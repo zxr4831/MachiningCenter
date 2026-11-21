@@ -3,76 +3,74 @@
 
 #include "GCode.h"
 
-
-//Ìí¼ÓG17¹æÔò½á¹¹Ìå
+//æ·»åŠ G17è§„åˆ™ç»“æž„ä½“
 void addG17RegulationAPI()
 {
-	//Ö¸Áî£ºG17
-	//×é±ð£ºsGc
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(17, sGc, 1, NULL, NULL, NULL, CheckG17, AssignG17);
+    //æŒ‡ä»¤ï¼šG17
+    //ç»„åˆ«ï¼šsGc
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(17, sGc, 1, NULL, NULL, NULL, CheckG17, AssignG17);
 }
-//Ìí¼ÓG18¹æÔò½á¹¹Ìå
+//æ·»åŠ G18è§„åˆ™ç»“æž„ä½“
 void addG18RegulationAPI()
 {
-	//Ö¸Áî£ºG18
-	//×é±ð£ºsGc
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(18, sGc, 1, NULL, NULL, NULL, CheckG18, AssignG18);
+    //æŒ‡ä»¤ï¼šG18
+    //ç»„åˆ«ï¼šsGc
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(18, sGc, 1, NULL, NULL, NULL, CheckG18, AssignG18);
 }
-//Ìí¼ÓG19¹æÔò½á¹¹Ìå
+//æ·»åŠ G19è§„åˆ™ç»“æž„ä½“
 void addG19RegulationAPI()
 {
-	//Ö¸Áî£ºG19
-	//×é±ð£ºsGc
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(19, sGc, 1, NULL, NULL, NULL, CheckG19, AssignG19);
+    //æŒ‡ä»¤ï¼šG19
+    //ç»„åˆ«ï¼šsGc
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(19, sGc, 1, NULL, NULL, NULL, CheckG19, AssignG19);
 }
 
-//¼ì²éG17
+//æ£€æŸ¥G17
 int8 CheckG17(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
-//¼ì²éG18
+//æ£€æŸ¥G18
 int8 CheckG18(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
-//¼ì²éG19
+//æ£€æŸ¥G19
 int8 CheckG19(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G19 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGc = G19 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
 
-
-//¸³ÖµG17
+//èµ‹å€¼G17
 int8 AssignG17(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 1;
+    pGCodeBufUnit->SModalInfo.sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 1;
 }
-//¸³ÖµG18
+//èµ‹å€¼G18
 int8 AssignG18(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 1;
+    pGCodeBufUnit->SModalInfo.sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 1;
 }
-//¸³ÖµG19
+//èµ‹å€¼G19
 int8 AssignG19(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGc = G19 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 1;
+    pGCodeBufUnit->SModalInfo.sGc = G19 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 1;
 }

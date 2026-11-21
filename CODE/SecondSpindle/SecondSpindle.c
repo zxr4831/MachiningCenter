@@ -1,8 +1,8 @@
 #include "SecondSpindle.h"
 #include <stdlib.h>
-#include "G1.h" 
-#include "G0.h"  
-#include "Motion.h"	
+#include "G1.h"
+#include "G0.h"
+#include "Motion.h"
 #include "GeneralFunctions.h"
 #include "CTrajPlanning.h"
 #include "G33.h"
@@ -13,176 +13,177 @@
 #include "sys.h"
 #endif // STM32_MODE
 
-
-/* ËÕÏò±ê 2026-10-14£º¸±ÖáÆô¶¯±£ÁôÍ£Ö¹ÃÅ¿Ø¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šå‰¯è½´å¯åŠ¨ä¿ç•™åœæ­¢é—¨æ§ã€‚ */
 /*************************************************
-  º¯ÊıÃû³Æ£ºSSecondSpindleBegin
-  º¯Êı¹¦ÄÜ£ºÇëÇóÆô¶¯¸±Öá£¬Í£Ö¹ÊÕÎ²ÆÚ¼ä²»¸²¸ÇÍ£Ö¹×´Ì¬
-  ÊäÈë²ÎÊı£ºpSSpindlePointer - ¸±Öá¶ÔÏó
-  Êä³ö²ÎÊı£º¸üĞÂÔÊĞíÆô¶¯Ê±µÄÄ£Ê½¼°½×¶Î
-  ·µ »Ø Öµ£º1 - ÒÑÉèÖÃÆô¶¯£»0 - Ôİ²»ÇĞ»»£»¸ºÖµ - ²ÎÊı´íÎó
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14£»±£Áô¶¯Á¦µ¶Ô­Æô¶¯Â·¾¶
+  å‡½æ•°åç§°ï¼šSSecondSpindleBegin
+  å‡½æ•°åŠŸèƒ½ï¼šè¯·æ±‚å¯åŠ¨å‰¯è½´ï¼Œåœæ­¢æ”¶å°¾æœŸé—´ä¸è¦†ç›–åœæ­¢çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼špSSpindlePointer - å‰¯è½´å¯¹è±¡
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°å…è®¸å¯åŠ¨æ—¶çš„æ¨¡å¼åŠé˜¶æ®µ
+  è¿” å› å€¼ï¼š1 - å·²è®¾ç½®å¯åŠ¨ï¼›0 - æš‚ä¸åˆ‡æ¢ï¼›è´Ÿå€¼ - å‚æ•°é”™è¯¯
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14ï¼›ä¿ç•™åŠ¨åŠ›åˆ€åŸå¯åŠ¨è·¯å¾„
 ****************************************/
 int8 SSecondSpindleBegin(struct _SSpindle* pSSpindlePointer)
 {
-	struct SSingleAxis* pSSingleAxisPointer;//µ¥Öá½á¹¹ÌåÖ¸Õë
-	const uint8* ucMapArray;//Ó³Éä
-	uint8 ucAxis;//ÖáºÅ
+    struct SSingleAxis* pSSingleAxisPointer; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
+    const uint8* ucMapArray;                 //æ˜ å°„
+    uint8 ucAxis;                            //è½´å·
 
-	if (pSSpindlePointer == NULL || pSSpindlePointer->pSSpindleAxis == NULL || pSSpindlePointer->pSChannel == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-    /* ËÕÏò±ê 2026-10-14£ºÍ£Ö¹ÊÕÎ²ÆÚ¼ä²»ÖØĞÂÆô¶¯¶¯Á¦µ¶¡£ */
+    if (pSSpindlePointer == NULL || pSSpindlePointer->pSSpindleAxis == NULL ||
+        pSSpindlePointer->pSChannel == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    /* è‹å‘æ ‡ 2026-10-14ï¼šåœæ­¢æ”¶å°¾æœŸé—´ä¸é‡æ–°å¯åŠ¨åŠ¨åŠ›åˆ€ã€‚ */
     if (isSpindleStopping(pSSpindlePointer))
     {
         return 0;
     }
-	//Ö¸Ïòµ¥Öá½á¹¹Ìå
-	pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
-	ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray;  //Ó³Éä
-	ucAxis = pSSingleAxisPointer->ucAxis;//¶ÁÈ¡ÖáºÅ
+    //æŒ‡å‘å•è½´ç»“æ„ä½“
+    pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
+    ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray; //æ˜ å°„
+    ucAxis = pSSingleAxisPointer->ucAxis;                    //è¯»å–è½´å·
 
-	if (pSSingleAxisPointer == NULL)//µ¥Öá½á¹¹ÌåÎª¿Õ
-	{
-		return -2;
-	}
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)//Î´Ó³ÉäÎïÀíÖá  ºé¹ÚÅô 2024/6/11
-	{
-		parseRunningError(pSSpindlePointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
-		channelStopToIDLE(pSSpindlePointer->pSChannel);
-		return -3;
-	}
-	switch (pSSingleAxisPointer->ucRunMode)// ¸ù¾İµ±Ç°µÄ¹¦ÄÜ×´Ì¬ÉèÖÃ
-	{
-		case SPINDLE_G96ANDG0_MODE:
-		case SPINDLE_G96ANDG1_MODE:
-		break;
-		
-	case SPINDLE_G97_MODE:
-		//ÒÑÆô¶¯×´Ì¬ÏÂ£¬Ö±½Ó·µ»Ø
-		break;
+    if (pSSingleAxisPointer == NULL) //å•è½´ç»“æ„ä½“ä¸ºç©º
+    {
+        return -2;
+    }
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX) //æœªæ˜ å°„ç‰©ç†è½´  æ´ªå† é¹ 2024/6/11
+    {
+        parseRunningError(pSSpindlePointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+        channelStopToIDLE(pSSpindlePointer->pSChannel);
+        return -3;
+    }
+    switch (pSSingleAxisPointer->ucRunMode) // æ ¹æ®å½“å‰çš„åŠŸèƒ½çŠ¶æ€è®¾ç½®
+    {
+    case SPINDLE_G96ANDG0_MODE:
+    case SPINDLE_G96ANDG1_MODE:
+        break;
 
-	case SPINDLE_SINGLEAXIS_MODE:
-	case SPINDLE_PRECISESTOP_MODE:
-	case SPINDLE_COMMONSTOP_MODE:
-		pSSingleAxisPointer->ucRunMode = SPINDLE_G97_MODE;//ÉèÖÃ¹¦ÄÜ
-		pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION; //½øÈëÖáÕ¼ÓÃ×´Ì¬
-		break;
-	}
-	return 0;
+    case SPINDLE_G97_MODE:
+        //å·²å¯åŠ¨çŠ¶æ€ä¸‹ï¼Œç›´æ¥è¿”å›
+        break;
+
+    case SPINDLE_SINGLEAXIS_MODE:
+    case SPINDLE_PRECISESTOP_MODE:
+    case SPINDLE_COMMONSTOP_MODE:
+        pSSingleAxisPointer->ucRunMode = SPINDLE_G97_MODE; //è®¾ç½®åŠŸèƒ½
+        pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION; //è¿›å…¥è½´å ç”¨çŠ¶æ€
+        break;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºreadSecondSpindleSpeed(struct SSingleAxis* pSSingleAxisPointer)
-  º¯Êı¹¦ÄÜ  ´Ó²å²¹½á¹¹ÌåÖĞ£¬¶ÁÈ¡µÚ¶ş×ªÖá/¶¯Á¦µ¶µÄ×ªËÙ
-  ÊäÈë²ÎÊı£º*pSSingleAxisPointer£¬½á¹¹Ìåstruct SSingleAxisÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			1  Ö´ĞĞ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šreadSecondSpindleSpeed(struct SSingleAxis* pSSingleAxisPointer)
+  å‡½æ•°åŠŸèƒ½  ä»æ’è¡¥ç»“æ„ä½“ä¸­ï¼Œè¯»å–ç¬¬äºŒè½¬è½´/åŠ¨åŠ›åˆ€çš„è½¬é€Ÿ
+  è¾“å…¥å‚æ•°ï¼š*pSSingleAxisPointerï¼Œç»“æ„ä½“struct SSingleAxisæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			1  æ‰§è¡ŒæˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 readSecondSpindleSpeed(struct SInterpolationPre* pSPrePointer, struct _SSpindle* pSSpindlePointer)
 {
-	struct SSingleAxis* pSSingleAxisPointer;//µ¥Öá½á¹¹ÌåÖ¸Õë
+    struct SSingleAxis* pSSingleAxisPointer; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
 
-	if (pSSpindlePointer == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	//Ö¸ÏòÖ÷Öáµ¥Öá½á¹¹Ìå
-	pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
+    if (pSSpindlePointer == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    //æŒ‡å‘ä¸»è½´å•è½´ç»“æ„ä½“
+    pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
 
-	if (pSSingleAxisPointer == NULL)//µ¥Öá½á¹¹ÌåÎª¿Õ
-	{
-		return -2;
-	}
+    if (pSSingleAxisPointer == NULL) //å•è½´ç»“æ„ä½“ä¸ºç©º
+    {
+        return -2;
+    }
 
-	if (pSPrePointer->dSecondSpindleSpeed >= 0)// Ö÷Öá×ªËÙÓĞĞ§
-	{
-		pSSingleAxisPointer->dSpindleSpeed = pSPrePointer->dSecondSpindleSpeed / (60.0 * 1000) * DEGREE_OF_CIRCLE;//¸³Öµ  Ö÷Öá×ªËÙ r/min->¶È/ms
+    if (pSPrePointer->dSecondSpindleSpeed >= 0) // ä¸»è½´è½¬é€Ÿæœ‰æ•ˆ
+    {
+        pSSingleAxisPointer->dSpindleSpeed =
+            pSPrePointer->dSecondSpindleSpeed / (60.0 * 1000) * DEGREE_OF_CIRCLE; //èµ‹å€¼  ä¸»è½´è½¬é€Ÿ r/min->åº¦/ms
 
-		if (pSSingleAxisPointer->ucRunMode == SPINDLE_G97_MODE)
-		{//´¦ÓÚG96G97µÄ¹¦ÄÜ×´Ì¬ÏÂ
-			pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION;//½øÈëÖáÕ¼ÓÃ×´Ì¬
-		}
-		pSPrePointer->dSecondSpindleSpeed = SPINDLE_INVALID_VAL;//ÒÑ¶ÁÈ¡  ÖÃÎªÎŞĞ§
+        if (pSSingleAxisPointer->ucRunMode == SPINDLE_G97_MODE)
+        {                                                      //å¤„äºG96G97çš„åŠŸèƒ½çŠ¶æ€ä¸‹
+            pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION; //è¿›å…¥è½´å ç”¨çŠ¶æ€
+        }
+        pSPrePointer->dSecondSpindleSpeed = SPINDLE_INVALID_VAL; //å·²è¯»å–  ç½®ä¸ºæ— æ•ˆ
+    }
 
-	}
-
-	return 1;
+    return 1;
 }
 
-
-/* ËÕÏò±ê 2026-10-14£º¸±ÖáÖÜÆÚ¸´ÓÃÍ£Ö¹·ÖÀàÓëÊÕÎ²¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šå‰¯è½´å‘¨æœŸå¤ç”¨åœæ­¢åˆ†ç±»ä¸æ”¶å°¾ã€‚ */
 /*************************************************
-  º¯ÊıÃû³Æ£ºSecondspindleMotion
-  º¯Êı¹¦ÄÜ£ºÍÆ½ø¸±ÖáËÙ¶È¼°×ø±ê£¬ÓÅÏÈ´¦ÀíÍ£Ö¹ÇëÇó
-  ÊäÈë²ÎÊı£ºpSSpindlePointer - ÓĞĞ§Í¨µÀËùÊô¸±Öá¶ÔÏó
-  Êä³ö²ÎÊı£º¸üĞÂ¸±ÖáÔË¶¯×´Ì¬¡¢ÖÜÆÚÂö³åÓë×ø±ê
-  ·µ »Ø Öµ£º1 - ±¾ÖÜÆÚ´¦Àí½áÊø£»0 - µÈ´ıÕ¼ÓÃ£»¸ºÖµ - ²ÎÊı»òÍ£Ö¹Òì³£
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14£»¸´ÓÃ¹«¹²Í£Ö¹Èë¿Ú£¬±£Áô×ø±ê»ØĞ´
+  å‡½æ•°åç§°ï¼šSecondspindleMotion
+  å‡½æ•°åŠŸèƒ½ï¼šæ¨è¿›å‰¯è½´é€Ÿåº¦åŠåæ ‡ï¼Œä¼˜å…ˆå¤„ç†åœæ­¢è¯·æ±‚
+  è¾“å…¥å‚æ•°ï¼špSSpindlePointer - æœ‰æ•ˆé€šé“æ‰€å±å‰¯è½´å¯¹è±¡
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°å‰¯è½´è¿åŠ¨çŠ¶æ€ã€å‘¨æœŸè„‰å†²ä¸åæ ‡
+  è¿” å› å€¼ï¼š1 - æœ¬å‘¨æœŸå¤„ç†ç»“æŸï¼›0 - ç­‰å¾…å ç”¨ï¼›è´Ÿå€¼ - å‚æ•°æˆ–åœæ­¢å¼‚å¸¸
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14ï¼›å¤ç”¨å…¬å…±åœæ­¢å…¥å£ï¼Œä¿ç•™åæ ‡å›å†™
 ****************************************/
 int8 SecondspindleMotion(struct _SSpindle* pSSpindlePointer)
 {
-	double dCurrentPoint;//µ±Ç°×ø±ê
-	struct SInterpolationPre* pSPreprocess;//Ô¤´¦ÀíÖ¸Õë
-	struct SSingleAxis* pSSingleAxisPointer;//µ¥Öá½á¹¹ÌåÖ¸Õë
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	const uint8* ucMapArray;//Ó³Éä
-	uint8 ucAxis;
+    double dCurrentPoint;                    //å½“å‰åæ ‡
+    struct SInterpolationPre* pSPreprocess;  //é¢„å¤„ç†æŒ‡é’ˆ
+    struct SSingleAxis* pSSingleAxisPointer; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
+    struct _SRun* pSRun;                     //è¿è¡Œç»“æ„ä½“
+    const uint8* ucMapArray;                 //æ˜ å°„
+    uint8 ucAxis;
 
-	if (pSSpindlePointer == NULL || pSSpindlePointer->pSSpindleAxis == NULL || pSSpindlePointer->pSChannel == NULL)
-	{
-		return -1;
-	}
-    /* ËÕÏò±ê 2026-10-14£º¸±ÖáÓëÖ÷Öá¹²ÏíÖÜÆÚÍ£Ö¹Èë¿Ú¡£ */
+    if (pSSpindlePointer == NULL || pSSpindlePointer->pSSpindleAxis == NULL || pSSpindlePointer->pSChannel == NULL)
+    {
+        return -1;
+    }
+    /* è‹å‘æ ‡ 2026-10-14ï¼šå‰¯è½´ä¸ä¸»è½´å…±äº«å‘¨æœŸåœæ­¢å…¥å£ã€‚ */
     processSpindleRequests(pSSpindlePointer);
     if (pSSpindlePointer->cStopError < 0)
     {
         return pSSpindlePointer->cStopError;
     }
-	//µ¥Öá½á¹¹Ìå
-	pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
-	//¶ÁÈ¡ÖáºÅ
-	ucAxis = pSSingleAxisPointer->ucAxis;
-	//»ñÈ¡Ó³Éä
-	ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray;
-	//»ñÈ¡ÔËĞĞ½á¹¹Ìå
-	pSRun = &pSSpindlePointer->pSChannel->SRun;
-	//Ô¤´¦Àí½á¹¹Ìå
-	pSPreprocess = &pSSpindlePointer->pSChannel->SPreProcess;
+    //å•è½´ç»“æ„ä½“
+    pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
+    //è¯»å–è½´å·
+    ucAxis = pSSingleAxisPointer->ucAxis;
+    //è·å–æ˜ å°„
+    ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray;
+    //è·å–è¿è¡Œç»“æ„ä½“
+    pSRun = &pSSpindlePointer->pSChannel->SRun;
+    //é¢„å¤„ç†ç»“æ„ä½“
+    pSPreprocess = &pSSpindlePointer->pSChannel->SPreProcess;
 
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)//ÎïÀíÖáÎª¿Õ ·µ»Ø
-	{
-		return -3;
-	}
-    /* 2026-10-24£º±¨¾¯½ûÖ¹ÆÕÍ¨ÔË¶¯£¬µ«ÒÑ½ÓÊÕµÄÍ£Ö¹ÈÔĞë¼õËÙ²¢Íê³ÉÈ¡ÏûÊ¹ÄÜ¡£ */
-	//2025.9.22 ĞÜ¿¥
-	if (!isSpindleStopping(pSSpindlePointer) && (
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX) //ç‰©ç†è½´ä¸ºç©º è¿”å›
+    {
+        return -3;
+    }
+    /* 2026-10-24ï¼šæŠ¥è­¦ç¦æ­¢æ™®é€šè¿åŠ¨ï¼Œä½†å·²æ¥æ”¶çš„åœæ­¢ä»é¡»å‡é€Ÿå¹¶å®Œæˆå–æ¶ˆä½¿èƒ½ã€‚ */
+    //2025.9.22 ç†Šéª
+    if (!isSpindleStopping(pSSpindlePointer) &&
+        (
 #if STM32_MODE
-		Check_bootwarning() == 0 || //ÕıÔÚ±¨¾¯ÔòÍË³öº¯Êı£¬ÆóÒµ¹ÜÀíµÄ±¨¾¯Ö÷Öá±¨¾¯¡¢ËÅ·ş±¨¾¯¡¢³¬Ê±±¨¾¯¡¢ÏŞÎ»±¨¾¯
+            Check_bootwarning() == 0 || //æ­£åœ¨æŠ¥è­¦åˆ™é€€å‡ºå‡½æ•°ï¼Œä¼ä¸šç®¡ç†çš„æŠ¥è­¦ä¸»è½´æŠ¥è­¦ã€ä¼ºæœæŠ¥è­¦ã€è¶…æ—¶æŠ¥è­¦ã€é™ä½æŠ¥è­¦
 #endif
-		isErrorHasBeenWritten() == TRUE))//ÕıÔÚ±¨¾¯ÔòÍË³öº¯Êı£¬Ñ§Ğ£¹ÜÀíµÄ±¨¾¯  2024/10/16
-	{
-		return -2;
-	}
-	if (pSPreprocess->dSecondSpindleSpeed >= 0)// Ö÷Öá×ªËÙÓĞĞ§
-	{
+            isErrorHasBeenWritten() == TRUE)) //æ­£åœ¨æŠ¥è­¦åˆ™é€€å‡ºå‡½æ•°ï¼Œå­¦æ ¡ç®¡ç†çš„æŠ¥è­¦  2024/10/16
+    {
+        return -2;
+    }
+    if (pSPreprocess->dSecondSpindleSpeed >= 0) // ä¸»è½´è½¬é€Ÿæœ‰æ•ˆ
+    {
 
-		//ºã×ªËÙ
-		pSSingleAxisPointer->dSpindleSpeed = pSPreprocess->dSecondSpindleSpeed / (60.0 * 1000) * DEGREE_OF_CIRCLE;//¸³Öµ  Ö÷Öá×ªËÙ r/ms->¶È/ms
+        //æ’è½¬é€Ÿ
+        pSSingleAxisPointer->dSpindleSpeed =
+            pSPreprocess->dSecondSpindleSpeed / (60.0 * 1000) * DEGREE_OF_CIRCLE; //èµ‹å€¼  ä¸»è½´è½¬é€Ÿ r/ms->åº¦/ms
 
-		if (pSSingleAxisPointer->ucRunMode == SPINDLE_G97_MODE)
-		{//´¦ÓÚG96G97µÄ¹¦ÄÜ×´Ì¬ÏÂ
-			pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION; //½øÈëÖáÕ¼ÓÃ×´Ì¬
-		}
-		pSPreprocess->dSecondSpindleSpeed = SPINDLE_INVALID_VAL;//ÒÑ¶ÁÈ¡  ÖÃÎªÎŞĞ§
-	}
+        if (pSSingleAxisPointer->ucRunMode == SPINDLE_G97_MODE)
+        {                                                      //å¤„äºG96G97çš„åŠŸèƒ½çŠ¶æ€ä¸‹
+            pSSingleAxisPointer->ucInpStatus = INP_OCCUPATION; //è¿›å…¥è½´å ç”¨çŠ¶æ€
+        }
+        pSPreprocess->dSecondSpindleSpeed = SPINDLE_INVALID_VAL; //å·²è¯»å–  ç½®ä¸ºæ— æ•ˆ
+    }
 
-	//±¶ÂÊ¸Ä±ä£¿
+    //å€ç‡æ”¹å˜ï¼Ÿ
 
-    /* ËÕÏò±ê 2026-10-14£º¶¯Á¦µ¶¸´ÓÃÍ¬Ò»¹«¹²Í£Ö¹Èë¿Ú¡£ */
+    /* è‹å‘æ ‡ 2026-10-14ï¼šåŠ¨åŠ›åˆ€å¤ç”¨åŒä¸€å…¬å…±åœæ­¢å…¥å£ã€‚ */
     if (isSpindleStopping(pSSpindlePointer))
     {
         if (processSpindleStop(pSSpindlePointer) < 0)
@@ -192,188 +193,201 @@ int8 SecondspindleMotion(struct _SSpindle* pSSpindlePointer)
     }
     else
     {
-        /* ÖáÕ¼ÓÃÅĞ¶Ï	//³ÂÃô´Ï	2023/12/19 */
+        /* è½´å ç”¨åˆ¤æ–­	//é™ˆæ•èª	2023/12/19 */
         if (pSSpindlePointer->pSSpindleAxis->ucInpStatus == INP_OCCUPATION)
         {
-            if (axisManagerOccupyByChannel(1 << pSSingleAxisPointer->ucAxis, pSSpindlePointer->pSChannel->ucChannelNum, &pSSpindlePointer->ucOccupation) == 1)
+            if (axisManagerOccupyByChannel(1 << pSSingleAxisPointer->ucAxis, pSSpindlePointer->pSChannel->ucChannelNum,
+                                           &pSSpindlePointer->ucOccupation) == 1)
             {
-                /* Õ¼ÓÃ³É¹¦ */
-                if (setSpindleEnabled(pSSpindlePointer, TRUE) == 1)//ÉèÖÃÖ÷ÖáÊ¹ÄÜ
+                /* å ç”¨æˆåŠŸ */
+                if (setSpindleEnabled(pSSpindlePointer, TRUE) == 1) //è®¾ç½®ä¸»è½´ä½¿èƒ½
                 {
-                    pSSpindlePointer->pSSpindleAxis->ucInpStatus = INP_INITIATION;//Ê¹ÄÜ³É¹¦  ½øÈë³õÊ¼»¯×´Ì¬
+                    pSSpindlePointer->pSSpindleAxis->ucInpStatus = INP_INITIATION; //ä½¿èƒ½æˆåŠŸ  è¿›å…¥åˆå§‹åŒ–çŠ¶æ€
                 }
             }
             else
             {
-                /* Õ¼ÓÃÊ§°Ü */
+                /* å ç”¨å¤±è´¥ */
                 return 0;
             }
         }
 
-        switch (pSSingleAxisPointer->ucRunMode)//¸ù¾İMode Ö´ĞĞ²»Í¬µÄ¹¦ÄÜ
+        switch (pSSingleAxisPointer->ucRunMode) //æ ¹æ®Mode æ‰§è¡Œä¸åŒçš„åŠŸèƒ½
         {
 
-        case SPINDLE_G97_MODE: //G97ºã×ªËÙ
+        case SPINDLE_G97_MODE: //G97æ’è½¬é€Ÿ
             constVelMotion(pSSpindlePointer);
             break;
 
-        case SPINDLE_COMMONSTOP_MODE://¼õËÙÍ£
+        case SPINDLE_COMMONSTOP_MODE: //å‡é€Ÿåœ
             commonStopMotion(pSSpindlePointer);
             break;
 
-        case SPINDLE_PRECISESTOP_MODE://×¼Í£
+        case SPINDLE_PRECISESTOP_MODE: //å‡†åœ
             preciseStopMotion(pSSpindlePointer);
             break;
         }
-
     }
 
-	//¸ù¾İÂö³å·´ËãµÃµ½CÖáÊµ¼Ê×ø±ê
-	getSingleAxisRealTimePoint(&dCurrentPoint, pSSingleAxisPointer->ucAxis, ucMapArray);
+    //æ ¹æ®è„‰å†²åç®—å¾—åˆ°Cè½´å®é™…åæ ‡
+    getSingleAxisRealTimePoint(&dCurrentPoint, pSSingleAxisPointer->ucAxis, ucMapArray);
 
-	if (pSSpindlePointer->pSSpindleAxis->ucRunMode != SPINDLE_SINGLEAXIS_MODE)
-	{
-		dCurrentPoint += pSRun->sAxisDeltaPulse[ucAxis] * g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dPulseToMm;//Âö³åÊı ¡Á Ã¿Âö³å¶ÔÓ¦µÄ½Ç¶È
-		dCurrentPoint = surplusDoubleData(dCurrentPoint + DEGREE_OF_CIRCLE, (int)DEGREE_OF_CIRCLE);//È¡Óà
-		//¸üĞÂ×ø±ê
-		updateSingleAxisRealTimePoint(&dCurrentPoint, ucAxis, ucMapArray);
-	}
+    if (pSSpindlePointer->pSSpindleAxis->ucRunMode != SPINDLE_SINGLEAXIS_MODE)
+    {
+        dCurrentPoint += pSRun->sAxisDeltaPulse[ucAxis] *
+                         g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dPulseToMm; //è„‰å†²æ•° Ã— æ¯è„‰å†²å¯¹åº”çš„è§’åº¦
+        dCurrentPoint = surplusDoubleData(dCurrentPoint + DEGREE_OF_CIRCLE, (int)DEGREE_OF_CIRCLE); //å–ä½™
+        //æ›´æ–°åæ ‡
+        updateSingleAxisRealTimePoint(&dCurrentPoint, ucAxis, ucMapArray);
+    }
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSecondSpindleSpeedReached(struct SSingleAxis* pSSingleAxisPointer)
-  º¯Êı¹¦ÄÜ£ºµÚ¶ş×ªÖáÎŞ±àÂëÆ÷£¬Í¨¹ıÀíÂÛµ±Ç°ËÙ¶ÈºÍÄ¿±êËÙ¶ÈµÄ±ÈÖµ´ÖÂÔµÄÅĞ¶ÏµÚ¶ş×ªÖá×ªËÙÊÇ·ñ´ïµ½ÒªÇó
-  ÊäÈë²ÎÊı£º*pSSingleAxisPointer£¬½á¹¹Ìåstruct SSingleAxisÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE
+  å‡½æ•°åç§°ï¼šgetSecondSpindleSpeedReached(struct SSingleAxis* pSSingleAxisPointer)
+  å‡½æ•°åŠŸèƒ½ï¼šç¬¬äºŒè½¬è½´æ— ç¼–ç å™¨ï¼Œé€šè¿‡ç†è®ºå½“å‰é€Ÿåº¦å’Œç›®æ ‡é€Ÿåº¦çš„æ¯”å€¼ç²—ç•¥çš„åˆ¤æ–­ç¬¬äºŒè½¬è½´è½¬é€Ÿæ˜¯å¦è¾¾åˆ°è¦æ±‚
+  è¾“å…¥å‚æ•°ï¼š*pSSingleAxisPointerï¼Œç»“æ„ä½“struct SSingleAxisæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getSecondSpindleSpeedReached(struct _SSpindle* pSSpindlePointer)
 {
-	if (pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_SINGLEAXIS_MODE
-		|| pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_COMMONSTOP_MODE || pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_PRECISESTOP_MODE
-		|| pSSpindlePointer->pSSpindleAxis->ucInpStatus == INP_FINISHED)//²»½øĞĞÖ÷Öá×ªËÙ¼ì²âµÄ×´Ì¬ //2024/7/6 Ó¦ÆóÒµÒªÇó£¬Ôö¼ÓÖ÷ÖáÍ£Ö¹Ê±²»¼ì²âÒÔ¼°×ªËÙÎ´·¢Éú¸Ä±äÊ±²»¼ì²â ºé¹ÚÅô
-	{
-		return TRUE;
-	}
-	else
-	{
-		double dTargetSpeed = 0;
-		if(calTargetSpindleSpeed(pSSpindlePointer,&dTargetSpeed)!= 1)return FALSE;
-		if (isZero(dTargetSpeed))
-		{
-			if (isZero(pSSpindlePointer->pSSpindleAxis->dCurrentSpeed) || isZero(g_SSystemPara.fSpindleSpeedDeviation - 1.0))//±àÂëÆ÷Ïà¶ÔÖµÎª0  »òÕßÔÊĞíÎó²îÎª100%
-			{
-				return TRUE;
-			}
-		}
-		else
-		{
-			double dSpeedPercentage;
-			if (pSSpindlePointer->pSSpindleAxis->cSpindleDir == ARC_CW)//Õı×ª
-			{
-				dSpeedPercentage = (pSSpindlePointer->pSSpindleAxis->dCurrentSpeed / DEGREE_OF_CIRCLE) / dTargetSpeed;
-			}
-			else//·´×ª
-			{
-				dSpeedPercentage = -1.0 * (pSSpindlePointer->pSSpindleAxis->dCurrentSpeed / DEGREE_OF_CIRCLE) / dTargetSpeed;
-			}
-			if ((fabs(dSpeedPercentage - 1.0 * SGN(dTargetSpeed)) <= g_SSystemPara.fSpindleSpeedDeviation)  //Îó²î·¶Î§ÄÚÄÚÇÒ·½ÏòÏàÍ¬
-				&& (pSSpindlePointer->pSSpindleAxis->ucInpStatus == INP_FINISHED || getBits(pSSpindlePointer->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_ADDR) == CMD_SPINDLE_SPEED_CV))//Ö÷Öá²å²¹Íê³É »òÎªºã×ªËÙ
-			{ //G96Ò»¶¨Òª¼ÓËÙÍê£¨status = FINISHED)²ÅÄÜÆô¶¯G1+
+    if (pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_SINGLEAXIS_MODE ||
+        pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_COMMONSTOP_MODE ||
+        pSSpindlePointer->pSSpindleAxis->ucRunMode == SPINDLE_PRECISESTOP_MODE ||
+        pSSpindlePointer->pSSpindleAxis->ucInpStatus ==
+            INP_FINISHED) //ä¸è¿›è¡Œä¸»è½´è½¬é€Ÿæ£€æµ‹çš„çŠ¶æ€ //2024/7/6 åº”ä¼ä¸šè¦æ±‚ï¼Œå¢åŠ ä¸»è½´åœæ­¢æ—¶ä¸æ£€æµ‹ä»¥åŠè½¬é€Ÿæœªå‘ç”Ÿæ”¹å˜æ—¶ä¸æ£€æµ‹ æ´ªå† é¹
+    {
+        return TRUE;
+    }
+    else
+    {
+        double dTargetSpeed = 0;
+        if (calTargetSpindleSpeed(pSSpindlePointer, &dTargetSpeed) != 1)
+            return FALSE;
+        if (isZero(dTargetSpeed))
+        {
+            if (isZero(pSSpindlePointer->pSSpindleAxis->dCurrentSpeed) ||
+                isZero(g_SSystemPara.fSpindleSpeedDeviation - 1.0)) //ç¼–ç å™¨ç›¸å¯¹å€¼ä¸º0  æˆ–è€…å…è®¸è¯¯å·®ä¸º100%
+            {
+                return TRUE;
+            }
+        }
+        else
+        {
+            double dSpeedPercentage;
+            if (pSSpindlePointer->pSSpindleAxis->cSpindleDir == ARC_CW) //æ­£è½¬
+            {
+                dSpeedPercentage = (pSSpindlePointer->pSSpindleAxis->dCurrentSpeed / DEGREE_OF_CIRCLE) / dTargetSpeed;
+            }
+            else //åè½¬
+            {
+                dSpeedPercentage =
+                    -1.0 * (pSSpindlePointer->pSSpindleAxis->dCurrentSpeed / DEGREE_OF_CIRCLE) / dTargetSpeed;
+            }
+            if ((fabs(dSpeedPercentage - 1.0 * SGN(dTargetSpeed)) <=
+                 g_SSystemPara.fSpindleSpeedDeviation) //è¯¯å·®èŒƒå›´å†…å†…ä¸”æ–¹å‘ç›¸åŒ
+                && (pSSpindlePointer->pSSpindleAxis->ucInpStatus == INP_FINISHED ||
+                    getBits(pSSpindlePointer->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_ADDR) ==
+                        CMD_SPINDLE_SPEED_CV)) //ä¸»è½´æ’è¡¥å®Œæˆ æˆ–ä¸ºæ’è½¬é€Ÿ
+            {                                  //G96ä¸€å®šè¦åŠ é€Ÿå®Œï¼ˆstatus = FINISHED)æ‰èƒ½å¯åŠ¨G1+
 
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleSpeedTest(struct SSpindleTest* pSpindleTest)
-  º¯Êı¹¦ÄÜ  Ö÷ÖáÊµ¼Ê×ªËÙ¼ì²â£¬¸ù¾İ±àÂëÆ÷È¡Öµ£¬¼ÆËãÖ÷ÖáµÄÆ½¾ù×ªËÙ  ¼ÆËãµÃµ½µÄÖ÷Öá×ªËÙ±£´æÔÚ   pSpindleTest->dSpindleAvgSpeed
-  ÊäÈë²ÎÊı£º*pSpindleTest£¬Ö÷Öá¼ì²â½á¹¹ÌåÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1  ¿ÕÖ¸Õë
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleSpeedTest(struct SSpindleTest* pSpindleTest)
+  å‡½æ•°åŠŸèƒ½  ä¸»è½´å®é™…è½¬é€Ÿæ£€æµ‹ï¼Œæ ¹æ®ç¼–ç å™¨å–å€¼ï¼Œè®¡ç®—ä¸»è½´çš„å¹³å‡è½¬é€Ÿ  è®¡ç®—å¾—åˆ°çš„ä¸»è½´è½¬é€Ÿä¿å­˜åœ¨   pSpindleTest->dSpindleAvgSpeed
+  è¾“å…¥å‚æ•°ï¼š*pSpindleTestï¼Œä¸»è½´æ£€æµ‹ç»“æ„ä½“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1  ç©ºæŒ‡é’ˆ
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 SecondspindleSpeedTest(struct _SEncoderTest* pEncoderTest, struct _SSpindle* pSSpindlePointer)
 {
-	struct SSingleAxis* pSSingleAxisPointer;//µ¥Öá½á¹¹ÌåÖ¸Õë
-	const uint8* ucMapArray;//Ó³Éä
-	uint8 ucAxis;//ÖáºÅ
-	struct SChannel* pSChannel;
+    struct SSingleAxis* pSSingleAxisPointer; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
+    const uint8* ucMapArray;                 //æ˜ å°„
+    uint8 ucAxis;                            //è½´å·
+    struct SChannel* pSChannel;
 
-	if (pSSpindlePointer == NULL || pEncoderTest == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	//Ö¸Ïò¶¯Á¦µ¶µ¥Öá½á¹¹Ìå
-	pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
-	//ÖáºÅ
-	ucAxis = pSSpindlePointer->pSSpindleAxis->ucAxis;
-	//Ó³Éä
-	ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray;
-	//Í¨µÀ
-	pSChannel = pSSpindlePointer->pSChannel;
+    if (pSSpindlePointer == NULL || pEncoderTest == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    //æŒ‡å‘åŠ¨åŠ›åˆ€å•è½´ç»“æ„ä½“
+    pSSingleAxisPointer = pSSpindlePointer->pSSpindleAxis;
+    //è½´å·
+    ucAxis = pSSpindlePointer->pSSpindleAxis->ucAxis;
+    //æ˜ å°„
+    ucMapArray = pSSpindlePointer->pSChannel->pMapAxisArray;
+    //é€šé“
+    pSChannel = pSSpindlePointer->pSChannel;
 
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -2;
-	}
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -2;
+    }
 #if SECONDSPINDLE_NOENCODER
-	pEncoderTest->ucStep = 2;
+    pEncoderTest->ucStep = 2;
 #endif
 
-	switch (pEncoderTest->ucStep)
-	{
-	case 0:
-		pEncoderTest->usPeriod = 0;//³õÊ¼»¯ÖÜÆÚ
-		pEncoderTest->nTotalPulse = 0;//³õÊ¼»¯Âö³å
-		if (pSChannel->bCalculateSecondSpindleSpeedFlag && pSSingleAxisPointer->ucInpStatus == INP_FINISHED)	//³ÂÃô´Ï	2023/6/22
-		{//¼ì²âÖ÷Öá×ªËÙµÄÌõ¼ş
-			pEncoderTest->ucStep = 2;
-		}
-		else
-		{
-			pEncoderTest->ucStep = 1;
-		}
-	case 1:
-	case 2:
-#if !SECONDSPINDLE_USE_NOENCODER	//µÚ¶ş×ªÖáÊ¹ÓÃ±àÂëÆ÷	20¸öÖÜÆÚ²Å²ÉÑùÍê
-		pEncoderTest->usPeriod++;//ÖÜÆÚ++
-		pEncoderTest->nTotalPulse += (int)pSChannel->pSSpindleEncoder->cEncoderDir * (int)pSChannel->pSSpindleEncoder->usDelta;//Âö³åÊıµş¼Ó
-		if (pEncoderTest->usPeriod >= g_SSystemPara.usSpindleAvgPeriod)//¼ÆÊı´ïµ½Ä¿±ê¼ÆÊı
-		{
-			//¼ÆËãÖ÷ÖáÆ½¾ù×ªËÙ  (r/ms)
-			pEncoderTest->dSpindleAvgSpeed = (double)pEncoderTest->nTotalPulse / pEncoderTest->usPeriod / (pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum);
+    switch (pEncoderTest->ucStep)
+    {
+    case 0:
+        pEncoderTest->usPeriod = 0;    //åˆå§‹åŒ–å‘¨æœŸ
+        pEncoderTest->nTotalPulse = 0; //åˆå§‹åŒ–è„‰å†²
+        if (pSChannel->bCalculateSecondSpindleSpeedFlag &&
+            pSSingleAxisPointer->ucInpStatus == INP_FINISHED) //é™ˆæ•èª	2023/6/22
+        {                                                     //æ£€æµ‹ä¸»è½´è½¬é€Ÿçš„æ¡ä»¶
+            pEncoderTest->ucStep = 2;
+        }
+        else
+        {
+            pEncoderTest->ucStep = 1;
+        }
+    case 1:
+    case 2:
+#if !SECONDSPINDLE_USE_NOENCODER  //ç¬¬äºŒè½¬è½´ä½¿ç”¨ç¼–ç å™¨	20ä¸ªå‘¨æœŸæ‰é‡‡æ ·å®Œ
+        pEncoderTest->usPeriod++; //å‘¨æœŸ++
+        pEncoderTest->nTotalPulse +=
+            (int)pSChannel->pSSpindleEncoder->cEncoderDir * (int)pSChannel->pSSpindleEncoder->usDelta; //è„‰å†²æ•°å åŠ 
+        if (pEncoderTest->usPeriod >= g_SSystemPara.usSpindleAvgPeriod) //è®¡æ•°è¾¾åˆ°ç›®æ ‡è®¡æ•°
+        {
+            //è®¡ç®—ä¸»è½´å¹³å‡è½¬é€Ÿ  (r/ms)
+            pEncoderTest->dSpindleAvgSpeed = (double)pEncoderTest->nTotalPulse / pEncoderTest->usPeriod /
+                                             (pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum);
 
-
-			if (pEncoderTest->ucStep == 2)//G33 G32ĞèÒª¼ì²âÖ÷Öá×ªËÙ
-			{
-				pSChannel->dSpindleRealSpeed = pEncoderTest->dSpindleAvgSpeed;//¸³Öµµ½Êµ¼ÊÖ÷Öá×ªËÙ
-				pSChannel->bCalculateSecondSpindleSpeedFlag = FALSE;//±êÖ¾Î»ÖÃ»ØÔ­À´µÄÖµ
-			}
-			pEncoderTest->ucStep = 0;//³õÊ¼»¯
-		}
-#else	//µÚ¶ş×ªÖá²»Ê¹ÓÃ±àÂëÆ÷ Ã¿Ò»ÖÜÆÚ¶¼²ÉÑù
-		if (pEncoderTest->ucStep == 2)//G33 G32ĞèÒª¼ì²âÖ÷Öá×ªËÙ
-		{
-			pEncoderTest->nTotalPulse = (int)pSChannel->pSSpindleEncoder->cEncoderDir * (int)pSChannel->pSSpindleEncoder->usDelta;
-			pSChannel->dSecondSpindleAnalogSpeed = pEncoderTest->dSpindleAvgSpeed = (double)pEncoderTest->nTotalPulse / (pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum);
-			pSChannel->bCalculateSecondSpindleSpeedFlag = FALSE;	//³ÂÃô´Ï	2023/6/22
-			pEncoderTest->nTotalPulse = 0;
-		}
-		pEncoderTest->ucStep = 0;
+            if (pEncoderTest->ucStep == 2) //G33 G32éœ€è¦æ£€æµ‹ä¸»è½´è½¬é€Ÿ
+            {
+                pSChannel->dSpindleRealSpeed = pEncoderTest->dSpindleAvgSpeed; //èµ‹å€¼åˆ°å®é™…ä¸»è½´è½¬é€Ÿ
+                pSChannel->bCalculateSecondSpindleSpeedFlag = FALSE;           //æ ‡å¿—ä½ç½®å›åŸæ¥çš„å€¼
+            }
+            pEncoderTest->ucStep = 0; //åˆå§‹åŒ–
+        }
+#else //ç¬¬äºŒè½¬è½´ä¸ä½¿ç”¨ç¼–ç å™¨ æ¯ä¸€å‘¨æœŸéƒ½é‡‡æ ·
+        if (pEncoderTest->ucStep == 2) //G33 G32éœ€è¦æ£€æµ‹ä¸»è½´è½¬é€Ÿ
+        {
+            pEncoderTest->nTotalPulse =
+                (int)pSChannel->pSSpindleEncoder->cEncoderDir * (int)pSChannel->pSSpindleEncoder->usDelta;
+            pSChannel->dSecondSpindleAnalogSpeed = pEncoderTest->dSpindleAvgSpeed =
+                (double)pEncoderTest->nTotalPulse / (pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum);
+            pSChannel->bCalculateSecondSpindleSpeedFlag = FALSE; //é™ˆæ•èª	2023/6/22
+            pEncoderTest->nTotalPulse = 0;
+        }
+        pEncoderTest->ucStep = 0;
 #endif
-		break;
-	default:
-		pEncoderTest->ucStep = 0;
-	}
+        break;
+    default:
+        pEncoderTest->ucStep = 0;
+    }
 
-	return 1;
+    return 1;
 }

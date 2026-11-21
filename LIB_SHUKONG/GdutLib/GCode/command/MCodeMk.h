@@ -1,64 +1,60 @@
-#ifndef   GCODE_Mk_H
-#define   GCODE_Mk_H
-
+#ifndef GCODE_Mk_H
+#define GCODE_Mk_H
 
 //****************************************M80***********************************
-//Ìí¼ÓM80¹æÔò
+//æ·»åŠ M80è§„åˆ™
 void addM80RegulationAPI();
 
-//¸³ÖµM80
+//èµ‹å€¼M80
 int8 AssignM80(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //****************************************M81***********************************
-//Ìí¼ÓM81¹æÔò
+//æ·»åŠ M81è§„åˆ™
 void addM81RegulationAPI();
 
-//¸³ÖµM81
+//èµ‹å€¼M81
 int8 AssignM81(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 //****************************************M82***********************************
-//Ìí¼ÓM82¹æÔò
+//æ·»åŠ M82è§„åˆ™
 void addM82RegulationAPI();
 
-//¸³ÖµM82
+//èµ‹å€¼M82
 int8 AssignM82(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 //****************************************M83***********************************
-//Ìí¼ÓM83¹æÔò
+//æ·»åŠ M83è§„åˆ™
 void addM83RegulationAPI();
 
-//¸³ÖµM83
+//èµ‹å€¼M83
 int8 AssignM83(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //****************************************M84***********************************
-//Ìí¼ÓM84¹æÔò
+//æ·»åŠ M84è§„åˆ™
 void addM84RegulationAPI();
 
-//¸³ÖµM84
+//èµ‹å€¼M84
 int8 AssignM84(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //****************************************M85***********************************
-//Ìí¼ÓM85¹æÔò
+//æ·»åŠ M85è§„åˆ™
 void addM85RegulationAPI();
 
-//¸³ÖµM85
+//èµ‹å€¼M85
 int8 AssignM85(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //****************************************M86***********************************
-//Ìí¼ÓM86¹æÔò
+//æ·»åŠ M86è§„åˆ™
 void addM86RegulationAPI();
 
-//¸³ÖµM86
+//èµ‹å€¼M86
 int8 AssignM86(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 //****************************************M87***********************************
-//Ìí¼ÓM83¹æÔò
+//æ·»åŠ M83è§„åˆ™
 void addM87RegulationAPI();
 
-//¸³ÖµM87
+//èµ‹å€¼M87
 int8 AssignM87(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif

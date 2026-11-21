@@ -2,18 +2,17 @@
 M3 S1000
 G51.2 P1 Q2 R0
 G1 Z50 F1000
-Ê¼ÖÕ²»ÄÜ½øÈë¸úËæ
+å§‹ç»ˆä¸èƒ½è¿›å…¥è·Ÿéš
 */
 /*
 G0Z0
 M3S50
 G51.2 P1Q2R350
 G1Z50F100
-½Ç¶È¸úËæÉÏË²¼ä£¬µ«ËÙ¶ÈÎ´¸úËæÉÏ
+è§’åº¦è·Ÿéšä¸Šç¬é—´ï¼Œä½†é€Ÿåº¦æœªè·Ÿéšä¸Š
 */
-//¸úËæ·½°¸1
-//ËÙ¶È¹æ»®£¬Èô´æÔÚ¼ÓËÙÖÜÆÚ£¬ÔòÊä³öVs+Acc£»Èô´æÔÚÔÈËÙÖÜÆÚ£¬ÔòÊä³öVs£»Èô´æÔÚ¼õËÙÖÜÆÚ£¬ÔòÊä³öVs-Dec
-
+//è·Ÿéšæ–¹æ¡ˆ1
+//é€Ÿåº¦è§„åˆ’ï¼Œè‹¥å­˜åœ¨åŠ é€Ÿå‘¨æœŸï¼Œåˆ™è¾“å‡ºVs+Accï¼›è‹¥å­˜åœ¨åŒ€é€Ÿå‘¨æœŸï¼Œåˆ™è¾“å‡ºVsï¼›è‹¥å­˜åœ¨å‡é€Ÿå‘¨æœŸï¼Œåˆ™è¾“å‡ºVs-Dec
 
 #include "common.h"
 #include <stdio.h>
@@ -40,2226 +39,2212 @@ extern FILE* pWriteFid;
 
 int8 initToolAxis(struct SChannel* pSChannel, struct SSingleAxis* pSSingleAxisPointer)
 {
-	memset(&g_SToolAxisInfo, 0, sizeof(SToolAxis));
-	initToolAxisPara();
-	g_SToolAxisInfo.pSChannel = pSChannel;
-	g_SToolAxisInfo.pSToolAxis = pSSingleAxisPointer;	//Ö÷ÖáµÄµ¥Öá½á¹¹Ìå
+    memset(&g_SToolAxisInfo, 0, sizeof(SToolAxis));
+    initToolAxisPara();
+    g_SToolAxisInfo.pSChannel = pSChannel;
+    g_SToolAxisInfo.pSToolAxis = pSSingleAxisPointer; //ä¸»è½´çš„å•è½´ç»“æ„ä½“
 }
 
-//µ¶¾ßÖáĞÅÏ¢³õÊ¼»¯
+//åˆ€å…·è½´ä¿¡æ¯åˆå§‹åŒ–
 void initToolAxisPara()
-{	
-	g_SToolAxisInfo.bFollowed = FALSE;
+{
+    g_SToolAxisInfo.bFollowed = FALSE;
 
-	g_SToolAxisInfo.dCommandRatio = 0;
-	g_SToolAxisInfo.dCommandAngle = 0;
+    g_SToolAxisInfo.dCommandRatio = 0;
+    g_SToolAxisInfo.dCommandAngle = 0;
 
-	g_SToolAxisInfo.dLastCommandRatio = 0;	//ÉÏÒ»Ö¸Áî×ªËÙ±È
-	g_SToolAxisInfo.dLastCommandAngle = 0;	//ÉÏÒ»Ö¸Áî½Ç¶È
+    g_SToolAxisInfo.dLastCommandRatio = 0; //ä¸Šä¸€æŒ‡ä»¤è½¬é€Ÿæ¯”
+    g_SToolAxisInfo.dLastCommandAngle = 0; //ä¸Šä¸€æŒ‡ä»¤è§’åº¦
 
-	g_SToolAxisInfo.dCurTwistAngle = 0;			//Å¤×ª½Ç¶È£¨Å¤×ª¶à±ßĞÎÓÃµ½£©
-	g_SToolAxisInfo.dLagAngle = 0;			//ÖÍºó½Ç¶È£¨ËÅ·şÇı¶¯Æ÷´æÔÚÏìÓ¦Ê±¼äµ¼ÖÂ£©
+    g_SToolAxisInfo.dCurTwistAngle = 0; //æ‰­è½¬è§’åº¦ï¼ˆæ‰­è½¬å¤šè¾¹å½¢ç”¨åˆ°ï¼‰
+    g_SToolAxisInfo.dLagAngle = 0;      //æ»åè§’åº¦ï¼ˆä¼ºæœé©±åŠ¨å™¨å­˜åœ¨å“åº”æ—¶é—´å¯¼è‡´ï¼‰
 
-	g_SToolAxisInfo.dSpindleSpeed = 0;
-	g_SToolAxisInfo.dLastSpindleSpeed = 0;
+    g_SToolAxisInfo.dSpindleSpeed = 0;
+    g_SToolAxisInfo.dLastSpindleSpeed = 0;
 
-	g_SToolAxisInfo.ucT = 0;
-	g_SToolAxisInfo.dLagAngle = 0;
-
+    g_SToolAxisInfo.ucT = 0;
+    g_SToolAxisInfo.dLagAngle = 0;
 }
 
-//1msµ÷ÓÃÒ»´Î
+//1msè°ƒç”¨ä¸€æ¬¡
 int8 toolAxisMotion(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder)
 {
-	struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;
-	const uint8* ucMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
-	uint8 ucToolAxisNum = pSToolAxis->ucAxis;
-	struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
+    struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;
+    const uint8* ucMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
+    uint8 ucToolAxisNum = pSToolAxis->ucAxis;
+    struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
 
-	switch (pSToolAxis->ucRunMode)
-	{
-	//µ¥ÖáÄ£Ê½
-	case TOOLAXIS_SINGLE_MODE:
-		pSToolAxisInfo->unTime = 0;
-		break;
-	//¶à±ßĞÎ¼Ó¹¤Ö¸Áî¿ªÆô	G51.2
-	case TOOLAXIS_FOLLOW_MODE:
-		pSToolAxisInfo->unTime++;
-		//if (ENCODER_FOLLOW)
-		if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
-			toolAxisFollowMotion(pSToolAxisInfo, pSSpindleInfo, pSSpindleEncoder);//¸úËæÖ÷Öá±àÂëÆ÷Öµ
-		else
-			toolAxisFollowMotion2(pSToolAxisInfo, pSSpindleInfo, pSSpindleEncoder);//ÎŞËã·¨
-		break;
-	//¶à±ßĞÎ¼Ó¹¤Ö¸Áî½áÊø	G50.2
-	case TOOLAXIS_COMMONSTOP_MODE:
-		pSToolAxisInfo->unTime++;
-		toolAxisCommonStop(pSToolAxisInfo);
-		break;
-	//ºã×ªËÙÄ£Ê½			M50¡¢M51
-	case TOOLAXIS_COMMON_MODE:
-		toolAxisCommonMotion(pSToolAxisInfo);
-		break;
-	default:
-		break;
-	}
+    switch (pSToolAxis->ucRunMode)
+    {
+    //å•è½´æ¨¡å¼
+    case TOOLAXIS_SINGLE_MODE:
+        pSToolAxisInfo->unTime = 0;
+        break;
+    //å¤šè¾¹å½¢åŠ å·¥æŒ‡ä»¤å¼€å¯	G51.2
+    case TOOLAXIS_FOLLOW_MODE:
+        pSToolAxisInfo->unTime++;
+        //if (ENCODER_FOLLOW)
+        if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
+            toolAxisFollowMotion(pSToolAxisInfo, pSSpindleInfo, pSSpindleEncoder); //è·Ÿéšä¸»è½´ç¼–ç å™¨å€¼
+        else
+            toolAxisFollowMotion2(pSToolAxisInfo, pSSpindleInfo, pSSpindleEncoder); //æ— ç®—æ³•
+        break;
+    //å¤šè¾¹å½¢åŠ å·¥æŒ‡ä»¤ç»“æŸ	G50.2
+    case TOOLAXIS_COMMONSTOP_MODE:
+        pSToolAxisInfo->unTime++;
+        toolAxisCommonStop(pSToolAxisInfo);
+        break;
+    //æ’è½¬é€Ÿæ¨¡å¼			M50ã€M51
+    case TOOLAXIS_COMMON_MODE:
+        toolAxisCommonMotion(pSToolAxisInfo);
+        break;
+    default:
+        break;
+    }
 
+    //æ ¹æ®è„‰å†²åç®—å¾—åˆ°Bè½´å®é™…åæ ‡
+    double dCurrentPoint;
+    getSingleAxisRealTimePoint(&dCurrentPoint, ucToolAxisNum, ucMapArray);
 
-	//¸ù¾İÂö³å·´ËãµÃµ½BÖáÊµ¼Ê×ø±ê	
-	double dCurrentPoint;
-	getSingleAxisRealTimePoint(&dCurrentPoint, ucToolAxisNum, ucMapArray);
+    if (pSToolAxis->ucRunMode != TOOLAXIS_SINGLE_MODE)
+    {
+        //æ ¹æ®åˆ€å…·è½´æ–¹å‘ä¿®æ­£è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] *= TOOLAXIS_FOLLOWDIR;
 
-	if (pSToolAxis->ucRunMode != TOOLAXIS_SINGLE_MODE)
-	{
-		//¸ù¾İµ¶¾ßÖá·½ÏòĞŞÕıÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] *= TOOLAXIS_FOLLOWDIR;
+        //æ›´æ–°åˆ€å…·è½´åæ ‡
+        dCurrentPoint += pSRun->sAxisDeltaPulse[ucToolAxisNum] *
+                         g_SSystemPara.SAxisPara[ucMapArray[ucToolAxisNum]].dPulseToMm; //è„‰å†²æ•° Ã— æ¯è„‰å†²å¯¹åº”çš„è§’åº¦
+        dCurrentPoint = surplusDoubleData(dCurrentPoint + DEGREE_OF_CIRCLE, (int)DEGREE_OF_CIRCLE); //å–ä½™
 
-		//¸üĞÂµ¶¾ßÖá×ø±ê
-		dCurrentPoint += pSRun->sAxisDeltaPulse[ucToolAxisNum] * g_SSystemPara.SAxisPara[ucMapArray[ucToolAxisNum]].dPulseToMm;//Âö³åÊı ¡Á Ã¿Âö³å¶ÔÓ¦µÄ½Ç¶È
-		dCurrentPoint = surplusDoubleData(dCurrentPoint + DEGREE_OF_CIRCLE, (int)DEGREE_OF_CIRCLE);//È¡Óà
-
-		updateSingleAxisRealTimePoint(&dCurrentPoint, ucToolAxisNum, ucMapArray);
+        updateSingleAxisRealTimePoint(&dCurrentPoint, ucToolAxisNum, ucMapArray);
 
 #if TOOLAXIS_DEBUG_VS
-		//VSÊä³ö
-		if (ENCODER_FOLLOW)
-			outputVS();
-		else
-			outputVS_2();
+        //VSè¾“å‡º
+        if (ENCODER_FOLLOW)
+            outputVS();
+        else
+            outputVS_2();
 #elif TOOLAXIS_DEBUG_32
-		//´®¿ÚÊä³ö
-		output485();
+        //ä¸²å£è¾“å‡º
+        output485();
 #endif
+    }
 
-	}
-
-	return 1;
-
+    return 1;
 }
 
-//¸úËæÄ£Ê½(¸úËæÖ÷Öá±àÂëÆ÷Öµ)
+//è·Ÿéšæ¨¡å¼(è·Ÿéšä¸»è½´ç¼–ç å™¨å€¼)
 void toolAxisFollowMotion(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder)
 {
-	const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
-	
-	struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;		//µ¶¾ßÖáµ¥Öá½á¹¹Ìå
-	struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis;	//Ö÷Öáµ¥Öá½á¹¹Ìå
+    const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
 
-	uint8 ucToolAxisNum = pSToolAxis->ucAxis;			//µ¶¾ßÖáÖáÃû
-	uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis;		//µ¶¾ßÖáÖáÃû
+    struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;      //åˆ€å…·è½´å•è½´ç»“æ„ä½“
+    struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis; //ä¸»è½´å•è½´ç»“æ„ä½“
 
-	struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
-	
+    uint8 ucToolAxisNum = pSToolAxis->ucAxis;       //åˆ€å…·è½´è½´å
+    uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis; //åˆ€å…·è½´è½´å
 
-	//¶ÁÈ¡Ö÷ÖáËÙ¶È
-	pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
-	pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
+    struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
 
-	//ÅĞ¶Ïµ¶¾ßÖáÏàÎ»²îÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
-	{
-		pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
-	//ÅĞ¶Ï Ö¸Áî¸úËæ±È Ö÷ÖáÄ¿±ê×ªËÙ ÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
-		!isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
-	{	
-		pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
-		pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    //è¯»å–ä¸»è½´é€Ÿåº¦
+    pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
 
-		//µ¶¾ßÖáÖØĞÂ½øĞĞ×ªËÙ¹ı¶É
-		pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
-	
-	//¼ÆËã×ÜÅ¤×ª½Ç¶È
-	pSToolAxisInfo->dTotalTwistAngle = calcCurCurTwistAngle();
+    //åˆ¤æ–­åˆ€å…·è½´ç›¸ä½å·®æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
+    {
+        pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
+    //åˆ¤æ–­ æŒ‡ä»¤è·Ÿéšæ¯” ä¸»è½´ç›®æ ‡è½¬é€Ÿ æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
+        !isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
+    {
+        pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
+        pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
 
-	//Ö´ĞĞ¸úËæÄ£Ê½¶ÔÓ¦²½Öè
-	switch (pSToolAxis->ucInpStatus)
-	{
-	//×ªËÙ¹ı¶É£¨ËÙ¶È¹æ»®£©
-	case INP_ASSIGNMENT_START:
-	{
-		//Ä©ËÙ¶È£ºµ¶¾ßÖáÄ¿±ê×ªËÙ
-		double dRealSpindleSpeed;
-		dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
-		pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
+        //åˆ€å…·è½´é‡æ–°è¿›è¡Œè½¬é€Ÿè¿‡æ¸¡
+        pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
 
-		//³õËÙ¶È£ºµ±Ç°ËÙ¶È
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+    //è®¡ç®—æ€»æ‰­è½¬è§’åº¦
+    pSToolAxisInfo->dTotalTwistAngle = calcCurCurTwistAngle();
 
-		//¼Ó¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
-		pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
+    //æ‰§è¡Œè·Ÿéšæ¨¡å¼å¯¹åº”æ­¥éª¤
+    switch (pSToolAxis->ucInpStatus)
+    {
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆé€Ÿåº¦è§„åˆ’ï¼‰
+    case INP_ASSIGNMENT_START:
+    {
+        //æœ«é€Ÿåº¦ï¼šåˆ€å…·è½´ç›®æ ‡è½¬é€Ÿ
+        double dRealSpindleSpeed;
+        dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
+        pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
 
-		//´ÓÏµÍ³²ÎÊı»ñÈ¡¼ÓËÙ¶È(ÉÏÒ»¶Î¼ÓËÙ¶ÈÖØËãºóÓëÏµÍ³²ÎÊı²»Ò»ÖÂ) //µ½´ïÖ¸¶¨×ªËÙºóÒÀ¾İÖ¸¶¨¼ÓËÙ¶È±ÈÀı¼õĞ¡¼ÓËÙ¶È ºé¹ÚÅô2024/3/23
-		pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
-		pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
+        //åˆé€Ÿåº¦ï¼šå½“å‰é€Ÿåº¦
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
 
-		//ËÙ¶È¹æ»®
-		preparePlanningVelCombine(&pSToolAxis->SPlanData, g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
+        //åŠ å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
+        pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
 
-		//ÖÜÆÚÖÃ0
-		pSToolAxis->SPlanData.unCurrentT = 0;
+        //ä»ç³»ç»Ÿå‚æ•°è·å–åŠ é€Ÿåº¦(ä¸Šä¸€æ®µåŠ é€Ÿåº¦é‡ç®—åä¸ç³»ç»Ÿå‚æ•°ä¸ä¸€è‡´) //åˆ°è¾¾æŒ‡å®šè½¬é€Ÿåä¾æ®æŒ‡å®šåŠ é€Ÿåº¦æ¯”ä¾‹å‡å°åŠ é€Ÿåº¦ æ´ªå† é¹2024/3/23
+        pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
+        pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
 
-		pSToolAxis->ucInpStatus = INP_STAGE_1;
-	}
-	//×ªËÙ¹ı¶É£¨¼ÆËãÏÂÒ»ÖÜÆÚ·¢ËÍÂö³åÊı£©
-	case INP_STAGE_1:
-	{
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄËÙ¶È
-		double dSpeed;
-		pSToolAxis->SPlanData.unCurrentT += 1;
-		pSToolAxis->dCurrentSpeed = dSpeed = nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
+        //é€Ÿåº¦è§„åˆ’
+        preparePlanningVelCombine(&pSToolAxis->SPlanData,
+                                  g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
 
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-		
-		//ÅĞ¶Ïµ¶¾ßÖáÊÇ·ñ´ïµ½Ä¿±ê×ªËÙ
-		if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
-		{
-			//µ¶¾ßÖá´ïµ½Ä¿±ê×ªËÙ£¬½øÈëÖ÷Öá×ªËÙ¼ì²â
-			pSToolAxis->ucInpStatus = INP_BLOCKED;
+        //å‘¨æœŸç½®0
+        pSToolAxis->SPlanData.unCurrentT = 0;
+
+        pSToolAxis->ucInpStatus = INP_STAGE_1;
+    }
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆè®¡ç®—ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²æ•°ï¼‰
+    case INP_STAGE_1:
+    {
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„é€Ÿåº¦
+        double dSpeed;
+        pSToolAxis->SPlanData.unCurrentT += 1;
+        pSToolAxis->dCurrentSpeed = dSpeed =
+            nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
+
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+
+        //åˆ¤æ–­åˆ€å…·è½´æ˜¯å¦è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
+        {
+            //åˆ€å…·è½´è¾¾åˆ°ç›®æ ‡è½¬é€Ÿï¼Œè¿›å…¥ä¸»è½´è½¬é€Ÿæ£€æµ‹
+            pSToolAxis->ucInpStatus = INP_BLOCKED;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("BLOCK\r");
+            uart6_set("BLOCK\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "BLOCK\r");
+            fprintf(pWriteFid, "BLOCK\r");
 #endif
-		}
-		break;
-
-	}
-	//Ö÷Öá×ªËÙ¼ì²â
-	case INP_BLOCKED:
-	{		
-		//Ö÷ÖáÒÑ´ïµ½Ä¿±ê×ªËÙ
-		if (pSSpindleInfo->pSSpindleAxis->ucInpStatus == INP_FINISHED)
-		{
-			pSToolAxisInfo->ucT = 0;
-			//½øÈë²âÊÔ½×¶Î
-			pSToolAxis->ucInpStatus = INP_TEST_1;
+        }
+        break;
+    }
+    //ä¸»è½´è½¬é€Ÿæ£€æµ‹
+    case INP_BLOCKED:
+    {
+        //ä¸»è½´å·²è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSSpindleInfo->pSSpindleAxis->ucInpStatus == INP_FINISHED)
+        {
+            pSToolAxisInfo->ucT = 0;
+            //è¿›å…¥æµ‹è¯•é˜¶æ®µ
+            pSToolAxis->ucInpStatus = INP_TEST_1;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("WAIT\r");
+            uart6_set("WAIT\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "WAIT\r");
+            fprintf(pWriteFid, "WAIT\r");
 #endif
+        }
+        //ä¸»è½´æœªè¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        else
+        {
+            //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+            double dSpeed;
+            pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+            //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+            pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+                round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		}
-		//Ö÷ÖáÎ´´ïµ½Ä¿±ê×ªËÙ
-		else
-		{
-			//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-			double dSpeed;
-			pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-			//¸ù¾İËÙ¶È»»ËãÂö³å
-			pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+            break;
+        }
+    }
+    //è®¡ç®—ç”µæœºæ»åè§’åº¦_1ï¼šç­‰å¾…ç¼–ç å™¨è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+    case INP_TEST_1:
+    {
+        //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+        double dSpeed;
+        pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+        //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-			break;
-		}
-	}
-	//¼ÆËãµç»úÖÍºó½Ç¶È_1£ºµÈ´ı±àÂëÆ÷´ïµ½Ä¿±ê×ªËÙ
-	case INP_TEST_1:
-	{
-		//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-		double dSpeed;
-		pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-		//¸ù¾İËÙ¶È»»ËãÂö³å
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-
-		pSToolAxisInfo->ucT++;
-		//´ïµ½µÈ´ıÖÜÆÚ
-		if (pSToolAxisInfo->ucT == WAIT_PERIOD)
-		{
-			pSToolAxisInfo->ucT = 0;
-			pSToolAxisInfo->dLagAngle = 0;
-			pSToolAxis->ucInpStatus = INP_TEST_2;
+        pSToolAxisInfo->ucT++;
+        //è¾¾åˆ°ç­‰å¾…å‘¨æœŸ
+        if (pSToolAxisInfo->ucT == WAIT_PERIOD)
+        {
+            pSToolAxisInfo->ucT = 0;
+            pSToolAxisInfo->dLagAngle = 0;
+            pSToolAxis->ucInpStatus = INP_TEST_2;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("TEST\r");
+            uart6_set("TEST\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "TEST\r");
+            fprintf(pWriteFid, "TEST\r");
 #endif
-		}
-		break;
-	}
-	//¼ÆËãµç»úÖÍºó½Ç¶È_2£º¼ÆËã±àÂëÆ÷ÖÍºó½Ç¶È
-	case INP_TEST_2:
-	{
-		//µ±Ç°ÖÜÆÚ¿ªÊ¼±àÂëÆ÷ÀíÂÛÎ»ÖÃ
-		double dTargetPos;
-		getSingleAxisRealTimePoint(&dTargetPos, ucToolAxisNum, pMapArray);
-		dTargetPos -= pSRun->sLastDeltaPulse[ucToolAxisNum] * 0.036;//sLastDeltaPulseÎªµ±Ç°ÖÜÆÚÀíÂÛÂö³åÔöÁ¿
+        }
+        break;
+    }
+    //è®¡ç®—ç”µæœºæ»åè§’åº¦_2ï¼šè®¡ç®—ç¼–ç å™¨æ»åè§’åº¦
+    case INP_TEST_2:
+    {
+        //å½“å‰å‘¨æœŸå¼€å§‹ç¼–ç å™¨ç†è®ºä½ç½®
+        double dTargetPos;
+        getSingleAxisRealTimePoint(&dTargetPos, ucToolAxisNum, pMapArray);
+        dTargetPos -= pSRun->sLastDeltaPulse[ucToolAxisNum] * 0.036; //sLastDeltaPulseä¸ºå½“å‰å‘¨æœŸç†è®ºè„‰å†²å¢é‡
 
-		//µ±Ç°ÖÜÆÚ¿ªÊ¼Ê±±àÂëÆ÷Î»ÖÃ
-		double dRealPos;
-		dRealPos = getToolAxisEncoderPos(0);
+        //å½“å‰å‘¨æœŸå¼€å§‹æ—¶ç¼–ç å™¨ä½ç½®
+        double dRealPos;
+        dRealPos = getToolAxisEncoderPos(0);
 
-		//µ±Ç°ÖÜÆÚ±àÂëÆ÷ÖÍºóÖµ
-		double dCurrEncoderLag;
-		dCurrEncoderLag = surplusDoubleToPositive(dTargetPos - dRealPos, 360);
+        //å½“å‰å‘¨æœŸç¼–ç å™¨æ»åå€¼
+        double dCurrEncoderLag;
+        dCurrEncoderLag = surplusDoubleToPositive(dTargetPos - dRealPos, 360);
 
-		//ÀÛ¼Æ±àÂëÆ÷ÖÍºóÖµ
-		pSToolAxisInfo->dLagAngle += dCurrEncoderLag;
-		
-		pSToolAxisInfo->ucT++;
-		//´ïµ½²ÉÑùÖÜÆÚ
-		if (pSToolAxisInfo->ucT == TEST_PERIOD)
-		{
-			//¼ÆËãµ¶¾ßÖáµ±Ç°×ªËÙÏÂ£¬ÓÉËÅ·şÏìÓ¦ÏìÓ¦Ê±¼ä´øÀ´µÄ½Ç¶ÈÖÍºó
-			pSToolAxisInfo->dLagAngle = surplusDoubleToPositive(pSToolAxisInfo->dLagAngle / TEST_PERIOD, 360.0);
-			pSToolAxisInfo->ucT = 0;
-			//½øÈë½Ç¶È¹ı¶É
-			pSToolAxis->ucInpStatus = INP_STAGE_2;
+        //ç´¯è®¡ç¼–ç å™¨æ»åå€¼
+        pSToolAxisInfo->dLagAngle += dCurrEncoderLag;
+
+        pSToolAxisInfo->ucT++;
+        //è¾¾åˆ°é‡‡æ ·å‘¨æœŸ
+        if (pSToolAxisInfo->ucT == TEST_PERIOD)
+        {
+            //è®¡ç®—åˆ€å…·è½´å½“å‰è½¬é€Ÿä¸‹ï¼Œç”±ä¼ºæœå“åº”å“åº”æ—¶é—´å¸¦æ¥çš„è§’åº¦æ»å
+            pSToolAxisInfo->dLagAngle = surplusDoubleToPositive(pSToolAxisInfo->dLagAngle / TEST_PERIOD, 360.0);
+            pSToolAxisInfo->ucT = 0;
+            //è¿›å…¥è§’åº¦è¿‡æ¸¡
+            pSToolAxis->ucInpStatus = INP_STAGE_2;
 
 #if TOOLAXIS_DEBUG_32
-			uart6_set("ING\r");
+            uart6_set("ING\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "FOLLOWING\r");
+            fprintf(pWriteFid, "FOLLOWING\r");
 #endif
-		}
-		//Î´´ïµ½¼ÆËãÖÜÆÚ£¬ĞèÒª¼ÌĞø·¢ËÍÂö³å
-		else
-		{
-			//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-			double dSpeed;
-			pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-			//¸ù¾İËÙ¶È»»ËãÂö³å
-			pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-			break;
-		}
-		
-	}
-	//½Ç¶È¹ı¶É
-	case INP_STAGE_2:
-	{
-		//1.¶ÁÈ¡Ö÷Öá±àÂëÆ÷ÉÏÒ»ÖÜÆÚÂö³åÔöÁ¿ Óë µ±Ç°ÖÜÆÚ¿ªÊ¼Ê±µÄ¾ø¶ÔÊıÖµ
-		uint16 usLastDelta;			//Ö÷Öá±àÂëÆ÷ÉÏÒ»ÖÜÆÚÂö³åÔöÁ¿
-		int64 lCurrEncoderAbsValue;	//Ö÷Öá±àÂëÆ÷µ±Ç°ÖÜÆÚ¿ªÊ¼Ê±µÄ¾ø¶ÔÊıÖµ
-		usLastDelta = pSSpindleEncoder->usDelta;
-		lCurrEncoderAbsValue = pSSpindleEncoder->lEncoderAbsValue;
+        }
+        //æœªè¾¾åˆ°è®¡ç®—å‘¨æœŸï¼Œéœ€è¦ç»§ç»­å‘é€è„‰å†²
+        else
+        {
+            //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+            double dSpeed;
+            pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+            //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+            pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+                round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+            break;
+        }
+    }
+    //è§’åº¦è¿‡æ¸¡
+    case INP_STAGE_2:
+    {
+        //1.è¯»å–ä¸»è½´ç¼–ç å™¨ä¸Šä¸€å‘¨æœŸè„‰å†²å¢é‡ ä¸ å½“å‰å‘¨æœŸå¼€å§‹æ—¶çš„ç»å¯¹æ•°å€¼
+        uint16 usLastDelta;         //ä¸»è½´ç¼–ç å™¨ä¸Šä¸€å‘¨æœŸè„‰å†²å¢é‡
+        int64 lCurrEncoderAbsValue; //ä¸»è½´ç¼–ç å™¨å½“å‰å‘¨æœŸå¼€å§‹æ—¶çš„ç»å¯¹æ•°å€¼
+        usLastDelta = pSSpindleEncoder->usDelta;
+        lCurrEncoderAbsValue = pSSpindleEncoder->lEncoderAbsValue;
 
-		//2.¼ÆËãÖ÷Öá±àÂëÆ÷µ±Ç°ÖÜÆÚ½áÊøÊ±µÄ½Ç¶È£¨´ËÊ±µ±Ç°ÖÜÆÚÄÚÊµ¼ÊÂö³åÔöÁ¿Î´Öª£¬ÕâÀï¼ÙÉèµ±Ç°ÖÜÆÚÄÚÂö³åÔöÁ¿ÓëÉÏÒ»ÖÜÆÚÂö³åÔöÁ¿ÏàÍ¬£©
-		double dSpindleEncoderCurrPos;	//µ¥Î»£º¡ãÖµÓò£º[0 - 360)
-		dSpindleEncoderCurrPos = getEncoderPosByValue(lCurrEncoderAbsValue + usLastDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
-		//dSpindleEncoderCurrPos = 360.0 * surplusDoubleToPositive(lCurrEncoderAbsValue + usLastDelta, pSSpindleEncoder->usEncoderCirclePulseNum) / 10000;
+        //2.è®¡ç®—ä¸»è½´ç¼–ç å™¨å½“å‰å‘¨æœŸç»“æŸæ—¶çš„è§’åº¦ï¼ˆæ­¤æ—¶å½“å‰å‘¨æœŸå†…å®é™…è„‰å†²å¢é‡æœªçŸ¥ï¼Œè¿™é‡Œå‡è®¾å½“å‰å‘¨æœŸå†…è„‰å†²å¢é‡ä¸ä¸Šä¸€å‘¨æœŸè„‰å†²å¢é‡ç›¸åŒï¼‰
+        double dSpindleEncoderCurrPos; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0 - 360)
+        dSpindleEncoderCurrPos =
+            getEncoderPosByValue(lCurrEncoderAbsValue + usLastDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
+        //dSpindleEncoderCurrPos = 360.0 * surplusDoubleToPositive(lCurrEncoderAbsValue + usLastDelta, pSSpindleEncoder->usEncoderCirclePulseNum) / 10000;
 
-		//3.¼ÆËãµ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊøÊ±µÄÀíÂÛ½Ç¶È
-		double dToolAxisTargetPos;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleEncoderCurrPos, FALSE);
-		//dToolAxisTargetPos = surplusDoubleToPositive(dSpindleEncoderCurrPos * pSToolAxisInfo->dCommandRatio + pSToolAxisInfo->dPhase, 360.0);
+        //3.è®¡ç®—åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸæ—¶çš„ç†è®ºè§’åº¦
+        double dToolAxisTargetPos; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleEncoderCurrPos, FALSE);
+        //dToolAxisTargetPos = surplusDoubleToPositive(dSpindleEncoderCurrPos * pSToolAxisInfo->dCommandRatio + pSToolAxisInfo->dPhase, 360.0);
 
-		//4.¶ÁÈ¡µ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊøÊ±µÄ½Ç¶È£¨ÉÏÒ»ÖÜÆÚÒÑ¼ÆËã£©
-		double dToolAxisCurrPos;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		getSingleAxisRealTimePoint(&dToolAxisCurrPos, ucToolAxisNum, pMapArray);
+        //4.è¯»å–åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸæ—¶çš„è§’åº¦ï¼ˆä¸Šä¸€å‘¨æœŸå·²è®¡ç®—ï¼‰
+        double dToolAxisCurrPos; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        getSingleAxisRealTimePoint(&dToolAxisCurrPos, ucToolAxisNum, pMapArray);
 
-		//5.¼ÆËãµ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊøÊ±µÄÂäºó½Ç¶È
-		double dToolAxisCurrLag;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisCurrPos, 360.0);
-		dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
+        //5.è®¡ç®—åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸæ—¶çš„è½åè§’åº¦
+        double dToolAxisCurrLag; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisCurrPos, 360.0);
+        dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
 
-		//7.ĞŞÕıÂäºó½Ç¶È
-		//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-		if (pSToolAxisInfo->bFollowed == TRUE)
-			dToolAxisCurrLag = dToolAxisCurrLag > 180 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
+        //7.ä¿®æ­£è½åè§’åº¦
+        //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+        if (pSToolAxisInfo->bFollowed == TRUE)
+            dToolAxisCurrLag = dToolAxisCurrLag > 180 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
 
-		//8.¶ÁÈ¡Ö÷ÖáÏÂÒ»ÖÜÆÚµÄ½Ç¶ÈÔöÁ¿
-		double dSpindle;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpindleAxisNum] * 0.036;
+        //8.è¯»å–ä¸»è½´ä¸‹ä¸€å‘¨æœŸçš„è§’åº¦å¢é‡
+        double dSpindle; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpindleAxisNum] * 0.036;
 
-		//9.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚ×·¸Ï¾àÀë
-		double dLeftDistance;
-		//dLeftDistance = dToolAxisCurrLag;
-		dLeftDistance = dToolAxisCurrLag + dSpindle * pSToolAxisInfo->dCommandRatio;
+        //9.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸè¿½èµ¶è·ç¦»
+        double dLeftDistance;
+        //dLeftDistance = dToolAxisCurrLag;
+        dLeftDistance = dToolAxisCurrLag + dSpindle * pSToolAxisInfo->dCommandRatio;
 
-		//10.¶Ôµ¶¾ßÖáÊ£Óà×·¸Ï¾àÀë½øĞĞËÙ¶È¹æ»®
-		//10.1ËÙ¶È¹æ»®²ÎÊı¸³Öµ
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
-		pSToolAxis->SPlanData.dVmax = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVmax;		//µ¶¾ßÖá×·¸Ï×î´óËÙ¶È(2000rpm)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
-		//pSToolAxis->SPlanData.dVe = pSToolAxisInfo->dSpindleSpeed * pSToolAxisInfo->dCommandRatio;	//  ¡ã/ms	Ä¿±ê×ªËÙ
-		pSToolAxis->SPlanData.dAcc = 0.036;// ¼ÓËÙ¶È(¶¯Ì¬ËÙ¶È¹æ»®*2)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
-		pSToolAxis->SPlanData.dDec = 0.036;// ¼ÓËÙ¶È(¶¯Ì¬ËÙ¶È¹æ»®*2)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
-	
-		//¸úËæÉÏºó¼Ó¼õËÙ*3
-		if (pSToolAxisInfo->bFollowed == TRUE)
-		{
-			pSToolAxis->SPlanData.dAcc *= 3;
-			pSToolAxis->SPlanData.dDec *= 3;
-		}
+        //10.å¯¹åˆ€å…·è½´å‰©ä½™è¿½èµ¶è·ç¦»è¿›è¡Œé€Ÿåº¦è§„åˆ’
+        //10.1é€Ÿåº¦è§„åˆ’å‚æ•°èµ‹å€¼
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+        pSToolAxis->SPlanData.dVmax =
+            g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVmax; //åˆ€å…·è½´è¿½èµ¶æœ€å¤§é€Ÿåº¦(2000rpm)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
+        //pSToolAxis->SPlanData.dVe = pSToolAxisInfo->dSpindleSpeed * pSToolAxisInfo->dCommandRatio;	//  Â°/ms	ç›®æ ‡è½¬é€Ÿ
+        pSToolAxis->SPlanData.dAcc = 0.036; // åŠ é€Ÿåº¦(åŠ¨æ€é€Ÿåº¦è§„åˆ’*2)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
+        pSToolAxis->SPlanData.dDec = 0.036; // åŠ é€Ÿåº¦(åŠ¨æ€é€Ÿåº¦è§„åˆ’*2)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
 
-		pSToolAxis->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;  //¼ÓËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;  //¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;  //Æ½Ì¯ÀàĞÍ
-		pSToolAxis->SPlanData.dCurLeftDist = dLeftDistance;
+        //è·Ÿéšä¸ŠååŠ å‡é€Ÿ*3
+        if (pSToolAxisInfo->bFollowed == TRUE)
+        {
+            pSToolAxis->SPlanData.dAcc *= 3;
+            pSToolAxis->SPlanData.dDec *= 3;
+        }
 
-		//10.ËÙ¶È¹æ»®£¬²¢È¥³ı²ĞÓà¾àÀë
-#if PARA_EDITABLE//²ÎÊı¿É±à¼­
-		if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
-		{
-			//preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
-		{
-			preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
-		{
-			preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
-		{
-		}
+        pSToolAxis->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹
+        pSToolAxis->SPlanData.dCurLeftDist = dLeftDistance;
+
+        //10.é€Ÿåº¦è§„åˆ’ï¼Œå¹¶å»é™¤æ®‹ä½™è·ç¦»
+#if PARA_EDITABLE //å‚æ•°å¯ç¼–è¾‘
+        if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
+        {
+            //preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
+        {
+            preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
+        {
+            preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
+        {
+        }
 
 #else
 #if PLANNING_METHOD == 0
-		preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 1
-		preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 2
-		preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 3
 
 #endif
 
 #endif
-		//11.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄ½Ç¶ÈÔöÁ¿
-		double dDeltaL = 0;
+        //11.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è§’åº¦å¢é‡
+        double dDeltaL = 0;
 
-#if PARA_EDITABLE//²ÎÊı¿É±à¼­
-		if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
-		{
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
-		{
-			dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
-		{
-			dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
-		{
-		}
+#if PARA_EDITABLE //å‚æ•°å¯ç¼–è¾‘
+        if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
+        {
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
+        {
+            dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
+        {
+            dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
+        {
+        }
 
 #else
 #if PLANNING_METHOD == 0
 
 #elif PLANNING_METHOD == 1
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 2
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 3
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_2(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_2(&pSToolAxis->SPlanData);
 
 #endif
 
 #endif
 
-		//¸úËæÅĞ¶Ï
-		if (pSToolAxisInfo->bFollowed == FALSE)
-		{
-			//ÌáÇ°½øÈë¸úËæ£¬·ÀÖ¹Ö÷Öá×ªËÙÍ»½µ
-			if (isEqualOrLessThanZero(pSToolAxis->SPlanData.dCurLeftDist - dDeltaL - 0.5))
-			{
-				pSToolAxisInfo->bFollowed = TRUE;
+        //è·Ÿéšåˆ¤æ–­
+        if (pSToolAxisInfo->bFollowed == FALSE)
+        {
+            //æå‰è¿›å…¥è·Ÿéšï¼Œé˜²æ­¢ä¸»è½´è½¬é€Ÿçªé™
+            if (isEqualOrLessThanZero(pSToolAxis->SPlanData.dCurLeftDist - dDeltaL - 0.5))
+            {
+                pSToolAxisInfo->bFollowed = TRUE;
 #if TOOLAXIS_DEBUG_32
-				uart6_set("ED\r");
+                uart6_set("ED\r");
 #elif TOOLAXIS_DEBUG_VS
-				fprintf(pWriteFid, "FOLLOWED\r");
+                fprintf(pWriteFid, "FOLLOWED\r");
 #endif
+            }
+        }
 
-			}
-				
-		}
+        //12.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] =
+            round(dDeltaL / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		//12.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] = round(dDeltaL / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-
-
-		//13.¸üĞÂµ¶¾ßÖáµ±Ç°ËÙ¶È
-		pSToolAxis->dCurrentSpeed = pSRun->sAxisDeltaPulse[ucToolAxisNum] * 0.036;
-
-
-	}
-	default:
-		break;
-	}
-
+        //13.æ›´æ–°åˆ€å…·è½´å½“å‰é€Ÿåº¦
+        pSToolAxis->dCurrentSpeed = pSRun->sAxisDeltaPulse[ucToolAxisNum] * 0.036;
+    }
+    default:
+        break;
+    }
 }
 
-//¸úËæÄ£Ê½(¸úËæÖ÷Öá±àÂëÆ÷Öµ)
-void toolAxisFollowMotion2(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder)
+//è·Ÿéšæ¨¡å¼(è·Ÿéšä¸»è½´ç¼–ç å™¨å€¼)
+void toolAxisFollowMotion2(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo,
+                           struct SEncoder* pSSpindleEncoder)
 {
-	const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
+    const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
 
-	struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;		//µ¶¾ßÖáµ¥Öá½á¹¹Ìå
-	struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis;	//Ö÷Öáµ¥Öá½á¹¹Ìå
+    struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;      //åˆ€å…·è½´å•è½´ç»“æ„ä½“
+    struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis; //ä¸»è½´å•è½´ç»“æ„ä½“
 
-	uint8 ucToolAxisNum = pSToolAxis->ucAxis;			//µ¶¾ßÖáÖáÃû
-	uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis;		//µ¶¾ßÖáÖáÃû
+    uint8 ucToolAxisNum = pSToolAxis->ucAxis;       //åˆ€å…·è½´è½´å
+    uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis; //åˆ€å…·è½´è½´å
 
-	struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
+    struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
 
-	//¶ÁÈ¡Ö÷ÖáËÙ¶È
-	pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
-	pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
+    //è¯»å–ä¸»è½´é€Ÿåº¦
+    pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
 
-	//ÅĞ¶Ïµ¶¾ßÖáÏàÎ»²îÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
-	{
-		pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
-	//ÅĞ¶Ï Ö¸Áî¸úËæ±È Ö÷ÖáÄ¿±ê×ªËÙ ÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
-		!isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
-	{
-		pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
-		pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    //åˆ¤æ–­åˆ€å…·è½´ç›¸ä½å·®æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
+    {
+        pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
+    //åˆ¤æ–­ æŒ‡ä»¤è·Ÿéšæ¯” ä¸»è½´ç›®æ ‡è½¬é€Ÿ æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
+        !isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
+    {
+        pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
+        pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
 
-		//µ¶¾ßÖáÖØĞÂ½øĞĞ×ªËÙ¹ı¶É
-		pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
+        //åˆ€å…·è½´é‡æ–°è¿›è¡Œè½¬é€Ÿè¿‡æ¸¡
+        pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
 
-	//¼ÆËãÅ¤×ª½Ç¶È	Å¤×ª½Ç¶ÈÊ²Ã´Ê±ºòÇåÁã
-	//pSToolAxisInfo->dCurTwistAngle;
+    //è®¡ç®—æ‰­è½¬è§’åº¦	æ‰­è½¬è§’åº¦ä»€ä¹ˆæ—¶å€™æ¸…é›¶
+    //pSToolAxisInfo->dCurTwistAngle;
 
-	//Ö´ĞĞ¸úËæÄ£Ê½¶ÔÓ¦²½Öè
-	switch (pSToolAxis->ucInpStatus)
-	{
-	//×ªËÙ¹ı¶É£¨ËÙ¶È¹æ»®£©
-	case INP_ASSIGNMENT_START:
-	{
-		//Ä©ËÙ¶È£ºµ¶¾ßÖáÄ¿±ê×ªËÙ
-		double dRealSpindleSpeed;
-		dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
-		pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
+    //æ‰§è¡Œè·Ÿéšæ¨¡å¼å¯¹åº”æ­¥éª¤
+    switch (pSToolAxis->ucInpStatus)
+    {
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆé€Ÿåº¦è§„åˆ’ï¼‰
+    case INP_ASSIGNMENT_START:
+    {
+        //æœ«é€Ÿåº¦ï¼šåˆ€å…·è½´ç›®æ ‡è½¬é€Ÿ
+        double dRealSpindleSpeed;
+        dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
+        pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
 
-		//³õËÙ¶È£ºµ±Ç°ËÙ¶È
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+        //åˆé€Ÿåº¦ï¼šå½“å‰é€Ÿåº¦
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
 
-		//¼Ó¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
-		pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
+        //åŠ å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
+        pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
 
-		//´ÓÏµÍ³²ÎÊı»ñÈ¡¼ÓËÙ¶È(ÉÏÒ»¶Î¼ÓËÙ¶ÈÖØËãºóÓëÏµÍ³²ÎÊı²»Ò»ÖÂ) //µ½´ïÖ¸¶¨×ªËÙºóÒÀ¾İÖ¸¶¨¼ÓËÙ¶È±ÈÀı¼õĞ¡¼ÓËÙ¶È ºé¹ÚÅô2024/3/23
-		pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
-		pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
+        //ä»ç³»ç»Ÿå‚æ•°è·å–åŠ é€Ÿåº¦(ä¸Šä¸€æ®µåŠ é€Ÿåº¦é‡ç®—åä¸ç³»ç»Ÿå‚æ•°ä¸ä¸€è‡´) //åˆ°è¾¾æŒ‡å®šè½¬é€Ÿåä¾æ®æŒ‡å®šåŠ é€Ÿåº¦æ¯”ä¾‹å‡å°åŠ é€Ÿåº¦ æ´ªå† é¹2024/3/23
+        pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
+        pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
 
-		//ËÙ¶È¹æ»®
-		preparePlanningVelCombine(&pSToolAxis->SPlanData, g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
+        //é€Ÿåº¦è§„åˆ’
+        preparePlanningVelCombine(&pSToolAxis->SPlanData,
+                                  g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
 
-		//ÖÜÆÚÖÃ0
-		pSToolAxis->SPlanData.unCurrentT = 0;
+        //å‘¨æœŸç½®0
+        pSToolAxis->SPlanData.unCurrentT = 0;
 
-		pSToolAxis->ucInpStatus = INP_STAGE_1;
-	}
-	//×ªËÙ¹ı¶É£¨¼ÆËãÏÂÒ»ÖÜÆÚ·¢ËÍÂö³åÊı£©
-	case INP_STAGE_1:
-	{
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄËÙ¶È
-		double dSpeed;
-		pSToolAxis->SPlanData.unCurrentT += 1;
-		pSToolAxis->dCurrentSpeed = dSpeed = nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
+        pSToolAxis->ucInpStatus = INP_STAGE_1;
+    }
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆè®¡ç®—ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²æ•°ï¼‰
+    case INP_STAGE_1:
+    {
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„é€Ÿåº¦
+        double dSpeed;
+        pSToolAxis->SPlanData.unCurrentT += 1;
+        pSToolAxis->dCurrentSpeed = dSpeed =
+            nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
 
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		//ÅĞ¶Ïµ¶¾ßÖáÊÇ·ñ´ïµ½Ä¿±ê×ªËÙ
-		if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
-		{
-			//µ¶¾ßÖá´ïµ½Ä¿±ê×ªËÙ£¬½øÈëÖ÷Öá×ªËÙ¼ì²â
-			pSToolAxis->ucInpStatus = INP_BLOCKED;
+        //åˆ¤æ–­åˆ€å…·è½´æ˜¯å¦è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
+        {
+            //åˆ€å…·è½´è¾¾åˆ°ç›®æ ‡è½¬é€Ÿï¼Œè¿›å…¥ä¸»è½´è½¬é€Ÿæ£€æµ‹
+            pSToolAxis->ucInpStatus = INP_BLOCKED;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("BLOCK\r");
+            uart6_set("BLOCK\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "BLOCK\r");
+            fprintf(pWriteFid, "BLOCK\r");
 #endif
-		}
-		break;
-
-	}
-	//Ö÷Öá×ªËÙ¼ì²â
-	case INP_BLOCKED:
-	{
-		//Ö÷ÖáÒÑ´ïµ½Ä¿±ê×ªËÙ
-		if (pSSpindleInfo->pSSpindleAxis->ucInpStatus == INP_FINISHED)
-		{
-			pSToolAxisInfo->ucT = 0;
-			//½øÈë²âÊÔ½×¶Î
-			pSToolAxis->ucInpStatus = INP_STAGE_2;
+        }
+        break;
+    }
+    //ä¸»è½´è½¬é€Ÿæ£€æµ‹
+    case INP_BLOCKED:
+    {
+        //ä¸»è½´å·²è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSSpindleInfo->pSSpindleAxis->ucInpStatus == INP_FINISHED)
+        {
+            pSToolAxisInfo->ucT = 0;
+            //è¿›å…¥æµ‹è¯•é˜¶æ®µ
+            pSToolAxis->ucInpStatus = INP_STAGE_2;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("ING\r");
+            uart6_set("ING\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "FOLLOWING\r");
+            fprintf(pWriteFid, "FOLLOWING\r");
 #endif
-		}
-		//Ö÷ÖáÎ´´ïµ½Ä¿±ê×ªËÙ
-		else
-		{
-			//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-			double dSpeed;
-			pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-			//¸ù¾İËÙ¶È»»ËãÂö³å
-			pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+        }
+        //ä¸»è½´æœªè¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        else
+        {
+            //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+            double dSpeed;
+            pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+            //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+            pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+                round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-			break;
-		}
-	}
-	//½Ç¶È¹ı¶É
-	case INP_STAGE_2:
-	{
-		//1.Ö÷ÖáÏÂÒ»ÖÜÆÚ½áÊøÊ±µÄ½Ç¶È
-		double dSpindleNextPos = 0;	//µ¥Î»£º¡ãÖµÓò£º[0 - 360)
-		getSingleAxisRealTimePoint(&dSpindleNextPos, ucSpindleAxisNum, pMapArray);//´Ë½Ç¶ÈÎªÏÂÒ»ÖÜÆÚ½áÊøÊ±µÄ½Ç¶È
+            break;
+        }
+    }
+    //è§’åº¦è¿‡æ¸¡
+    case INP_STAGE_2:
+    {
+        //1.ä¸»è½´ä¸‹ä¸€å‘¨æœŸç»“æŸæ—¶çš„è§’åº¦
+        double dSpindleNextPos = 0;                                                //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0 - 360)
+        getSingleAxisRealTimePoint(&dSpindleNextPos, ucSpindleAxisNum, pMapArray); //æ­¤è§’åº¦ä¸ºä¸‹ä¸€å‘¨æœŸç»“æŸæ—¶çš„è§’åº¦
 
-		//2.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚ½áÊøÊ±µÄÀíÂÛ½Ç¶È
-		double dToolAxisTargetPos;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleNextPos, TRUE);//²»¿¼ÂÇËÅ·şÏµÍ³ÏìÓ¦Ê±¼ä
+        //2.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»“æŸæ—¶çš„ç†è®ºè§’åº¦
+        double dToolAxisTargetPos;                                               //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleNextPos, TRUE); //ä¸è€ƒè™‘ä¼ºæœç³»ç»Ÿå“åº”æ—¶é—´
 
-		//3.¶ÁÈ¡µ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊøÊ±µÄ½Ç¶È£¨ÉÏÒ»ÖÜÆÚÒÑ¼ÆËã£©
-		double dToolAxisCurrPos;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		getSingleAxisRealTimePoint(&dToolAxisCurrPos, ucToolAxisNum, pMapArray);
+        //3.è¯»å–åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸæ—¶çš„è§’åº¦ï¼ˆä¸Šä¸€å‘¨æœŸå·²è®¡ç®—ï¼‰
+        double dToolAxisCurrPos; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        getSingleAxisRealTimePoint(&dToolAxisCurrPos, ucToolAxisNum, pMapArray);
 
-		//4.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚ×ÜÔË¶¯µÄ½Ç¶È
-		double dLeftDistance;	//µ¥Î»£º¡ãÖµÓò£º[0-360)
-		dLeftDistance = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisCurrPos, 360.0);
-		dLeftDistance = isZero(dLeftDistance - 360) ? 0 : dLeftDistance;
+        //4.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸæ€»è¿åŠ¨çš„è§’åº¦
+        double dLeftDistance; //å•ä½ï¼šÂ°å€¼åŸŸï¼š[0-360)
+        dLeftDistance = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisCurrPos, 360.0);
+        dLeftDistance = isZero(dLeftDistance - 360) ? 0 : dLeftDistance;
 
-		//5.ĞŞÕıµ¶¾ßÖáÏÂÒ»ÖÜÆÚ×ÜÔË¶¯µÄ½Ç¶È
-		//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-		if (pSToolAxisInfo->bFollowed == TRUE)
-			dLeftDistance = dLeftDistance > 180 ? dLeftDistance = dLeftDistance - 360 : dLeftDistance;
+        //5.ä¿®æ­£åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸæ€»è¿åŠ¨çš„è§’åº¦
+        //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+        if (pSToolAxisInfo->bFollowed == TRUE)
+            dLeftDistance = dLeftDistance > 180 ? dLeftDistance = dLeftDistance - 360 : dLeftDistance;
 
-		//10.¶Ôµ¶¾ßÖáÊ£Óà×·¸Ï¾àÀë½øĞĞËÙ¶È¹æ»®
-		//10.1ËÙ¶È¹æ»®²ÎÊı¸³Öµ
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
-		pSToolAxis->SPlanData.dVmax = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVmax;		//µ¶¾ßÖá×·¸Ï×î´óËÙ¶È(2000rpm)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
-		//pSToolAxis->SPlanData.dVe = pSToolAxisInfo->dSpindleSpeed * pSToolAxisInfo->dCommandRatio;	//  ¡ã/ms	Ä¿±ê×ªËÙ
-		pSToolAxis->SPlanData.dAcc = 0.036;// ¼ÓËÙ¶È(¶¯Ì¬ËÙ¶È¹æ»®*2)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
-		pSToolAxis->SPlanData.dDec = 0.036;// ¼ÓËÙ¶È(¶¯Ì¬ËÙ¶È¹æ»®*2)ºóĞø¸ÄÎªÏµÍ³±äÁ¿
+        //10.å¯¹åˆ€å…·è½´å‰©ä½™è¿½èµ¶è·ç¦»è¿›è¡Œé€Ÿåº¦è§„åˆ’
+        //10.1é€Ÿåº¦è§„åˆ’å‚æ•°èµ‹å€¼
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+        pSToolAxis->SPlanData.dVmax =
+            g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVmax; //åˆ€å…·è½´è¿½èµ¶æœ€å¤§é€Ÿåº¦(2000rpm)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
+        //pSToolAxis->SPlanData.dVe = pSToolAxisInfo->dSpindleSpeed * pSToolAxisInfo->dCommandRatio;	//  Â°/ms	ç›®æ ‡è½¬é€Ÿ
+        pSToolAxis->SPlanData.dAcc = 0.036; // åŠ é€Ÿåº¦(åŠ¨æ€é€Ÿåº¦è§„åˆ’*2)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
+        pSToolAxis->SPlanData.dDec = 0.036; // åŠ é€Ÿåº¦(åŠ¨æ€é€Ÿåº¦è§„åˆ’*2)åç»­æ”¹ä¸ºç³»ç»Ÿå˜é‡
 
-		//¸úËæÉÏºó¼Ó¼õËÙ*3
-		if (pSToolAxisInfo->bFollowed == TRUE)
-		{
-			pSToolAxis->SPlanData.dAcc *= 3;
-			pSToolAxis->SPlanData.dDec *= 3;
-		}
+        //è·Ÿéšä¸ŠååŠ å‡é€Ÿ*3
+        if (pSToolAxisInfo->bFollowed == TRUE)
+        {
+            pSToolAxis->SPlanData.dAcc *= 3;
+            pSToolAxis->SPlanData.dDec *= 3;
+        }
 
-		pSToolAxis->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;  //¼ÓËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;  //¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;  //Æ½Ì¯ÀàĞÍ
-		pSToolAxis->SPlanData.dCurLeftDist = dLeftDistance;
+        pSToolAxis->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹
+        pSToolAxis->SPlanData.dCurLeftDist = dLeftDistance;
 
-		//10.ËÙ¶È¹æ»®£¬²¢È¥³ı²ĞÓà¾àÀë
-#if PARA_EDITABLE//²ÎÊı¿É±à¼­
-		if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
-		{
-			//preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
-		{
-			preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
-		{
-			preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
-		{
-		}
+        //10.é€Ÿåº¦è§„åˆ’ï¼Œå¹¶å»é™¤æ®‹ä½™è·ç¦»
+#if PARA_EDITABLE //å‚æ•°å¯ç¼–è¾‘
+        if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
+        {
+            //preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
+        {
+            preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
+        {
+            preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
+        {
+        }
 
 #else
 #if PLANNING_METHOD == 0
-		preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_0(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 1
-		preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 2
-		preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
+        preparePlanningTNewAddForToolAxis_2(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 3
 
 #endif
 
 #endif
-		//11.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄ½Ç¶ÈÔöÁ¿
-		double dDeltaL = 0;
+        //11.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è§’åº¦å¢é‡
+        double dDeltaL = 0;
 
-#if PARA_EDITABLE//²ÎÊı¿É±à¼­
-		if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
-		{
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
-		{
-			dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
-		{
-			dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
-		}
-		else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
-		{
-		}
+#if PARA_EDITABLE //å‚æ•°å¯ç¼–è¾‘
+        if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 0)
+        {
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 1)
+        {
+            dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 2)
+        {
+            dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        }
+        else if (g_SSystemPara.sGcode_MultiLineHandleMaxNum == 3)
+        {
+        }
 
 #else
 #if PLANNING_METHOD == 0
 
 #elif PLANNING_METHOD == 1
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 2
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_1(&pSToolAxis->SPlanData);
 #elif PLANNING_METHOD == 3
-		dDeltaL = nextStepPlanningAndDistReAvgToolAxis_2(&pSToolAxis->SPlanData);
+        dDeltaL = nextStepPlanningAndDistReAvgToolAxis_2(&pSToolAxis->SPlanData);
 
 #endif
 
 #endif
 
-		//¸úËæÅĞ¶Ï
-		if (pSToolAxisInfo->bFollowed == FALSE)
-		{
-			//ÌáÇ°½øÈë¸úËæ£¬·ÀÖ¹Ö÷Öá×ªËÙÍ»½µ
-			if (isEqualOrLessThanZero(pSToolAxis->SPlanData.dCurLeftDist - dDeltaL - 0.5))
-			{
-				pSToolAxisInfo->bFollowed = TRUE;
+        //è·Ÿéšåˆ¤æ–­
+        if (pSToolAxisInfo->bFollowed == FALSE)
+        {
+            //æå‰è¿›å…¥è·Ÿéšï¼Œé˜²æ­¢ä¸»è½´è½¬é€Ÿçªé™
+            if (isEqualOrLessThanZero(pSToolAxis->SPlanData.dCurLeftDist - dDeltaL - 0.5))
+            {
+                pSToolAxisInfo->bFollowed = TRUE;
 #if TOOLAXIS_DEBUG_32
-				uart6_set("ED\r");
+                uart6_set("ED\r");
 #elif TOOLAXIS_DEBUG_VS
-				fprintf(pWriteFid, "FOLLOWED\r");
+                fprintf(pWriteFid, "FOLLOWED\r");
 #endif
+            }
+        }
 
-			}
+        //12.è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] =
+            round(dDeltaL / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		}
-
-		//12.¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] = round(dDeltaL / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-
-
-		//13.¸üĞÂµ¶¾ßÖáµ±Ç°ËÙ¶È
-		pSToolAxis->dCurrentSpeed = pSRun->sAxisDeltaPulse[ucToolAxisNum] * 0.036;
-
-
-	}
-	default:
-		break;
-	}
-
+        //13.æ›´æ–°åˆ€å…·è½´å½“å‰é€Ÿåº¦
+        pSToolAxis->dCurrentSpeed = pSRun->sAxisDeltaPulse[ucToolAxisNum] * 0.036;
+    }
+    default:
+        break;
+    }
 }
 
-//¸úËæÄ£Ê½(Ö±½ÓÆô¶¯) 
-void toolAxisFollowMotion3(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder)
+//è·Ÿéšæ¨¡å¼(ç›´æ¥å¯åŠ¨)
+void toolAxisFollowMotion3(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo,
+                           struct SEncoder* pSSpindleEncoder)
 {
-	const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
+    const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
 
-	struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;		//µ¶¾ßÖáµ¥Öá½á¹¹Ìå
-	struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis;	//Ö÷Öáµ¥Öá½á¹¹Ìå
+    struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;      //åˆ€å…·è½´å•è½´ç»“æ„ä½“
+    struct SSingleAxis* pSSpindleAxis = pSSpindleInfo->pSSpindleAxis; //ä¸»è½´å•è½´ç»“æ„ä½“
 
-	uint8 ucToolAxisNum = pSToolAxis->ucAxis;			//µ¶¾ßÖáÖáÃû
-	uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis;		//µ¶¾ßÖáÖáÃû
+    uint8 ucToolAxisNum = pSToolAxis->ucAxis;       //åˆ€å…·è½´è½´å
+    uint8 ucSpindleAxisNum = pSSpindleAxis->ucAxis; //åˆ€å…·è½´è½´å
 
-	struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
+    struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
 
-	//¶ÁÈ¡Ö÷ÖáËÙ¶È
-	pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
-	pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
+    //è¯»å–ä¸»è½´é€Ÿåº¦
+    pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    pSToolAxisInfo->dSpindleSpeed = pSSpindleAxis->dSpindleSpeed;
 
-	//ÅĞ¶Ïµ¶¾ßÖáÏàÎ»²îÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
-	{
-		pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
-	//ÅĞ¶Ï Ö¸Áî¸úËæ±È Ö÷ÖáÄ¿±ê×ªËÙ ÊÇ·ñ·¢Éú±ä»¯
-	if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
-		!isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
-	{
-		pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
-		pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
+    //åˆ¤æ–­åˆ€å…·è½´ç›¸ä½å·®æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandAngle - pSToolAxisInfo->dLastCommandAngle))
+    {
+        pSToolAxisInfo->dLastCommandAngle = pSToolAxisInfo->dCommandAngle;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
+    //åˆ¤æ–­ æŒ‡ä»¤è·Ÿéšæ¯” ä¸»è½´ç›®æ ‡è½¬é€Ÿ æ˜¯å¦å‘ç”Ÿå˜åŒ–
+    if (!isZero(pSToolAxisInfo->dCommandRatio - pSToolAxisInfo->dLastCommandRatio) ||
+        !isZero(pSToolAxisInfo->dSpindleSpeed - pSToolAxisInfo->dLastSpindleSpeed))
+    {
+        pSToolAxisInfo->dLastCommandRatio = pSToolAxisInfo->dCommandRatio;
+        pSToolAxisInfo->dLastSpindleSpeed = pSToolAxisInfo->dSpindleSpeed;
 
-		//µ¶¾ßÖáÖØĞÂ½øĞĞ×ªËÙ¹ı¶É
-		pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
-		pSToolAxisInfo->bFollowed = FALSE;
-	}
+        //åˆ€å…·è½´é‡æ–°è¿›è¡Œè½¬é€Ÿè¿‡æ¸¡
+        pSToolAxis->ucInpStatus = INP_ASSIGNMENT_START;
+        pSToolAxisInfo->bFollowed = FALSE;
+    }
 
-	//¼ÆËãÅ¤×ª½Ç¶È	Å¤×ª½Ç¶ÈÊ²Ã´Ê±ºòÇåÁã
-	//pSToolAxisInfo->dTwistAngle;
+    //è®¡ç®—æ‰­è½¬è§’åº¦	æ‰­è½¬è§’åº¦ä»€ä¹ˆæ—¶å€™æ¸…é›¶
+    //pSToolAxisInfo->dTwistAngle;
 
-	//Ö´ĞĞ¸úËæÄ£Ê½¶ÔÓ¦²½Öè
-	switch (pSToolAxis->ucInpStatus)
-	{
-	//×ªËÙ¹ı¶É£¨ËÙ¶È¹æ»®£©
-	case INP_ASSIGNMENT_START:
-	{
-		//Ä©ËÙ¶È£ºµ¶¾ßÖáÄ¿±ê×ªËÙ
-		double dRealSpindleSpeed;
-		dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
-		pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
-		pSToolAxis->SPlanData.dVe = 8.4;//²âÊÔÈ¡Öµ1400rpm
+    //æ‰§è¡Œè·Ÿéšæ¨¡å¼å¯¹åº”æ­¥éª¤
+    switch (pSToolAxis->ucInpStatus)
+    {
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆé€Ÿåº¦è§„åˆ’ï¼‰
+    case INP_ASSIGNMENT_START:
+    {
+        //æœ«é€Ÿåº¦ï¼šåˆ€å…·è½´ç›®æ ‡è½¬é€Ÿ
+        double dRealSpindleSpeed;
+        dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
+        pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
+        pSToolAxis->SPlanData.dVe = 8.4; //æµ‹è¯•å–å€¼1400rpm
 
-		//³õËÙ¶È£ºµ±Ç°ËÙ¶È
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+        //åˆé€Ÿåº¦ï¼šå½“å‰é€Ÿåº¦
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
 
-		//¼Ó¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
-		pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
+        //åŠ å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
+        pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
 
-		//´ÓÏµÍ³²ÎÊı»ñÈ¡¼ÓËÙ¶È(ÉÏÒ»¶Î¼ÓËÙ¶ÈÖØËãºóÓëÏµÍ³²ÎÊı²»Ò»ÖÂ) //µ½´ïÖ¸¶¨×ªËÙºóÒÀ¾İÖ¸¶¨¼ÓËÙ¶È±ÈÀı¼õĞ¡¼ÓËÙ¶È ºé¹ÚÅô2024/3/23
-		pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
-		pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
+        //ä»ç³»ç»Ÿå‚æ•°è·å–åŠ é€Ÿåº¦(ä¸Šä¸€æ®µåŠ é€Ÿåº¦é‡ç®—åä¸ç³»ç»Ÿå‚æ•°ä¸ä¸€è‡´) //åˆ°è¾¾æŒ‡å®šè½¬é€Ÿåä¾æ®æŒ‡å®šåŠ é€Ÿåº¦æ¯”ä¾‹å‡å°åŠ é€Ÿåº¦ æ´ªå† é¹2024/3/23
+        pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
+        pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
 
-		//ËÙ¶È¹æ»®
-		preparePlanningVelCombine(&pSToolAxis->SPlanData, g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
+        //é€Ÿåº¦è§„åˆ’
+        preparePlanningVelCombine(&pSToolAxis->SPlanData,
+                                  g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
 
-		//ÖÜÆÚÖÃ0
-		pSToolAxis->SPlanData.unCurrentT = 0;
+        //å‘¨æœŸç½®0
+        pSToolAxis->SPlanData.unCurrentT = 0;
 
-		pSToolAxis->ucInpStatus = INP_STAGE_1;
-	}
-	//×ªËÙ¹ı¶É£¨¼ÆËãÏÂÒ»ÖÜÆÚ·¢ËÍÂö³åÊı£©
-	case INP_STAGE_1:
-	{
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄËÙ¶È
-		double dSpeed;
-		pSToolAxis->SPlanData.unCurrentT += 1;
-		pSToolAxis->dCurrentSpeed = dSpeed = nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
+        pSToolAxis->ucInpStatus = INP_STAGE_1;
+    }
+    //è½¬é€Ÿè¿‡æ¸¡ï¼ˆè®¡ç®—ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²æ•°ï¼‰
+    case INP_STAGE_1:
+    {
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„é€Ÿåº¦
+        double dSpeed;
+        pSToolAxis->SPlanData.unCurrentT += 1;
+        pSToolAxis->dCurrentSpeed = dSpeed =
+            nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
 
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		//ÅĞ¶Ïµ¶¾ßÖáÊÇ·ñ´ïµ½Ä¿±ê×ªËÙ
-		if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
-		{
-			//µ¶¾ßÖá´ïµ½Ä¿±ê×ªËÙ£¬½øÈëÖ÷Öá×ªËÙ¼ì²â
-			pSToolAxis->ucInpStatus = INP_STAGE_2;
+        //åˆ¤æ–­åˆ€å…·è½´æ˜¯å¦è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
+        {
+            //åˆ€å…·è½´è¾¾åˆ°ç›®æ ‡è½¬é€Ÿï¼Œè¿›å…¥ä¸»è½´è½¬é€Ÿæ£€æµ‹
+            pSToolAxis->ucInpStatus = INP_STAGE_2;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("ED\r");
+            uart6_set("ED\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "FOLLOWED\r");
+            fprintf(pWriteFid, "FOLLOWED\r");
 #endif
-		}
-		break;
-	}
-	//¸úËæ
-	case INP_STAGE_2:
-	{
-		//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-		double dSpeed;
-		pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-		//¸ù¾İËÙ¶È»»ËãÂö³å
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+        }
+        break;
+    }
+    //è·Ÿéš
+    case INP_STAGE_2:
+    {
+        //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+        double dSpeed;
+        pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+        //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		break;
-	}
-	default:
-		break;
-	}
-
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-//¼õËÙÍ£Ä£Ê½
+//å‡é€Ÿåœæ¨¡å¼
 int8 toolAxisCommonStop(SToolAxis* pSToolAxisPointer)
 {
-	double dSpeed;//ËÙ¶ÈÊä³ö
-	struct SSingleAxis* pSSingleAxisPointer;//µ¥Öá½á¹¹Ìå
-	uint8 ucAxis;//µ±Ç°ÖáºÅ
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	const uint8* ucMapArray;//Ó³Éä
+    double dSpeed;                           //é€Ÿåº¦è¾“å‡º
+    struct SSingleAxis* pSSingleAxisPointer; //å•è½´ç»“æ„ä½“
+    uint8 ucAxis;                            //å½“å‰è½´å·
+    struct _SRun* pSRun;                     //è¿è¡Œç»“æ„ä½“
+    const uint8* ucMapArray;                 //æ˜ å°„
 
-	if (pSToolAxisPointer == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
+    if (pSToolAxisPointer == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
 
-	//»ñÈ¡µ¥Öá½á¹¹Ìå
-	pSSingleAxisPointer = pSToolAxisPointer->pSToolAxis;
-	//¶ÁÈ¡ÖáºÅ
-	ucAxis = pSSingleAxisPointer->ucAxis;
-	//»ñÈ¡Ó³Éä
-	ucMapArray = pSToolAxisPointer->pSChannel->pMapAxisArray;
-	//»ñÈ¡ÔËĞĞ½á¹¹Ìå
-	pSRun = &pSToolAxisPointer->pSChannel->SRun;
+    //è·å–å•è½´ç»“æ„ä½“
+    pSSingleAxisPointer = pSToolAxisPointer->pSToolAxis;
+    //è¯»å–è½´å·
+    ucAxis = pSSingleAxisPointer->ucAxis;
+    //è·å–æ˜ å°„
+    ucMapArray = pSToolAxisPointer->pSChannel->pMapAxisArray;
+    //è·å–è¿è¡Œç»“æ„ä½“
+    pSRun = &pSToolAxisPointer->pSChannel->SRun;
 
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)//ÎïÀíÖáÎª¿Õ ·µ»Ø
-	{
-		return -3;
-	}
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX) //ç‰©ç†è½´ä¸ºç©º è¿”å›
+    {
+        return -3;
+    }
 
-	switch (pSSingleAxisPointer->ucInpStatus)
-	{
-	//³õÊ¼»¯
-	case INP_INITIATION:
-	{
-		//Ä¿±êÄ©ËÙ¶È
-		pSSingleAxisPointer->SPlanData.dPrimalVe = 0;
-		//ÆğÌøËÙ¶È  Óëµ±Ç°ËÙ¶ÈÈ¡×îĞ¡Öµ
-		//pSSingleAxisPointer->SPlanData.dVe = sgn(pSSingleAxisPointer->dCurrentSpeed) * min(fabs(pSSingleAxisPointer->dCurrentSpeed), g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dVe);
-		pSSingleAxisPointer->SPlanData.dVe = 0;
-		//ÆğÊ¼ËÙ¶È(r/ms)
-		pSSingleAxisPointer->SPlanData.dVs = pSSingleAxisPointer->dCurrentSpeed;
+    switch (pSSingleAxisPointer->ucInpStatus)
+    {
+    //åˆå§‹åŒ–
+    case INP_INITIATION:
+    {
+        //ç›®æ ‡æœ«é€Ÿåº¦
+        pSSingleAxisPointer->SPlanData.dPrimalVe = 0;
+        //èµ·è·³é€Ÿåº¦  ä¸å½“å‰é€Ÿåº¦å–æœ€å°å€¼
+        //pSSingleAxisPointer->SPlanData.dVe = sgn(pSSingleAxisPointer->dCurrentSpeed) * min(fabs(pSSingleAxisPointer->dCurrentSpeed), g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dVe);
+        pSSingleAxisPointer->SPlanData.dVe = 0;
+        //èµ·å§‹é€Ÿåº¦(r/ms)
+        pSSingleAxisPointer->SPlanData.dVs = pSSingleAxisPointer->dCurrentSpeed;
 
-		//¼Ó¼õËÙÇúÏß
-		pSSingleAxisPointer->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAccVelPlanType;
-		pSSingleAxisPointer->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucDecVelPlanType;
-		
-		//´ÓÏµÍ³²ÎÊı»ñÈ¡¼ÓËÙ¶È(ÉÏÒ»¶Î¼ÓËÙ¶ÈÖØËãºóÓëÏµÍ³²ÎÊı²»Ò»ÖÂ) //µ½´ïÖ¸¶¨×ªËÙºóÒÀ¾İÖ¸¶¨¼ÓËÙ¶È±ÈÀı¼õĞ¡¼ÓËÙ¶È ºé¹ÚÅô2024/3/23
-		pSSingleAxisPointer->SPlanData.dAcc = (pSSingleAxisPointer->bIsChangeAcc == TRUE) ? getSingleAxisAcc(ucAxis, pSSingleAxisPointer->SPlanData.ucAccVelPlanType, ucMapArray) * pSSingleAxisPointer->ucGearForChangeRate / 100.0 : getSingleAxisAcc(ucAxis, pSSingleAxisPointer->SPlanData.ucAccVelPlanType, ucMapArray);
-		pSSingleAxisPointer->SPlanData.dDec = (pSSingleAxisPointer->bIsChangeAcc == TRUE) ? getSingleAxisDec(ucAxis, pSSingleAxisPointer->SPlanData.ucDecVelPlanType, ucMapArray) * pSSingleAxisPointer->ucGearForChangeRate / 100.0 : getSingleAxisDec(ucAxis, pSSingleAxisPointer->SPlanData.ucDecVelPlanType, ucMapArray);
+        //åŠ å‡é€Ÿæ›²çº¿
+        pSSingleAxisPointer->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAccVelPlanType;
+        pSSingleAxisPointer->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucDecVelPlanType;
 
-		//ËÙ¶È¹æ»®
-		preparePlanningVelCombine(&pSSingleAxisPointer->SPlanData,g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dVeerDeltaVMax);
+        //ä»ç³»ç»Ÿå‚æ•°è·å–åŠ é€Ÿåº¦(ä¸Šä¸€æ®µåŠ é€Ÿåº¦é‡ç®—åä¸ç³»ç»Ÿå‚æ•°ä¸ä¸€è‡´) //åˆ°è¾¾æŒ‡å®šè½¬é€Ÿåä¾æ®æŒ‡å®šåŠ é€Ÿåº¦æ¯”ä¾‹å‡å°åŠ é€Ÿåº¦ æ´ªå† é¹2024/3/23
+        pSSingleAxisPointer->SPlanData.dAcc =
+            (pSSingleAxisPointer->bIsChangeAcc == TRUE)
+                ? getSingleAxisAcc(ucAxis, pSSingleAxisPointer->SPlanData.ucAccVelPlanType, ucMapArray) *
+                      pSSingleAxisPointer->ucGearForChangeRate / 100.0
+                : getSingleAxisAcc(ucAxis, pSSingleAxisPointer->SPlanData.ucAccVelPlanType, ucMapArray);
+        pSSingleAxisPointer->SPlanData.dDec =
+            (pSSingleAxisPointer->bIsChangeAcc == TRUE)
+                ? getSingleAxisDec(ucAxis, pSSingleAxisPointer->SPlanData.ucDecVelPlanType, ucMapArray) *
+                      pSSingleAxisPointer->ucGearForChangeRate / 100.0
+                : getSingleAxisDec(ucAxis, pSSingleAxisPointer->SPlanData.ucDecVelPlanType, ucMapArray);
 
-		//³õÊ¼»¯±äÁ¿
-		pSSingleAxisPointer->SPlanData.unCurrentT = 0;//Ê±¼äÖÃ0
-		pSSingleAxisPointer->ucInpStatus = INP_RUNNING;//Ìø×ªµ½Êä³öËÙ¶È
-	}
-	//Êä³öËÙ¶È
-	case INP_RUNNING:
-	{
-		//Ê±¼äÔö¼Ó
-		pSSingleAxisPointer->SPlanData.unCurrentT += 1;
-		//»ñµÃµ±Ç°ËÙ¶È (r/ms)
-		pSSingleAxisPointer->dCurrentSpeed = dSpeed = nextstepPlanningVelCombine(pSSingleAxisPointer->SPlanData.unCurrentT, &pSSingleAxisPointer->SPlanData);
-		//¼ÆËãÂö³åÔöÁ¿
-		pSRun->sAxisDeltaPulse[ucAxis] = round(dSpeed / g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dPulseToMm);
+        //é€Ÿåº¦è§„åˆ’
+        preparePlanningVelCombine(&pSSingleAxisPointer->SPlanData,
+                                  g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dVeerDeltaVMax);
 
-		if (pSSingleAxisPointer->SPlanData.unCurrentT >= pSSingleAxisPointer->SPlanData.unT5)//¼ÓËÙ/¼õËÙÍê³É?
-		{
-			pSSingleAxisPointer->ucInpStatus = INP_FINISHED;//²å²¹Íê³É
-		}
-		break;
-	}
-	//Ö÷ÖáÍ£ÏÂ
-	case INP_FINISHED:
-	{	
-		pSSingleAxisPointer->ucRunMode = TOOLAXIS_SINGLE_MODE;
-		initToolAxisPara();
-		break;
-	}
-	}
-	return 1;
+        //åˆå§‹åŒ–å˜é‡
+        pSSingleAxisPointer->SPlanData.unCurrentT = 0;  //æ—¶é—´ç½®0
+        pSSingleAxisPointer->ucInpStatus = INP_RUNNING; //è·³è½¬åˆ°è¾“å‡ºé€Ÿåº¦
+    }
+    //è¾“å‡ºé€Ÿåº¦
+    case INP_RUNNING:
+    {
+        //æ—¶é—´å¢åŠ 
+        pSSingleAxisPointer->SPlanData.unCurrentT += 1;
+        //è·å¾—å½“å‰é€Ÿåº¦ (r/ms)
+        pSSingleAxisPointer->dCurrentSpeed = dSpeed =
+            nextstepPlanningVelCombine(pSSingleAxisPointer->SPlanData.unCurrentT, &pSSingleAxisPointer->SPlanData);
+        //è®¡ç®—è„‰å†²å¢é‡
+        pSRun->sAxisDeltaPulse[ucAxis] = round(dSpeed / g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].dPulseToMm);
 
+        if (pSSingleAxisPointer->SPlanData.unCurrentT >= pSSingleAxisPointer->SPlanData.unT5) //åŠ é€Ÿ/å‡é€Ÿå®Œæˆ?
+        {
+            pSSingleAxisPointer->ucInpStatus = INP_FINISHED; //æ’è¡¥å®Œæˆ
+        }
+        break;
+    }
+    //ä¸»è½´åœä¸‹
+    case INP_FINISHED:
+    {
+        pSSingleAxisPointer->ucRunMode = TOOLAXIS_SINGLE_MODE;
+        initToolAxisPara();
+        break;
+    }
+    }
+    return 1;
 }
 
-//ºã×ªËÙ
+//æ’è½¬é€Ÿ
 void toolAxisCommonMotion(SToolAxis* pSToolAxisInfo)
 {
-	//µ¶¾ßÖáµ¥Öá½á¹¹Ìå
-	struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;	
+    //åˆ€å…·è½´å•è½´ç»“æ„ä½“
+    struct SSingleAxis* pSToolAxis = pSToolAxisInfo->pSToolAxis;
 
-	const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
-	uint8 ucToolAxisNum = pSToolAxis->ucAxis;			//µ¶¾ßÖáÖáÃû
-	struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
+    const uint8* pMapArray = pSToolAxisInfo->pSChannel->pMapAxisArray;
+    uint8 ucToolAxisNum = pSToolAxis->ucAxis; //åˆ€å…·è½´è½´å
+    struct _SRun* pSRun = &pSToolAxisInfo->pSChannel->SRun;
 
-	switch (pSToolAxis->ucInpStatus)
-	{
-	//ËÙ¶È¹æ»®
-	case INP_ASSIGNMENT_START:
-	{
-		//Ä©ËÙ¶È£ºµ¶¾ßÖáÄ¿±ê×ªËÙ
-		double dRealSpindleSpeed;
-		dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
-		pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
+    switch (pSToolAxis->ucInpStatus)
+    {
+    //é€Ÿåº¦è§„åˆ’
+    case INP_ASSIGNMENT_START:
+    {
+        //æœ«é€Ÿåº¦ï¼šåˆ€å…·è½´ç›®æ ‡è½¬é€Ÿ
+        double dRealSpindleSpeed;
+        dRealSpindleSpeed = (int)((pSToolAxisInfo->dSpindleSpeed / 0.036) + 0.5) * 0.036;
+        pSToolAxis->SPlanData.dVe = dRealSpindleSpeed * pSToolAxisInfo->dCommandRatio;
 
-		//³õËÙ¶È£ºµ±Ç°ËÙ¶È
-		pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
+        //åˆé€Ÿåº¦ï¼šå½“å‰é€Ÿåº¦
+        pSToolAxis->SPlanData.dVs = pSToolAxis->dCurrentSpeed;
 
-		//¼Ó¼õËÙÇúÏßÀàĞÍ
-		pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
-		pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
+        //åŠ å‡é€Ÿæ›²çº¿ç±»å‹
+        pSToolAxis->SPlanData.ucAccVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucAccVelPlanType;
+        pSToolAxis->SPlanData.ucDecVelPlanType = g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].ucDecVelPlanType;
 
-		//´ÓÏµÍ³²ÎÊı»ñÈ¡¼ÓËÙ¶È(ÉÏÒ»¶Î¼ÓËÙ¶ÈÖØËãºóÓëÏµÍ³²ÎÊı²»Ò»ÖÂ) //µ½´ïÖ¸¶¨×ªËÙºóÒÀ¾İÖ¸¶¨¼ÓËÙ¶È±ÈÀı¼õĞ¡¼ÓËÙ¶È ºé¹ÚÅô2024/3/23
-		pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
-		pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
+        //ä»ç³»ç»Ÿå‚æ•°è·å–åŠ é€Ÿåº¦(ä¸Šä¸€æ®µåŠ é€Ÿåº¦é‡ç®—åä¸ç³»ç»Ÿå‚æ•°ä¸ä¸€è‡´) //åˆ°è¾¾æŒ‡å®šè½¬é€Ÿåä¾æ®æŒ‡å®šåŠ é€Ÿåº¦æ¯”ä¾‹å‡å°åŠ é€Ÿåº¦ æ´ªå† é¹2024/3/23
+        pSToolAxis->SPlanData.dAcc = getSingleAxisAcc(ucToolAxisNum, pSToolAxis->SPlanData.ucAccVelPlanType, pMapArray);
+        pSToolAxis->SPlanData.dDec = getSingleAxisDec(ucToolAxisNum, pSToolAxis->SPlanData.ucDecVelPlanType, pMapArray);
 
-		//ËÙ¶È¹æ»®
-		preparePlanningVelCombine(&pSToolAxis->SPlanData,g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
+        //é€Ÿåº¦è§„åˆ’
+        preparePlanningVelCombine(&pSToolAxis->SPlanData,
+                                  g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dVeerDeltaVMax);
 
-		//ÖÜÆÚÖÃ0
-		pSToolAxis->SPlanData.unCurrentT = 0;
+        //å‘¨æœŸç½®0
+        pSToolAxis->SPlanData.unCurrentT = 0;
 
-		pSToolAxis->ucInpStatus = INP_STAGE_1;
-	}
-	//¼ÓËÙ½×¶Î
-	case INP_STAGE_1:
-	{
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄËÙ¶È
-		double dSpeed;
-		pSToolAxis->SPlanData.unCurrentT += 1;
-		pSToolAxis->dCurrentSpeed = dSpeed = nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
+        pSToolAxis->ucInpStatus = INP_STAGE_1;
+    }
+    //åŠ é€Ÿé˜¶æ®µ
+    case INP_STAGE_1:
+    {
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„é€Ÿåº¦
+        double dSpeed;
+        pSToolAxis->SPlanData.unCurrentT += 1;
+        pSToolAxis->dCurrentSpeed = dSpeed =
+            nextstepPlanningVelCombine(pSToolAxis->SPlanData.unCurrentT, &pSToolAxis->SPlanData);
 
-		//¼ÆËãµ¶¾ßÖáÏÂÒ»ÖÜÆÚµÄÂö³åÊı
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
+        //è®¡ç®—åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸçš„è„‰å†²æ•°
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-		//ÅĞ¶Ïµ¶¾ßÖáÊÇ·ñ´ïµ½Ä¿±ê×ªËÙ
-		if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
-		{
-			//µ¶¾ßÖá´ïµ½Ä¿±ê×ªËÙ£¬½øÈëÖ÷Öá×ªËÙ¼ì²â
-			pSToolAxis->ucInpStatus = INP_BLOCKED;
+        //åˆ¤æ–­åˆ€å…·è½´æ˜¯å¦è¾¾åˆ°ç›®æ ‡è½¬é€Ÿ
+        if (pSToolAxis->SPlanData.unCurrentT >= pSToolAxis->SPlanData.unT5)
+        {
+            //åˆ€å…·è½´è¾¾åˆ°ç›®æ ‡è½¬é€Ÿï¼Œè¿›å…¥ä¸»è½´è½¬é€Ÿæ£€æµ‹
+            pSToolAxis->ucInpStatus = INP_BLOCKED;
 #if TOOLAXIS_DEBUG_32
-			uart6_set("BLOCK\r");
+            uart6_set("BLOCK\r");
 #elif TOOLAXIS_DEBUG_VS
-			fprintf(pWriteFid, "BLOCK\r");
+            fprintf(pWriteFid, "BLOCK\r");
 #endif
-		}
-		break;
+        }
+        break;
+    }
+    //åŒ€é€Ÿé˜¶æ®µ
+    case INP_BLOCKED:
+    {
+        //åˆ€å…·è½´ä¸‹ä¸€å‘¨æœŸç»§ç»­æŒ‰å½“å‰é€Ÿåº¦è¾“å‡ºè„‰å†²
+        double dSpeed;
+        pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
+        //æ ¹æ®é€Ÿåº¦æ¢ç®—è„‰å†²
+        pSRun->sAxisDeltaPulse[ucToolAxisNum] +=
+            round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
 
-	}
-	//ÔÈËÙ½×¶Î
-	case INP_BLOCKED:
-	{
-		//µ¶¾ßÖáÏÂÒ»ÖÜÆÚ¼ÌĞø°´µ±Ç°ËÙ¶ÈÊä³öÂö³å
-		double dSpeed;
-		pSToolAxis->dCurrentSpeed = dSpeed = pSToolAxis->SPlanData.dVe;
-		//¸ù¾İËÙ¶È»»ËãÂö³å
-		pSRun->sAxisDeltaPulse[ucToolAxisNum] += round(dSpeed / g_SSystemPara.SAxisPara[pMapArray[ucToolAxisNum]].dPulseToMm);
-
-		break;
-	}
-	}
+        break;
+    }
+    }
 }
 
-//¼ÆËã×ÜÅ¤×ª½Ç¶È»ñÈ¡Ö¸ÁîÖĞµÄÅ¤×ª½Ç¶È
+//è®¡ç®—æ€»æ‰­è½¬è§’åº¦è·å–æŒ‡ä»¤ä¸­çš„æ‰­è½¬è§’åº¦
 double calcCurCurTwistAngle()
 {
-	double dTotalTwistAngle = 0;
+    double dTotalTwistAngle = 0;
 
-	//¶Ô²»Í¬Ö¸Áî½øĞĞ¼ÆËã
-	switch (g_SToolAxisInfo.cTwistCommand)
-	{
-	case 0:
-		break;
-	case 1:
-	{
-		if (g_SToolAxisInfo.pSChannel->SG01.ucInpStatus == INP_RUNNING || g_SToolAxisInfo.pSChannel->SG01.ucInpStatus == INP_FINISHED)
-		{
-			struct SPlan* pSPlanData = &(g_SToolAxisInfo.pSChannel->SG01.SPlanData);
-			dTotalTwistAngle = g_SToolAxisInfo.dCurTwistAngle + g_SToolAxisInfo.dCommandTwistAngle * (1 - pSPlanData->dCurLeftDist / pSPlanData->dDistance);
-		
-			if (pSPlanData->dCurLeftDist <= EPSINON)
-			{
-				//Ö¸Áî½Ç¶ÈÀÛ»ıµ½µ±Ç°Å¤×ª½Ç¶ÈÖĞ
-				g_SToolAxisInfo.dCurTwistAngle += g_SToolAxisInfo.dCommandTwistAngle;
-				//Çå³ıÖ¸ÁîÅ¤×ª½Ç¶È
-				g_SToolAxisInfo.dCommandTwistAngle = 0;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-	}
+    //å¯¹ä¸åŒæŒ‡ä»¤è¿›è¡Œè®¡ç®—
+    switch (g_SToolAxisInfo.cTwistCommand)
+    {
+    case 0:
+        break;
+    case 1:
+    {
+        if (g_SToolAxisInfo.pSChannel->SG01.ucInpStatus == INP_RUNNING ||
+            g_SToolAxisInfo.pSChannel->SG01.ucInpStatus == INP_FINISHED)
+        {
+            struct SPlan* pSPlanData = &(g_SToolAxisInfo.pSChannel->SG01.SPlanData);
+            dTotalTwistAngle =
+                g_SToolAxisInfo.dCurTwistAngle +
+                g_SToolAxisInfo.dCommandTwistAngle * (1 - pSPlanData->dCurLeftDist / pSPlanData->dDistance);
 
-	return dTotalTwistAngle;
+            if (pSPlanData->dCurLeftDist <= EPSINON)
+            {
+                //æŒ‡ä»¤è§’åº¦ç´¯ç§¯åˆ°å½“å‰æ‰­è½¬è§’åº¦ä¸­
+                g_SToolAxisInfo.dCurTwistAngle += g_SToolAxisInfo.dCommandTwistAngle;
+                //æ¸…é™¤æŒ‡ä»¤æ‰­è½¬è§’åº¦
+                g_SToolAxisInfo.dCommandTwistAngle = 0;
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    return dTotalTwistAngle;
 }
 
-
-
-
-
-
-
 //****************************************************
-//ÒÔÏÂÎª±àÂëÆ÷Ä£¿éÏà¹Ø½Ó¿Ú
+//ä»¥ä¸‹ä¸ºç¼–ç å™¨æ¨¡å—ç›¸å…³æ¥å£
 //****************************************************
 
-//»ñÈ¡Öµ¶ÔÓ¦µÄ½Ç¶È
+//è·å–å€¼å¯¹åº”çš„è§’åº¦
 double getEncoderPosByValue(int64 lEncoderValue, uint16 usEncoderCirclePulseNum)
 {
-	double dEncoderPos;
-	dEncoderPos = 360.0 * surplusDoubleToPositive(lEncoderValue, usEncoderCirclePulseNum) / usEncoderCirclePulseNum;
+    double dEncoderPos;
+    dEncoderPos = 360.0 * surplusDoubleToPositive(lEncoderValue, usEncoderCirclePulseNum) / usEncoderCirclePulseNum;
 
-	return dEncoderPos;
+    return dEncoderPos;
 }
 
-//¼ÆËãÄ¿±ê±àÂëÆ÷µÄ½Ç¶È[0-360)
+//è®¡ç®—ç›®æ ‡ç¼–ç å™¨çš„è§’åº¦[0-360)
 double getEncoderPos(uint8 ucEncoderNum)
 {
-	double dEncoderPos;
-	dEncoderPos = 360.0 * surplusDoubleToPositive(g_SEncoder[ucEncoderNum].lEncoderAbsValue, g_SEncoder[ucEncoderNum].usEncoderCirclePulseNum) / g_SEncoder[ucEncoderNum].usEncoderCirclePulseNum;
-	return dEncoderPos;
+    double dEncoderPos;
+    dEncoderPos = 360.0 *
+                  surplusDoubleToPositive(g_SEncoder[ucEncoderNum].lEncoderAbsValue,
+                                          g_SEncoder[ucEncoderNum].usEncoderCirclePulseNum) /
+                  g_SEncoder[ucEncoderNum].usEncoderCirclePulseNum;
+    return dEncoderPos;
 }
 
-//»ñÈ¡µ±Ç°Ö÷Öá±àÂëÆ÷½Ç¶È
+//è·å–å½“å‰ä¸»è½´ç¼–ç å™¨è§’åº¦
 double getSpindleEncoderPos(uint8 ucChannelNum)
 {
-	//»ñÈ¡Ö÷Öá±àÂëÆ÷ÎïÀí±àºÅ
-	uint8 ucEncoderNum;
-	ucEncoderNum = g_SSystemPara.ucEncoderMapArray[ucChannelNum][SPINDLE_ENCODER - 1];
+    //è·å–ä¸»è½´ç¼–ç å™¨ç‰©ç†ç¼–å·
+    uint8 ucEncoderNum;
+    ucEncoderNum = g_SSystemPara.ucEncoderMapArray[ucChannelNum][SPINDLE_ENCODER - 1];
 
-	//»ñÈ¡Ö÷Öá±àÂëÆ÷¶ÔÓ¦½Ç¶È
-	double dSpindleEncoderPos;
-	dSpindleEncoderPos = getEncoderPos(ucEncoderNum);
-	
-	return dSpindleEncoderPos;
+    //è·å–ä¸»è½´ç¼–ç å™¨å¯¹åº”è§’åº¦
+    double dSpindleEncoderPos;
+    dSpindleEncoderPos = getEncoderPos(ucEncoderNum);
+
+    return dSpindleEncoderPos;
 }
 
-//»ñÈ¡µ±Ç°µ¶¾ßÖá±àÂëÆ÷½Ç¶È
+//è·å–å½“å‰åˆ€å…·è½´ç¼–ç å™¨è§’åº¦
 double getToolAxisEncoderPos(uint8 ucChannelNum)
 {
-	//»ñÈ¡µ¶¾ßÖá±àÂëÆ÷ÎïÀí±àºÅ
-	uint8 ucEncoderNum;
-	ucEncoderNum = g_SSystemPara.ucEncoderMapArray[ucChannelNum][TOOLAXIS_ENCODER - 1];
+    //è·å–åˆ€å…·è½´ç¼–ç å™¨ç‰©ç†ç¼–å·
+    uint8 ucEncoderNum;
+    ucEncoderNum = g_SSystemPara.ucEncoderMapArray[ucChannelNum][TOOLAXIS_ENCODER - 1];
 
-	double dToolAxisEncoderPos;
-	dToolAxisEncoderPos = getEncoderPos(ucEncoderNum);
+    double dToolAxisEncoderPos;
+    dToolAxisEncoderPos = getEncoderPos(ucEncoderNum);
 
-	return dToolAxisEncoderPos;
+    return dToolAxisEncoderPos;
 }
 
-//»ñÈ¡µ¶¾ßÖá±àÂëÆ÷Ä¿±ê½Ç¶È
+//è·å–åˆ€å…·è½´ç¼–ç å™¨ç›®æ ‡è§’åº¦
 double getToolAxisEncoderTargetPos(double ucFollowAngle, bool bFlag)
 {
-	//¼ÆËãµ¶¾ßÖáÄ¿±êÎ»ÖÃ
-	double dToolAxisPos;
-	//µ¶¾ßÖá±àÂëÆ÷Ä¿±êÎ»ÖÃ
-	if (bFlag == TRUE)
-		dToolAxisPos = g_SToolAxisInfo.dCommandRatio * ucFollowAngle + g_SToolAxisInfo.dCommandAngle;//+ g_SToolAxisInfo.dCurTwistAngle
-	//µ¶¾ßÖá×ø±êÄ¿±êÎ»ÖÃ
-	else
-		dToolAxisPos = g_SToolAxisInfo.dCommandRatio * ucFollowAngle + g_SToolAxisInfo.dCommandAngle + g_SToolAxisInfo.dTotalTwistAngle + g_SToolAxisInfo.dLagAngle;
+    //è®¡ç®—åˆ€å…·è½´ç›®æ ‡ä½ç½®
+    double dToolAxisPos;
+    //åˆ€å…·è½´ç¼–ç å™¨ç›®æ ‡ä½ç½®
+    if (bFlag == TRUE)
+        dToolAxisPos = g_SToolAxisInfo.dCommandRatio * ucFollowAngle +
+                       g_SToolAxisInfo.dCommandAngle; //+ g_SToolAxisInfo.dCurTwistAngle
+    //åˆ€å…·è½´åæ ‡ç›®æ ‡ä½ç½®
+    else
+        dToolAxisPos = g_SToolAxisInfo.dCommandRatio * ucFollowAngle + g_SToolAxisInfo.dCommandAngle +
+                       g_SToolAxisInfo.dTotalTwistAngle + g_SToolAxisInfo.dLagAngle;
 
-		dToolAxisPos = surplusDoubleToPositive(dToolAxisPos, 360.0);
+    dToolAxisPos = surplusDoubleToPositive(dToolAxisPos, 360.0);
 
-	return dToolAxisPos;
+    return dToolAxisPos;
 }
 
-
-//ËÙ¶È¹æ»®£¨¶ÔÊ±¼ä½ÚµãÔ²Õû´¦Àí£©
+//é€Ÿåº¦è§„åˆ’ï¼ˆå¯¹æ—¶é—´èŠ‚ç‚¹åœ†æ•´å¤„ç†ï¼‰
 int8 preparePlanningTNewAddForToolAxis(struct SPlan* pSPlanPointer)
 {
-	int8 res = 1;
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
-	uint8 flag = FALSE;//ÊäÈëÊÇ·ñÎª×î´óËÙ¶È
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
-	const uint8* pMapArray;
-	pMapArray = g_SChannel[0].pMapAxisArray;
+    int8 res = 1;
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
+    uint8 flag = FALSE;                  //è¾“å…¥æ˜¯å¦ä¸ºæœ€å¤§é€Ÿåº¦
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
+    const uint8* pMapArray;
+    pMapArray = g_SChannel[0].pMapAxisArray;
 
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;                //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;            //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;              //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;              //å‡é€Ÿåº¦
+    dDistance = pSPlanPointer->dCurLeftDist; //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
+    dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dDistance = pSPlanPointer->dCurLeftDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    ////å‡½æ•°è¿è¡Œå¼€å§‹
+    //if (isZero(dVmax - g_SSystemPara.SAxisPara[pMapArray[4]].dVmax))
+    //{//è¾“å…¥çš„æœ€å¤§é€Ÿåº¦ä¸ºç³»ç»Ÿå‚æ•°çš„æœ€å¤§é€Ÿåº¦
+    //	//ä½œç”¨ï¼šåŒºåˆ†   è¿½èµ¶ã€éšåŠ¨é˜¶æ®µ  ä¸  å‡é€Ÿé˜¶æ®µï¼Œä¸åŒé˜¶æ®µä½¿ç”¨ä¸åŒçš„å–æ•´æ–¹å¼(Tconst)ï¼Œé‡ç®—çš„å¯¹è±¡(Ve, Dec)ä¹Ÿä¸åŒ
+    //	flag = TRUE;
+    //}
 
-	////º¯ÊıÔËĞĞ¿ªÊ¼
-	//if (isZero(dVmax - g_SSystemPara.SAxisPara[pMapArray[4]].dVmax))
-	//{//ÊäÈëµÄ×î´óËÙ¶ÈÎªÏµÍ³²ÎÊıµÄ×î´óËÙ¶È
-	//	//×÷ÓÃ£ºÇø·Ö   ×·¸Ï¡¢Ëæ¶¯½×¶Î  Óë  ¼õËÙ½×¶Î£¬²»Í¬½×¶ÎÊ¹ÓÃ²»Í¬µÄÈ¡Õû·½Ê½(Tconst)£¬ÖØËãµÄ¶ÔÏó(Ve, Dec)Ò²²»Í¬
-	//	flag = TRUE;
-	//}
+    //å†³å®šdTacã€dTconstã€dTdeçš„åœ†æ•´æ–¹å¼
+    flag = TRUE;
+    //flag = FALSE;
 
-	//¾ö¶¨dTac¡¢dTconst¡¢dTdeµÄÔ²Õû·½Ê½
-	flag = TRUE;
-	//flag = FALSE;
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+        /* æ­¤å¤„åŸæœ‰ G32 è°ƒè¯•ç‰‡æ®µå¼•ç”¨äº†æœ¬å‡½æ•°ä½œç”¨åŸŸå¤–çš„å˜é‡ï¼Œå·²æ¸…ç†ã€‚ */
 
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+        return 0;
+    }
 
-		return 0;
-	}
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
-	
-	//1.¹æ»®¾àÀë²»×ãVs->Vmax->Ve£¬ĞèÒªµ÷Ğ¡Vmax
-	if (dDistance < dSac + dSde)
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
-		//×¢£º
-		//µ÷Ğ¡Vmaxºó£¬¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve
-		//µ«Èô¹æ»®¾àÀë¹ıĞ¡£¬¿ÉÄÜ²»×ãÒÔVs->Ve
-		//ÔòÖØËãdVmax<Ve£¬¼´ÔÚ¼õËÙ¶ÎÊ±ÈÔÔÚ¼ÓËÙ£¬µ¼ÖÂ¼õËÙ¾àÀë<0¡£
-		//´Ó¶øÂú×ã¹æ»®¾àÀë = ¼ÓËÙ¾àÀë(+) + ¼õËÙ¾àÀë(-)
-	}
+    //1.è§„åˆ’è·ç¦»ä¸è¶³Vs->Vmax->Veï¼Œéœ€è¦è°ƒå°Vmax
+    if (dDistance < dSac + dSde)
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+        //æ³¨ï¼š
+        //è°ƒå°Vmaxåï¼Œè§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Ve
+        //ä½†è‹¥è§„åˆ’è·ç¦»è¿‡å°ï¼Œå¯èƒ½ä¸è¶³ä»¥Vs->Ve
+        //åˆ™é‡ç®—dVmax<Veï¼Œå³åœ¨å‡é€Ÿæ®µæ—¶ä»åœ¨åŠ é€Ÿï¼Œå¯¼è‡´å‡é€Ÿè·ç¦»<0ã€‚
+        //ä»è€Œæ»¡è¶³è§„åˆ’è·ç¦» = åŠ é€Ÿè·ç¦»(+) + å‡é€Ÿè·ç¦»(-)
+    }
 
+    dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    //å¥½æƒ…å†µä¸‹è¿™é‡Œå¾—åˆ°çš„dTacã€dTdeã€dTconstéƒ½åº”è¯¥>=0
+    //ä½†æŸäº›åæƒ…å†µä¸‹å¯èƒ½å¯¼è‡´dTacã€dTdeã€dTconst < 0ï¼ŒåŸå› å¦‚ä¸‹
+    //1.è§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Veï¼Œå¯¼è‡´dTconst=0ï¼ˆè¿™é‡Œåº”è¯¥ä¸éœ€è¦å¤„ç†è¯¥æƒ…å†µï¼‰
+    //2.è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œå¯¼è‡´è§„åˆ’è·ç¦» < |åŠ é€Ÿè·ç¦»(+)| + |å‡é€Ÿè·ç¦»(-)|ï¼Œä½¿å¾—dTconst<0
+    //  è¿™ç§æƒ…å†µä¸‹çš„dTacæˆ–dTdeä¼šå°äº0
+    //å³éœ€è¦å°†è¿™ç§åæƒ…å†µè¿›è¡Œä¿®æ­£
+    if (dTconst <= 0)
+    {
+        //è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œè§£å†³æ–¹æ³•ï¼ˆè¿™é‡Œä¿®æ­£Veï¼‰
+        //1.ä¿®æ­£Ve
+        //2.ä¿®æ­£Vs
+        //2.ä¿®æ­£Aac
+        if (dTac < 0 || dTde < 0)
+        {
+            //Vsä¸èƒ½å‡é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            //é‡ç®—Veåå˜å¤§ï¼Œä½¿å¾—Vsèƒ½å‡é€Ÿåˆ°Ve
+            if (dVs > dVe)
+            {
+                dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec); //æ ¹æ®å‡é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦(ä¸ä¼šå‡ºç°è´Ÿå€¼)
+                dVmax = dVs;                                    //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+            }
+            //Vsä¸èƒ½åŠ é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            //é‡ç®—Veåå˜å°ï¼Œä½¿å¾—Vsèƒ½åŠ é€Ÿåˆ°Ve
+            else
+            {
+                dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance); //æ ¹æ®åŠ é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦
+                dVmax = dVe;                                    //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+            }
+            //åæƒ…å†µå·²å¤„ç†å®Œæˆï¼Œé‡æ–°è®¡ç®—dTacä¸dTde
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+    }
 
-	//ºÃÇé¿öÏÂÕâÀïµÃµ½µÄdTac¡¢dTde¡¢dTconst¶¼Ó¦¸Ã>=0
-	//µ«Ä³Ğ©»µÇé¿öÏÂ¿ÉÄÜµ¼ÖÂdTac¡¢dTde¡¢dTconst < 0£¬Ô­ÒòÈçÏÂ
-	//1.¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve£¬µ¼ÖÂdTconst=0£¨ÕâÀïÓ¦¸Ã²»ĞèÒª´¦Àí¸ÃÇé¿ö£©
-	//2.¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬µ¼ÖÂ¹æ»®¾àÀë < |¼ÓËÙ¾àÀë(+)| + |¼õËÙ¾àÀë(-)|£¬Ê¹µÃdTconst<0
-	//  ÕâÖÖÇé¿öÏÂµÄdTac»òdTde»áĞ¡ÓÚ0
-	//¼´ĞèÒª½«ÕâÖÖ»µÇé¿ö½øĞĞĞŞÕı
-	if (dTconst <= 0)
-	{
-		//¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬½â¾ö·½·¨£¨ÕâÀïĞŞÕıVe£©
-		//1.ĞŞÕıVe
-		//2.ĞŞÕıVs
-		//2.ĞŞÕıAac
-		if (dTac < 0 || dTde < 0)
-		{
-			//Vs²»ÄÜ¼õËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			//ÖØËãVeºó±ä´ó£¬Ê¹µÃVsÄÜ¼õËÙµ½Ve
-			if (dVs > dVe)
-			{
-				dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec);//¸ù¾İ¼õËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È(²»»á³öÏÖ¸ºÖµ)
-				dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-			}
-			//Vs²»ÄÜ¼ÓËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			//ÖØËãVeºó±äĞ¡£¬Ê¹µÃVsÄÜ¼ÓËÙµ½Ve
-			else
-			{
-				dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance);//¸ù¾İ¼ÓËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È
-				dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-			}
-			//»µÇé¿öÒÑ´¦ÀíÍê³É£¬ÖØĞÂ¼ÆËãdTacÓëdTde
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-	}
+    //è§„åˆ’è·ç¦»è¶³å¤ŸVs->Vmax->Veï¼Œä½†Vs>Vmaxå¯¼è‡´dTac<0ï¼Œè¿™é‡Œå¯¹dTacä¸dAccå–åå³å¯
+    if (dTac < 0)
+    {
+        dTac = fabs(dTac);
+        dAcc = -(dAcc);
+    }
 
-	//¹æ»®¾àÀë×ã¹»Vs->Vmax->Ve£¬µ«Vs>Vmaxµ¼ÖÂdTac<0£¬ÕâÀï¶ÔdTacÓëdAccÈ¡·´¼´¿É
-	if (dTac < 0)
-	{
-		dTac = fabs(dTac);
-		dAcc = -(dAcc);
-	}
+    //å¤„ç†dTacä¸dTdeè¿‡å°çš„æƒ…å†µï¼ˆå°äº0.5ï¼‰
+    //è‹¥dTacè¿‡å°ï¼Œåˆ™å°†è§„åˆ’çš„dVsæé«˜åˆ°dVmaxï¼Œå–æ¶ˆåŠ é€Ÿå‘¨æœŸ
+    //è‹¥dTdeè¿‡å°ï¼Œåˆ™å°†è§„åˆ’çš„dVeæé«˜åˆ°dVmaxï¼Œå–æ¶ˆå‡é€Ÿå‘¨æœŸ
+    //è¿™é‡Œä¸æ˜ç™½ä¸ºä»€ä¹ˆdTacä¸dTdeè¿‡å°æ—¶ä¸å‘ä¸Šå–æ•´???
+    if (((int)(dTac + 0.5)) == 0) //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0  (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    {
+        dTac = 0;    //åŠ é€Ÿå‘¨æœŸä¸º0
+        dVs = dVmax; //èµ·å§‹é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    //if (((int)(dTde + 0.5)) == 0)//å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0 (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    //{
+    //	dTde = 0;//å‡é€Ÿå‘¨æœŸè®¾ä¸º0
+    //	dVe = dVmax;//æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    //}
 
-	//´¦ÀídTacÓëdTde¹ıĞ¡µÄÇé¿ö£¨Ğ¡ÓÚ0.5£©
-	//ÈôdTac¹ıĞ¡£¬Ôò½«¹æ»®µÄdVsÌá¸ßµ½dVmax£¬È¡Ïû¼ÓËÙÖÜÆÚ
-	//ÈôdTde¹ıĞ¡£¬Ôò½«¹æ»®µÄdVeÌá¸ßµ½dVmax£¬È¡Ïû¼õËÙÖÜÆÚ
-	//ÕâÀï²»Ã÷°×ÎªÊ²Ã´dTacÓëdTde¹ıĞ¡Ê±²»ÏòÉÏÈ¡Õû???
-	if (((int)(dTac + 0.5)) == 0)//¼ÓËÙÖÜÆÚËÄÉáÎåÈëºóÎª0  (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	{
-		dTac = 0;//¼ÓËÙÖÜÆÚÎª0
-		dVs = dVmax;//ÆğÊ¼ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	//if (((int)(dTde + 0.5)) == 0)//¼õËÙÖÜÆÚËÄÉáÎåÈëºóÎª0 (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	//{
-	//	dTde = 0;//¼õËÙÖÜÆÚÉèÎª0
-	//	dVe = dVmax;//Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	//}
+    //
+    if (isZero(dTde) && isZero(dTac) && dVmax * dTc >= dDistance)
+    {
+        res = 2; //éšåŠ¨é˜¶æ®µ
+    }
 
-	//
-	if (isZero(dTde) && isZero(dTac) && dVmax * dTc >= dDistance)
-	{
-		res = 2;//Ëæ¶¯½×¶Î
-	}
+    //é€Ÿåº¦è§„åˆ’éœ€è¦åšç¦»æ•£åŒ–å¤„ç†ï¼Œéœ€è¦åœ†æ•´dTacã€dTdeï¼Œè¿™é‡Œå¯¹å…¶å‘ä¸Šå–æ•´
+    //dTacå‘ä¸Šå–æ•´åï¼Œå®é™…Vmaxå¤§äºè§„åˆ’Vmax
+    //dTdeå‘ä¸Šå–æ•´åï¼Œå®é™…Vmaxå¤§äºè§„åˆ’Vmax
+    dTac = ceil(dTac);
+    dTde = ceil(dTde);
 
-	//ËÙ¶È¹æ»®ĞèÒª×öÀëÉ¢»¯´¦Àí£¬ĞèÒªÔ²ÕûdTac¡¢dTde£¬ÕâÀï¶ÔÆäÏòÉÏÈ¡Õû
-	//dTacÏòÉÏÈ¡Õûºó£¬Êµ¼ÊVmax´óÓÚ¹æ»®Vmax
-	//dTdeÏòÉÏÈ¡Õûºó£¬Êµ¼ÊVmax´óÓÚ¹æ»®Vmax
-	dTac = ceil(dTac);
-	dTde = ceil(dTde);
+    //å‰é¢å·²ç»å¤„ç†è¿‡dTac=0çš„æƒ…å†µï¼Œè¿™é‡Œé‡å¤å¤„ç†
+    if (isZero(dTac) || isZero(dVs - dVmax)) //åŠ é€Ÿå‘¨æœŸä¸º0
+    {
+        dVs = dVmax;
+        dTac = 0;
+    }
+    else
+    {
+        //dTacå‘ä¸Šå–æ•´åï¼Œè§„åˆ’å‚æ•°Vmax != Vs + Acc*Tacï¼Œæœ‰ä¸¤ç§è°ƒæ•´æ–¹æ³•
+        //1.é‡ç®—Vmax
+        //2.é‡ç®—Acc
+        if (1)
+        {
+            dVmax = dAcc * (dTac * dTc) + dVs; //é‡ç®—æœ€å¤§é€Ÿåº¦
+        }
+        else
+        {
+            dAcc = (dVmax - dVs) / (dTac * dTc); //é‡ç®—åŠ é€Ÿåº¦
+        }
+    }
+    if (dTde < 0 ||
+        isZero(
+            dTde)) //å‡é€Ÿå‘¨æœŸä¸º0 ï¼ˆå‰ææ˜¯æœ€å¤§é€Ÿåº¦ä¸ä¼šæ¯”ç»ˆç‚¹é€Ÿåº¦å°å¾ˆå¤š(>dDec)ï¼‰   æ™®é€šè§„åˆ’é™åˆ¶äº†æœ«é€Ÿåº¦ä¸è¶…è¿‡æœ€å¤§é€Ÿåº¦  æ–°å¢è·ç¦»çš„è§„åˆ’æ²¡æœ‰é™åˆ¶  å› æ­¤éœ€è¦åˆ¤æ–­<=0
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        //dTacå‘ä¸Šå–æ•´åï¼Œè§„åˆ’å‚æ•°Ve != Vmax - Dec*Tdeï¼Œæœ‰ä¸¤ç§è°ƒæ•´æ–¹æ³•
+        //1.é‡ç®—Ve
+        //2.é‡ç®—Dec
+        if (flag)
+        {
+            //ä»¥å…å‡é€Ÿåº¦é‡ç®—ä¸º0ï¼Œå½±å“è®¡ç®—
+            //ä¸ºä»€ä¹ˆå‡é€Ÿåº¦é‡ç®—ä¸º0ï¼Ÿæ˜¯å› ä¸ºdVmax = dVeï¼Ÿ
+            dVe = dVmax - dDec * (dTde * dTc);
+        }
+        else
+        {
+            dDec = (dVmax - dVe) / (dTde * dTc);
+        }
+    }
 
-	//Ç°ÃæÒÑ¾­´¦Àí¹ıdTac=0µÄÇé¿ö£¬ÕâÀïÖØ¸´´¦Àí
-	if (isZero(dTac) || isZero(dVs - dVmax))//¼ÓËÙÖÜÆÚÎª0
-	{
-		dVs = dVmax;
-		dTac = 0;
-	}
-	else
-	{
-		//dTacÏòÉÏÈ¡Õûºó£¬¹æ»®²ÎÊıVmax != Vs + Acc*Tac£¬ÓĞÁ½ÖÖµ÷Õû·½·¨
-		//1.ÖØËãVmax
-		//2.ÖØËãAcc
-		if (1)
-		{
-			dVmax = dAcc * (dTac * dTc) + dVs;//ÖØËã×î´óËÙ¶È
-		}
-		else
-		{
-			dAcc = (dVmax - dVs) / (dTac * dTc);//ÖØËã¼ÓËÙ¶È
-		}
+    //è§„åˆ’å‚æ•°Vsã€Vmaxã€Veã€Accã€Decã€Tacã€Tdeå…¨éƒ¨é‡æ–°è°ƒæ•´ï¼Œå¯¼è‡´Distance != Sac + Sde + Sconst
+    //éœ€è¦é‡ç®—Sconstã€Tconst
+    dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);     //åŠ é€Ÿæ®µä½ç§»ï¼ˆæ—¶é—´å–æ•´åï¼‰
+    dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2);     //å‡é€Ÿæ®µä½ç§»
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
-	}
-	if (dTde < 0 || isZero(dTde))  //¼õËÙÖÜÆÚÎª0 £¨Ç°ÌáÊÇ×î´óËÙ¶È²»»á±ÈÖÕµãËÙ¶ÈĞ¡ºÜ¶à(>dDec)£©   ÆÕÍ¨¹æ»®ÏŞÖÆÁËÄ©ËÙ¶È²»³¬¹ı×î´óËÙ¶È  ĞÂÔö¾àÀëµÄ¹æ»®Ã»ÓĞÏŞÖÆ  Òò´ËĞèÒªÅĞ¶Ï<=0
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{                                  
-		//dTacÏòÉÏÈ¡Õûºó£¬¹æ»®²ÎÊıVe != Vmax - Dec*Tde£¬ÓĞÁ½ÖÖµ÷Õû·½·¨
-		//1.ÖØËãVe
-		//2.ÖØËãDec
-		if (flag)
-		{
-			//ÒÔÃâ¼õËÙ¶ÈÖØËãÎª0£¬Ó°Ïì¼ÆËã
-			//ÎªÊ²Ã´¼õËÙ¶ÈÖØËãÎª0£¿ÊÇÒòÎªdVmax = dVe£¿
-			dVe = dVmax - dDec * (dTde * dTc);
-		}
-		else
-		{
-			dDec = (dVmax - dVe) / (dTde * dTc);
-		}
-	}
+    //æ­¤æ—¶Tacã€Tconstã€Tdeä¸­ï¼Œä»…Tconstæœªè¿›è¡Œåœ†æ•´
+    //Tacã€Tdeå‘ä¸Šå–æ•´åï¼Œå¯¼è‡´Sacã€Sdeå˜å¤§
+    //åœ¨è§„åˆ’è·ç¦»ä¸å˜çš„æƒ…å†µä¸‹ï¼Œå¯èƒ½å¯¼è‡´Sconst<0
+    //è¿™é‡Œå‡ºç°æ®‹ä½™è·ç¦»!!!
+    if (dTconst <= 0) //æ²¡æœ‰åŒ€é€Ÿå‘¨æœŸ
+    {
+        dTconst = 0;
+    }
+    if (flag || (isZero(dTac) && isZero(dTde)))
+    {
+        //å‘ä¸Šå–æ•´
+        dTconst = ceil(dTconst); //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    }
+    else
+    {
+        //å››èˆäº”å…¥
+        dTconst = (int)(dTconst + 0.5); //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    }
 
-	//¹æ»®²ÎÊıVs¡¢Vmax¡¢Ve¡¢Acc¡¢Dec¡¢Tac¡¢TdeÈ«²¿ÖØĞÂµ÷Õû£¬µ¼ÖÂDistance != Sac + Sde + Sconst
-	//ĞèÒªÖØËãSconst¡¢Tconst
-	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //¼ÓËÙ¶ÎÎ»ÒÆ£¨Ê±¼äÈ¡Õûºó£©
-	dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2);   //¼õËÙ¶ÎÎ»ÒÆ 
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    unT1 = unT2 = (uint32)dTac;        //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT3 = unT2 + (uint32)dTconst;     //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT4 = unT5 = unT3 + (uint32)dTde; //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
 
-	//´ËÊ±Tac¡¢Tconst¡¢TdeÖĞ£¬½öTconstÎ´½øĞĞÔ²Õû
-	//Tac¡¢TdeÏòÉÏÈ¡Õûºó£¬µ¼ÖÂSac¡¢Sde±ä´ó
-	//ÔÚ¹æ»®¾àÀë²»±äµÄÇé¿öÏÂ£¬¿ÉÄÜµ¼ÖÂSconst<0
-	//ÕâÀï³öÏÖ²ĞÓà¾àÀë!!!
-	if (dTconst <= 0)  //Ã»ÓĞÔÈËÙÖÜÆÚ
-	{
-		dTconst = 0;
-	}
-	if (flag || (isZero(dTac) && isZero(dTde)))
-	{
-		//ÏòÉÏÈ¡Õû
-		dTconst = ceil(dTconst);  //ÔÈËÙÖÜÆÚÈ¡Õû
-	}
-	else
-	{
-		//ËÄÉáÎåÈë
-		dTconst = (int)(dTconst + 0.5);  //ÔÈËÙÖÜÆÚÈ¡Õû
-	}
+    dSconst = dVmax * (unT3 - unT2) * dTc; //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
 
-	unT1 = unT2 = (uint32)dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	unT3 = unT2 + (uint32)dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	unT4 = unT5 = unT3 + (uint32)dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	dSconst = dVmax * (unT3 - unT2) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("TĞÎËÙ¶È¹æ»®\n");
-	printf("dTac = %lf\r\n", dTac);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde = %lf\r\n", dTde);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dVmax = %lf\r\n", dVmax);
+    printf("Tå½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac = %lf\r\n", dTac);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde = %lf\r\n", dTde);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dVmax = %lf\r\n", dVmax);
 #endif
-	return res;
-
+    return res;
 }
-//ËÙ¶È¹æ»®1£¨²»¶ÔÊ±¼ä½ÚµãÔ²Õû´¦Àí£©
+//é€Ÿåº¦è§„åˆ’1ï¼ˆä¸å¯¹æ—¶é—´èŠ‚ç‚¹åœ†æ•´å¤„ç†ï¼‰
 int8 preparePlanningTNewAddForToolAxis_1(struct SPlan* pSPlanPointer)
 {
-	int8 res = 1;
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dT1, dT2, dT3, dT4, dT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
-	uint8 flag = FALSE;//ÊäÈëÊÇ·ñÎª×î´óËÙ¶È
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
-	const uint8* pMapArray;
-	pMapArray = g_SChannel[0].pMapAxisArray;
+    int8 res = 1;
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;     //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dT1, dT2, dT3, dT4, dT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;     //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
+    uint8 flag = FALSE;             //è¾“å…¥æ˜¯å¦ä¸ºæœ€å¤§é€Ÿåº¦
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
+    const uint8* pMapArray;
+    pMapArray = g_SChannel[0].pMapAxisArray;
 
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;                //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;            //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;              //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;              //å‡é€Ÿåº¦
+    dDistance = pSPlanPointer->dCurLeftDist; //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
+    dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dDistance = pSPlanPointer->dCurLeftDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    ////å‡½æ•°è¿è¡Œå¼€å§‹
+    //if (isZero(dVmax - g_SSystemPara.SAxisPara[pMapArray[4]].dVmax))
+    //{//è¾“å…¥çš„æœ€å¤§é€Ÿåº¦ä¸ºç³»ç»Ÿå‚æ•°çš„æœ€å¤§é€Ÿåº¦
+    //	//ä½œç”¨ï¼šåŒºåˆ†   è¿½èµ¶ã€éšåŠ¨é˜¶æ®µ  ä¸  å‡é€Ÿé˜¶æ®µï¼Œä¸åŒé˜¶æ®µä½¿ç”¨ä¸åŒçš„å–æ•´æ–¹å¼(Tconst)ï¼Œé‡ç®—çš„å¯¹è±¡(Ve, Dec)ä¹Ÿä¸åŒ
+    //	flag = TRUE;
+    //}
 
-	////º¯ÊıÔËĞĞ¿ªÊ¼
-	//if (isZero(dVmax - g_SSystemPara.SAxisPara[pMapArray[4]].dVmax))
-	//{//ÊäÈëµÄ×î´óËÙ¶ÈÎªÏµÍ³²ÎÊıµÄ×î´óËÙ¶È
-	//	//×÷ÓÃ£ºÇø·Ö   ×·¸Ï¡¢Ëæ¶¯½×¶Î  Óë  ¼õËÙ½×¶Î£¬²»Í¬½×¶ÎÊ¹ÓÃ²»Í¬µÄÈ¡Õû·½Ê½(Tconst)£¬ÖØËãµÄ¶ÔÏó(Ve, Dec)Ò²²»Í¬
-	//	flag = TRUE;
-	//}
+    //å†³å®šdTacã€dTconstã€dTdeçš„åœ†æ•´æ–¹å¼
+    flag = TRUE;
+    //flag = FALSE;
 
-	//¾ö¶¨dTac¡¢dTconst¡¢dTdeµÄÔ²Õû·½Ê½
-	flag = TRUE;
-	//flag = FALSE;
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
 
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+        return 0;
+    }
 
-		return 0;
-	}
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+    //1.è§„åˆ’è·ç¦»ä¸è¶³Vs->Vmax->Veï¼Œéœ€è¦è°ƒå°Vmax
+    if (dDistance < dSac + dSde)
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+        //æ³¨ï¼š
+        //è°ƒå°Vmaxåï¼Œè§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Ve
+        //ä½†è‹¥è§„åˆ’è·ç¦»è¿‡å°ï¼Œå¯èƒ½ä¸è¶³ä»¥Vs->Ve
+        //åˆ™é‡ç®—dVmax<Veï¼Œå³åœ¨å‡é€Ÿæ®µæ—¶ä»åœ¨åŠ é€Ÿï¼Œå¯¼è‡´å‡é€Ÿè·ç¦»<0ã€‚
+        //ä»è€Œæ»¡è¶³è§„åˆ’è·ç¦» = åŠ é€Ÿè·ç¦»(+) + å‡é€Ÿè·ç¦»(-)
+    }
 
-	//1.¹æ»®¾àÀë²»×ãVs->Vmax->Ve£¬ĞèÒªµ÷Ğ¡Vmax
-	if (dDistance < dSac + dSde)
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
-		//×¢£º
-		//µ÷Ğ¡Vmaxºó£¬¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve
-		//µ«Èô¹æ»®¾àÀë¹ıĞ¡£¬¿ÉÄÜ²»×ãÒÔVs->Ve
-		//ÔòÖØËãdVmax<Ve£¬¼´ÔÚ¼õËÙ¶ÎÊ±ÈÔÔÚ¼ÓËÙ£¬µ¼ÖÂ¼õËÙ¾àÀë<0¡£
-		//´Ó¶øÂú×ã¹æ»®¾àÀë = ¼ÓËÙ¾àÀë(+) + ¼õËÙ¾àÀë(-)
-	}
+    dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
+    //å¥½æƒ…å†µä¸‹è¿™é‡Œå¾—åˆ°çš„dTacã€dTdeã€dTconstéƒ½åº”è¯¥>=0
+    //ä½†æŸäº›åæƒ…å†µä¸‹å¯èƒ½å¯¼è‡´dTacã€dTdeã€dTconst < 0ï¼ŒåŸå› å¦‚ä¸‹
+    //1.è§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Veï¼Œå¯¼è‡´dTconst=0ï¼ˆè¿™é‡Œåº”è¯¥ä¸éœ€è¦å¤„ç†è¯¥æƒ…å†µï¼‰
+    //2.è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œå¯¼è‡´è§„åˆ’è·ç¦» < |åŠ é€Ÿè·ç¦»(+)| + |å‡é€Ÿè·ç¦»(-)|ï¼Œä½¿å¾—dTconst<0
+    //  è¿™ç§æƒ…å†µä¸‹çš„dTacæˆ–dTdeä¼šå°äº0
+    //å³éœ€è¦å°†è¿™ç§åæƒ…å†µè¿›è¡Œä¿®æ­£
+    if (isUnEqualAndLessThanZero(dTconst)) //dTconst < 0
+    {
+        //è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œè§£å†³æ–¹æ³•ï¼ˆè¿™é‡Œä¿®æ­£Veï¼‰
+        //1.ä¿®æ­£Veæˆ–Vs
+        //2.ä¿®æ­£Aacæˆ–Dec
+        //3.ä¿®æ­£Dist(âˆš)
+        if (dTac < 0 || dTde < 0)
+        {
+            //Vsä¸èƒ½å‡é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            if (dVs > dVe)
+            {
+                dVmax = dVs; //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+                dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
+            }
+            //Vsä¸èƒ½åŠ é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            else
+            {
+                dVmax = dVe; //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+                dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
+            }
+            //åæƒ…å†µå·²å¤„ç†å®Œæˆï¼Œé‡æ–°è®¡ç®—dTacä¸dTde
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+    }
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    //è§„åˆ’è·ç¦»è¶³å¤ŸVs->Vmax->Veï¼Œä½†Vs>Vmaxå¯¼è‡´dTac<0ï¼Œè¿™é‡Œå¯¹dTacä¸dAccå–åå³å¯
+    if (dTac < 0)
+    {
+        dTac = fabs(dTac);
+        dAcc = -(dAcc);
+    }
 
-	//ºÃÇé¿öÏÂÕâÀïµÃµ½µÄdTac¡¢dTde¡¢dTconst¶¼Ó¦¸Ã>=0
-	//µ«Ä³Ğ©»µÇé¿öÏÂ¿ÉÄÜµ¼ÖÂdTac¡¢dTde¡¢dTconst < 0£¬Ô­ÒòÈçÏÂ
-	//1.¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve£¬µ¼ÖÂdTconst=0£¨ÕâÀïÓ¦¸Ã²»ĞèÒª´¦Àí¸ÃÇé¿ö£©
-	//2.¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬µ¼ÖÂ¹æ»®¾àÀë < |¼ÓËÙ¾àÀë(+)| + |¼õËÙ¾àÀë(-)|£¬Ê¹µÃdTconst<0
-	//  ÕâÖÖÇé¿öÏÂµÄdTac»òdTde»áĞ¡ÓÚ0
-	//¼´ĞèÒª½«ÕâÖÖ»µÇé¿ö½øĞĞĞŞÕı
-	if (isUnEqualAndLessThanZero(dTconst))//dTconst < 0
-	{
-		//¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬½â¾ö·½·¨£¨ÕâÀïĞŞÕıVe£©
-		//1.ĞŞÕıVe»òVs
-		//2.ĞŞÕıAac»òDec
-		//3.ĞŞÕıDist(¡Ì)
-		if (dTac < 0 || dTde < 0)
-		{
-			//Vs²»ÄÜ¼õËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			if (dVs > dVe)
-			{
-				dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-				dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
-			}
-			//Vs²»ÄÜ¼ÓËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			else
-			{
-				dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-				dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
-			}
-			//»µÇé¿öÒÑ´¦ÀíÍê³É£¬ÖØĞÂ¼ÆËãdTacÓëdTde
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-	}
+    dT1 = dT2 = dTac;       //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    dT3 = dT2 + dTconst;    //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    dT4 = dT5 = dT3 + dTde; //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
 
-	//¹æ»®¾àÀë×ã¹»Vs->Vmax->Ve£¬µ«Vs>Vmaxµ¼ÖÂdTac<0£¬ÕâÀï¶ÔdTacÓëdAccÈ¡·´¼´¿É
-	if (dTac < 0)
-	{
-		dTac = fabs(dTac);
-		dAcc = -(dAcc);
-	}
+    dSconst = dVmax * (dT3 - dT2) * dTc; //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
 
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	dT1 = dT2 = dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	dT3 = dT2 + dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	dT4 = dT5 = dT3 + dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->dT1 = dT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->dT2 = dT2;
+    pSPlanPointer->dT3 = dT3;
+    pSPlanPointer->dT4 = dT4;
+    pSPlanPointer->dT5 = dT5;
 
-	dSconst = dVmax * (dT3 - dT2) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
-
-	//´«³ö²ÎÊı
-	pSPlanPointer->dT1 = dT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->dT2 = dT2;
-	pSPlanPointer->dT3 = dT3;
-	pSPlanPointer->dT4 = dT4;
-	pSPlanPointer->dT5 = dT5;
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("TĞÎËÙ¶È¹æ»®\n");
-	printf("dTac = %lf\r\n", dTac);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde = %lf\r\n", dTde);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dVmax = %lf\r\n", dVmax);
+    printf("Tå½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac = %lf\r\n", dTac);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde = %lf\r\n", dTde);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dVmax = %lf\r\n", dVmax);
 #endif
-	return res;
-
+    return res;
 }
-//ËÙ¶È¹æ»®2£¨²»¶ÔÊ±¼ä½ÚµãÔ²Õû´¦Àí£©£¬µ±¼ÓËÙÊ±¼äĞ¡ÓÚ0£¬½øĞĞ¶ş´ÎËÙ¶È¹æ»®
+//é€Ÿåº¦è§„åˆ’2ï¼ˆä¸å¯¹æ—¶é—´èŠ‚ç‚¹åœ†æ•´å¤„ç†ï¼‰ï¼Œå½“åŠ é€Ÿæ—¶é—´å°äº0ï¼Œè¿›è¡ŒäºŒæ¬¡é€Ÿåº¦è§„åˆ’
 int8 preparePlanningTNewAddForToolAxis_2(struct SPlan* pSPlanPointer)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dT1, dT2, dT3, dT4, dT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;     //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dT1, dT2, dT3, dT4, dT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;     //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
 
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;                //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;            //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;              //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;              //å‡é€Ÿåº¦
+    dDistance = pSPlanPointer->dCurLeftDist; //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
+    dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dDistance = pSPlanPointer->dCurLeftDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    if (dDistance < 0)
+    {
+        dDistance = 0;
+    }
 
-	//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	if (dDistance < 0)
-	{
-		dDistance = 0;
-	}
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
 
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+        return 0;
+    }
 
-		return 0;
-	}
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+    //1.è§„åˆ’è·ç¦»ä¸è¶³Vs->Vmax->Veï¼Œéœ€è¦è°ƒå°Vmax
+    if (dDistance < dSac + dSde)
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+        //æ³¨ï¼š
+        //è°ƒå°Vmaxåï¼Œè§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Ve
+        //ä½†è‹¥è§„åˆ’è·ç¦»è¿‡å°ï¼Œå¯èƒ½ä¸è¶³ä»¥Vs->Ve
+        //åˆ™é‡ç®—dVmax<Veï¼Œå³åœ¨å‡é€Ÿæ®µæ—¶ä»åœ¨åŠ é€Ÿï¼Œå¯¼è‡´å‡é€Ÿè·ç¦»<0ã€‚
+        //ä»è€Œæ»¡è¶³è§„åˆ’è·ç¦» = åŠ é€Ÿè·ç¦»(+) + å‡é€Ÿè·ç¦»(-)
+    }
 
-	//1.¹æ»®¾àÀë²»×ãVs->Vmax->Ve£¬ĞèÒªµ÷Ğ¡Vmax
-	if (dDistance < dSac + dSde)
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
-		//×¢£º
-		//µ÷Ğ¡Vmaxºó£¬¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve
-		//µ«Èô¹æ»®¾àÀë¹ıĞ¡£¬¿ÉÄÜ²»×ãÒÔVs->Ve
-		//ÔòÖØËãdVmax<Ve£¬¼´ÔÚ¼õËÙ¶ÎÊ±ÈÔÔÚ¼ÓËÙ£¬µ¼ÖÂ¼õËÙ¾àÀë<0¡£
-		//´Ó¶øÂú×ã¹æ»®¾àÀë = ¼ÓËÙ¾àÀë(+) + ¼õËÙ¾àÀë(-)
-	}
+    dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
+    //å¥½æƒ…å†µä¸‹è¿™é‡Œå¾—åˆ°çš„dTacã€dTdeã€dTconstéƒ½åº”è¯¥>=0
+    //ä½†æŸäº›åæƒ…å†µä¸‹å¯èƒ½å¯¼è‡´dTacã€dTdeã€dTconst < 0ï¼ŒåŸå› å¦‚ä¸‹
+    //1.è§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Veï¼Œå¯¼è‡´dTconst=0ï¼ˆè¿™é‡Œåº”è¯¥ä¸éœ€è¦å¤„ç†è¯¥æƒ…å†µï¼‰
+    //2.è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œå¯¼è‡´è§„åˆ’è·ç¦» < |åŠ é€Ÿè·ç¦»(+)| + |å‡é€Ÿè·ç¦»(-)|ï¼Œä½¿å¾—dTconst<0
+    //  è¿™ç§æƒ…å†µä¸‹çš„dTacæˆ–dTdeä¼šå°äº0
+    //å³éœ€è¦å°†è¿™ç§åæƒ…å†µè¿›è¡Œä¿®æ­£
+    if (isUnEqualAndLessThanZero(dTconst)) //dTconst < 0
+    {
+        //è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œè§£å†³æ–¹æ³•ï¼ˆè¿™é‡Œä¿®æ­£Veï¼‰
+        //1.ä¿®æ­£Veæˆ–Vs
+        //2.ä¿®æ­£Aacæˆ–Dec
+        //3.ä¿®æ­£Dist(âˆš)
+        if (dTac < 0 || dTde < 0)
+        {
+            //Vsä¸èƒ½å‡é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            if (dVs > dVe)
+            {
+                dVmax = dVs; //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+                dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
+            }
+            //Vsä¸èƒ½åŠ é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+            else
+            {
+                dVmax = dVe; //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+                dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
+            }
+            //åæƒ…å†µå·²å¤„ç†å®Œæˆï¼Œé‡æ–°è®¡ç®—dTacä¸dTde
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+    }
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    //è§„åˆ’è·ç¦»è¶³å¤ŸVs->Vmax->Veï¼Œä½†Vs>Vmaxå¯¼è‡´dTac<0ï¼Œè¿™é‡Œå¯¹dTacä¸dAccå–åå³å¯
+    if (dTac < 0)
+    {
+        dTac = fabs(dTac);
+        dAcc = -(dAcc);
+    }
 
-	//ºÃÇé¿öÏÂÕâÀïµÃµ½µÄdTac¡¢dTde¡¢dTconst¶¼Ó¦¸Ã>=0
-	//µ«Ä³Ğ©»µÇé¿öÏÂ¿ÉÄÜµ¼ÖÂdTac¡¢dTde¡¢dTconst < 0£¬Ô­ÒòÈçÏÂ
-	//1.¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve£¬µ¼ÖÂdTconst=0£¨ÕâÀïÓ¦¸Ã²»ĞèÒª´¦Àí¸ÃÇé¿ö£©
-	//2.¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬µ¼ÖÂ¹æ»®¾àÀë < |¼ÓËÙ¾àÀë(+)| + |¼õËÙ¾àÀë(-)|£¬Ê¹µÃdTconst<0
-	//  ÕâÖÖÇé¿öÏÂµÄdTac»òdTde»áĞ¡ÓÚ0
-	//¼´ĞèÒª½«ÕâÖÖ»µÇé¿ö½øĞĞĞŞÕı
-	if (isUnEqualAndLessThanZero(dTconst))//dTconst < 0
-	{
-		//¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬½â¾ö·½·¨£¨ÕâÀïĞŞÕıVe£©
-		//1.ĞŞÕıVe»òVs
-		//2.ĞŞÕıAac»òDec
-		//3.ĞŞÕıDist(¡Ì)
-		if (dTac < 0 || dTde < 0)
-		{
-			//Vs²»ÄÜ¼õËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			if (dVs > dVe)
-			{
-				dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-				dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
-			}
-			//Vs²»ÄÜ¼ÓËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-			else
-			{
-				dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-				dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
-			}
-			//»µÇé¿öÒÑ´¦ÀíÍê³É£¬ÖØĞÂ¼ÆËãdTacÓëdTde
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-	}
+    //åŠ å…¥æœªæ¥æ–°å¢è·ç¦»è¿›è¡ŒäºŒæ¬¡è§„åˆ’
+    if (isZero(dTac))
+    {
+        dVs = pSPlanPointer->dVs;                //èµ·å§‹é€Ÿåº¦
+        dVmax = pSPlanPointer->dVmax;            //æœ€å¤§é€Ÿåº¦
+        dVe = pSPlanPointer->dVe;                //æœ€ç»ˆé€Ÿåº¦
+        dAcc = pSPlanPointer->dAcc;              //åŠ é€Ÿåº¦
+        dDec = pSPlanPointer->dDec;              //å‡é€Ÿåº¦
+        dDistance = pSPlanPointer->dCurLeftDist; //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
+        dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	//¹æ»®¾àÀë×ã¹»Vs->Vmax->Ve£¬µ«Vs>Vmaxµ¼ÖÂdTac<0£¬ÕâÀï¶ÔdTacÓëdAccÈ¡·´¼´¿É
-	if (dTac < 0)
-	{
-		dTac = fabs(dTac);
-		dAcc = -(dAcc);
-	}
+        double dNewAddDist;
+        dNewAddDist = (dTconst + dTde - 1.05) * dVe; //1.05
+        dDistance += dNewAddDist;                    //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
 
-	//¼ÓÈëÎ´À´ĞÂÔö¾àÀë½øĞĞ¶ş´Î¹æ»®
-	if (isZero(dTac))
-	{
-		dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-		dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-		dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-		dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-		dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-		dDistance = pSPlanPointer->dCurLeftDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
-		dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-		double dNewAddDist;
-		dNewAddDist = (dTconst + dTde - 1.05) * dVe;//1.05
-		dDistance += dNewAddDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
+        //1.è§„åˆ’è·ç¦»ä¸è¶³Vs->Vmax->Veï¼Œéœ€è¦è°ƒå°Vmax
+        if (dDistance < dSac + dSde)
+        {
+            //é‡ç®—æœ€å¤§é€Ÿåº¦
+            dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+            dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
+            dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+            //æ³¨ï¼š
+            //è°ƒå°Vmaxåï¼Œè§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Ve
+            //ä½†è‹¥è§„åˆ’è·ç¦»è¿‡å°ï¼Œå¯èƒ½ä¸è¶³ä»¥Vs->Ve
+            //åˆ™é‡ç®—dVmax<Veï¼Œå³åœ¨å‡é€Ÿæ®µæ—¶ä»åœ¨åŠ é€Ÿï¼Œå¯¼è‡´å‡é€Ÿè·ç¦»<0ã€‚
+            //ä»è€Œæ»¡è¶³è§„åˆ’è·ç¦» = åŠ é€Ÿè·ç¦»(+) + å‡é€Ÿè·ç¦»(-)
+        }
 
+        dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+        dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+        //å¥½æƒ…å†µä¸‹è¿™é‡Œå¾—åˆ°çš„dTacã€dTdeã€dTconstéƒ½åº”è¯¥>=0
+        //ä½†æŸäº›åæƒ…å†µä¸‹å¯èƒ½å¯¼è‡´dTacã€dTdeã€dTconst < 0ï¼ŒåŸå› å¦‚ä¸‹
+        //1.è§„åˆ’è·ç¦»æ°å¥½Vs->Vmax->Veï¼Œå¯¼è‡´dTconst=0ï¼ˆè¿™é‡Œåº”è¯¥ä¸éœ€è¦å¤„ç†è¯¥æƒ…å†µï¼‰
+        //2.è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œå¯¼è‡´è§„åˆ’è·ç¦» < |åŠ é€Ÿè·ç¦»(+)| + |å‡é€Ÿè·ç¦»(-)|ï¼Œä½¿å¾—dTconst<0
+        //  è¿™ç§æƒ…å†µä¸‹çš„dTacæˆ–dTdeä¼šå°äº0
+        //å³éœ€è¦å°†è¿™ç§åæƒ…å†µè¿›è¡Œä¿®æ­£
+        if (isUnEqualAndLessThanZero(dTconst)) //dTconst < 0
+        {
+            //è§„åˆ’è·ç¦»è¿‡å°ä¸è¶³ä»¥Vs->Veï¼Œè§£å†³æ–¹æ³•ï¼ˆè¿™é‡Œä¿®æ­£Veï¼‰
+            //1.ä¿®æ­£Veæˆ–Vs
+            //2.ä¿®æ­£Aacæˆ–Dec
+            //3.ä¿®æ­£Dist(âˆš)
+            if (dTac < 0 || dTde < 0)
+            {
+                //Vsä¸èƒ½å‡é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+                if (dVs > dVe)
+                {
+                    dVmax = dVs; //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+                    dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
+                }
+                //Vsä¸èƒ½åŠ é€Ÿåˆ°Veï¼Œæ ¹æ®è§„åˆ’è·ç¦»å€’ç®—Ve
+                else
+                {
+                    dVmax = dVe; //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+                    dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
+                }
+                //åæƒ…å†µå·²å¤„ç†å®Œæˆï¼Œé‡æ–°è®¡ç®—dTacä¸dTde
+                dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+                dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+            }
+            dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+        }
 
-		//1.¹æ»®¾àÀë²»×ãVs->Vmax->Ve£¬ĞèÒªµ÷Ğ¡Vmax
-		if (dDistance < dSac + dSde)
-		{
-			//ÖØËã×î´óËÙ¶È
-			dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
-			dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));
-			dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
-			//×¢£º
-			//µ÷Ğ¡Vmaxºó£¬¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve
-			//µ«Èô¹æ»®¾àÀë¹ıĞ¡£¬¿ÉÄÜ²»×ãÒÔVs->Ve
-			//ÔòÖØËãdVmax<Ve£¬¼´ÔÚ¼õËÙ¶ÎÊ±ÈÔÔÚ¼ÓËÙ£¬µ¼ÖÂ¼õËÙ¾àÀë<0¡£
-			//´Ó¶øÂú×ã¹æ»®¾àÀë = ¼ÓËÙ¾àÀë(+) + ¼õËÙ¾àÀë(-)
-		}
+        //è§„åˆ’è·ç¦»è¶³å¤ŸVs->Vmax->Veï¼Œä½†Vs>Vmaxå¯¼è‡´dTac<0ï¼Œè¿™é‡Œå¯¹dTacä¸dAccå–åå³å¯
+        if (dTac < 0)
+        {
+            dTac = fabs(dTac);
+            dAcc = -(dAcc);
+        }
+    }
 
+    dT1 = dT2 = dTac;       //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    dT3 = dT2 + dTconst;    //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    dT4 = dT5 = dT3 + dTde; //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
 
-		dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-		dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    dSconst = dVmax * (dT3 - dT2) * dTc; //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
 
-		//ºÃÇé¿öÏÂÕâÀïµÃµ½µÄdTac¡¢dTde¡¢dTconst¶¼Ó¦¸Ã>=0
-		//µ«Ä³Ğ©»µÇé¿öÏÂ¿ÉÄÜµ¼ÖÂdTac¡¢dTde¡¢dTconst < 0£¬Ô­ÒòÈçÏÂ
-		//1.¹æ»®¾àÀëÇ¡ºÃVs->Vmax->Ve£¬µ¼ÖÂdTconst=0£¨ÕâÀïÓ¦¸Ã²»ĞèÒª´¦Àí¸ÃÇé¿ö£©
-		//2.¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬µ¼ÖÂ¹æ»®¾àÀë < |¼ÓËÙ¾àÀë(+)| + |¼õËÙ¾àÀë(-)|£¬Ê¹µÃdTconst<0
-		//  ÕâÖÖÇé¿öÏÂµÄdTac»òdTde»áĞ¡ÓÚ0
-		//¼´ĞèÒª½«ÕâÖÖ»µÇé¿ö½øĞĞĞŞÕı
-		if (isUnEqualAndLessThanZero(dTconst))//dTconst < 0
-		{
-			//¹æ»®¾àÀë¹ıĞ¡²»×ãÒÔVs->Ve£¬½â¾ö·½·¨£¨ÕâÀïĞŞÕıVe£©
-			//1.ĞŞÕıVe»òVs
-			//2.ĞŞÕıAac»òDec
-			//3.ĞŞÕıDist(¡Ì)
-			if (dTac < 0 || dTde < 0)
-			{
-				//Vs²»ÄÜ¼õËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-				if (dVs > dVe)
-				{
-					dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-					dDistance = -(dVe * dVe - dVs * dVs) / 2 / dDec;
-				}
-				//Vs²»ÄÜ¼ÓËÙµ½Ve£¬¸ù¾İ¹æ»®¾àÀëµ¹ËãVe
-				else
-				{
-					dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-					dDistance = (dVe * dVe - dVs * dVs) / 2 / dAcc;
-				}
-				//»µÇé¿öÒÑ´¦ÀíÍê³É£¬ÖØĞÂ¼ÆËãdTacÓëdTde
-				dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-				dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-			}
-			dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-		}
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-		//¹æ»®¾àÀë×ã¹»Vs->Vmax->Ve£¬µ«Vs>Vmaxµ¼ÖÂdTac<0£¬ÕâÀï¶ÔdTacÓëdAccÈ¡·´¼´¿É
-		if (dTac < 0)
-		{
-			dTac = fabs(dTac);
-			dAcc = -(dAcc);
-		}
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->dT1 = dT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->dT2 = dT2;
+    pSPlanPointer->dT3 = dT3;
+    pSPlanPointer->dT4 = dT4;
+    pSPlanPointer->dT5 = dT5;
 
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	}
-
-
-
-	dT1 = dT2 = dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	dT3 = dT2 + dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	dT4 = dT5 = dT3 + dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
-
-	dSconst = dVmax * (dT3 - dT2) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
-
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
-
-	//´«³ö²ÎÊı
-	pSPlanPointer->dT1 = dT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->dT2 = dT2;
-	pSPlanPointer->dT3 = dT3;
-	pSPlanPointer->dT4 = dT4;
-	pSPlanPointer->dT5 = dT5;
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("TĞÎËÙ¶È¹æ»®\n");
-	printf("dTac = %lf\r\n", dTac);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde = %lf\r\n", dTde);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dVmax = %lf\r\n", dVmax);
+    printf("Tå½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac = %lf\r\n", dTac);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde = %lf\r\n", dTde);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dVmax = %lf\r\n", dVmax);
 #endif
-	return 1;
-
+    return 1;
 }
 
-
-
-//¼ÆËãÏÂÒ»ÖÜÆÚ½Ç¶È
+//è®¡ç®—ä¸‹ä¸€å‘¨æœŸè§’åº¦
 double nextStepPlanningAndDistReAvgToolAxis(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dDistance = 0; //ËÙ¶È¹æ»®×ßµÄ¾àÀë
-	double dPreDist = 0;//¹æ»®Ç°ÒÑ×ßµÄ¾àÀë
-	double dTotalDist = 0;
-	uint8 ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
-	double dAverageFactor;		///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
+    double dDistance = 0; //é€Ÿåº¦è§„åˆ’èµ°çš„è·ç¦»
+    double dPreDist = 0;  //è§„åˆ’å‰å·²èµ°çš„è·ç¦»
+    double dTotalDist = 0;
+    uint8 ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
+    double dAverageFactor;     ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return 0;
-	}
-	if (isZero(pSPlanPointer->dDistance))
-	{
-		//pSPlanPointer->ucInpStatus = INP_FINISHED;
-		//return 0;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return 0;
+    }
+    if (isZero(pSPlanPointer->dDistance))
+    {
+        //pSPlanPointer->ucInpStatus = INP_FINISHED;
+        //return 0;
+    }
 
-	//³õÊ¼»¯
-	ucDistReAverageType = pSPlanPointer->ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
-	dAverageFactor = pSPlanPointer->dAverageFactor;		///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
-	dPreDist = pSPlanPointer->dPreDist;
+    //åˆå§‹åŒ–
+    ucDistReAverageType = pSPlanPointer->ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
+    dAverageFactor = pSPlanPointer->dAverageFactor;           ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
+    dPreDist = pSPlanPointer->dPreDist;
 
-	dDistance = nextstepPlanningCombine(unK, pSPlanPointer);
+    dDistance = nextstepPlanningCombine(unK, pSPlanPointer);
 
+    //switch (ucDistReAverageType)//æ ¹æ®é¢„è®¾çš„DEAL_DE_TYPEå€¼,å¤„ç†é€Ÿåº¦è§„åˆ’åçš„ä½ç§»
+    //{
+    //case 1:
+    //	dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//æ¢¯å½¢å‡æ‘Šåçš„ä½ç§»S(t)
+    //	break;
+    //case 2:
+    //	dDistance += nextstepDistReAvgS5(unK, pSPlanPointer);//äº”æ¬¡å¤šé¡¹å¼å‡æ‘Šåçš„ä½ç§»S(t)
+    //	break;
+    //case 3:
+    //	dDistance *= dAverageFactor;//æŒ‰æ¯”ä¾‹å‡æ‘Šåçš„ä½ç§»S(t)
+    //	break;
+    //default:
+    //	dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//Default:æ¢¯å½¢å‡æ‘Šåçš„ä½ç§»S(t)
+    //}
 
-	//switch (ucDistReAverageType)//¸ù¾İÔ¤ÉèµÄDEAL_DE_TYPEÖµ,´¦ÀíËÙ¶È¹æ»®ºóµÄÎ»ÒÆ
-	//{
-	//case 1:
-	//	dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//ÌİĞÎ¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-	//	break;
-	//case 2:
-	//	dDistance += nextstepDistReAvgS5(unK, pSPlanPointer);//Îå´Î¶àÏîÊ½¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-	//	break;
-	//case 3:
-	//	dDistance *= dAverageFactor;//°´±ÈÀı¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-	//	break;
-	//default:
-	//	dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//Default:ÌİĞÎ¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-	//}
+    dTotalDist = dDistance; //ä¸ç®—è§„åˆ’  å·²èµ°çš„è·ç¦»
 
-	dTotalDist = dDistance;//²»Ëã¹æ»®  ÒÑ×ßµÄ¾àÀë
-
-	return dTotalDist;//·µ»Ø¾ùÌ¯ºóµÄ×ÜÎ»ÒÆ
+    return dTotalDist; //è¿”å›å‡æ‘Šåçš„æ€»ä½ç§»
 }
-//¼ÆËãÏÂÒ»ÖÜÆÚ½Ç¶È£¨ÈáĞÔ¸úËæ£©
+//è®¡ç®—ä¸‹ä¸€å‘¨æœŸè§’åº¦ï¼ˆæŸ”æ€§è·Ÿéšï¼‰
 double nextStepPlanningAndDistReAvgToolAxis_1(struct SPlan* pSPlanPointer)
 {
-	double dDeltaL = 0;
-	
-	double dVs = pSPlanPointer->dVs;
-	double dVmax = pSPlanPointer->dVmax;
-	double dAcc = pSPlanPointer->dAcc;
-	double dDec = pSPlanPointer->dDec;
-	double dTc = pSPlanPointer->dTc;
-	double dDist = pSPlanPointer->dCurLeftDist;
-	double dDistMin = dVs * dTc - dDec * dTc * dTc;	//ÔÊĞíÊä³ö×îĞ¡¾àÀë
-	double dDistMax = dVs * dTc + dAcc * dTc * dTc;	//ÔÊĞíÊä³ö×î´ó¾àÀë
- 
-	//1.dDist < dDistMin
-	if (isUnEqualAndLessThanZero(dDist - dDistMin))
-	{
-		dDeltaL = dDistMin;
-	}	
-	//2.dDistMin < dDist < dDistMax
-	else if (isBetweenA2B(pSPlanPointer->dCurLeftDist, dDistMin, dDistMax))
-	{
-		dDeltaL = dDist;
-	}
-	//3.dDistMax < dDist
-	else if (isUnEqualAndGreaterThanZero(dDist - dDistMax))
-	{
-		//if
-		//3.1¼ÓËÙ£¨ÄÜ¼ÓËÙÔò¼ÓËÙ£©
-		if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
-		{
-			dDeltaL = dDistMax;
-		}
-		//3.2ÔÈËÙ
-		else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3))
-		{
-			dDeltaL = dVs * dTc;
-		}
-		//3.3¼õËÙ
-		else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
-		{
-			dDeltaL = dDistMin;
-		}
-	}
+    double dDeltaL = 0;
 
-	////1.¼ÓËÙÖÜÆÚ > 1,Ôò¼ÓËÙ
-	//else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
-	//{
-	//	dDeltaL = pSPlanPointer->dVs + pSPlanPointer->dAcc;
-	//}
-	////2.ÓĞÔÈËÙÖÜÆÚ£¬ÔòÔÈËÙ
-	//else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3 - 0.5))
-	//{
-	//	dDeltaL = pSPlanPointer->dVs ;
-	//}
-	////3.ÓĞ¼õËÙÖÜÆÚ£¬Ôò¼õËÙ
-	//else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
-	//{
-	//	dDeltaL = pSPlanPointer->dVs - pSPlanPointer->dDec;
-	//}
+    double dVs = pSPlanPointer->dVs;
+    double dVmax = pSPlanPointer->dVmax;
+    double dAcc = pSPlanPointer->dAcc;
+    double dDec = pSPlanPointer->dDec;
+    double dTc = pSPlanPointer->dTc;
+    double dDist = pSPlanPointer->dCurLeftDist;
+    double dDistMin = dVs * dTc - dDec * dTc * dTc; //å…è®¸è¾“å‡ºæœ€å°è·ç¦»
+    double dDistMax = dVs * dTc + dAcc * dTc * dTc; //å…è®¸è¾“å‡ºæœ€å¤§è·ç¦»
 
-	return dDeltaL;
+    //1.dDist < dDistMin
+    if (isUnEqualAndLessThanZero(dDist - dDistMin))
+    {
+        dDeltaL = dDistMin;
+    }
+    //2.dDistMin < dDist < dDistMax
+    else if (isBetweenA2B(pSPlanPointer->dCurLeftDist, dDistMin, dDistMax))
+    {
+        dDeltaL = dDist;
+    }
+    //3.dDistMax < dDist
+    else if (isUnEqualAndGreaterThanZero(dDist - dDistMax))
+    {
+        //if
+        //3.1åŠ é€Ÿï¼ˆèƒ½åŠ é€Ÿåˆ™åŠ é€Ÿï¼‰
+        if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
+        {
+            dDeltaL = dDistMax;
+        }
+        //3.2åŒ€é€Ÿ
+        else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3))
+        {
+            dDeltaL = dVs * dTc;
+        }
+        //3.3å‡é€Ÿ
+        else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
+        {
+            dDeltaL = dDistMin;
+        }
+    }
 
+    ////1.åŠ é€Ÿå‘¨æœŸ > 1,åˆ™åŠ é€Ÿ
+    //else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
+    //{
+    //	dDeltaL = pSPlanPointer->dVs + pSPlanPointer->dAcc;
+    //}
+    ////2.æœ‰åŒ€é€Ÿå‘¨æœŸï¼Œåˆ™åŒ€é€Ÿ
+    //else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3 - 0.5))
+    //{
+    //	dDeltaL = pSPlanPointer->dVs ;
+    //}
+    ////3.æœ‰å‡é€Ÿå‘¨æœŸï¼Œåˆ™å‡é€Ÿ
+    //else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
+    //{
+    //	dDeltaL = pSPlanPointer->dVs - pSPlanPointer->dDec;
+    //}
+
+    return dDeltaL;
 }
-//¼ÆËãÏÂÒ»ÖÜÆÚ½Ç¶È£¨¸ÕĞÔ¸úËæ£©
+//è®¡ç®—ä¸‹ä¸€å‘¨æœŸè§’åº¦ï¼ˆåˆšæ€§è·Ÿéšï¼‰
 double nextStepPlanningAndDistReAvgToolAxis_2(struct SPlan* pSPlanPointer)
 {
-	double dDeltaL = 0;
+    double dDeltaL = 0;
 
-	double dVs = pSPlanPointer->dVs;
-	double dVmax = pSPlanPointer->dVmax;
-	double dAcc = pSPlanPointer->dAcc;
-	double dDec = pSPlanPointer->dDec;
-	double dTc = pSPlanPointer->dTc;
-	double dDist = pSPlanPointer->dCurLeftDist;
-	double dDistMin = dVs * dTc - dDec * dTc * dTc;	//ÔÊĞíÊä³ö×îĞ¡¾àÀë
-	double dDistMax = dVs * dTc + dAcc * dTc * dTc;	//ÔÊĞíÊä³ö×î´ó¾àÀë
-	if (g_SToolAxisInfo.bFollowed)
-	{
-		dDeltaL = dDist;
-	}
-	//1.dDist < dDistMin
-	if (isUnEqualAndLessThanZero(dDist - dDistMin))
-	{
-		dDeltaL = dDistMin;
-	}
-	//2.dDistMin < dDist < dDistMax
-	else if (isBetweenA2B(pSPlanPointer->dCurLeftDist, dDistMin, dDistMax))
-	{
-		dDeltaL = dDist;
-	}
-	//3.dDistMax < dDist
-	else if (isUnEqualAndGreaterThanZero(dDist - dDistMax))
-	{
-		//if
-		//3.1¼ÓËÙ£¨ÄÜ¼ÓËÙÔò¼ÓËÙ£©
-		if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
-		{
-			dDeltaL = dDistMax;
-		}
-		//3.2ÔÈËÙ
-		else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3))
-		{
-			dDeltaL = dVs * dTc;
-		}
-		//3.3¼õËÙ
-		else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
-		{
-			dDeltaL = dDistMin;
-		}
-	}
+    double dVs = pSPlanPointer->dVs;
+    double dVmax = pSPlanPointer->dVmax;
+    double dAcc = pSPlanPointer->dAcc;
+    double dDec = pSPlanPointer->dDec;
+    double dTc = pSPlanPointer->dTc;
+    double dDist = pSPlanPointer->dCurLeftDist;
+    double dDistMin = dVs * dTc - dDec * dTc * dTc; //å…è®¸è¾“å‡ºæœ€å°è·ç¦»
+    double dDistMax = dVs * dTc + dAcc * dTc * dTc; //å…è®¸è¾“å‡ºæœ€å¤§è·ç¦»
+    if (g_SToolAxisInfo.bFollowed)
+    {
+        dDeltaL = dDist;
+    }
+    //1.dDist < dDistMin
+    if (isUnEqualAndLessThanZero(dDist - dDistMin))
+    {
+        dDeltaL = dDistMin;
+    }
+    //2.dDistMin < dDist < dDistMax
+    else if (isBetweenA2B(pSPlanPointer->dCurLeftDist, dDistMin, dDistMax))
+    {
+        dDeltaL = dDist;
+    }
+    //3.dDistMax < dDist
+    else if (isUnEqualAndGreaterThanZero(dDist - dDistMax))
+    {
+        //if
+        //3.1åŠ é€Ÿï¼ˆèƒ½åŠ é€Ÿåˆ™åŠ é€Ÿï¼‰
+        if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT1 - 0.5))
+        {
+            dDeltaL = dDistMax;
+        }
+        //3.2åŒ€é€Ÿ
+        else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT3))
+        {
+            dDeltaL = dVs * dTc;
+        }
+        //3.3å‡é€Ÿ
+        else if (isUnEqualAndGreaterThanZero(pSPlanPointer->dT4))
+        {
+            dDeltaL = dDistMin;
+        }
+    }
 
-	return dDeltaL;
-
+    return dDeltaL;
 }
-
-
-
 
 #if TOOLAXIS_DEBUG_32
-//Êı¿ØÃæ°åÏÔÊ¾Êı¾İ³õÊ¼»¯
+//æ•°æ§é¢æ¿æ˜¾ç¤ºæ•°æ®åˆå§‹åŒ–
 void toolAxisScreenPrintInit()
 {
-	wordx(220, 260, 2, 0, 2, green, black, "Ö÷Ôö");
-	wordx(450, 260, 2, 0, 2, green, black, "Ö÷±à");
-	wordx(220, 300, 2, 0, 2, green, black, "¸±Ôö");
-	wordx(450, 300, 2, 0, 2, green, black, "¸±±à");
-	wordx(450, 216, 2, 0, 2, green, black, "ÖÍºó");
+    wordx(220, 260, 2, 0, 2, green, black, "ä¸»å¢");
+    wordx(450, 260, 2, 0, 2, green, black, "ä¸»ç¼–");
+    wordx(220, 300, 2, 0, 2, green, black, "å‰¯å¢");
+    wordx(450, 300, 2, 0, 2, green, black, "å‰¯ç¼–");
+    wordx(450, 216, 2, 0, 2, green, black, "æ»å");
 }
 
-//Êı¿ØÃæ°åÏÔÊ¾Êı¾İ(·Ç1msÏÔÊ¾Ò»´Î)
+//æ•°æ§é¢æ¿æ˜¾ç¤ºæ•°æ®(é1msæ˜¾ç¤ºä¸€æ¬¡)
 void toolAxisScreenPrint()
 {
-	uint8 ucSpinleAxisNum;
-	uint8 ucSpindleEncoderNum;
-	uint8 ucToolAxisNum;
-	uint8 ucToolAxisEncoderNum;
+    uint8 ucSpinleAxisNum;
+    uint8 ucSpindleEncoderNum;
+    uint8 ucToolAxisNum;
+    uint8 ucToolAxisEncoderNum;
 
-	ucSpinleAxisNum = SPINDLE_AXIS;
-	ucSpindleEncoderNum = SPINDLE_ENCODER;
-	ucToolAxisNum = TOOL_AXIS;
-	ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
+    ucSpinleAxisNum = SPINDLE_AXIS;
+    ucSpindleEncoderNum = SPINDLE_ENCODER;
+    ucToolAxisNum = TOOL_AXIS;
+    ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
 
-	//Ö÷Öá±àÂëÆ÷Âö³åÔöÁ¿
-	double dSpindleEncoderDelta;
-	dSpindleEncoderDelta = g_SEncoder[0].usDelta;
-	Trans_Data_Clear(220, 280, 9, 0, 2, white, black, dSpindleEncoderDelta);
+    //ä¸»è½´ç¼–ç å™¨è„‰å†²å¢é‡
+    double dSpindleEncoderDelta;
+    dSpindleEncoderDelta = g_SEncoder[0].usDelta;
+    Trans_Data_Clear(220, 280, 9, 0, 2, white, black, dSpindleEncoderDelta);
 
-	//Ö÷Öá±àÂëÆ÷Î»ÖÃ
-	double dSpindleEncoderPos;
-	dSpindleEncoderPos = getEncoderPos(0);
-	Trans_Data_Clear(420, 280, 9, 0, 2, white, black, (int32)(dSpindleEncoderPos * 1000));
+    //ä¸»è½´ç¼–ç å™¨ä½ç½®
+    double dSpindleEncoderPos;
+    dSpindleEncoderPos = getEncoderPos(0);
+    Trans_Data_Clear(420, 280, 9, 0, 2, white, black, (int32)(dSpindleEncoderPos * 1000));
 
-	//µ¶¾ßÖá±àÂëÆ÷ÔöÁ¿
-	double dToolAxisEncoderDelta;
-	dToolAxisEncoderDelta = g_SEncoder[1].usDelta;
-	Trans_Data_Clear(220, 325, 9, 0, 2, white, black, dToolAxisEncoderDelta);
+    //åˆ€å…·è½´ç¼–ç å™¨å¢é‡
+    double dToolAxisEncoderDelta;
+    dToolAxisEncoderDelta = g_SEncoder[1].usDelta;
+    Trans_Data_Clear(220, 325, 9, 0, 2, white, black, dToolAxisEncoderDelta);
 
-	//µ¶¾ßÖá±àÂëÆ÷Î»ÖÃ
-	double dToolAxisEncoderPos;
-	dToolAxisEncoderPos = getEncoderPos(1);
-	Trans_Data_Clear(420, 325, 9, 0, 2, white, black, (int32)(dToolAxisEncoderPos * 1000));
+    //åˆ€å…·è½´ç¼–ç å™¨ä½ç½®
+    double dToolAxisEncoderPos;
+    dToolAxisEncoderPos = getEncoderPos(1);
+    Trans_Data_Clear(420, 325, 9, 0, 2, white, black, (int32)(dToolAxisEncoderPos * 1000));
 
-	//µ¶¾ßÖáÂäºó½Ç¶È
-	double dToolAxisTargetPos;
-	dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleEncoderPos, TRUE);
-	double dToolAxisCurrLag;
-	dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisEncoderPos, 360.0);
-	dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
-	//ĞŞÕıÂäºó½Ç¶È
-	//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-	if (g_SToolAxisInfo.bFollowed == TRUE)
-		dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
-	Trans_Data_Clear(420, 240, 9, 0, 2, white, black, (int32)(dToolAxisCurrLag * 1000));
-
+    //åˆ€å…·è½´è½åè§’åº¦
+    double dToolAxisTargetPos;
+    dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindleEncoderPos, TRUE);
+    double dToolAxisCurrLag;
+    dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisEncoderPos, 360.0);
+    dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
+    //ä¿®æ­£è½åè§’åº¦
+    //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+    if (g_SToolAxisInfo.bFollowed == TRUE)
+        dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
+    Trans_Data_Clear(420, 240, 9, 0, 2, white, black, (int32)(dToolAxisCurrLag * 1000));
 }
 void output485()
 {
-	uint8 ucSpinleAxisNum;
-	uint8 ucSpindleEncoderNum;
-	uint8 ucToolAxisNum;
-	uint8 ucToolAxisEncoderNum;
+    uint8 ucSpinleAxisNum;
+    uint8 ucSpindleEncoderNum;
+    uint8 ucToolAxisNum;
+    uint8 ucToolAxisEncoderNum;
 
-	ucSpinleAxisNum = SPINDLE_AXIS;
-	ucSpindleEncoderNum = SPINDLE_ENCODER;
-	ucToolAxisNum = TOOL_AXIS;
-	ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
+    ucSpinleAxisNum = SPINDLE_AXIS;
+    ucSpindleEncoderNum = SPINDLE_ENCODER;
+    ucToolAxisNum = TOOL_AXIS;
+    ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
 
-	//0.Ê±¼ä
-	char cTime[7];
-	itoaNC(g_SToolAxisInfo.unTime, cTime, 10);
-	uart6_set(cTime);
-	uart6_set("\t");
+    //0.æ—¶é—´
+    char cTime[7];
+    itoaNC(g_SToolAxisInfo.unTime, cTime, 10);
+    uart6_set(cTime);
+    uart6_set("\t");
 
-	
-	//1.±àÂëÆ÷0ÔöÁ¿
-	outputEncoderDelta(0);
-	
-	//2.±àÂëÆ÷1ÔöÁ¿
-	outputEncoderDelta(1);
+    //1.ç¼–ç å™¨0å¢é‡
+    outputEncoderDelta(0);
 
-	//3.±àÂëÆ÷0Î»ÖÃ
-	outputEncoderPos(0);
+    //2.ç¼–ç å™¨1å¢é‡
+    outputEncoderDelta(1);
 
-	//4.±àÂëÆ÷1Î»ÖÃ
-	outputEncoderPos(1);
+    //3.ç¼–ç å™¨0ä½ç½®
+    outputEncoderPos(0);
 
-	//5.±àÂëÆ÷1Âäºó½Ç¶È
-	double dToolAxisTargetPos;
-	dToolAxisTargetPos = getToolAxisEncoderTargetPos(getEncoderPos(0), TRUE);
-	double dToolAxisCurrLag;
-	dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - getEncoderPos(1), 360.0);
-	dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
-	//ĞŞÕıÂäºó½Ç¶È
-	//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-	if (g_SToolAxisInfo.bFollowed == TRUE)
-		dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
+    //4.ç¼–ç å™¨1ä½ç½®
+    outputEncoderPos(1);
 
-	char cToolAxisCurrLag[7];
-	itoaNC((int32)(dToolAxisCurrLag * 1000), cToolAxisCurrLag, 10);
-	uart6_set(cToolAxisCurrLag);
-	uart6_set("\t");
+    //5.ç¼–ç å™¨1è½åè§’åº¦
+    double dToolAxisTargetPos;
+    dToolAxisTargetPos = getToolAxisEncoderTargetPos(getEncoderPos(0), TRUE);
+    double dToolAxisCurrLag;
+    dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - getEncoderPos(1), 360.0);
+    dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
+    //ä¿®æ­£è½åè§’åº¦
+    //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+    if (g_SToolAxisInfo.bFollowed == TRUE)
+        dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
 
-	//6.ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³åÊı
-	outputNextPulse();
+    char cToolAxisCurrLag[7];
+    itoaNC((int32)(dToolAxisCurrLag * 1000), cToolAxisCurrLag, 10);
+    uart6_set(cToolAxisCurrLag);
+    uart6_set("\t");
 
+    //6.ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²æ•°
+    outputNextPulse();
 
-	uart6_set("\r");
+    uart6_set("\r");
 }
 
 void outputEncoderDelta(uint8 ucEncoderNum)
 {
-	char cEncoderDelta[4];
-	itoaNC(g_SEncoder[ucEncoderNum].usDelta, cEncoderDelta, 10);
-	uart6_set(cEncoderDelta);
-	uart6_set("\t");
+    char cEncoderDelta[4];
+    itoaNC(g_SEncoder[ucEncoderNum].usDelta, cEncoderDelta, 10);
+    uart6_set(cEncoderDelta);
+    uart6_set("\t");
 }
 
 void outputEncoderDir(uint8 ucEncoderNum)
 {
-	char cEncoderDir[2];
-	itoaNC(g_SEncoder[ucEncoderNum].cEncoderDir, cEncoderDir, 10);
-	uart6_set(cEncoderDir);
-	uart6_set("\t");
+    char cEncoderDir[2];
+    itoaNC(g_SEncoder[ucEncoderNum].cEncoderDir, cEncoderDir, 10);
+    uart6_set(cEncoderDir);
+    uart6_set("\t");
 }
 
 void outputEncoderPos(uint8 ucEncoderNum)
 {
-	double dEncoderPos;
-	dEncoderPos = getEncoderPos(ucEncoderNum);
-	char cEncoderPos[7];
-	itoaNC((int32)(dEncoderPos * 1000), cEncoderPos, 10);
-	uart6_set(cEncoderPos);
-	uart6_set("\t");
+    double dEncoderPos;
+    dEncoderPos = getEncoderPos(ucEncoderNum);
+    char cEncoderPos[7];
+    itoaNC((int32)(dEncoderPos * 1000), cEncoderPos, 10);
+    uart6_set(cEncoderPos);
+    uart6_set("\t");
 }
 
 void outputIdealDelta(uint8 ucAxisNum)
 {
-	char cIdealDelta[4];
-	itoaNC(g_SChannel[0].SRun.sLastDeltaPulse[ucAxisNum], cIdealDelta, 10);
-	uart6_set(cIdealDelta);
-	uart6_set("\t");
+    char cIdealDelta[4];
+    itoaNC(g_SChannel[0].SRun.sLastDeltaPulse[ucAxisNum], cIdealDelta, 10);
+    uart6_set(cIdealDelta);
+    uart6_set("\t");
 }
 
 void outputIdealDir(uint8 ucAxisNum)
 {
-	int8 cDir;
-	cDir = g_SChannel[0].SRun.sLastDeltaPulse[ucAxisNum] > 0 ? 1 : -1;
-	char cIdealDir[2];
-	itoaNC(cDir, cIdealDir, 10);
-	uart6_set(cIdealDir);
-	uart6_set("\t");
+    int8 cDir;
+    cDir = g_SChannel[0].SRun.sLastDeltaPulse[ucAxisNum] > 0 ? 1 : -1;
+    char cIdealDir[2];
+    itoaNC(cDir, cIdealDir, 10);
+    uart6_set(cIdealDir);
+    uart6_set("\t");
 }
 
 void outputIdealPos(uint8 ucAxisNum)
 {
-	double dAxisPos;
-	getSingleAxisRealTimePoint(&dAxisPos, ucAxisNum, g_SChannel[0].pMapAxisArray);
-	dAxisPos = dAxisPos - g_SChannel[0].SRun.sAxisDeltaPulse[0] * 0.036;
-	char cAxisPos[7];
-	itoaNC((int32)(dAxisPos * 1000), cAxisPos, 10);
-	uart6_set(cAxisPos);
-	uart6_set("\t");
+    double dAxisPos;
+    getSingleAxisRealTimePoint(&dAxisPos, ucAxisNum, g_SChannel[0].pMapAxisArray);
+    dAxisPos = dAxisPos - g_SChannel[0].SRun.sAxisDeltaPulse[0] * 0.036;
+    char cAxisPos[7];
+    itoaNC((int32)(dAxisPos * 1000), cAxisPos, 10);
+    uart6_set(cAxisPos);
+    uart6_set("\t");
 }
 
 void outputIdealPulse(uint8 ucAxisNum)
 {
-	//ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³å
-	int16 sPulse;
-	sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucAxisNum];
-	char cPulse[4];
-	itoaNC(sPulse, cPulse, 10);
-	uart6_set(cPulse);
-	uart6_set("\t");
+    //ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²
+    int16 sPulse;
+    sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucAxisNum];
+    char cPulse[4];
+    itoaNC(sPulse, cPulse, 10);
+    uart6_set(cPulse);
+    uart6_set("\t");
 }
 
 void outputNextPulse()
 {
-	char cNextPulse[4];
-	itoaNC(g_SChannel[0].SRun.sAxisDeltaPulse[TOOL_AXIS], cNextPulse, 10);
-	uart6_set(cNextPulse);
-	uart6_set("\t");
+    char cNextPulse[4];
+    itoaNC(g_SChannel[0].SRun.sAxisDeltaPulse[TOOL_AXIS], cNextPulse, 10);
+    uart6_set(cNextPulse);
+    uart6_set("\t");
 }
-
-
 
 #elif TOOLAXIS_DEBUG_VS
 
-//Êä³ö±àÂëÆ÷Êı¾İ
+//è¾“å‡ºç¼–ç å™¨æ•°æ®
 void outputVS()
 {
-	uint8 ucSpinleAxisNum;
-	uint8 ucSpindleEncoderNum;
-	uint8 ucToolAxisNum;
-	uint8 ucToolAxisEncoderNum;
+    uint8 ucSpinleAxisNum;
+    uint8 ucSpindleEncoderNum;
+    uint8 ucToolAxisNum;
+    uint8 ucToolAxisEncoderNum;
 
-	ucSpinleAxisNum = SPINDLE_AXIS;
-	ucSpindleEncoderNum = SPINDLE_ENCODER;
-	ucToolAxisNum = TOOL_AXIS;
-	ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
+    ucSpinleAxisNum = SPINDLE_AXIS;
+    ucSpindleEncoderNum = SPINDLE_ENCODER;
+    ucToolAxisNum = TOOL_AXIS;
+    ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
 
-	uint8* ucMapArray = g_SChannel[0].pMapAxisArray;
-	uint8* ucEncoderMapArray = g_SSystemPara.ucEncoderMapArray[0];
+    uint8* ucMapArray = g_SChannel[0].pMapAxisArray;
+    uint8* ucEncoderMapArray = g_SSystemPara.ucEncoderMapArray[0];
 
-	//0.µ±Ç°±àºÅ
-	fprintf(pWriteFid, "±àºÅ£º\t%d\t", g_SToolAxisInfo.unTime);
+    //0.å½“å‰ç¼–å·
+    fprintf(pWriteFid, "ç¼–å·ï¼š\t%d\t", g_SToolAxisInfo.unTime);
 
-	//1.±àÂëÆ÷0ÔöÁ¿
-	fprintf(pWriteFid, "Ö÷ÖáÉÏÒ»ÖÜÆÚÂö³åÔöÁ¿£º\t%d\t", g_SEncoder[0].usDelta);
+    //1.ç¼–ç å™¨0å¢é‡
+    fprintf(pWriteFid, "ä¸»è½´ä¸Šä¸€å‘¨æœŸè„‰å†²å¢é‡ï¼š\t%d\t", g_SEncoder[0].usDelta);
 
-	//2.±àÂëÆ÷1ÔöÁ¿
-	fprintf(pWriteFid, "µ¶ÖáÉÏÒ»ÖÜÆÚÂö³åÔöÁ¿£º\t%d\t", g_SEncoder[1].usDelta);
+    //2.ç¼–ç å™¨1å¢é‡
+    fprintf(pWriteFid, "åˆ€è½´ä¸Šä¸€å‘¨æœŸè„‰å†²å¢é‡ï¼š\t%d\t", g_SEncoder[1].usDelta);
 
-	//3.±àÂëÆ÷0Î»ÖÃ
-	double dEncoderPos_0;
-	dEncoderPos_0 = getEncoderPos(0);
-	fprintf(pWriteFid, "Ö÷Öáµ±Ç°ÖÜÆÚ¿ªÊ¼½Ç¶È£º\t%.3f\t", dEncoderPos_0);
+    //3.ç¼–ç å™¨0ä½ç½®
+    double dEncoderPos_0;
+    dEncoderPos_0 = getEncoderPos(0);
+    fprintf(pWriteFid, "ä¸»è½´å½“å‰å‘¨æœŸå¼€å§‹è§’åº¦ï¼š\t%.3f\t", dEncoderPos_0);
 
-	//4.±àÂëÆ÷1Î»ÖÃ
-	double dEncoderPos_1;
-	dEncoderPos_1 = getEncoderPos(1);
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ¿ªÊ¼½Ç¶È£º\t%.3f\t", dEncoderPos_1);
+    //4.ç¼–ç å™¨1ä½ç½®
+    double dEncoderPos_1;
+    dEncoderPos_1 = getEncoderPos(1);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸå¼€å§‹è§’åº¦ï¼š\t%.3f\t", dEncoderPos_1);
 
-	//5.µ¶¾ßÖáÄ¿±ê½Ç¶È
-	double dToolAxisTargetPos;
-	dToolAxisTargetPos = getToolAxisEncoderTargetPos(dEncoderPos_0, TRUE);
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ¿ªÊ¼Ä¿±ê½Ç¶È£º\t%.3f\t", dToolAxisTargetPos);
+    //5.åˆ€å…·è½´ç›®æ ‡è§’åº¦
+    double dToolAxisTargetPos;
+    dToolAxisTargetPos = getToolAxisEncoderTargetPos(dEncoderPos_0, TRUE);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸå¼€å§‹ç›®æ ‡è§’åº¦ï¼š\t%.3f\t", dToolAxisTargetPos);
 
-	//5.µ¶¾ßÖáÂäºó½Ç¶È
-	double dToolAxisCurrLag;
-	dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dEncoderPos_1, 360);
-	dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
-	//ĞŞÕıÂäºó½Ç¶È
-	//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-	if (g_SToolAxisInfo.bFollowed == TRUE)
-		dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
+    //5.åˆ€å…·è½´è½åè§’åº¦
+    double dToolAxisCurrLag;
+    dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dEncoderPos_1, 360);
+    dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
+    //ä¿®æ­£è½åè§’åº¦
+    //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+    if (g_SToolAxisInfo.bFollowed == TRUE)
+        dToolAxisCurrLag = dToolAxisCurrLag > 345 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
 
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ¿ªÊ¼Âäºó½Ç¶È£º\t%.3f\t", dToolAxisCurrLag);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸå¼€å§‹è½åè§’åº¦ï¼š\t%.3f\t", dToolAxisCurrLag);
 
-	//6.µ¶¾ßÖá×·¸Ï¾àÀë
-	double dSpindle;
-	dSpindle = dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpinleAxisNum] * 0.036;
-	double dLeftDistance;
-	dLeftDistance = dToolAxisCurrLag + dSpindle * g_SToolAxisInfo.dCommandRatio;
-	fprintf(pWriteFid, "µ¶Öá×·¸Ï¾àÀë£º\t%.3f\t", dLeftDistance);
+    //6.åˆ€å…·è½´è¿½èµ¶è·ç¦»
+    double dSpindle;
+    dSpindle = dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpinleAxisNum] * 0.036;
+    double dLeftDistance;
+    dLeftDistance = dToolAxisCurrLag + dSpindle * g_SToolAxisInfo.dCommandRatio;
+    fprintf(pWriteFid, "åˆ€è½´è¿½èµ¶è·ç¦»ï¼š\t%.3f\t", dLeftDistance);
 
-	//7.ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³å
-	int16 sPulse;
-	sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucToolAxisNum];
-	fprintf(pWriteFid, "ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³å£º\t%d\t", sPulse);
+    //7.ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²
+    int16 sPulse;
+    sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucToolAxisNum];
+    fprintf(pWriteFid, "ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²ï¼š\t%d\t", sPulse);
 
-	fprintf(pWriteFid, "\n");
+    fprintf(pWriteFid, "\n");
 }
-//Êä³ö×ø±êÊı¾İ
+//è¾“å‡ºåæ ‡æ•°æ®
 void outputVS_2()
 {
-	uint8 ucSpinleAxisNum;
-	uint8 ucSpindleEncoderNum;
-	uint8 ucToolAxisNum;
-	uint8 ucToolAxisEncoderNum;
+    uint8 ucSpinleAxisNum;
+    uint8 ucSpindleEncoderNum;
+    uint8 ucToolAxisNum;
+    uint8 ucToolAxisEncoderNum;
 
-	ucSpinleAxisNum = SPINDLE_AXIS;
-	ucSpindleEncoderNum = SPINDLE_ENCODER;
-	ucToolAxisNum = TOOL_AXIS;
-	ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
+    ucSpinleAxisNum = SPINDLE_AXIS;
+    ucSpindleEncoderNum = SPINDLE_ENCODER;
+    ucToolAxisNum = TOOL_AXIS;
+    ucToolAxisEncoderNum = TOOLAXIS_ENCODER;
 
-	uint8* ucMapArray = g_SChannel[0].pMapAxisArray;
-	uint8* ucEncoderMapArray = g_SSystemPara.ucEncoderMapArray[0];
-	
-	struct _SRun* pSRun = &(g_SChannel[0].SRun);
+    uint8* ucMapArray = g_SChannel[0].pMapAxisArray;
+    uint8* ucEncoderMapArray = g_SSystemPara.ucEncoderMapArray[0];
 
-	//0.µ±Ç°±àºÅ
-	fprintf(pWriteFid, "±àºÅ£º\t%d\t", g_SToolAxisInfo.unTime);
+    struct _SRun* pSRun = &(g_SChannel[0].SRun);
 
-	//1.Ö÷ÖáÀíÂÛÔöÁ¿
-	fprintf(pWriteFid, "Ö÷ÖáÏÂÒ»ÖÜÆÚÂö³åÔöÁ¿£º\t%d\t", pSRun->sAxisDeltaPulse[SPINDLE_AXIS]);
+    //0.å½“å‰ç¼–å·
+    fprintf(pWriteFid, "ç¼–å·ï¼š\t%d\t", g_SToolAxisInfo.unTime);
 
-	//2.µ¶¾ßÖáÀíÂÛÔöÁ¿
-	fprintf(pWriteFid, "µ¶ÖáÏÂÒ»ÖÜÆÚÂö³åÔöÁ¿£º\t%d\t", pSRun->sAxisDeltaPulse[TOOL_AXIS]);
+    //1.ä¸»è½´ç†è®ºå¢é‡
+    fprintf(pWriteFid, "ä¸»è½´ä¸‹ä¸€å‘¨æœŸè„‰å†²å¢é‡ï¼š\t%d\t", pSRun->sAxisDeltaPulse[SPINDLE_AXIS]);
 
-	//3.Ö÷Öáµ±Ç°ÖÜÆÚ½áÊø×ø±ê
-	double dSpindlePos; 
-	getSingleAxisRealTimePoint(&dSpindlePos, SPINDLE_AXIS, ucMapArray);
+    //2.åˆ€å…·è½´ç†è®ºå¢é‡
+    fprintf(pWriteFid, "åˆ€è½´ä¸‹ä¸€å‘¨æœŸè„‰å†²å¢é‡ï¼š\t%d\t", pSRun->sAxisDeltaPulse[TOOL_AXIS]);
 
-	fprintf(pWriteFid, "Ö÷Öáµ±Ç°ÖÜÆÚ½áÊø½Ç¶È£º\t%.3f\t", dSpindlePos);
+    //3.ä¸»è½´å½“å‰å‘¨æœŸç»“æŸåæ ‡
+    double dSpindlePos;
+    getSingleAxisRealTimePoint(&dSpindlePos, SPINDLE_AXIS, ucMapArray);
 
-	//4.µ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊø×ø±ê
-	double dToolAxisPos;
-	getSingleAxisRealTimePoint(&dToolAxisPos, TOOL_AXIS, ucMapArray);
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ½áÊø½Ç¶È£º\t%.3f\t", dToolAxisPos);
+    fprintf(pWriteFid, "ä¸»è½´å½“å‰å‘¨æœŸç»“æŸè§’åº¦ï¼š\t%.3f\t", dSpindlePos);
 
-	//5.µ¶¾ßÖáµ±Ç°ÖÜÆÚ½áÊøÄ¿±ê×ø±ê
-	double dToolAxisTargetPos;
-	dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindlePos, TRUE);
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ½áÊøÄ¿±ê½Ç¶È£º\t%.3f\t", dToolAxisTargetPos);
+    //4.åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸåæ ‡
+    double dToolAxisPos;
+    getSingleAxisRealTimePoint(&dToolAxisPos, TOOL_AXIS, ucMapArray);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸç»“æŸè§’åº¦ï¼š\t%.3f\t", dToolAxisPos);
 
-	//6.µ¶¾ßÖáÂäºó½Ç¶È
-	double dToolAxisCurrLag;
-	dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisPos, 360);
-	dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
-	//ĞŞÕıÂäºó½Ç¶È
-	//µ±µ¶¾ßÖá¸úËæÉÏÖ÷Öáºó£¬ÓÉÓÚÖ÷Öá×ªËÙ²¨¶¯£¬ÈôÖ÷Öá×ªËÙÍ»¼õ¿ÉÄÜµ¼ÖÂµ¶¾ßÖá³¬Ç°Ö÷Öá£¬¼´dToolAxisCurrLagÖµ´Ó1->359
-	if (g_SToolAxisInfo.bFollowed == TRUE)
-		dToolAxisCurrLag = dToolAxisCurrLag > 180 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
+    //5.åˆ€å…·è½´å½“å‰å‘¨æœŸç»“æŸç›®æ ‡åæ ‡
+    double dToolAxisTargetPos;
+    dToolAxisTargetPos = getToolAxisEncoderTargetPos(dSpindlePos, TRUE);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸç»“æŸç›®æ ‡è§’åº¦ï¼š\t%.3f\t", dToolAxisTargetPos);
 
-	fprintf(pWriteFid, "µ¶Öáµ±Ç°ÖÜÆÚ½áÊøÂäºó½Ç¶È£º\t%.3f\t", dToolAxisCurrLag);
+    //6.åˆ€å…·è½´è½åè§’åº¦
+    double dToolAxisCurrLag;
+    dToolAxisCurrLag = surplusDoubleToPositive(dToolAxisTargetPos - dToolAxisPos, 360);
+    dToolAxisCurrLag = isZero(dToolAxisCurrLag - 360) ? 0 : dToolAxisCurrLag;
+    //ä¿®æ­£è½åè§’åº¦
+    //å½“åˆ€å…·è½´è·Ÿéšä¸Šä¸»è½´åï¼Œç”±äºä¸»è½´è½¬é€Ÿæ³¢åŠ¨ï¼Œè‹¥ä¸»è½´è½¬é€Ÿçªå‡å¯èƒ½å¯¼è‡´åˆ€å…·è½´è¶…å‰ä¸»è½´ï¼Œå³dToolAxisCurrLagå€¼ä»1->359
+    if (g_SToolAxisInfo.bFollowed == TRUE)
+        dToolAxisCurrLag = dToolAxisCurrLag > 180 ? dToolAxisCurrLag = dToolAxisCurrLag - 360 : dToolAxisCurrLag;
 
-	//6.µ¶¾ßÖá×·¸Ï¾àÀë
-	//double dSpindle;
-	//dSpindle = dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpinleAxisNum] * 0.036;
-	//double dLeftDistance;
-	//dLeftDistance = dToolAxisCurrLag + dSpindle * g_SToolAxisInfo.dCommandRatio;
-	//fprintf(pWriteFid, "µ¶Öá×·¸Ï¾àÀë£º\t%.3f\t", dLeftDistance);
+    fprintf(pWriteFid, "åˆ€è½´å½“å‰å‘¨æœŸç»“æŸè½åè§’åº¦ï¼š\t%.3f\t", dToolAxisCurrLag);
 
-	//7.ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³å
-	int16 sPulse;
-	sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucToolAxisNum];
-	fprintf(pWriteFid, "ÏÂÒ»ÖÜÆÚ·¢ËÍÂö³å£º\t%d\t", sPulse);
+    //6.åˆ€å…·è½´è¿½èµ¶è·ç¦»
+    //double dSpindle;
+    //dSpindle = dSpindle = g_SChannel[0].SRun.sAxisDeltaPulse[ucSpinleAxisNum] * 0.036;
+    //double dLeftDistance;
+    //dLeftDistance = dToolAxisCurrLag + dSpindle * g_SToolAxisInfo.dCommandRatio;
+    //fprintf(pWriteFid, "åˆ€è½´è¿½èµ¶è·ç¦»ï¼š\t%.3f\t", dLeftDistance);
 
-	fprintf(pWriteFid, "\n");
+    //7.ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²
+    int16 sPulse;
+    sPulse = g_SChannel[0].SRun.sAxisDeltaPulse[ucToolAxisNum];
+    fprintf(pWriteFid, "ä¸‹ä¸€å‘¨æœŸå‘é€è„‰å†²ï¼š\t%d\t", sPulse);
+
+    fprintf(pWriteFid, "\n");
 }
 
 #endif

@@ -2,100 +2,100 @@
 #define __G2_H
 #include "common.h"
 
+//#define G02_AXIS 3   //G02æ’è¡¥çš„è½´æ•°
+#define EllipseTEST 0 //æ¤­åœ†ä»£ç æµ‹è¯•
 
-//#define G02_AXIS 3   //G02²å²¹µÄÖáÊı
-#define EllipseTEST		0   //ÍÖÔ²´úÂë²âÊÔ
-
-struct SG2     // 2022.3.14    G2 Ö´ĞĞ½á¹¹Ìå
+struct SG2 // 2022.3.14    G2 æ‰§è¡Œç»“æ„ä½“
 {
-	struct SChannel *pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
 
-	uint32 unCommandType;			//Ö¸ÁîÀàĞÍ
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
+    uint32 unCommandType;        //æŒ‡ä»¤ç±»å‹
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
 
-	struct SInput SUserData;	// ÓÃ»§£¨ÊäÈë£©²ÎÊı
-	struct SPlan SPlanData;			//ËÙ¶È¹æ»®²ÎÊı
+    struct SInput SUserData; // ç”¨æˆ·ï¼ˆè¾“å…¥ï¼‰å‚æ•°
+    struct SPlan SPlanData;  //é€Ÿåº¦è§„åˆ’å‚æ•°
 
-	/******************* ÔË¶¯²ÎÊı  ÓëµãÓĞ¹ØµÄ²¿·Ö *****************/
-	SVector SStartVector;			//ÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£©
-	SPointDouble SStartPoint;		//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;			//ÖÕµã£¬µ¥Î»£ºmm
+    /******************* è¿åŠ¨å‚æ•°  ä¸ç‚¹æœ‰å…³çš„éƒ¨åˆ† *****************/
+    SVector SStartVector;     //èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
 
-	SPointDouble SMaxVal;//ÔË¶¯¹ì¼£ÉÏ¸÷Öá×î´óÖµµãµÄ¼¯ºÏ£¬µ¥Î»£ºmm   2024-4-11 ºé¹ÚÅô
-	SPointDouble SMinVal;//ÔË¶¯¹ì¼£ÉÏ¸÷Öá×îĞ¡ÖµµãµÄ¼¯ºÏ£¬µ¥Î»£ºmm
+    SPointDouble SMaxVal; //è¿åŠ¨è½¨è¿¹ä¸Šå„è½´æœ€å¤§å€¼ç‚¹çš„é›†åˆï¼Œå•ä½ï¼šmm   2024-4-11 æ´ªå† é¹
+    SPointDouble SMinVal; //è¿åŠ¨è½¨è¿¹ä¸Šå„è½´æœ€å°å€¼ç‚¹çš„é›†åˆï¼Œå•ä½ï¼šmm
 
-	float dA; //ÍÖÔ²²ÎÊıA
-	float dB; //ÍÖÔ²²ÎÊıB
-	SPointDouble SEllipseSCenterPoint;			//Ô²ĞÄ£¬µ¥Î»£ºmm
-	double dCoordRotation; // ×ø±êÏµĞı×ª»¡¶È  rad
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ÖìÎÈÖĞ
+    float dA;                          //æ¤­åœ†å‚æ•°A
+    float dB;                          //æ¤­åœ†å‚æ•°B
+    SPointDouble SEllipseSCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
+    double dCoordRotation;             // åæ ‡ç³»æ—‹è½¬å¼§åº¦  rad
+    float fCylinderRadius;             // åœ†æŸ±åŠå¾„ mm  2023.3.29 æœ±ç¨³ä¸­
 
-	int8 cArcDir;					//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	double dRad;					//»¡¶È
-	double dRadius;					//°ë¾¶£¬µ¥Î»£ºmm
-	SPointDouble SCenterPoint;		//Ô²ĞÄ£¬µ¥Î»£ºmm£¨Ïà¶ÔÆğµã
+    int8 cArcDir;              //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    double dRad;               //å¼§åº¦
+    double dRadius;            //åŠå¾„ï¼Œå•ä½ï¼šmm
+    SPointDouble SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmmï¼ˆç›¸å¯¹èµ·ç‚¹
 
-	/***************************************************************/
+    /***************************************************************/
 
-	/*********************ÄÚ²¿½ø¸øËÙ¶È ±¶ÂÊ*************************/
-	double dFeedrate;				//½ø¸øËÙ¶È  mm/ms
-	double dFeedRatio;				//½ø¸ø±¶ÂÊ
-	double dAcc; // ¼ÓËÙ¶È  Ô­Ê¼Öµ
-	double dDec; //¼õËÙ¶È  Ô­Ê¼Öµ
-	/***************************************************************/
+    /*********************å†…éƒ¨è¿›ç»™é€Ÿåº¦ å€ç‡*************************/
+    double dFeedrate;  //è¿›ç»™é€Ÿåº¦  mm/ms
+    double dFeedRatio; //è¿›ç»™å€ç‡
+    double dAcc;       // åŠ é€Ÿåº¦  åŸå§‹å€¼
+    double dDec;       //å‡é€Ÿåº¦  åŸå§‹å€¼
+    /***************************************************************/
 
-	double dCurrentSpeed;		//µ±Ç°ËÙ¶È mm/ms
+    double dCurrentSpeed; //å½“å‰é€Ÿåº¦ mm/ms
 
-	uint8 ucInpStatus;					//²å²¹×´Ì¬£¬INITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
-	//uint8 ucRunStep;					//²½Öè
+    uint8 ucInpStatus; //æ’è¡¥çŠ¶æ€ï¼ŒINITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
+    //uint8 ucRunStep;					//æ­¥éª¤
 
-	uint8 ucAxis[2];  //Ö´ĞĞ²å²¹µÄÖáºÅ  [0] ->> ºáÖá   [1] ->> ×İÖá
+    uint8 ucAxis[2]; //æ‰§è¡Œæ’è¡¥çš„è½´å·  [0] ->> æ¨ªè½´   [1] ->> çºµè½´
 
-	bool bUseSRunFeedRatio;	//ÊÇ·ñÊ¹ÓÃSRun±¶ÂÊ
-	bool bIsUserData; //Ê¹ÓÃÓÃ»§Êı¾İ    2022.12.6
-	double dPulseToMm[AXIS_NUM_MAX];	//Âö³åµ±Á¿µÄµ¹Êı  ¸÷¸öÖá  XYZ ABC
+    bool bUseSRunFeedRatio;          //æ˜¯å¦ä½¿ç”¨SRunå€ç‡
+    bool bIsUserData;                //ä½¿ç”¨ç”¨æˆ·æ•°æ®    2022.12.6
+    double dPulseToMm[AXIS_NUM_MAX]; //è„‰å†²å½“é‡çš„å€’æ•°  å„ä¸ªè½´  XYZ ABC
 
-	double dCurEndPointAngle;       //µ±Ç°¶ÎÖÕµã´¦ËÙ¶ÈÓëºáÖá¼äµÄ¼Ğ½Ç 2024/4/12 ºé¹ÚÅô
-	double dNextStartPointAngle;	//ÏÂÒ»¶ÎÆğµã´¦ËÙ¶ÈÓëºáÖá¼äµÄ¼Ğ½Ç 2024/4/12 ºé¹ÚÅô
-	bool bReCalculateDec;			//¼õËÙµ½ÈíÏŞÎ»µãµÄ¼õËÙ¶ÈÖØËã±êÖ¾Î» 2024/4/12 ºé¹ÚÅô
-	double dReCalculateVe;          //¸ù¾İÈíÏŞÎ»µãÖØËãÄ©ËÙ¶È 2024/4/12 ºé¹ÚÅô
+    double dCurEndPointAngle;    //å½“å‰æ®µç»ˆç‚¹å¤„é€Ÿåº¦ä¸æ¨ªè½´é—´çš„å¤¹è§’ 2024/4/12 æ´ªå† é¹
+    double dNextStartPointAngle; //ä¸‹ä¸€æ®µèµ·ç‚¹å¤„é€Ÿåº¦ä¸æ¨ªè½´é—´çš„å¤¹è§’ 2024/4/12 æ´ªå† é¹
+    bool bReCalculateDec;        //å‡é€Ÿåˆ°è½¯é™ä½ç‚¹çš„å‡é€Ÿåº¦é‡ç®—æ ‡å¿—ä½ 2024/4/12 æ´ªå† é¹
+    double dReCalculateVe;       //æ ¹æ®è½¯é™ä½ç‚¹é‡ç®—æœ«é€Ÿåº¦ 2024/4/12 æ´ªå† é¹
 };
 
 //extern struct SG2 g_SG2;
 
-//G2¼ÓÔØÏµÍ³²ÎÊı£¨³õÊ¼»¯£©
+//G2åŠ è½½ç³»ç»Ÿå‚æ•°ï¼ˆåˆå§‹åŒ–ï¼‰
 int8 SG2LoadSysPara(struct SG2* pSG2);
 
-//Ñ¡Ôñ²å²¹Æ½Ãæ  G17 G18 G19
+//é€‰æ‹©æ’è¡¥å¹³é¢  G17 G18 G19
 int8 chooseInterpPlane(uint8* ucAxisArray, uint32 unCommandType);
 
-
-//Ô²»¡¼ÆËã³¤ÖáºÍ¾àÀë·ÖÁ¿
+//åœ†å¼§è®¡ç®—é•¿è½´å’Œè·ç¦»åˆ†é‡
 int8 calArcVectorAndDistance(struct SG2* pSG2Pointer);
 
-//¼ÆËãÔ²»¡×ø±êµãº¯Êı
+//è®¡ç®—åœ†å¼§åæ ‡ç‚¹å‡½æ•°
 int8 calculateArcInterpolationPoint(double dDeltaL, struct SG2* pSG2Pointer, double* pdTargetPoint);
 
-//ÆÕÍ¨Ô²»¡×ª»¯ÎªÍÖÔ²
-int8 commonArc2Ellipse(double *dPoint ,double *dCenterPoint,double *dOutputPoint,int nArraySize,double dA,double dB , double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis);
+//æ™®é€šåœ†å¼§è½¬åŒ–ä¸ºæ¤­åœ†
+int8 commonArc2Ellipse(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB,
+                       double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis);
 
-//ÍÖÔ²×ª»¯ÎªÆÕÍ¨Ô²
-int8 ellipse2CommonArc(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis);
+//æ¤­åœ†è½¬åŒ–ä¸ºæ™®é€šåœ†
+int8 ellipse2CommonArc(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB,
+                       double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis);
 
-//ÔİÍ£³õÊ¼»¯º¯Êı
+//æš‚åœåˆå§‹åŒ–å‡½æ•°
 int8 prepareToPauseG2(struct SG2* pSG2Pointer, double dVmin, double dDec, bool bWriteBackFlag);
 
-//´ÓInput²ÎÊı¸³Öµµ½G2½á¹¹Ìå
+//ä»Inputå‚æ•°èµ‹å€¼åˆ°G2ç»“æ„ä½“
 int8 loadSG2DataFromInput(struct SG2* pSG2Pointer, struct SInput* pSInput);
 
-//Ô²»¡²å²¹ÔË¶¯
+//åœ†å¼§æ’è¡¥è¿åŠ¨
 int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn);
 
-// ¼ÆËãÔ²»¡½Ç¶È
-double calcArcAngle(double *pCenterPoint, double *pStartPoint, double *pEndPoint, uint8 ucInpDir);
+// è®¡ç®—åœ†å¼§è§’åº¦
+double calcArcAngle(double* pCenterPoint, double* pStartPoint, double* pEndPoint, uint8 ucInpDir);
 
-// ¼ì²éG2ÄÄ¸ùÖá×îÏÈ´¥·¢ÈíÏŞÎ»
-int8 checkG2FirstAxisSoftLimit(struct SChannel *pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal, SPointDouble SMinVal);
+// æ£€æŸ¥G2å“ªæ ¹è½´æœ€å…ˆè§¦å‘è½¯é™ä½
+int8 checkG2FirstAxisSoftLimit(struct SChannel* pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal,
+                               SPointDouble SMinVal);
 
 #endif // __G2_H
-

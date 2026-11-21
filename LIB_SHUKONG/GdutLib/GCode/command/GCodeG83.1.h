@@ -6,51 +6,46 @@
 
 typedef struct _SG83_1Para
 {
-	int8 cG83_1Step;//G83¸³Öµ²½Öè   
+    int8 cG83_1Step; //G83èµ‹å€¼æ­¥éª¤
 
-	double dR;//RÖµ£¨³õÊ¼µãµ½RµãµÄÔöÁ¿Öµ(Õı¸ººÅÎŞĞ§£¬ÎŞÂÛ×ê¿×·½ÏòÖ®ÖáÏòÎªÖ±/°ë¾¶Öá£¬RÒıÊı´øÈë°ë¾¶Á¿¼´¿É)£©
-	double dQ;//QÖµ £¨Ã¿´Î½ø¸øÉî¶È(Õı¸ººÅÎŞĞ§) £©
-	uint32 unDelaytime;		//¶´µ×ÔİÍ£Ê±¼ä(ÓĞĞ¡Êıµã£¬ÒÔÃëÎªµ¥Î»£»ÎŞĞ¡Êıµã£¬²Î¿¼Pr17ÓëPr3241)
-	int8 cK;				//ÖØ¸´´ÎÊı
-	int8 cFeedAxis;			//½ø¸øÖá
-	int8 cFeedDir;			//½ø¸ø·½Ïò
+    double dR;          //Rå€¼ï¼ˆåˆå§‹ç‚¹åˆ°Rç‚¹çš„å¢é‡å€¼(æ­£è´Ÿå·æ— æ•ˆï¼Œæ— è®ºé’»å­”æ–¹å‘ä¹‹è½´å‘ä¸ºç›´/åŠå¾„è½´ï¼ŒRå¼•æ•°å¸¦å…¥åŠå¾„é‡å³å¯)ï¼‰
+    double dQ;          //Qå€¼ ï¼ˆæ¯æ¬¡è¿›ç»™æ·±åº¦(æ­£è´Ÿå·æ— æ•ˆ) ï¼‰
+    uint32 unDelaytime; //æ´åº•æš‚åœæ—¶é—´(æœ‰å°æ•°ç‚¹ï¼Œä»¥ç§’ä¸ºå•ä½ï¼›æ— å°æ•°ç‚¹ï¼Œå‚è€ƒPr17ä¸Pr3241)
+    int8 cK;            //é‡å¤æ¬¡æ•°
+    int8 cFeedAxis;     //è¿›ç»™è½´
+    int8 cFeedDir;      //è¿›ç»™æ–¹å‘
 
-	SCoord SCoordInfo;		//³ÌĞò¶Î×ø±êĞÅÏ¢(Î´¼Ó×ÜÆ«ÒÆÖµ)
-	SPointDouble SFinalPoint;//¿×µ××ø±ê
-	SPointDouble  SFirstPoint;//³õÊ¼µã
-	SPointDouble  SRPoint;//Rµã
-	SPointDouble SCuttingStartPoint;//ÇĞÏ÷ÆğÊ¼µã
+    SCoord SCoordInfo;               //ç¨‹åºæ®µåæ ‡ä¿¡æ¯(æœªåŠ æ€»åç§»å€¼)
+    SPointDouble SFinalPoint;        //å­”åº•åæ ‡
+    SPointDouble SFirstPoint;        //åˆå§‹ç‚¹
+    SPointDouble SRPoint;            //Rç‚¹
+    SPointDouble SCuttingStartPoint; //åˆ‡å‰Šèµ·å§‹ç‚¹
 
-	bool bIsFirstFeed;//ÊÇ·ñÎªµÚÒ»´Î½ø¸ø
-	bool bIsFirstHole;//ÊÇ·ñÎªµÚÒ»¸ö¿×
-	bool bIsNotFirstG83_1;//ÊÇ·ñÎªµÚÒ»¸öG83.1  Á¬ĞøG83.1Ê±£¬µ±ÎªµÚÒ»´ÎG83.1Ê±£¬ĞèÒª¼ÇÂ¼µÚÒ»´ÎµÄ³õÊ¼µã£¬ºóĞøµÄG83.1µÄRµã¶¼¸ù¾İµÚÒ»´ÎµÄ³õÊ¼µã¼ÆËã
-	int8 cGaBeforeG83_1;		//±£´æÔËĞĞÇ°µÄÄ£Ì¬
-	SGCommandRegulation* pGaBeforeG83_1Regulation;//±£´æÔËĞĞÇ°µÄÄ£Ì¬¹æÔòµØÖ·
+    bool bIsFirstFeed; //æ˜¯å¦ä¸ºç¬¬ä¸€æ¬¡è¿›ç»™
+    bool bIsFirstHole; //æ˜¯å¦ä¸ºç¬¬ä¸€ä¸ªå­”
+    bool
+        bIsNotFirstG83_1; //æ˜¯å¦ä¸ºç¬¬ä¸€ä¸ªG83.1  è¿ç»­G83.1æ—¶ï¼Œå½“ä¸ºç¬¬ä¸€æ¬¡G83.1æ—¶ï¼Œéœ€è¦è®°å½•ç¬¬ä¸€æ¬¡çš„åˆå§‹ç‚¹ï¼Œåç»­çš„G83.1çš„Rç‚¹éƒ½æ ¹æ®ç¬¬ä¸€æ¬¡çš„åˆå§‹ç‚¹è®¡ç®—
+    int8 cGaBeforeG83_1;                           //ä¿å­˜è¿è¡Œå‰çš„æ¨¡æ€
+    SGCommandRegulation* pGaBeforeG83_1Regulation; //ä¿å­˜è¿è¡Œå‰çš„æ¨¡æ€è§„åˆ™åœ°å€
 
-}SG83_1Para;
+} SG83_1Para;
 
-//Ìí¼ÓG83¹æÔò½á¹¹Ìå
+//æ·»åŠ G83è§„åˆ™ç»“æ„ä½“
 void addG83_1RegulationAPI();
 
-//¿ª±ÙG83²ÎÊı½á¹¹Ìå
+//å¼€è¾ŸG83å‚æ•°ç»“æ„ä½“
 int8 mallocG83_1ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 
-//ÊÍ·ÅG83²ÎÊı½á¹¹Ìå
+//é‡Šæ”¾G83å‚æ•°ç»“æ„ä½“
 int8 freeG83_1ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 
-//  »ñÈ¡G83²ÎÊı
+//  è·å–G83å‚æ•°
 int8 getG83_1Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* pSGCodeCurrSysState);
 
-// ¼ì²éG83
-int8 CheckG83_1(struct _SSyntaxConfiguration*pSSyntaxConfig,  struct SGCodeParse* pGCodeBufUnit);
+// æ£€æŸ¥G83
+int8 CheckG83_1(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
-// ¸³ÖµG83
+// èµ‹å€¼G83
 int8 AssignG83_1(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
-
-
-
-
-
 
 #endif

@@ -1,38 +1,32 @@
 #ifndef __GCODE_G92_H
 #define __GCODE_G92_H
 
-
 //#include "common.h"
 //#include "GCodeCommon.h"
 
-
 typedef struct _SG92Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
-	double dR;					//RÖµ
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    double dR;  //Rå€¼
 
-	SCoord SCoordInfo;			//³ÌĞò¶Î×ø±êĞÅÏ¢
-	SPointDouble SPointA;		//Aµã×ø±ê£¨»úĞµ×ø±ê£©
-	SPointDouble SPointC;		//Cµã×ø±ê£¨»úĞµ×ø±ê£©
+    SCoord SCoordInfo;    //ç¨‹åºæ®µåæ ‡ä¿¡æ¯
+    SPointDouble SPointA; //Aç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SPointC; //Cç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
-	double dJ;			//¶ÌÖáÍËÎ²Á¿£¨Ä£Ì¬£©
-	double dK;			//³¤ÖáÍËÎ²Á¿£¨Ä£Ì¬£©
-	double dF;          //µ¼³Ì£¨Ä£Ì¬£©
-	double dQ;			//ÆğÊ¼½Ç¶È£¨·ÇÄ£Ì¬£©
-	uint8 ucL;                  //¶àÍ·ÂİÎÆÍ·Êı£¨ÎªÄ£Ì¬£©
-	uint8 ucLNow;               //µ±Ç°ÇĞÏ÷µÄÍ·Êı
+    double dJ;    //çŸ­è½´é€€å°¾é‡ï¼ˆæ¨¡æ€ï¼‰
+    double dK;    //é•¿è½´é€€å°¾é‡ï¼ˆæ¨¡æ€ï¼‰
+    double dF;    //å¯¼ç¨‹ï¼ˆæ¨¡æ€ï¼‰
+    double dQ;    //èµ·å§‹è§’åº¦ï¼ˆéæ¨¡æ€ï¼‰
+    uint8 ucL;    //å¤šå¤´èºçº¹å¤´æ•°ï¼ˆä¸ºæ¨¡æ€ï¼‰
+    uint8 ucLNow; //å½“å‰åˆ‡å‰Šçš„å¤´æ•°
 
-	bool bRepeatG32Flag;    //ÊÇ·ñÎªÁ¬ĞøG32
-	bool bG32LetterQ;    //G32ÊÇ·ñ³öÏÖQµÄ±êÖ¾Î»
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4 ³ÂÃô´ÏÔö 2023/6/13
+    bool bRepeatG32Flag; //æ˜¯å¦ä¸ºè¿ç»­G32
+    bool bG32LetterQ;    //G32æ˜¯å¦å‡ºç°Qçš„æ ‡å¿—ä½
+    uint8 ucG32SubMode;  //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4 é™ˆæ•èªå¢ 2023/6/13
 
-	bool bExecute; // Ö´ĞĞ±êÖ¾Î»  Ö´ĞĞµÄ±êÖ¾ÎªG92³ÌĞò¶ÎÖĞÓĞ¹Ø¼ü×ÖX
+    bool bExecute; // æ‰§è¡Œæ ‡å¿—ä½  æ‰§è¡Œçš„æ ‡å¿—ä¸ºG92ç¨‹åºæ®µä¸­æœ‰å…³é”®å­—X
 
-
-
-
-}SG92Para;
-
+} SG92Para;
 
 void addG92RegulationAPI();
 
@@ -44,4 +38,3 @@ int8 CheckG92(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* 
 int8 AssignG92(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif
-

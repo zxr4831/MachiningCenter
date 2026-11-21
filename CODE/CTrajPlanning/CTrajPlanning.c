@@ -8,2609 +8,2597 @@
 #include "Channel.h"
 #include "Config.h"
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetFactor(uint8 ucVelPlanType)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄËÙ¶ÈÇúÏßÀàĞÍ  ·µ»Ø¾àÀë¼ÆËã¹«Ê½µÄ¼ÆËãÏµÊı  Ä¬ÈÏ×´Ì¬ÏÂ·µ»ØS4µÄÏµÊı
-  ÊäÈë²ÎÊı£ºucVelPlanType	ÇúÏßÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼ÆËãÏµÊı
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetFactor(uint8 ucVelPlanType)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„é€Ÿåº¦æ›²çº¿ç±»å‹  è¿”å›è·ç¦»è®¡ç®—å…¬å¼çš„è®¡ç®—ç³»æ•°  é»˜è®¤çŠ¶æ€ä¸‹è¿”å›S4çš„ç³»æ•°
+  è¾“å…¥å‚æ•°ï¼šucVelPlanType	æ›²çº¿ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè®¡ç®—ç³»æ•°
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getFactor(uint8 ucVelPlanType)
 {
-	switch (ucVelPlanType)
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return 0.5;
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return 1.0;
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return 0.75;
-		break;
-	default:
-		return 0.75;
-	}
+    switch (ucVelPlanType)
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return 0.5;
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return 1.0;
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return 0.75;
+        break;
+    default:
+        return 0.75;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetFactor(uint8 ucVelPlanType)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄËÙ¶ÈÇúÏßÀàĞÍ  ·µ»ØÏµÍ³²ÎÊı¶ÔÓ¦µÄ¼ÓËÙ¶È
-  ÊäÈë²ÎÊı£ºucVelPlanType	ÇúÏßÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼ÓËÙ¶È
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetFactor(uint8 ucVelPlanType)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„é€Ÿåº¦æ›²çº¿ç±»å‹  è¿”å›ç³»ç»Ÿå‚æ•°å¯¹åº”çš„åŠ é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šucVelPlanType	æ›²çº¿ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåŠ é€Ÿåº¦
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getSysAcc(uint8 ucVelPlanType)
 {
-	switch (ucVelPlanType)
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return g_SSystemPara.dSysPlanTMaxAcc;
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return g_SSystemPara.dSysPlanS3MaxAcc;
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return g_SSystemPara.dSysPlanS4MaxAcc;
-		break;
-	default:
-		return g_SSystemPara.dSysPlanS4MaxAcc;
-	}
+    switch (ucVelPlanType)
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return g_SSystemPara.dSysPlanTMaxAcc;
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return g_SSystemPara.dSysPlanS3MaxAcc;
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return g_SSystemPara.dSysPlanS4MaxAcc;
+        break;
+    default:
+        return g_SSystemPara.dSysPlanS4MaxAcc;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetFactor(uint8 ucVelPlanType)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄËÙ¶ÈÇúÏßÀàĞÍ  ·µ»ØÏµÍ³²ÎÊı¶ÔÓ¦µÄ¼õËÙ¶È
-  ÊäÈë²ÎÊı£ºucVelPlanType	ÇúÏßÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼õËÙ¶È
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetFactor(uint8 ucVelPlanType)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„é€Ÿåº¦æ›²çº¿ç±»å‹  è¿”å›ç³»ç»Ÿå‚æ•°å¯¹åº”çš„å‡é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šucVelPlanType	æ›²çº¿ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šå‡é€Ÿåº¦
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getSysDec(uint8 ucVelPlanType)
 {
-	switch (ucVelPlanType)
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return g_SSystemPara.dSysPlanTMaxDec;
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return g_SSystemPara.dSysPlanS3MaxDec;
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return g_SSystemPara.dSysPlanS4MaxDec;
-		break;
-	default:
-		return g_SSystemPara.dSysPlanS4MaxDec;
-	}
+    switch (ucVelPlanType)
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return g_SSystemPara.dSysPlanTMaxDec;
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return g_SSystemPara.dSysPlanS3MaxDec;
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return g_SSystemPara.dSysPlanS4MaxDec;
+        break;
+    default:
+        return g_SSystemPara.dSysPlanS4MaxDec;
+    }
 }
-
 
 double getSingleAxisAcc(uint8 ucAxis, uint8 ucVelPlanType, const uint8* ucAxisMap)
 {
-	uint8 ucPhysicalAxis;
-	if (ucAxis  >= AXIS_NUM_MAX || ucAxisMap == NULL)//³¬¹ıÖáÊıÁ¿»ò¿ÕÖ¸Õë
-	{
-		return 0;
-	}
-	ucPhysicalAxis = ucAxisMap[ucAxis ];
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0.0;
-	}
+    uint8 ucPhysicalAxis;
+    if (ucAxis >= AXIS_NUM_MAX || ucAxisMap == NULL) //è¶…è¿‡è½´æ•°é‡æˆ–ç©ºæŒ‡é’ˆ
+    {
+        return 0;
+    }
+    ucPhysicalAxis = ucAxisMap[ucAxis];
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0.0;
+    }
 
-	switch (ucVelPlanType)
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanTMaxAcc;
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS3MaxAcc;
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS4MaxAcc;
-		break;
-	default:
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS4MaxAcc;
-	}
+    switch (ucVelPlanType)
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanTMaxAcc;
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS3MaxAcc;
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS4MaxAcc;
+        break;
+    default:
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS4MaxAcc;
+    }
 }
 
 double getSingleAxisDec(uint8 ucAxis, uint8 ucVelPlanType, const uint8* ucAxisMap)
 {
-	uint8 ucPhysicalAxis;
-	if (ucAxis  >= AXIS_NUM_MAX || ucAxisMap == NULL)//³¬¹ıÖáÊıÁ¿»ò¿ÕÖ¸Õë
-	{
-		return 0;
-	}
-	ucPhysicalAxis = ucAxisMap[ucAxis ];
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0.0;
-	}
+    uint8 ucPhysicalAxis;
+    if (ucAxis >= AXIS_NUM_MAX || ucAxisMap == NULL) //è¶…è¿‡è½´æ•°é‡æˆ–ç©ºæŒ‡é’ˆ
+    {
+        return 0;
+    }
+    ucPhysicalAxis = ucAxisMap[ucAxis];
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0.0;
+    }
 
-	switch (ucVelPlanType)
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanTMaxDec;
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS3MaxDec;
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS4MaxDec;
-		break;
-	default:
-		return g_SSystemPara.SAxisPara[ucPhysicalAxis ].dSysPlanS4MaxDec;
-	}
+    switch (ucVelPlanType)
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanTMaxDec;
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS3MaxDec;
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS4MaxDec;
+        break;
+    default:
+        return g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanS4MaxDec;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningT(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÏß¶Î³¤¶È£¬ËÙ¶È²ÎÊı£¬¼ÓËÙ¶È²ÎÊı£¬½øĞĞÌİĞÎËÙ¶È¹æ»®£¬µÃµ½¸÷¶ÎÎ»ÒÆ£¬Ê±¼ä½Úµã£¬²ĞÓà¾àÀë
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º2   ¹æ»®³É¹¦ µ«Vmax=0
-			1   ¹æ»®³É¹¦ Vmax¡Ù0
-			0	¾àÀëÌ«¶Ì£¬ºöÂÔ
-			-1	ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningT(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®çº¿æ®µé•¿åº¦ï¼Œé€Ÿåº¦å‚æ•°ï¼ŒåŠ é€Ÿåº¦å‚æ•°ï¼Œè¿›è¡Œæ¢¯å½¢é€Ÿåº¦è§„åˆ’ï¼Œå¾—åˆ°å„æ®µä½ç§»ï¼Œæ—¶é—´èŠ‚ç‚¹ï¼Œæ®‹ä½™è·ç¦»
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š2   è§„åˆ’æˆåŠŸ ä½†Vmax=0
+			1   è§„åˆ’æˆåŠŸ Vmaxâ‰ 0
+			0	è·ç¦»å¤ªçŸ­ï¼Œå¿½ç•¥
+			-1	è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningT(struct SPlan* pSPlanPointer)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;     //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿåº¦
+    dTc = pSPlanPointer->dTc;     //æ’è¡¥å‘¨æœŸ
 
+    if (pSPlanPointer->cInterpDir != INP_GO_BACK) //æ­£èµ°
+    {
+        dDistance = pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
+    else //åèµ°
+    {
+        dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
 
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	if (pSPlanPointer->cInterpDir != INP_GO_BACK)//Õı×ß
-	{
-		dDistance = pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
-	else//·´×ß
-	{
-		dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
+    //å‡½æ•°è¿è¡Œå¼€å§‹
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 =
+            0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        return 0;
+    }
+    if (dVe > dVmax)
+    {
+        dVe = dVmax; //é™åˆ¶æœ«é€Ÿåº¦
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //è§„åˆ’å‰å·²èµ°
 
-	//º¯ÊıÔËĞĞ¿ªÊ¼
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3
-			= pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		return 0;
-	}
-	if (dVe > dVmax)
-	{
-		dVe = dVmax;//ÏŞÖÆÄ©ËÙ¶È
-	}
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//¹æ»®Ç°ÒÑ×ß
+    if (dDistance < dSac + dSde) //è·¯ç¨‹ä¸è¶³åŠ å‡é€Ÿ
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
-
-	if (dDistance < dSac + dSde) //Â·³Ì²»×ã¼Ó¼õËÙ
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
-
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //ÖØËã¼Ó¼õËÙ¶ÎÎ»ÒÆ
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //é‡ç®—åŠ å‡é€Ÿæ®µä½ç§»
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
 #if EN_DEBUG
-		printf("dDistance < dSac + dSde\r\n");
+        printf("dDistance < dSac + dSde\r\n");
 #endif
-	}
+    }
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ  ×î´óËÙ¶ÈÎª0Ê± ÔÈËÙÖÜÆÚÎª0
+    dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst =
+        (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ  æœ€å¤§é€Ÿåº¦ä¸º0æ—¶ åŒ€é€Ÿå‘¨æœŸä¸º0
 
-	if (dTconst < 0 && !isZero(dTconst))   //¾àÀë²»×ãÃ»ÓĞÔÈËÙµÄÇé¿ö
-	{
-		if (dTac < 0 || dTde < 0)  //¾àÀë²»×ã
-		{
-			//¶¯Ì¬¹æ»®
-			//Ve¸¡¶¯
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec);
-				dVmax = dVs;
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance);
-				dVmax = dVe;
-			}
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;
-	}
+    if (dTconst < 0 && !isZero(dTconst)) //è·ç¦»ä¸è¶³æ²¡æœ‰åŒ€é€Ÿçš„æƒ…å†µ
+    {
+        if (dTac < 0 || dTde < 0) //è·ç¦»ä¸è¶³
+        {
+            //åŠ¨æ€è§„åˆ’
+            //Veæµ®åŠ¨
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec);
+                dVmax = dVs;
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance);
+                dVmax = dVe;
+            }
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0;
+    }
 
-	if (dTac < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTac = fabs(dTac);
-		dAcc = -(dAcc);
-	}
+    if (dTac < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTac = fabs(dTac);
+        dAcc = -(dAcc);
+    }
 
-	// 	dTac = (int)(dTac + 0.5);    //¼ÓËÙÖÜÆÚËÄÉáÎåÈëÈ¡Õû  
-	// 	dTde = (int)(dTde + 0.5);    //¼õËÙÖÜÆÚËÄÉáÎåÈëÈ¡Õû  
-	dTac = ceil(dTac);//ÏòÉÏÈ¡Õû
-	dTde = ceil(dTde);
+    // 	dTac = (int)(dTac + 0.5);    //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥å–æ•´
+    // 	dTde = (int)(dTde + 0.5);    //å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥å–æ•´
+    dTac = ceil(dTac); //å‘ä¸Šå–æ•´
+    dTde = ceil(dTde);
 
-	//	dVmax = dTac * dTc * dAcc + dVs;        //ÖØËã×î´óËÙ¶È  £¨ÒòÎª¼ÓËÙÊ±¼äÈ¡Õû£©	
+    //	dVmax = dTac * dTc * dAcc + dVs;        //é‡ç®—æœ€å¤§é€Ÿåº¦  ï¼ˆå› ä¸ºåŠ é€Ÿæ—¶é—´å–æ•´ï¼‰
 
-	if (isZero(dTac))//¼ÓËÙÖÜÆÚÎª0
-	{
-		dVs = dVmax;
-	}
-	else
-	{
-		dAcc = (dVmax - dVs) / (dTac * dTc);//ÖØËã¼ÓËÙ¶È
-	}
+    if (isZero(dTac)) //åŠ é€Ÿå‘¨æœŸä¸º0
+    {
+        dVs = dVmax;
+    }
+    else
+    {
+        dAcc = (dVmax - dVs) / (dTac * dTc); //é‡ç®—åŠ é€Ÿåº¦
+    }
 
-	if (isZero(dTde))  //¼õËÙÖÜÆÚÎª0 
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{
-		dDec = (dVmax - dVe) / (dTde * dTc);      //ÖØËã¼õËÙ¶Î¼ÓËÙ¶È£¨ÒòÎª¼õËÙÊ±¼äÈ¡Õû£©
-	}
+    if (isZero(dTde)) //å‡é€Ÿå‘¨æœŸä¸º0
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        dDec = (dVmax - dVe) / (dTde * dTc); //é‡ç®—å‡é€Ÿæ®µåŠ é€Ÿåº¦ï¼ˆå› ä¸ºå‡é€Ÿæ—¶é—´å–æ•´ï¼‰
+    }
 
-	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //¼ÓËÙ¶ÎÎ»ÒÆ£¨Ê±¼äÈ¡Õûºó£©
-	dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2);   //¼õËÙ¶ÎÎ»ÒÆ 
+    dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2); //åŠ é€Ÿæ®µä½ç§»ï¼ˆæ—¶é—´å–æ•´åï¼‰
+    dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2); //å‡é€Ÿæ®µä½ç§»
 
-	//dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ  ×î´óËÙ¶ÈÎª0Ê± ÔÈËÙÖÜÆÚÎª0
+    //dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
+    dTconst =
+        (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ  æœ€å¤§é€Ÿåº¦ä¸º0æ—¶ åŒ€é€Ÿå‘¨æœŸä¸º0
 
-	if (dTconst < 0)  //Ã»ÓĞÔÈËÙÖÜÆÚ
-	{
-		dTconst = 0;
-	}
-	dTconst = (int)(dTconst + 0.5);  //ÔÈËÙÖÜÆÚÈ¡Õû
+    if (dTconst < 0) //æ²¡æœ‰åŒ€é€Ÿå‘¨æœŸ
+    {
+        dTconst = 0;
+    }
+    dTconst = (int)(dTconst + 0.5); //åŒ€é€Ÿå‘¨æœŸå–æ•´
 
-	unT1 = unT2 = (int32)dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	unT3 = unT2 + (int32)dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	unT4 = unT5 = unT3 + (int32)dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
+    unT1 = unT2 = (int32)dTac;        //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT3 = unT2 + (int32)dTconst;     //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT4 = unT5 = unT3 + (int32)dTde; //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
 
-	dSconst = dVmax * (unT3 - unT1) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
+    dSconst = dVmax * (unT3 - unT1) * dTc; //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
 
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("TĞÎËÙ¶È¹æ»®\n");
-	printf("dTac = %lf\r\n", dTac);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde = %lf\r\n", dTde);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dVmax = %lf\r\n", dVmax);
+    printf("Tå½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac = %lf\r\n", dTac);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde = %lf\r\n", dTde);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dVmax = %lf\r\n", dVmax);
 #endif
-	return (isZero(dVmax)) ? 2 : 1;
+    return (isZero(dVmax)) ? 2 : 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningS3(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÏß¶Î³¤¶È£¬ËÙ¶È²ÎÊı£¬¼ÓËÙ¶È²ÎÊı£¬½øĞĞS3ĞÍËÙ¶È¹æ»®£¬µÃµ½¸÷¶ÎÎ»ÒÆ£¬Ê±¼ä½Úµã£¬²ĞÓà¾àÀë
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º2   ¹æ»®³É¹¦ µ«Vmax=0
-			1   ¹æ»®³É¹¦ Vmax¡Ù0
-			0	¾àÀëÌ«¶Ì£¬ºöÂÔ
-			-1	ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningS3(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®çº¿æ®µé•¿åº¦ï¼Œé€Ÿåº¦å‚æ•°ï¼ŒåŠ é€Ÿåº¦å‚æ•°ï¼Œè¿›è¡ŒS3å‹é€Ÿåº¦è§„åˆ’ï¼Œå¾—åˆ°å„æ®µä½ç§»ï¼Œæ—¶é—´èŠ‚ç‚¹ï¼Œæ®‹ä½™è·ç¦»
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š2   è§„åˆ’æˆåŠŸ ä½†Vmax=0
+			1   è§„åˆ’æˆåŠŸ Vmaxâ‰ 0
+			0	è·ç¦»å¤ªçŸ­ï¼Œå¿½ç•¥
+			-1	è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningS3(struct SPlan* pSPlanPointer)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTacHalf, dTconst, dTdeHalf;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dDistAcc, dDistConst, dDistDec;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTacHalf, dTconst, dTdeHalf;    //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5;   //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dDistAcc, dDistConst, dDistDec; //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	//dDistance	= pSPlanPointer->dDistance; //×Ü¾àÀë
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;     //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿåº¦
+    //dDistance	= pSPlanPointer->dDistance; //æ€»è·ç¦»
+    dTc = pSPlanPointer->dTc; //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer->cInterpDir != INP_GO_BACK)//Õı×ß
-	{
-		dDistance = pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
-	else//·´×ß
-	{
-		dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
+    if (pSPlanPointer->cInterpDir != INP_GO_BACK) //æ­£èµ°
+    {
+        dDistance = pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
+    else //åèµ°
+    {
+        dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	//¿ªÊ¼ËÙ¶È¹æ»®
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3
-			= pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		return 0;
-	}
-	if (dVe > dVmax)
-	{
-		dVe = dVmax;//ÏŞÖÆÄ©ËÙ¶È
-	}
+    //å¼€å§‹é€Ÿåº¦è§„åˆ’
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 =
+            0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        return 0;
+    }
+    if (dVe > dVmax)
+    {
+        dVe = dVmax; //é™åˆ¶æœ«é€Ÿåº¦
+    }
 
-	pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//¹æ»®Ç°ÒÑ×ß
+    pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //è§„åˆ’å‰å·²èµ°
 
-	dDistAcc = fabs((dVmax * dVmax - dVs * dVs) / dAcc);   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dDistDec = fabs((dVmax * dVmax - dVe * dVe) / dDec);   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+    dDistAcc = fabs((dVmax * dVmax - dVs * dVs) / dAcc); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dDistDec = fabs((dVmax * dVmax - dVe * dVe) / dDec); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	if (dDistance < dDistAcc + dDistDec)  //¾àÀë²»¹»  ÖØËã
-	{
-		dVmax = sqrt((dAcc * dDec * dDistance + dDec * dVs * dVs + dAcc * dVe * dVe) / (dAcc + dDec));   //ÖØËã×î´óËÙ¶È
-		//ÖØËã¼Ó¼õËÙ¾àÀë
-		dDistAcc = fabs((dVmax * dVmax - dVs * dVs) / dAcc);   //ÖØËã¼ÓËÙ¾àÀë
-		dDistDec = fabs((dVmax * dVmax - dVe * dVe) / dDec);   //ÖØËã¼õËÙ¾àÀë
-	}
+    if (dDistance < dDistAcc + dDistDec) //è·ç¦»ä¸å¤Ÿ  é‡ç®—
+    {
+        dVmax = sqrt((dAcc * dDec * dDistance + dDec * dVs * dVs + dAcc * dVe * dVe) / (dAcc + dDec)); //é‡ç®—æœ€å¤§é€Ÿåº¦
+        //é‡ç®—åŠ å‡é€Ÿè·ç¦»
+        dDistAcc = fabs((dVmax * dVmax - dVs * dVs) / dAcc); //é‡ç®—åŠ é€Ÿè·ç¦»
+        dDistDec = fabs((dVmax * dVmax - dVe * dVe) / dDec); //é‡ç®—å‡é€Ÿè·ç¦»
+    }
 
-	dTacHalf = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTdeHalf = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dDistAcc - dDistDec) / (dVmax * dTc);//¼ÆËãÔÈËÙÖÜÆÚ  ×î´óËÙ¶ÈÎª0Ê± ÔÈËÙÖÜÆÚÎª0
+    dTacHalf = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTdeHalf = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (isZero(dVmax))
+                  ? 0
+                  : (dDistance - dDistAcc - dDistDec) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ  æœ€å¤§é€Ÿåº¦ä¸º0æ—¶ åŒ€é€Ÿå‘¨æœŸä¸º0
 
-	if (dTconst < 0 && !isZero(dTconst))   //¾àÀë²»×ã£¨Ã»ÓĞÔÈËÙ£©µÄÇé¿ö
-	{
-		if (dTacHalf < 0 || dTdeHalf < 0)  //¾àÀë²»×ã £¨Ö»¼ÓËÙ/¼õËÙ 
-		{
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * dDec);
-				dVmax = dVs;
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + dDistance * dAcc);
-				dVmax = dVe;
-			}
-			dTacHalf = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTdeHalf = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;
-	}
-	if (dTacHalf < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTacHalf = fabs(dTacHalf);
-		dAcc = -dAcc;
-	}
+    if (dTconst < 0 && !isZero(dTconst)) //è·ç¦»ä¸è¶³ï¼ˆæ²¡æœ‰åŒ€é€Ÿï¼‰çš„æƒ…å†µ
+    {
+        if (dTacHalf < 0 || dTdeHalf < 0) //è·ç¦»ä¸è¶³ ï¼ˆåªåŠ é€Ÿ/å‡é€Ÿ
+        {
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * dDec);
+                dVmax = dVs;
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + dDistance * dAcc);
+                dVmax = dVe;
+            }
+            dTacHalf = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTdeHalf = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0;
+    }
+    if (dTacHalf < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTacHalf = fabs(dTacHalf);
+        dAcc = -dAcc;
+    }
 
+    // 	dTacHalf = (int)(dTacHalf + 0.5);  //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥ (dTac1 2 ç°åœ¨ä¸ºæ•´æ•°ï¼‰
+    // 	dTdeHalf = (int)(dTdeHalf + 0.5);  //å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥ (dTde1 2 ç°åœ¨ä¸ºæ•´æ•°ï¼‰
 
-	// 	dTacHalf = (int)(dTacHalf + 0.5);  //¼ÓËÙÖÜÆÚËÄÉáÎåÈë (dTac1 2 ÏÖÔÚÎªÕûÊı£©
-	// 	dTdeHalf = (int)(dTdeHalf + 0.5);  //¼õËÙÖÜÆÚËÄÉáÎåÈë (dTde1 2 ÏÖÔÚÎªÕûÊı£©
+    dTacHalf = ceil(dTacHalf); //å‘ä¸Šå–æ•´
+    dTdeHalf = ceil(dTdeHalf);
 
-	dTacHalf = ceil(dTacHalf);//ÏòÉÏÈ¡Õû
-	dTdeHalf = ceil(dTdeHalf);
+    //	dVmax = (double)dTacHalf * dAcc * dTc + dVs;  //é‡ç®—æœ€å¤§é€Ÿåº¦
 
-	//	dVmax = (double)dTacHalf * dAcc * dTc + dVs;  //ÖØËã×î´óËÙ¶È
+    if (isZero(dTacHalf)) //åŠ é€Ÿå‘¨æœŸä¸º0
+    {
+        dVs = dVmax;
+    }
+    else
+    {
+        dAcc = (dVmax - dVs) / (dTacHalf * dTc); //é‡ç®—åŠ é€Ÿåº¦
+    }
 
-	if (isZero(dTacHalf))//¼ÓËÙÖÜÆÚÎª0
-	{
-		dVs = dVmax;
-	}
-	else
-	{
-		dAcc = (dVmax - dVs) / (dTacHalf * dTc);//ÖØËã¼ÓËÙ¶È
-	}
+    if (isZero(dTdeHalf)) //å‡é€Ÿå‘¨æœŸä¸º0 ï¼ˆå‰ææ˜¯æœ€å¤§é€Ÿåº¦ä¸ä¼šæ¯”ç»ˆç‚¹é€Ÿåº¦å°å¾ˆå¤š(>dDec)ï¼‰
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        dDec = (dVmax - dVe) / (dTdeHalf * dTc); //é‡ç®—å‡é€Ÿæ®µåŠ é€Ÿåº¦
+    }
 
-	if (isZero(dTdeHalf))  //¼õËÙÖÜÆÚÎª0 £¨Ç°ÌáÊÇ×î´óËÙ¶È²»»á±ÈÖÕµãËÙ¶ÈĞ¡ºÜ¶à(>dDec)£©
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{
-		dDec = (dVmax - dVe) / (dTdeHalf * dTc);  //ÖØËã¼õËÙ¶Î¼ÓËÙ¶È
-	}
+    //é‡ç®—åŠ å‡é€Ÿè·ç¦»
+    dDistAcc = (dVmax * dVmax - dVs * dVs) / dAcc;
+    dDistDec = (dVmax * dVmax - dVe * dVe) / dDec;
 
-	//ÖØËã¼Ó¼õËÙ¾àÀë
-	dDistAcc = (dVmax * dVmax - dVs * dVs) / dAcc;
-	dDistDec = (dVmax * dVmax - dVe * dVe) / dDec;
+    dTconst = (isZero(dVmax)) ? 0 : (dDistance - dDistAcc - dDistDec) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ
+    dTconst = (int)(dTconst + 0.5);                                                    //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    if (dTconst < 0)
+    {
+        dTconst = 0; //æ²¡æœ‰åŒ€é€Ÿå‘¨æœŸ
+    }
 
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dDistAcc - dDistDec) / (dVmax * dTc);   //¼ÆËãÔÈËÙÖÜÆÚ
-	dTconst = (int)(dTconst + 0.5);       //ÔÈËÙÖÜÆÚÈ¡Õû
-	if (dTconst < 0)
-	{
-		dTconst = 0;  //Ã»ÓĞÔÈËÙÖÜÆÚ
-	}
+    //è®¡ç®—æ—¶é—´èŠ‚ç‚¹  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT1 = (int32)(dTacHalf);
+    unT2 = 2 * unT1;
+    unT3 = unT2 + (int32)dTconst;
+    unT4 = unT3 + (int32)dTdeHalf;
+    unT5 = unT4 + (int32)dTdeHalf;
 
-	//¼ÆËãÊ±¼ä½Úµã  £¨¾ø¶ÔÊ±¼ä£©
-	unT1 = (int32)(dTacHalf);
-	unT2 = 2 * unT1;
-	unT3 = unT2 + (int32)dTconst;
-	unT4 = unT3 + (int32)dTdeHalf;
-	unT5 = unT4 + (int32)dTdeHalf;
+    dDistConst = dVmax * dTc * (int)dTconst; //è®¡ç®—åŒ€é€Ÿè·ç¦»
 
-	dDistConst = dVmax * dTc * (int)dTconst;  //¼ÆËãÔÈËÙ¾àÀë
+    dDistRemain = dDistance - dDistAcc - dDistDec - dDistConst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	dDistRemain = dDistance - dDistAcc - dDistDec - dDistConst;  //¼ÆËã²ĞÓà¾àÀë
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3,4,5
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3,4,5
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
+    pSPlanPointer->dDistAcc = dDistAcc; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dDistConst;
+    pSPlanPointer->dDistDec = dDistDec;
 
-	pSPlanPointer->dDistAcc = dDistAcc;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dDistConst;
-	pSPlanPointer->dDistDec = dDistDec;
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
 
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
 
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("S3ĞÎËÙ¶È¹æ»®\n");
-	printf("dTac1 = %lf\r\n", dTacHalf);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde1 = %lf\r\n", dTdeHalf);
-	printf("dSac = %20.16lf\r\n", dDistAcc);
-	printf("dSconst = %20.16lf\r\n", dDistConst);
-	printf("dSde = %20.16lf\r\n", dDistDec);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("nT4 = %d\r\n", unT4);
-	printf("nT5 = %d\r\n", unT5);
-	printf("dAcc = %20.16lf\r\n", dAcc);
-	printf("dDec = %20.16lf\r\n", dDec);
-	printf("dVs = %20.16lf\r\n", dVs);
-	printf("dVe = %20.16lf\r\n", dVe);
-	printf("dVmax = %20.16lf\r\n", dVmax);
-	printf("dTc   = %20.16lf\n", dTc);
+    printf("S3å½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac1 = %lf\r\n", dTacHalf);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde1 = %lf\r\n", dTdeHalf);
+    printf("dSac = %20.16lf\r\n", dDistAcc);
+    printf("dSconst = %20.16lf\r\n", dDistConst);
+    printf("dSde = %20.16lf\r\n", dDistDec);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("nT4 = %d\r\n", unT4);
+    printf("nT5 = %d\r\n", unT5);
+    printf("dAcc = %20.16lf\r\n", dAcc);
+    printf("dDec = %20.16lf\r\n", dDec);
+    printf("dVs = %20.16lf\r\n", dVs);
+    printf("dVe = %20.16lf\r\n", dVe);
+    printf("dVmax = %20.16lf\r\n", dVmax);
+    printf("dTc   = %20.16lf\n", dTc);
 #endif
 
-	return (isZero(dVmax)) ? 2 : 1;
-
+    return (isZero(dVmax)) ? 2 : 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningS4(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÏß¶Î³¤¶È£¬ËÙ¶È²ÎÊı£¬¼ÓËÙ¶È²ÎÊı£¬½øĞĞS4ĞÍËÙ¶È¹æ»®£¬µÃµ½¸÷¶ÎÎ»ÒÆ£¬Ê±¼ä½Úµã£¬²ĞÓà¾àÀë
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º2   ¹æ»®³É¹¦ µ«Vmax=0
-			1   ¹æ»®³É¹¦ Vmax¡Ù0
-			0	¾àÀëÌ«¶Ì£¬ºöÂÔ
-			-1	ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningS4(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®çº¿æ®µé•¿åº¦ï¼Œé€Ÿåº¦å‚æ•°ï¼ŒåŠ é€Ÿåº¦å‚æ•°ï¼Œè¿›è¡ŒS4å‹é€Ÿåº¦è§„åˆ’ï¼Œå¾—åˆ°å„æ®µä½ç§»ï¼Œæ—¶é—´èŠ‚ç‚¹ï¼Œæ®‹ä½™è·ç¦»
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š2   è§„åˆ’æˆåŠŸ ä½†Vmax=0
+			1   è§„åˆ’æˆåŠŸ Vmaxâ‰ 0
+			0	è·ç¦»å¤ªçŸ­ï¼Œå¿½ç•¥
+			-1	è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningS4(struct SPlan* pSPlanPointer)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dDistance = pSPlanPointer->dDistance; //×Ü¾àÀë
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;             //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;         //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;             //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;           //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;           //å‡é€Ÿåº¦
+    dDistance = pSPlanPointer->dDistance; //æ€»è·ç¦»
+    dTc = pSPlanPointer->dTc;             //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer->cInterpDir != INP_GO_BACK)//Õı×ß
-	{
-		dDistance = pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
-	else//·´×ß
-	{
-		dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
+    if (pSPlanPointer->cInterpDir != INP_GO_BACK) //æ­£èµ°
+    {
+        dDistance = pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
+    else //åèµ°
+    {
+        dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	//¿ªÊ¼ËÙ¶È¹æ»®
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3
-			= pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		return 0;
-	}
-	if (dVe > dVmax)
-	{
-		dVe = dVmax;//ÏŞÖÆÄ©ËÙ¶È
-	}
+    //å¼€å§‹é€Ÿåº¦è§„åˆ’
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 =
+            0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        return 0;
+    }
+    if (dVe > dVmax)
+    {
+        dVe = dVmax; //é™åˆ¶æœ«é€Ÿåº¦
+    }
 
-	pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//¹æ»®Ç°ÒÑ×ß
-	//¼ÆËã¼Ó¼õËÙ¾àÀë
-	dSac = fabs(3 * (dVmax * dVmax - dVs * dVs) / (4 * dAcc));  //ps:¼õµµ¼õËÙ,×î´óËÙ¶ÈĞ¡ÓÚÆğÊ¼ËÙ¶È ¼ÓËÙ¶ÎÎ»ÒÆÈ¡¾ø¶ÔÖµ
-	dSde = fabs(3 * (dVmax * dVmax - dVe * dVe) / (4 * dDec));
+    pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //è§„åˆ’å‰å·²èµ°
+    //è®¡ç®—åŠ å‡é€Ÿè·ç¦»
+    dSac = fabs(3 * (dVmax * dVmax - dVs * dVs) / (4 * dAcc)); //ps:å‡æ¡£å‡é€Ÿ,æœ€å¤§é€Ÿåº¦å°äºèµ·å§‹é€Ÿåº¦ åŠ é€Ÿæ®µä½ç§»å–ç»å¯¹å€¼
+    dSde = fabs(3 * (dVmax * dVmax - dVe * dVe) / (4 * dDec));
 
-	if (dDistance < dSac + dSde) //¾àÀë²»¹» ÖØËã×î´óËÙ¶È 
-	{
-		//ÖØËã×î´óËÙ¶È  
-		dVmax = sqrt((4 * dAcc * dDec * dDistance + 3 * dDec * dVs * dVs + 3 * dAcc * dVe * dVe) / (3 * (dAcc + dDec)));
+    if (dDistance < dSac + dSde) //è·ç¦»ä¸å¤Ÿ é‡ç®—æœ€å¤§é€Ÿåº¦
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((4 * dAcc * dDec * dDistance + 3 * dDec * dVs * dVs + 3 * dAcc * dVe * dVe) / (3 * (dAcc + dDec)));
 
-		dSac = fabs((3 * (dVmax * dVmax - dVs * dVs)) / (4 * dAcc));  //ÖØËã¼ÓËÙ¾àÀë  
-		dSde = fabs((3 * (dVmax * dVmax - dVe * dVe)) / (4 * dDec));  //ÖØËã¼õËÙ¾àÀë         
-	}
+        dSac = fabs((3 * (dVmax * dVmax - dVs * dVs)) / (4 * dAcc)); //é‡ç®—åŠ é€Ÿè·ç¦»
+        dSde = fabs((3 * (dVmax * dVmax - dVe * dVe)) / (4 * dDec)); //é‡ç®—å‡é€Ÿè·ç¦»
+    }
 
-	//¼ÆËãÊ±¼äÔöÁ¿
-	dTac = (3 * (dVmax - dVs)) / (2 * dAcc * dTc);
-	dTde = (3 * (dVmax - dVe)) / (2 * dDec * dTc);
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - (dSac + dSde)) / (dVmax * dTc);//¼ÆËãÔÈËÙÖÜÆÚ  ×î´óËÙ¶ÈÎª0Ê± ÔÈËÙÖÜÆÚÎª0
+    //è®¡ç®—æ—¶é—´å¢é‡
+    dTac = (3 * (dVmax - dVs)) / (2 * dAcc * dTc);
+    dTde = (3 * (dVmax - dVe)) / (2 * dDec * dTc);
+    dTconst =
+        (isZero(dVmax)) ? 0 : (dDistance - (dSac + dSde)) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ  æœ€å¤§é€Ÿåº¦ä¸º0æ—¶ åŒ€é€Ÿå‘¨æœŸä¸º0
 
-	if (dTconst < 0 && !isZero(dTconst))   //Ã»ÓĞÔÈËÙµÄÇé¿ö
-	{
-		if (dTac < 0 || dTde < 0)  //¾àÀë²»×ã £¨Ö»¼ÓËÙ/¼õËÙ 
-		{
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * dDec / 0.75);
-				dVmax = dVs;
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + dDistance * dAcc / 0.75);
-				dVmax = dVe;
-			}
-			//dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			//dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-			dTac = (3 * (dVmax - dVs)) / (2 * dAcc * dTc);
-			dTde = (3 * (dVmax - dVe)) / (2 * dDec * dTc);
-		}
-		dTconst = 0;
-	}
-	if (dTac < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTac = fabs(dTac);//Ê±¼äÈ¡¾ø¶ÔÖµ
-		dAcc = -dAcc;   //¼ÓËÙ¶ÈÈ¡·´
-	}
+    if (dTconst < 0 && !isZero(dTconst)) //æ²¡æœ‰åŒ€é€Ÿçš„æƒ…å†µ
+    {
+        if (dTac < 0 || dTde < 0) //è·ç¦»ä¸è¶³ ï¼ˆåªåŠ é€Ÿ/å‡é€Ÿ
+        {
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * dDec / 0.75);
+                dVmax = dVs;
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + dDistance * dAcc / 0.75);
+                dVmax = dVe;
+            }
+            //dTac = (dVmax - dVs) / (dAcc * dTc);    //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            //dTde = (dVmax - dVe) / (dDec * dTc);    //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+            dTac = (3 * (dVmax - dVs)) / (2 * dAcc * dTc);
+            dTde = (3 * (dVmax - dVe)) / (2 * dDec * dTc);
+        }
+        dTconst = 0;
+    }
+    if (dTac < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTac = fabs(dTac); //æ—¶é—´å–ç»å¯¹å€¼
+        dAcc = -dAcc;      //åŠ é€Ÿåº¦å–å
+    }
 
-	//¼Ó¼õËÙÖÜÆÚÈ¡Õû
-// 	dTac=(int)(dTac+0.5);
-// 	dTde=(int)(dTde+0.5);  
+    //åŠ å‡é€Ÿå‘¨æœŸå–æ•´
+    // 	dTac=(int)(dTac+0.5);
+    // 	dTde=(int)(dTde+0.5);
 
-	dTac = ceil(dTac);//ÏòÉÏÈ¡Õû
-	dTde = ceil(dTde);
+    dTac = ceil(dTac); //å‘ä¸Šå–æ•´
+    dTde = ceil(dTde);
 
-	// 	//¾É·½°¸£º¼ÓËÙÊ±¼äÔ²Õûºó£¬ĞèÖØËã×î´óËÙ¶È£¬ÓÉÓÚ¼õËÙÊ±¼ä¹Ì¶¨£¬´ËÊ±ÒªÖØËã¼õËÙ¶È   
-	//     dVmax = 2.0 * dAcc * (double)dTac * dTc / 3.0 + dVs; //ÖØËã×î´óËÙ¶È
-		//ĞÂ·½°¸£º¼ÓËÙÊ±¼äÎª0Ê± ÆğÊ¼ËÙ¶ÈµÈÓÚ×î´óËÙ¶È   ¼ÓËÙÊ±¼ä²»Îª0Ê±£¬ÖØËã¼ÓËÙ¶È
-	if (isZero(dTac))
-	{
-		dVs = dVmax;
-	}
-	else
-	{
-		dAcc = (3 * (dVmax - dVs)) / (2 * dTac * dTc);
-	}
+    // 	//æ—§æ–¹æ¡ˆï¼šåŠ é€Ÿæ—¶é—´åœ†æ•´åï¼Œéœ€é‡ç®—æœ€å¤§é€Ÿåº¦ï¼Œç”±äºå‡é€Ÿæ—¶é—´å›ºå®šï¼Œæ­¤æ—¶è¦é‡ç®—å‡é€Ÿåº¦
+    //     dVmax = 2.0 * dAcc * (double)dTac * dTc / 3.0 + dVs; //é‡ç®—æœ€å¤§é€Ÿåº¦
+    //æ–°æ–¹æ¡ˆï¼šåŠ é€Ÿæ—¶é—´ä¸º0æ—¶ èµ·å§‹é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦   åŠ é€Ÿæ—¶é—´ä¸ä¸º0æ—¶ï¼Œé‡ç®—åŠ é€Ÿåº¦
+    if (isZero(dTac))
+    {
+        dVs = dVmax;
+    }
+    else
+    {
+        dAcc = (3 * (dVmax - dVs)) / (2 * dTac * dTc);
+    }
 
+    if (isZero(dTde)) //å‡é€Ÿå‘¨æœŸä¸º0ï¼Œä¿®æ•´æœ€ç»ˆé€Ÿåº¦
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        dDec = 3 * (dVmax - dVe) / (2.0 * (double)dTde * dTc); //é‡ç®—å‡é€Ÿåº¦
+    }
 
-	if (isZero(dTde))  //¼õËÙÖÜÆÚÎª0£¬ĞŞÕû×îÖÕËÙ¶È
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{
-		dDec = 3 * (dVmax - dVe) / (2.0 * (double)dTde * dTc); //ÖØËã¼õËÙ¶È
-	}
+    //é‡ç®—åŠ å‡é€Ÿè·ç¦»
+    dSac = fabs(3 * (dVmax * dVmax - dVs * dVs) / (4 * dAcc));
+    dSde = fabs(3 * (dVmax * dVmax - dVe * dVe) / (4 * dDec));
 
-	//ÖØËã¼Ó¼õËÙ¾àÀë  
-	dSac = fabs(3 * (dVmax * dVmax - dVs * dVs) / (4 * dAcc));
-	dSde = fabs(3 * (dVmax * dVmax - dVe * dVe) / (4 * dDec));
+    dTconst = (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ
+    if (dTconst < 0)                                                           // åŒ€é€Ÿå‘¨æœŸä¸ºè´Ÿæ—¶ï¼Œå–0
+    {
+        dTconst = 0;
+    }
+    dTconst = (int)(dTconst + 0.5); //åŒ€é€Ÿå‘¨æœŸå–æ•´
 
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //¼ÆËãÔÈËÙÖÜÆÚ  
-	if (dTconst < 0)  // ÔÈËÙÖÜÆÚÎª¸ºÊ±£¬È¡0
-	{
-		dTconst = 0;
-	}
-	dTconst = (int)(dTconst + 0.5);//ÔÈËÙÖÜÆÚÈ¡Õû
+    //æ—¶é—´å–æ•´åï¼Œè®¡ç®—æ—¶é—´èŠ‚ç‚¹ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT1 = unT2 = (int32)dTac;
+    unT3 = unT2 + (int32)dTconst;
+    unT4 = unT5 = unT3 + (int32)dTde;
 
-	//Ê±¼äÈ¡Õûºó£¬¼ÆËãÊ±¼ä½Úµã£¨¾ø¶ÔÊ±¼ä£©  
-	unT1 = unT2 = (int32)dTac;
-	unT3 = unT2 + (int32)dTconst;
-	unT4 = unT5 = unT3 + (int32)dTde;
+    dSconst = dVmax * (int32)dTconst * dTc; //è®¡ç®—åŒ€é€Ÿè·ç¦»
 
-	dSconst = dVmax * (int32)dTconst * dTc; //¼ÆËãÔÈËÙ¾àÀë  
+    dDistRemain = dDistance - dSac - dSde - dSconst; //æ®‹ä½™è·ç¦»
 
-	dDistRemain = dDistance - dSac - dSde - dSconst; //²ĞÓà¾àÀë 
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("S4ĞÎËÙ¶È¹æ»®\n");
-	printf("**************************\n");
-	printf("k_acc = %lf\r\n", dTac);
-	printf("k_const = %lf\r\n", dTconst);
-	printf("k_dec = %lf\r\n", dTde);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dAcc = %20.16lf\r\n", dAcc);
-	printf("dDec = %20.16lf\r\n", dDec);
-	printf("dDe  = %20.16lf\r\n", dDistRemain);
-	printf("dVs = %20.16lf\r\n", dVs);
-	printf("dVe = %20.16lf\r\n", dVe);
-	printf("dVmax = %20.16lf\r\n", dVmax);
-	printf("**************************\n");
+    printf("S4å½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("**************************\n");
+    printf("k_acc = %lf\r\n", dTac);
+    printf("k_const = %lf\r\n", dTconst);
+    printf("k_dec = %lf\r\n", dTde);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dAcc = %20.16lf\r\n", dAcc);
+    printf("dDec = %20.16lf\r\n", dDec);
+    printf("dDe  = %20.16lf\r\n", dDistRemain);
+    printf("dVs = %20.16lf\r\n", dVs);
+    printf("dVe = %20.16lf\r\n", dVe);
+    printf("dVmax = %20.16lf\r\n", dVmax);
+    printf("**************************\n");
 #endif
-	return (isZero(dVmax)) ? 2 : 1;
+    return (isZero(dVmax)) ? 2 : 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningCombine(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÏß¶Î³¤¶È£¬ËÙ¶È²ÎÊı£¬¼ÓËÙ¶È²ÎÊı£¬½øĞĞ»ìºÏĞÍËÙ¶È¹æ»®£¬µÃµ½¸÷¶ÎÎ»ÒÆ£¬Ê±¼ä½Úµã£¬²ĞÓà¾àÀë
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-			bUseFloatingVe		ÊÇ·ñÊ¹ÓÃ¸¡¶¯µÄËÙ¶È¹æ»®
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º
-			 2  ÊäÈëµÄ×î´óËÙ¶ÈÎª0
-			 1  ¹æ»®³É¹¦
-			 0	¾àÀëÌ«¶Ì,ºöÂÔ
-			-1	ÊäÈë´íÎó
-			-2	¾àÀë²»×ãÒÔ¼Ó¼õËÙ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningCombine(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®çº¿æ®µé•¿åº¦ï¼Œé€Ÿåº¦å‚æ•°ï¼ŒåŠ é€Ÿåº¦å‚æ•°ï¼Œè¿›è¡Œæ··åˆå‹é€Ÿåº¦è§„åˆ’ï¼Œå¾—åˆ°å„æ®µä½ç§»ï¼Œæ—¶é—´èŠ‚ç‚¹ï¼Œæ®‹ä½™è·ç¦»
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+			bUseFloatingVe		æ˜¯å¦ä½¿ç”¨æµ®åŠ¨çš„é€Ÿåº¦è§„åˆ’
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š
+			 2  è¾“å…¥çš„æœ€å¤§é€Ÿåº¦ä¸º0
+			 1  è§„åˆ’æˆåŠŸ
+			 0	è·ç¦»å¤ªçŸ­,å¿½ç•¥
+			-1	è¾“å…¥é”™è¯¯
+			-2	è·ç¦»ä¸è¶³ä»¥åŠ å‡é€Ÿ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningCombine(struct SPlan* pSPlanPointer, bool bUseFloatingVe)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
-	double dAccFactor = 0, dDecFactor = 0; //¼ÓËÙ¹«Ê½ÏµÊı  ¼õËÙ¹«Ê½ÏµÊı  £¨¸ù¾İÇúÏßÀàĞÍÈ¡Öµ£©
-	double dPreDist = 0;
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;                //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;                     //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain;         //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                            //æ’è¡¥å‘¨æœŸ
+    double dAccFactor = 0, dDecFactor = 0; //åŠ é€Ÿå…¬å¼ç³»æ•°  å‡é€Ÿå…¬å¼ç³»æ•°  ï¼ˆæ ¹æ®æ›²çº¿ç±»å‹å–å€¼ï¼‰
+    double dPreDist = 0;
 
-	/*Èı½ÇĞÎÇúÏßĞŞÕıÎªÌİĞÎÇúÏß*///  ºé¹ÚÅô 2024/3/23
-	bool bTriangleToTrapezoid = FALSE;//Èı½ÇĞÎËÙ¶ÈÇúÏßĞŞÕı±êÖ¾Î»
-	double dTconstForTrapezoid = 0;//Èı½ÇĞÎËÙ¶ÈÇúÏßĞŞÕıÎªÌİĞÎËÙ¶ÈÇúÏßÏÂµÄÔÈËÙÊ±¼ä
-	double t1, t2;//ÖĞ¼ä±äÁ¿
+    /*ä¸‰è§’å½¢æ›²çº¿ä¿®æ­£ä¸ºæ¢¯å½¢æ›²çº¿*/       //  æ´ªå† é¹ 2024/3/23
+    bool bTriangleToTrapezoid = FALSE; //ä¸‰è§’å½¢é€Ÿåº¦æ›²çº¿ä¿®æ­£æ ‡å¿—ä½
+    double dTconstForTrapezoid = 0;    //ä¸‰è§’å½¢é€Ÿåº¦æ›²çº¿ä¿®æ­£ä¸ºæ¢¯å½¢é€Ÿåº¦æ›²çº¿ä¸‹çš„åŒ€é€Ÿæ—¶é—´
+    double t1, t2;                     //ä¸­é—´å˜é‡
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	dDistance = pSPlanPointer->dCurLeftDist; //×Ü¾àÀë
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;                //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;            //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;              //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;              //å‡é€Ÿåº¦
+    dDistance = pSPlanPointer->dCurLeftDist; //æ€»è·ç¦»
+    dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	if (pSPlanPointer->cInterpDir != INP_GO_BACK)//Õı×ß
-	{
-		dDistance = pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
-	else//·´×ß
-	{
-		dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//ĞèÒª¹æ»®µÄ¾àÀë
-	}
+    if (pSPlanPointer->cInterpDir != INP_GO_BACK) //æ­£èµ°
+    {
+        dDistance = pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
+    else //åèµ°
+    {
+        dDistance = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //éœ€è¦è§„åˆ’çš„è·ç¦»
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-	dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//¹æ»®Ç°ÒÑ×ß
+    dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //è§„åˆ’å‰å·²èµ°
 
-	//¿ªÊ¼ËÙ¶È¹æ»®
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3
-			= pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		pSPlanPointer->dDistAcc = 0;
-    	pSPlanPointer->dDistDec = 0;
-    	pSPlanPointer->dDistConst = 0;
-    	pSPlanPointer->dDistRemaining = dDistance;
-		pSPlanPointer->dPreDist = dPreDist;
-		return 0;
-	}
-	if (dVe > dVmax)
-	{
-		dVe = dVmax;//ÏŞÖÆÄ©ËÙ¶È
-	}
+    //å¼€å§‹é€Ÿåº¦è§„åˆ’
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 =
+            0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        pSPlanPointer->dDistAcc = 0;
+        pSPlanPointer->dDistDec = 0;
+        pSPlanPointer->dDistConst = 0;
+        pSPlanPointer->dDistRemaining = dDistance;
+        pSPlanPointer->dPreDist = dPreDist;
+        return 0;
+    }
+    if (dVe > dVmax)
+    {
+        dVe = dVmax; //é™åˆ¶æœ«é€Ÿåº¦
+    }
 
-	//dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//¹æ»®Ç°ÒÑ×ß
+    //dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;//è§„åˆ’å‰å·²èµ°
 
+    dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType); //æ ¹æ®åŠ é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
+    dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType); //æ ¹æ®å‡é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
 
-	dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType);//¸ù¾İ¼ÓËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
-	dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType);//¸ù¾İ¼õËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
+    //è®¡ç®—åŠ å‡é€Ÿè·ç¦»
+    dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc); //ps:å‡æ¡£å‡é€Ÿ,æœ€å¤§é€Ÿåº¦å°äºèµ·å§‹é€Ÿåº¦ åŠ é€Ÿæ®µä½ç§»å–ç»å¯¹å€¼
+    dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec);
 
+    //     if(dDistance < dSac + dSde) //è·ç¦»ä¸å¤Ÿ é‡ç®—æœ€å¤§é€Ÿåº¦
+    //     {
+    // 		//é‡ç®—æœ€å¤§é€Ÿåº¦
+    //         dVmax = sqrt((4 * dAcc * dDec * dDistance  + 3 * dDec *  dVs * dVs + 3 * dAcc * dVe * dVe) / (3*(dAcc + dDec)));
+    //
+    //         dSac = fabs((3 * (dVmax * dVmax - dVs * dVs)) / (4 * dAcc));  //é‡ç®—åŠ é€Ÿè·ç¦»
+    // 		dSde = fabs((3 * (dVmax * dVmax - dVe * dVe)) / (4 * dDec));  //é‡ç®—å‡é€Ÿè·ç¦»
+    //     }
 
+    if (dDistance < dSac + dSde) //è·ç¦»ä¸å¤Ÿ é‡ç®—æœ€å¤§é€Ÿåº¦
+    {
+        //double g_dVmaxPre = dVmax;
 
-	//¼ÆËã¼Ó¼õËÙ¾àÀë
-	dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc);  //ps:¼õµµ¼õËÙ,×î´óËÙ¶ÈĞ¡ÓÚÆğÊ¼ËÙ¶È ¼ÓËÙ¶ÎÎ»ÒÆÈ¡¾ø¶ÔÖµ
-	dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec);
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((dAcc * dDec * dDistance + dAccFactor * dDec * dVs * dVs + dDecFactor * dAcc * dVe * dVe) /
+                     (dDecFactor * dAcc + dAccFactor * dDec));
+        if (dVmax > dVs && dVmax > dVe) //ä¸‰è§’å½¢é€Ÿåº¦æ›²çº¿  2024/3/23
+        {
+            bTriangleToTrapezoid = TRUE;
+        }
+        dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc); //é‡ç®—åŠ é€Ÿè·ç¦»
+        dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec); //é‡ç®—å‡é€Ÿè·ç¦»
+    }
 
-	//     if(dDistance < dSac + dSde) //¾àÀë²»¹» ÖØËã×î´óËÙ¶È 
-	//     {  
-	// 		//ÖØËã×î´óËÙ¶È  
-	//         dVmax = sqrt((4 * dAcc * dDec * dDistance  + 3 * dDec *  dVs * dVs + 3 * dAcc * dVe * dVe) / (3*(dAcc + dDec)));  
-	// 
-	//         dSac = fabs((3 * (dVmax * dVmax - dVs * dVs)) / (4 * dAcc));  //ÖØËã¼ÓËÙ¾àÀë  
-	// 		dSde = fabs((3 * (dVmax * dVmax - dVe * dVe)) / (4 * dDec));  //ÖØËã¼õËÙ¾àÀë         
-	//     }     
+    //è®¡ç®—æ—¶é—´å¢é‡
+    dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dAcc * dTc)
+                                                                  : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc);
+    dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / (dDec * dTc)
+                                                                  : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc);
+    dTconst =
+        (isZero(dVmax)) ? 0 : (dDistance - (dSac + dSde)) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ  æœ€å¤§é€Ÿåº¦ä¸º0æ—¶   åŒ€é€Ÿå‘¨æœŸä¸º0
 
+    if (dTconst < 0 && !isZero(dTconst)) //æ²¡æœ‰åŒ€é€Ÿçš„æƒ…å†µ
+    {
+        if (dTac < 0 || dTde < 0) //è·ç¦»ä¸è¶³
+        {
+            if (!bUseFloatingVe)
+            {
+                return -2; //è·ç¦»ä¸è¶³ä»¥åŠ å‡é€Ÿ
+            }
+            //åŠ¨æ€è§„åˆ’
+            //Veæµ®åŠ¨
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * dDec / dAccFactor);
+                dVmax = dVs;
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + dDistance * dAcc / dAccFactor);
+                dVmax = dVe;
+            }
+            //dTac = (dVmax - dVs) / (dAcc * dTc);    //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            //dTde = (dVmax - dVe) / (dDec * dTc);    //è®¡ç®—å‡é€Ÿå‘¨æœŸ
 
-	if (dDistance < dSac + dSde) //¾àÀë²»¹» ÖØËã×î´óËÙ¶È 
-	{
-		//double g_dVmaxPre = dVmax;
+            dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dAccFactor * (dVmax - dVs) / (dAcc * dTc)
+                       : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc);
+            dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dDecFactor * (dVmax - dVe) / (dDec * dTc)
+                       : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc);
+        }
+        dTconst = 0;
+    }
+    if (dTac < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTac = fabs(dTac); //æ—¶é—´å–ç»å¯¹å€¼
+        dAcc = -dAcc;      //åŠ é€Ÿåº¦å–å
+    }
 
-		//ÖØËã×î´óËÙ¶È  
-		dVmax = sqrt((dAcc * dDec * dDistance + dAccFactor * dDec * dVs * dVs + dDecFactor * dAcc * dVe * dVe) / (dDecFactor * dAcc + dAccFactor * dDec));
-		if (dVmax > dVs && dVmax > dVe)//Èı½ÇĞÎËÙ¶ÈÇúÏß  2024/3/23
-		{
-			bTriangleToTrapezoid = TRUE;
-		}
-		dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc);  //ÖØËã¼ÓËÙ¾àÀë 
-		dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec); //ÖØËã¼õËÙ¾àÀë 
-	}
+    if (bTriangleToTrapezoid == TRUE &&
+        pSPlanPointer->ucTconstForTrapezoid !=
+            0) //ä¸‰è§’å½¢é€Ÿåº¦æ›²çº¿ä¿®æ­£ä¸ºæ¢¯å½¢æ›²çº¿ï¼šé‡ç®—æœ€å¤§é€Ÿåº¦dVmaxã€åŠ é€Ÿåº¦dAccã€å‡é€Ÿåº¦dDec 2024/3/22 æ´ªå† é¹
+    {
+        if (pSPlanPointer->ucTconstForTrapezoid == 100)
+        {
+            //åŒ€é€Ÿæ—¶é—´å æ€»æ—¶é•¿çš„æ¯”ä¾‹è®¾ä¸º100æ—¶ï¼Œä¼ä¸šæœªæƒ³å¥½é‡‡ç”¨ä½•ç§æ–¹æ¡ˆï¼Œæš‚æ—¶ä¸è¿›è¡Œå¤„ç†ï¼Œå³ä¸è¿›è¡Œä¿®è°ƒã€‚
+        }
+        else
+        {
+            dTac = ceil(dTac); //å‘ä¸Šå–æ•´  ä¼ä¸šè¦æ±‚ï¼šæ”¹å˜åçš„æ›²çº¿æ€»æ—¶é•¿ä¸å˜ï¼Œåœ¨ä¿®æ­£å‰è¦è·å–ä¸‰è§’å½¢é€Ÿåº¦æ›²çº¿ä¸‹çš„å®é™…æ—¶é—´ã€‚
+            dTde = ceil(dTde); //å‘ä¸Šå–æ•´
 
-	//¼ÆËãÊ±¼äÔöÁ¿
-	dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dAcc * dTc) : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc);
-	dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / (dDec * dTc) : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc);
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - (dSac + dSde)) / (dVmax * dTc);//¼ÆËãÔÈËÙÖÜÆÚ  ×î´óËÙ¶ÈÎª0Ê±   ÔÈËÙÖÜÆÚÎª0
+            //æ ¹æ®ç³»ç»Ÿå‚æ•°è®¾ç½®çš„åŒ€é€Ÿæ—¶é—´å æ€»æ—¶é•¿çš„æ¯”ä¾‹ï¼Œè®¡ç®—åŒ€é€Ÿæ—¶é—´
+            dTconstForTrapezoid =
+                (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)
+                    ? pSPlanPointer->ucTconstForTrapezoid / 100.0 * (2.0 * dTac + 2.0 * dTde + dTconst)
+                    : pSPlanPointer->ucTconstForTrapezoid / 100.0 * (dTac + dTde + dTconst);
+            t1 = (dTac / (dTac + dTde)) * dTconstForTrapezoid; //ä¸­é—´å˜é‡
+            t2 = (dTde / (dTac + dTde)) * dTconstForTrapezoid; //ä¸­é—´å˜é‡
 
+            //æ ¹æ®æ€»ä½ç§»ä¸å˜åŸåˆ™ï¼Œåˆ©ç”¨é€Ÿåº¦æ›²çº¿å›´æˆçš„é¢ç§¯ç­‰äºä½ç§»çš„åŸç†ï¼Œåç®—å‡ºæ¢¯å½¢æ›²çº¿ä¸‹çš„æœ€å¤§é€Ÿåº¦ã€‚
+            //1.S3å‹é€Ÿåº¦æ›²çº¿çš„åŠ å‡é€Ÿæ®µå…³äºä¸­é—´æ—¶åˆ»ç‚¹ä¸­å¿ƒå¯¹ç§°ï¼Œå…¶ä½ç§»å¯ç”¨æ¢¯å½¢æ›²çº¿ç®—å‡ºï¼›
+            //2.S4å‹é€Ÿåº¦æ›²çº¿çš„åŠ å‡é€Ÿæ®µæ²¡æœ‰å¯¹ç§°å‹ï¼Œä½†ç»æ¨å¯¼ï¼Œå½“S4å‹åŠ é€Ÿåº¦ç­‰äº1.5å€Tå‹åŠ é€Ÿåº¦ï¼Œå…¶ä½ç§»ä¹Ÿå¯ç”¨æ¢¯å½¢æ›²çº¿ç®—å‡ºï¼Œè¯¥å€æ•°å…³ç³»ä½“ç°åœ¨åŠ å‡é€Ÿåº¦ç³»æ•°ã€‚
+            dVmax = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)
+                        ? (2 * dDistance - (2.0 * dTac - t1) * dVs - (2.0 * dTde - t2) * dVe) /
+                              (2.0 * dTac + 2.0 * dTde + dTconstForTrapezoid)
+                        : (2 * dDistance - (dTac - t1) * dVs - (dTde - t2) * dVe) / (dTac + dTde + dTconstForTrapezoid);
 
-	if (dTconst < 0 && !isZero(dTconst))   //Ã»ÓĞÔÈËÙµÄÇé¿ö    
-	{
-		if (dTac < 0 || dTde < 0)  //¾àÀë²»×ã
-		{
-			if (!bUseFloatingVe)
-			{
-				return -2;//¾àÀë²»×ãÒÔ¼Ó¼õËÙ
-			}
-			//¶¯Ì¬¹æ»®
-			//Ve¸¡¶¯
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * dDec / dAccFactor);
-				dVmax = dVs;
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + dDistance * dAcc / dAccFactor);
-				dVmax = dVe;
-			}
-			//dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			//dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
+            dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dAccFactor * (dVmax - dVs) / ((dTac - 0.5 * t1) * dTc)
+                       : dAccFactor * 2.0 * (dVmax - dVs) / ((dTac - t1) * dTc); //é‡ç®—åŠ é€Ÿåº¦
+            dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dDecFactor * (dVmax - dVe) / ((dTde - 0.5 * t2) * dTc)
+                       : dDecFactor * 2.0 * (dVmax - dVe) / ((dTde - t2) * dTc); //é‡ç®—å‡é€Ÿåº¦
+            dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dAccFactor * (dVmax - dVs) / (dAcc * dTc)
+                       : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc); //é‡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE)
+                       ? dDecFactor * (dVmax - dVe) / (dDec * dTc)
+                       : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc); //é‡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+    }
+    if (isZero(dTconst)) //é™ˆæ•èª	2023/7/29	åˆ¤æ–­æ˜¯å¦æ— åŒ€é€Ÿè¿‡ç¨‹ï¼Œåªæœ‰åŠ å‡é€Ÿè¿‡ç¨‹ï¼Œä¸”åŠ å‡é€Ÿå‘¨æœŸæ€»å’Œå°äºä¸€ä¸ªæ’è¡¥å‘¨æœŸ
+    {
+        if ((dTac + dTde < dTc) && dTac > 0 && dTde > 0 &&
+            !isZero(dVmax)) //!isZero(dVmax)é¿å…éŸ³æ‰‹è½®æ¨¡æ‹Ÿè½¬åŠ¨å¤ªå°æ—¶ï¼Œå‡ºç°æœ€å¤§é€Ÿåº¦å¼‚å¸¸å¤§
+        {
+            dVmax =
+                dDistance /
+                dTc; //æœ€å¤§é€Ÿåº¦è®¾ä¸ºæ’è¡¥è·ç¦»/æ’è¡¥å‘¨æœŸï¼Œåˆé€Ÿåº¦å’Œæœ«é€Ÿåº¦åœ¨ä¸‹æ–¹çš„ä»£ç å› ä¸ºåŠ å‡é€Ÿå‘¨æœŸä¸º0è®¾ä¸ºå’Œæœ€å¤§é€Ÿåº¦ä¸€æ ·çš„é€Ÿåº¦
+            dTac = dTde = 0; //åŠ å‡é€Ÿå‘¨æœŸæ•°è®¾ä¸º0
+            dTconst = 1;     //åŒ€é€Ÿæ®µå‘¨æœŸæ•°è®¾ä¸º1
+        }
+    }
 
-			dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dAcc * dTc) : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc);
-			dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / (dDec * dTc) : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc);
-		}
-		dTconst = 0;
-	}
-	if (dTac < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTac = fabs(dTac);//Ê±¼äÈ¡¾ø¶ÔÖµ
-		dAcc = -dAcc;   //¼ÓËÙ¶ÈÈ¡·´
-	}
+    dTac = ceil(dTac); //å‘ä¸Šå–æ•´
+    dTde = ceil(dTde);
 
-	if (bTriangleToTrapezoid == TRUE && pSPlanPointer->ucTconstForTrapezoid != 0)//Èı½ÇĞÎËÙ¶ÈÇúÏßĞŞÕıÎªÌİĞÎÇúÏß£ºÖØËã×î´óËÙ¶ÈdVmax¡¢¼ÓËÙ¶ÈdAcc¡¢¼õËÙ¶ÈdDec 2024/3/22 ºé¹ÚÅô
-	{
-		if (pSPlanPointer->ucTconstForTrapezoid == 100)
-		{
-			//ÔÈËÙÊ±¼äÕ¼×ÜÊ±³¤µÄ±ÈÀıÉèÎª100Ê±£¬ÆóÒµÎ´ÏëºÃ²ÉÓÃºÎÖÖ·½°¸£¬ÔİÊ±²»½øĞĞ´¦Àí£¬¼´²»½øĞĞĞŞµ÷¡£
-		}
-		else
-		{
-			dTac = ceil(dTac);//ÏòÉÏÈ¡Õû  ÆóÒµÒªÇó£º¸Ä±äºóµÄÇúÏß×ÜÊ±³¤²»±ä£¬ÔÚĞŞÕıÇ°Òª»ñÈ¡Èı½ÇĞÎËÙ¶ÈÇúÏßÏÂµÄÊµ¼ÊÊ±¼ä¡£
-			dTde = ceil(dTde);//ÏòÉÏÈ¡Õû
+    // 	//æ—§æ–¹æ¡ˆï¼šåŠ é€Ÿæ—¶é—´åœ†æ•´åï¼Œéœ€é‡ç®—æœ€å¤§é€Ÿåº¦ï¼Œç”±äºå‡é€Ÿæ—¶é—´å›ºå®šï¼Œæ­¤æ—¶è¦é‡ç®—å‡é€Ÿåº¦
+    //     dVmax = 2.0 * dAcc * (double)dTac * dTc / 3.0 + dVs; //é‡ç®—æœ€å¤§é€Ÿåº¦
+    //æ–°æ–¹æ¡ˆï¼šåŠ é€Ÿæ—¶é—´ä¸º0æ—¶ èµ·å§‹é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦   åŠ é€Ÿæ—¶é—´ä¸ä¸º0æ—¶ï¼Œé‡ç®—åŠ é€Ÿåº¦
+    if (isZero(dTac))
+    {
+        dVs = dVmax;
+    }
+    else
+    {
+        dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dTac * dTc)
+                                                                      : dAccFactor * 2.0 * (dVmax - dVs) / (dTac * dTc);
+    }
 
-			//¸ù¾İÏµÍ³²ÎÊıÉèÖÃµÄÔÈËÙÊ±¼äÕ¼×ÜÊ±³¤µÄ±ÈÀı£¬¼ÆËãÔÈËÙÊ±¼ä
-			dTconstForTrapezoid = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? pSPlanPointer->ucTconstForTrapezoid / 100.0 * (2.0 * dTac + 2.0 * dTde + dTconst) :
-				pSPlanPointer->ucTconstForTrapezoid / 100.0 * (dTac + dTde + dTconst);
-			t1 = (dTac / (dTac + dTde)) * dTconstForTrapezoid;//ÖĞ¼ä±äÁ¿
-			t2 = (dTde / (dTac + dTde)) * dTconstForTrapezoid;//ÖĞ¼ä±äÁ¿
+    if (isZero(dTde)) //å‡é€Ÿå‘¨æœŸä¸º0ï¼Œä¿®æ•´æœ€ç»ˆé€Ÿåº¦
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE)
+                   ? dDecFactor * (dVmax - dVe) / (dTde * dTc)
+                   : dDecFactor * 2.0 * (dVmax - dVe) / (dTde * dTc); //é‡ç®—å‡é€Ÿåº¦
+    }
 
-			//¸ù¾İ×ÜÎ»ÒÆ²»±äÔ­Ôò£¬ÀûÓÃËÙ¶ÈÇúÏßÎ§³ÉµÄÃæ»ıµÈÓÚÎ»ÒÆµÄÔ­Àí£¬·´Ëã³öÌİĞÎÇúÏßÏÂµÄ×î´óËÙ¶È¡£
-			//1.S3ĞÍËÙ¶ÈÇúÏßµÄ¼Ó¼õËÙ¶Î¹ØÓÚÖĞ¼äÊ±¿ÌµãÖĞĞÄ¶Ô³Æ£¬ÆäÎ»ÒÆ¿ÉÓÃÌİĞÎÇúÏßËã³ö£»
-			//2.S4ĞÍËÙ¶ÈÇúÏßµÄ¼Ó¼õËÙ¶ÎÃ»ÓĞ¶Ô³ÆĞÍ£¬µ«¾­ÍÆµ¼£¬µ±S4ĞÍ¼ÓËÙ¶ÈµÈÓÚ1.5±¶TĞÍ¼ÓËÙ¶È£¬ÆäÎ»ÒÆÒ²¿ÉÓÃÌİĞÎÇúÏßËã³ö£¬¸Ã±¶Êı¹ØÏµÌåÏÖÔÚ¼Ó¼õËÙ¶ÈÏµÊı¡£
-			dVmax = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? (2 * dDistance - (2.0 * dTac - t1) * dVs - (2.0 * dTde - t2) * dVe) / (2.0 * dTac + 2.0 * dTde + dTconstForTrapezoid) :
-				(2 * dDistance - (dTac - t1) * dVs - (dTde - t2) * dVe) / (dTac + dTde + dTconstForTrapezoid);
+    //é‡ç®—åŠ å‡é€Ÿè·ç¦»
+    dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc); //é‡ç®—åŠ é€Ÿè·ç¦»
+    dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec); //é‡ç®—å‡é€Ÿè·ç¦»
 
-			dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / ((dTac - 0.5 * t1) * dTc) : dAccFactor * 2.0 * (dVmax - dVs) / ((dTac - t1) * dTc);//ÖØËã¼ÓËÙ¶È
-			dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / ((dTde - 0.5 * t2) * dTc) : dDecFactor * 2.0 * (dVmax - dVe) / ((dTde - t2) * dTc);//ÖØËã¼õËÙ¶È
-			dTac = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dAcc * dTc) : dAccFactor * 2.0 * (dVmax - dVs) / (dAcc * dTc);//ÖØËã¼ÓËÙÖÜÆÚ
-			dTde = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / (dDec * dTc) : dDecFactor * 2.0 * (dVmax - dVe) / (dDec * dTc);//ÖØËã¼õËÙÖÜÆÚ
-		}
-	}
-	if (isZero(dTconst))	//³ÂÃô´Ï	2023/7/29	ÅĞ¶ÏÊÇ·ñÎŞÔÈËÙ¹ı³Ì£¬Ö»ÓĞ¼Ó¼õËÙ¹ı³Ì£¬ÇÒ¼Ó¼õËÙÖÜÆÚ×ÜºÍĞ¡ÓÚÒ»¸ö²å²¹ÖÜÆÚ
-	{
-		if ((dTac + dTde < dTc) && dTac > 0 && dTde > 0 &&  !isZero(dVmax))//!isZero(dVmax)±ÜÃâÒôÊÖÂÖÄ£Äâ×ª¶¯Ì«Ğ¡Ê±£¬³öÏÖ×î´óËÙ¶ÈÒì³£´ó
-		{
-			dVmax = dDistance / dTc;	//×î´óËÙ¶ÈÉèÎª²å²¹¾àÀë/²å²¹ÖÜÆÚ£¬³õËÙ¶ÈºÍÄ©ËÙ¶ÈÔÚÏÂ·½µÄ´úÂëÒòÎª¼Ó¼õËÙÖÜÆÚÎª0ÉèÎªºÍ×î´óËÙ¶ÈÒ»ÑùµÄËÙ¶È
-			dTac = dTde = 0;			//¼Ó¼õËÙÖÜÆÚÊıÉèÎª0
-			dTconst = 1;				//ÔÈËÙ¶ÎÖÜÆÚÊıÉèÎª1
-		}
-	}
+    dTconst =
+        (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿå‘¨æœŸ    æœ€å¤§é€Ÿåº¦ä¸º0æ—¶  åŒ€é€Ÿå‘¨æœŸ ä¸º0
 
-	dTac = ceil(dTac);//ÏòÉÏÈ¡Õû
-	dTde = ceil(dTde);
+    dTconst = (int32)(dTconst + 0.5); //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    if (dTconst < 0)                  // åŒ€é€Ÿå‘¨æœŸä¸ºè´Ÿæ—¶ï¼Œå–0
+    {
+        dTconst = 0;
+    }
 
-	// 	//¾É·½°¸£º¼ÓËÙÊ±¼äÔ²Õûºó£¬ĞèÖØËã×î´óËÙ¶È£¬ÓÉÓÚ¼õËÙÊ±¼ä¹Ì¶¨£¬´ËÊ±ÒªÖØËã¼õËÙ¶È   
-	//     dVmax = 2.0 * dAcc * (double)dTac * dTc / 3.0 + dVs; //ÖØËã×î´óËÙ¶È
-		//ĞÂ·½°¸£º¼ÓËÙÊ±¼äÎª0Ê± ÆğÊ¼ËÙ¶ÈµÈÓÚ×î´óËÙ¶È   ¼ÓËÙÊ±¼ä²»Îª0Ê±£¬ÖØËã¼ÓËÙ¶È
-	if (isZero(dTac))
-	{
-		dVs = dVmax;
-	}
-	else
-	{
-		dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) ? dAccFactor * (dVmax - dVs) / (dTac * dTc) : dAccFactor * 2.0 * (dVmax - dVs) / (dTac * dTc);
-	}
+    //æ—¶é—´å–æ•´åï¼Œè®¡ç®—æ—¶é—´èŠ‚ç‚¹ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE) //åŠ é€Ÿ
+    {
+        unT1 = (int32)dTac;
+        unT2 = 2 * unT1;
+    }
+    else
+    {
+        unT1 = unT2 = (int32)dTac;
+    }
 
+    unT3 = unT2 + (int32)dTconst; //åŒ€é€Ÿ
 
-	if (isZero(dTde))  //¼õËÙÖÜÆÚÎª0£¬ĞŞÕû×îÖÕËÙ¶È
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{
-		dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) ? dDecFactor * (dVmax - dVe) / (dTde * dTc) : dDecFactor * 2.0 * (dVmax - dVe) / (dTde * dTc); //ÖØËã¼õËÙ¶È
-	}
+    if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE) //å‡é€Ÿ
+    {
+        unT4 = unT3 + (int32)dTde;
+        unT5 = unT4 + (int32)dTde;
+    }
+    else
+    {
+        unT4 = unT5 = unT3 + (int32)dTde;
+    }
 
-	//ÖØËã¼Ó¼õËÙ¾àÀë  
-	dSac = fabs(dAccFactor * (dVmax * dVmax - dVs * dVs) / dAcc);  //ÖØËã¼ÓËÙ¾àÀë 
-	dSde = fabs(dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec); //ÖØËã¼õËÙ¾àÀë 
+    dSconst = dVmax * (int)dTconst * dTc; //è®¡ç®—åŒ€é€Ÿè·ç¦»
 
-	dTconst = (isZero(dVmax)) ? 0 : (dDistance - dSac - dSde) / (dVmax * dTc); //¼ÆËãÔÈËÙÖÜÆÚ    ×î´óËÙ¶ÈÎª0Ê±  ÔÈËÙÖÜÆÚ Îª0
+    dDistRemain = dDistance - dSac - dSde - dSconst; //æ®‹ä½™è·ç¦»
 
-	dTconst = (int32)(dTconst + 0.5);//ÔÈËÙÖÜÆÚÈ¡Õû
-	if (dTconst < 0)  // ÔÈËÙÖÜÆÚÎª¸ºÊ±£¬È¡0
-	{
-		dTconst = 0;
-	}
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3,4,5
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	//Ê±¼äÈ¡Õûºó£¬¼ÆËãÊ±¼ä½Úµã£¨¾ø¶ÔÊ±¼ä£©  
-	if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_S3_CURVE)//¼ÓËÙ
-	{
-		unT1 = (int32)dTac;
-		unT2 = 2 * unT1;
-	}
-	else
-	{
-		unT1 = unT2 = (int32)dTac;
-	}
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	unT3 = unT2 + (int32)dTconst; //ÔÈËÙ
-
-	if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_S3_CURVE)//¼õËÙ
-	{
-		unT4 = unT3 + (int32)dTde;
-		unT5 = unT4 + (int32)dTde;
-	}
-	else
-	{
-		unT4 = unT5 = unT3 + (int32)dTde;
-	}
-
-
-	dSconst = dVmax * (int)dTconst * dTc; //¼ÆËãÔÈËÙ¾àÀë  
-
-	dDistRemain = dDistance - dSac - dSde - dSconst; //²ĞÓà¾àÀë 
-
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3,4,5
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
-	pSPlanPointer->dPreDist = dPreDist;
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
+    pSPlanPointer->dPreDist = dPreDist;
 
 #if EN_DEBUG
-	printf("»ìºÏËÙ¶È¹æ»®\n");
-	printf("**************************\n");
-	printf("k_acc = %lf\r\n", dTac);
-	printf("k_const = %lf\r\n", dTconst);
-	printf("k_dec = %lf\r\n", dTde);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("nT4 = %d\r\n", unT4);
-	printf("nT5 = %d\r\n", unT5);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dAcc = %20.16lf\r\n", dAcc);
-	printf("dDec = %20.16lf\r\n", dDec);
-	printf("dDe  = %20.16lf\r\n", dDistRemain);
-	printf("dVs = %20.16lf\r\n", dVs);
-	printf("dVe = %20.16lf\r\n", dVe);
-	printf("dVmax = %20.16lf\r\n", dVmax);
-	printf("**************************\n");
+    printf("æ··åˆé€Ÿåº¦è§„åˆ’\n");
+    printf("**************************\n");
+    printf("k_acc = %lf\r\n", dTac);
+    printf("k_const = %lf\r\n", dTconst);
+    printf("k_dec = %lf\r\n", dTde);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("nT4 = %d\r\n", unT4);
+    printf("nT5 = %d\r\n", unT5);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dAcc = %20.16lf\r\n", dAcc);
+    printf("dDec = %20.16lf\r\n", dDec);
+    printf("dDe  = %20.16lf\r\n", dDistRemain);
+    printf("dVs = %20.16lf\r\n", dVs);
+    printf("dVe = %20.16lf\r\n", dVe);
+    printf("dVmax = %20.16lf\r\n", dVmax);
+    printf("**************************\n");
 #endif
-	return (isZero(dVmax)) ? 2 : 1;
+    return (isZero(dVmax)) ? 2 : 1;
 }
 
 extern FILE* pWriteFid;
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningTNewAdd(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ĞÂÔö¾àÀëÄ£Ê½µÄTĞÍËÙ¶È¹æ»®  ÓëÆÕÍ¨Ä£Ê½µÄËÙ¶È¹æ»®²»Í¬  ¸ÃÄ£Ê½ÔÚ¾àÀë²»Îª0Ê±¹æ»®Ò»¶¨³É¹¦
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º 2  Ëæ¶¯½×¶Î
-			 1  ¼ÓËÙ½×¶Î
-			 0	¾àÀëÎª0/¸º
-			-1	ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningTNewAdd(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ–°å¢è·ç¦»æ¨¡å¼çš„Tå‹é€Ÿåº¦è§„åˆ’  ä¸æ™®é€šæ¨¡å¼çš„é€Ÿåº¦è§„åˆ’ä¸åŒ  è¯¥æ¨¡å¼åœ¨è·ç¦»ä¸ä¸º0æ—¶è§„åˆ’ä¸€å®šæˆåŠŸ
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š 2  éšåŠ¨é˜¶æ®µ
+			 1  åŠ é€Ÿé˜¶æ®µ
+			 0	è·ç¦»ä¸º0/è´Ÿ
+			-1	è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningTNewAdd(struct SPlan* pSPlanPointer)
 {
-	int8 res = 1;
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dTac, dTconst, dTde;//¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dSac, dSconst, dSde;//¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
-	uint8 flag = FALSE;//ÊäÈëÊÇ·ñÎª×î´óËÙ¶È
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance, dDistRemain;        //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTc;				 //²å²¹ÖÜÆÚ
+    int8 res = 1;
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
+    uint8 flag = FALSE;                  //è¾“å…¥æ˜¯å¦ä¸ºæœ€å¤§é€Ÿåº¦
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dVs, dVmax, dVe;        //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;             //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance, dDistRemain; //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTc;                    //æ’è¡¥å‘¨æœŸ
 
-	struct _SG32* pG32 = &g_SChannel[0].SG32;
+    struct _SG32* pG32 = &g_SChannel[0].SG32;
 
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    dVs = pSPlanPointer->dVs;     //èµ·å§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿåº¦
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿåº¦
+    //dDistance	= pSPlanPointer->dDistance; //æ€»è·ç¦»
+    dDistance = pSPlanPointer->dCurLeftDist; //å¯¹å‰©ä½™è·ç¦»è¿›è¡Œè§„åˆ’
+    dTc = pSPlanPointer->dTc;                //æ’è¡¥å‘¨æœŸ
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	dVs = pSPlanPointer->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È
-	dVe = pSPlanPointer->dVe;		//×îÖÕËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶È
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶È
-	//dDistance	= pSPlanPointer->dDistance; //×Ü¾àÀë
-	dDistance = pSPlanPointer->dCurLeftDist; //¶ÔÊ£Óà¾àÀë½øĞĞ¹æ»®
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-
-	if (dAcc <= 0 || dDec <= 0)	//Ôö¼ÓĞ£Ñé
-	{
-		return -1;
-	}
-
+    if (dAcc <= 0 || dDec <= 0) //å¢åŠ æ ¡éªŒ
+    {
+        return -1;
+    }
 
 #if !ENCODER_MODE
-	if (pG32->bPrintFlag == TRUE)
-	{
+    if (pG32->bPrintFlag == TRUE)
+    {
 #if !MATLAB_DEBUG
-		fprintf(pWriteFid, " %lf %lf %lf %lf ", dVs, dVmax, dVe, dDistance);
+        fprintf(pWriteFid, " %lf %lf %lf %lf ", dVs, dVmax, dVe, dDistance);
 #endif
-	}
+    }
 #endif
-	//º¯ÊıÔËĞĞ¿ªÊ¼
-	if (isZero(dVmax - g_SSystemPara.dSysMaxVel))
-	{//ÊäÈëµÄ×î´óËÙ¶ÈÎªÏµÍ³²ÎÊıµÄ×î´óËÙ¶È
-		//×÷ÓÃ£ºÇø·Ö   ×·¸Ï¡¢Ëæ¶¯½×¶Î  Óë  ¼õËÙ½×¶Î£¬²»Í¬½×¶ÎÊ¹ÓÃ²»Í¬µÄÈ¡Õû·½Ê½(Tconst)£¬ÖØËãµÄ¶ÔÏó(Ve, Dec)Ò²²»Í¬
-		flag = TRUE;
-	}
+    //å‡½æ•°è¿è¡Œå¼€å§‹
+    if (isZero(dVmax - g_SSystemPara.dSysMaxVel))
+    { //è¾“å…¥çš„æœ€å¤§é€Ÿåº¦ä¸ºç³»ç»Ÿå‚æ•°çš„æœ€å¤§é€Ÿåº¦
+        //ä½œç”¨ï¼šåŒºåˆ†   è¿½èµ¶ã€éšåŠ¨é˜¶æ®µ  ä¸  å‡é€Ÿé˜¶æ®µï¼Œä¸åŒé˜¶æ®µä½¿ç”¨ä¸åŒçš„å–æ•´æ–¹å¼(Tconst)ï¼Œé‡ç®—çš„å¯¹è±¡(Ve, Dec)ä¹Ÿä¸åŒ
+        flag = TRUE;
+    }
 
-	if (dDistance < 0)//¾àÀëÎª¸º ÖÃ0ºöÂÔºó·µ»Ø ºé¹ÚÅô 2024/5/6
-	{
-		dDistance = 0;
-	}
+    if (dDistance < 0) //è·ç¦»ä¸ºè´Ÿ ç½®0å¿½ç•¥åè¿”å› æ´ªå† é¹ 2024/5/6
+    {
+        dDistance = 0;
+    }
 
-
-	if (isZero(dDistance))//¾àÀëÌ«¶Ì ºöÂÔ
-	{
-		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //¾àÀë¶ÔÓ¦µÄÊ±¼ä½ÚµãÖÃ0
-		pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+    if (isZero(dDistance)) //è·ç¦»å¤ªçŸ­ å¿½ç•¥
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //è·ç¦»å¯¹åº”çš„æ—¶é—´èŠ‚ç‚¹ç½®0
+        pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
 #if !ENCODER_MODE
 #if !MATLAB_DEBUG
-		if (pG32->bPrintFlag == TRUE)
-		{
-			fprintf(pWriteFid, " %lf ", dVmax);
-			fprintf(pWriteFid, " %lf %lf", dAcc, dDec);
-
-	}
+        if (pG32->bPrintFlag == TRUE)
+        {
+            fprintf(pWriteFid, " %lf ", dVmax);
+            fprintf(pWriteFid, " %lf %lf", dAcc, dDec);
+        }
 #endif
 #endif
 
-		return 0;
-}
+        return 0;
+    }
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	if (dDistance < dSac + dSde) //Â·³Ì²»×ã¼Ó¼õËÙ
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+    if (dDistance < dSac + dSde) //è·¯ç¨‹ä¸è¶³åŠ å‡é€Ÿ
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
 
 #if !ENCODER_MODE
 #if !MATLAB_DEBUG
-		if (pG32->bPrintFlag == TRUE)
-		{
-			fprintf(pWriteFid, " %lf ", dVmax);
-		}
-#endif	
+        if (pG32->bPrintFlag == TRUE)
+        {
+            fprintf(pWriteFid, " %lf ", dVmax);
+        }
+#endif
 #endif
 
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //ÖØËã¼Ó¼õËÙ¶ÎÎ»ÒÆ
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //é‡ç®—åŠ å‡é€Ÿæ®µä½ç§»
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
 #if EN_DEBUG
-		printf("dDistance < dSac + dSde\r\n");
+        printf("dDistance < dSac + dSde\r\n");
 #endif
-	}
-	else
-	{
+    }
+    else
+    {
 #if !ENCODER_MODE
 #if !MATLAB_DEBUG
-		if (pG32->bPrintFlag == TRUE)
-		{
-			fprintf(pWriteFid, " %lf ", dVmax);
-		}
+        if (pG32->bPrintFlag == TRUE)
+        {
+            fprintf(pWriteFid, " %lf ", dVmax);
+        }
 #endif
 #endif
+    }
 
-	}
+    dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
+    if (dTconst <= 0) //è·ç¦»ä¸è¶³æ²¡æœ‰åŒ€é€Ÿçš„æƒ…å†µ
+    {
+        if (dTac < 0 || dTde < 0) //è·ç¦»ä¸è¶³
+        {
+            //åŠ¨æ€è§„åˆ’
+            //Veæµ®åŠ¨
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec); //æ ¹æ®å‡é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦(ä¸ä¼šå‡ºç°è´Ÿå€¼)
+                dVmax = dVs;                                    //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance); //æ ¹æ®åŠ é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦
+                dVmax = dVe;                                    //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+            }
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+    }
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    if (dTac < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTac = fabs(dTac); //åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿæ•°  å–ç»å¯¹å€¼
+        dAcc = -(dAcc);    //åŠ é€Ÿåº¦ä¸ºæ­£  å°†å…¶å˜ä¸ºå‡é€Ÿ  å–å
+    }
 
-	if (dTconst <= 0)   //¾àÀë²»×ãÃ»ÓĞÔÈËÙµÄÇé¿ö
-	{
-		if (dTac < 0 || dTde < 0)  //¾àÀë²»×ã
-		{
-			//¶¯Ì¬¹æ»®
-			//Ve¸¡¶¯
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec);//¸ù¾İ¼õËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È(²»»á³öÏÖ¸ºÖµ)
-				dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance);//¸ù¾İ¼ÓËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È
-				dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-			}
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-	}
+    if (((int)(dTac + 0.5)) == 0) //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0  (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    {
+        dTac = 0;    //åŠ é€Ÿå‘¨æœŸä¸º0
+        dVs = dVmax; //èµ·å§‹é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    if (((int)(dTde + 0.5)) == 0) //å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0 (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    {
+        dTde = 0;    //å‡é€Ÿå‘¨æœŸè®¾ä¸º0
+                     /*		dVmax = dVe;*/
+        dVe = dVmax; //æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    if (isZero(dTde) && isZero(dTac) && dVmax * dTc >= dDistance)
+    {
+        res = 2; //éšåŠ¨é˜¶æ®µ
+    }
+    // 	dTac = (int)(dTac + 0.5);    //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥å–æ•´
+    // 	dTde = (int)(dTde + 0.5);    //å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥å–æ•´
 
-	if (dTac < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTac = fabs(dTac);//¼ÓËÙÖÜÆÚÎª¸ºÊı  È¡¾ø¶ÔÖµ  
-		dAcc = -(dAcc);//¼ÓËÙ¶ÈÎªÕı  ½«Æä±äÎª¼õËÙ  È¡·´
-	}
+    dTac = ceil(dTac); //å‘ä¸Šå–æ•´
+    dTde = ceil(dTde);
 
+    if (isZero(dTac) || isZero(dVs - dVmax)) //åŠ é€Ÿå‘¨æœŸä¸º0
+    {
+        dVs = dVmax;
+        dTac = 0;
+    }
+    else
+    {
+        //		dAcc = (dVmax - dVs)/(dTac * dTc);//é‡ç®—åŠ é€Ÿåº¦
+        //		dVmax = dAcc * (dTac * dTc) + dVs;//é‡ç®—æœ€å¤§é€Ÿåº¦
+        if (1)
+        {
+            dVmax = dAcc * (dTac * dTc) + dVs; //é‡ç®—æœ€å¤§é€Ÿåº¦
+        }
+        else
+        {
+            dAcc = (dVmax - dVs) / (dTac * dTc); //é‡ç®—åŠ é€Ÿåº¦
+        }
+    }
 
+    if (dTde < 0 ||
+        isZero(
+            dTde)) //å‡é€Ÿå‘¨æœŸä¸º0 ï¼ˆå‰ææ˜¯æœ€å¤§é€Ÿåº¦ä¸ä¼šæ¯”ç»ˆç‚¹é€Ÿåº¦å°å¾ˆå¤š(>dDec)ï¼‰   æ™®é€šè§„åˆ’é™åˆ¶äº†æœ«é€Ÿåº¦ä¸è¶…è¿‡æœ€å¤§é€Ÿåº¦  æ–°å¢è·ç¦»çš„è§„åˆ’æ²¡æœ‰é™åˆ¶  å› æ­¤éœ€è¦åˆ¤æ–­<=0
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    { //ä»¥å…å‡é€Ÿåº¦é‡ç®—ä¸º0ï¼Œå½±å“è®¡ç®—
+        //		dDec = (dVmax - dVe) / (dTde * dTc);      //é‡ç®—å‡é€Ÿæ®µåŠ é€Ÿåº¦ï¼ˆå› ä¸ºå‡é€Ÿæ—¶é—´å–æ•´ï¼‰
+        //		dVe = dVmax - dDec* (dTde * dTc);
+        if (flag)
+        {
+            dVe = dVmax - dDec * (dTde * dTc);
+        }
+        else
+        {
+            dDec = (dVmax - dVe) / (dTde * dTc);
+        }
+    }
 
+    dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2); //åŠ é€Ÿæ®µä½ç§»ï¼ˆæ—¶é—´å–æ•´åï¼‰
+    dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2); //å‡é€Ÿæ®µä½ç§»
 
-	if (((int)(dTac + 0.5)) == 0)//¼ÓËÙÖÜÆÚËÄÉáÎåÈëºóÎª0  (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	{
-		dTac = 0;//¼ÓËÙÖÜÆÚÎª0
-		dVs = dVmax;//ÆğÊ¼ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	if (((int)(dTde + 0.5)) == 0)//¼õËÙÖÜÆÚËÄÉáÎåÈëºóÎª0 (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	{
-		dTde = 0;//¼õËÙÖÜÆÚÉèÎª0
-/*		dVmax = dVe;*/
-		dVe = dVmax;//Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	if (isZero(dTde) && isZero(dTac) && dVmax * dTc >= dDistance)
-	{
-		res = 2;//Ëæ¶¯½×¶Î
-	}
-	// 	dTac = (int)(dTac + 0.5);    //¼ÓËÙÖÜÆÚËÄÉáÎåÈëÈ¡Õû  
-	// 	dTde = (int)(dTde + 0.5);    //¼õËÙÖÜÆÚËÄÉáÎåÈëÈ¡Õû
-
-
-	dTac = ceil(dTac);//ÏòÉÏÈ¡Õû
-	dTde = ceil(dTde);
-
-
-	if (isZero(dTac) || isZero(dVs - dVmax))//¼ÓËÙÖÜÆÚÎª0
-	{
-		dVs = dVmax;
-		dTac = 0;
-	}
-	else
-	{
-		//		dAcc = (dVmax - dVs)/(dTac * dTc);//ÖØËã¼ÓËÙ¶È		
-		 //		dVmax = dAcc * (dTac * dTc) + dVs;//ÖØËã×î´óËÙ¶È	
-		if (1)
-		{
-			dVmax = dAcc * (dTac * dTc) + dVs;//ÖØËã×î´óËÙ¶È
-		}
-		else
-		{
-			dAcc = (dVmax - dVs) / (dTac * dTc);//ÖØËã¼ÓËÙ¶È
-		}
-
-	}
-
-	if (dTde < 0 || isZero(dTde))  //¼õËÙÖÜÆÚÎª0 £¨Ç°ÌáÊÇ×î´óËÙ¶È²»»á±ÈÖÕµãËÙ¶ÈĞ¡ºÜ¶à(>dDec)£©   ÆÕÍ¨¹æ»®ÏŞÖÆÁËÄ©ËÙ¶È²»³¬¹ı×î´óËÙ¶È  ĞÂÔö¾àÀëµÄ¹æ»®Ã»ÓĞÏŞÖÆ  Òò´ËĞèÒªÅĞ¶Ï<=0
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{                                  //ÒÔÃâ¼õËÙ¶ÈÖØËãÎª0£¬Ó°Ïì¼ÆËã
-//		dDec = (dVmax - dVe) / (dTde * dTc);      //ÖØËã¼õËÙ¶Î¼ÓËÙ¶È£¨ÒòÎª¼õËÙÊ±¼äÈ¡Õû£©		
-//		dVe = dVmax - dDec* (dTde * dTc);
-		if (flag)
-		{
-			dVe = dVmax - dDec * (dTde * dTc);
-		}
-		else
-		{
-			dDec = (dVmax - dVe) / (dTde * dTc);
-		}
-	}
-
-	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //¼ÓËÙ¶ÎÎ»ÒÆ£¨Ê±¼äÈ¡Õûºó£©
-	dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2);   //¼õËÙ¶ÎÎ»ÒÆ 
-
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
 #if !ENCODER_MODE
 #if !MATLAB_DEBUG
-	if (pG32->bPrintFlag == TRUE)
-	{
-		fprintf(pWriteFid, " %lf %lf", dAcc, dDec);
-	}
+    if (pG32->bPrintFlag == TRUE)
+    {
+        fprintf(pWriteFid, " %lf %lf", dAcc, dDec);
+    }
 #endif
 #endif
 
+    if (dTconst <= 0) //æ²¡æœ‰åŒ€é€Ÿå‘¨æœŸ
+    {
+        dTconst = 0;
+    }
 
-	if (dTconst <= 0)  //Ã»ÓĞÔÈËÙÖÜÆÚ
-	{
-		dTconst = 0;
-	}
+    if (flag || (isZero(dTac) && isZero(dTde)))
+    {
+        dTconst = ceil(dTconst); //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    }
+    else
+    {
+        dTconst = (int)(dTconst + 0.5); //åŒ€é€Ÿå‘¨æœŸå–æ•´
+    }
 
-	if (flag || (isZero(dTac) && isZero(dTde)))
-	{
-		dTconst = ceil(dTconst);  //ÔÈËÙÖÜÆÚÈ¡Õû
-	}
-	else
-	{
-		dTconst = (int)(dTconst + 0.5);  //ÔÈËÙÖÜÆÚÈ¡Õû
-	}
+    unT1 = unT2 = (uint32)dTac;        //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT3 = unT2 + (uint32)dTconst;     //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT4 = unT5 = unT3 + (uint32)dTde; //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
 
+    dSconst = dVmax * (unT3 - unT2) * dTc; //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
 
-	unT1 = unT2 = (uint32)dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	unT3 = unT2 + (uint32)dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	unT4 = unT5 = unT3 + (uint32)dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	dSconst = dVmax * (unT3 - unT2) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
+    pSPlanPointer->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pSPlanPointer->dDistConst = dSconst;
+    pSPlanPointer->dDistDec = dSde;
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
-
-	pSPlanPointer->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pSPlanPointer->dDistConst = dSconst;
-	pSPlanPointer->dDistDec = dSde;
-
-	pSPlanPointer->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
+    pSPlanPointer->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("TĞÎËÙ¶È¹æ»®\n");
-	printf("dTac = %lf\r\n", dTac);
-	printf("dTconst = %lf\r\n", dTconst);
-	printf("dTde = %lf\r\n", dTde);
-	printf("dSac = %20.16lf\r\n", dSac);
-	printf("dSconst = %20.16lf\r\n", dSconst);
-	printf("dSde = %20.16lf\r\n", dSde);
-	printf("dDe = %lf\r\n", dDistRemain);
-	printf("nT1 = %d\r\n", unT1);
-	printf("nT2 = %d\r\n", unT2);
-	printf("nT3 = %d\r\n", unT3);
-	printf("dVmax = %lf\r\n", dVmax);
+    printf("Tå½¢é€Ÿåº¦è§„åˆ’\n");
+    printf("dTac = %lf\r\n", dTac);
+    printf("dTconst = %lf\r\n", dTconst);
+    printf("dTde = %lf\r\n", dTde);
+    printf("dSac = %20.16lf\r\n", dSac);
+    printf("dSconst = %20.16lf\r\n", dSconst);
+    printf("dSde = %20.16lf\r\n", dSde);
+    printf("dDe = %lf\r\n", dDistRemain);
+    printf("nT1 = %d\r\n", unT1);
+    printf("nT2 = %d\r\n", unT2);
+    printf("nT3 = %d\r\n", unT3);
+    printf("dVmax = %lf\r\n", dVmax);
 #endif
-	return res;
-
+    return res;
 }
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºprepareDistReAvgT(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ½«ËÙ¶È¹æ»®ºóÊ£ÓàµÄ²å²¹ÓàÁ¿,¸ù¾İµÈÑüÌİĞÎÆ½Ì¯
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º-1	ÊäÈë´íÎó
-			1	Æ½Ì¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šprepareDistReAvgT(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  å°†é€Ÿåº¦è§„åˆ’åå‰©ä½™çš„æ’è¡¥ä½™é‡,æ ¹æ®ç­‰è…°æ¢¯å½¢å¹³æ‘Š
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š-1	è¾“å…¥é”™è¯¯
+			1	å¹³æ‘Šå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 prepareDistReAvgT(struct SPlan* pSPlanPointer, bool bAddCycleFlag)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dFactor;		  //±ÈÀıÒò×Ó ÓÃÓÚÅĞ¶ÏÊÇ·ñÔö¼ÓÖÜÆÚ
-	double dDistNewAddT; ///<ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
-	uint32 unDistReT1;	 ///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT1
-	uint32 unDistReT2;  ///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT2
-	uint32 unDistReT3;  ///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT3
-	double dTrapezoidAvgAcc;   ///Æ½Ì¯ÌİĞÎµÄ¼ÓËÙ¶È
-	double dTrapezoidAvgVel;   ///Æ½Ì¯ÌİĞÎµÄ×î´óËÙ¶È
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dFactor;          //æ¯”ä¾‹å› å­ ç”¨äºåˆ¤æ–­æ˜¯å¦å¢åŠ å‘¨æœŸ
+    double dDistNewAddT;     ///<æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
+    uint32 unDistReT1;       ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unDistReT2;       ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unDistReT3;       ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T3
+    double dTrapezoidAvgAcc; ///å¹³æ‘Šæ¢¯å½¢çš„åŠ é€Ÿåº¦
+    double dTrapezoidAvgVel; ///å¹³æ‘Šæ¢¯å½¢çš„æœ€å¤§é€Ÿåº¦
 
-	//Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dVe;			//ÖÕµãËÙ¶È
-	double dDistRemain;	//²ĞÓà¾àÀë
-	double dTc;			//²å²¹ÖÜÆÚ
-	uint32 unSumT;		//×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©
+    //éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dVe;         //ç»ˆç‚¹é€Ÿåº¦
+    double dDistRemain; //æ®‹ä½™è·ç¦»
+    double dTc;         //æ’è¡¥å‘¨æœŸ
+    uint32 unSumT;      //æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
 
-	if (pSPlanPointer == NULL)  //¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVe = pSPlanPointer->dVe;				//ÖÕµãËÙ¶È
-	dDistRemain = pSPlanPointer->dDistRemaining;//²ĞÓà¾àÀë
-	dTc = pSPlanPointer->dTc;				//²å²¹ÖÜÆÚ
-	////×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©	
-	unSumT = pSPlanPointer->unT5;
+    //åˆå§‹åŒ–
+    dVe = pSPlanPointer->dVe;                    //ç»ˆç‚¹é€Ÿåº¦
+    dDistRemain = pSPlanPointer->dDistRemaining; //æ®‹ä½™è·ç¦»
+    dTc = pSPlanPointer->dTc;                    //æ’è¡¥å‘¨æœŸ
+    ////æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
+    unSumT = pSPlanPointer->unT5;
 
-	dFactor = (isZero(dVe)) ? 0.1 : dDistRemain / (dVe * dTc); //¼ÆËã±ÈÀıÒò×Ó  ÅĞ¶ÏÊÇ·ñÔö¼ÓÖÜÆÚ
+    dFactor = (isZero(dVe)) ? 0.1 : dDistRemain / (dVe * dTc); //è®¡ç®—æ¯”ä¾‹å› å­  åˆ¤æ–­æ˜¯å¦å¢åŠ å‘¨æœŸ
 
-	if (unSumT <= 0)
-	{
-		return -1;
-	}
-	
-	if (bAddCycleFlag)
-	{
-		if (dFactor >= 0.5)
-		{ //Ôö¼ÓÒ»¸öÖÜÆÚ
-			unDistReT3 = unSumT + 1;
-			dDistNewAddT = dVe * dTc;  //ĞÂÔö¼õËÙÖÜÆÚµÄÎ»ÒÆ
-			dDistRemain -= dVe * dTc;      //¸üĞÂ²ĞÓà¾àÀë
-		}
-		else
-		{
-			//²»Ôö¼ÓÖÜÆÚ
-			dDistNewAddT = 0;
-			unDistReT3 = unSumT;
-		}
-	}
-	else
-	{
-		//²»Ôö¼ÓÖÜÆÚ
-		dDistNewAddT = 0;
-		unDistReT3 = unSumT;
+    if (unSumT <= 0)
+    {
+        return -1;
+    }
 
-	}
+    if (bAddCycleFlag)
+    {
+        if (dFactor >= 0.5)
+        { //å¢åŠ ä¸€ä¸ªå‘¨æœŸ
+            unDistReT3 = unSumT + 1;
+            dDistNewAddT = dVe * dTc; //æ–°å¢å‡é€Ÿå‘¨æœŸçš„ä½ç§»
+            dDistRemain -= dVe * dTc; //æ›´æ–°æ®‹ä½™è·ç¦»
+        }
+        else
+        {
+            //ä¸å¢åŠ å‘¨æœŸ
+            dDistNewAddT = 0;
+            unDistReT3 = unSumT;
+        }
+    }
+    else
+    {
+        //ä¸å¢åŠ å‘¨æœŸ
+        dDistNewAddT = 0;
+        unDistReT3 = unSumT;
+    }
 
-	unDistReT1 = unDistReT3 / 3;  //Ê±¼ä½ÚµãT1
-	unDistReT2 = unDistReT3 - unDistReT1;        //Ê±¼ä½ÚµãT2
-	unDistReT3 = unDistReT3;           //Ê±¼ä½ÚµãT3
+    unDistReT1 = unDistReT3 / 3;          //æ—¶é—´èŠ‚ç‚¹T1
+    unDistReT2 = unDistReT3 - unDistReT1; //æ—¶é—´èŠ‚ç‚¹T2
+    unDistReT3 = unDistReT3;              //æ—¶é—´èŠ‚ç‚¹T3
 
+    if (unDistReT1 <= 1) //ç‰¹æ®Šæƒ…å†µï¼šåŠ å‡é€Ÿå‘¨æœŸå¾ˆçŸ­ å¹³æ‘Šåˆ°åŒ€é€Ÿéƒ¨åˆ†
+    {
+        dTrapezoidAvgAcc = dDistRemain / (unDistReT3 - 2 * unDistReT1);
+        dTrapezoidAvgVel = dDistRemain / (unDistReT3 - 2 * unDistReT1);
+    }
+    else
+    {
+        dTrapezoidAvgAcc = dDistRemain / ((unDistReT3 - unDistReT1) * (unDistReT1 - 1)); //è®¡ç®—å¹³æ‘Šå› å­d(=g_dD)
+        dTrapezoidAvgVel = (unDistReT1 - 1) * dTrapezoidAvgAcc;                          //è®¡ç®—å¹³æ‘Šçš„æœ€å¤§é€Ÿåº¦(=(n-1)d)
+    }
 
-	if (unDistReT1 <= 1)    //ÌØÊâÇé¿ö£º¼Ó¼õËÙÖÜÆÚºÜ¶Ì Æ½Ì¯µ½ÔÈËÙ²¿·Ö
-	{
-		dTrapezoidAvgAcc = dDistRemain / (unDistReT3 - 2 * unDistReT1);
-		dTrapezoidAvgVel = dDistRemain / (unDistReT3 - 2 * unDistReT1);
-	}
-	else
-	{
-		dTrapezoidAvgAcc = dDistRemain / ((unDistReT3 - unDistReT1) * (unDistReT1 - 1));  //¼ÆËãÆ½Ì¯Òò×Ód(=g_dD)
-		dTrapezoidAvgVel = (unDistReT1 - 1) * dTrapezoidAvgAcc;            //¼ÆËãÆ½Ì¯µÄ×î´óËÙ¶È(=(n-1)d)
-	}
-
-	//´«³ö²ÎÊı
-	pSPlanPointer->dDistNewAddT = dDistNewAddT;		///<ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
-	pSPlanPointer->unDistReT1 = unDistReT1;		///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT1
-	pSPlanPointer->unDistReT2 = unDistReT2;		///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT2
-	pSPlanPointer->unDistReT3 = unDistReT3;		///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT3
-	pSPlanPointer->dTrapezoidAvgAcc = dTrapezoidAvgAcc;	///<Æ½Ì¯ÌİĞÎµÄ¼ÓËÙ¶È
-	pSPlanPointer->dTrapezoidAvgVel = dTrapezoidAvgVel;	///<Æ½Ì¯ÌİĞÎµÄ×î´óËÙ¶È
-	pSPlanPointer->dDistRemaining = dDistRemain;		///<²ĞÓà¾àÀë
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->dDistNewAddT = dDistNewAddT;         ///<æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
+    pSPlanPointer->unDistReT1 = unDistReT1;             ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T1
+    pSPlanPointer->unDistReT2 = unDistReT2;             ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T2
+    pSPlanPointer->unDistReT3 = unDistReT3;             ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T3
+    pSPlanPointer->dTrapezoidAvgAcc = dTrapezoidAvgAcc; ///<å¹³æ‘Šæ¢¯å½¢çš„åŠ é€Ÿåº¦
+    pSPlanPointer->dTrapezoidAvgVel = dTrapezoidAvgVel; ///<å¹³æ‘Šæ¢¯å½¢çš„æœ€å¤§é€Ÿåº¦
+    pSPlanPointer->dDistRemaining = dDistRemain;        ///<æ®‹ä½™è·ç¦»
 
 #if EN_DEBUG
-	printf("ÌİĞÎÆ½Ì¯\n");
+    printf("æ¢¯å½¢å¹³æ‘Š\n");
 #endif
 
-	return 1;
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºprepareDistReAvgS5(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ½«ËÙ¶È¹æ»®ºóÊ£ÓàµÄ²å²¹ÓàÁ¿,¸ù¾İÎå´Î¶àÏîÊ½Æ½Ì¯
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º-1	ÊäÈë´íÎó
-			1	Æ½Ì¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šprepareDistReAvgS5(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  å°†é€Ÿåº¦è§„åˆ’åå‰©ä½™çš„æ’è¡¥ä½™é‡,æ ¹æ®äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š-1	è¾“å…¥é”™è¯¯
+			1	å¹³æ‘Šå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 prepareDistReAvgS5(struct SPlan* pSPlanPointer)
 {
-	//²»Ğè³õÊ¼»¯µÄ²ÎÊı
-	double dQuinticAvgA = 0;	///Îå´ÎÏîÏµÊıA
-	double dQuinticAvgB = 0;	///Îå´ÎÏîÏµÊıB
-	double dQuinticAvgC = 0;	///Îå´ÎÏîÏµÊıC
-	uint32 unDistReT3;      ///¾ùÌ¯µÄÊ±¼ä½ÚµãT3
-	uint8 ucQuinticAvgTFlag; ///Îå´ÎÖÜÆÚ²»×ã±êÖ¾Î»
-	double dTrapezoidAvgVel = 0;  //ÖÜÆÚ²»×ãÊ±£¬ Æ½Ì¯×î´óËÙ¶È
+    //ä¸éœ€åˆå§‹åŒ–çš„å‚æ•°
+    double dQuinticAvgA = 0;     ///äº”æ¬¡é¡¹ç³»æ•°A
+    double dQuinticAvgB = 0;     ///äº”æ¬¡é¡¹ç³»æ•°B
+    double dQuinticAvgC = 0;     ///äº”æ¬¡é¡¹ç³»æ•°C
+    uint32 unDistReT3;           ///å‡æ‘Šçš„æ—¶é—´èŠ‚ç‚¹T3
+    uint8 ucQuinticAvgTFlag;     ///äº”æ¬¡å‘¨æœŸä¸è¶³æ ‡å¿—ä½
+    double dTrapezoidAvgVel = 0; //å‘¨æœŸä¸è¶³æ—¶ï¼Œ å¹³æ‘Šæœ€å¤§é€Ÿåº¦
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dDistRemain;	//²ĞÓà¾àÀë
-	uint32 unSumT;		//×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dDistRemain; //æ®‹ä½™è·ç¦»
+    uint32 unSumT;      //æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
 
-	if (pSPlanPointer == NULL)   //¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dDistRemain = pSPlanPointer->dDistRemaining; //²ĞÓà¾àÀë
-	////×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©
-	unSumT = pSPlanPointer->unT5;
+    //åˆå§‹åŒ–
+    dDistRemain = pSPlanPointer->dDistRemaining; //æ®‹ä½™è·ç¦»
+    ////æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
+    unSumT = pSPlanPointer->unT5;
 
-	if (unSumT <= 0)
-	{
-		return -1;
-	}
-	
+    if (unSumT <= 0)
+    {
+        return -1;
+    }
 
-	if (unSumT > 6)  //ÖÜÆÚÊı´óÓÚ6
-	{
-		double dPeriod = unSumT - 2;  //µÚÒ»¸öÖÜÆÚºÍ×îºóÒ»¸öÖÜÆÚ²»Æ½Ì¯
+    if (unSumT > 6) //å‘¨æœŸæ•°å¤§äº6
+    {
+        double dPeriod = unSumT - 2; //ç¬¬ä¸€ä¸ªå‘¨æœŸå’Œæœ€åä¸€ä¸ªå‘¨æœŸä¸å¹³æ‘Š
 
-		dQuinticAvgA = 6 * dDistRemain / (dPeriod * dPeriod * dPeriod * dPeriod * dPeriod);  //¼ÆËãÎå´ÎÏîÏµÊıAµÄÖµ
-		dQuinticAvgB = -15 * dDistRemain / (dPeriod * dPeriod * dPeriod * dPeriod);   //¼ÆËãËÄ´ÎÏîÏµÊıBµÄÖµ
-		dQuinticAvgC = 10 * dDistRemain / (dPeriod * dPeriod * dPeriod);     //¼ÆËãÈı´ÎÏîÏµÊıCµÄÖµ
-		ucQuinticAvgTFlag = 0; //ÖÜÆÚÊı´óÓÚ6  ÖÜÆÚ×ã¹» ±êÖ¾Î»ÖÃ0
-	}
-	else//ÖÜÆÚÊıĞ¡ÓÚ6  ÖÜÆÚ²»×ã
-	{
-		dTrapezoidAvgVel = dDistRemain / unSumT;  //Ö±½ÓÆ½Ì¯
-		ucQuinticAvgTFlag = 1;      //±êÖ¾Î»ÖÃ1
-	}
-	unDistReT3 = unSumT;  //¸Ä±äÆ½¾ùÓàÁ¿µÄÖÜÆÚÊı
+        dQuinticAvgA = 6 * dDistRemain / (dPeriod * dPeriod * dPeriod * dPeriod * dPeriod); //è®¡ç®—äº”æ¬¡é¡¹ç³»æ•°Açš„å€¼
+        dQuinticAvgB = -15 * dDistRemain / (dPeriod * dPeriod * dPeriod * dPeriod);         //è®¡ç®—å››æ¬¡é¡¹ç³»æ•°Bçš„å€¼
+        dQuinticAvgC = 10 * dDistRemain / (dPeriod * dPeriod * dPeriod);                    //è®¡ç®—ä¸‰æ¬¡é¡¹ç³»æ•°Cçš„å€¼
+        ucQuinticAvgTFlag = 0; //å‘¨æœŸæ•°å¤§äº6  å‘¨æœŸè¶³å¤Ÿ æ ‡å¿—ä½ç½®0
+    }
+    else //å‘¨æœŸæ•°å°äº6  å‘¨æœŸä¸è¶³
+    {
+        dTrapezoidAvgVel = dDistRemain / unSumT; //ç›´æ¥å¹³æ‘Š
+        ucQuinticAvgTFlag = 1;                   //æ ‡å¿—ä½ç½®1
+    }
+    unDistReT3 = unSumT; //æ”¹å˜å¹³å‡ä½™é‡çš„å‘¨æœŸæ•°
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->dQuinticAvgA = dQuinticAvgA;	///Îå´ÎÏîÏµÊıA
-	pSPlanPointer->dQuinticAvgB = dQuinticAvgB;	///Îå´ÎÏîÏµÊıB
-	pSPlanPointer->dQuinticAvgC = dQuinticAvgC;	///Îå´ÎÏîÏµÊıC
-	pSPlanPointer->ucQuinticAvgTFlag = ucQuinticAvgTFlag;///Îå´ÎÖÜÆÚ²»×ã±êÖ¾Î»
-	pSPlanPointer->unDistReT3 = unDistReT3;		///<·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT3
-	pSPlanPointer->dTrapezoidAvgVel = dTrapezoidAvgVel; //ÖÜÆÚ²»×ãÊ±£¬ Æ½Ì¯×î´óËÙ¶È
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->dQuinticAvgA = dQuinticAvgA;           ///äº”æ¬¡é¡¹ç³»æ•°A
+    pSPlanPointer->dQuinticAvgB = dQuinticAvgB;           ///äº”æ¬¡é¡¹ç³»æ•°B
+    pSPlanPointer->dQuinticAvgC = dQuinticAvgC;           ///äº”æ¬¡é¡¹ç³»æ•°C
+    pSPlanPointer->ucQuinticAvgTFlag = ucQuinticAvgTFlag; ///äº”æ¬¡å‘¨æœŸä¸è¶³æ ‡å¿—ä½
+    pSPlanPointer->unDistReT3 = unDistReT3;               ///<åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T3
+    pSPlanPointer->dTrapezoidAvgVel = dTrapezoidAvgVel;   //å‘¨æœŸä¸è¶³æ—¶ï¼Œ å¹³æ‘Šæœ€å¤§é€Ÿåº¦
 
 #if EN_DEBUG
-	printf("Îå´Î¶àÏîÊ½Æ½Ì¯\n");
+    printf("äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š\n");
 #endif
 
-	return 1;
-
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºprepareDistReAvgRatio(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ½«ËÙ¶È¹æ»®ºóÊ£ÓàµÄ²å²¹ÓàÁ¿,°´±ÈÀıÆ½Ì¯
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º-1	ÊäÈë´íÎó
-			1	Æ½Ì¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šprepareDistReAvgRatio(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  å°†é€Ÿåº¦è§„åˆ’åå‰©ä½™çš„æ’è¡¥ä½™é‡,æŒ‰æ¯”ä¾‹å¹³æ‘Š
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š-1	è¾“å…¥é”™è¯¯
+			1	å¹³æ‘Šå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 prepareDistReAvgRatio(struct SPlan* pSPlanPointer)
 {
-	//²»ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dAverageFactor;	///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
-	uint32 unDistReT3;      ///¾ùÌ¯µÄÊ±¼ä½ÚµãT3
+    //ä¸éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dAverageFactor; ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
+    uint32 unDistReT3;     ///å‡æ‘Šçš„æ—¶é—´èŠ‚ç‚¹T3
 
-	//ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-	double dSumDist;	//ÒÑËÙ¶È¹æ»®µÄ¾àÀë
-	double dDistance;	///<²å²¹¾àÀë	mm 
-	uint32 unSumT;		//×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©
+    //éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+    double dSumDist;  //å·²é€Ÿåº¦è§„åˆ’çš„è·ç¦»
+    double dDistance; ///<æ’è¡¥è·ç¦»	mm
+    uint32 unSumT;    //æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
-	///³õÊ¼»¯
-	//ÒÑ¹æ»®µÄ¾àÀë
-	dSumDist = pSPlanPointer->dDistAcc + pSPlanPointer->dDistConst + pSPlanPointer->dDistDec;
-	dDistance = pSPlanPointer->dDistance;   //Ïß¶Î³¤¶È
-	////×ÜÖÜÆÚÊı£¨TĞÍ£¬S4ĞÍÎªT3£¬S3ĞÍÎªT5£©
-	unSumT = pSPlanPointer->unT5;
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
+    ///åˆå§‹åŒ–
+    //å·²è§„åˆ’çš„è·ç¦»
+    dSumDist = pSPlanPointer->dDistAcc + pSPlanPointer->dDistConst + pSPlanPointer->dDistDec;
+    dDistance = pSPlanPointer->dDistance; //çº¿æ®µé•¿åº¦
+    ////æ€»å‘¨æœŸæ•°ï¼ˆTå‹ï¼ŒS4å‹ä¸ºT3ï¼ŒS3å‹ä¸ºT5ï¼‰
+    unSumT = pSPlanPointer->unT5;
 
-	if(dSumDist <= 0 || isnan(dSumDist))
-	{
-		return -1;
-	}
+    if (dSumDist <= 0 || isnan(dSumDist))
+    {
+        return -1;
+    }
 
-	dAverageFactor = dDistance / dSumDist; //¼ÆËã±ÈÀıÏµÊı
-	unDistReT3 = unSumT; //¸Ä±äÆ½¾ùÓàÁ¿µÄÖÜÆÚÊı
+    dAverageFactor = dDistance / dSumDist; //è®¡ç®—æ¯”ä¾‹ç³»æ•°
+    unDistReT3 = unSumT;                   //æ”¹å˜å¹³å‡ä½™é‡çš„å‘¨æœŸæ•°
 
-	//´«³ö²ÎÊı
-	pSPlanPointer->unDistReT3 = unDistReT3;    ///¾ùÌ¯µÄÊ±¼ä½ÚµãT3
-	pSPlanPointer->dAverageFactor = dAverageFactor;///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
+    //ä¼ å‡ºå‚æ•°
+    pSPlanPointer->unDistReT3 = unDistReT3;         ///å‡æ‘Šçš„æ—¶é—´èŠ‚ç‚¹T3
+    pSPlanPointer->dAverageFactor = dAverageFactor; ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
 
 #if EN_DEBUG
-	printf("±ÈÀıÏµÊıÆ½Ì¯\n");
+    printf("æ¯”ä¾‹ç³»æ•°å¹³æ‘Š\n");
 #endif
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningT(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÌİĞÎËÙ¶È¹æ»®Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆ£¨Ïà¶ÔÆğµã£©
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningT(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æ¢¯å½¢é€Ÿåº¦è§„åˆ’é¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double nextstepPlanningT(uint32 unK, struct SPlan* pSPlanPointer)   //TĞÍS(t) 
+double nextstepPlanningT(uint32 unK, struct SPlan* pSPlanPointer) //Tå‹S(t)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dDistAcc;		///<¼ÓËÙ¶ÎÎ»ÒÆ
-	double dDistConst;	    ///<ÔÈËÙ¶ÎÎ»ÒÆ
-	double dDistDec;		///<¼õËÙ¶ÎÎ»ÒÆ
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dDistAcc;        ///<åŠ é€Ÿæ®µä½ç§»
+    double dDistConst;      ///<åŒ€é€Ÿæ®µä½ç§»
+    double dDistDec;        ///<å‡é€Ÿæ®µä½ç§»
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
 
-	double dDistNewAddT;	///<ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    double dDistNewAddT; ///<æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dDistAcc = pSPlanPointer->dDistAcc;	//¼ÓËÙ¶ÎÎ»ÒÆ
-	dDistConst = pSPlanPointer->dDistConst;//ÔÈËÙ¶ÎÎ»ÒÆ
-	dDistDec = pSPlanPointer->dDistDec;	//¼õËÙ¶ÎÎ»ÒÆ
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT4
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT5
-	dDistNewAddT = pSPlanPointer->dDistNewAddT;//ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;                   //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;               //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                   //ç»ˆç‚¹é€Ÿåº¦
+    dDistAcc = pSPlanPointer->dDistAcc;         //åŠ é€Ÿæ®µä½ç§»
+    dDistConst = pSPlanPointer->dDistConst;     //åŒ€é€Ÿæ®µä½ç§»
+    dDistDec = pSPlanPointer->dDistDec;         //å‡é€Ÿæ®µä½ç§»
+    dAcc = pSPlanPointer->dAcc;                 //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;                 //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;                   //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;                 //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;                 //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;                 //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;                 //æ—¶é—´èŠ‚ç‚¹T4
+    unT5 = pSPlanPointer->unT5;                 //æ—¶é—´èŠ‚ç‚¹T5
+    dDistNewAddT = pSPlanPointer->dDistNewAddT; //æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (unK == 0) //·ÀÖ¹¼ÓËÙÖÜÆÚÎª0   ÊäÈëunKÓÖÎª0  Êä³öÎª -nan
-	{
-		return 0.0;
-	}
-	else if (unK <= unT1)   //¼ÓËÙ  unT2 = unT1
-	{
-		return dVs * unK * dTc + dAcc * unK * dTc * unK * dTc / 2;
-	}
-	else if (unK <= unT3)   //ÔÈËÙ
-	{
+    if (unK == 0) //é˜²æ­¢åŠ é€Ÿå‘¨æœŸä¸º0   è¾“å…¥unKåˆä¸º0  è¾“å‡ºä¸º -nan
+    {
+        return 0.0;
+    }
+    else if (unK <= unT1) //åŠ é€Ÿ  unT2 = unT1
+    {
+        return dVs * unK * dTc + dAcc * unK * dTc * unK * dTc / 2;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
 
-		return dDistAcc + dVmax * (unK - unT2) * dTc;
-	}
-	else if (unK <= unT5)   //¼õËÙ unT4 = unT5
-	{
-		int dDeltaK = (int)(unK - unT5);
-		return dDistAcc + dDistConst + dDistDec - dDec * dDeltaK * dTc * dDeltaK * dTc / 2 + dVe * dDeltaK * dTc;
-
-	}
-	else   //³¬³ö·¶Î§
-	{
-		return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
-	}
+        return dDistAcc + dVmax * (unK - unT2) * dTc;
+    }
+    else if (unK <= unT5) //å‡é€Ÿ unT4 = unT5
+    {
+        int dDeltaK = (int)(unK - unT5);
+        return dDistAcc + dDistConst + dDistDec - dDec * dDeltaK * dTc * dDeltaK * dTc / 2 + dVe * dDeltaK * dTc;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningS3(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İS3ĞÍËÙ¶È¹æ»®Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆ£¨Ïà¶ÔÆğµã£©
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningS3(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®S3å‹é€Ÿåº¦è§„åˆ’é¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double nextstepPlanningS3(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dDistAcc;		///<¼ÓËÙ¶ÎÎ»ÒÆ
-	double dDistConst;	    ///<ÔÈËÙ¶ÎÎ»ÒÆ
-	double dDistDec;		///<¼õËÙ¶ÎÎ»ÒÆ
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
-	double dDistNewAddT;	///<ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dDistAcc;        ///<åŠ é€Ÿæ®µä½ç§»
+    double dDistConst;      ///<åŒ€é€Ÿæ®µä½ç§»
+    double dDistDec;        ///<å‡é€Ÿæ®µä½ç§»
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
+    double dDistNewAddT;    ///<æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dDistAcc = pSPlanPointer->dDistAcc;	//¼ÓËÙ¶ÎÎ»ÒÆ
-	dDistConst = pSPlanPointer->dDistConst;//ÔÈËÙ¶ÎÎ»ÒÆ
-	dDistDec = pSPlanPointer->dDistDec;	//¼õËÙ¶ÎÎ»ÒÆ
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT4
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT5
-	dDistNewAddT = pSPlanPointer->dDistNewAddT;//ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;                   //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;               //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;                   //ç»ˆç‚¹é€Ÿåº¦
+    dDistAcc = pSPlanPointer->dDistAcc;         //åŠ é€Ÿæ®µä½ç§»
+    dDistConst = pSPlanPointer->dDistConst;     //åŒ€é€Ÿæ®µä½ç§»
+    dDistDec = pSPlanPointer->dDistDec;         //å‡é€Ÿæ®µä½ç§»
+    dAcc = pSPlanPointer->dAcc;                 //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;                 //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;                   //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;                 //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;                 //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;                 //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;                 //æ—¶é—´èŠ‚ç‚¹T4
+    unT5 = pSPlanPointer->unT5;                 //æ—¶é—´èŠ‚ç‚¹T5
+    dDistNewAddT = pSPlanPointer->dDistNewAddT; //æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (unK == 0) //·ÀÖ¹¼ÓËÙÖÜÆÚÎª0   ÊäÈëunKÓÖÎª0  Êä³öÎª -nan
-	{
-		return 0.0;
-	}
-	else if (unK <= unT1) //¼ÓËÙ1
-	{
-		return dAcc * dAcc * unK * dTc * unK * dTc * unK * dTc / (6 * (dVmax - dVs)) + dVs * unK * dTc;  //SĞÍËÙ¶ÈÇúÏß S(t) = t3 
-	}
-	else if (unK <= unT2)  //¼ÓËÙ2
-	{
-		int dDeltaK = (int)(unK - unT2); //ÓÃdouble»áÊä³ö´íÎó
-		return dAcc * dAcc * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVs - dVmax)) + dVmax * (unK - unT1) * dTc + dVs * unT1 * dTc;
-	}
-	else if (unK <= unT3)  //ÔÈËÙ
-	{
-		return dDistAcc + dVmax * (unK - unT2) * dTc;
-	}
-	else if (unK <= unT4)  //¼õËÙ1
-	{
-		int dDeltaK = (int)(unK - unT3);
-		return dDistAcc + dDec * dDec * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVe - dVmax)) + dVmax * (unK - unT2) * dTc;
-	}
-	else if (unK <= unT5)   //¼õËÙ2
-	{
-		int dDeltaK = (int)(unK - unT5);
-		return dDistAcc + dVmax * (unT4 - unT2) * dTc
-			+ dDec * dDec * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVmax - dVe))
-			+ dVe * (unK - unT4) * dTc;
-	}
-	else    //³¬³ö·¶Î§
-	{
-		return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
-	}
-
+    if (unK == 0) //é˜²æ­¢åŠ é€Ÿå‘¨æœŸä¸º0   è¾“å…¥unKåˆä¸º0  è¾“å‡ºä¸º -nan
+    {
+        return 0.0;
+    }
+    else if (unK <= unT1) //åŠ é€Ÿ1
+    {
+        return dAcc * dAcc * unK * dTc * unK * dTc * unK * dTc / (6 * (dVmax - dVs)) +
+               dVs * unK * dTc; //Så‹é€Ÿåº¦æ›²çº¿ S(t) = t3
+    }
+    else if (unK <= unT2) //åŠ é€Ÿ2
+    {
+        int dDeltaK = (int)(unK - unT2); //ç”¨doubleä¼šè¾“å‡ºé”™è¯¯
+        return dAcc * dAcc * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVs - dVmax)) +
+               dVmax * (unK - unT1) * dTc + dVs * unT1 * dTc;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
+        return dDistAcc + dVmax * (unK - unT2) * dTc;
+    }
+    else if (unK <= unT4) //å‡é€Ÿ1
+    {
+        int dDeltaK = (int)(unK - unT3);
+        return dDistAcc + dDec * dDec * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVe - dVmax)) +
+               dVmax * (unK - unT2) * dTc;
+    }
+    else if (unK <= unT5) //å‡é€Ÿ2
+    {
+        int dDeltaK = (int)(unK - unT5);
+        return dDistAcc + dVmax * (unT4 - unT2) * dTc +
+               dDec * dDec * dDeltaK * dTc * dDeltaK * dTc * dDeltaK * dTc / (6 * (dVmax - dVe)) +
+               dVe * (unK - unT4) * dTc;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningS4(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İS4ĞÍËÙ¶È¹æ»®Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆ£¨Ïà¶ÔÆğµã£©
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningS4(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®S4å‹é€Ÿåº¦è§„åˆ’é¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double nextstepPlanningS4(uint32 unK, struct SPlan* pSPlanPointer)  //S4ĞÍS(t)
+double nextstepPlanningS4(uint32 unK, struct SPlan* pSPlanPointer) //S4å‹S(t)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dDistAcc;		///<¼ÓËÙ¶ÎÎ»ÒÆ
-	double dDistConst;	    ///<ÔÈËÙ¶ÎÎ»ÒÆ
-	double dDistDec;		///<¼õËÙ¶ÎÎ»ÒÆ
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
-	double dDistNewAddT;	///<ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dDistAcc;        ///<åŠ é€Ÿæ®µä½ç§»
+    double dDistConst;      ///<åŒ€é€Ÿæ®µä½ç§»
+    double dDistDec;        ///<å‡é€Ÿæ®µä½ç§»
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
+    double dDistNewAddT;    ///<æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dDistAcc = pSPlanPointer->dDistAcc;	//¼ÓËÙ¶ÎÎ»ÒÆ
-	dDistConst = pSPlanPointer->dDistConst;//ÔÈËÙ¶ÎÎ»ÒÆ
-	dDistDec = pSPlanPointer->dDistDec;	//¼õËÙ¶ÎÎ»ÒÆ
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT4
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT5
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;               //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax;           //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;               //ç»ˆç‚¹é€Ÿåº¦
+    dDistAcc = pSPlanPointer->dDistAcc;     //åŠ é€Ÿæ®µä½ç§»
+    dDistConst = pSPlanPointer->dDistConst; //åŒ€é€Ÿæ®µä½ç§»
+    dDistDec = pSPlanPointer->dDistDec;     //å‡é€Ÿæ®µä½ç§»
+    dAcc = pSPlanPointer->dAcc;             //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;             //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;               //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;             //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;             //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;             //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;             //æ—¶é—´èŠ‚ç‚¹T4
+    unT5 = pSPlanPointer->unT5;             //æ—¶é—´èŠ‚ç‚¹T5
 
-	dDistNewAddT = pSPlanPointer->dDistNewAddT;//ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    dDistNewAddT = pSPlanPointer->dDistNewAddT; //æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	if (unK == 0) //·ÀÖ¹¼ÓËÙÖÜÆÚÎª0   ÊäÈëunKÓÖÎª0  Êä³öÎª -nan
-	{
-		return 0.0;
-	}
-	else if (unK <= unT1) // ¼ÓËÙ  unT2=unT1 //2025.10.11 ĞŞ¸Ä (3 * unT1 * unT1)Îª(3.0 * unT1 * unT1)£¬ÈôunT1¹ı´ó¿ÉÄÜ³¬³öÕûĞÎ·¶Î§£¬µ¼ÖÂÒç³ö
-	{
-		return -dAcc / (3.0 * unT1 * unT1) * unK * unK * unK * unK * dTc * dTc + 2 * dAcc / (3 * unT1) * unK * unK * unK * dTc * dTc + dVs * unK * dTc;
-	}
-	else if (unK <= unT3) //ÔÈËÙ  
-	{
-		return dDistAcc + dVmax * (unK - unT1) * dTc;
-
-	}
-	else if (unK <= unT5) //¼õËÙ  unT4=unT5
-	{
-		double dDeltaK = (double)(unK - unT3);
-		// 		printf("%lf ",dDec / (3 * (unT5 - unT3) * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dDeltaK * dTc * dTc 
-		// 			- 2 * dDec / (3 * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dTc * dTc
-		// 			+ dVmax * dDeltaK * dTc + dDistAcc + dDistConst);
-		return dDec / (3.0 * (unT5 - unT3) * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dDeltaK * dTc * dTc
-			- 2 * dDec / (3.0 * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dTc * dTc
-			+ dVmax * dDeltaK * dTc + dDistAcc + dDistConst;
-	}
-	else //³¬³ö·¶Î§  
-	{
-		return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
-	}
+    if (unK == 0) //é˜²æ­¢åŠ é€Ÿå‘¨æœŸä¸º0   è¾“å…¥unKåˆä¸º0  è¾“å‡ºä¸º -nan
+    {
+        return 0.0;
+    }
+    else if (
+        unK <=
+        unT1) // åŠ é€Ÿ  unT2=unT1 //2025.10.11 ä¿®æ”¹ (3 * unT1 * unT1)ä¸º(3.0 * unT1 * unT1)ï¼Œè‹¥unT1è¿‡å¤§å¯èƒ½è¶…å‡ºæ•´å½¢èŒƒå›´ï¼Œå¯¼è‡´æº¢å‡º
+    {
+        return -dAcc / (3.0 * unT1 * unT1) * unK * unK * unK * unK * dTc * dTc +
+               2 * dAcc / (3 * unT1) * unK * unK * unK * dTc * dTc + dVs * unK * dTc;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
+        return dDistAcc + dVmax * (unK - unT1) * dTc;
+    }
+    else if (unK <= unT5) //å‡é€Ÿ  unT4=unT5
+    {
+        double dDeltaK = (double)(unK - unT3);
+        // 		printf("%lf ",dDec / (3 * (unT5 - unT3) * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dDeltaK * dTc * dTc
+        // 			- 2 * dDec / (3 * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dTc * dTc
+        // 			+ dVmax * dDeltaK * dTc + dDistAcc + dDistConst);
+        return dDec / (3.0 * (unT5 - unT3) * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dDeltaK * dTc * dTc -
+               2 * dDec / (3.0 * (unT5 - unT3)) * dDeltaK * dDeltaK * dDeltaK * dTc * dTc + dVmax * dDeltaK * dTc +
+               dDistAcc + dDistConst;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dDistAcc + dDistConst + dDistDec + dDistNewAddT;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningCombine(uint32 unK,struct SPlan *pSPlanPointer)  //»ìºÏĞÍS(t)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ»ìºÏĞÍËÙ¶È¹æ»®Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆ£¨Ïà¶ÔÆğµã£©
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningCombine(uint32 unK,struct SPlan *pSPlanPointer)  //æ··åˆå‹S(t)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æ··åˆå‹é€Ÿåº¦è§„åˆ’é¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double nextstepPlanningCombine(uint32 unK, struct SPlan* pSPlanPointer)  //»ìºÏĞÍS(t)
+double nextstepPlanningCombine(uint32 unK, struct SPlan* pSPlanPointer) //æ··åˆå‹S(t)
 {
-	uint8 ucVelPlanType = 0;//ÇúÏßÀàĞÍ
-	//unT3Îª·Ö½çÏß
-	ucVelPlanType = (pSPlanPointer->unCurrentT <= pSPlanPointer->unT3) ? pSPlanPointer->ucAccVelPlanType : pSPlanPointer->ucDecVelPlanType;
+    uint8 ucVelPlanType = 0; //æ›²çº¿ç±»å‹
+    //unT3ä¸ºåˆ†ç•Œçº¿
+    ucVelPlanType = (pSPlanPointer->unCurrentT <= pSPlanPointer->unT3) ? pSPlanPointer->ucAccVelPlanType
+                                                                       : pSPlanPointer->ucDecVelPlanType;
 
-	switch (ucVelPlanType)//¸ù¾İµ±Ç°µÄÇúÏßÀàĞÍµ÷ÓÃ¾àÀëº¯Êı
-	{
-	case VEL_PLAN_T_CURVE://TĞÍ
-		return nextstepPlanningT(unK, pSPlanPointer);
-		break;
-	case VEL_PLAN_S3_CURVE://S3ĞÍ
-		return nextstepPlanningS3(unK, pSPlanPointer);
-		break;
-	case VEL_PLAN_S4_CURVE://S4ĞÍ
-		return nextstepPlanningS4(unK, pSPlanPointer);
-		break;
-	default:
-		return nextstepPlanningS4(unK, pSPlanPointer);
-	}
-
+    switch (ucVelPlanType) //æ ¹æ®å½“å‰çš„æ›²çº¿ç±»å‹è°ƒç”¨è·ç¦»å‡½æ•°
+    {
+    case VEL_PLAN_T_CURVE: //Tå‹
+        return nextstepPlanningT(unK, pSPlanPointer);
+        break;
+    case VEL_PLAN_S3_CURVE: //S3å‹
+        return nextstepPlanningS3(unK, pSPlanPointer);
+        break;
+    case VEL_PLAN_S4_CURVE: //S4å‹
+        return nextstepPlanningS4(unK, pSPlanPointer);
+        break;
+    default:
+        return nextstepPlanningS4(unK, pSPlanPointer);
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepDistReAvgT(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÌİĞÎÆ½Ì¯Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄÌİĞÎÆ½Ì¯µÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble Æ½Ì¯µÄ¾ø¶ÔÎ»ÒÆ
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepDistReAvgT(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æ¢¯å½¢å¹³æ‘Šé¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„æ¢¯å½¢å¹³æ‘Šçš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble å¹³æ‘Šçš„ç»å¯¹ä½ç§»
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double nextstepDistReAvgT(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	uint32 unDistReT1, unDistReT2, unDistReT3;   //Æ½Ì¯Ê±¼ä½ÚµãT1,T2,T3
-	double dTrapezoidAvgAcc;   ///Æ½Ì¯ÌİĞÎµÄ¼ÓËÙ¶È
-	double dTrapezoidAvgVel;   ///Æ½Ì¯ÌİĞÎµÄ×î´óËÙ¶È
-	double dDistRemaining;		///<²ĞÓà¾àÀë
+    uint32 unDistReT1, unDistReT2, unDistReT3; //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T1,T2,T3
+    double dTrapezoidAvgAcc;                   ///å¹³æ‘Šæ¢¯å½¢çš„åŠ é€Ÿåº¦
+    double dTrapezoidAvgVel;                   ///å¹³æ‘Šæ¢¯å½¢çš„æœ€å¤§é€Ÿåº¦
+    double dDistRemaining;                     ///<æ®‹ä½™è·ç¦»
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	unDistReT1 = pSPlanPointer->unDistReT1;		//Æ½Ì¯Ê±¼ä½ÚµãT1
-	unDistReT2 = pSPlanPointer->unDistReT2;		//Æ½Ì¯Ê±¼ä½ÚµãT2
-	unDistReT3 = pSPlanPointer->unDistReT3;		//Æ½Ì¯Ê±¼ä½ÚµãT3
-	dTrapezoidAvgAcc = pSPlanPointer->dTrapezoidAvgAcc;	///Æ½Ì¯ÌİĞÎµÄ¼ÓËÙ¶È
-	dTrapezoidAvgVel = pSPlanPointer->dTrapezoidAvgVel;	///Æ½Ì¯ÌİĞÎµÄ×î´óËÙ¶È
-	dDistRemaining = pSPlanPointer->dDistRemaining;	///<²ĞÓà¾àÀë
+    //åˆå§‹åŒ–
+    unDistReT1 = pSPlanPointer->unDistReT1;             //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T1
+    unDistReT2 = pSPlanPointer->unDistReT2;             //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T2
+    unDistReT3 = pSPlanPointer->unDistReT3;             //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T3
+    dTrapezoidAvgAcc = pSPlanPointer->dTrapezoidAvgAcc; ///å¹³æ‘Šæ¢¯å½¢çš„åŠ é€Ÿåº¦
+    dTrapezoidAvgVel = pSPlanPointer->dTrapezoidAvgVel; ///å¹³æ‘Šæ¢¯å½¢çš„æœ€å¤§é€Ÿåº¦
+    dDistRemaining = pSPlanPointer->dDistRemaining;     ///<æ®‹ä½™è·ç¦»
 
-
-	if (unK <= unDistReT1)   //¼ÓËÙ
-	{
-		return dTrapezoidAvgAcc * (unK - 1) * unK / 2;
-	}
-	else if (unK <= unDistReT2)  //ÔÈËÙ
-	{
-		return dTrapezoidAvgAcc * (unDistReT1 - 1) * unDistReT1 / 2 + dTrapezoidAvgVel * (unK - unDistReT1);
-	}
-	else if (unK <= unDistReT3)   //¼õËÙ
-	{
-		return dDistRemaining - dTrapezoidAvgAcc * (unDistReT3 - unK) * (unDistReT3 - unK - 1) / 2;
-	}
-	else   //³¬³ö·¶Î§
-	{
-		return dDistRemaining;
-	}
+    if (unK <= unDistReT1) //åŠ é€Ÿ
+    {
+        return dTrapezoidAvgAcc * (unK - 1) * unK / 2;
+    }
+    else if (unK <= unDistReT2) //åŒ€é€Ÿ
+    {
+        return dTrapezoidAvgAcc * (unDistReT1 - 1) * unDistReT1 / 2 + dTrapezoidAvgVel * (unK - unDistReT1);
+    }
+    else if (unK <= unDistReT3) //å‡é€Ÿ
+    {
+        return dDistRemaining - dTrapezoidAvgAcc * (unDistReT3 - unK) * (unDistReT3 - unK - 1) / 2;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dDistRemaining;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepDistReAvgS5(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÎå´Î¶àÏîÊ½Æ½Ì¯Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄÎå´Î¶àÏîÊ½Æ½Ì¯µÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble Æ½Ì¯µÄ¾ø¶ÔÎ»ÒÆ
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepDistReAvgS5(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Šé¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Šçš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble å¹³æ‘Šçš„ç»å¯¹ä½ç§»
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double nextstepDistReAvgS5(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	uint32 unDistReT3;   //Æ½Ì¯Ê±¼ä½ÚµãT3
-	double dQuinticAvgA;	///Îå´ÎÏîÏµÊıA
-	double dQuinticAvgB;	///Îå´ÎÏîÏµÊıB
-	double dQuinticAvgC;	///Îå´ÎÏîÏµÊıC
-	double dTrapezoidAvgVel;//ÖÜÆÚ²»×ãÊ±£¬ Æ½Ì¯×î´óËÙ¶È
-	uint8 ucQuinticAvgTFlag; ///Îå´ÎÖÜÆÚ²»×ã±êÖ¾Î»
-	double dDistRemaining;		///<²ĞÓà¾àÀë
+    uint32 unDistReT3;       //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T3
+    double dQuinticAvgA;     ///äº”æ¬¡é¡¹ç³»æ•°A
+    double dQuinticAvgB;     ///äº”æ¬¡é¡¹ç³»æ•°B
+    double dQuinticAvgC;     ///äº”æ¬¡é¡¹ç³»æ•°C
+    double dTrapezoidAvgVel; //å‘¨æœŸä¸è¶³æ—¶ï¼Œ å¹³æ‘Šæœ€å¤§é€Ÿåº¦
+    uint8 ucQuinticAvgTFlag; ///äº”æ¬¡å‘¨æœŸä¸è¶³æ ‡å¿—ä½
+    double dDistRemaining;   ///<æ®‹ä½™è·ç¦»
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	unDistReT3 = pSPlanPointer->unDistReT3;		//Æ½Ì¯Ê±¼ä½ÚµãT3
-	dQuinticAvgA = pSPlanPointer->dQuinticAvgA;	//////Îå´ÎÏîÏµÊıA
-	dQuinticAvgB = pSPlanPointer->dQuinticAvgB;	//////Îå´ÎÏîÏµÊıB
-	dQuinticAvgC = pSPlanPointer->dQuinticAvgC;	//////Îå´ÎÏîÏµÊıC
-	dTrapezoidAvgVel = pSPlanPointer->dTrapezoidAvgVel;	//ÖÜÆÚ²»×ãÊ±£¬ Æ½Ì¯×î´óËÙ¶È
-	ucQuinticAvgTFlag = pSPlanPointer->ucQuinticAvgTFlag;	//Îå´ÎÖÜÆÚ²»×ã±êÖ¾Î»
-	dDistRemaining = pSPlanPointer->dDistRemaining;	///<²ĞÓà¾àÀë
+    //åˆå§‹åŒ–
+    unDistReT3 = pSPlanPointer->unDistReT3;               //å¹³æ‘Šæ—¶é—´èŠ‚ç‚¹T3
+    dQuinticAvgA = pSPlanPointer->dQuinticAvgA;           //////äº”æ¬¡é¡¹ç³»æ•°A
+    dQuinticAvgB = pSPlanPointer->dQuinticAvgB;           //////äº”æ¬¡é¡¹ç³»æ•°B
+    dQuinticAvgC = pSPlanPointer->dQuinticAvgC;           //////äº”æ¬¡é¡¹ç³»æ•°C
+    dTrapezoidAvgVel = pSPlanPointer->dTrapezoidAvgVel;   //å‘¨æœŸä¸è¶³æ—¶ï¼Œ å¹³æ‘Šæœ€å¤§é€Ÿåº¦
+    ucQuinticAvgTFlag = pSPlanPointer->ucQuinticAvgTFlag; //äº”æ¬¡å‘¨æœŸä¸è¶³æ ‡å¿—ä½
+    dDistRemaining = pSPlanPointer->dDistRemaining;       ///<æ®‹ä½™è·ç¦»
 
-
-
-
-	if (ucQuinticAvgTFlag)  //Ö±½ÓÆ½Ì¯
-	{
-		return unK * dTrapezoidAvgVel;
-	}
-	else   //Îå´Î¶àÏîÊ½Æ½Ì¯
-	{
-		if (unK <= 0)  //µÚÒ»¸öÖÜÆÚ²»Æ½Ì¯
-		{
-			return 0.0;
-		}
-		else if (unK <= (unDistReT3 - 1))  //Îå´Î¶àÏîÊ½Æ½Ì¯
-		{
-			return 6 * dDistRemaining * pow(unK, 5) / pow(unDistReT3 - 2, 5)
-				- 15 * dDistRemaining * pow(unK, 4) / pow(unDistReT3 - 2, 4)
-				+ 10 * dDistRemaining * pow(unK, 3) / pow(unDistReT3 - 2, 3);
-		}
-		else
-		{
-			return dDistRemaining;
-		}
-	}
+    if (ucQuinticAvgTFlag) //ç›´æ¥å¹³æ‘Š
+    {
+        return unK * dTrapezoidAvgVel;
+    }
+    else //äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š
+    {
+        if (unK <= 0) //ç¬¬ä¸€ä¸ªå‘¨æœŸä¸å¹³æ‘Š
+        {
+            return 0.0;
+        }
+        else if (unK <= (unDistReT3 - 1)) //äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š
+        {
+            return 6 * dDistRemaining * pow(unK, 5) / pow(unDistReT3 - 2, 5) -
+                   15 * dDistRemaining * pow(unK, 4) / pow(unDistReT3 - 2, 4) +
+                   10 * dDistRemaining * pow(unK, 3) / pow(unDistReT3 - 2, 3);
+        }
+        else
+        {
+            return dDistRemaining;
+        }
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningAndDistReAvg(SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İucVelPlanTypeºÍucDistReAverageTypeµÄÖµµ÷ÓÃ²»Í¬µÄËÙ¶È¹æ»®ºÍÆ½Ì¯Ô¤´¦Àíº¯Êı
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  ·µ »Ø Öµ£º
-			-2  ¾àÀë²»×ãÒÔ¼Ó¼õËÙ
-			-1	ÊäÈë´íÎó
-			1	¹æ»®&Æ½Ì¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špreparePlanningAndDistReAvg(SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®ucVelPlanTypeå’ŒucDistReAverageTypeçš„å€¼è°ƒç”¨ä¸åŒçš„é€Ÿåº¦è§„åˆ’å’Œå¹³æ‘Šé¢„å¤„ç†å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¿” å› å€¼ï¼š
+			-2  è·ç¦»ä¸è¶³ä»¥åŠ å‡é€Ÿ
+			-1	è¾“å…¥é”™è¯¯
+			1	è§„åˆ’&å¹³æ‘Šå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 preparePlanningAndDistReAvg(struct SPlan* pSPlanPointer, bool bUseFloatingVe)
 {
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	int8 res = preparePlanningCombine(pSPlanPointer, bUseFloatingVe);
-	int8 cReAvgRes;
-	if (res == 1)//»ìºÏËÙ¶È¹æ»®   (2:ÊäÈë×î´óËÙ¶ÈÎª0   -2:¾àÀë²»×ãÒÔ¼Ó¼õËÙ  0:¾àÀëÌ«¶Ì,ºöÂÔ£¬Í¬Ê±Çå¿ÕÆ½Ì¯ -1:ÊäÈë´íÎó)
-	{
-		switch (pSPlanPointer->ucDistReAverageType)//¸ù¾İÔ¤ÉèµÄDEAL_DE_TYPEÖµµ÷ÓÃ²»Í¬µÄÆ½Ì¯Ô¤´¦Àíº¯Êı
-		{
-		case 1:
-			cReAvgRes = prepareDistReAvgT(pSPlanPointer, TRUE);//ÌİĞÎÆ½Ì¯
-			break;
-		case 2:
-			cReAvgRes = prepareDistReAvgS5(pSPlanPointer);	//5´Î¶àÏîÊ½Æ½Ì¯
-			break;
-		case 3:
-			cReAvgRes = prepareDistReAvgRatio(pSPlanPointer);//±ÈÀıÏµÊıÆ½Ì¯
-			break;
-		default:
-			cReAvgRes = prepareDistReAvgT(pSPlanPointer, TRUE);//Default:ÌİĞÎÆ½Ì¯
-		}
-		if (cReAvgRes == -1) //Æ½Ì¯´íÎó
-		{
-			clearDistReAvgPara(pSPlanPointer);	
-			return -1;
-		}
-	}
-	else // ==2  ×î´óËÙ¶ÈvmaxÎª0  ²»Æ½Ì¯ Çå¿ÕÆ½Ì¯²ÎÊı£¨±¶ÂÊÎª0Ê±³öÏÖ£©
-	{
-		if (res == -2)
-		{
-			return -2;
-		}
-		clearDistReAvgPara(pSPlanPointer);
-	}
+    int8 res = preparePlanningCombine(pSPlanPointer, bUseFloatingVe);
+    int8 cReAvgRes;
+    if (res == 1) //æ··åˆé€Ÿåº¦è§„åˆ’   (2:è¾“å…¥æœ€å¤§é€Ÿåº¦ä¸º0   -2:è·ç¦»ä¸è¶³ä»¥åŠ å‡é€Ÿ  0:è·ç¦»å¤ªçŸ­,å¿½ç•¥ï¼ŒåŒæ—¶æ¸…ç©ºå¹³æ‘Š -1:è¾“å…¥é”™è¯¯)
+    {
+        switch (pSPlanPointer->ucDistReAverageType) //æ ¹æ®é¢„è®¾çš„DEAL_DE_TYPEå€¼è°ƒç”¨ä¸åŒçš„å¹³æ‘Šé¢„å¤„ç†å‡½æ•°
+        {
+        case 1:
+            cReAvgRes = prepareDistReAvgT(pSPlanPointer, TRUE); //æ¢¯å½¢å¹³æ‘Š
+            break;
+        case 2:
+            cReAvgRes = prepareDistReAvgS5(pSPlanPointer); //5æ¬¡å¤šé¡¹å¼å¹³æ‘Š
+            break;
+        case 3:
+            cReAvgRes = prepareDistReAvgRatio(pSPlanPointer); //æ¯”ä¾‹ç³»æ•°å¹³æ‘Š
+            break;
+        default:
+            cReAvgRes = prepareDistReAvgT(pSPlanPointer, TRUE); //Default:æ¢¯å½¢å¹³æ‘Š
+        }
+        if (cReAvgRes == -1) //å¹³æ‘Šé”™è¯¯
+        {
+            clearDistReAvgPara(pSPlanPointer);
+            return -1;
+        }
+    }
+    else // ==2  æœ€å¤§é€Ÿåº¦vmaxä¸º0  ä¸å¹³æ‘Š æ¸…ç©ºå¹³æ‘Šå‚æ•°ï¼ˆå€ç‡ä¸º0æ—¶å‡ºç°ï¼‰
+    {
+        if (res == -2)
+        {
+            return -2;
+        }
+        clearDistReAvgPara(pSPlanPointer);
+    }
 
+    ////èµ‹å€¼å®Œæˆ
+    //pSPlanPointer->ucInpStatus = INP_RUNNING;  //èµ‹å€¼å®Œæˆ  è¿è¡Œ
 
-	////¸³ÖµÍê³É
-	//pSPlanPointer->ucInpStatus = INP_RUNNING;  //¸³ÖµÍê³É  ÔËĞĞ
-
-	return 1;
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningAndDistReAvg(uint32 unK, struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  ¸ù¾İucVelPlanTypeºÍucDistReAverageTypeµÄÖµµ÷ÓÃ²»Í¬µÄÎ»ÒÆº¯Êı,»ñµÃ¹æ»®ºÃ¡¢Æ½Ì¯ºóµÄ¾ø¶ÔÎ»ÒÆS(t)¡£
-			Êä³öµÄ¾àÀëÓÉÄ¿±ê¾àÀëÏŞÖÆ£¬¼´Êä³ö²»»á³¬¹ıÄ¿±ê¾àÀë
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆS(t)
-			0		ÊäÈë´íÎó»ò¾àÀëÎª0
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningAndDistReAvg(uint32 unK, struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®ucVelPlanTypeå’ŒucDistReAverageTypeçš„å€¼è°ƒç”¨ä¸åŒçš„ä½ç§»å‡½æ•°,è·å¾—è§„åˆ’å¥½ã€å¹³æ‘Šåçš„ç»å¯¹ä½ç§»S(t)ã€‚
+			è¾“å‡ºçš„è·ç¦»ç”±ç›®æ ‡è·ç¦»é™åˆ¶ï¼Œå³è¾“å‡ºä¸ä¼šè¶…è¿‡ç›®æ ‡è·ç¦»
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»S(t)
+			0		è¾“å…¥é”™è¯¯æˆ–è·ç¦»ä¸º0
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double nextstepPlanningAndDistReAvg(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dDistance = 0; //ËÙ¶È¹æ»®×ßµÄ¾àÀë
-	double dPreDist = 0;//¹æ»®Ç°ÒÑ×ßµÄ¾àÀë
-	double dTotalDist = 0;
-	uint8 ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
-	double dAverageFactor;		///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
+    double dDistance = 0; //é€Ÿåº¦è§„åˆ’èµ°çš„è·ç¦»
+    double dPreDist = 0;  //è§„åˆ’å‰å·²èµ°çš„è·ç¦»
+    double dTotalDist = 0;
+    uint8 ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
+    double dAverageFactor;     ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return 0;
-	}
-	if (isZero(pSPlanPointer->dDistance))
-	{
-		//pSPlanPointer->ucInpStatus = INP_FINISHED;
-		return 0;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return 0;
+    }
+    if (isZero(pSPlanPointer->dDistance))
+    {
+        //pSPlanPointer->ucInpStatus = INP_FINISHED;
+        return 0;
+    }
 
-	//³õÊ¼»¯
-	ucDistReAverageType = pSPlanPointer->ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
-	dAverageFactor = pSPlanPointer->dAverageFactor;		///<±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
-	dPreDist = pSPlanPointer->dPreDist;
+    //åˆå§‹åŒ–
+    ucDistReAverageType = pSPlanPointer->ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
+    dAverageFactor = pSPlanPointer->dAverageFactor;           ///<æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
+    dPreDist = pSPlanPointer->dPreDist;
 
-	dDistance = nextstepPlanningCombine(unK, pSPlanPointer);
+    dDistance = nextstepPlanningCombine(unK, pSPlanPointer);
 
+    switch (ucDistReAverageType) //æ ¹æ®é¢„è®¾çš„DEAL_DE_TYPEå€¼,å¤„ç†é€Ÿåº¦è§„åˆ’åçš„ä½ç§»
+    {
+    case 1:
+        dDistance += nextstepDistReAvgT(unK, pSPlanPointer); //æ¢¯å½¢å‡æ‘Šåçš„ä½ç§»S(t)
+        break;
+    case 2:
+        dDistance += nextstepDistReAvgS5(unK, pSPlanPointer); //äº”æ¬¡å¤šé¡¹å¼å‡æ‘Šåçš„ä½ç§»S(t)
+        break;
+    case 3:
+        dDistance *= dAverageFactor; //æŒ‰æ¯”ä¾‹å‡æ‘Šåçš„ä½ç§»S(t)
+        break;
+    default:
+        dDistance += nextstepDistReAvgT(unK, pSPlanPointer); //Default:æ¢¯å½¢å‡æ‘Šåçš„ä½ç§»S(t)
+    }
 
-	switch (ucDistReAverageType)//¸ù¾İÔ¤ÉèµÄDEAL_DE_TYPEÖµ,´¦ÀíËÙ¶È¹æ»®ºóµÄÎ»ÒÆ
-	{
-	case 1:
-		dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//ÌİĞÎ¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-		break;
-	case 2:
-		dDistance += nextstepDistReAvgS5(unK, pSPlanPointer);//Îå´Î¶àÏîÊ½¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-		break;
-	case 3:
-		dDistance *= dAverageFactor;//°´±ÈÀı¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-		break;
-	default:
-		dDistance += nextstepDistReAvgT(unK, pSPlanPointer);//Default:ÌİĞÎ¾ùÌ¯ºóµÄÎ»ÒÆS(t)
-	}
+    dTotalDist = dPreDist;                                                               //ä¸ç®—è§„åˆ’  å·²èµ°çš„è·ç¦»
+    dTotalDist += (pSPlanPointer->cInterpDir == INP_GO_BACK) ? (-dDistance) : dDistance; //æ ¹æ®æ–¹å‘è®¡ç®—è·ç¦»
 
-	dTotalDist = dPreDist;//²»Ëã¹æ»®  ÒÑ×ßµÄ¾àÀë
-	dTotalDist += (pSPlanPointer->cInterpDir == INP_GO_BACK) ? (-dDistance) : dDistance;//¸ù¾İ·½Ïò¼ÆËã¾àÀë
+    if ((fabs(dTotalDist) > 1e15 || isnan(dTotalDist) || isinf(dTotalDist))) //å¼‚å¸¸å€¼é˜²æŠ¤
+    {
+        return 0;
+    }
 
-	if ((fabs(dTotalDist) > 1e15 || isnan(dTotalDist) || isinf(dTotalDist))) //Òì³£Öµ·À»¤
-	{
-		return 0;  
-	}
-
-	if (dTotalDist > pSPlanPointer->dTargetDist)//Ä¿±ê¾àÀëÏŞÖÆÊä³ö
-	{
-		dTotalDist = pSPlanPointer->dTargetDist;
-	}
-	if (dTotalDist < 0)//¸ºÊıÏŞÖÆ
-	{
-		dTotalDist = 0;
-	}
-	return dTotalDist;//·µ»Ø¾ùÌ¯ºóµÄ×ÜÎ»ÒÆ
+    if (dTotalDist > pSPlanPointer->dTargetDist) //ç›®æ ‡è·ç¦»é™åˆ¶è¾“å‡º
+    {
+        dTotalDist = pSPlanPointer->dTargetDist;
+    }
+    if (dTotalDist < 0) //è´Ÿæ•°é™åˆ¶
+    {
+        dTotalDist = 0;
+    }
+    return dTotalDist; //è¿”å›å‡æ‘Šåçš„æ€»ä½ç§»
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningV3(struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  V¹ØÓÚtµÄÈı´Î·½ËÙ¶È¹æ»®  £¨Ö»¿¼ÂÇ¼ÓËÙ »ò¼õËÙ£©
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Ô¤´¦ÀíÍê³É
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£ºÖ»¼ÓËÙ »ò Ö»¼õËÙ
-			Ê¹ÓÃÇ°spindleµÄµ¥Î»ĞèÒªÍ³Ò»  Èç¹ûÎªG96Ôò»¯Îªmm/min   Èç¹ûÎªG97Ôò»¯Îªr/min
+  å‡½æ•°åç§°ï¼špreparePlanningV3(struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  Vå…³äºtçš„ä¸‰æ¬¡æ–¹é€Ÿåº¦è§„åˆ’  ï¼ˆåªè€ƒè™‘åŠ é€Ÿ æˆ–å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		é¢„å¤„ç†å®Œæˆ
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼šåªåŠ é€Ÿ æˆ– åªå‡é€Ÿ
+			ä½¿ç”¨å‰spindleçš„å•ä½éœ€è¦ç»Ÿä¸€  å¦‚æœä¸ºG96åˆ™åŒ–ä¸ºmm/min   å¦‚æœä¸ºG97åˆ™åŒ–ä¸ºr/min
 **************************************************/
 int8 preparePlanningV3(struct SPlan* pSPlanPointer)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unCalTempK;
-	uint32 unAccTime = 0, unDecTime = 0;
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unCalTempK;
+    uint32 unAccTime = 0, unDecTime = 0;
+    uint32 unT1; ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2; ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3; ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4; ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5; ///<æ—¶é—´èŠ‚ç‚¹T5
 
-	if (pSPlanPointer == NULL)//¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//¶Á³öÊı¾İ
-	dVs = pSPlanPointer->dVs;
-	dVmax = pSPlanPointer->dVmax;
-	dVe = pSPlanPointer->dVe;
-	dDec = pSPlanPointer->dDec;
-	dAcc = pSPlanPointer->dAcc;
-	dTc = pSPlanPointer->dTc;
+    //è¯»å‡ºæ•°æ®
+    dVs = pSPlanPointer->dVs;
+    dVmax = pSPlanPointer->dVmax;
+    dVe = pSPlanPointer->dVe;
+    dDec = pSPlanPointer->dDec;
+    dAcc = pSPlanPointer->dAcc;
+    dTc = pSPlanPointer->dTc;
 
-	//·ûºÅÏà·´ ÇúÏßÎª ¼õËÙ ÔÈËÙ ·´Ïò¼ÓËÙ   £¨ÔÈËÙ¶ÎËÙ¶ÈÎª0
-	if ((fabs(dVs) + fabs(dVe)) > fabs(dVs + dVe))
-	{
-		unAccTime = (uint32)ceil(fabs(3 * (0.0 - dVs) / (2 * dAcc * dTc)));//¼ÆËãµ½0µÄÊ±¼ä
+    //ç¬¦å·ç›¸å æ›²çº¿ä¸º å‡é€Ÿ åŒ€é€Ÿ åå‘åŠ é€Ÿ   ï¼ˆåŒ€é€Ÿæ®µé€Ÿåº¦ä¸º0
+    if ((fabs(dVs) + fabs(dVe)) > fabs(dVs + dVe))
+    {
+        unAccTime = (uint32)ceil(fabs(3 * (0.0 - dVs) / (2 * dAcc * dTc))); //è®¡ç®—åˆ°0çš„æ—¶é—´
 
-		unDecTime = (uint32)ceil(fabs(3 * (dVe - 0.0) / (2 * dDec * dTc)));//¼ÆËãµ½VeµÄÊ±¼ä
+        unDecTime = (uint32)ceil(fabs(3 * (dVe - 0.0) / (2 * dDec * dTc))); //è®¡ç®—åˆ°Veçš„æ—¶é—´
 
-		if (unAccTime != 0)
-		{
-			dAcc = 3 * (0.0 - dVs) / (2 * unAccTime * dTc);	//·´Ëã¼ÓËÙ¶È
-		}
+        if (unAccTime != 0)
+        {
+            dAcc = 3 * (0.0 - dVs) / (2 * unAccTime * dTc); //åç®—åŠ é€Ÿåº¦
+        }
 
-		if (unDecTime != 0)
-		{
-			dDec = 3 * (0.0 - dVe) / (2 * unDecTime * dTc);	//·´Ëã¼ÓËÙ¶È
-		}
-		unT1 = unT2 = unAccTime;
-		unT3 = unAccTime + unDecTime;
-		dVmax = 0;
-	}
-	else if (dVs < dVe) //Í¬Ïò¼ÓËÙ
-	{
-		unCalTempK = (uint32)ceil(3 * (dVe - dVs) / (2 * dAcc * dTc));//¼ÆËã½Úµã
-		if (unCalTempK != 0)
-		{
-			dAcc = 3 * (dVe - dVs) / (2 * unCalTempK * dTc);	//·´Ëã¼ÓËÙ¶È
-		}
-		dVmax = dVe;//Ö»ÓĞ¼ÓËÙ¶Î ×î´óËÙ¶È¼´Ä©ËÙ¶È
-		unT1 = unT2 = unT3 = unCalTempK;//Ö»ÓĞ¼ÓËÙ¶Î½ÚµãT1 2 3 ÖØºÏ
-	}
-	else   //Í¬Ïò¼õËÙ
-	{
-		unCalTempK = (uint32)ceil(3 * (dVs - dVe) / (2 * dDec * dTc));//¼ÆËã½Úµã
-		if (unCalTempK != 0)
-		{
-			dDec = 3 * (dVs - dVe) / (2 * unCalTempK * dTc);	//·´Ëã¼ÓËÙ¶È
-		}
-		dVmax = dVs;//Ö»ÓĞ¼õËÙ¶Î  ×î´óËÙ¶È¼´ÆğÊ¼ËÙ¶È
-		unT1 = unT2 = 0;//Ö»ÓĞ¼õËÙ¶ÎT1 T2Îª0
-		unT3 = unCalTempK + unT2;
-	}
+        if (unDecTime != 0)
+        {
+            dDec = 3 * (0.0 - dVe) / (2 * unDecTime * dTc); //åç®—åŠ é€Ÿåº¦
+        }
+        unT1 = unT2 = unAccTime;
+        unT3 = unAccTime + unDecTime;
+        dVmax = 0;
+    }
+    else if (dVs < dVe) //åŒå‘åŠ é€Ÿ
+    {
+        unCalTempK = (uint32)ceil(3 * (dVe - dVs) / (2 * dAcc * dTc)); //è®¡ç®—èŠ‚ç‚¹
+        if (unCalTempK != 0)
+        {
+            dAcc = 3 * (dVe - dVs) / (2 * unCalTempK * dTc); //åç®—åŠ é€Ÿåº¦
+        }
+        dVmax = dVe;                     //åªæœ‰åŠ é€Ÿæ®µ æœ€å¤§é€Ÿåº¦å³æœ«é€Ÿåº¦
+        unT1 = unT2 = unT3 = unCalTempK; //åªæœ‰åŠ é€Ÿæ®µèŠ‚ç‚¹T1 2 3 é‡åˆ
+    }
+    else //åŒå‘å‡é€Ÿ
+    {
+        unCalTempK = (uint32)ceil(3 * (dVs - dVe) / (2 * dDec * dTc)); //è®¡ç®—èŠ‚ç‚¹
+        if (unCalTempK != 0)
+        {
+            dDec = 3 * (dVs - dVe) / (2 * unCalTempK * dTc); //åç®—åŠ é€Ÿåº¦
+        }
+        dVmax = dVs;     //åªæœ‰å‡é€Ÿæ®µ  æœ€å¤§é€Ÿåº¦å³èµ·å§‹é€Ÿåº¦
+        unT1 = unT2 = 0; //åªæœ‰å‡é€Ÿæ®µT1 T2ä¸º0
+        unT3 = unCalTempK + unT2;
+    }
 
-	//Ğ´ÈëÊı¾İ
-	pSPlanPointer->dVs = dVs;
-	pSPlanPointer->dVmax = dVmax;
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dAcc = dAcc;
-	pSPlanPointer->unT1 = unT1;
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
+    //å†™å…¥æ•°æ®
+    pSPlanPointer->dVs = dVs;
+    pSPlanPointer->dVmax = dVmax;
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dAcc = dAcc;
+    pSPlanPointer->unT1 = unT1;
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
 
 #if EN_DEBUG
-	printf("Planning V3\n");
-	printf("dVs		=%10.16lf\n", dVs);
-	printf("dVmax	=%10.16lf\n", dVmax);
-	printf("dVe		=%10.16lf\n", dVe);
-	printf("dDec	=%10.16lf\n", dDec);
-	printf("dAcc	=%10.16lf\n", dAcc);
-	printf("unT1	=%d\n", unT1);
-	printf("unT2	=%d\n", unT2);
-	printf("unT3	=%d\n", unT3);
+    printf("Planning V3\n");
+    printf("dVs		=%10.16lf\n", dVs);
+    printf("dVmax	=%10.16lf\n", dVmax);
+    printf("dVe		=%10.16lf\n", dVe);
+    printf("dDec	=%10.16lf\n", dDec);
+    printf("dAcc	=%10.16lf\n", dAcc);
+    printf("unT1	=%d\n", unT1);
+    printf("unT2	=%d\n", unT2);
+    printf("unT3	=%d\n", unT3);
 
 #endif
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºpreparePlanningVelCombine(struct SPlan *pSPlanPointer,double dVeerDeltaVMax)
-  º¯Êı¹¦ÄÜ  Vel×éºÏĞÍËÙ¶È¹æ»®   £¨Ö»¿¼ÂÇ¼ÓËÙ »ò¼õËÙ£©
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë ,dVeerDeltaVMax µ¥Öá·´Ïò×ªËÙ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Ô¤´¦ÀíÍê³É
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£ºÖ»¼ÓËÙ »ò Ö»¼õËÙ
-			Ê¹ÓÃÇ°spindleµÄµ¥Î»ĞèÒªÍ³Ò»  Èç¹ûÎªG96Ôò»¯Îªm/ms   Èç¹ûÎªG97Ôò»¯Îªr/ms
-			(2.20 ÕûÀí×¢ÊÍ)
+  å‡½æ•°åç§°ï¼špreparePlanningVelCombine(struct SPlan *pSPlanPointer,double dVeerDeltaVMax)
+  å‡½æ•°åŠŸèƒ½  Velç»„åˆå‹é€Ÿåº¦è§„åˆ’   ï¼ˆåªè€ƒè™‘åŠ é€Ÿ æˆ–å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ ,dVeerDeltaVMax å•è½´åå‘è½¬é€Ÿ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		é¢„å¤„ç†å®Œæˆ
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼šåªåŠ é€Ÿ æˆ– åªå‡é€Ÿ
+			ä½¿ç”¨å‰spindleçš„å•ä½éœ€è¦ç»Ÿä¸€  å¦‚æœä¸ºG96åˆ™åŒ–ä¸ºm/ms   å¦‚æœä¸ºG97åˆ™åŒ–ä¸ºr/ms
+			(2.20 æ•´ç†æ³¨é‡Š)
 **************************************************/
-int8 preparePlanningVelCombine(struct SPlan* pSPlanPointer,double dVeerDeltaVMax)
+int8 preparePlanningVelCombine(struct SPlan* pSPlanPointer, double dVeerDeltaVMax)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unAccTime = 0, unDecTime = 0;
-	uint32 unT1 = 0, unT2 = 0, unT3 = 0, unT4 = 0, unT5 = 0;	///<Ê±¼ä½ÚµãT1
-	double dAccFactor = 0, dDecFactor = 0;//ÏµÊı
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unAccTime = 0, unDecTime = 0;
+    uint32 unT1 = 0, unT2 = 0, unT3 = 0, unT4 = 0, unT5 = 0; ///<æ—¶é—´èŠ‚ç‚¹T1
+    double dAccFactor = 0, dDecFactor = 0;                   //ç³»æ•°
 
-	if (pSPlanPointer == NULL)//¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//¶Á³öÊı¾İ
-	dVs = pSPlanPointer->dVs;
-	dVmax = pSPlanPointer->dVmax;
-	dVe = pSPlanPointer->dVe;
-	dDec = pSPlanPointer->dDec;
-	dAcc = pSPlanPointer->dAcc;
-	dTc = pSPlanPointer->dTc;
-	dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType);//¸ù¾İ¼ÓËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
-	dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType);//¸ù¾İ¼õËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
+    //è¯»å‡ºæ•°æ®
+    dVs = pSPlanPointer->dVs;
+    dVmax = pSPlanPointer->dVmax;
+    dVe = pSPlanPointer->dVe;
+    dDec = pSPlanPointer->dDec;
+    dAcc = pSPlanPointer->dAcc;
+    dTc = pSPlanPointer->dTc;
+    dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType); //æ ¹æ®åŠ é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
+    dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType); //æ ¹æ®å‡é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
 
-	if (dAcc <= 0 || dDec <= 0)	//Ôö¼ÓĞ£Ñé
-	{
-		return -1;
-	}
+    if (dAcc <= 0 || dDec <= 0) //å¢åŠ æ ¡éªŒ
+    {
+        return -1;
+    }
 
-	if (isZero((dVe - dVs) / dAcc) && isZero((dVs - dVe) / dDec))//ËÙ¶ÈÏàµÈ  T = 1 Ê±  Ö±½ÓÊä³ö dVe
-	{
-		pSPlanPointer->unT1
-			= pSPlanPointer->unT2
-			= pSPlanPointer->unT3
-			= pSPlanPointer->unT4
-			= pSPlanPointer->unT5 = 0;
-		return 1;
-	}
+    if (isZero((dVe - dVs) / dAcc) && isZero((dVs - dVe) / dDec)) //é€Ÿåº¦ç›¸ç­‰  T = 1 æ—¶  ç›´æ¥è¾“å‡º dVe
+    {
+        pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
+        return 1;
+    }
 
-	//·ûºÅÏà·´ ÇúÏßÎª ¼õËÙ ÔÈËÙ ·´Ïò¼ÓËÙ   
-	if ((fabs(dVs) + fabs(dVe)) > fabs(dVs + dVe))
-	{
-		//µ÷»»¼Ó¼õËÙ²ÎÊı
-		uint8 ucTempUc;
-		double dTempDouble;
+    //ç¬¦å·ç›¸å æ›²çº¿ä¸º å‡é€Ÿ åŒ€é€Ÿ åå‘åŠ é€Ÿ
+    if ((fabs(dVs) + fabs(dVe)) > fabs(dVs + dVe))
+    {
+        //è°ƒæ¢åŠ å‡é€Ÿå‚æ•°
+        uint8 ucTempUc;
+        double dTempDouble;
 
-		// double dVeerDeltaVMax = min(g_SSystemPara.SAxisPara[AXIS_C ].dVeerDeltaVMax, fabs(dVs));//µ¥Öá·´Ïò×ªËÙ !!!
-		dVeerDeltaVMax = min(dVeerDeltaVMax, fabs(dVs));	//ĞŞ¸Ä2026.3.18,µ±º¯Êı±»·ÇCÖáµ÷ÓÃÊ±£¬²ÎÊı²»Ò»ÖÂ 
+        // double dVeerDeltaVMax = min(g_SSystemPara.SAxisPara[AXIS_C ].dVeerDeltaVMax, fabs(dVs));//å•è½´åå‘è½¬é€Ÿ !!!
+        dVeerDeltaVMax = min(dVeerDeltaVMax, fabs(dVs)); //ä¿®æ”¹2026.3.18,å½“å‡½æ•°è¢«éCè½´è°ƒç”¨æ—¶ï¼Œå‚æ•°ä¸ä¸€è‡´
 
-		ucTempUc = pSPlanPointer->ucAccVelPlanType;//µ÷×ªÇúÏßÀàĞÍ
-		pSPlanPointer->ucAccVelPlanType = pSPlanPointer->ucDecVelPlanType;
-		pSPlanPointer->ucDecVelPlanType = ucTempUc;
+        ucTempUc = pSPlanPointer->ucAccVelPlanType; //è°ƒè½¬æ›²çº¿ç±»å‹
+        pSPlanPointer->ucAccVelPlanType = pSPlanPointer->ucDecVelPlanType;
+        pSPlanPointer->ucDecVelPlanType = ucTempUc;
 
-		dTempDouble = dAcc;//µ÷×ª¼ÓËÙ¶ÈºÍ¼õËÙ¶È
-		dAcc = dDec;
-		dDec = dTempDouble;
+        dTempDouble = dAcc; //è°ƒè½¬åŠ é€Ÿåº¦å’Œå‡é€Ÿåº¦
+        dAcc = dDec;
+        dDec = dTempDouble;
 
-		dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType);//¸ù¾İ¼ÓËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
-		dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType);//¸ù¾İ¼õËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
+        dAccFactor = getFactor(pSPlanPointer->ucAccVelPlanType); //æ ¹æ®åŠ é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
+        dDecFactor = getFactor(pSPlanPointer->ucDecVelPlanType); //æ ¹æ®å‡é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
 
-		//¼ÓËÙÖÜÆÚ
-		unAccTime = (int32)ceil((pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE) ? fabs(dAccFactor * (sgn(dVs) * dVeerDeltaVMax - dVs) / (dAcc * dTc)) : fabs(dAccFactor * 2.0 * (sgn(dVs) * dVeerDeltaVMax - dVs) / (dAcc * dTc)));
-		//¼õËÙÖÜÆÚ
-		unDecTime = (int32)ceil((pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE) ? fabs(dDecFactor * (dVe - sgn(dVe) * dVeerDeltaVMax) / (dDec * dTc)) : fabs(dDecFactor * 2.0 * (dVe - sgn(dVe) * dVeerDeltaVMax) / (dDec * dTc)));
+        //åŠ é€Ÿå‘¨æœŸ
+        unAccTime = (int32)ceil((pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+                                    ? fabs(dAccFactor * (sgn(dVs) * dVeerDeltaVMax - dVs) / (dAcc * dTc))
+                                    : fabs(dAccFactor * 2.0 * (sgn(dVs) * dVeerDeltaVMax - dVs) / (dAcc * dTc)));
+        //å‡é€Ÿå‘¨æœŸ
+        unDecTime = (int32)ceil((pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+                                    ? fabs(dDecFactor * (dVe - sgn(dVe) * dVeerDeltaVMax) / (dDec * dTc))
+                                    : fabs(dDecFactor * 2.0 * (dVe - sgn(dVe) * dVeerDeltaVMax) / (dDec * dTc)));
 
-		if (unAccTime != 0)
-		{//ÖØËã¼ÓËÙ¶È
-			dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE) ? dAccFactor * (sgn(dVs) * dVeerDeltaVMax - dVs) / (unAccTime * dTc) : dAccFactor * 2.0 * (sgn(dVs) * dVeerDeltaVMax - dVs) / (unAccTime * dTc);
-		}
+        if (unAccTime != 0)
+        { //é‡ç®—åŠ é€Ÿåº¦
+            dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+                       ? dAccFactor * (sgn(dVs) * dVeerDeltaVMax - dVs) / (unAccTime * dTc)
+                       : dAccFactor * 2.0 * (sgn(dVs) * dVeerDeltaVMax - dVs) / (unAccTime * dTc);
+        }
 
-		if (unDecTime != 0)
-		{//ÖØËã¼õËÙ¶È
-			dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE) ? dDecFactor * (sgn(dVe) * dVeerDeltaVMax - dVe) / (unDecTime * dTc) : dDecFactor * 2.0 * (sgn(dVe) * dVeerDeltaVMax - dVe) / (unDecTime * dTc);
-		}
+        if (unDecTime != 0)
+        { //é‡ç®—å‡é€Ÿåº¦
+            dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+                       ? dDecFactor * (sgn(dVe) * dVeerDeltaVMax - dVe) / (unDecTime * dTc)
+                       : dDecFactor * 2.0 * (sgn(dVe) * dVeerDeltaVMax - dVe) / (unDecTime * dTc);
+        }
 
-		//¼ÆËãÊ±¼ä½Úµã
-		//¼ÓËÙÊ±¼ä½Úµã
-		if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
-		{//V2(S3)ĞÍËÙ¶È¹æ»®
-			unT1 = unAccTime;
-			unT2 = unT1 + unAccTime;
-			unT3 = unT2 + 0;
-			dVmax = dVeerDeltaVMax;
-		}
-		else
-		{
-			unT1 = unT2 = unT3 = unAccTime;
-			dVmax = dVeerDeltaVMax;
-		}
+        //è®¡ç®—æ—¶é—´èŠ‚ç‚¹
+        //åŠ é€Ÿæ—¶é—´èŠ‚ç‚¹
+        if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+        { //V2(S3)å‹é€Ÿåº¦è§„åˆ’
+            unT1 = unAccTime;
+            unT2 = unT1 + unAccTime;
+            unT3 = unT2 + 0;
+            dVmax = dVeerDeltaVMax;
+        }
+        else
+        {
+            unT1 = unT2 = unT3 = unAccTime;
+            dVmax = dVeerDeltaVMax;
+        }
 
-		//¼õËÙÊ±¼ä½Úµã
-		if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
-		{//V2(S3)ĞÍËÙ¶È¹æ»®
-			unT4 = unT3 + unDecTime;
-			unT5 = unT4 + unDecTime;
-		}
-		else
-		{
-			unT4 = unT5 = unT3 + unDecTime;
-		}
-	}
-	else if (fabs(dVs) < fabs(dVe)) //Í¬Ïò¼ÓËÙ
-	{
-		//¼ÓËÙÖÜÆÚ
-		unAccTime = (int32)ceil((pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE) ? fabs(dAccFactor * (dVe - dVs) / (dAcc * dTc)) : fabs(dAccFactor * 2.0 * (dVe - dVs) / (dAcc * dTc)));
+        //å‡é€Ÿæ—¶é—´èŠ‚ç‚¹
+        if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+        { //V2(S3)å‹é€Ÿåº¦è§„åˆ’
+            unT4 = unT3 + unDecTime;
+            unT5 = unT4 + unDecTime;
+        }
+        else
+        {
+            unT4 = unT5 = unT3 + unDecTime;
+        }
+    }
+    else if (fabs(dVs) < fabs(dVe)) //åŒå‘åŠ é€Ÿ
+    {
+        //åŠ é€Ÿå‘¨æœŸ
+        unAccTime = (int32)ceil((pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+                                    ? fabs(dAccFactor * (dVe - dVs) / (dAcc * dTc))
+                                    : fabs(dAccFactor * 2.0 * (dVe - dVs) / (dAcc * dTc)));
 
-		if (unAccTime != 0)
-		{//ÖØËã¼ÓËÙ¶È
-			dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE) ? dAccFactor * (dVe - dVs) / (unAccTime * dTc) : dAccFactor * 2.0 * (dVe - dVs) / (unAccTime * dTc);//ÖØËã¼ÓËÙ¶È
-		}
+        if (unAccTime != 0)
+        { //é‡ç®—åŠ é€Ÿåº¦
+            dAcc = (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+                       ? dAccFactor * (dVe - dVs) / (unAccTime * dTc)
+                       : dAccFactor * 2.0 * (dVe - dVs) / (unAccTime * dTc); //é‡ç®—åŠ é€Ÿåº¦
+        }
 
-		dVmax = dVe;//Ö»ÓĞ¼ÓËÙ¶Î ×î´óËÙ¶È¼´Ä©ËÙ¶È
+        dVmax = dVe; //åªæœ‰åŠ é€Ÿæ®µ æœ€å¤§é€Ÿåº¦å³æœ«é€Ÿåº¦
 
-		//¼ÆËãÊ±¼ä½Úµã
-		if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
-		{//V2(S3)ĞÍËÙ¶È¹æ»®
-			unT1 = unAccTime;
-			unT2 = unT3 = unT4 = unT5 = unT1 + unAccTime;
-		}
-		else
-		{
-			unT1 = unT2 = unT3 = unT4 = unT5 = unAccTime;//Ö»ÓĞ¼ÓËÙ¶Î½ÚµãT1 2 3 4 5ÖØºÏ
-		}
+        //è®¡ç®—æ—¶é—´èŠ‚ç‚¹
+        if (pSPlanPointer->ucAccVelPlanType == VEL_PLAN_V2_CURVE)
+        { //V2(S3)å‹é€Ÿåº¦è§„åˆ’
+            unT1 = unAccTime;
+            unT2 = unT3 = unT4 = unT5 = unT1 + unAccTime;
+        }
+        else
+        {
+            unT1 = unT2 = unT3 = unT4 = unT5 = unAccTime; //åªæœ‰åŠ é€Ÿæ®µèŠ‚ç‚¹T1 2 3 4 5é‡åˆ
+        }
+    }
+    else //åŒå‘å‡é€Ÿ
+    {
+        //å‡é€Ÿå‘¨æœŸ
+        unDecTime = (int32)ceil((pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+                                    ? fabs(dDecFactor * (dVs - dVe) / (dDec * dTc))
+                                    : fabs(dDecFactor * 2.0 * (dVs - dVe) / (dDec * dTc)));
 
-	}
-	else   //Í¬Ïò¼õËÙ
-	{
-		//¼õËÙÖÜÆÚ
-		unDecTime = (int32)ceil((pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE) ? fabs(dDecFactor * (dVs - dVe) / (dDec * dTc)) : fabs(dDecFactor * 2.0 * (dVs - dVe) / (dDec * dTc)));
+        if (unDecTime != 0)
+        { //é‡ç®—å‡é€Ÿåº¦
+            dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+                       ? dDecFactor * (dVs - dVe) / (unDecTime * dTc)
+                       : dDecFactor * 2.0 * (dVs - dVe) / (unDecTime * dTc); //é‡ç®—å‡é€Ÿåº¦
+        }
 
-		if (unDecTime != 0)
-		{//ÖØËã¼õËÙ¶È
-			dDec = (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE) ? dDecFactor * (dVs - dVe) / (unDecTime * dTc) : dDecFactor * 2.0 * (dVs - dVe) / (unDecTime * dTc); //ÖØËã¼õËÙ¶È
-		}
+        dVmax = dVs; //åªæœ‰å‡é€Ÿæ®µ  æœ€å¤§é€Ÿåº¦å³èµ·å§‹é€Ÿåº¦
 
-		dVmax = dVs;//Ö»ÓĞ¼õËÙ¶Î  ×î´óËÙ¶È¼´ÆğÊ¼ËÙ¶È
+        //è®¡ç®—æ—¶é—´èŠ‚ç‚¹
+        unT1 = unT2 = unT3 = 0; //åªæœ‰å‡é€Ÿæ®µ   T1 T2 T3ä¸º0
+        if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
+        { //V2(S3)å‹é€Ÿåº¦è§„åˆ’
+            unT4 = unDecTime + unT3;
+            unT5 = unDecTime + unT4;
+        }
+        else
+        {
+            unT4 = unT5 = unDecTime + unT3;
+        }
+    }
 
-		//¼ÆËãÊ±¼ä½Úµã
-		unT1 = unT2 = unT3 = 0;//Ö»ÓĞ¼õËÙ¶Î   T1 T2 T3Îª0
-		if (pSPlanPointer->ucDecVelPlanType == VEL_PLAN_V2_CURVE)
-		{//V2(S3)ĞÍËÙ¶È¹æ»®
-			unT4 = unDecTime + unT3;
-			unT5 = unDecTime + unT4;
-		}
-		else
-		{
-			unT4 = unT5 = unDecTime + unT3;
-		}
-
-	}
-
-	//Ğ´ÈëÊı¾İ
-	pSPlanPointer->dVs = dVs;
-	pSPlanPointer->dVmax = dVmax;
-	pSPlanPointer->dVe = dVe;
-	pSPlanPointer->dDec = dDec;
-	pSPlanPointer->dAcc = dAcc;
-	pSPlanPointer->unT1 = unT1;
-	pSPlanPointer->unT2 = unT2;
-	pSPlanPointer->unT3 = unT3;
-	pSPlanPointer->unT4 = unT4;
-	pSPlanPointer->unT5 = unT5;
+    //å†™å…¥æ•°æ®
+    pSPlanPointer->dVs = dVs;
+    pSPlanPointer->dVmax = dVmax;
+    pSPlanPointer->dVe = dVe;
+    pSPlanPointer->dDec = dDec;
+    pSPlanPointer->dAcc = dAcc;
+    pSPlanPointer->unT1 = unT1;
+    pSPlanPointer->unT2 = unT2;
+    pSPlanPointer->unT3 = unT3;
+    pSPlanPointer->unT4 = unT4;
+    pSPlanPointer->unT5 = unT5;
 
 #if EN_DEBUG
-	printf("Planning V3\n");
-	printf("dVs		=%10.16lf\n", dVs);
-	printf("dVmax	=%10.16lf\n", dVmax);
-	printf("dVe		=%10.16lf\n", dVe);
-	printf("dDec	=%10.16lf\n", dDec);
-	printf("dAcc	=%10.16lf\n", dAcc);
-	printf("unT1	=%d\n", unT1);
-	printf("unT2	=%d\n", unT2);
-	printf("unT3	=%d\n", unT3);
+    printf("Planning V3\n");
+    printf("dVs		=%10.16lf\n", dVs);
+    printf("dVmax	=%10.16lf\n", dVmax);
+    printf("dVe		=%10.16lf\n", dVe);
+    printf("dDec	=%10.16lf\n", dDec);
+    printf("dAcc	=%10.16lf\n", dAcc);
+    printf("unT1	=%d\n", unT1);
+    printf("unT2	=%d\n", unT2);
+    printf("unT3	=%d\n", unT3);
 
 #endif
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningV1(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  V¹ØÓÚtµÄÒ»´Î·½ËÙ¶È¹æ»®  £¨Ö»¿¼ÂÇ¼ÓËÙ »ò¼õËÙ£©
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Ô¤´¦ÀíÍê³É
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£ºÖ»¼ÓËÙ »ò Ö»¼õËÙ
-			Ê¹ÓÃÇ°spindleµÄµ¥Î»ĞèÒªÍ³Ò»  Èç¹ûÎªG96Ôò»¯Îªmm/min   Èç¹ûÎªG97Ôò»¯Îªr/min
+  å‡½æ•°åç§°ï¼šnextstepPlanningV1(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  Vå…³äºtçš„ä¸€æ¬¡æ–¹é€Ÿåº¦è§„åˆ’  ï¼ˆåªè€ƒè™‘åŠ é€Ÿ æˆ–å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		é¢„å¤„ç†å®Œæˆ
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼šåªåŠ é€Ÿ æˆ– åªå‡é€Ÿ
+			ä½¿ç”¨å‰spindleçš„å•ä½éœ€è¦ç»Ÿä¸€  å¦‚æœä¸ºG96åˆ™åŒ–ä¸ºmm/min   å¦‚æœä¸ºG97åˆ™åŒ–ä¸ºr/min
 **************************************************/
 double nextstepPlanningV1(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT2
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT3
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;     //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //ç»ˆç‚¹é€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;     //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;   //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;   //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT5 = pSPlanPointer->unT5;   //æ—¶é—´èŠ‚ç‚¹T3
 
-	if (unK == 0)
-	{
-		return dVs;
-	}
-	else if (unK <= unT1)//¼ÓËÙ  
-	{
-		return dAcc * unK + dVs;
-	}
-	else if (unK <= unT3) //ÔÈËÙ  
-	{
-		return dVmax;
-	}
-	else if (unK <= unT5) //¼õËÙ  
-	{
-		return dVe - (int)(unK - unT5) * dDec;
-	}
-	else //³¬³ö·¶Î§  
-	{
-		return dVe;
-	}
+    if (unK == 0)
+    {
+        return dVs;
+    }
+    else if (unK <= unT1) //åŠ é€Ÿ
+    {
+        return dAcc * unK + dVs;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
+        return dVmax;
+    }
+    else if (unK <= unT5) //å‡é€Ÿ
+    {
+        return dVe - (int)(unK - unT5) * dDec;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dVe;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningV2(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  V¹ØÓÚtµÄ¶ş´Î·½ËÙ¶È¹æ»®  £¨Ö»¿¼ÂÇ¼ÓËÙ »ò¼õËÙ£©
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Ô¤´¦ÀíÍê³É
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£ºÖ»¼ÓËÙ »ò Ö»¼õËÙ
-			Ê¹ÓÃÇ°spindleµÄµ¥Î»ĞèÒªÍ³Ò»  Èç¹ûÎªG96Ôò»¯Îªmm/min   Èç¹ûÎªG97Ôò»¯Îªr/min
+  å‡½æ•°åç§°ï¼šnextstepPlanningV2(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  Vå…³äºtçš„äºŒæ¬¡æ–¹é€Ÿåº¦è§„åˆ’  ï¼ˆåªè€ƒè™‘åŠ é€Ÿ æˆ–å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		é¢„å¤„ç†å®Œæˆ
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼šåªåŠ é€Ÿ æˆ– åªå‡é€Ÿ
+			ä½¿ç”¨å‰spindleçš„å•ä½éœ€è¦ç»Ÿä¸€  å¦‚æœä¸ºG96åˆ™åŒ–ä¸ºmm/min   å¦‚æœä¸ºG97åˆ™åŒ–ä¸ºr/min
 **************************************************/
 double nextstepPlanningV2(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT2
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT3
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;     //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //ç»ˆç‚¹é€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;     //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;   //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;   //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT5 = pSPlanPointer->unT5;   //æ—¶é—´èŠ‚ç‚¹T3
 
-	if (unK == 0)
-	{
-		return dVs;
-	}
-	else if (unK <= unT1)//¼ÓËÙ  
-	{
-		return dAcc * dAcc * unK * unK / (2.0 * (dVmax - dVs)) + dVs;
-	}
-	else if (unK <= unT2)//¼ÓËÙ  
-	{
-		dVmax = sgn(dVs) == 0 ? dVmax : sgn(dVs) * fabs(dVmax);//¸ù¾İVsµÄ·ûºÅÅĞ¶ÏVeerµÄ·ûºÅ
-		return dAcc * dAcc * (int)(unK - unT2) * (int)(unK - unT2) / (2.0 * (dVs - dVmax)) + dVmax;
-	}
-	else if (unK <= unT3) //ÔÈËÙ  
-	{
-		return dVmax;
-	}
-	else if (unK <= unT4) //¼õËÙ  
-	{
-		dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax); //¸ù¾İVeµÄ·ûºÅÅĞ¶ÏVeerµÄ·ûºÅ
-		return dVmax + dDec * dDec * (int)(unK - unT3) * (int)(unK - unT3) / (2.0 * (dVe - dVmax));
-	}
-	else if (unK <= unT5) //¼õËÙ  
-	{
-		dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax);//¸ù¾İVeµÄ·ûºÅÅĞ¶ÏVeerµÄ·ûºÅ
-		return dVe + dDec * dDec * (int)(unK - unT5) * (int)(unK - unT5) / (2.0 * (dVmax - dVe));
-	}
-	else //³¬³ö·¶Î§  
-	{
-		return dVe;
-	}
+    if (unK == 0)
+    {
+        return dVs;
+    }
+    else if (unK <= unT1) //åŠ é€Ÿ
+    {
+        return dAcc * dAcc * unK * unK / (2.0 * (dVmax - dVs)) + dVs;
+    }
+    else if (unK <= unT2) //åŠ é€Ÿ
+    {
+        dVmax = sgn(dVs) == 0 ? dVmax : sgn(dVs) * fabs(dVmax); //æ ¹æ®Vsçš„ç¬¦å·åˆ¤æ–­Veerçš„ç¬¦å·
+        return dAcc * dAcc * (int)(unK - unT2) * (int)(unK - unT2) / (2.0 * (dVs - dVmax)) + dVmax;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
+        return dVmax;
+    }
+    else if (unK <= unT4) //å‡é€Ÿ
+    {
+        dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax); //æ ¹æ®Veçš„ç¬¦å·åˆ¤æ–­Veerçš„ç¬¦å·
+        return dVmax + dDec * dDec * (int)(unK - unT3) * (int)(unK - unT3) / (2.0 * (dVe - dVmax));
+    }
+    else if (unK <= unT5) //å‡é€Ÿ
+    {
+        dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax); //æ ¹æ®Veçš„ç¬¦å·åˆ¤æ–­Veerçš„ç¬¦å·
+        return dVe + dDec * dDec * (int)(unK - unT5) * (int)(unK - unT5) / (2.0 * (dVmax - dVe));
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dVe;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningV3(uint32 unK,struct SPlan *pSPlanPointer)
-  º¯Êı¹¦ÄÜ  V¹ØÓÚtµÄÈı´Î·½ËÙ¶È¹æ»®  £¨Ö»¿¼ÂÇ¼ÓËÙ »ò¼õËÙ£©
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Ô¤´¦ÀíÍê³É
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£ºÖ»¼ÓËÙ »ò Ö»¼õËÙ
-			Ê¹ÓÃÇ°spindleµÄµ¥Î»ĞèÒªÍ³Ò»  Èç¹ûÎªG96Ôò»¯Îªmm/min   Èç¹ûÎªG97Ôò»¯Îªr/min
+  å‡½æ•°åç§°ï¼šnextstepPlanningV3(uint32 unK,struct SPlan *pSPlanPointer)
+  å‡½æ•°åŠŸèƒ½  Vå…³äºtçš„ä¸‰æ¬¡æ–¹é€Ÿåº¦è§„åˆ’  ï¼ˆåªè€ƒè™‘åŠ é€Ÿ æˆ–å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		é¢„å¤„ç†å®Œæˆ
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼šåªåŠ é€Ÿ æˆ– åªå‡é€Ÿ
+			ä½¿ç”¨å‰spindleçš„å•ä½éœ€è¦ç»Ÿä¸€  å¦‚æœä¸ºG96åˆ™åŒ–ä¸ºmm/min   å¦‚æœä¸ºG97åˆ™åŒ–ä¸ºr/min
 **************************************************/
 double nextstepPlanningV3(uint32 unK, struct SPlan* pSPlanPointer)
 {
-	double dVs, dVmax, dVe;   //³õÊ¼£¬ÔÈËÙ£¬ÖÕµãËÙ¶È
-	double dAcc;		///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;		///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dTc;			///<²å²¹ÖÜÆÚ	ms
-	uint32 unT1;	///<Ê±¼ä½ÚµãT1
-	uint32 unT2;	///<Ê±¼ä½ÚµãT2
-	uint32 unT3;	///<Ê±¼ä½ÚµãT3
-	uint32 unT4;	///<Ê±¼ä½ÚµãT4
-	uint32 unT5;	///<Ê±¼ä½ÚµãT5
+    double dVs, dVmax, dVe; //åˆå§‹ï¼ŒåŒ€é€Ÿï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc;            ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;            ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dTc;             ///<æ’è¡¥å‘¨æœŸ	ms
+    uint32 unT1;            ///<æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2;            ///<æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3;            ///<æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4;            ///<æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5;            ///<æ—¶é—´èŠ‚ç‚¹T5
 
-	if (pSPlanPointer == NULL) //¿ÕÖ¸Õë ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL) //ç©ºæŒ‡é’ˆ ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	//³õÊ¼»¯
-	dVs = pSPlanPointer->dVs;		//³õÊ¼ËÙ¶È
-	dVmax = pSPlanPointer->dVmax;		//×î´óËÙ¶È	
-	dVe = pSPlanPointer->dVe;		//ÖÕµãËÙ¶È
-	dAcc = pSPlanPointer->dAcc;		//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dDec = pSPlanPointer->dDec;		//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	dTc = pSPlanPointer->dTc;		//²å²¹ÖÜÆÚ
-	unT1 = pSPlanPointer->unT1;		//Ê±¼ä½ÚµãT1
-	unT2 = pSPlanPointer->unT2;		//Ê±¼ä½ÚµãT2
-	unT3 = pSPlanPointer->unT3;		//Ê±¼ä½ÚµãT3
-	unT4 = pSPlanPointer->unT4;		//Ê±¼ä½ÚµãT2
-	unT5 = pSPlanPointer->unT5;		//Ê±¼ä½ÚµãT3
+    //åˆå§‹åŒ–
+    dVs = pSPlanPointer->dVs;     //åˆå§‹é€Ÿåº¦
+    dVmax = pSPlanPointer->dVmax; //æœ€å¤§é€Ÿåº¦
+    dVe = pSPlanPointer->dVe;     //ç»ˆç‚¹é€Ÿåº¦
+    dAcc = pSPlanPointer->dAcc;   //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dDec = pSPlanPointer->dDec;   //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    dTc = pSPlanPointer->dTc;     //æ’è¡¥å‘¨æœŸ
+    unT1 = pSPlanPointer->unT1;   //æ—¶é—´èŠ‚ç‚¹T1
+    unT2 = pSPlanPointer->unT2;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT3 = pSPlanPointer->unT3;   //æ—¶é—´èŠ‚ç‚¹T3
+    unT4 = pSPlanPointer->unT4;   //æ—¶é—´èŠ‚ç‚¹T2
+    unT5 = pSPlanPointer->unT5;   //æ—¶é—´èŠ‚ç‚¹T3
 
-	if (unK == 0)
-	{
-		return dVs;
-	}
-	else if (unK <= unT2) // ¼ÓËÙ //2025.10.11 ĞŞ¸Ä (3 * unT2 * unT2)Îª(3.0 * unT2 * unT2)£¬ÈôunT2¹ı´ó¿ÉÄÜ³¬³öÕûĞÎ·¶Î§£¬µ¼ÖÂÒç³ö
-	{
-		return -4 * dAcc / (3.0 * unT2 * unT2) * unK * dTc * unK * dTc * unK * dTc + 2 * dAcc / unT2 * unK * dTc * unK * dTc + dVs;
-	}
-	else if (unK <= unT3) //ÔÈËÙ  
-	{
-		return dVmax;
-	}
-	else if (unK <= unT5) //¼õËÙ  
-	{
-		dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax);//¸ù¾İVeµÄ·ûºÅÅĞ¶ÏVeerµÄ·ûºÅ
-		return dVmax + 4 * dDec / (3 * pow(unT5 - unT3, 2)) * pow((unK - unT3) * dTc, 3) - 2 * dDec / (unT5 - unT3) * (unK - unT3) * dTc * (unK - unT3) * dTc;
-	}
-	else //³¬³ö·¶Î§  
-	{
-		return dVe;
-	}
+    if (unK == 0)
+    {
+        return dVs;
+    }
+    else if (
+        unK <=
+        unT2) // åŠ é€Ÿ //2025.10.11 ä¿®æ”¹ (3 * unT2 * unT2)ä¸º(3.0 * unT2 * unT2)ï¼Œè‹¥unT2è¿‡å¤§å¯èƒ½è¶…å‡ºæ•´å½¢èŒƒå›´ï¼Œå¯¼è‡´æº¢å‡º
+    {
+        return -4 * dAcc / (3.0 * unT2 * unT2) * unK * dTc * unK * dTc * unK * dTc +
+               2 * dAcc / unT2 * unK * dTc * unK * dTc + dVs;
+    }
+    else if (unK <= unT3) //åŒ€é€Ÿ
+    {
+        return dVmax;
+    }
+    else if (unK <= unT5) //å‡é€Ÿ
+    {
+        dVmax = sgn(dVe) == 0 ? dVmax : sgn(dVe) * fabs(dVmax); //æ ¹æ®Veçš„ç¬¦å·åˆ¤æ–­Veerçš„ç¬¦å·
+        return dVmax + 4 * dDec / (3 * pow(unT5 - unT3, 2)) * pow((unK - unT3) * dTc, 3) -
+               2 * dDec / (unT5 - unT3) * (unK - unT3) * dTc * (unK - unT3) * dTc;
+    }
+    else //è¶…å‡ºèŒƒå›´
+    {
+        return dVe;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºnextstepPlanningCombine(uint32 unK,struct SPlan *pSPlanPointer)  //»ìºÏĞÍS(t)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ»ìºÏĞÍËÙ¶È¹æ»®Ô¤´¦Àí,ºÍÊäÈëµÄÊ±¼ä½ÚµãunK,¼ÆËã²¢·µ»Ø¸ÃÊ±¼ä½ÚµãµÄ¾ø¶ÔÎ»ÒÆs(t)
-  ÊäÈë²ÎÊı£º*pSPlanPointer£¬½á¹¹Ìåstruct SPlanÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble ¾ø¶ÔÎ»ÒÆ£¨Ïà¶ÔÆğµã£©
-			-1		ÊäÈë´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnextstepPlanningCombine(uint32 unK,struct SPlan *pSPlanPointer)  //æ··åˆå‹S(t)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æ··åˆå‹é€Ÿåº¦è§„åˆ’é¢„å¤„ç†,å’Œè¾“å…¥çš„æ—¶é—´èŠ‚ç‚¹unK,è®¡ç®—å¹¶è¿”å›è¯¥æ—¶é—´èŠ‚ç‚¹çš„ç»å¯¹ä½ç§»s(t)
+  è¾“å…¥å‚æ•°ï¼š*pSPlanPointerï¼Œç»“æ„ä½“struct SPlanæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble ç»å¯¹ä½ç§»ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+			-1		è¾“å…¥é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double nextstepPlanningVelCombine(uint32 unK, struct SPlan* pSPlanPointer)  //»ìºÏĞÍV(t)
+double nextstepPlanningVelCombine(uint32 unK, struct SPlan* pSPlanPointer) //æ··åˆå‹V(t)
 {
-	uint8 ucVelPlanType = 0;//ÇúÏßÀàĞÍ
-	//unT3Îª·Ö½çÏß
-	ucVelPlanType = (pSPlanPointer->unCurrentT <= pSPlanPointer->unT3) ? pSPlanPointer->ucAccVelPlanType : pSPlanPointer->ucDecVelPlanType;
+    uint8 ucVelPlanType = 0; //æ›²çº¿ç±»å‹
+    //unT3ä¸ºåˆ†ç•Œçº¿
+    ucVelPlanType = (pSPlanPointer->unCurrentT <= pSPlanPointer->unT3) ? pSPlanPointer->ucAccVelPlanType
+                                                                       : pSPlanPointer->ucDecVelPlanType;
 
-	switch (ucVelPlanType)//¸ù¾İµ±Ç°µÄÇúÏßÀàĞÍµ÷ÓÃ¾àÀëº¯Êı
-	{
-	case VEL_PLAN_V1_CURVE://TĞÍ
-		return nextstepPlanningV1(unK, pSPlanPointer);
-		break;
-	case VEL_PLAN_V2_CURVE://S3ĞÍ
-		return nextstepPlanningV2(unK, pSPlanPointer);
-		break;
-	case VEL_PLAN_V3_CURVE://S4ĞÍ
-		return nextstepPlanningV3(unK, pSPlanPointer);
-		break;
-	default:
-		return nextstepPlanningV3(unK, pSPlanPointer);
-	}
-
+    switch (ucVelPlanType) //æ ¹æ®å½“å‰çš„æ›²çº¿ç±»å‹è°ƒç”¨è·ç¦»å‡½æ•°
+    {
+    case VEL_PLAN_V1_CURVE: //Tå‹
+        return nextstepPlanningV1(unK, pSPlanPointer);
+        break;
+    case VEL_PLAN_V2_CURVE: //S3å‹
+        return nextstepPlanningV2(unK, pSPlanPointer);
+        break;
+    case VEL_PLAN_V3_CURVE: //S4å‹
+        return nextstepPlanningV3(unK, pSPlanPointer);
+        break;
+    default:
+        return nextstepPlanningV3(unK, pSPlanPointer);
+    }
 }
 
-
-#define  REPEATG32_NUM  4  //Á¬ĞøG32µÄ¸öÊı(²âÊÔÓÃ)
-//²âÊÔÓÃÈ«¾Ö±äÁ¿
+#define REPEATG32_NUM 4 //è¿ç»­G32çš„ä¸ªæ•°(æµ‹è¯•ç”¨)
+//æµ‹è¯•ç”¨å…¨å±€å˜é‡
 double g_dLongAxisPos[REPEATG32_NUM * 2];
 double g_dShortAxisPos[REPEATG32_NUM * 2];
 double g_dEncoderNum[REPEATG32_NUM * 2];
@@ -2618,418 +2606,428 @@ double g_dDeltaPulse[REPEATG32_NUM];
 double g_dDeltaLongAxis[REPEATG32_NUM];
 double g_dDeltaShortAxis[REPEATG32_NUM];
 double g_dTime;
-int    g_nI;
-int    g_nDeltaI;
+int g_nI;
+int g_nDeltaI;
 /*************************************************
-  º¯ÊıÃû³Æ£ºnewAddDistace(struct SPlan *pSPlanPointer,double newAddDist)
-  º¯Êı¹¦ÄÜ  ĞÂÔö¾àÀë
-  ÊäÈë²ÎÊı£ºpSPlanPointer  Ô¤´¦Àí½á¹¹ÌåÖ¸Õë
-			newAddDist	ĞÂÔö¾àÀë
-			dAcc		¼ÓËÙ¶È
-			dDec		¼õËÙ¶È
-			dVe			Ëæ¶¯µÄÀíÏëÄ¿±êËÙ¶È
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0 ¼ÓËÙ½×¶Î
-			1 Ëæ¶¯½×¶Î  £¨Ëæ¶¯½×¶ÎÒªÊÇ  ĞÂÔö¾àÀë!=µ±Ç°ËÙ¶È  »á½øÈë¼ÓËÙ(×·¸Ï)½×¶Î)
-			2 ¼õËÙ½×¶Î
-			3 Íê³É½×¶Î
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnewAddDistace(struct SPlan *pSPlanPointer,double newAddDist)
+  å‡½æ•°åŠŸèƒ½  æ–°å¢è·ç¦»
+  è¾“å…¥å‚æ•°ï¼špSPlanPointer  é¢„å¤„ç†ç»“æ„ä½“æŒ‡é’ˆ
+			newAddDist	æ–°å¢è·ç¦»
+			dAcc		åŠ é€Ÿåº¦
+			dDec		å‡é€Ÿåº¦
+			dVe			éšåŠ¨çš„ç†æƒ³ç›®æ ‡é€Ÿåº¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0 åŠ é€Ÿé˜¶æ®µ
+			1 éšåŠ¨é˜¶æ®µ  ï¼ˆéšåŠ¨é˜¶æ®µè¦æ˜¯  æ–°å¢è·ç¦»!=å½“å‰é€Ÿåº¦  ä¼šè¿›å…¥åŠ é€Ÿ(è¿½èµ¶)é˜¶æ®µ)
+			2 å‡é€Ÿé˜¶æ®µ
+			3 å®Œæˆé˜¶æ®µ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-uint8 newAddDistace(struct _SG32* pG32, struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, double dCurrentSpeed)
+uint8 newAddDistace(struct _SG32* pG32, struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec,
+                    double dVe, double dCurrentSpeed)
 {
-	uint8 res = 0; //·µ»ØÖµ
-	double dMaxDistance;
-	double dBackCalVmax;
-	int8 cMotionState;
+    uint8 res = 0; //è¿”å›å€¼
+    double dMaxDistance;
+    double dBackCalVmax;
+    int8 cMotionState;
 
-	pSPlanPointer->dDistance = fabs(pSPlanPointer->dDistance);                          //³¤ÖáµÄ²å²¹³¤¶È
-	pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //ÒÑ²å²¹³¤¶È
+    pSPlanPointer->dDistance = fabs(pSPlanPointer->dDistance);                          //é•¿è½´çš„æ’è¡¥é•¿åº¦
+    pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //å·²æ’è¡¥é•¿åº¦
 
-	//if (!isZero(pG32->dNextG32LongAxisSpeed) && !pG32->bDecPlanTransitionFlag)          //Îª·Ç¼õËÙ¹ı¶ÉµÄÁ¬ĞøG32
-	//{
-	//	pSPlanPointer->dTargetDist = pSPlanPointer->dTargetDist + newAddDist;           //Ä¿±ê¾àÀëÎŞ×Ü³¤¶ÈÏŞÖÆ
-	//}
-	if ((!isZero(pG32->dNextG32LongAxisSpeed) && !pG32->bDecPlanTransitionFlag) ||
-		(!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe) && pG32->bDecPlanTransitionFlag))          //Îª·Ç»»Ïò¹ı¶ÉµÄÁ¬ĞøG32
-	{
-		pSPlanPointer->dTargetDist = pSPlanPointer->dTargetDist + newAddDist;           //Ä¿±ê¾àÀëÎŞ×Ü³¤¶ÈÏŞÖÆ
-	}
-	else
-	{
-		pSPlanPointer->dTargetDist = min(pSPlanPointer->dDistance, pSPlanPointer->dTargetDist + newAddDist);//È·¶¨Ä¿±ê¾àÀë  (×Ü³¤¶È¶ÔÆäÏŞÖÆ)
-	}
-	pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; //¼ÆËãÊ£Óà¾àÀë£¨¹æ»®ÓÃ)
-	dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist;                  //¾àÖÕµãµÄ¾àÀë
+    //if (!isZero(pG32->dNextG32LongAxisSpeed) && !pG32->bDecPlanTransitionFlag)          //ä¸ºéå‡é€Ÿè¿‡æ¸¡çš„è¿ç»­G32
+    //{
+    //	pSPlanPointer->dTargetDist = pSPlanPointer->dTargetDist + newAddDist;           //ç›®æ ‡è·ç¦»æ— æ€»é•¿åº¦é™åˆ¶
+    //}
+    if ((!isZero(pG32->dNextG32LongAxisSpeed) && !pG32->bDecPlanTransitionFlag) ||
+        (!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe) &&
+         pG32->bDecPlanTransitionFlag)) //ä¸ºéæ¢å‘è¿‡æ¸¡çš„è¿ç»­G32
+    {
+        pSPlanPointer->dTargetDist = pSPlanPointer->dTargetDist + newAddDist; //ç›®æ ‡è·ç¦»æ— æ€»é•¿åº¦é™åˆ¶
+    }
+    else
+    {
+        pSPlanPointer->dTargetDist =
+            min(pSPlanPointer->dDistance, pSPlanPointer->dTargetDist + newAddDist); //ç¡®å®šç›®æ ‡è·ç¦»  (æ€»é•¿åº¦å¯¹å…¶é™åˆ¶)
+    }
+    pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; //è®¡ç®—å‰©ä½™è·ç¦»ï¼ˆè§„åˆ’ç”¨)
+    dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist;                  //è·ç»ˆç‚¹çš„è·ç¦»
 
-	if (dMaxDistance < 0)
-	{
-		dMaxDistance = 0;
-	}
+    if (dMaxDistance < 0)
+    {
+        dMaxDistance = 0;
+    }
 
-	//2¸³ĞÂÖµ
-	pSPlanPointer->dAcc = 2.0 * dAcc;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->dDec = 2.0 * dDec;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;       //¼ÓËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;       //¼õËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE;  //Æ½Ì¯ÀàĞÍ£¨ÎŞÓÃ£©
+    //2èµ‹æ–°å€¼
+    pSPlanPointer->dAcc = 2.0 * dAcc;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->dDec = 2.0 * dDec;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹ï¼ˆæ— ç”¨ï¼‰
 
-	//¼ÆËã·´ËãËÙ¶È
-	if (pG32->bDecPlanTransitionFlag)  //Îª¼õËÙ¹ı¶ÉĞÍÁ¬ĞøG32
-	{
-		dBackCalVmax = pG32->SUserData.dVmax;   //·´ËãËÙ¶ÈÎªÏµÍ³×î´óËÙ¶È
-	}
-	else
-	{
-		//Èôµ±Ç°µÄÖ¸ÁîÎªG34µÄ³¤ÖáËÙ¶È¹æ»®£¨ÈôÎªG34µÄ³¤Öá¹æ»®£¬»¹µÃ¼ÆËãG34µÄÖÕµãµ½µ±Ç°Î»ÖÃµÄ·´ËãËÙ¶È£©
-		if (pG32->bG34RunFlag && (pSPlanPointer != pG32->SExcessPlanForG32))
-		{
-			uint8 ucLongAxisNum = pG32->ucAxis[0];  //»ñÈ¡³¤ÖáÖáºÅ
-			SPointDouble SRealTimePoint;            //ÊµÊ±µã
-			double dLongAxisVector = pG32->SStartVector.dArray[ucLongAxisNum];  //³¤ÖáÏòÁ¿
-			double dMaxDistanceForG34;  //µ±Ç°µã¾àÀëG34µÄ¾àÀë
-			double dLimitSpeed;         //Ô¼ÊøËÙ¶È
+    //è®¡ç®—åç®—é€Ÿåº¦
+    if (pG32->bDecPlanTransitionFlag) //ä¸ºå‡é€Ÿè¿‡æ¸¡å‹è¿ç»­G32
+    {
+        dBackCalVmax = pG32->SUserData.dVmax; //åç®—é€Ÿåº¦ä¸ºç³»ç»Ÿæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
+        //è‹¥å½“å‰çš„æŒ‡ä»¤ä¸ºG34çš„é•¿è½´é€Ÿåº¦è§„åˆ’ï¼ˆè‹¥ä¸ºG34çš„é•¿è½´è§„åˆ’ï¼Œè¿˜å¾—è®¡ç®—G34çš„ç»ˆç‚¹åˆ°å½“å‰ä½ç½®çš„åç®—é€Ÿåº¦ï¼‰
+        if (pG32->bG34RunFlag && (pSPlanPointer != pG32->SExcessPlanForG32))
+        {
+            uint8 ucLongAxisNum = pG32->ucAxis[0];                             //è·å–é•¿è½´è½´å·
+            SPointDouble SRealTimePoint;                                       //å®æ—¶ç‚¹
+            double dLongAxisVector = pG32->SStartVector.dArray[ucLongAxisNum]; //é•¿è½´å‘é‡
+            double dMaxDistanceForG34;                                         //å½“å‰ç‚¹è·ç¦»G34çš„è·ç¦»
+            double dLimitSpeed;                                                //çº¦æŸé€Ÿåº¦
 
-			getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);  //»ñÈ¡ÊµÊ±µã
-			dMaxDistanceForG34 = fabs(pG32->SG34EndPoint.dArray[ucLongAxisNum] * dLongAxisVector - SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector);    //»ñÈ¡µ±Ç°µã¾àÀëG34µÄ¾àÀë
-			dLimitSpeed = min(sqrt(dMaxDistanceForG34 * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe), pG32->dNextG32LongAxisSpeed); //»ñÈ¡Ô¼ÊøËÙ¶È
-			dBackCalVmax = max(sqrt(dMaxDistance * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe), dLimitSpeed);  //»ñÈ¡·´ËãËÙ¶È
+            getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                             &pG32->ucValStatus); //è·å–å®æ—¶ç‚¹
+            dMaxDistanceForG34 = fabs(pG32->SG34EndPoint.dArray[ucLongAxisNum] * dLongAxisVector -
+                                      SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector); //è·å–å½“å‰ç‚¹è·ç¦»G34çš„è·ç¦»
+            dLimitSpeed =
+                min(sqrt(dMaxDistanceForG34 * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe),
+                    pG32->dNextG32LongAxisSpeed); //è·å–çº¦æŸé€Ÿåº¦
+            dBackCalVmax =
+                max(sqrt(dMaxDistance * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe),
+                    dLimitSpeed); //è·å–åç®—é€Ÿåº¦
+        }
+        else if (pSPlanPointer == pG32->SExcessPlanForG32) //çŸ­è½´é€Ÿåº¦è§„åˆ’
+        {
+            dBackCalVmax = pG32->SUserData.dVmax; //åç®—é€Ÿåº¦ä¸ºç³»ç»Ÿæœ€å¤§é€Ÿåº¦
+        }
+        else
+        {
+            dBackCalVmax =
+                max(sqrt(dMaxDistance * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe),
+                    pG32->dNextG32LongAxisSpeed); //åç®—çš„æœ€å¤§é€Ÿåº¦
+        }
+    }
 
-		}
-		else if (pSPlanPointer == pG32->SExcessPlanForG32)  //¶ÌÖáËÙ¶È¹æ»®
-		{
-			dBackCalVmax = pG32->SUserData.dVmax; //·´ËãËÙ¶ÈÎªÏµÍ³×î´óËÙ¶È
+    if (dCurrentSpeed <= dBackCalVmax) //ä¸å—åˆ°åç®—é€Ÿåº¦çš„é™åˆ¶
+    {
+        pSPlanPointer->dVmax = min(dBackCalVmax, pG32->SUserData.dVmax); //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe = min(dVe, pSPlanPointer->dVmax);             //æœ«é€Ÿåº¦  å–ä¼ å…¥å‚æ•°dVe ä¸æœ€å¤§é€Ÿåº¦çš„æœ€å°å€¼
+        pSPlanPointer->dVs = isZero(dCurrentSpeed) ? pG32->SUserData.dVs : dCurrentSpeed; //ç¡®å®šèµ·å§‹é€Ÿåº¦
+    }
+    else //å—åˆ°åç®—é€Ÿåº¦çš„é™åˆ¶
+    {
+        pSPlanPointer->dVmax = dBackCalVmax;      //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe = pG32->SUserData.dVe; //æœ«é€Ÿåº¦   å‡é€Ÿæ—¶æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVs = isZero(dCurrentSpeed) ? pG32->SUserData.dVs : dBackCalVmax; //ç¡®å®šèµ·å§‹é€Ÿåº¦
+        pSPlanPointer->dAcc = 1.0 * pG32->SUserData.dAcc;                                // åŠ é€Ÿåº¦
+        pSPlanPointer->dDec = 1.0 * pG32->SUserData.dDec;                                // åŠ é€Ÿåº¦
+        res = 2;                                                                         //å·²è¿›å…¥å‡é€Ÿé˜¶æ®µ
+    }
 
-		}
-		else
-		{
-			dBackCalVmax = max(sqrt(dMaxDistance * 2.0 * pG32->SUserData.dDec + pG32->SUserData.dVe * pG32->SUserData.dVe), pG32->dNextG32LongAxisSpeed); //·´ËãµÄ×î´óËÙ¶È
-		}
+    cMotionState = preparePlanningTNewAdd(pSPlanPointer);
+    if (cMotionState == 2)
+    {
 
-	}
-
-	if (dCurrentSpeed <= dBackCalVmax)//²»ÊÜµ½·´ËãËÙ¶ÈµÄÏŞÖÆ
-	{
-		pSPlanPointer->dVmax = min(dBackCalVmax, pG32->SUserData.dVmax);//È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = min(dVe, pSPlanPointer->dVmax); //Ä©ËÙ¶È  È¡´«Èë²ÎÊıdVe Óë×î´óËÙ¶ÈµÄ×îĞ¡Öµ 
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? pG32->SUserData.dVs : dCurrentSpeed; //È·¶¨ÆğÊ¼ËÙ¶È
-	}
-	else//ÊÜµ½·´ËãËÙ¶ÈµÄÏŞÖÆ
-	{
-		pSPlanPointer->dVmax = dBackCalVmax;//È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = pG32->SUserData.dVe; //Ä©ËÙ¶È   ¼õËÙÊ±Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? pG32->SUserData.dVs : dBackCalVmax; //È·¶¨ÆğÊ¼ËÙ¶È
-		pSPlanPointer->dAcc = 1.0 * pG32->SUserData.dAcc;// ¼ÓËÙ¶È 
-		pSPlanPointer->dDec = 1.0 * pG32->SUserData.dDec;// ¼ÓËÙ¶È
-		res = 2;//ÒÑ½øÈë¼õËÙ½×¶Î
-	}
-
-	cMotionState = preparePlanningTNewAdd(pSPlanPointer);
-	if (cMotionState == 2)
-	{
-
-		//*********************************¶à´ÎÇĞÏ÷ÊÇ·ñÍ¬²½²âÊÔ********************************
-		g_dTime++;
-		if (g_dTime == 30)
-		{
-			uint8 ucLongAxisNum = pG32->ucAxis[0];    //»ñµÃ³¤ÖáÖáºÅ
-			uint8 ucShortAxisNum = pG32->ucAxis[1];  //»ñµÃ¶ÌÖáÖáºÅ
-			struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-			pSRun = &pG32->pSChannel->SRun;//ÔËĞĞ½á¹¹Ìå
-			//¸ù¾İ³¤ÖáµÄ±ÈÀı¼ÆËã¶ÌÖáµÄ×ø±ê
-			pG32->dStartFollowDis = fabs(pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->SStarCutPoint.dArray[ucLongAxisNum]);
-			g_dLongAxisPos[g_nI] = pSRun->SAbsCoord.dArray[ucLongAxisNum];
-			g_dShortAxisPos[g_nI] = pSRun->SAbsCoord.dArray[ucShortAxisNum];
-			//g_dEncoderNum[g_nI] = g_SEncoder[SPINDLE_ENCODER - 1].lEncoderAbsValue % g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum;
-			g_dEncoderNum[g_nI] = pG32->pSChannel->pSSpindleEncoder->lEncoderAbsValue % pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
-			if (g_nI >= REPEATG32_NUM)
-			{
-				g_dDeltaPulse[g_nDeltaI] = g_dEncoderNum[g_nI] - g_dEncoderNum[g_nI - REPEATG32_NUM];
-				g_dDeltaLongAxis[g_nDeltaI] = g_dLongAxisPos[g_nI] - g_dLongAxisPos[g_nI - REPEATG32_NUM];
-				g_dDeltaShortAxis[g_nDeltaI] = g_dShortAxisPos[g_nI] - g_dShortAxisPos[g_nI - REPEATG32_NUM];
-				g_nDeltaI++;
-
-			}
-			g_nI++;
-			if (g_nI == REPEATG32_NUM * 2)
-			{
+        //*********************************å¤šæ¬¡åˆ‡å‰Šæ˜¯å¦åŒæ­¥æµ‹è¯•********************************
+        g_dTime++;
+        if (g_dTime == 30)
+        {
+            uint8 ucLongAxisNum = pG32->ucAxis[0];  //è·å¾—é•¿è½´è½´å·
+            uint8 ucShortAxisNum = pG32->ucAxis[1]; //è·å¾—çŸ­è½´è½´å·
+            struct _SRun* pSRun;                    //è¿è¡Œç»“æ„ä½“
+            pSRun = &pG32->pSChannel->SRun;         //è¿è¡Œç»“æ„ä½“
+            //æ ¹æ®é•¿è½´çš„æ¯”ä¾‹è®¡ç®—çŸ­è½´çš„åæ ‡
+            pG32->dStartFollowDis =
+                fabs(pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->SStarCutPoint.dArray[ucLongAxisNum]);
+            g_dLongAxisPos[g_nI] = pSRun->SAbsCoord.dArray[ucLongAxisNum];
+            g_dShortAxisPos[g_nI] = pSRun->SAbsCoord.dArray[ucShortAxisNum];
+            //g_dEncoderNum[g_nI] = g_SEncoder[SPINDLE_ENCODER - 1].lEncoderAbsValue % g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum;
+            g_dEncoderNum[g_nI] = pG32->pSChannel->pSSpindleEncoder->lEncoderAbsValue %
+                                  pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
+            if (g_nI >= REPEATG32_NUM)
+            {
+                g_dDeltaPulse[g_nDeltaI] = g_dEncoderNum[g_nI] - g_dEncoderNum[g_nI - REPEATG32_NUM];
+                g_dDeltaLongAxis[g_nDeltaI] = g_dLongAxisPos[g_nI] - g_dLongAxisPos[g_nI - REPEATG32_NUM];
+                g_dDeltaShortAxis[g_nDeltaI] = g_dShortAxisPos[g_nI] - g_dShortAxisPos[g_nI - REPEATG32_NUM];
+                g_nDeltaI++;
+            }
+            g_nI++;
+            if (g_nI == REPEATG32_NUM * 2)
+            {
 #if LHK_DEBUG
 
-				for (int i = 0; i < g_nI; i++)
-				{
-					/*printf("g_dZ[%d] = %f \r\n", i, g_dZ[i]);
+                for (int i = 0; i < g_nI; i++)
+                {
+                    /*printf("g_dZ[%d] = %f \r\n", i, g_dZ[i]);
 					printf("g_dEncoderNum[%d] = %f \r\n", i, g_dEncoderNum[i]);*/
+                }
 
-				}
-
-				for (int i = 0; i < g_nDeltaI; i++)
-				{
-					printf("g_dDeltaPulse[%d] = %f \r\n", i, g_dDeltaPulse[i]);
-					printf("AxisNum:%d g_dDeltaLongAxis[%d] = %f \r\n", ucLongAxisNum, i, g_dDeltaLongAxis[i]);
-					printf("AxisNum:%d g_dDeltaLongAxis[%d] = %f \r\n", ucShortAxisNum, i, g_dDeltaShortAxis[i]);
-			}
-				printf("\r\n");
+                for (int i = 0; i < g_nDeltaI; i++)
+                {
+                    printf("g_dDeltaPulse[%d] = %f \r\n", i, g_dDeltaPulse[i]);
+                    printf("AxisNum:%d g_dDeltaLongAxis[%d] = %f \r\n", ucLongAxisNum, i, g_dDeltaLongAxis[i]);
+                    printf("AxisNum:%d g_dDeltaLongAxis[%d] = %f \r\n", ucShortAxisNum, i, g_dDeltaShortAxis[i]);
+                }
+                printf("\r\n");
 #endif
 
-				g_nDeltaI = 0;
-				g_nI = 0;
+                g_nDeltaI = 0;
+                g_nI = 0;
+            }
+        }
+        //*********************************å¤šæ¬¡åˆ‡å‰Šæ˜¯å¦åŒæ­¥æµ‹è¯•********************************
+        res = max(1, res); //éšåŠ¨é˜¶æ®µ
+    }
+    else if (cMotionState < 0)
+    {
+        clearSPlanData(pSPlanPointer);
+        return -1;
+    }
 
-			}
+    if (isZero(dMaxDistance))
+    {
+        res = 3; //å®Œæˆ
+    }
+    pSPlanPointer->unCurrentT = 0;     //æ—¶é—´ä¸º0
+    pSPlanPointer->dDistRemaining = 0; //å¹³æ‘Šçš„å‰©ä½™è·ç¦»è®¾ä¸º0
 
-
-		}
-		//*********************************¶à´ÎÇĞÏ÷ÊÇ·ñÍ¬²½²âÊÔ********************************
-		res = max(1, res);//Ëæ¶¯½×¶Î
-
-	}
-	else if (cMotionState < 0)
-	{
-		clearSPlanData(pSPlanPointer);
-		return -1;
-	}
-	
-	if (isZero(dMaxDistance))
-	{
-		res = 3;//Íê³É
-	}
-	pSPlanPointer->unCurrentT = 0;  //Ê±¼äÎª0
-	pSPlanPointer->dDistRemaining = 0;//Æ½Ì¯µÄÊ£Óà¾àÀëÉèÎª0
-
-	return res;
+    return res;
 }
-
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºnewAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, bool bEnableDec, double dDecDist)
-  º¯Êı¹¦ÄÜ  ĞÂÔö¾àÀë(¿É²»ÏŞÖÆÖÕµã)
-			bEnableDec == TRUE   ÓĞ¼õËÙ½×¶Î  ÏŞÖÆÖÕµã
-			bEnableDec == FALSE  ÎŞ¼õËÙ½×¶Î  ²»ÏŞÖÆÖÕµã
-  ÊäÈë²ÎÊı£ºpSPlanPointer  Ô¤´¦Àí½á¹¹ÌåÖ¸Õë
-			newAddDist	ĞÂÔö¾àÀë
-			dAcc		¹æ»®µÄ¼ÓËÙ¶È
-			dDec		¹æ»®µÄ¼õËÙ¶È
-			dVe			Ëæ¶¯µÄÀíÏëÄ¿±êËÙ¶È
-			bEnableDec	ÊÇ·ñÓĞ¼õËÙ¶Î£¨ÓĞ¼õËÙ¶Î->²»ÄÜÔ½¹ıÖÕµã,ÎŞ¼õËÙ¶Î->ÄÜÔ½¹ıÖÕµã£©
-			dDecDist	¼õËÙ¶Î³¤¶È
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0 ×·¸Ï½×¶Î
-			1 Ëæ¶¯½×¶Î  £¨Ëæ¶¯½×¶ÎÒªÊÇ  ĞÂÔö¾àÀë!=µ±Ç°ËÙ¶È  »á½øÈë¼ÓËÙ(×·¸Ï)½×¶Î)
-			2 ¼õËÙ½×¶Î	£¨Èç¹ûÓĞ£©
-			3 Íê³É½×¶Î	£¨ÓëÖÕµãÖØºÏ£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šnewAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, bool bEnableDec, double dDecDist)
+  å‡½æ•°åŠŸèƒ½  æ–°å¢è·ç¦»(å¯ä¸é™åˆ¶ç»ˆç‚¹)
+			bEnableDec == TRUE   æœ‰å‡é€Ÿé˜¶æ®µ  é™åˆ¶ç»ˆç‚¹
+			bEnableDec == FALSE  æ— å‡é€Ÿé˜¶æ®µ  ä¸é™åˆ¶ç»ˆç‚¹
+  è¾“å…¥å‚æ•°ï¼špSPlanPointer  é¢„å¤„ç†ç»“æ„ä½“æŒ‡é’ˆ
+			newAddDist	æ–°å¢è·ç¦»
+			dAcc		è§„åˆ’çš„åŠ é€Ÿåº¦
+			dDec		è§„åˆ’çš„å‡é€Ÿåº¦
+			dVe			éšåŠ¨çš„ç†æƒ³ç›®æ ‡é€Ÿåº¦
+			bEnableDec	æ˜¯å¦æœ‰å‡é€Ÿæ®µï¼ˆæœ‰å‡é€Ÿæ®µ->ä¸èƒ½è¶Šè¿‡ç»ˆç‚¹,æ— å‡é€Ÿæ®µ->èƒ½è¶Šè¿‡ç»ˆç‚¹ï¼‰
+			dDecDist	å‡é€Ÿæ®µé•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0 è¿½èµ¶é˜¶æ®µ
+			1 éšåŠ¨é˜¶æ®µ  ï¼ˆéšåŠ¨é˜¶æ®µè¦æ˜¯  æ–°å¢è·ç¦»!=å½“å‰é€Ÿåº¦  ä¼šè¿›å…¥åŠ é€Ÿ(è¿½èµ¶)é˜¶æ®µ)
+			2 å‡é€Ÿé˜¶æ®µ	ï¼ˆå¦‚æœæœ‰ï¼‰
+			3 å®Œæˆé˜¶æ®µ	ï¼ˆä¸ç»ˆç‚¹é‡åˆï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
-uint8 newAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, bool bEnableDec, double dDecDist, double dCurrentSpeed)
+uint8 newAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe,
+                              bool bEnableDec, double dDecDist, double dCurrentSpeed)
 {
-	uint8 res = 0; //·µ»ØÖµ
-	int8 cPlanRes;
-	//SPointDouble SCurrentPoint;
-	double dMaxDistance;
-	double dBackCalVmax;
-	double dCalDec = 0;
-	//SVector currentVector;
-	//SCurrentPoint = calculateExactInterpolationPoint(pSPlanPointer->dDistance - pSPlanPointer->dCurLeftDist, pSPlanPointer);//¼ÆËãÀíÂÛÆğµã
-	//calVectorAndDistance(SCurrentPoint, pSPlanPointer->SEndPoint, &dMaxDistance, &currentVector);
+    uint8 res = 0; //è¿”å›å€¼
+    int8 cPlanRes;
+    //SPointDouble SCurrentPoint;
+    double dMaxDistance;
+    double dBackCalVmax;
+    double dCalDec = 0;
+    //SVector currentVector;
+    //SCurrentPoint = calculateExactInterpolationPoint(pSPlanPointer->dDistance - pSPlanPointer->dCurLeftDist, pSPlanPointer);//è®¡ç®—ç†è®ºèµ·ç‚¹
+    //calVectorAndDistance(SCurrentPoint, pSPlanPointer->SEndPoint, &dMaxDistance, &currentVector);
 
-	//pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //ÒÑ²å²¹³¤¶È
+    //pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //å·²æ’è¡¥é•¿åº¦
 
-	if (bEnableDec == FALSE)//ÎŞ¼õËÙ¶Î
-	{
-		pSPlanPointer->dTargetDist += newAddDist;
-	}
-	else//ÓĞ¼õËÙ¶Î   ×Ü¾àÀë¶ÔÄ¿±ê¾àÀë½øĞĞÏŞÖÆ
-	{
-		pSPlanPointer->dTargetDist = min(pSPlanPointer->dDistance, pSPlanPointer->dTargetDist + newAddDist);//È·¶¨Ä¿±ê¾àÀë  (×Ü³¤¶È¶ÔÆäÏŞÖÆ)
-	}
+    if (bEnableDec == FALSE) //æ— å‡é€Ÿæ®µ
+    {
+        pSPlanPointer->dTargetDist += newAddDist;
+    }
+    else //æœ‰å‡é€Ÿæ®µ   æ€»è·ç¦»å¯¹ç›®æ ‡è·ç¦»è¿›è¡Œé™åˆ¶
+    {
+        pSPlanPointer->dTargetDist =
+            min(pSPlanPointer->dDistance, pSPlanPointer->dTargetDist + newAddDist); //ç¡®å®šç›®æ ‡è·ç¦»  (æ€»é•¿åº¦å¯¹å…¶é™åˆ¶)
+    }
 
-	pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; // ¼ÆËãÊ£Óà¾àÀë£¨¹æ»®ÓÃ)
-	dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist;//¾àÖÕµãµÄ¾àÀë   (³¬¹ıÖÕµãÊ±Îª¸ºÊı)
+    pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; // è®¡ç®—å‰©ä½™è·ç¦»ï¼ˆè§„åˆ’ç”¨)
+    dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist; //è·ç»ˆç‚¹çš„è·ç¦»   (è¶…è¿‡ç»ˆç‚¹æ—¶ä¸ºè´Ÿæ•°)
 
+    //2èµ‹æ–°å€¼
+    //pSPlanPointer->dDistance = pSPlanPointer->dCurLeftDist + newAddDist;//ç¡®å®šæ’è¡¥è·ç¦»
+    pSPlanPointer->dAcc = 2.0 * dAcc;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->dDec = 2.0 * dDec;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹ï¼ˆæ— ç”¨ï¼‰
 
-	//2¸³ĞÂÖµ
-	//pSPlanPointer->dDistance = pSPlanPointer->dCurLeftDist + newAddDist;//È·¶¨²å²¹¾àÀë 
-	pSPlanPointer->dAcc = 2.0 * dAcc;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->dDec = 2.0 * dDec;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;  //¼ÓËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;  //¼õËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE;  //Æ½Ì¯ÀàĞÍ£¨ÎŞÓÃ£©
+    if (bEnableDec == FALSE || dMaxDistance > dDecDist) //åŠ é€Ÿæˆ–è€…éšåŠ¨æ®µ
+    {
+        pSPlanPointer->dVmax = g_SSystemPara.dG33MaxVel; //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe =
+            min(dVe, pSPlanPointer->dVmax); //æœ«é€Ÿåº¦  ï¼ˆåŠ é€Ÿå’ŒéšåŠ¨é˜¶æ®µæœ«é€Ÿåº¦!=æœ€å¤§é€Ÿåº¦  å‡é€Ÿæ—¶æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦)
+        pSPlanPointer->dVs = isZero(dCurrentSpeed) ? g_SSystemPara.dSysMinVel : dCurrentSpeed; //ç¡®å®šèµ·å§‹é€Ÿåº¦
+    }
+    else //å‡é€Ÿæ®µ
+    {
+        if (!isZero(dMaxDistance + dCurrentSpeed))
+        {
+            //æ­¤æ—¶Vsä¸ºä¸Šä¸€å‘¨æœŸçš„æ•°æ®  è·ç¦»ä¸ºä¸Šä¸€ä¸ªå‘¨æœŸçš„å‰©ä½™è·ç¦»   æ®æ­¤è®¡ç®—å‡é€Ÿåº¦
+            //dCurrentSpeedæ˜¯ä¸Šä¸ªå‘¨æœŸèµ°çš„è·ç¦»ï¼Œè¿™æ ·è®¡ç®—çš„åŸå› æ˜¯ï¼Œå¦‚æœä¸åŠ ä¸Šä¸ªå‘¨æœŸèµ°çš„è·ç¦»ï¼Œå‡é€Ÿåº¦å°†ä¼šè¶Šæ¥è¶Šå¤§ï¼Œå¯¼è‡´æœ€ç»ˆçš„é€Ÿåº¦è¿œå¤§äºç³»ç»Ÿèµ·è·³é€Ÿåº¦
+            if (isZero(pSPlanPointer->dVs - g_SSystemPara.dSysMinVel)) //ç‰¹æ®Šæƒ…å†µï¼šä¸¤é€Ÿåº¦ç›¸ç­‰ï¼Œèµ‹ç³»ç»Ÿå‚æ•°
+            {
+                dCalDec = g_SSystemPara.dSysPlanTMaxDec; //æœ€å¤§å‡é€Ÿåº¦
+            }
+            else
+            {
+                dCalDec = (pow(pSPlanPointer->dVs, 2) - pow(g_SSystemPara.dSysMinVel, 2)) /
+                          (2.0 * (dMaxDistance + dCurrentSpeed));
+            }
+        }
 
+        dBackCalVmax = (dMaxDistance < 0)
+                           ? g_SSystemPara.dSysMinVel
+                           : sqrt(dMaxDistance * 2.0 * dCalDec +
+                                  g_SSystemPara.dSysMinVel *
+                                      g_SSystemPara.dSysMinVel); //åç®—çš„æœ€å¤§é€Ÿåº¦ //2026.4.2è¶…è¿‡ç»ˆç‚¹æ—¶æœ€å¤§é€Ÿåº¦å–ç³»ç»Ÿå‚æ•°
+        //pSPlanPointer->dDistance = min(dMaxDistance, (pSPlanPointer->dCurLeftDist + newAddDist));//ç¡®å®šæ’è¡¥è·ç¦»
+        pSPlanPointer->dVmax = dBackCalVmax; //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe =
+            g_SSystemPara.dSysMinVel; //æœ«é€Ÿåº¦  ï¼ˆåŠ é€Ÿå’ŒéšåŠ¨é˜¶æ®µæœ«é€Ÿåº¦!=æœ€å¤§é€Ÿåº¦  å‡é€Ÿæ—¶æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦)
+        pSPlanPointer->dVs =
+            isZero(dCurrentSpeed)
+                ? g_SSystemPara.dSysMinVel
+                : dBackCalVmax; //ç¡®å®šèµ·å§‹é€Ÿåº¦  dCurrentSpeedç›´æ¥æ”¹ä¸ºdBackCalVmaxï¼Œå­˜åœ¨çªè·³ï¼Œä½†æ˜¯åœ¨å‡é€Ÿåº¦å…è®¸çš„èŒƒå›´å†…
+        pSPlanPointer->dAcc = pSPlanPointer->dDec = 1.0 * dCalDec; // åŠ é€Ÿåº¦
+        res = 2;
+    }
 
+    cPlanRes = preparePlanningTNewAdd(pSPlanPointer);
+    if (cPlanRes == 2)
+    {
+        res = max(1, res); //éšåŠ¨é˜¶æ®µ
+    }
+    else if (cPlanRes == -1)
+    {
+        clearSPlanData(pSPlanPointer);
+        return -1;
+    }
 
-	if (bEnableDec == FALSE || dMaxDistance > dDecDist)//¼ÓËÙ»òÕßËæ¶¯¶Î
-	{
-		pSPlanPointer->dVmax = g_SSystemPara.dG33MaxVel;          //È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = min(dVe, pSPlanPointer->dVmax); //Ä©ËÙ¶È  £¨¼ÓËÙºÍËæ¶¯½×¶ÎÄ©ËÙ¶È!=×î´óËÙ¶È  ¼õËÙÊ±Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È)
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? g_SSystemPara.dSysMinVel : dCurrentSpeed; //È·¶¨ÆğÊ¼ËÙ¶È
-	}
-	else  //¼õËÙ¶Î
-	{
-		if (!isZero(dMaxDistance + dCurrentSpeed))
-		{
-			//´ËÊ±VsÎªÉÏÒ»ÖÜÆÚµÄÊı¾İ  ¾àÀëÎªÉÏÒ»¸öÖÜÆÚµÄÊ£Óà¾àÀë   ¾İ´Ë¼ÆËã¼õËÙ¶È
-			//dCurrentSpeedÊÇÉÏ¸öÖÜÆÚ×ßµÄ¾àÀë£¬ÕâÑù¼ÆËãµÄÔ­ÒòÊÇ£¬Èç¹û²»¼ÓÉÏ¸öÖÜÆÚ×ßµÄ¾àÀë£¬¼õËÙ¶È½«»áÔ½À´Ô½´ó£¬µ¼ÖÂ×îÖÕµÄËÙ¶ÈÔ¶´óÓÚÏµÍ³ÆğÌøËÙ¶È
-			if (isZero(pSPlanPointer->dVs - g_SSystemPara.dSysMinVel))//ÌØÊâÇé¿ö£ºÁ½ËÙ¶ÈÏàµÈ£¬¸³ÏµÍ³²ÎÊı
-			{
-				dCalDec = g_SSystemPara.dSysPlanTMaxDec;//×î´ó¼õËÙ¶È
-			}
-			else
-			{
-				dCalDec = (pow(pSPlanPointer->dVs, 2) - pow(g_SSystemPara.dSysMinVel, 2)) / (2.0 * (dMaxDistance + dCurrentSpeed));
-			}
-		}
-		
-		dBackCalVmax = (dMaxDistance < 0) ? g_SSystemPara.dSysMinVel : sqrt(dMaxDistance * 2.0 * dCalDec + g_SSystemPara.dSysMinVel * g_SSystemPara.dSysMinVel); //·´ËãµÄ×î´óËÙ¶È //2026.4.2³¬¹ıÖÕµãÊ±×î´óËÙ¶ÈÈ¡ÏµÍ³²ÎÊı
-		//pSPlanPointer->dDistance = min(dMaxDistance, (pSPlanPointer->dCurLeftDist + newAddDist));//È·¶¨²å²¹¾àÀë 
-		pSPlanPointer->dVmax = dBackCalVmax;//È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = g_SSystemPara.dSysMinVel; //Ä©ËÙ¶È  £¨¼ÓËÙºÍËæ¶¯½×¶ÎÄ©ËÙ¶È!=×î´óËÙ¶È  ¼õËÙÊ±Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È)
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? g_SSystemPara.dSysMinVel : dBackCalVmax;//È·¶¨ÆğÊ¼ËÙ¶È  dCurrentSpeedÖ±½Ó¸ÄÎªdBackCalVmax£¬´æÔÚÍ»Ìø£¬µ«ÊÇÔÚ¼õËÙ¶ÈÔÊĞíµÄ·¶Î§ÄÚ
-		pSPlanPointer->dAcc = pSPlanPointer->dDec = 1.0 * dCalDec;// ¼ÓËÙ¶È
-		res = 2;
-	}
+    //if (crossOfBivector(currentVector, pSPlanPointer->SStartVector) <= 0)
+    // zxr: æ— ç»ˆç‚¹é™åˆ¶çš„åŠ é€Ÿè¿½èµ¶ä¿ç•™éšåŠ¨ç»“æœï¼Œä»…é™è·å‡é€Ÿæ—¶åˆ¤æ–­ç»ˆç‚¹å®Œæˆ
+    if (bEnableDec && (isZero(dMaxDistance) || dMaxDistance < 0)) //å½“å‰ç‚¹åˆ°ç»ˆç‚¹çš„è·ç¦»=0
+    {
+        res = 3; //å®Œæˆ
+    }
+    //else if (dMaxDistance < 0)//åŠ é€Ÿè¿½èµ¶é˜¶æ®µæœ‰å¯èƒ½è¶…è¿‡G33ç†è®ºé•¿åº¦ï¼Œæ­¤æ—¶è¿”å›4ä¼šå°†è¿½èµ¶å®Œæˆçš„è¿”å›å€¼1è¦†ç›–æ‰ï¼Œå¯¼è‡´åŠ é€Ÿé˜¶æ®µåŠ é€Ÿåº¦ä¸€ç›´è®¡ç®—ä¸å‡ºæ¥ï¼Œå¡æ­»
+    //{
+    //	res = 4;//è¶…è¶Š
+    //}
 
-	cPlanRes = preparePlanningTNewAdd(pSPlanPointer);
-	if (cPlanRes== 2)
-	{
-		res = max(1, res);//Ëæ¶¯½×¶Î
-	}
-	else if (cPlanRes == -1)
-	{
-		clearSPlanData(pSPlanPointer);
-		return -1;
-	}
-	
-	//if (crossOfBivector(currentVector, pSPlanPointer->SStartVector) <= 0)
-	// zxr: ÎŞÖÕµãÏŞÖÆµÄ¼ÓËÙ×·¸Ï±£ÁôËæ¶¯½á¹û£¬½öÏŞ¾à¼õËÙÊ±ÅĞ¶ÏÖÕµãÍê³É
-	if (bEnableDec && (isZero(dMaxDistance) || dMaxDistance < 0))  //µ±Ç°µãµ½ÖÕµãµÄ¾àÀë=0
-	{
-		res = 3;//Íê³É
-	}
-	//else if (dMaxDistance < 0)//¼ÓËÙ×·¸Ï½×¶ÎÓĞ¿ÉÄÜ³¬¹ıG33ÀíÂÛ³¤¶È£¬´ËÊ±·µ»Ø4»á½«×·¸ÏÍê³ÉµÄ·µ»ØÖµ1¸²¸Çµô£¬µ¼ÖÂ¼ÓËÙ½×¶Î¼ÓËÙ¶ÈÒ»Ö±¼ÆËã²»³öÀ´£¬¿¨ËÀ
-	//{
-	//	res = 4;//³¬Ô½
-	//}
+    //pSPlanPointer->SStartPoint = SCurrentPoint;//èµ·ç‚¹
+    //pSPlanPointer->dCurLeftDist = pSPlanPointer->dDistance;
+    pSPlanPointer->unCurrentT = 0;
+    pSPlanPointer->dDistRemaining = 0;
 
-	//pSPlanPointer->SStartPoint = SCurrentPoint;//Æğµã
-	//pSPlanPointer->dCurLeftDist = pSPlanPointer->dDistance;
-	pSPlanPointer->unCurrentT = 0;
-	pSPlanPointer->dDistRemaining = 0;
-
-	return res;
+    return res;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºhandWheelAddNewPlan(struct SPlan* pSPlanPointer, double newAddDist, double dvs, double dVe, double dCurrentSpeed, bool bIsRotationAxis)
-  º¯Êı¹¦ÄÜ  ÊÖÂÖ¼Ó¼õËÙĞÂÔö¾àÀë
-  ÊäÈë²ÎÊı£ºpSPlanPointer  Ô¤´¦Àí½á¹¹ÌåÖ¸Õë
-			newAddDist	ĞÂÔö¾àÀë
-			dAcc		¼ÓËÙ¶È
-			dDec		¼õËÙ¶È
-			dVe			Ëæ¶¯µÄÀíÏëÄ¿±êËÙ¶È
-			bIsRotationAxis ÊÇ·ñÎªĞı×ªÖá
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ½øÈëÊÖÂÖ¼Ó¼õËÙ¹æ»®
-			3 Íê³É½×¶Î
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šhandWheelAddNewPlan(struct SPlan* pSPlanPointer, double newAddDist, double dvs, double dVe, double dCurrentSpeed, bool bIsRotationAxis)
+  å‡½æ•°åŠŸèƒ½  æ‰‹è½®åŠ å‡é€Ÿæ–°å¢è·ç¦»
+  è¾“å…¥å‚æ•°ï¼špSPlanPointer  é¢„å¤„ç†ç»“æ„ä½“æŒ‡é’ˆ
+			newAddDist	æ–°å¢è·ç¦»
+			dAcc		åŠ é€Ÿåº¦
+			dDec		å‡é€Ÿåº¦
+			dVe			éšåŠ¨çš„ç†æƒ³ç›®æ ‡é€Ÿåº¦
+			bIsRotationAxis æ˜¯å¦ä¸ºæ—‹è½¬è½´
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è¿›å…¥æ‰‹è½®åŠ å‡é€Ÿè§„åˆ’
+			3 å®Œæˆé˜¶æ®µ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-uint8 handWheelAddNewPlan(struct SPlan* pSPlanPointer, double dDistance, double dVs, double dVe, double dCurrentSpeed, bool bIsRotationAxis)
+uint8 handWheelAddNewPlan(struct SPlan* pSPlanPointer, double dDistance, double dVs, double dVe, double dCurrentSpeed,
+                          bool bIsRotationAxis)
 {
-	uint8 res = 1; //·µ»ØÖµ
-	double dMaxDistance;
-	double dBackCalVmax;
-	double dAcc;
-	double dDec;
-	double dVmax;
+    uint8 res = 1; //è¿”å›å€¼
+    double dMaxDistance;
+    double dBackCalVmax;
+    double dAcc;
+    double dDec;
+    double dVmax;
 
+    pSPlanPointer->dDistance = dDistance;                                               //é•¿è½´çš„æ’è¡¥é•¿åº¦
+    pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //å·²æ’è¡¥é•¿åº¦
+    pSPlanPointer->dTargetDist = dDistance;                                             //ç›®æ ‡è·ç¦»æ— æ€»é•¿åº¦é™åˆ¶
+    pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; //è®¡ç®—å‰©ä½™è·ç¦»ï¼ˆè§„åˆ’ç”¨)
+    dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist;                  //è·ç»ˆç‚¹çš„è·ç¦»
+    dAcc = dDec = bIsRotationAxis == FALSE
+                      ? g_SSystemPara.dHandWheelAcc
+                      : g_SSystemPara.dHandWheelAcc *
+                            DEGREE_OF_CIRCLE; //æ‰‹è½®çš„æœ€å¤§å‡é€Ÿåº¦ å•ä½ï¼šmm/ms2ï¼ˆr/ms2ï¼‰ è®¡ç®—æ—‹è½¬è½´æ—¶ç»Ÿä¸€å•ä½Â°/ms2
+    dVmax = bIsRotationAxis == FALSE
+                ? pSPlanPointer->dVmax
+                : pSPlanPointer->dVmax * DEGREE_OF_CIRCLE; //æ‰‹è½®çš„æœ€å¤§é€Ÿåº¦ å•ä½ï¼šmm/msï¼ˆr/msï¼‰ è®¡ç®—æ—‹è½¬è½´æ—¶ç»Ÿä¸€å•ä½Â°/ms
 
-	pSPlanPointer->dDistance = dDistance;                          //³¤ÖáµÄ²å²¹³¤¶È
-	pSPlanPointer->dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist; //ÒÑ²å²¹³¤¶È
-	pSPlanPointer->dTargetDist = dDistance;           //Ä¿±ê¾àÀëÎŞ×Ü³¤¶ÈÏŞÖÆ
-	pSPlanPointer->dCurLeftDist = pSPlanPointer->dTargetDist - pSPlanPointer->dPreDist; //¼ÆËãÊ£Óà¾àÀë£¨¹æ»®ÓÃ)
-	dMaxDistance = pSPlanPointer->dDistance - pSPlanPointer->dPreDist;                  //¾àÖÕµãµÄ¾àÀë
-	dAcc = dDec = bIsRotationAxis == FALSE ? g_SSystemPara.dHandWheelAcc : g_SSystemPara.dHandWheelAcc * DEGREE_OF_CIRCLE;//ÊÖÂÖµÄ×î´ó¼õËÙ¶È µ¥Î»£ºmm/ms2£¨r/ms2£© ¼ÆËãĞı×ªÖáÊ±Í³Ò»µ¥Î»¡ã/ms2
-	dVmax = bIsRotationAxis == FALSE ? pSPlanPointer->dVmax : pSPlanPointer->dVmax * DEGREE_OF_CIRCLE;  //ÊÖÂÖµÄ×î´óËÙ¶È µ¥Î»£ºmm/ms£¨r/ms£© ¼ÆËãĞı×ªÖáÊ±Í³Ò»µ¥Î»¡ã/ms
-	
-	if (dAcc <= 0 || dDec <= 0)
-	{
-		return 1;
-	}
-	
+    if (dAcc <= 0 || dDec <= 0)
+    {
+        return 1;
+    }
 
-	//2¸³ĞÂÖµ
-	pSPlanPointer->dAcc = 2.0 * dAcc;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->dDec = 2.0 * dDec;// ¼ÓËÙ¶È(2±¶)
-	pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;       //¼ÓËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;       //¼õËÙÇúÏßÀàĞÍ
-	pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE;  //Æ½Ì¯ÀàĞÍ£¨ÎŞÓÃ£©
+    //2èµ‹æ–°å€¼
+    pSPlanPointer->dAcc = 2.0 * dAcc;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->dDec = 2.0 * dDec;                        // åŠ é€Ÿåº¦(2å€)
+    pSPlanPointer->ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿæ›²çº¿ç±»å‹
+    pSPlanPointer->ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹ï¼ˆæ— ç”¨ï¼‰
 
-	dMaxDistance = max(0,dMaxDistance);
+    dMaxDistance = max(0, dMaxDistance);
 
-	dBackCalVmax = sqrt(dMaxDistance * 2.0 * dDec + dVe * dVe);  //»ñÈ¡·´ËãËÙ¶È
+    dBackCalVmax = sqrt(dMaxDistance * 2.0 * dDec + dVe * dVe); //è·å–åç®—é€Ÿåº¦
 
+    if (dCurrentSpeed <= dBackCalVmax) //ä¸å—åˆ°åç®—é€Ÿåº¦çš„é™åˆ¶
+    {
+        pSPlanPointer->dVmax = min(dBackCalVmax, dVmax);                  //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe = min(dVe, pSPlanPointer->dVmax);              //æœ«é€Ÿåº¦  å–ä¼ å…¥å‚æ•°dVe ä¸æœ€å¤§é€Ÿåº¦çš„æœ€å°å€¼
+        pSPlanPointer->dVs = isZero(dCurrentSpeed) ? dVs : dCurrentSpeed; //ç¡®å®šèµ·å§‹é€Ÿåº¦
+    }
+    else //å—åˆ°åç®—é€Ÿåº¦çš„é™åˆ¶
+    {
+        pSPlanPointer->dVmax = dBackCalVmax;                             //ç¡®å®šæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVe = dVe;                                        //æœ«é€Ÿåº¦   å‡é€Ÿæ—¶æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+        pSPlanPointer->dVs = isZero(dCurrentSpeed) ? dVs : dBackCalVmax; //ç¡®å®šèµ·å§‹é€Ÿåº¦
+        pSPlanPointer->dAcc = 1.0 * dAcc;                                // åŠ é€Ÿåº¦
+        pSPlanPointer->dDec = 1.0 * dDec;                                // åŠ é€Ÿåº¦
+        res = 2;                                                         //å·²è¿›å…¥å‡é€Ÿé˜¶æ®µ
+    }
 
-	if (dCurrentSpeed <= dBackCalVmax)//²»ÊÜµ½·´ËãËÙ¶ÈµÄÏŞÖÆ
-	{
-		pSPlanPointer->dVmax = min(dBackCalVmax, dVmax);//È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = min(dVe, pSPlanPointer->dVmax); //Ä©ËÙ¶È  È¡´«Èë²ÎÊıdVe Óë×î´óËÙ¶ÈµÄ×îĞ¡Öµ 
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? dVs : dCurrentSpeed; //È·¶¨ÆğÊ¼ËÙ¶È
-	}
-	else//ÊÜµ½·´ËãËÙ¶ÈµÄÏŞÖÆ
-	{
-		pSPlanPointer->dVmax = dBackCalVmax;//È·¶¨×î´óËÙ¶È
-		pSPlanPointer->dVe = dVe; //Ä©ËÙ¶È   ¼õËÙÊ±Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-		pSPlanPointer->dVs = isZero(dCurrentSpeed) ? dVs : dBackCalVmax; //È·¶¨ÆğÊ¼ËÙ¶È
-		pSPlanPointer->dAcc = 1.0 * dAcc;// ¼ÓËÙ¶È 
-		pSPlanPointer->dDec = 1.0 * dDec;// ¼ÓËÙ¶È
-		res = 2;//ÒÑ½øÈë¼õËÙ½×¶Î
-	}
+    if (preparePlanningTNewAdd(pSPlanPointer) == -1)
+    {
+        return 1;
+    }
 
-	if (preparePlanningTNewAdd(pSPlanPointer) == -1)
-	{
-		return 1;
-	}
-		
+    if (isZero(dMaxDistance))
+    {
+        res = 3; //å®Œæˆ
+    }
+    pSPlanPointer->unCurrentT = 0;     //æ—¶é—´ä¸º0
+    pSPlanPointer->dDistRemaining = 0; //å¹³æ‘Šçš„å‰©ä½™è·ç¦»è®¾ä¸º0
 
-	if (isZero(dMaxDistance))
-	{
-		res = 3;//Íê³É
-	}
-	pSPlanPointer->unCurrentT = 0;  //Ê±¼äÎª0
-	pSPlanPointer->dDistRemaining = 0;//Æ½Ì¯µÄÊ£Óà¾àÀëÉèÎª0
-
-	return res;
+    return res;
 }
 
-
-
-
-//Çå³ıÓëÆ½Ì¯ÓĞ¹ØµÄ²ÎÊı
+//æ¸…é™¤ä¸å¹³æ‘Šæœ‰å…³çš„å‚æ•°
 int8 clearDistReAvgPara(struct SPlan* pSPlanPointer)
 {
-	if (pSPlanPointer == NULL)
-	{
-		return -1;
-	}
+    if (pSPlanPointer == NULL)
+    {
+        return -1;
+    }
 
-	pSPlanPointer->unDistReT1 = 0;
-	pSPlanPointer->unDistReT2 = 0;
-	pSPlanPointer->unDistReT3 = 0;
-	pSPlanPointer->dDistRemaining = 0;
-	pSPlanPointer->dDistNewAddT = 0;
-	pSPlanPointer->dTrapezoidAvgAcc = 0;
-	pSPlanPointer->dTrapezoidAvgVel = 0;
-	pSPlanPointer->dAverageFactor = 1.0;
+    pSPlanPointer->unDistReT1 = 0;
+    pSPlanPointer->unDistReT2 = 0;
+    pSPlanPointer->unDistReT3 = 0;
+    pSPlanPointer->dDistRemaining = 0;
+    pSPlanPointer->dDistNewAddT = 0;
+    pSPlanPointer->dTrapezoidAvgAcc = 0;
+    pSPlanPointer->dTrapezoidAvgVel = 0;
+    pSPlanPointer->dAverageFactor = 1.0;
 }
 
-//Çå³şÓëËÙ¶È¹æ»®ÓĞ¹ØµÄ²ÎÊı
+//æ¸…æ¥šä¸é€Ÿåº¦è§„åˆ’æœ‰å…³çš„å‚æ•°
 int8 clearSPlanData(struct SPlan* pSPlanPointer)
 {
-	if (pSPlanPointer==NULL)
-	{
-		return -1;
-	}
-	pSPlanPointer->dDistance = pSPlanPointer->dTargetDist = pSPlanPointer->dCurLeftDist = pSPlanPointer->dPreDist = 0;
-	pSPlanPointer->dDistAcc = pSPlanPointer->dDistConst = pSPlanPointer->dDistDec = pSPlanPointer->dDistNewAddT=0;
-	pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;	//6/24 ³ÂÃô´Ï
-	pSPlanPointer->unCurrentT = 0xFFFFFFFF;
-	clearDistReAvgPara(pSPlanPointer);
-	return 1;
+    if (pSPlanPointer == NULL)
+    {
+        return -1;
+    }
+    pSPlanPointer->dDistance = pSPlanPointer->dTargetDist = pSPlanPointer->dCurLeftDist = pSPlanPointer->dPreDist = 0;
+    pSPlanPointer->dDistAcc = pSPlanPointer->dDistConst = pSPlanPointer->dDistDec = pSPlanPointer->dDistNewAddT = 0;
+    pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = pSPlanPointer->unT4 = pSPlanPointer->unT5 =
+        0; //6/24 é™ˆæ•èª
+    pSPlanPointer->unCurrentT = 0xFFFFFFFF;
+    clearDistReAvgPara(pSPlanPointer);
+    return 1;
 }
-

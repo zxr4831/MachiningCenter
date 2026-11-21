@@ -1,181 +1,166 @@
 #ifndef __GCODEASSIGN_H
 #define __GCODEASSIGN_H
 
-
 #include "common.h"
 #include "list.h"
 
-//lxw:Í·ÎÄ¼ş°üº¬¹ØÏµ
+//lxw:å¤´æ–‡ä»¶åŒ…å«å…³ç³»
 //#include "GCodeCommon.h"
 //#include "GCodeCheckAndAssign.h"
 
-
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
-//Ô²»¡×îÖµµã¼ÆËã×¨ÓÃ½á¹¹Ìå   ºé¹ÚÅô 2024/4/12
+//åœ†å¼§æœ€å€¼ç‚¹è®¡ç®—ä¸“ç”¨ç»“æ„ä½“   æ´ªå† é¹ 2024/4/12
 typedef struct _SGetAxisMaxAndMin
 {
-	//int8 cArcDir;	            //Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	//uint8 ucHor;                //ºáÖá
-	//uint8 ucVer;                //×İÖá
-	//double dRadius;			    //°ë¾¶£¬µ¥Î»£ºmm
-	//SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
-	//SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	//SPointDouble SEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
-	//SPointDouble SMaxVal;       //×î´óÖµµãµÄ¼¯ºÏ£¬µ¥Î»£ºmm
-	//SPointDouble SMinVal;       //×îĞ¡ÖµµãµÄ¼¯ºÏ£¬µ¥Î»£ºmm
-	int8 cArcDir;	            //Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	uint8 ucHor;                //ºáÖá
-	uint8 ucVer;                //×İÖá
-	double dRadius;			    //°ë¾¶£¬µ¥Î»£ºmm
-	SPointDouble* SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
-	SPointDouble* SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble* SEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
-	double dHorMax;		//²å²¹ºáÖá·½ÏòµÄ×î´óÖµ   //¼ÆËãÆ½ÃæÔ²»¡µÄ×îÖµ   ºé¹ÚÅô 2024/4/19
-	double dVerMax;		//²å²¹×İÖá·½ÏòµÄ×î´óÖµ
-	double dHorMin;		//²å²¹ºáÖá·½ÏòµÄ×îĞ¡Öµ
-	double dVerMin;		//²å²¹×İÖá·½ÏòµÄ×îĞ¡Öµ
-}SGetAxisMaxAndMin;
+    //int8 cArcDir;	            //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    //uint8 ucHor;                //æ¨ªè½´
+    //uint8 ucVer;                //çºµè½´
+    //double dRadius;			    //åŠå¾„ï¼Œå•ä½ï¼šmm
+    //SPointDouble SCenterPoint;	//åœ†å¿ƒï¼Œå•ä½ï¼šmm
+    //SPointDouble SStartPoint;	//èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    //SPointDouble SEndPoint;		//ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    //SPointDouble SMaxVal;       //æœ€å¤§å€¼ç‚¹çš„é›†åˆï¼Œå•ä½ï¼šmm
+    //SPointDouble SMinVal;       //æœ€å°å€¼ç‚¹çš„é›†åˆï¼Œå•ä½ï¼šmm
+    int8 cArcDir;               //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    uint8 ucHor;                //æ¨ªè½´
+    uint8 ucVer;                //çºµè½´
+    double dRadius;             //åŠå¾„ï¼Œå•ä½ï¼šmm
+    SPointDouble* SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
+    SPointDouble* SStartPoint;  //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble* SEndPoint;    //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    double dHorMax;             //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å¤§å€¼   //è®¡ç®—å¹³é¢åœ†å¼§çš„æœ€å€¼   æ´ªå† é¹ 2024/4/19
+    double dVerMax;             //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å¤§å€¼
+    double dHorMin;             //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å°å€¼
+    double dVerMin;             //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å°å€¼
+} SGetAxisMaxAndMin;
 
-//¸³Öµ½á¹¹Ìå
-typedef struct _SAssignConfiguration//½ö´æ·ÅÓë¸³Öµ¼Ü¹¹ÓĞ¹ØµÄ±äÁ¿£¬ÓëÖ¸ÁîÓĞ¹ØµÄ±äÁ¿»ò½á¹¹Ìå·ÅÈë¶ÔÓ¦Ö¸ÁîÄ£¿éÖĞ
+//èµ‹å€¼ç»“æ„ä½“
+typedef struct _SAssignConfiguration //ä»…å­˜æ”¾ä¸èµ‹å€¼æ¶æ„æœ‰å…³çš„å˜é‡ï¼Œä¸æŒ‡ä»¤æœ‰å…³çš„å˜é‡æˆ–ç»“æ„ä½“æ”¾å…¥å¯¹åº”æŒ‡ä»¤æ¨¡å—ä¸­
 {
-	uint8 ucChannelNum;                               //Í¨µÀºÅ
-	uint8  ucStatus;                               //¸³Öµ×´Ì¬»ú
-	bool bAssignFinished;//20250122£º²»ÄÜ¹»Í¨¹ı¸³Öµ½á¹¹ÌåÖªµÀ¸³ÖµÊÇ·ñÍê³É£¬lxwĞÂÔö´Ë±ê¼Ç
+    uint8 ucChannelNum;   //é€šé“å·
+    uint8 ucStatus;       //èµ‹å€¼çŠ¶æ€æœº
+    bool bAssignFinished; //20250122ï¼šä¸èƒ½å¤Ÿé€šè¿‡èµ‹å€¼ç»“æ„ä½“çŸ¥é“èµ‹å€¼æ˜¯å¦å®Œæˆï¼Œlxwæ–°å¢æ­¤æ ‡è®°
 
-	int8 cPart;                                     //ÇĞÆ¬±êÖ¾   ±êÖ¾×÷ÓÃ£ºÅĞ¶Ï×ßµ½ÄÄ¸öÁ÷³Ì
-	int8 ucTargetStatus;
+    int8 cPart; //åˆ‡ç‰‡æ ‡å¿—   æ ‡å¿—ä½œç”¨ï¼šåˆ¤æ–­èµ°åˆ°å“ªä¸ªæµç¨‹
+    int8 ucTargetStatus;
 
-	uint16 usMainProStartLine;						//Ö÷³ÌĞòÆğÊ¼µ¥½Ú(ĞĞ£©
+    uint16 usMainProStartLine; //ä¸»ç¨‹åºèµ·å§‹å•èŠ‚(è¡Œï¼‰
 
-	//int16 sBeginLineNum;                            //G´úÂë¿ªÊ¼µÄĞĞºÅ£¬µÚÒ»¸ö%ºÅĞĞ£¨·ÅÈë³ÌĞò½ÚµãÖĞ£¿£¿£¿£©
-	//int32 nEndLineNum;                              //G´úÂë×îºóÒ»ĞĞµÄĞĞºÅ£¬µÚ¶ş¸ö%ºÅĞĞ	£¨·ÅÈë³ÌĞò½ÚµãÖĞ£¿£¿£¿£©
+    //int16 sBeginLineNum;                            //Gä»£ç å¼€å§‹çš„è¡Œå·ï¼Œç¬¬ä¸€ä¸ª%å·è¡Œï¼ˆæ”¾å…¥ç¨‹åºèŠ‚ç‚¹ä¸­ï¼Ÿï¼Ÿï¼Ÿï¼‰
+    //int32 nEndLineNum;                              //Gä»£ç æœ€åä¸€è¡Œçš„è¡Œå·ï¼Œç¬¬äºŒä¸ª%å·è¡Œ	ï¼ˆæ”¾å…¥ç¨‹åºèŠ‚ç‚¹ä¸­ï¼Ÿï¼Ÿï¼Ÿï¼‰
 
-	int8 cCommandSegmentCnt;//µ±Ç°Ö¸Áî³ÌĞò¶Î¼ÆÊı
+    int8 cCommandSegmentCnt; //å½“å‰æŒ‡ä»¤ç¨‹åºæ®µè®¡æ•°
 
-	uint32 unTotalCommandCnt;//×ÜÖ¸Áî¼ÆÊı£¬ÓÃÓÚÅĞ¶Ï¼ì²é¸³Öµ½ø¶È
-	uint32 unLineCnt;
+    uint32 unTotalCommandCnt; //æ€»æŒ‡ä»¤è®¡æ•°ï¼Œç”¨äºåˆ¤æ–­æ£€æŸ¥èµ‹å€¼è¿›åº¦
+    uint32 unLineCnt;
 
-	SGetTextStateInfo SGetTextStateInfo;			//»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢£¨½á¹¹ÌåÄÚ²»Ğè¿ª±Ù¶¯Ì¬ÄÚ´æ£©
+    SGetTextStateInfo SGetTextStateInfo; //è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯ï¼ˆç»“æ„ä½“å†…ä¸éœ€å¼€è¾ŸåŠ¨æ€å†…å­˜ï¼‰
 
-	//int8* pCurrPtr;                                  //µ±Ç°×Ö·ûµÄÖ¸Õë£¬ÓÃÓÚÒÆ¶¯£¨lxwÒÆ¶¯µ½ÎÄ±¾½á¹¹Ìå£©
-	//int8* pStartPtr;                                 //Ö¸ÕëÖ¸Ïò´Ê·¨µ¥Ôª¿ªÍ·
-	//int8* pEndPtr;                                   //Ö¸ÕëÖ¸Ïò´Ê·¨µ¥Ôª½áÎ²µÄºóÒ»Î»
+    //int8* pCurrPtr;                                  //å½“å‰å­—ç¬¦çš„æŒ‡é’ˆï¼Œç”¨äºç§»åŠ¨ï¼ˆlxwç§»åŠ¨åˆ°æ–‡æœ¬ç»“æ„ä½“ï¼‰
+    //int8* pStartPtr;                                 //æŒ‡é’ˆæŒ‡å‘è¯æ³•å•å…ƒå¼€å¤´
+    //int8* pEndPtr;                                   //æŒ‡é’ˆæŒ‡å‘è¯æ³•å•å…ƒç»“å°¾çš„åä¸€ä½
 
+    //struct SGCodeModalInfo SModalInfo;			//æ¨¡æ€ç»“æ„ä½“ï¼ˆç»“æ„ä½“å†…ä¸éœ€å¼€è¾ŸåŠ¨æ€å†…å­˜ï¼‰ï¼ˆlxwç§»åŠ¨åˆ°æ‰«æç»“æ„ä½“ï¼‰
+    SScan SScanContainer; //æ‰«æç»“æ„ä½“ï¼ˆç»“æ„ä½“å†…ä¸éœ€å¼€è¾ŸåŠ¨æ€å†…å­˜ï¼‰
 
-	//struct SGCodeModalInfo SModalInfo;			//Ä£Ì¬½á¹¹Ìå£¨½á¹¹ÌåÄÚ²»Ğè¿ª±Ù¶¯Ì¬ÄÚ´æ£©£¨lxwÒÆ¶¯µ½É¨Ãè½á¹¹Ìå£©
-	SScan SScanContainer;						//É¨Ãè½á¹¹Ìå£¨½á¹¹ÌåÄÚ²»Ğè¿ª±Ù¶¯Ì¬ÄÚ´æ£©
+    int16 sCurrCommandVal; //ç”¨äºåˆ¤æ–­å ç”¨å¤šè¡Œç¨‹åºæ®µçš„æŒ‡ä»¤ï¼Œæ¯ä¸€è¡Œç¨‹åºæ®µæ˜¯å¦ç›¸åŒ
 
-	int16 sCurrCommandVal;//ÓÃÓÚÅĞ¶ÏÕ¼ÓÃ¶àĞĞ³ÌĞò¶ÎµÄÖ¸Áî£¬Ã¿Ò»ĞĞ³ÌĞò¶ÎÊÇ·ñÏàÍ¬
+    SGCommandRegulation* pSCurrCommandRegulation; //å½“å‰æ‰§è¡ŒGaã€Gzç»„æŒ‡ä»¤è§„åˆ™
 
-	SGCommandRegulation* pSCurrCommandRegulation;//µ±Ç°Ö´ĞĞGa¡¢Gz×éÖ¸Áî¹æÔò
+    struct _SGCodeSysState SGCodeCurrSysState; //å½“å‰é€šé“çŠ¶æ€ç»“æ„ä½“     èµ‹å€¼å‰ä½¿ç”¨å‡½æ•°è¿›è¡Œåˆå§‹åŒ–ä¸€æ¬¡
+    struct SGCodeParse* pGCodeBuf;             //æŒ‡é’ˆæŒ‡å‘è¯¥é€šé“å¯¹åº”ç¼“å†²åŒº
 
-	struct _SGCodeSysState SGCodeCurrSysState;       //µ±Ç°Í¨µÀ×´Ì¬½á¹¹Ìå     ¸³ÖµÇ°Ê¹ÓÃº¯Êı½øĞĞ³õÊ¼»¯Ò»´Î
-	struct SGCodeParse* pGCodeBuf;                  //Ö¸ÕëÖ¸Ïò¸ÃÍ¨µÀ¶ÔÓ¦»º³åÇø
+    //SPointDouble STotalOffset; //å®æ—¶æ€»åç½®                     //æ€»çš„åç§»é‡ æ³¨æ„:æ€»åç§»çš„Xæ˜¯åŠå¾„å€¼ yt
+    //SPointDouble SG50Offset;//G50å®æ—¶åç½®å€¼			æ³¨ï¼šä¸èƒ½æ”¾å…¥Gä»£ç ç³»ç»ŸçŠ¶æ€ä¸­ï¼Œå› ä¸ºä½¿ç”¨æ—¶éå®æ—¶å€¼ï¼ˆåç»­å°†Gä»£ç ç³»ç»ŸçŠ¶æ€æ”¹ä¸ºå®æ—¶æ›´æ–°ï¼‰
 
-	//SPointDouble STotalOffset; //ÊµÊ±×ÜÆ«ÖÃ                     //×ÜµÄÆ«ÒÆÁ¿ ×¢Òâ:×ÜÆ«ÒÆµÄXÊÇ°ë¾¶Öµ yt
-	//SPointDouble SG50Offset;//G50ÊµÊ±Æ«ÖÃÖµ			×¢£º²»ÄÜ·ÅÈëG´úÂëÏµÍ³×´Ì¬ÖĞ£¬ÒòÎªÊ¹ÓÃÊ±·ÇÊµÊ±Öµ£¨ºóĞø½«G´úÂëÏµÍ³×´Ì¬¸ÄÎªÊµÊ±¸üĞÂ£©
+    //å…¶ä»–åç½®å€¼å¯æ ¹æ®åˆ€è¡¥å·ï¼Œå·¥ä»¶åæ ‡å·åœ¨ç³»ç»Ÿå‚æ•°ä¸­æŸ¥è¯¢åˆ°å€¼ï¼ŒG50å¿…é¡»è®°å½•ä¸‹æ¥
+    //G50è‹¥è®°å½•åœ¨ç¼“å†²åŒºä¸­åˆ™å†…å­˜æ¶ˆè€—å¤§
+    //SPointDouble SWorkPieceOffsetByG50;             //å› G50å¼•èµ·çš„å·¥ä»¶åæ ‡åç§»é‡ï¼ˆæ”¹ä¸ºSG50Offsetï¼‰
 
-	//ÆäËûÆ«ÖÃÖµ¿É¸ù¾İµ¶²¹ºÅ£¬¹¤¼ş×ø±êºÅÔÚÏµÍ³²ÎÊıÖĞ²éÑ¯µ½Öµ£¬G50±ØĞë¼ÇÂ¼ÏÂÀ´
-	//G50Èô¼ÇÂ¼ÔÚ»º³åÇøÖĞÔòÄÚ´æÏûºÄ´ó
-	//SPointDouble SWorkPieceOffsetByG50;             //ÒòG50ÒıÆğµÄ¹¤¼ş×ø±êÆ«ÒÆÁ¿£¨¸ÄÎªSG50Offset£©
+    int8 cSpindleStatus;       //1:æ­£è½¬ 0:åœæ­¢ -1:åè½¬ 2:å¤¹ç´§ï¼ˆåªæ›´æ–°ï¼Œä¸ç»§æ‰¿ï¼‰ï¼ˆåç»­ç§»å…¥Gä»£ç ç³»ç»ŸçŠ¶æ€ä¸­ï¼‰
+    int8 cSSecondpindleStatus; //1:æ­£è½¬ 0:åœæ­¢ -1:åè½¬ï¼ˆåªæ›´æ–°ï¼Œä¸ç»§æ‰¿ï¼‰ï¼ˆåç»­ç§»å…¥Gä»£ç ç³»ç»ŸçŠ¶æ€ä¸­ï¼‰
 
+    int8
+        cSpindleSpeedAssignFlag; //lxw:ä¸ºäº†åŒºåˆ†ç¨‹åºæ®µå•ç‹¬å‡ºç°Sï¼ŒSå€¼è¯¥èµ‹ç»™ä¸»è½´é€Ÿåº¦orç¬¬äºŒä¸»è½´é€Ÿåº¦ï¼Œè‹¥æ ‡å¿—ä¸º0ï¼ŒSèµ‹ç»™ä¸»è½´ï¼›è‹¥æ ‡å¿—ä¸º1ï¼ŒSèµ‹ç»™ç¬¬äºŒä¸»è½´ã€‚
+                                 //è¯¥æ ‡å¿—åœ¨ä¸»è½´/ç¬¬äºŒä¸»è½´æ§åˆ¶æŒ‡ä»¤èµ‹å€¼æ¥å£ä¸­å†™å…¥ï¼ˆM3M4/M51M52ï¼‰
 
-	int8 cSpindleStatus;	//1:Õı×ª 0:Í£Ö¹ -1:·´×ª 2:¼Ğ½ô£¨Ö»¸üĞÂ£¬²»¼Ì³Ğ£©£¨ºóĞøÒÆÈëG´úÂëÏµÍ³×´Ì¬ÖĞ£©
-	int8 cSSecondpindleStatus;	//1:Õı×ª 0:Í£Ö¹ -1:·´×ª£¨Ö»¸üĞÂ£¬²»¼Ì³Ğ£©£¨ºóĞøÒÆÈëG´úÂëÏµÍ³×´Ì¬ÖĞ£©
+    //	struct _SPriority SPriorityContainer;           //ä¼˜å…ˆçº§ç»“æ„ä½“           ç»™ä¸€è¡Œèµ‹å€¼å‰åˆå§‹åŒ–
 
-	int8 cSpindleSpeedAssignFlag;//lxw:ÎªÁËÇø·Ö³ÌĞò¶Îµ¥¶À³öÏÖS£¬SÖµ¸Ã¸³¸øÖ÷ÖáËÙ¶ÈorµÚ¶şÖ÷ÖáËÙ¶È£¬Èô±êÖ¾Îª0£¬S¸³¸øÖ÷Öá£»Èô±êÖ¾Îª1£¬S¸³¸øµÚ¶şÖ÷Öá¡£
-//¸Ã±êÖ¾ÔÚÖ÷Öá/µÚ¶şÖ÷Öá¿ØÖÆÖ¸Áî¸³Öµ½Ó¿ÚÖĞĞ´Èë£¨M3M4/M51M52£©
+    uint16 usIndex; //Gä»£ç å†™å…¥ç¼“å†²åŒºçš„ç´¢å¼•		//lxwå¼ƒç”¨
 
+    //union UCycleStruct *pCycleStructPtr;           //å¾ªç¯å…±ç”¨ä½“
+    SList* pList;             //G71~G73æ•°æ®é“¾è¡¨     ï¼ˆç§»åˆ°G71G72G73æŒ‡ä»¤æ¨¡å—å‚æ•°ç»“æ„ä½“ï¼‰
+    bool bG70Flag;            //TRUE:G70æ¨¡å¼ FALSEï¼šéG70æ¨¡å¼
+    SList* SGrooveTrackList;  //å­˜æ”¾åŠ å·¥æ§½ä¿¡æ¯çš„é“¾è¡¨
+    bool bLineNum;            //è¡Œå·æ ‡è®°ä½,ç”¨ä»¥G71ä¸­è¡Œå·NS~NFæ®µçš„åˆ¤æ–­
+    uint8 ucG71G72AssistLine; //è®°å½•G71ç¬¬äºŒæ®µçš„è¡Œå·,å³PQè¡Œ
+    //bool bG10Flag;
 
+    ///è‡ªåŠ¨è¿è¡Œæ¨¡å¼ä¸“å±
+    bool bFinshed; //å½“å‰è¡Œèµ‹å€¼å®Œæˆæ ‡è®°
 
+    //ç­‰å¾…æŒ‡ä»¤ç›¸å…³
+    uint8 ucRelevantChannel; //ç­‰å¾…æ ‡è®°ç›¸å…³çš„é€šé“  è¯´æ˜:ä¾‹å¦‚WAITM(4,1,3,5),æ­¤æ—¶sWaitMark=4ï¼ŒucRelevantChannel=0001 0101
 
-
-
-
-
-
-
-//	struct _SPriority SPriorityContainer;           //ÓÅÏÈ¼¶½á¹¹Ìå           ¸øÒ»ĞĞ¸³ÖµÇ°³õÊ¼»¯
-
-	uint16 usIndex;                                  //G´úÂëĞ´Èë»º³åÇøµÄË÷Òı		//lxwÆúÓÃ
-
-
-	//union UCycleStruct *pCycleStructPtr;           //Ñ­»·¹²ÓÃÌå
-	SList* pList;                                  //G71~G73Êı¾İÁ´±í     £¨ÒÆµ½G71G72G73Ö¸ÁîÄ£¿é²ÎÊı½á¹¹Ìå£©
-	bool bG70Flag;                                 //TRUE:G70Ä£Ê½ FALSE£º·ÇG70Ä£Ê½
-	SList* SGrooveTrackList;                       //´æ·Å¼Ó¹¤²ÛĞÅÏ¢µÄÁ´±í
-	bool bLineNum;                                 //ĞĞºÅ±ê¼ÇÎ»,ÓÃÒÔG71ÖĞĞĞºÅNS~NF¶ÎµÄÅĞ¶Ï
-	uint8 ucG71G72AssistLine;                   //¼ÇÂ¼G71µÚ¶ş¶ÎµÄĞĞºÅ,¼´PQĞĞ
-	//bool bG10Flag;
-
-	///×Ô¶¯ÔËĞĞÄ£Ê½×¨Êô
-	bool bFinshed;                                 //µ±Ç°ĞĞ¸³ÖµÍê³É±ê¼Ç
-
-	//µÈ´ıÖ¸ÁîÏà¹Ø
-	uint8 ucRelevantChannel;     //µÈ´ı±ê¼ÇÏà¹ØµÄÍ¨µÀ  ËµÃ÷:ÀıÈçWAITM(4,1,3,5),´ËÊ±sWaitMark=4£¬ucRelevantChannel=0001 0101
-
-
-
-	uint8 ucG66MarkAssign;
-	uint8 ucLetterIJKCnt[3];    //IJK¼ÆÊıÆ÷£¬ÓëG65¡¢G66µÄIJK´«²Î·½Ê½ÓĞ¹Ø
-
+    uint8 ucG66MarkAssign;
+    uint8 ucLetterIJKCnt[3]; //IJKè®¡æ•°å™¨ï¼Œä¸G65ã€G66çš„IJKä¼ å‚æ–¹å¼æœ‰å…³
 
 #if POLAR_COORD_TEST
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ´ÓÖìÎÈÖĞ´¦¸´ÖÆ
-	int8 cPolarHorDir; //¼«×ø±êºáÖá·½Ïò  1ºÍ-1
+    float fCylinderRadius; // åœ†æŸ±åŠå¾„ mm  2023.3.29 ä»æœ±ç¨³ä¸­å¤„å¤åˆ¶
+    int8 cPolarHorDir;     //æåæ ‡æ¨ªè½´æ–¹å‘  1å’Œ-1
 #endif
 
-	struct _SQuickHandleFlag SQuickHandleFlag;	//G´úÂë¿ìËÙ´¦Àí½á¹¹Ìå	³ÂÃô´ÏĞÂÔö
+    struct _SQuickHandleFlag SQuickHandleFlag; //Gä»£ç å¿«é€Ÿå¤„ç†ç»“æ„ä½“	é™ˆæ•èªæ–°å¢
 
-	int8 cPartPreMd;//Ç°×÷ÓÃD×éMÂë¸¨Öú±ê¼Ç
+    int8 cPartPreMd; //å‰ä½œç”¨Dç»„Mç è¾…åŠ©æ ‡è®°
 
-	int8* cOriginalStr; //µ±Ç°ĞĞ×Ö·û´®
-	uint8 ucOriStrIndex;  //µ±Ç°ĞĞ×Ö·û´®µÄË÷Òı
-	uint8 ucInsertIndex;//²åÈëË÷Òı
-	bool bIgnored;  //ºöÂÔÀ¨ºÅÖĞÄÚÈİ£¬TRUE:À¨ºÅÄÚ  FALSE:·ÇÀ¨ºÅÄÚ
+    int8* cOriginalStr;  //å½“å‰è¡Œå­—ç¬¦ä¸²
+    uint8 ucOriStrIndex; //å½“å‰è¡Œå­—ç¬¦ä¸²çš„ç´¢å¼•
+    uint8 ucInsertIndex; //æ’å…¥ç´¢å¼•
+    bool bIgnored;       //å¿½ç•¥æ‹¬å·ä¸­å†…å®¹ï¼ŒTRUE:æ‹¬å·å†…  FALSE:éæ‹¬å·å†…
 
-	int8 cAssistPart;//ÇĞÆ¬±ê¼Ç ¸¨ÖúÓÃ
+    int8 cAssistPart; //åˆ‡ç‰‡æ ‡è®° è¾…åŠ©ç”¨
 
-	//SGCommandRegulation* pSGCommandRegulation;//G´úÂë¹æÔòÖ¸Õë  £¨±£´æµ±Ç°GÖ¸Áî½ÚµãµØÖ·£©
-	//************************************Ë«Ö÷Öá»úÏà¹Ø***************************************
-	bool bToolChange;                            //Í¨µÀ»»µ¶±êÖ¾Î»£¬ÓÃÓÚÍ¨µÀ¼ä»»µ¶µÄÅĞ¶Ï
-	bool bToolCmpBuild;//µ¶²¹½¨Á¢±êÖ¾Î»
-	bool bToolCmpPreCancel;//µ¶²¹Ô¤È¡Ïû±êÖ¾Î»
-	bool bG40Appear;//G40³öÏÖ±êÖ¾Î»
-	VAL_STRUCT_TYPE ToolAxic;//µ¶²¹Õ¼ÓÃÖá
+    //SGCommandRegulation* pSGCommandRegulation;//Gä»£ç è§„åˆ™æŒ‡é’ˆ  ï¼ˆä¿å­˜å½“å‰GæŒ‡ä»¤èŠ‚ç‚¹åœ°å€ï¼‰
+    //************************************åŒä¸»è½´æœºç›¸å…³***************************************
+    bool bToolChange;         //é€šé“æ¢åˆ€æ ‡å¿—ä½ï¼Œç”¨äºé€šé“é—´æ¢åˆ€çš„åˆ¤æ–­
+    bool bToolCmpBuild;       //åˆ€è¡¥å»ºç«‹æ ‡å¿—ä½
+    bool bToolCmpPreCancel;   //åˆ€è¡¥é¢„å–æ¶ˆæ ‡å¿—ä½
+    bool bG40Appear;          //G40å‡ºç°æ ‡å¿—ä½
+    VAL_STRUCT_TYPE ToolAxic; //åˆ€è¡¥å ç”¨è½´
 
-	VAL_STRUCT_TYPE GcodeAxic;//G´úÂëÕ¼ÓÃÖá
-	bool bWorkPieceOffsetNumChange;//¹¤¼ş×ø±êºÅ¸Ä±ä±êÖ¾Î»
-	bool bWorkPieceOffsetByG50Change;//G50¸Ä±ä±êÖ¾Î»
-	bool bG92IsWorkingByGcode;//²âÊÔÓÃ
-	struct _SGetAxisMaxAndMin SGetAxisMaxAndMin; //Ô²»¡×îÖµµã¼ÆËã½á¹¹Ìå ºé¹ÚÅôĞÂÔö	£¨lxw£ºÓë¸³Öµ¿ò¼ÜÎŞ¹Ø£¬ÒÆ¶¯µ½G2Ö¸ÁîÄ£¿é£©
+    VAL_STRUCT_TYPE GcodeAxic;        //Gä»£ç å ç”¨è½´
+    bool bWorkPieceOffsetNumChange;   //å·¥ä»¶åæ ‡å·æ”¹å˜æ ‡å¿—ä½
+    bool bWorkPieceOffsetByG50Change; //G50æ”¹å˜æ ‡å¿—ä½
+    bool bG92IsWorkingByGcode;        //æµ‹è¯•ç”¨
+    struct _SGetAxisMaxAndMin
+        SGetAxisMaxAndMin; //åœ†å¼§æœ€å€¼ç‚¹è®¡ç®—ç»“æ„ä½“ æ´ªå† é¹æ–°å¢	ï¼ˆlxwï¼šä¸èµ‹å€¼æ¡†æ¶æ— å…³ï¼Œç§»åŠ¨åˆ°G2æŒ‡ä»¤æ¨¡å—ï¼‰
 
-}SAssignConfiguration;
+} SAssignConfiguration;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//»ñÈ¡¸³Öµ½á¹¹Ìå
+//è·å–èµ‹å€¼ç»“æ„ä½“
 SAssignConfiguration* getAssignConfig(uint8 ucChannelNum);
 
-//³õÊ¼»¯¸³Öµ½á¹¹Ìå
+//åˆå§‹åŒ–èµ‹å€¼ç»“æ„ä½“
 void initAssignConfig(struct _SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum);
 
-//¸³Öµ×´Ì¬»ú
+//èµ‹å€¼çŠ¶æ€æœº
 void assignStatusMachine(SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum);
 
-//¸³Öµ³ÌĞò¶Î×Ü½Ó¿Ú
+//èµ‹å€¼ç¨‹åºæ®µæ€»æ¥å£
 void assignSegments(struct _SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum);
 
 //
 void assignRun2Finished(SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum);
 
-//¸³ÖµcGa¡¢cGzÒÔÍâµÄGÖ¸Áî
+//èµ‹å€¼cGaã€cGzä»¥å¤–çš„GæŒ‡ä»¤
 int8 assignGbCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 int8 assignGcCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 int8 assignGdCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
@@ -187,13 +172,12 @@ int8 assignGjCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCode
 int8 assignGhCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 int8 assignGxCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-//¸³ÖµFSTÖ¸Áî
-// 1 ³É¹¦»òÎ´Ğ´ F£»-1 ÒÑ±¨ 130£¬Ğ´²Û²»±ä£¬µ÷ÓÃ·½±ØĞëÍ£Ö¹µ±Ç°¶Î¡£
+//èµ‹å€¼FSTæŒ‡ä»¤
+// 1 æˆåŠŸæˆ–æœªå†™ Fï¼›-1 å·²æŠ¥ 130ï¼Œå†™æ§½ä¸å˜ï¼Œè°ƒç”¨æ–¹å¿…é¡»åœæ­¢å½“å‰æ®µã€‚
 int8 assignFCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 assignSCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 assignTCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 int8 assignSpecialCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 #endif

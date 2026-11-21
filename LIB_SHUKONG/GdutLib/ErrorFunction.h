@@ -1,7 +1,6 @@
 #ifndef _ERRORFUCTION_H
 #define _ERRORFUCTION_H
 
-
 void printError(void);
 
 #include "API.h"
@@ -10,271 +9,266 @@ void printError(void);
 #define bool bool
 #endif
 
-#pragma warning(disable:4996)   //´¦ÀíVS»·¾³ÏÂ¶ÁÎÄ¼þµÄ¾¯¸æ
-#define ErrorGCode_MAX 5          //ÔÊÐí±£´æ´íÎóG´úÂëµÄ×î¶à×Ö·ûÊý
-#define GCODEERRORBUF_MAX 10       //SGCodeErrorBuf G´úÂë´íÎóÐÅÏ¢»º³åÇø ÈÝÁ¿
-#define SIZE_OF_ERROR_STRING 38    //´íÎó×Ö·û´®´óÐ¡
+#pragma warning(disable : 4996) //å¤„ç†VSçŽ¯å¢ƒä¸‹è¯»æ–‡ä»¶çš„è­¦å‘Š
+#define ErrorGCode_MAX 5        //å…è®¸ä¿å­˜é”™è¯¯Gä»£ç çš„æœ€å¤šå­—ç¬¦æ•°
+#define GCODEERRORBUF_MAX 10    //SGCodeErrorBuf Gä»£ç é”™è¯¯ä¿¡æ¯ç¼“å†²åŒº å®¹é‡
+#define SIZE_OF_ERROR_STRING 38 //é”™è¯¯å­—ç¬¦ä¸²å¤§å°
 
-#define GCODE_ERROR_NUM01  1  //¼±Í£±¨¾¯!¼±Í£°´Å¥ÒÑ°´ÏÂ»òÎ´½Ó¼±Í£°´Å¥!
+#define GCODE_ERROR_NUM01 1 //æ€¥åœæŠ¥è­¦!æ€¥åœæŒ‰é’®å·²æŒ‰ä¸‹æˆ–æœªæŽ¥æ€¥åœæŒ‰é’®!
 
-#define GCODE_ERROR_NUM29  29  // M35 ¹¦ÄÜµÈ´ýÊ±¼ä³¬Ê±
-#define GCODE_ERROR_NUM30  30  // M35/M20/M01 ¹¦ÄÜ¶Ë¿Ú´íÎó		//ÁÙÊ±ÓÃ£¬¿É±»ÐÞ¸Ä
-#define GCODE_ERROR_NUM31  31  // M01 ¶Ë¿Ú¼ì²â³¬Ê±		//ÁÙÊ±ÓÃ£¬¿É±»ÐÞ¸Ä
+#define GCODE_ERROR_NUM29 29 // M35 åŠŸèƒ½ç­‰å¾…æ—¶é—´è¶…æ—¶
+#define GCODE_ERROR_NUM30 30 // M35/M20/M01 åŠŸèƒ½ç«¯å£é”™è¯¯		//ä¸´æ—¶ç”¨ï¼Œå¯è¢«ä¿®æ”¹
+#define GCODE_ERROR_NUM31 31 // M01 ç«¯å£æ£€æµ‹è¶…æ—¶		//ä¸´æ—¶ç”¨ï¼Œå¯è¢«ä¿®æ”¹
 
+#define GCODE_ERROR_NUM41 41 //Xè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½! //æœ±ç¨³ä¸­ 2023.6.16
+#define GCODE_ERROR_NUM42 42 //Yè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM43 43 //Zè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM44 44 //Aè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM45 45 //Bè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM46 46 //Cè½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!
 
-#define GCODE_ERROR_NUM41 41  //XÖá³¬³öÕýÏòÈí¼þÏÞÎ»! //ÖìÎÈÖÐ 2023.6.16
-#define GCODE_ERROR_NUM42 42  //YÖá³¬³öÕýÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM43 43  //ZÖá³¬³öÕýÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM44 44  //AÖá³¬³öÕýÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM45 45  //BÖá³¬³öÕýÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM46 46  //CÖá³¬³öÕýÏòÈí¼þÏÞÎ»!
+#define GCODE_ERROR_NUM47 47 //Xè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM48 48 //Yè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM49 49 //Zè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM50 50 //Aè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM51 51 //Bè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
+#define GCODE_ERROR_NUM52 52 //Cè½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!
 
-#define GCODE_ERROR_NUM47 47  //XÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM48 48  //YÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM49 49  //ZÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM50 50  //AÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM51 51  //BÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
-#define GCODE_ERROR_NUM52 52  //CÖá³¬³ö¸ºÏòÈí¼þÏÞÎ»!
+#define GCODE_ERROR_NUM80 80 //Gä»£ç é”™è¯¯ä»£ç 80:æ®µå·å¿…é¡»åœ¨ç¨‹åºæ®µå¼€å¤´!
+#define GCODE_ERROR_NUM81 81 //Gä»£ç é”™è¯¯ä»£ç 81:ä»£ç åœ°å€è¾“å…¥é”™è¯¯!
+#define GCODE_ERROR_NUM82 82 //Gä»£ç é”™è¯¯ä»£ç 82:æ®µå·ä¸èƒ½æœ‰è´Ÿå€¼æˆ–å°æ•°ç‚¹!
+#define GCODE_ERROR_NUM83 83 //Gä»£ç é”™è¯¯ä»£ç 83:G-ä»£ç ä¸èƒ½æœ‰è´Ÿæ•°!
+#define GCODE_ERROR_NUM84 84 //Gä»£ç é”™è¯¯ä»£ç 84:ç¨‹åºè¾“å…¥çš„ä»£ç å€¼éžæ³•!
+#define GCODE_ERROR_NUM85 85 //Gä»£ç é”™è¯¯ä»£ç 85:ä»£ç å­—çš„å­—ç¬¦æ•°ä¸èƒ½å°äºŽ2æˆ–å¤§äºŽ11!
+//#define GCODE_ERROR_NUM86 86    //Gä»£ç é”™è¯¯ä»£ç 86:ä»£ç ä¹‹é—´ç¼ºå°‘ç©ºæ ¼ç¬¦! //å¼ƒç”¨
+#define GCODE_ERROR_NUM87 87 //Gä»£ç é”™è¯¯ä»£ç 87:è¾“å…¥äº†ä¸æ”¯æŒçš„Gä»£ç !
+#define GCODE_ERROR_NUM88                                                                                              \
+    88 //Gä»£ç é”™è¯¯ä»£ç 87:ç¨‹åºæ®µç¬¬ä¸€è¡Œæˆ–æœ€åŽä¸€è¡Œç¼ºå°‘æ ‡è¯†ç¬¦%å·ï¼Œ%å¿…é¡»æ˜¯ä¸€è¡Œçš„ç¬¬ä¸€ä¸ªå­—ç¬¦     æ³¨ï¼šé”™è¯¯è¿‡å¤šæ—¶ï¼ŒunEndLineNumä¸ä¼šè¢«èµ‹å€¼ï¼Œä¹Ÿä¼šæŠ¥æ­¤é”™è¯¯
+#define GCODE_ERROR_NUM89 89 //Gä»£ç é”™è¯¯ä»£ç 89:è¦è¯»å–çš„ç¨‹åºä¸å­˜åœ¨æˆ–æ‰“å¼€å¤±è´¥!
 
+#define GCODE_ERROR_NUM91 91   ///Gä»£ç é”™è¯¯ä»£ç 91:è¯»å–ç¨‹åºæ®µå†…å®¹æ—¶å‡ºé”™!
+#define GCODE_ERROR_NUM92 92   ///Gä»£ç é”™è¯¯ä»£ç 92:æ‰‹åŠ¨è¾“å…¥æ–¹å¼ä¸‹ä¸èƒ½æ‰§è¡ŒM98, M99æŒ‡ä»¤!
+#define GCODE_ERROR_NUM93 93   //Gä»£ç é”™è¯¯ä»£ç 93:æœç´¢ä¸åˆ°æŒ‡å®šçš„ç¨‹åºæ®µå·!
+#define GCODE_ERROR_NUM94 94   //Gä»£ç é”™è¯¯ä»£ç 94:å®ç¨‹åºçš„åµŒå¥—å±‚æ•°è¶…è¿‡æœ€å¤§é™åˆ¶!
+#define GCODE_ERROR_NUM95 95   ///Gä»£ç é”™è¯¯ä»£ç 95:G75æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM96 96   ///Gä»£ç é”™è¯¯ä»£ç 96:G74æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM97 97   //Gä»£ç é”™è¯¯ä»£ç 97:G70ï½žG73ä»£ç ä¸­ç²¾åŠ å·¥ç¨‹åºæ®µè¶…å‡ºé™åˆ¶!
+#define GCODE_ERROR_NUM98 98   //Gä»£ç é”™è¯¯ä»£ç 98:åœ†å¼§å‚æ•°R,I,Kè‡³å°‘è¾“å…¥ä¸€ä¸ª!
+#define GCODE_ERROR_NUM99 99   //Gä»£ç é”™è¯¯ä»£ç 99:åœ†å¼§æ’è¡¥ä¸­å¼¦é•¿å¤§äºŽ2å€åŠå¾„R!
+#define GCODE_ERROR_NUM100 100 //Gä»£ç é”™è¯¯ä»£ç 100:G73ä»£ç ä¸­nsç¨‹åºæ®µåªèƒ½æ˜¯G00,G01ä»£ç !
+#define GCODE_ERROR_NUM101 101 //Gä»£ç é”™è¯¯ä»£ç 101:nsï½žnfç¨‹åºæ®µå¿…éœ€åœ¨G71~G73åŽä¸€æ®µè¾“å…¥!
+#define GCODE_ERROR_NUM102 102 //Gä»£ç é”™è¯¯ä»£ç 102:G73æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM103 103 //Gä»£ç é”™è¯¯ä»£ç 103:G71ï½žG73ä»£ç æœªè¾“å…¥På€¼!
+#define GCODE_ERROR_NUM104 104 //Gä»£ç é”™è¯¯ä»£ç 104:G71ï½žG73ä»£ç æœªè¾“å…¥Qå€¼!
+#define GCODE_ERROR_NUM105 105 //Gä»£ç é”™è¯¯ä»£ç 105: G72ä»£ç ç¬¬ä¸€æ®µæœªè¾“å…¥Zæˆ–Zè½´ç§»åŠ¨é‡ä¸º0!
+#define GCODE_ERROR_NUM106 106 //Gä»£ç é”™è¯¯ä»£ç 106: G72ä»£ç ç¬¬ä¸€æ®µåªèƒ½æ˜¯Zè½´å¿«é€Ÿç§»åŠ¨æˆ–åˆ‡å‰Šè¿›ç»™!
+#define GCODE_ERROR_NUM107 107 //Gä»£ç é”™è¯¯ä»£ç 107: G72æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM108 108 //Gä»£ç é”™è¯¯ä»£ç 108: G71ä»£ç ç¬¬ä¸€æ®µæœªè¾“å…¥Xæˆ–Xè½´ç§»åŠ¨é‡ä¸º0!
+#define GCODE_ERROR_NUM109 109 //Gä»£ç é”™è¯¯ä»£ç 109: G71ä»£ç ç¬¬ä¸€æ®µåªèƒ½æ˜¯Xè½´å¿«é€Ÿç§»åŠ¨æˆ–åˆ‡å‰Šè¿›ç»™!
+#define GCODE_ERROR_NUM110 110 //Gä»£ç é”™è¯¯ä»£ç 110: G71æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM111 111 //Gä»£ç é”™è¯¯ä»£ç 111:G76ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM112 112 //Gä»£ç é”™è¯¯ä»£ç 112:G76ä¸­æ²¡æœ‰æŒ‡å®šèžºçº¹ç‰™é«˜På€¼æˆ–ä¸º0!
+#define GCODE_ERROR_NUM113 113 //Gä»£ç é”™è¯¯ä»£ç 113:G76ä¸­æ²¡æœ‰æŒ‡å®šç¬¬ä¸€æ¬¡åˆ‡å‰Šæ·±åº¦Qæˆ–ä¸º0!
+#define GCODE_ERROR_NUM114 114 //Gä»£ç é”™è¯¯ä»£ç 114:G76ä¸­På€¼æ ¼å¼ä¸æ­£ç¡®æˆ–è¶…å‡ºèŒƒå›´!
+#define GCODE_ERROR_NUM115 115 //Gä»£ç é”™è¯¯ä»£ç 115:æ‰‹åŠ¨è¾“å…¥MDIæ¨¡å¼ä¸‹ä¸èƒ½ä½¿ç”¨G70ï½žG73ã€å®æŒ‡ä»¤ã€é€šé“æŒ‡ä»¤!
+///#define GCODE_ERROR_NUM116 116  ///Gä»£ç é”™è¯¯ä»£ç 116:æ‰§è¡ŒG70ä»£ç å‰è¯·å…ˆæ‰§è¡ŒG71ï½žG73ä»£ç !  å¼ƒç”¨
+#define GCODE_ERROR_NUM117 117 //Gä»£ç é”™è¯¯ä»£ç 117:Cåˆ€è¡¥ä¸­ä¸èƒ½æ‰§è¡ŒTæŒ‡ä»¤ï¼Œè¯·æ’¤é”€Cåˆ€è¡¥!
+#define GCODE_ERROR_NUM118 118 //Gä»£ç é”™è¯¯ä»£ç 118:Cåˆ€è¡¥ä¸­æ²¡æœ‰ç§»åŠ¨çš„ä»£ç æ®µè¶…è¿‡è§„å®šçš„æœ€å¤§æ®µæ•°!
 
-#define GCODE_ERROR_NUM80 80    //G´úÂë´íÎó´úÂë80:¶ÎºÅ±ØÐëÔÚ³ÌÐò¶Î¿ªÍ·!
-#define GCODE_ERROR_NUM81 81    //G´úÂë´íÎó´úÂë81:´úÂëµØÖ·ÊäÈë´íÎó!
-#define GCODE_ERROR_NUM82 82    //G´úÂë´íÎó´úÂë82:¶ÎºÅ²»ÄÜÓÐ¸ºÖµ»òÐ¡Êýµã!
-#define GCODE_ERROR_NUM83 83    //G´úÂë´íÎó´úÂë83:G-´úÂë²»ÄÜÓÐ¸ºÊý!
-#define GCODE_ERROR_NUM84 84    //G´úÂë´íÎó´úÂë84:³ÌÐòÊäÈëµÄ´úÂëÖµ·Ç·¨!
-#define GCODE_ERROR_NUM85 85    //G´úÂë´íÎó´úÂë85:´úÂë×ÖµÄ×Ö·ûÊý²»ÄÜÐ¡ÓÚ2»ò´óÓÚ11!
-//#define GCODE_ERROR_NUM86 86    //G´úÂë´íÎó´úÂë86:´úÂëÖ®¼äÈ±ÉÙ¿Õ¸ñ·û! //ÆúÓÃ
-#define GCODE_ERROR_NUM87 87    //G´úÂë´íÎó´úÂë87:ÊäÈëÁË²»Ö§³ÖµÄG´úÂë!
-#define GCODE_ERROR_NUM88 88    //G´úÂë´íÎó´úÂë87:³ÌÐò¶ÎµÚÒ»ÐÐ»ò×îºóÒ»ÐÐÈ±ÉÙ±êÊ¶·û%ºÅ£¬%±ØÐëÊÇÒ»ÐÐµÄµÚÒ»¸ö×Ö·û     ×¢£º´íÎó¹ý¶àÊ±£¬unEndLineNum²»»á±»¸³Öµ£¬Ò²»á±¨´Ë´íÎó
-#define GCODE_ERROR_NUM89 89    //G´úÂë´íÎó´úÂë89:Òª¶ÁÈ¡µÄ³ÌÐò²»´æÔÚ»ò´ò¿ªÊ§°Ü!
+#define GCODE_ERROR_NUM126 126 ///Gä»£ç é”™è¯¯ä»£ç 126:å½“å‰ä¸æ˜¯æ¨¡æ‹Ÿä¸»è½´,æ— æ³•ä½¿ç”¨G96æ’çº¿é€ŸåŠŸèƒ½!
+#define GCODE_ERROR_NUM127 127 //Gä»£ç é”™è¯¯ä»£ç 127:ä¸€è¡Œå‡ºçŽ°äº†åŒç»„æ¨¡æ€ä»£ç !
+#define GCODE_ERROR_NUM129 129 //Gä»£ç é”™è¯¯ä»£ç 129:è¾“å…¥äº†æ— æ•ˆçš„åˆ€å…·å·!
+#define GCODE_ERROR_NUM130 130 //Gä»£ç é”™è¯¯ä»£ç 130:ç¨‹åºæŒ‡ä»¤ä»£ç æ ¼å¼é”™è¯¯!
 
-#define GCODE_ERROR_NUM91 91    ///G´úÂë´íÎó´úÂë91:¶ÁÈ¡³ÌÐò¶ÎÄÚÈÝÊ±³ö´í!
-#define GCODE_ERROR_NUM92 92    ///G´úÂë´íÎó´úÂë92:ÊÖ¶¯ÊäÈë·½Ê½ÏÂ²»ÄÜÖ´ÐÐM98, M99Ö¸Áî!
-#define GCODE_ERROR_NUM93 93    //G´úÂë´íÎó´úÂë93:ËÑË÷²»µ½Ö¸¶¨µÄ³ÌÐò¶ÎºÅ!
-#define GCODE_ERROR_NUM94 94    //G´úÂë´íÎó´úÂë94:ºê³ÌÐòµÄÇ¶Ì×²ãÊý³¬¹ý×î´óÏÞÖÆ!
-#define GCODE_ERROR_NUM95 95    ///G´úÂë´íÎó´úÂë95:G75Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM96 96    ///G´úÂë´íÎó´úÂë96:G74Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM97 97    //G´úÂë´íÎó´úÂë97:G70¡«G73´úÂëÖÐ¾«¼Ó¹¤³ÌÐò¶Î³¬³öÏÞÖÆ!
-#define GCODE_ERROR_NUM98 98    //G´úÂë´íÎó´úÂë98:Ô²»¡²ÎÊýR,I,KÖÁÉÙÊäÈëÒ»¸ö!
-#define GCODE_ERROR_NUM99 99    //G´úÂë´íÎó´úÂë99:Ô²»¡²å²¹ÖÐÏÒ³¤´óÓÚ2±¶°ë¾¶R!
-#define GCODE_ERROR_NUM100 100  //G´úÂë´íÎó´úÂë100:G73´úÂëÖÐns³ÌÐò¶ÎÖ»ÄÜÊÇG00,G01´úÂë!
-#define GCODE_ERROR_NUM101 101  //G´úÂë´íÎó´úÂë101:ns¡«nf³ÌÐò¶Î±ØÐèÔÚG71~G73ºóÒ»¶ÎÊäÈë!
-#define GCODE_ERROR_NUM102 102  //G´úÂë´íÎó´úÂë102:G73Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM103 103  //G´úÂë´íÎó´úÂë103:G71¡«G73´úÂëÎ´ÊäÈëPÖµ!
-#define GCODE_ERROR_NUM104 104  //G´úÂë´íÎó´úÂë104:G71¡«G73´úÂëÎ´ÊäÈëQÖµ!
-#define GCODE_ERROR_NUM105 105  //G´úÂë´íÎó´úÂë105: G72´úÂëµÚÒ»¶ÎÎ´ÊäÈëZ»òZÖáÒÆ¶¯Á¿Îª0!
-#define GCODE_ERROR_NUM106 106  //G´úÂë´íÎó´úÂë106: G72´úÂëµÚÒ»¶ÎÖ»ÄÜÊÇZÖá¿ìËÙÒÆ¶¯»òÇÐÏ÷½ø¸ø!
-#define GCODE_ERROR_NUM107 107  //G´úÂë´íÎó´úÂë107: G72Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM108 108  //G´úÂë´íÎó´úÂë108: G71´úÂëµÚÒ»¶ÎÎ´ÊäÈëX»òXÖáÒÆ¶¯Á¿Îª0!
-#define GCODE_ERROR_NUM109 109  //G´úÂë´íÎó´úÂë109: G71´úÂëµÚÒ»¶ÎÖ»ÄÜÊÇXÖá¿ìËÙÒÆ¶¯»òÇÐÏ÷½ø¸ø!
-#define GCODE_ERROR_NUM110 110  //G´úÂë´íÎó´úÂë110: G71Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM111 111  //G´úÂë´íÎó´úÂë111:G76´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM112 112  //G´úÂë´íÎó´úÂë112:G76ÖÐÃ»ÓÐÖ¸¶¨ÂÝÎÆÑÀ¸ßPÖµ»òÎª0!
-#define GCODE_ERROR_NUM113 113  //G´úÂë´íÎó´úÂë113:G76ÖÐÃ»ÓÐÖ¸¶¨µÚÒ»´ÎÇÐÏ÷Éî¶ÈQ»òÎª0!
-#define GCODE_ERROR_NUM114 114  //G´úÂë´íÎó´úÂë114:G76ÖÐPÖµ¸ñÊ½²»ÕýÈ·»ò³¬³ö·¶Î§!
-#define GCODE_ERROR_NUM115 115  //G´úÂë´íÎó´úÂë115:ÊÖ¶¯ÊäÈëMDIÄ£Ê½ÏÂ²»ÄÜÊ¹ÓÃG70¡«G73¡¢ºêÖ¸Áî¡¢Í¨µÀÖ¸Áî!
-///#define GCODE_ERROR_NUM116 116  ///G´úÂë´íÎó´úÂë116:Ö´ÐÐG70´úÂëÇ°ÇëÏÈÖ´ÐÐG71¡«G73´úÂë!  ÆúÓÃ
-#define GCODE_ERROR_NUM117 117  //G´úÂë´íÎó´úÂë117:Cµ¶²¹ÖÐ²»ÄÜÖ´ÐÐTÖ¸Áî£¬Çë³·ÏúCµ¶²¹!
-#define GCODE_ERROR_NUM118 118  //G´úÂë´íÎó´úÂë118:Cµ¶²¹ÖÐÃ»ÓÐÒÆ¶¯µÄ´úÂë¶Î³¬¹ý¹æ¶¨µÄ×î´ó¶ÎÊý!
+#define GCODE_ERROR_NUM131 131 //å‡½æ•°è¿ç®—è¾“å…¥çš„å‚æ•°æ— æ•ˆ!
+#define GCODE_ERROR_NUM132 132 //é™¤æ³•è¿ç®—é™¤æ•°ä¸èƒ½ä¸º0!
+#define GCODE_ERROR_NUM133 133 //å¹³æ–¹æ ¹è¾“å…¥æ•°æ®ä¸èƒ½å°äºŽ0!
+#define GCODE_ERROR_NUM134 134 //å®è¯­å¥è¿ç®—æ ¼å¼é”™è¯¯!
+#define GCODE_ERROR_NUM135 135 //WHILE-ENDå¾ªçŽ¯ä½“è¯­å¥æ ¼å¼é”™è¯¯!
+#define GCODE_ERROR_NUM136 136 //IFè¯­å¥æ ¼å¼é”™è¯¯!
 
+#define GCODE_ERROR_NUM147 147 //G83æˆ–G87æŒ‡ä»¤æ²¡æœ‰æŒ‡ä»¤è¿›åˆ€é‡Qæˆ–Q=0
+#define GCODE_ERROR_NUM148 148 //ä¸»è½´è¢«åˆ¹è½¦é”ç´§ï¼Œä¸èƒ½æ—‹è½¬ä¸»è½´		CMC 2023/4/4
+#define GCODE_ERROR_NUM149 149 //å¤¹å…·æœªå¤¹ä¸»è½´ä¸å¯è¿è½¬		æ´ªå† é¹ 2023/12/19
+#define GCODE_ERROR_NUM150 150 //æœªæ˜ å°„ç‰©ç†è½´		æ´ªå† é¹ 2024/6/11
+#define GCODE_ERROR_NUM151 151 //ç¼–ç å™¨ç›¸ä½é”™è¯¯		ç†Šéª 2025/3/29
+#define GCODE_ERROR_NUM152 152 //é€Ÿåº¦å‘ç”Ÿçªå˜		ç†Šéª 2025/3/29
+#define GCODE_ERROR_NUM153 153 //å‚æ•°è¾“å…¥/ç³»ç»Ÿå‚æ•°é”™è¯¯ï¼Œå‡ºçŽ°äº†é›¶å€¼		ç†Šéª 2025/9/3
+/* è‹å‘æ ‡ 2026-10-14ï¼šåœæ­¢å¼‚å¸¸å•ç‹¬æŠ¥è­¦ï¼Œä¸ä¼ªè£…ä¸ºå¤ä½å®Œæˆã€‚ */
+#define GCODE_ERROR_NUM155 155 /* ä¸»è½´åœæ­¢çŠ¶æ€æˆ–æŽ§åˆ¶æƒå¼‚å¸¸ï¼ŒæŸ¥çœ‹cStopErrorã€‚ */
+#define GCODE_ERROR_NUM154 154 //è¶…æ—¶/è¶…é€Ÿé”™è¯¯
 
-#define GCODE_ERROR_NUM126 126  ///G´úÂë´íÎó´úÂë126:µ±Ç°²»ÊÇÄ£ÄâÖ÷Öá,ÎÞ·¨Ê¹ÓÃG96ºãÏßËÙ¹¦ÄÜ!
-#define GCODE_ERROR_NUM127 127  //G´úÂë´íÎó´úÂë127:Ò»ÐÐ³öÏÖÁËÍ¬×éÄ£Ì¬´úÂë!
-#define GCODE_ERROR_NUM129 129  //G´úÂë´íÎó´úÂë129:ÊäÈëÁËÎÞÐ§µÄµ¶¾ßºÅ!
-#define GCODE_ERROR_NUM130 130  //G´úÂë´íÎó´úÂë130:³ÌÐòÖ¸Áî´úÂë¸ñÊ½´íÎó!
+#define GCODE_ERROR_NUM160 160 //è¯¥æŒ‡ä»¤æœªå¢žåŠ æ£€æŸ¥å‡½æ•°
+#define GCODE_ERROR_NUM161 161 //è¯¥æŒ‡ä»¤æœªå¢žåŠ å‚æ•°èµ‹å€¼å‡½æ•°
+#define GCODE_ERROR_NUM162 162 //è¯¥æŒ‡ä»¤æœªå¢žåŠ è½¨è¿¹è®¡ç®—å‡½æ•°
 
-#define GCODE_ERROR_NUM131 131  //º¯ÊýÔËËãÊäÈëµÄ²ÎÊýÎÞÐ§!
-#define GCODE_ERROR_NUM132 132  //³ý·¨ÔËËã³ýÊý²»ÄÜÎª0!
-#define GCODE_ERROR_NUM133 133  //Æ½·½¸ùÊäÈëÊý¾Ý²»ÄÜÐ¡ÓÚ0!
-#define GCODE_ERROR_NUM134 134  //ºêÓï¾äÔËËã¸ñÊ½´íÎó!
-#define GCODE_ERROR_NUM135 135  //WHILE-ENDÑ­»·ÌåÓï¾ä¸ñÊ½´íÎó!
-#define GCODE_ERROR_NUM136 136  //IFÓï¾ä¸ñÊ½´íÎó!
+#define GCODE_ERROR_NUM280 280 //D/Lå‚æ•°åŒæ—¶å‡ºçŽ°
+#define GCODE_ERROR_NUM281 281 //å€’è§’é•¿åº¦è¿‡é•¿
+#define GCODE_ERROR_NUM282 282 //å€’åœ†åŠå¾„è¿‡å¤§
+#define GCODE_ERROR_NUM283 283 //å€’è§’/å€’åœ†å‰ææ¡ä»¶ä¸æ»¡è¶³æˆ–å‡ ä½•æ•°æ®æœ‰è¯¯
+#define GCODE_ERROR_NUM284 284 //è‡ªåŠ¨å€’è§’ç¼“å†²åŒºä¸è¶³
 
-#define GCODE_ERROR_NUM147 147  //G83»òG87Ö¸ÁîÃ»ÓÐÖ¸Áî½øµ¶Á¿Q»òQ=0
-#define GCODE_ERROR_NUM148 148  //Ö÷Öá±»É²³µËø½ô£¬²»ÄÜÐý×ªÖ÷Öá		CMC 2023/4/4
-#define GCODE_ERROR_NUM149 149  //¼Ð¾ßÎ´¼ÐÖ÷Öá²»¿ÉÔË×ª		ºé¹ÚÅô 2023/12/19
-#define GCODE_ERROR_NUM150 150  //Î´Ó³ÉäÎïÀíÖá		ºé¹ÚÅô 2024/6/11
-#define GCODE_ERROR_NUM151 151  //±àÂëÆ÷ÏàÎ»´íÎó		ÐÜ¿¥ 2025/3/29
-#define GCODE_ERROR_NUM152 152  //ËÙ¶È·¢ÉúÍ»±ä		ÐÜ¿¥ 2025/3/29
-#define GCODE_ERROR_NUM153 153  //²ÎÊýÊäÈë/ÏµÍ³²ÎÊý´íÎó£¬³öÏÖÁËÁãÖµ		ÐÜ¿¥ 2025/9/3
-/* ËÕÏò±ê 2026-10-14£ºÍ£Ö¹Òì³£µ¥¶À±¨¾¯£¬²»Î±×°Îª¸´Î»Íê³É¡£ */
-#define GCODE_ERROR_NUM155 155  /* Ö÷ÖáÍ£Ö¹×´Ì¬»ò¿ØÖÆÈ¨Òì³££¬²é¿´cStopError¡£ */
-#define GCODE_ERROR_NUM154 154  //³¬Ê±/³¬ËÙ´íÎó
+#define GCODE_ERROR_NUM300 300 //Gä»£ç é”™è¯¯ä»£ç 300:ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL!
+#define GCODE_ERROR_NUM301 301 //è¾“å…¥äº†æ— æ•ˆçš„å‡½æ•°å‚æ•°!
+#define GCODE_ERROR_NUM302 302 //å·¥å¾ªçŽ¯åŠŸèƒ½ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL!
+#define GCODE_ERROR_NUM303 303 //é“¾è¡¨åŠŸèƒ½ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL!
+#define GCODE_ERROR_NUM304 304 //ä¸å­˜åœ¨æ­¤åˆ†æ”¯!
+#define GCODE_ERROR_NUM305 305 //G66åµŒå¥—å±‚æ•°è¿‡å¤š!
+#define GCODE_ERROR_NUM306 306 //è¯‘ç çŠ¶æ€æœºå‡ºé”™!
+#define GCODE_ERROR_NUM307 307 //å°è¯•ç»™ä¸ä¸ºNULLçš„åœ°å€å¼€è¾Ÿå†…å­˜!
+#define GCODE_ERROR_NUM308 308 //åœ¨æ‰¹æ³¨ä¸­é‡åˆ°æ–‡ä»¶ç»“æŸç¬¦
+#define GCODE_ERROR_NUM309 309 //
 
+//Gä»£ç çš„è¯­æ³•é”™è¯¯
+#define GCODE_ERROR_NUM399 399 //Gä»£ç é”™è¯¯ä»£ç 399:ä¸€è¡Œä¸­å‡ºçŽ°MåŠŸèƒ½æ•°ç›®ä¸èƒ½è¶…è¿‡6ä¸ª!
+#define GCODE_ERROR_NUM400 400 //Gä»£ç é”™è¯¯ä»£ç 400:ä¸èƒ½å‡ºçŽ°ä¸¤ä¸ªæ­£è´Ÿå·!
+#define GCODE_ERROR_NUM401 401 //Gä»£ç é”™è¯¯ä»£ç 401:ä¸èƒ½å‡ºçŽ°ä¸¤ä¸ªå°æ•°ç‚¹!
+#define GCODE_ERROR_NUM402 402 //Gä»£ç é”™è¯¯ä»£ç 402:ä¸€è¡Œä¸­é‡å¤å‡ºçŽ°è¯¥å­—ç¬¦!
+#define GCODE_ERROR_NUM403                                                                                             \
+    403 //Gä»£ç é”™è¯¯ä»£ç 403:å½“å‰è¡Œæ¨¡æ€åŠŸèƒ½ä¸æ”¯æŒè¾“å…¥è¯¥å­—ç¬¦åŠŸèƒ½æˆ–æ— æ¨¡æ€æŒ‡ä»¤!  æ³¨æ„ï¼šå‘ç”Ÿæ— æ¨¡æ€æŒ‡ä»¤é”™è¯¯å¯èƒ½ä¼šå¯¼è‡´åŽç»­ä»£ç ä¹Ÿå‡ºé”™ï¼Œè¯·å…ˆè§£å†³æ­¤ç±»é”™è¯¯
+#define GCODE_ERROR_NUM404 404 //Gä»£ç é”™è¯¯ä»£ç 404:åœ†å¼§å‚æ•°I,Kè¾“å…¥æœ‰è¯¯!(å¹¶ä¸èƒ½æŒ‡å‡ºå“ªä¸ªå‚æ•°æœ‰è¯¯)
+#define GCODE_ERROR_NUM405 405 //Gä»£ç é”™è¯¯ä»£ç 405:æ‰§è¡Œè¯¥æ¨¡æ€æŒ‡ä»¤ç¼ºå°‘è¿è¡Œå‚æ•°(ä¸»è½´è½¬å‘ã€è½¬é€Ÿã€è¿›ç»™é€Ÿåº¦)!
+#define GCODE_ERROR_NUM406 406 //Gä»£ç é”™è¯¯ä»£ç 406:å†…å­˜ç©ºé—´ä¸è¶³ï¼Œå†…å­˜åˆ†é…å¤±è´¥!
+//#define GCODE_ERROR_NUM407 407      ///Gä»£ç é”™è¯¯ä»£ç 407:Cåˆ€è¡¥å°šæœªå»ºç«‹ï¼Œä¸èƒ½æ‰§è¡Œæ’¤é”€åˆ€è¡¥!  å¾…å¤„ç†  é¢„å¼ƒç”¨
+#define GCODE_ERROR_NUM408 408 //Gä»£ç é”™è¯¯ä»£ç 408:æ›´æ¢åˆ€è¡¥ç±»åž‹å‰ï¼Œè¯·å…ˆæ’¤é”€åˆ€è¡¥!
+#define GCODE_ERROR_NUM409 409 //Gä»£ç é”™è¯¯ä»£ç 409:åªèƒ½ä»¥ç›´çº¿è¿›è¡Œåˆ€è¡¥å»ºç«‹æˆ–æ’¤é”€
+#define GCODE_ERROR_NUM410 410 //Gä»£ç é”™è¯¯ä»£ç 410:G32æˆ–G92ä»£ç å‚æ•°ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM411 411 //Gä»£ç é”™è¯¯ä»£ç 411:G90æˆ–G92å‚æ•°Ré”™è¯¯!
+#define GCODE_ERROR_NUM412 412 //Gä»£ç é”™è¯¯ä»£ç 412:èžºçº¹å¯¼ç¨‹å¿…é¡»å¤§äºŽ0!
+#define GCODE_ERROR_NUM413 413 //Gä»£ç é”™è¯¯ä»£ç 413:èžºçº¹é€€å°¾é‡ä¸æ­£ç¡®ï¼
+#define GCODE_ERROR_NUM414 414 //Gä»£ç é”™è¯¯ä»£ç 414:G92ä¸èƒ½åŠ å·¥ç«¯é¢èžºçº¹ï¼Œå³ä¸èƒ½åªæœ‰Xè½´åæ ‡å‘ç”Ÿå˜åŒ–ï¼Œè€ŒZè½´åæ ‡ä¸åŠ¨!
+#define GCODE_ERROR_NUM415 415 //Gä»£ç é”™è¯¯ä»£ç 415:Gä»£ç è¿‡é•¿ï¼Œè¶…è¿‡256ä¸ªå­—ç¬¦!
+#define GCODE_ERROR_NUM416 416 //Gä»£ç é”™è¯¯ä»£ç 416:G90/G94æ ¼å¼é”™è¯¯!
+#define GCODE_ERROR_NUM417 417 //Gä»£ç é”™è¯¯ä»£ç 417:G71èµ·åˆ€ç‚¹Aä¸åˆç†!(è‹¥å•è°ƒæ€§æœ‰é—®é¢˜å¯èƒ½ä¼šå¯¼è‡´è¯¯åˆ¤)
+#define GCODE_ERROR_NUM418 418 //Gä»£ç é”™è¯¯ä»£ç 418:G71åœ¨Xæ–¹å‘çš„å•è°ƒæ€§å˜åŒ–ä¸æ­£ç¡®!(å¦‚æžœèµ·åˆ€ç‚¹ä½ç½®ä¸åˆç†ä¹Ÿä¼šå¯¼è‡´æ­¤æŠ¥é”™)
+#define GCODE_ERROR_NUM419 419 //Gä»£ç é”™è¯¯ä»£ç 419:G70På€¼æˆ–Qå€¼ä¸æ­£ç¡®æˆ–æ²¡è¾“å…¥!
 
-#define GCODE_ERROR_NUM160  160//¸ÃÖ¸ÁîÎ´Ôö¼Ó¼ì²éº¯Êý
-#define GCODE_ERROR_NUM161  161//¸ÃÖ¸ÁîÎ´Ôö¼Ó²ÎÊý¸³Öµº¯Êý
-#define GCODE_ERROR_NUM162  162//¸ÃÖ¸ÁîÎ´Ôö¼Ó¹ì¼£¼ÆËãº¯Êý
+#define GCODE_ERROR_NUM421 421 //Gä»£ç é”™è¯¯ä»£ç 421:G72åœ¨Zæ–¹å‘çš„å•è°ƒæ€§å˜åŒ–ä¸æ­£ç¡®!(å¦‚æžœèµ·åˆ€ç‚¹ä½ç½®ä¸åˆç†ä¹Ÿä¼šå¯¼è‡´æ­¤æŠ¥é”™)
+#define GCODE_ERROR_NUM422 422 //Gä»£ç é”™è¯¯ä»£ç 422:G72èµ·åˆ€ç‚¹Aä¸åˆç†!(è‹¥å•è°ƒæ€§æœ‰é—®é¢˜å¯èƒ½ä¼šå¯¼è‡´è¯¯åˆ¤)
+//#define GCODE_ERROR_NUM423 423      //Gä»£ç é”™è¯¯ä»£ç 423:IIåž‹G71å¿…é¡»æŒ‡å®šX(U)å’ŒZ(W)ä¸¤ä¸ªè½´ï¼Œå½“Zè½´ä¸ç§»åŠ¨æ—¶ä¹Ÿå¿…é¡»æŒ‡å®šW0!
+//#define GCODE_ERROR_NUM424 424      //Gä»£ç é”™è¯¯ä»£ç 424:IIåž‹G72å¿…é¡»æŒ‡å®šX(U)å’ŒZ(W)ä¸¤ä¸ªè½´ï¼Œå½“Xè½´ä¸ç§»åŠ¨æ—¶ä¹Ÿå¿…é¡»æŒ‡å®šU0!
 
-#define GCODE_ERROR_NUM280  280//D/L²ÎÊýÍ¬Ê±³öÏÖ
-#define GCODE_ERROR_NUM281  281//µ¹½Ç³¤¶È¹ý³¤
-#define GCODE_ERROR_NUM282  282//µ¹Ô²°ë¾¶¹ý´ó
-#define GCODE_ERROR_NUM283  283//µ¹½Ç/µ¹Ô²Ç°ÌáÌõ¼þ²»Âú×ã»ò¼¸ºÎÊý¾ÝÓÐÎó
-#define GCODE_ERROR_NUM284  284//×Ô¶¯µ¹½Ç»º³åÇø²»×ã
+#define GCODE_ERROR_NUM425 425 //G74æŒ‡ä»¤ä¸­æœªè¾“å…¥Zçš„å€¼!
+#define GCODE_ERROR_NUM426 426 //G74æŒ‡ä»¤ä¸­Qçš„å€¼ä¸º0æˆ–æœªè¾“å…¥
+#define GCODE_ERROR_NUM427 427 //G74æˆ–G75æŒ‡ä»¤ä¸­æœªè¾“å…¥Xçš„å€¼
+#define GCODE_ERROR_NUM428 428 //G75æŒ‡ä»¤ä¸­Pçš„å€¼ä¸º0æˆ–æœªè¾“å…¥
+#define GCODE_ERROR_NUM429 429 //G74æˆ–G75ä¸­çš„å•æ¬¡é€€åˆ€é‡ R(e)è¶…å‡ºå…è®¸èŒƒå›´
+#define GCODE_ERROR_NUM430 430 //G74æˆ–G75ä¸­Xæˆ–Zæ–¹å‘çš„å•æ¬¡åˆ‡å‰Šé‡è¶…å‡ºå…è®¸èŒƒå›´
+#define GCODE_ERROR_NUM431 431 //G74æˆ–G75ä¸­çš„å•æ¬¡é€€åˆ€é‡R(Î”d)è¶…å‡ºå…è®¸èŒƒå›´
 
+#define GCODE_ERROR_NUM432 432 //G70æ ¼å¼ä¸æ­£ç¡®
+#define GCODE_ERROR_NUM433 433 //G71ã€G72ã€G73ä½¿ç”¨æ®µå·é‡å¤!
+#define GCODE_ERROR_NUM434 434 //G33/G32ç³»ç»Ÿæœ€å¤§é€Ÿåº¦æ— æ³•æ»¡è¶³ï¼
 
-#define GCODE_ERROR_NUM300 300      //G´úÂë´íÎó´úÂë300:´«ÈëÖ¸Õë±äÁ¿ÎªNULL!
-#define GCODE_ERROR_NUM301 301      //ÊäÈëÁËÎÞÐ§µÄº¯Êý²ÎÊý!
-#define GCODE_ERROR_NUM302 302      //¹¤Ñ­»·¹¦ÄÜ´«ÈëÖ¸Õë±äÁ¿ÎªNULL!
-#define GCODE_ERROR_NUM303 303      //Á´±í¹¦ÄÜ´«ÈëÖ¸Õë±äÁ¿ÎªNULL!
-#define GCODE_ERROR_NUM304 304      //²»´æÔÚ´Ë·ÖÖ§!
-#define GCODE_ERROR_NUM305 305      //G66Ç¶Ì×²ãÊý¹ý¶à!
-#define GCODE_ERROR_NUM306 306      //ÒëÂë×´Ì¬»ú³ö´í!
-#define GCODE_ERROR_NUM307 307      //³¢ÊÔ¸ø²»ÎªNULLµÄµØÖ·¿ª±ÙÄÚ´æ!
-#define GCODE_ERROR_NUM308 308      //ÔÚÅú×¢ÖÐÓöµ½ÎÄ¼þ½áÊø·û
-#define GCODE_ERROR_NUM309 309      //
+#define GCODE_ERROR_NUM435 435 //Gä»£ç é”™è¯¯ä»£ç 435:G71IIåž‹è®¡ç®—é”™è¯¯ï¼
+#define GCODE_ERROR_NUM436 436 //Gä»£ç é”™è¯¯ä»£ç 436:G71IIåž‹æ•°æ®å­˜å‚¨å¤±è´¥ï¼
+#define GCODE_ERROR_NUM437 437 //G71äºŒåž‹NFæ®µä¸å…è®¸å‡ºçŽ°Xå€¼å˜åŒ–Zå€¼ä¸å˜æ—¶çš„èµ·å§‹è¾¹ï¼
 
-//G´úÂëµÄÓï·¨´íÎó
-#define GCODE_ERROR_NUM399 399      //G´úÂë´íÎó´úÂë399:Ò»ÐÐÖÐ³öÏÖM¹¦ÄÜÊýÄ¿²»ÄÜ³¬¹ý6¸ö!
-#define GCODE_ERROR_NUM400 400      //G´úÂë´íÎó´úÂë400:²»ÄÜ³öÏÖÁ½¸öÕý¸ººÅ!
-#define GCODE_ERROR_NUM401 401      //G´úÂë´íÎó´úÂë401:²»ÄÜ³öÏÖÁ½¸öÐ¡Êýµã!
-#define GCODE_ERROR_NUM402 402      //G´úÂë´íÎó´úÂë402:Ò»ÐÐÖÐÖØ¸´³öÏÖ¸Ã×Ö·û!
-#define GCODE_ERROR_NUM403 403      //G´úÂë´íÎó´úÂë403:µ±Ç°ÐÐÄ£Ì¬¹¦ÄÜ²»Ö§³ÖÊäÈë¸Ã×Ö·û¹¦ÄÜ»òÎÞÄ£Ì¬Ö¸Áî!  ×¢Òâ£º·¢ÉúÎÞÄ£Ì¬Ö¸Áî´íÎó¿ÉÄÜ»áµ¼ÖÂºóÐø´úÂëÒ²³ö´í£¬ÇëÏÈ½â¾ö´ËÀà´íÎó
-#define GCODE_ERROR_NUM404 404      //G´úÂë´íÎó´úÂë404:Ô²»¡²ÎÊýI,KÊäÈëÓÐÎó!(²¢²»ÄÜÖ¸³öÄÄ¸ö²ÎÊýÓÐÎó)
-#define GCODE_ERROR_NUM405 405      //G´úÂë´íÎó´úÂë405:Ö´ÐÐ¸ÃÄ£Ì¬Ö¸ÁîÈ±ÉÙÔËÐÐ²ÎÊý(Ö÷Öá×ªÏò¡¢×ªËÙ¡¢½ø¸øËÙ¶È)!
-#define GCODE_ERROR_NUM406 406      //G´úÂë´íÎó´úÂë406:ÄÚ´æ¿Õ¼ä²»×ã£¬ÄÚ´æ·ÖÅäÊ§°Ü!
-//#define GCODE_ERROR_NUM407 407      ///G´úÂë´íÎó´úÂë407:Cµ¶²¹ÉÐÎ´½¨Á¢£¬²»ÄÜÖ´ÐÐ³·Ïúµ¶²¹!  ´ý´¦Àí  Ô¤ÆúÓÃ
-#define GCODE_ERROR_NUM408 408      //G´úÂë´íÎó´úÂë408:¸ü»»µ¶²¹ÀàÐÍÇ°£¬ÇëÏÈ³·Ïúµ¶²¹!
-#define GCODE_ERROR_NUM409 409      //G´úÂë´íÎó´úÂë409:Ö»ÄÜÒÔÖ±Ïß½øÐÐµ¶²¹½¨Á¢»ò³·Ïú
-#define GCODE_ERROR_NUM410 410      //G´úÂë´íÎó´úÂë410:G32»òG92´úÂë²ÎÊý²»ÕýÈ·!
-#define GCODE_ERROR_NUM411 411      //G´úÂë´íÎó´úÂë411:G90»òG92²ÎÊýR´íÎó!
-#define GCODE_ERROR_NUM412 412      //G´úÂë´íÎó´úÂë412:ÂÝÎÆµ¼³Ì±ØÐë´óÓÚ0!
-#define GCODE_ERROR_NUM413 413      //G´úÂë´íÎó´úÂë413:ÂÝÎÆÍËÎ²Á¿²»ÕýÈ·£¡
-#define GCODE_ERROR_NUM414 414      //G´úÂë´íÎó´úÂë414:G92²»ÄÜ¼Ó¹¤¶ËÃæÂÝÎÆ£¬¼´²»ÄÜÖ»ÓÐXÖá×ø±ê·¢Éú±ä»¯£¬¶øZÖá×ø±ê²»¶¯!
-#define GCODE_ERROR_NUM415 415      //G´úÂë´íÎó´úÂë415:G´úÂë¹ý³¤£¬³¬¹ý256¸ö×Ö·û!
-#define GCODE_ERROR_NUM416 416      //G´úÂë´íÎó´úÂë416:G90/G94¸ñÊ½´íÎó!
-#define GCODE_ERROR_NUM417 417      //G´úÂë´íÎó´úÂë417:G71Æðµ¶µãA²»ºÏÀí!(Èôµ¥µ÷ÐÔÓÐÎÊÌâ¿ÉÄÜ»áµ¼ÖÂÎóÅÐ)
-#define GCODE_ERROR_NUM418 418      //G´úÂë´íÎó´úÂë418:G71ÔÚX·½ÏòµÄµ¥µ÷ÐÔ±ä»¯²»ÕýÈ·!(Èç¹ûÆðµ¶µãÎ»ÖÃ²»ºÏÀíÒ²»áµ¼ÖÂ´Ë±¨´í)
-#define GCODE_ERROR_NUM419 419      //G´úÂë´íÎó´úÂë419:G70PÖµ»òQÖµ²»ÕýÈ·»òÃ»ÊäÈë!
+#define GCODE_ERROR_NUM438 438 //åœ†å¼§G32å¼§åº¦ä¸ç¬¦åˆè¦æ±‚!
+#define GCODE_ERROR_NUM439 439 //è°ƒç”¨ç¨‹åºå‡ºé”™!
+#define GCODE_ERROR_NUM440 440 //å®ç¨‹åºåµŒå¥—å±‚æ•°è¶…å‡ºé™åˆ¶!
+#define GCODE_ERROR_NUM441 441 //M97æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®!
+#define GCODE_ERROR_NUM442 442 //ç­‰å¾…æŒ‡ä»¤é”™è¯¯ï¼
 
+#define GCODE_ERROR_NUM443 443 //è‡ªå®šä¹‰å®è¯­æ³•é”™è¯¯
+#define GCODE_ERROR_NUM444 444 //IFè¯­å¥è¯­æ³•é”™è¯¯
+#define GCODE_ERROR_NUM445 445 //WHILEè¯­å¥è¯­æ³•é”™è¯¯
+#define GCODE_ERROR_NUM446 446 //GOTOè¯­å¥è¾“å…¥æ®µå·æ— æ•ˆ
+#define GCODE_ERROR_NUM447 447 //å®æŒ‡ä»¤è¯­æ³•é”™è¯¯
 
-#define GCODE_ERROR_NUM421 421      //G´úÂë´íÎó´úÂë421:G72ÔÚZ·½ÏòµÄµ¥µ÷ÐÔ±ä»¯²»ÕýÈ·!(Èç¹ûÆðµ¶µãÎ»ÖÃ²»ºÏÀíÒ²»áµ¼ÖÂ´Ë±¨´í)
-#define GCODE_ERROR_NUM422 422      //G´úÂë´íÎó´úÂë422:G72Æðµ¶µãA²»ºÏÀí!(Èôµ¥µ÷ÐÔÓÐÎÊÌâ¿ÉÄÜ»áµ¼ÖÂÎóÅÐ)
-//#define GCODE_ERROR_NUM423 423      //G´úÂë´íÎó´úÂë423:IIÐÍG71±ØÐëÖ¸¶¨X(U)ºÍZ(W)Á½¸öÖá£¬µ±ZÖá²»ÒÆ¶¯Ê±Ò²±ØÐëÖ¸¶¨W0!
-//#define GCODE_ERROR_NUM424 424      //G´úÂë´íÎó´úÂë424:IIÐÍG72±ØÐëÖ¸¶¨X(U)ºÍZ(W)Á½¸öÖá£¬µ±XÖá²»ÒÆ¶¯Ê±Ò²±ØÐëÖ¸¶¨U0!
+#define GCODE_ERROR_NUM448 448 //è¾“å…¥çš„ç¨‹åºå·é”™è¯¯!
+#define GCODE_ERROR_NUM449 449 //è¾“å…¥çš„è°ƒç”¨æ¬¡æ•°é”™è¯¯!
+#define GCODE_ERROR_NUM450 450 //ä¸å­˜åœ¨æ­¤Aç±»å®æŒ‡ä»¤
+#define GCODE_ERROR_NUM451 451 //ç¼ºå°‘æ‰§è¡Œæ­¤Aç±»å®æŒ‡ä»¤æ‰€éœ€çš„å‚æ•°
+#define GCODE_ERROR_NUM452 452 //æ ¹å·å†…çš„å€¼ä¸èƒ½ä¸ºè´Ÿæ•°
 
-#define GCODE_ERROR_NUM425 425      //G74Ö¸ÁîÖÐÎ´ÊäÈëZµÄÖµ!
-#define GCODE_ERROR_NUM426 426      //G74Ö¸ÁîÖÐQµÄÖµÎª0»òÎ´ÊäÈë
-#define GCODE_ERROR_NUM427 427      //G74»òG75Ö¸ÁîÖÐÎ´ÊäÈëXµÄÖµ
-#define GCODE_ERROR_NUM428 428      //G75Ö¸ÁîÖÐPµÄÖµÎª0»òÎ´ÊäÈë
-#define GCODE_ERROR_NUM429 429      //G74»òG75ÖÐµÄµ¥´ÎÍËµ¶Á¿ R(e)³¬³öÔÊÐí·¶Î§
-#define GCODE_ERROR_NUM430 430      //G74»òG75ÖÐX»òZ·½ÏòµÄµ¥´ÎÇÐÏ÷Á¿³¬³öÔÊÐí·¶Î§
-#define GCODE_ERROR_NUM431 431      //G74»òG75ÖÐµÄµ¥´ÎÍËµ¶Á¿R(¦¤d)³¬³öÔÊÐí·¶Î§
+#define GCODE_ERROR_NUM453 453 //G34çš„Rå€¼ä¸åœ¨èŒƒå›´å†…
+#define GCODE_ERROR_NUM454 454 //èžºçº¹è½¦å‰Šçš„é•¿è½´æœ€å¤§é€Ÿåº¦è¿‡å°
+#define GCODE_ERROR_NUM455 455 //èžºçº¹è½¦å‰Šçš„çŸ­è½´æœ€å¤§é€Ÿåº¦è¿‡å°
+#define GCODE_ERROR_NUM456 456 //èžºçº¹è½¦å‰Šçš„è¿›ç»™é€ŸçŽ‡å¤§äºŽ1000
+#define GCODE_ERROR_NUM457 457 //å­ç¨‹åºä¸­æ²¡æœ‰M99ä¸»ç¨‹åºè¿”å›ž
+#define GCODE_ERROR_NUM458 458 //å¦ä¸€é€šé“æ­£æ‰§è¡Œåˆ€è¡¥ï¼Œæœ¬é€šé“ä¸è®¸æ‰§è¡Œå…¶åˆ€è¡¥å¹³é¢è¿åŠ¨
 
-#define GCODE_ERROR_NUM432 432      //G70¸ñÊ½²»ÕýÈ·
-#define GCODE_ERROR_NUM433 433      //G71¡¢G72¡¢G73Ê¹ÓÃ¶ÎºÅÖØ¸´!
-#define GCODE_ERROR_NUM434 434      //G33/G32ÏµÍ³×î´óËÙ¶ÈÎÞ·¨Âú×ã£¡
+#define GCODE_ERROR_NUM459 459 //FASHä»»åŠ¡ç¹å¿™
+#define GCODE_ERROR_NUM460 460 //ç”³è¯·IOå¤±è´¥
+#define GCODE_ERROR_NUM461 461 //G90å¤–åœ†è½¦å‰Šå¾ªçŽ¯åªèƒ½åœ¨G18(ZX)å¹³é¢æ‰§è¡Œ
 
-#define GCODE_ERROR_NUM435 435      //G´úÂë´íÎó´úÂë435:G71IIÐÍ¼ÆËã´íÎó£¡
-#define GCODE_ERROR_NUM436 436      //G´úÂë´íÎó´úÂë436:G71IIÐÍÊý¾Ý´æ´¢Ê§°Ü£¡
-#define GCODE_ERROR_NUM437 437      //G71¶þÐÍNF¶Î²»ÔÊÐí³öÏÖXÖµ±ä»¯ZÖµ²»±äÊ±µÄÆðÊ¼±ß£¡
+#define PLC_ERROR_NUM1000 1000 //ç”µåŠ¨åˆ€æž¶æ¢åˆ€è¶…æ—¶	//ç›®å‰åªç”¨äº†1000	//é™ˆæ•èª	æ¥è‡ªCNCè¯´æ˜Žä¹¦	2023/2/4
+#define PLC_ERROR_NUM1001 1001 //æ¢åˆ€ç»“æŸæ—¶ï¼Œåˆ€æž¶æœªåˆ°ä½æŠ¥è­¦
+#define PLC_ERROR_NUM1002 1002 //æ¢åˆ€æœªå®ŒæˆæŠ¥è­¦
+#define PLC_ERROR_NUM1003 1003 //æœªæ£€æµ‹åˆ°åˆ€æž¶é”ç´§TCPä¿¡å·
+#define PLC_ERROR_NUM1004 1004 //æ¢åˆ€æ–¹å¼Aæˆ–Bæœ€å¤šåªæ”¯æŒ8æŠŠåˆ€
+#define PLC_ERROR_NUM1005 1005 //ç³»ç»Ÿæ–­ç”µå‰æ¢åˆ€å‡ºé”™
 
-#define GCODE_ERROR_NUM438 438      //Ô²»¡G32»¡¶È²»·ûºÏÒªÇó!
-#define GCODE_ERROR_NUM439 439      //µ÷ÓÃ³ÌÐò³ö´í!
-#define GCODE_ERROR_NUM440 440      //ºê³ÌÐòÇ¶Ì×²ãÊý³¬³öÏÞÖÆ!
-#define GCODE_ERROR_NUM441 441      //M97Ö¸Áî´úÂë¸ñÊ½²»ÕýÈ·!
-#define GCODE_ERROR_NUM442 442      //µÈ´ýÖ¸Áî´íÎó£¡
+#define PLC_ERROR_NUM3842 2042 //ä¸Šç”µåŽè¯»å–åˆ€ä½ä¿¡å·å¼‚å¸¸æŠ¥è­¦
+#define PLC_ERROR_NUM3955                                                                                              \
+    2155 //æ¢åˆ€åŽçš„åˆ€å·ä¸ŽæŒ‡å®šåˆ€å·ä¸ç¬¦	//é™ˆæ•èª	è‡ªå®šä¹‰	æ¥è‡ªè‹æ€»æä¾›çš„KT820ç³»ç»ŸäºŽå¸¸å·žä¼˜æ€å¡”ä¼ºæœåˆ€æž¶çš„è¯´æ˜Žä¹¦	2023/2/4
+#define PLC_ERROR_NUM3978 2178 //ä¼ºæœé©±åŠ¨å™¨æŠ¥è­¦
+#define PLC_ERROR_NUM3986 2186 //åˆ€å¡”å®šä½å®Œæˆä¿¡å·æœªæ£€æµ‹åˆ°
+#define PLC_ERROR_NUM3987 2187 //æœªæ£€æµ‹åˆ°åˆ€æž¶é”ç´§åˆ°ä½æˆ–æ¾å¼€åˆ°ä½ä¿¡å·
+#define PLC_ERROR_NUM3988 2188 //åˆ€å…·çŠ¶æ€æœªå®šä¹‰
 
-#define GCODE_ERROR_NUM443 443      //×Ô¶¨ÒåºêÓï·¨´íÎó
-#define GCODE_ERROR_NUM444 444      //IFÓï¾äÓï·¨´íÎó
-#define GCODE_ERROR_NUM445 445      //WHILEÓï¾äÓï·¨´íÎó
-#define GCODE_ERROR_NUM446 446      //GOTOÓï¾äÊäÈë¶ÎºÅÎÞÐ§
-#define GCODE_ERROR_NUM447 447      //ºêÖ¸ÁîÓï·¨´íÎó
-
-#define GCODE_ERROR_NUM448 448      //ÊäÈëµÄ³ÌÐòºÅ´íÎó!
-#define GCODE_ERROR_NUM449 449      //ÊäÈëµÄµ÷ÓÃ´ÎÊý´íÎó!
-#define GCODE_ERROR_NUM450 450      //²»´æÔÚ´ËAÀàºêÖ¸Áî
-#define GCODE_ERROR_NUM451 451      //È±ÉÙÖ´ÐÐ´ËAÀàºêÖ¸ÁîËùÐèµÄ²ÎÊý
-#define GCODE_ERROR_NUM452 452      //¸ùºÅÄÚµÄÖµ²»ÄÜÎª¸ºÊý
-
-#define GCODE_ERROR_NUM453 453      //G34µÄRÖµ²»ÔÚ·¶Î§ÄÚ
-#define GCODE_ERROR_NUM454 454      //ÂÝÎÆ³µÏ÷µÄ³¤Öá×î´óËÙ¶È¹ýÐ¡
-#define GCODE_ERROR_NUM455 455     //ÂÝÎÆ³µÏ÷µÄ¶ÌÖá×î´óËÙ¶È¹ýÐ¡
-#define GCODE_ERROR_NUM456 456     //ÂÝÎÆ³µÏ÷µÄ½ø¸øËÙÂÊ´óÓÚ1000
-#define GCODE_ERROR_NUM457 457     //×Ó³ÌÐòÖÐÃ»ÓÐM99Ö÷³ÌÐò·µ»Ø
-#define GCODE_ERROR_NUM458 458     //ÁíÒ»Í¨µÀÕýÖ´ÐÐµ¶²¹£¬±¾Í¨µÀ²»ÐíÖ´ÐÐÆäµ¶²¹Æ½ÃæÔË¶¯
-
-#define GCODE_ERROR_NUM459 459     //FASHÈÎÎñ·±Ã¦
-#define GCODE_ERROR_NUM460 460     //ÉêÇëIOÊ§°Ü
-#define GCODE_ERROR_NUM461 461     //G90ÍâÔ²³µÏ÷Ñ­»·Ö»ÄÜÔÚG18(ZX)Æ½ÃæÖ´ÐÐ
-
-#define PLC_ERROR_NUM1000 1000  //µç¶¯µ¶¼Ü»»µ¶³¬Ê±	//Ä¿Ç°Ö»ÓÃÁË1000	//³ÂÃô´Ï	À´×ÔCNCËµÃ÷Êé	2023/2/4
-#define PLC_ERROR_NUM1001 1001  //»»µ¶½áÊøÊ±£¬µ¶¼ÜÎ´µ½Î»±¨¾¯
-#define PLC_ERROR_NUM1002 1002  //»»µ¶Î´Íê³É±¨¾¯
-#define PLC_ERROR_NUM1003 1003  //Î´¼ì²âµ½µ¶¼ÜËø½ôTCPÐÅºÅ
-#define PLC_ERROR_NUM1004 1004  //»»µ¶·½Ê½A»òB×î¶àÖ»Ö§³Ö8°Ñµ¶
-#define PLC_ERROR_NUM1005 1005  //ÏµÍ³¶ÏµçÇ°»»µ¶³ö´í
-
-#define PLC_ERROR_NUM3842 2042  //ÉÏµçºó¶ÁÈ¡µ¶Î»ÐÅºÅÒì³£±¨¾¯
-#define PLC_ERROR_NUM3955 2155  //»»µ¶ºóµÄµ¶ºÅÓëÖ¸¶¨µ¶ºÅ²»·û	//³ÂÃô´Ï	×Ô¶¨Òå	À´×ÔËÕ×ÜÌá¹©µÄKT820ÏµÍ³ÓÚ³£ÖÝÓÅË¼ËþËÅ·þµ¶¼ÜµÄËµÃ÷Êé	2023/2/4
-#define PLC_ERROR_NUM3978 2178  //ËÅ·þÇý¶¯Æ÷±¨¾¯
-#define PLC_ERROR_NUM3986 2186  //µ¶Ëþ¶¨Î»Íê³ÉÐÅºÅÎ´¼ì²âµ½
-#define PLC_ERROR_NUM3987 2187  //Î´¼ì²âµ½µ¶¼ÜËø½ôµ½Î»»òËÉ¿ªµ½Î»ÐÅºÅ
-#define PLC_ERROR_NUM3988 2188  //µ¶¾ß×´Ì¬Î´¶¨Òå
-
-
-typedef struct SGCodeError  //G´úÂë´íÎóÐÅÏ¢½á¹¹Ìå
+typedef struct SGCodeError //Gä»£ç é”™è¯¯ä¿¡æ¯ç»“æž„ä½“
 {
-	uint32 unLineNum;   //G´úÂëÐÐºÅ
+    uint32 unLineNum; //Gä»£ç è¡Œå·
 
-	uint16 usErrorCode; //G´úÂë´íÎó´úÂë
+    uint16 usErrorCode; //Gä»£ç é”™è¯¯ä»£ç 
 
-	uint8 ucErrorGCode[ErrorGCode_MAX];    //´íÎóG´úÂë×Ö·û
+    uint8 ucErrorGCode[ErrorGCode_MAX]; //é”™è¯¯Gä»£ç å­—ç¬¦
 
-	uint8 ucIOIndex; //IOË÷Òý¶Ë¿Ú 2023/10/24
-}SGCodeError;
+    uint8 ucIOIndex; //IOç´¢å¼•ç«¯å£ 2023/10/24
+} SGCodeError;
 
-//±¨´íº¯Êý1
+//æŠ¥é”™å‡½æ•°1
 uint8 parseGCodeError(const char* pGCode, uint32 unLineNum, uint8 ucWord_Len);
 
-//±¨´íº¯Êý1
+//æŠ¥é”™å‡½æ•°1
 uint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum);
 
-//±¨´íº¯Êý2
+//æŠ¥é”™å‡½æ•°2
 uint8 parseErrorC(uint32 unLineNum, uint16 usErrorNum);
 
-//ÖÐ¶ÏÔËÐÐÖÐ±¨´í
+//ä¸­æ–­è¿è¡Œä¸­æŠ¥é”™
 uint8 parseRunningError(uint32 unLineNum, uint16 usErrorNum, uint32 ucIOIndex);
 
-//·µ»Ø´íÎóºÅÏà¶ÔµÄÄÚÈÝ
-int16  getStrByWord(uint16 sNum, uint16 c_num, uint16 mode);
+//è¿”å›žé”™è¯¯å·ç›¸å¯¹çš„å†…å®¹
+int16 getStrByWord(uint16 sNum, uint16 c_num, uint16 mode);
 int8* getStrByNum(uint16 sNum, uint16 c_num, uint16 mode);
 
-//·µ»Ø±êÖ¾Î»£¬ÅÐ¶Ï´íÎó»º³åÊÇ·ñÂú
+//è¿”å›žæ ‡å¿—ä½ï¼Œåˆ¤æ–­é”™è¯¯ç¼“å†²æ˜¯å¦æ»¡
 bool isErrorFull();
 
-//³õÊ¼»¯´íÎó»º³åÇø¼°Ïà¹Ø±äÁ¿
+//åˆå§‹åŒ–é”™è¯¯ç¼“å†²åŒºåŠç›¸å…³å˜é‡
 void initErrorBuf();
 
-//ÉèÖÃ´íÎóÀàÐÍ
+//è®¾ç½®é”™è¯¯ç±»åž‹
 void setErrorType(uint16 usType);
 
-//ÅÐ¶ÏÊÇ·ñÒÑÓÐ´íÎóÐ´Èë
+//åˆ¤æ–­æ˜¯å¦å·²æœ‰é”™è¯¯å†™å…¥
 bool isErrorHasBeenWritten();
 
-//ÉèÖÃ´íÎóÒÑÐ´Èë±êÖ¾Î»
+//è®¾ç½®é”™è¯¯å·²å†™å…¥æ ‡å¿—ä½
 void setErrorWriteFlag(bool bFlag);
 
-//»ñÈ¡´íÎóÊýÁ¿
+//èŽ·å–é”™è¯¯æ•°é‡
 uint8 getErrorNum();
 
-//ÉèÖÃ´íÎó±êÖ¾Î»
+//è®¾ç½®é”™è¯¯æ ‡å¿—ä½
 void setErrorFlag(bool bFlag);
 
-//»ñÈ¡´íÎó±êÖ¾Î»
+//èŽ·å–é”™è¯¯æ ‡å¿—ä½
 bool getErrorFlag();
 
-//·µ»Ø´íÎó½á¹¹ÌåµÄµØÖ·
+//è¿”å›žé”™è¯¯ç»“æž„ä½“çš„åœ°å€
 struct SGCodeError getErrorStructAdd(int8 cIndex);
-
 
 //struct SGCodeError
 //{
-//	uint32 unLineNum;  //G´úÂëÐÐºÅ
+//	uint32 unLineNum;  //Gä»£ç è¡Œå·
 //
-//	uint16 usErrorCode; //G´úÂë´íÎó´úÂë
+//	uint16 usErrorCode; //Gä»£ç é”™è¯¯ä»£ç 
 //
-//	uint8 *pErrorGCode; //´íÎóG´úÂë×Ö·û£¬×¢ÒâÒª¶¯Ì¬·ÖÅäÄÚ´æ¡£
+//	uint8 *pErrorGCode; //é”™è¯¯Gä»£ç å­—ç¬¦ï¼Œæ³¨æ„è¦åŠ¨æ€åˆ†é…å†…å­˜ã€‚
 //};
 
 #endif // !_ERRORFUCTION_H

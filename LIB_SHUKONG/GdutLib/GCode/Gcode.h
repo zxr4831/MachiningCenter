@@ -1,11 +1,11 @@
 /*
-ºóĞøĞèÒª½«´ËÎÄ¼şÖĞµÄº¯ÊıÉùÃ÷¹éÀàµ½¸÷Ä£¿éµÄÍ·ÎÄ¼şÖĞ
+åç»­éœ€è¦å°†æ­¤æ–‡ä»¶ä¸­çš„å‡½æ•°å£°æ˜å½’ç±»åˆ°å„æ¨¡å—çš„å¤´æ–‡ä»¶ä¸­
 */
 
 #ifndef __GCODE_H
 #define __GCODE_H
 
-#pragma warning(disable:4996)   //´¦ÀíVS»·¾³ÏÂ¶ÁÎÄ¼şµÄ¾¯¸æ
+#pragma warning(disable : 4996) //å¤„ç†VSç¯å¢ƒä¸‹è¯»æ–‡ä»¶çš„è­¦å‘Š
 
 #include <stdio.h>
 #include <math.h>
@@ -18,14 +18,11 @@
 #include "tree.h"
 #include "list.h"
 
-
 #include "GCodeCommon.h"
 
 #include "GCodeCalcExpression.h"
 
 #include "GCodeProgram.h"
-
-
 
 #include "GCodeCheckAndAssign.h"
 #include "GCodeQuickHandle.h"
@@ -41,197 +38,162 @@
 #include "GCodeRegulation.h"
 #include "GCodeTest.h"
 
-#define PRINTMODE 0    //1:´òG´úÂëÓ¡»º³åÇøµ¥ÔªÄÚÈİ 2:´òÓ¡G´úÂëNCÎÄ¼ş 3:´òÓ¡ÔË¶¯²å²¹µãNCÎÄ¼ş  4.´òÓ¡ÔË¶¯²å²¹µãµ½testÎÄ¼ş
-#define CONSOLEPRINT 0 //¿ØÖÆÌ¨´òÓ¡G´úÂëNCÎÄ¼ş
+#define PRINTMODE 0    //1:æ‰“Gä»£ç å°ç¼“å†²åŒºå•å…ƒå†…å®¹ 2:æ‰“å°Gä»£ç NCæ–‡ä»¶ 3:æ‰“å°è¿åŠ¨æ’è¡¥ç‚¹NCæ–‡ä»¶  4.æ‰“å°è¿åŠ¨æ’è¡¥ç‚¹åˆ°testæ–‡ä»¶
+#define CONSOLEPRINT 0 //æ§åˆ¶å°æ‰“å°Gä»£ç NCæ–‡ä»¶
 
 #define CHANNEL_COMMAND_MIN_VAL 100
 #define CHANNEL_COMMAND_MAX_VAL 199
-//extern struct SG50RingBuff g_SG50RingBuff[CHANNEL_NUM_MAX];//G50»·ĞÎ»º³åÇø
+//extern struct SG50RingBuff g_SG50RingBuff[CHANNEL_NUM_MAX];//G50ç¯å½¢ç¼“å†²åŒº
 
-//Í¨µÀ½á¹¹Ìå
+//é€šé“ç»“æ„ä½“
 typedef struct _SChannelConfiguration
 {
-	int8 cUserID;				//Ê¹ÓÃÕßµÄID
-	uint8 ucChannelNum;			//Í¨µÀºÅ
-	
-	int8 s_cMDIStep;			//MDI²½Öè
+    int8 cUserID;       //ä½¿ç”¨è€…çš„ID
+    uint8 ucChannelNum; //é€šé“å·
 
-	uint8  ucStatus;			//ÔËĞĞ×´Ì¬
+    int8 s_cMDIStep; //MDIæ­¥éª¤
 
-	bool bSkipMode;
+    uint8 ucStatus; //è¿è¡ŒçŠ¶æ€
 
-	struct _SSyntaxConfiguration  SSyntaxConfig;       //Óï·¨¼ì²é½á¹¹Ìå£¨ÄÚ²¿ÎŞ¶¯Ì¬ÄÚ´æ£©
-	struct _SAssignConfiguration  SAssignConfig;       //¸³Öµ½á¹¹Ìå£¨ÄÚ²¿ÎŞ¶¯Ì¬ÄÚ´æ£©
-	SList* pProgramList;        //³ÌĞòÁ´±í  pDataÊÇSProgram
-	uint8 ucMainMacroTablePos;  //Ö÷ºê³ÌĞò(¼´µÚÒ»´Î³öÏÖµÄºê³ÌĞò)ÔÚÁ´±íÖĞµÄÎ»ÖÃ¼ÓÒ»  (ÒòÎª³ÌĞò±íÓÃµÄÊÇÍ·²å·¨£¬ËùÒÔ´ËÎ»ÖÃÊÇ´Ó³ÌĞò±í×îºóÒ»¸öÎ»ÖÃ¿ªÊ¼Êı)  »¹Ã»ÓÃ ÀûÓÃucMacroProgramCnt½øĞĞÈ·ÈÏ
-	uint8 ucMacroProgramCnt;    //ºê³ÌĞòÊıÁ¿
+    bool bSkipMode;
 
-	struct _G66InfoStruct* pSG66InfoArr[NESTING_LIMIT];   //G66ĞÅÏ¢½á¹¹Ìå Ö¸Õë±äÁ¿Êı×é
+    struct _SSyntaxConfiguration SSyntaxConfig; //è¯­æ³•æ£€æŸ¥ç»“æ„ä½“ï¼ˆå†…éƒ¨æ— åŠ¨æ€å†…å­˜ï¼‰
+    struct _SAssignConfiguration SAssignConfig; //èµ‹å€¼ç»“æ„ä½“ï¼ˆå†…éƒ¨æ— åŠ¨æ€å†…å­˜ï¼‰
+    SList* pProgramList;                        //ç¨‹åºé“¾è¡¨  pDataæ˜¯SProgram
+    uint8
+        ucMainMacroTablePos; //ä¸»å®ç¨‹åº(å³ç¬¬ä¸€æ¬¡å‡ºç°çš„å®ç¨‹åº)åœ¨é“¾è¡¨ä¸­çš„ä½ç½®åŠ ä¸€  (å› ä¸ºç¨‹åºè¡¨ç”¨çš„æ˜¯å¤´æ’æ³•ï¼Œæ‰€ä»¥æ­¤ä½ç½®æ˜¯ä»ç¨‹åºè¡¨æœ€åä¸€ä¸ªä½ç½®å¼€å§‹æ•°)  è¿˜æ²¡ç”¨ åˆ©ç”¨ucMacroProgramCntè¿›è¡Œç¡®è®¤
+    uint8 ucMacroProgramCnt; //å®ç¨‹åºæ•°é‡
 
-	//SMacroCalculate g_SMacroCalCheck;   //ÓëºêÔËËãÓĞ¹ØµÄ½á¹¹Ìå£¨ÄÚº¬¶¯Ì¬ÄÚ´æ£©
-	//SMacroCalculate g_SMacroCalAssign;
+    struct _G66InfoStruct* pSG66InfoArr[NESTING_LIMIT]; //G66ä¿¡æ¯ç»“æ„ä½“ æŒ‡é’ˆå˜é‡æ•°ç»„
 
+    //SMacroCalculate g_SMacroCalCheck;   //ä¸å®è¿ç®—æœ‰å…³çš„ç»“æ„ä½“ï¼ˆå†…å«åŠ¨æ€å†…å­˜ï¼‰
+    //SMacroCalculate g_SMacroCalAssign;
 
-}SChannelConfiguration;
+} SChannelConfiguration;
 
+/**********************  å®ç›¸å…³  *************************/
 
-
-/**********************  ºêÏà¹Ø  *************************/
-
-
-
-
-
-
-
-
-struct _SystemMacro//ÏµÍ³ºê½á¹¹Ìå 
+struct _SystemMacro //ç³»ç»Ÿå®ç»“æ„ä½“
 {
-	uint8* MarcoAdd[32];//IOÊä³ö¿ÚµØÖ·
+    uint8* MarcoAdd[32]; //IOè¾“å‡ºå£åœ°å€
 };
 
-extern struct _SystemMacro g_SystemMacro;//ÏµÍ³ºê
+extern struct _SystemMacro g_SystemMacro; //ç³»ç»Ÿå®
 
-
-
-
-extern SChannelConfiguration* s_pSChannelConfig[CHANNEL_NUM_MAX];//G´úÂëÍ¨µÀ½á¹¹ÌåÖ¸Õë
+extern SChannelConfiguration* s_pSChannelConfig[CHANNEL_NUM_MAX]; //Gä»£ç é€šé“ç»“æ„ä½“æŒ‡é’ˆ
 
 //*****************G50 2023.7.28***************************************
-struct SG50Info//G50ĞÅÏ¢½á¹¹Ìå£¬¼ÇÂ¼ÒòG50²úÉúµÄ¹¤¼ş×ø±êÆ«ÒÆÁ¿ ºÍG50ËùÔÚµÄĞĞºÅ
+struct SG50Info //G50ä¿¡æ¯ç»“æ„ä½“ï¼Œè®°å½•å› G50äº§ç”Ÿçš„å·¥ä»¶åæ ‡åç§»é‡ å’ŒG50æ‰€åœ¨çš„è¡Œå·
 {
-	SPointDouble SWorkPieceOffsetByG50;             //ÒòG50ÒıÆğµÄ¹¤¼ş×ø±êÆ«ÒÆÁ¿
-	uint32 unG50LineNum;                            //G50ËùÔÚµÄĞĞºÅ
+    SPointDouble SWorkPieceOffsetByG50; //å› G50å¼•èµ·çš„å·¥ä»¶åæ ‡åç§»é‡
+    uint32 unG50LineNum;                //G50æ‰€åœ¨çš„è¡Œå·
 };
-
 
 //*******************G50 end****************************************
 //*******************G10 start****************************************
-struct SG10Info//G10ĞÅÏ¢½á¹¹Ìå
+struct SG10Info //G10ä¿¡æ¯ç»“æ„ä½“
 {
-	SPoint SToolCMPByG10;//G10ÉèÖÃµÄµ¶¾ßÄ¥Ëğ²¹³¥Á¿
-	uint32 unG10LineNum;//G10ËùÔÚµÄĞĞºÅ
+    SPoint SToolCMPByG10; //G10è®¾ç½®çš„åˆ€å…·ç£¨æŸè¡¥å¿é‡
+    uint32 unG10LineNum;  //G10æ‰€åœ¨çš„è¡Œå·
 };
 //*******************G10 end****************************************
-union G50G10Info//G50G10ĞÅÏ¢ÁªºÏÌå
+union G50G10Info //G50G10ä¿¡æ¯è”åˆä½“
 {
-	struct SG50Info SG50Info;
-	struct SG10Info SG10Info;
+    struct SG50Info SG50Info;
+    struct SG10Info SG10Info;
 };
 
-struct SG50RingBuff //G50»·ĞÎ»º³åÇø½á¹¹Ìå
+struct SG50RingBuff //G50ç¯å½¢ç¼“å†²åŒºç»“æ„ä½“
 {
-	int16 sSG50_WRITEIndex;//G50Ğ´ÈëË÷Òı
-	int16 sSG50_WRITEDNum;//G50ÒÑ¾­Ğ´ÈëµÄÇÒÎ´¶Á×ßµÄ¸öÊı
-	union  G50G10Info G50G10Ringbuf[G50_INFO_BUF_MAX];//G50»·ĞÎÊı×é
+    int16 sSG50_WRITEIndex;                           //G50å†™å…¥ç´¢å¼•
+    int16 sSG50_WRITEDNum;                            //G50å·²ç»å†™å…¥çš„ä¸”æœªè¯»èµ°çš„ä¸ªæ•°
+    union G50G10Info G50G10Ringbuf[G50_INFO_BUF_MAX]; //G50ç¯å½¢æ•°ç»„
 };
-
 
 #if !STM32_MODE
-//extern int8  g_cMapBufferTEST[FILESIZE];      //²âÊÔÊ¹ÓÃ£¬½«G´úÂëÎÄ±¾·ÅÈë´Ë×Ö·û´®     Í¨µÀ1 
-//extern int8  g_cMapBufferS1[FILESIZE];     //²âÊÔÊ¹ÓÃ£¬½«G´úÂëÎÄ±¾·ÅÈë´Ë×Ö·û´®     Í¨µÀ2
+//extern int8  g_cMapBufferTEST[FILESIZE];      //æµ‹è¯•ä½¿ç”¨ï¼Œå°†Gä»£ç æ–‡æœ¬æ”¾å…¥æ­¤å­—ç¬¦ä¸²     é€šé“1
+//extern int8  g_cMapBufferS1[FILESIZE];     //æµ‹è¯•ä½¿ç”¨ï¼Œå°†Gä»£ç æ–‡æœ¬æ”¾å…¥æ­¤å­—ç¬¦ä¸²     é€šé“2
 
-extern int8 g_cName_C0[20];    //Í¨µÀ0
-extern int8 g_cName_C1[20];    //Í¨µÀ1
+extern int8 g_cName_C0[20]; //é€šé“0
+extern int8 g_cName_C1[20]; //é€šé“1
 extern uint8 g_ucNameType;
 extern int8 g_textBuf[20][MAX_LENGTH_OF_LINE];
 #endif
 
-
 extern bool g_bGCodeDraw[CHANNEL_NUM_MAX];
 
-
-#if ((MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)&&( CHANNEL_NUM_MAX > 1))//Ë«Ö÷ÖáÄ£Ê½ÏÂµÄµ¶¾ßºÅ£¬Ä¥ËğºÅ
-extern int8 g_cToolCompNumAssiagn;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßºÅ£¨Óï·¨¸³ÖµµÄ£©
+#if ((MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE) && (CHANNEL_NUM_MAX > 1)) //åŒä¸»è½´æ¨¡å¼ä¸‹çš„åˆ€å…·å·ï¼Œç£¨æŸå·
+extern int8 g_cToolCompNumAssiagn; //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·å·ï¼ˆè¯­æ³•èµ‹å€¼çš„ï¼‰
 extern int8 g_cToolNumAssiagn;
-extern int8 g_cToolNumSyntax;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßºÅ£¨Óï·¨¼ì²éµÄ£©
-extern int8 g_cToolCompNumSyntax;//×¨Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßÄ¥ËğºÅ
+extern int8 g_cToolNumSyntax;     //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·å·ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+extern int8 g_cToolCompNumSyntax; //ä¸“åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·ç£¨æŸå·
 
-extern int8 g_cWorkPieceOffsetNumSyntax;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄ¹¤¼ş×ø±êºÅ G54-G59£¨Óï·¨¼ì²éµÄ£©
-extern int8 g_cWorkPieceOffsetNumAssiagn;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄ¹¤¼ş×ø±êºÅ G54-G59£¨Óï·¨¸³ÖµµÄ£©
+extern int8 g_cWorkPieceOffsetNumSyntax;  //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„å·¥ä»¶åæ ‡å· G54-G59ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+extern int8 g_cWorkPieceOffsetNumAssiagn; //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„å·¥ä»¶åæ ‡å· G54-G59ï¼ˆè¯­æ³•èµ‹å€¼çš„ï¼‰
 
-extern SPointDouble g_SWorkPieceOffsetByG50Syntax;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄG50Æ«ÒÆÖµ£¨Óï·¨¼ì²éµÄ£©
-extern SPointDouble g_SWorkPieceOffsetByG50Assiagn ;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄG50Æ«ÒÆÖµ£¨Óï·¨¼ì²éµÄ£©
+extern SPointDouble g_SWorkPieceOffsetByG50Syntax;  //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„G50åç§»å€¼ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+extern SPointDouble g_SWorkPieceOffsetByG50Assiagn; //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„G50åç§»å€¼ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
 
 #endif
 
-
-//ÒëÂëÄ£¿é³õÊ¼»¯
+//è¯‘ç æ¨¡å—åˆå§‹åŒ–
 void gcodeInit(uint8 ucChannelNum, uint8 ucIsAllowGodeRun, uint8 ucIsGetBeforeProgram);
 
-//¿ª±ÙG´úÂëÍ¨µÀ½á¹¹ÌåÄÚ´æ
+//å¼€è¾ŸGä»£ç é€šé“ç»“æ„ä½“å†…å­˜
 SChannelConfiguration* mallocGCodeChannelConfig();
 
-//³õÊ¼»¯G´úÂëÍ¨µÀ½á¹¹Ìå
+//åˆå§‹åŒ–Gä»£ç é€šé“ç»“æ„ä½“
 void initGCodeChannelConfig(uint8 ucChannelNum);
 
-//ÊÍ·ÅÒëÂëÄ£¿é¿ª±ÙµÄÄÚ´æ
+//é‡Šæ”¾è¯‘ç æ¨¡å—å¼€è¾Ÿçš„å†…å­˜
 void freeAllGcode();
 
-//ÊÍ·ÅG´úÂë½á¹¹ÌåÄÚ¿ª±ÙµÄÄÚ´æ
+//é‡Šæ”¾Gä»£ç ç»“æ„ä½“å†…å¼€è¾Ÿçš„å†…å­˜
 void freeGCodeChannelConfig(SChannelConfiguration* pSGCodeChannelConfig);
 
-//»ñÈ¡Í¨µÀ½á¹¹ÌåµØÖ·
+//è·å–é€šé“ç»“æ„ä½“åœ°å€
 SChannelConfiguration* getChannelConfig(uint8 ucChannelNum);
 
-//ÒëÂëÄ£¿é×Ü½Ó¿Ú
+//è¯‘ç æ¨¡å—æ€»æ¥å£
 int8 mainFuncGCode(uint8 ucChannelNum);
 
-//AUTOÄ£Ê½ÒëÂë×Ü½Ó¿Ú
+//AUTOæ¨¡å¼è¯‘ç æ€»æ¥å£
 int8 mainFuncGCodeAuto(uint8 ucChannelNum);
 
-//MDIÄ£Ê½ÒëÂë×Ü½Ó¿Ú
+//MDIæ¨¡å¼è¯‘ç æ€»æ¥å£
 int8 mainFuncGCodeMDI(uint8 ucChannelNum);
 
-//ÒëÂëÄ£¿éµÄÔËĞĞ°´Å¥ÖĞ½Ó¿Ú
+//è¯‘ç æ¨¡å—çš„è¿è¡ŒæŒ‰é’®ä¸­æ¥å£
 void runbuttonAPI_GCode(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°ÔËĞĞµÄĞĞºÅ
+//è·å–å½“å‰è¿è¡Œçš„è¡Œå·
 uint32 getSRunLine(uint8 ucChannelNum);
 
-
-
-
 //**********************************************GCodeG50.c**************************************************************
-//G50¸³Öµ  
-void assignG50(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, SSyntaxConfiguration* pSyntax, SAssignConfiguration* pAssign);
-//³õÊ¼»¯G50»·ĞÎ»º³åÇø
+//G50èµ‹å€¼
+void assignG50(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, SSyntaxConfiguration* pSyntax,
+               SAssignConfiguration* pAssign);
+//åˆå§‹åŒ–G50ç¯å½¢ç¼“å†²åŒº
 int8 initG50RingBuffer(uint8 ucChannelNum);
-//	»ñÈ¡G50Ö¸ÕëµÄË÷ÒıÖµ£¨Í¨¹ıÀàĞÍ£©
+//	è·å–G50æŒ‡é’ˆçš„ç´¢å¼•å€¼ï¼ˆé€šè¿‡ç±»å‹ï¼‰
 int16 getSG50PointerIndex(enum G50RingBufPointerType pointerTpye, uint8 ucChannelNum);
-//»ñÈ¡G50»·ĞÎÊı×éÔªËØÖ¸Õë(Í¨¹ıË÷Òı)
-union  G50G10Info* getSG50PointerByIndex(short sIndex, uint8 ucChannelNum);
-//	»ñÈ¡G50»·ĞÎÊı×éÔªËØÖ¸Õë(Í¨¹ıÀàĞÍ)
-union  G50G10Info* getSG50PointerByType(enum G50RingBufPointerType pointerTpye, uint8 ucChannelNum);
-//	»ñÈ¡G50Ö¸ÕëÊ£ÓàÈİÁ¿
+//è·å–G50ç¯å½¢æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç´¢å¼•)
+union G50G10Info* getSG50PointerByIndex(short sIndex, uint8 ucChannelNum);
+//	è·å–G50ç¯å½¢æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç±»å‹)
+union G50G10Info* getSG50PointerByType(enum G50RingBufPointerType pointerTpye, uint8 ucChannelNum);
+//	è·å–G50æŒ‡é’ˆå‰©ä½™å®¹é‡
 int16 getSG50PointerBufRes(enum G50RingBufPointerType pointerTpye, uint8 ucChannelNum);
-//	ÒÆ¶¯G50Ö¸Õë
+//	ç§»åŠ¨G50æŒ‡é’ˆ
 bool moveSG50Pointer(enum G50RingBufPointerType pointerTpye, uint8 ucChannelNum);
-//	·µ»ØG50»º³åÇøµÄµØÖ·   
-union  G50G10Info* getG50RingBuffHeadAddr(uint8 ucChannelNum);
+//	è¿”å›G50ç¼“å†²åŒºçš„åœ°å€
+union G50G10Info* getG50RingBuffHeadAddr(uint8 ucChannelNum);
 
-
-
-
-
-
-
-
-
-
-
-//Ô²»¡×îÖµµã¼ÆËã
+//åœ†å¼§æœ€å€¼ç‚¹è®¡ç®—
 void getAxisMaxAndMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin);
 
-
-
-
-//ÏµÍ³²ÎÊıºê±äÁ¿³õÊ¼»¯
+//ç³»ç»Ÿå‚æ•°å®å˜é‡åˆå§‹åŒ–
 void initMacroVariable(uint8 ucControl);
-//ÏµÍ³ºê³õÊ¼»¯
+//ç³»ç»Ÿå®åˆå§‹åŒ–
 void InitSystemMacro();
-
-
-
 
 #endif // !_GCODE

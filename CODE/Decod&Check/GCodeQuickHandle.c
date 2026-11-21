@@ -1,548 +1,542 @@
 #include "Gcode.h"
 #include "ErrorFunction.h"
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsGodeCoordSustained()
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÄ£Ì¬G´úÂëÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ÄÜ¿ìËÙ´¦Àí FALSE ²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsGodeCoordSustained()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æ¨¡æ€Gä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE èƒ½å¿«é€Ÿå¤„ç† FALSE ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsGodeCoordSustained(SAssignConfiguration* pSAssignConfig)
 {
-	if (pSAssignConfig->pGCodeBuf[pSAssignConfig->usIndex].EntityType == DOT)
-	{
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
+    if (pSAssignConfig->pGCodeBuf[pSAssignConfig->usIndex].EntityType == DOT)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsModalInfoChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸ÃĞĞÄ£Ì¬G´úÂëÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE Ä£Ì¬ĞÅÏ¢¸Ä±ä FALSE Ä£Ì¬ĞÅÏ¢Î´¸Ä±ä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsModalInfoChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¯¥è¡Œæ¨¡æ€Gä»£ç æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE æ¨¡æ€ä¿¡æ¯æ”¹å˜ FALSE æ¨¡æ€ä¿¡æ¯æœªæ”¹å˜
+  å¤‡    æ³¨ï¼š
 **************************************************/
-bool IsModalInfoChanged(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, enum ModalNum* pModalChangedNumArray, int8* pCounter)
+bool IsModalInfoChanged(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf,
+                        enum ModalNum* pModalChangedNumArray, int8* pCounter)
 {
-	if (pModalChangedNumArray == NULL)
-	{
-		return TRUE;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa != pGCodeBuf->SModalInfo.sGa)
-	{
-		enum ModalNum ModalNumNode = sGa;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGb != pGCodeBuf->SModalInfo.sGb)
-	{
-		enum ModalNum ModalNumNode = sGb;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGc != pGCodeBuf->SModalInfo.sGc)
-	{
-		enum ModalNum ModalNumNode = sGc;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGd != pGCodeBuf->SModalInfo.sGd)
-	{
-		enum ModalNum ModalNumNode = sGd;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGe != pGCodeBuf->SModalInfo.sGe)
-	{
-		enum ModalNum ModalNumNode = sGe;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGf != pGCodeBuf->SModalInfo.sGf)
-	{
-		enum ModalNum ModalNumNode = sGf;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGg != pGCodeBuf->SModalInfo.sGg)
-	{
-		enum ModalNum ModalNumNode = sGg;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGh != pGCodeBuf->SModalInfo.sGh)
-	{
-		enum ModalNum ModalNumNode = sGh;
-		pModalChangedNumArray[*pCounter] = ModalNumNode;
-		(*pCounter)++;
-	}
-	return (*pCounter) ? TRUE : FALSE;
+    if (pModalChangedNumArray == NULL)
+    {
+        return TRUE;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa != pGCodeBuf->SModalInfo.sGa)
+    {
+        enum ModalNum ModalNumNode = sGa;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGb != pGCodeBuf->SModalInfo.sGb)
+    {
+        enum ModalNum ModalNumNode = sGb;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGc != pGCodeBuf->SModalInfo.sGc)
+    {
+        enum ModalNum ModalNumNode = sGc;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGd != pGCodeBuf->SModalInfo.sGd)
+    {
+        enum ModalNum ModalNumNode = sGd;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGe != pGCodeBuf->SModalInfo.sGe)
+    {
+        enum ModalNum ModalNumNode = sGe;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGf != pGCodeBuf->SModalInfo.sGf)
+    {
+        enum ModalNum ModalNumNode = sGf;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGg != pGCodeBuf->SModalInfo.sGg)
+    {
+        enum ModalNum ModalNumNode = sGg;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGh != pGCodeBuf->SModalInfo.sGh)
+    {
+        enum ModalNum ModalNumNode = sGh;
+        pModalChangedNumArray[*pCounter] = ModalNumNode;
+        (*pCounter)++;
+    }
+    return (*pCounter) ? TRUE : FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsModalInfoChangedAPI
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸ÃĞĞÄ£Ì¬G´úÂëÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ¸Ä±äÁË FALSE Î´¸Ä±ä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsModalInfoChangedAPI
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¯¥è¡Œæ¨¡æ€Gä»£ç æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE æ”¹å˜äº† FALSE æœªæ”¹å˜
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsModalInfoChangedAPI(SAssignConfiguration* pSAssignConfig)
 {
-	return (pSAssignConfig->SQuickHandleFlag.bIsModalInfoChangFlag) ? TRUE : FALSE;
+    return (pSAssignConfig->SQuickHandleFlag.bIsModalInfoChangFlag) ? TRUE : FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºCanModalChangedQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸ÃĞĞÄ£Ì¬G´úÂëÊÇ·ñ¸Ä±ä£¬ÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ÄÜ¿ìËÙ´¦Àí FALSE ²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šCanModalChangedQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¯¥è¡Œæ¨¡æ€Gä»£ç æ˜¯å¦æ”¹å˜ï¼Œèƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE èƒ½å¿«é€Ÿå¤„ç† FALSE ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
-bool CanModalChangedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, enum ModalNum* pModalChangedNumArray, int8* pCounter)
+bool CanModalChangedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf,
+                                enum ModalNum* pModalChangedNumArray, int8* pCounter)
 {
-	int nCounter = 0;
-	int8 cCanHandleFlag = 1;
-	if (pSAssignConfig == NULL)
-	{
-		return FALSE;
-	}
-	if (pGCodeBuf == NULL)
-	{
-		return FALSE;
-	}
-	if (pModalChangedNumArray == NULL)
-	{
-		return FALSE;
-	}
-	for (nCounter = 0; nCounter < (*pCounter); nCounter++)
-	{
-		//int8 sGa, sGb, sGc, sGd, sGe, sGf, sGg, sGh;
-		/// G´úÂë·ÖÀà²ÎÊı£¬
-		/// sGa£ºÔË¶¯Àà G00£¬G01£¬G02£¬G03£¬G32,G33,G76,G92						MOCTION
-		/// sGb£º¹¤¼ş×ø±êÏµ G54-G59												COOR
-		/// sGc£º¶¨Òå²å²¹Æ½Ãæ G17-G19		
-		/// sGd£ºµ¶¾ß²¹³¥ G40-G42												TOOLCOMP
-		/// sGe£ºµ¥Î»Ñ¡Ôñ£ºÓ¢ÖÆ/¹«ÖÆ G20£¬G21									UNITS   INCHS MM 
-		/****** ĞÂÔöÄ£Ì¬×é *******/  //2021-9-13  ·ëÓ¢»ª
-		/// sGf: ºãÏßËÙ¿ØÖÆ G96¡¢ºã×ªËÙ¿ØÖÆ G97									SPINDLE_SPEED
-		/// sGg: ¸ø¶¨Ã¿·Ö½ø¸øËÙ¶È G98 ¡¢ÒÔºÁÃ×/×ªÎªµ¥Î»¸ø¶¨ÇĞÏ÷½ø¸øËÙ¶È G99		FEED  
-		/// sGh: ¾ø¶Ô±à³ÌG90/ Ïà¶Ô±à³ÌG91  Ä¬ÈÏG90
-		/// 
-		int nTemp = pModalChangedNumArray[nCounter];
-		switch (nTemp)
-		{
-		case sGa:	//×ø±ê²»¸Ä±äµÄÇé¿öG0G1µÄÇĞ»»ÔÊĞí¿ìËÙ´¦Àí
-			if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa == G00 || pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa == G01)
-			{
-				if ((pGCodeBuf->SModalInfo.sGa == G00 || pGCodeBuf->SModalInfo.sGa == G01))
-				{
-					break;
-				}
-			}
-			cCanHandleFlag &= 0;
-			break;
-		case sGb:	//G54µ½G59×ø±êÏµµÄÇĞ»»ÔÊĞí¿ìËÙ´¦Àï
-			break;
-		default:
-			cCanHandleFlag &= 0;
-			break;
-		}
-
-	}
-	return (cCanHandleFlag) ? TRUE : FALSE;
-
+    int nCounter = 0;
+    int8 cCanHandleFlag = 1;
+    if (pSAssignConfig == NULL)
+    {
+        return FALSE;
+    }
+    if (pGCodeBuf == NULL)
+    {
+        return FALSE;
+    }
+    if (pModalChangedNumArray == NULL)
+    {
+        return FALSE;
+    }
+    for (nCounter = 0; nCounter < (*pCounter); nCounter++)
+    {
+        //int8 sGa, sGb, sGc, sGd, sGe, sGf, sGg, sGh;
+        /// Gä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+        /// sGaï¼šè¿åŠ¨ç±» G00ï¼ŒG01ï¼ŒG02ï¼ŒG03ï¼ŒG32,G33,G76,G92						MOCTION
+        /// sGbï¼šå·¥ä»¶åæ ‡ç³» G54-G59												COOR
+        /// sGcï¼šå®šä¹‰æ’è¡¥å¹³é¢ G17-G19
+        /// sGdï¼šåˆ€å…·è¡¥å¿ G40-G42												TOOLCOMP
+        /// sGeï¼šå•ä½é€‰æ‹©ï¼šè‹±åˆ¶/å…¬åˆ¶ G20ï¼ŒG21									UNITS   INCHS MM
+        /****** æ–°å¢æ¨¡æ€ç»„ *******/ //2021-9-13  å†¯è‹±å
+        /// sGf: æ’çº¿é€Ÿæ§åˆ¶ G96ã€æ’è½¬é€Ÿæ§åˆ¶ G97									SPINDLE_SPEED
+        /// sGg: ç»™å®šæ¯åˆ†è¿›ç»™é€Ÿåº¦ G98 ã€ä»¥æ¯«ç±³/è½¬ä¸ºå•ä½ç»™å®šåˆ‡å‰Šè¿›ç»™é€Ÿåº¦ G99		FEED
+        /// sGh: ç»å¯¹ç¼–ç¨‹G90/ ç›¸å¯¹ç¼–ç¨‹G91  é»˜è®¤G90
+        ///
+        int nTemp = pModalChangedNumArray[nCounter];
+        switch (nTemp)
+        {
+        case sGa: //åæ ‡ä¸æ”¹å˜çš„æƒ…å†µG0G1çš„åˆ‡æ¢å…è®¸å¿«é€Ÿå¤„ç†
+            if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa == G00 ||
+                pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa == G01)
+            {
+                if ((pGCodeBuf->SModalInfo.sGa == G00 || pGCodeBuf->SModalInfo.sGa == G01))
+                {
+                    break;
+                }
+            }
+            cCanHandleFlag &= 0;
+            break;
+        case sGb: //G54åˆ°G59åæ ‡ç³»çš„åˆ‡æ¢å…è®¸å¿«é€Ÿå¤„é‡Œ
+            break;
+        default:
+            cCanHandleFlag &= 0;
+            break;
+        }
+    }
+    return (cCanHandleFlag) ? TRUE : FALSE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºCanModalChangedQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸ÃĞĞÄ£Ì¬G´úÂëÊÇ·ñ¸Ä±ä£¬ÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ÄÜ¿ìËÙ´¦Àí FALSE ²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šCanModalChangedQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¯¥è¡Œæ¨¡æ€Gä»£ç æ˜¯å¦æ”¹å˜ï¼Œèƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE èƒ½å¿«é€Ÿå¤„ç† FALSE ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool CanModalChangedQuickHandleAPI(SAssignConfiguration* pSAssignConfig)
 {
-	return (pSAssignConfig->SQuickHandleFlag.bCanModalInfoQuickHandleFlag) ? TRUE : FALSE;
+    return (pSAssignConfig->SQuickHandleFlag.bCanModalInfoQuickHandleFlag) ? TRUE : FALSE;
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsNonModalMcodeInfoChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬M´úÂëÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ¸Ä±äÁË FALSE Î´¸Ä±ä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsNonModalMcodeInfoChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€Mä»£ç æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE æ”¹å˜äº† FALSE æœªæ”¹å˜
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsNonModalMcodeInfoChanged(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
 {
 
-	//int8 cMa, cMb, cMc, cMd, cMe, cMf, cMg, cMh;
-	/// M´úÂë·ÖÀà²ÎÊı£¬
-	/// cMa£ºÖ÷ÖáÕı/·´×ª/Í£		/M03/M04/M05(·ÇÄ£Ì¬£©									
-	/// cMb£º³ÌĞòÍ£/³ÌĞò½áÊø	/M00/M01/M02/M30(·ÇÄ£Ì¬)	//¿É¿ìËÙ´¦Àí£¬²»ÄÜÈÓ							
-	/// cMc£ºÀäÈ´Òº¿ª/¹Ø		/M08/M09(·ÇÄ£Ì¬)			//¿É¿ìËÙ´¦Àí£¬²»ÄÜÈÓ						
-	/// cMd£ºM96 M97 M98 M99
-	/// cMe£ºÈó»¬ÓÍ¿ª/¹Ø        /M32/M33					//¿É¿ìËÙ´¦Àí£¬²»ÄÜÈÓ	
-	/// cMf£º¹¤¼ş¼Ğ½ô / ËÉ¿ª / M10 / M11					
-	/// cMg£ºM14 / M15
-	/// cMh: M50/51/52										
+    //int8 cMa, cMb, cMc, cMd, cMe, cMf, cMg, cMh;
+    /// Mä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+    /// cMaï¼šä¸»è½´æ­£/åè½¬/åœ		/M03/M04/M05(éæ¨¡æ€ï¼‰
+    /// cMbï¼šç¨‹åºåœ/ç¨‹åºç»“æŸ	/M00/M01/M02/M30(éæ¨¡æ€)	//å¯å¿«é€Ÿå¤„ç†ï¼Œä¸èƒ½æ‰”
+    /// cMcï¼šå†·å´æ¶²å¼€/å…³		/M08/M09(éæ¨¡æ€)			//å¯å¿«é€Ÿå¤„ç†ï¼Œä¸èƒ½æ‰”
+    /// cMdï¼šM96 M97 M98 M99
+    /// cMeï¼šæ¶¦æ»‘æ²¹å¼€/å…³        /M32/M33					//å¯å¿«é€Ÿå¤„ç†ï¼Œä¸èƒ½æ‰”
+    /// cMfï¼šå·¥ä»¶å¤¹ç´§ / æ¾å¼€ / M10 / M11
+    /// cMgï¼šM14 / M15
+    /// cMh: M50/51/52
 
-	//if (
-	//	(pGCodeBuf->SNonModalInfo.cMa != 0)
-	//	|| (pGCodeBuf->SNonModalInfo.sMb != -1)
-	//	|| (pGCodeBuf->SNonModalInfo.cMc != 0)
-	//	|| (pGCodeBuf->SNonModalInfo.cMe != 0)
-	//	|| (pGCodeBuf->SNonModalInfo.cMf != 0)
-	//	|| (pGCodeBuf->SNonModalInfo.cMg != 0)
-	//	|| (pGCodeBuf->SNonModalInfo.cMh != 0)
-	//	)
-	//{
-	//	return TRUE;
-	//}
+    //if (
+    //	(pGCodeBuf->SNonModalInfo.cMa != 0)
+    //	|| (pGCodeBuf->SNonModalInfo.sMb != -1)
+    //	|| (pGCodeBuf->SNonModalInfo.cMc != 0)
+    //	|| (pGCodeBuf->SNonModalInfo.cMe != 0)
+    //	|| (pGCodeBuf->SNonModalInfo.cMf != 0)
+    //	|| (pGCodeBuf->SNonModalInfo.cMg != 0)
+    //	|| (pGCodeBuf->SNonModalInfo.cMh != 0)
+    //	)
+    //{
+    //	return TRUE;
+    //}
 
-	//return FALSE;
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºCanNonModalMcodeQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬M´úÂë¸Ä±äµÄÇé¿öÏÂÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ÄÜ¿ìËÙ´¦Àí FALSE ²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šCanNonModalMcodeQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€Mä»£ç æ”¹å˜çš„æƒ…å†µä¸‹èƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE èƒ½å¿«é€Ÿå¤„ç† FALSE ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
-bool CanNonModalMcodeQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
+bool CanNonModalMcodeQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf,
+                                 uint8 ucChannelNum)
 {
-	//int8 cNeedHandleFlag = 1;
+    //int8 cNeedHandleFlag = 1;
 
-	//switch (pGCodeBuf->SNonModalInfo.cMa)
-	//{
-	//case 0:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
+    //switch (pGCodeBuf->SNonModalInfo.cMa)
+    //{
+    //case 0:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
+    //switch (pGCodeBuf->SNonModalInfo.sMb)
+    //{
+    //case 0:
+    //	break;
+    //case -1:
+    //	break;
+    //   case M99:
+    //       break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
-	//switch (pGCodeBuf->SNonModalInfo.sMb)
-	//{
-	//case 0:
-	//	break;
-	//case -1:
-	//	break;
- //   case M99:
- //       break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
+    //// cMcï¼šå†·å´æ¶²å¼€/å…³		/M08/M09(éæ¨¡æ€)
+    //switch (pGCodeBuf->SNonModalInfo.cMc)
+    //{
+    //case 0:
+    //	break;
+    //case M08:
+    //	break;
+    //case M09:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
-	//// cMc£ºÀäÈ´Òº¿ª/¹Ø		/M08/M09(·ÇÄ£Ì¬)
-	//switch (pGCodeBuf->SNonModalInfo.cMc)
-	//{
-	//case 0:
-	//	break;
-	//case M08:
-	//	break;
-	//case M09:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
+    //// cMeï¼šæ¶¦æ»‘æ²¹å¼€/å…³        /M32/M33
+    //switch (pGCodeBuf->SNonModalInfo.cMe)
+    //{
+    //case 0:
+    //	break;
+    //case M32:
+    //	break;
+    //case M33:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
+    //switch (pGCodeBuf->SNonModalInfo.cMf)
+    //{
+    //case 0:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
-	//// cMe£ºÈó»¬ÓÍ¿ª/¹Ø        /M32/M33
-	//switch (pGCodeBuf->SNonModalInfo.cMe)
-	//{
-	//case 0:
-	//	break;
-	//case M32:
-	//	break;
-	//case M33:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
+    //switch (pGCodeBuf->SNonModalInfo.cMg)
+    //{
+    //case 0:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
+    //switch (pGCodeBuf->SNonModalInfo.cMh)
+    //{
+    //case 0:
+    //	break;
+    //default:
+    //	cNeedHandleFlag &= 0;
+    //	break;
+    //}
 
-	//switch (pGCodeBuf->SNonModalInfo.cMf)
-	//{
-	//case 0:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
-
-
-	//switch (pGCodeBuf->SNonModalInfo.cMg)
-	//{
-	//case 0:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
-
-
-	//switch (pGCodeBuf->SNonModalInfo.cMh)
-	//{
-	//case 0:
-	//	break;
-	//default:
-	//	cNeedHandleFlag &= 0;
-	//	break;
-	//}
-
-	//return ((cNeedHandleFlag) ? TRUE : FALSE);
-
+    //return ((cNeedHandleFlag) ? TRUE : FALSE);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºCanNonModalGcodeQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬G´úÂë¸Ä±äµÄÇé¿öÏÂÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ÄÜ¿ìËÙ´¦Àí FALSE ²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šCanNonModalGcodeQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€Gä»£ç æ”¹å˜çš„æƒ…å†µä¸‹èƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE èƒ½å¿«é€Ÿå¤„ç† FALSE ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool CanNonModalGcodeQuickHandle(struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
 {
-	//// sGz£º·ÇÄ£Ì¬×é±ğ
-	////case G04:case G50:case G65:case G66:case G67:case G70:case G71:case 72:case G73:case G74:case G75:case G76:case G10:
+    //// sGzï¼šéæ¨¡æ€ç»„åˆ«
+    ////case G04:case G50:case G65:case G66:case G67:case G70:case G71:case 72:case G73:case G74:case G75:case G76:case G10:
 
-	//switch (pGCodeBuf->SNonModalInfo.sGz)
-	//{
-	//case G04:	////G04ÑÓÊ±Ê±¼äÎª0
-	//{
-	//	if (pGCodeBuf->unDelayTime == 0)
-	//	{
-	//		return TRUE;
-	//	}
-	//}
-	//break;
+    //switch (pGCodeBuf->SNonModalInfo.sGz)
+    //{
+    //case G04:	////G04å»¶æ—¶æ—¶é—´ä¸º0
+    //{
+    //	if (pGCodeBuf->unDelayTime == 0)
+    //	{
+    //		return TRUE;
+    //	}
+    //}
+    //break;
 
-	//case G50:	//G50Ã»ÊäÈëSÖµ
-	//{
-	//	if (pGCodeBuf->dSpindleSpeed == UNASSIGNED_VALUE)
-	//	{
-	//		return TRUE;
-	//	}
-	//}
-	//break;
+    //case G50:	//G50æ²¡è¾“å…¥Så€¼
+    //{
+    //	if (pGCodeBuf->dSpindleSpeed == UNASSIGNED_VALUE)
+    //	{
+    //		return TRUE;
+    //	}
+    //}
+    //break;
 
-	//default:
-	//	break;
-	//}
+    //default:
+    //	break;
+    //}
 
-	//return FALSE;
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsNonModalGcodeInfoChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬G´úÂëÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ¸Ä±äÁË FALSE Ã»¸Ä±ä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsNonModalGcodeInfoChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€Gä»£ç æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE æ”¹å˜äº† FALSE æ²¡æ”¹å˜
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsNonModalGcodeInfoChanged(struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
 {
-	//if (pGCodeBuf->SNonModalInfo.sGz)
-	//{
-	//	return TRUE;
-	//}
-	//return FALSE;
+    //if (pGCodeBuf->SNonModalInfo.sGz)
+    //{
+    //	return TRUE;
+    //}
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsTurretModeTCodeChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ïµ¶Ëş»úÄ£Ê½ÏÂµ¶¾ßÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE µ¶¾ßÃ»¸Ä±ä TRUE µ¶¾ß¸Ä±äÁË
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsTurretModeTCodeChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­åˆ€å¡”æœºæ¨¡å¼ä¸‹åˆ€å…·æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE åˆ€å…·æ²¡æ”¹å˜ TRUE åˆ€å…·æ”¹å˜äº†
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsTurretModeTCodeChanged(SAssignConfiguration* pSAssignConfig)
 {
-	//if (g_SSystemPara.ucToolDevie == TOOL_TURRET_MODE)
-	//{
-	//	if (pSAssignConfig->SPriorityContainer.bT)
-	//	{
-	//		return TRUE;
-	//	}
-	//}
+    //if (g_SSystemPara.ucToolDevie == TOOL_TURRET_MODE)
+    //{
+    //	if (pSAssignConfig->SPriorityContainer.bT)
+    //	{
+    //		return TRUE;
+    //	}
+    //}
 
-	//return FALSE;
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsToolRawModeTCodeChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÅÅµ¶»úÄ£Ê½ÏÂµ¶¾ßÊÇ·ñ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE µ¶¾ßÃ»¸Ä±ä TRUE µ¶¾ß¸Ä±äÁË
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsToolRawModeTCodeChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æ’åˆ€æœºæ¨¡å¼ä¸‹åˆ€å…·æ˜¯å¦æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE åˆ€å…·æ²¡æ”¹å˜ TRUE åˆ€å…·æ”¹å˜äº†
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsToolRawModeTCodeChanged(SAssignConfiguration* pSAssignConfig)
 {
-	//if (g_SSystemPara.ucToolDevie == TOOL_RAWTOOL_MODE)
-	//{
-	//	if (pSAssignConfig->SPriorityContainer.bT)
-	//	{
-	//		return TRUE;
-	//	}
-	//}
+    //if (g_SSystemPara.ucToolDevie == TOOL_RAWTOOL_MODE)
+    //{
+    //	if (pSAssignConfig->SPriorityContainer.bT)
+    //	{
+    //		return TRUE;
+    //	}
+    //}
 
-	//return FALSE;
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºIsFeedrateOrSpindleSpeedChanged()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï½ø¸øËÙ¶È»ò×ªËÙÊÇ·ñÓĞ¸Ä±ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ¸Ä±äÁË FALSE Ã»¸Ä±ä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIsFeedrateOrSpindleSpeedChanged()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¿›ç»™é€Ÿåº¦æˆ–è½¬é€Ÿæ˜¯å¦æœ‰æ”¹å˜
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE æ”¹å˜äº† FALSE æ²¡æ”¹å˜
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool IsFeedrateOrSpindleSpeedChanged(SAssignConfiguration* pSAssignConfig)
 {
-	//if (pSAssignConfig->SPriorityContainer.bS || pSAssignConfig->SPriorityContainer.bF)
-	//{
-	//	return TRUE;
-	//}
+    //if (pSAssignConfig->SPriorityContainer.bS || pSAssignConfig->SPriorityContainer.bF)
+    //{
+    //	return TRUE;
+    //}
 
-	//return FALSE;
+    //return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºJudgeNonModalGcodeNeedQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬G´úÂëÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º2  GCODE_CAN_MERGED ÄÜºÏ²¢
-			-1 ²»ÄÜºÏ²¢
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šJudgeNonModalGcodeNeedQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€Gä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š2  GCODE_CAN_MERGED èƒ½åˆå¹¶
+			-1 ä¸èƒ½åˆå¹¶
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 JudgeNonModalGcodeNeedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
+int8 JudgeNonModalGcodeNeedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf,
+                                       uint8 ucChannelNum)
 {
-	if (IsNonModalGcodeInfoChanged(pGCodeBuf, ucChannelNum))
-	{
-		if (CanNonModalGcodeQuickHandle(pGCodeBuf, ucChannelNum))
-		{
-			return GCODE_CAN_MERGED;
-		}
-		else
-		{
-			return -1;	//·ÇÄ£Ì¬G´úÂë²»ÄÜ¿ìËÙ´¦Àí
-		}
-	}
-	else
-	{
-		return GCODE_CAN_MERGED;
-	}
+    if (IsNonModalGcodeInfoChanged(pGCodeBuf, ucChannelNum))
+    {
+        if (CanNonModalGcodeQuickHandle(pGCodeBuf, ucChannelNum))
+        {
+            return GCODE_CAN_MERGED;
+        }
+        else
+        {
+            return -1; //éæ¨¡æ€Gä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+        }
+    }
+    else
+    {
+        return GCODE_CAN_MERGED;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºJudgeNonModalCodeNeedQuickHandle()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï·ÇÄ£Ì¬´úÂëÄÜ·ñ¿ìËÙ´¦Àí,µ÷ÓÃÁËÅĞ¶Ï·ÇÄ£Ì¬G´úÂëÄÜ·ñ¿ìËÙ´¦ÀíµÄº¯ÊıºÍÅĞ¶Ï·ÇÄ£Ì¬M´úÂëÄÜ·ñ¿ìËÙ´¦ÀíµÄº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 GCODE_CAN_QUICKHANDLE  ÄÜ¿ìËÙ´¦Àí
-			2 GCODE_CAN_MERGED		ÄÜºÏ²¢
-			-2 ·ÇÄ£Ì¬G´úÂë²»ÄÜ¿ìËÙ´¦Àí
-			-3 ·ÇÄ£Ì¬M´úÂë²»ÄÜ¿ìËÙ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šJudgeNonModalCodeNeedQuickHandle()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­éæ¨¡æ€ä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†,è°ƒç”¨äº†åˆ¤æ–­éæ¨¡æ€Gä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†çš„å‡½æ•°å’Œåˆ¤æ–­éæ¨¡æ€Mä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†çš„å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 GCODE_CAN_QUICKHANDLE  èƒ½å¿«é€Ÿå¤„ç†
+			2 GCODE_CAN_MERGED		èƒ½åˆå¹¶
+			-2 éæ¨¡æ€Gä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+			-3 éæ¨¡æ€Mä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 JudgeNonModalCodeNeedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
+int8 JudgeNonModalCodeNeedQuickHandle(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf,
+                                      uint8 ucChannelNum)
 {
-	if (IsNonModalMcodeInfoChanged(pSAssignConfig, pGCodeBuf, ucChannelNum))	//ÅĞ¶Ï·ÇÄ£Ì¬MÖ¸ÁîÊÇ·ñ¸Ä±ä
-	{
-		if (CanNonModalMcodeQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum))	//ÅĞ¶Ï¸Ä±äµÄ·ÇÄ£Ì¬MÖ¸ÁîÊÇ·ñ¿ÉÒÔ¿ìËÙ´¦Àí
-		{
-			if (JudgeNonModalGcodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum) == GCODE_CAN_MERGED)		//ÅĞ¶Ï·ÇÄ£Ì¬GÖ¸ÁîÊÇ·ñ¸Ä±ä»òÊÇ·ñÄÜ¿ìËÙ´¦Àí
-			{
-				return GCODE_CAN_QUICKHANDLE;	//·ÇÄ£Ì¬G´úÂëÄÜ¿ìËÙ´¦Àí,·ÇÄ£Ì¬M´úÂëÒ²ÄÜ¿ìËÙ´¦Àí£¬µ«·ÇÄ£Ì¬M´úÂë¸Ä±ä£¬²»ÄÜÈÚºÏ
-			}
-			else
-			{
-				return -2;	//·ÇÄ£Ì¬G´úÂë²»ÄÜ¿ìËÙ´¦Àí
-			}
-		}
-		else
-		{
-			return -3;	//µ«·ÇÄ£Ì¬M´úÂë¸Ä±ä£¬ÇÒ²»ÄÜ¿ìËÙ´¦Àí
-		}
-	}
-	else
-	{
-		return JudgeNonModalGcodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum);	//ÅĞ¶Ï·ÇÄ£Ì¬GÖ¸ÁîÊÇ·ñ¸Ä±ä»òÊÇ·ñÄÜ¿ìËÙ´¦Àí
-	}
+    if (IsNonModalMcodeInfoChanged(pSAssignConfig, pGCodeBuf, ucChannelNum)) //åˆ¤æ–­éæ¨¡æ€MæŒ‡ä»¤æ˜¯å¦æ”¹å˜
+    {
+        if (CanNonModalMcodeQuickHandle(pSAssignConfig, pGCodeBuf,
+                                        ucChannelNum)) //åˆ¤æ–­æ”¹å˜çš„éæ¨¡æ€MæŒ‡ä»¤æ˜¯å¦å¯ä»¥å¿«é€Ÿå¤„ç†
+        {
+            if (JudgeNonModalGcodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum) ==
+                GCODE_CAN_MERGED) //åˆ¤æ–­éæ¨¡æ€GæŒ‡ä»¤æ˜¯å¦æ”¹å˜æˆ–æ˜¯å¦èƒ½å¿«é€Ÿå¤„ç†
+            {
+                return GCODE_CAN_QUICKHANDLE; //éæ¨¡æ€Gä»£ç èƒ½å¿«é€Ÿå¤„ç†,éæ¨¡æ€Mä»£ç ä¹Ÿèƒ½å¿«é€Ÿå¤„ç†ï¼Œä½†éæ¨¡æ€Mä»£ç æ”¹å˜ï¼Œä¸èƒ½èåˆ
+            }
+            else
+            {
+                return -2; //éæ¨¡æ€Gä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+            }
+        }
+        else
+        {
+            return -3; //ä½†éæ¨¡æ€Mä»£ç æ”¹å˜ï¼Œä¸”ä¸èƒ½å¿«é€Ÿå¤„ç†
+        }
+    }
+    else
+    {
+        return JudgeNonModalGcodeNeedQuickHandle(pSAssignConfig, pGCodeBuf,
+                                                 ucChannelNum); //åˆ¤æ–­éæ¨¡æ€GæŒ‡ä»¤æ˜¯å¦æ”¹å˜æˆ–æ˜¯å¦èƒ½å¿«é€Ÿå¤„ç†
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºJudgeGodeQuickHandleType()
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸ÃĞĞNC´úÂëÄÜ·ñ¿ìËÙ´¦Àí
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º	2	G´úÂëÄÜºÏ²¢
-				1	G´úÂëÄÜ¿ìËÙ´¦Àí
-				-2	Ä£Ì¬Ö¸ÁîÃ»¸Ä±ä£¬µ«·ÇÄ£Ì¬G´úÂë²»ÄÜ¿ìËÙ´¦Àí
-				-3 Ä£Ì¬Ö¸ÁîÃ»¸Ä±ä£¬µ«·ÇÄ£Ì¬G´úÂë²»ÄÜ¿ìËÙ´¦Àí
-				-4 Ä£Ì¬Ö¸Áî¸Ä±ä£¬¸ÃÖ¸ÁîÄÜ¿ìËÙ´¦Àí£¬µ«·ÇÄ£Ì¬G/M´úÂë²»ÄÜ¿ìËÙ´¦Àí
-				-5 Ä£Ì¬Ö¸Áî¸Ä±ä£¬ÇÒ¸ÃÄ£Ì¬²»ÄÜ¿ìËÙ´¦Àí
-				-6 1.³ÌĞòÓĞÊäÈëF/SÖµ	2.ÖÕµã¸Ä±ä	3.µ¶¼ÜÄ£Ê½Îªµ¶ËşÄ£Ê½
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šJudgeGodeQuickHandleType()
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­è¯¥è¡ŒNCä»£ç èƒ½å¦å¿«é€Ÿå¤„ç†
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š	2	Gä»£ç èƒ½åˆå¹¶
+				1	Gä»£ç èƒ½å¿«é€Ÿå¤„ç†
+				-2	æ¨¡æ€æŒ‡ä»¤æ²¡æ”¹å˜ï¼Œä½†éæ¨¡æ€Gä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+				-3 æ¨¡æ€æŒ‡ä»¤æ²¡æ”¹å˜ï¼Œä½†éæ¨¡æ€Gä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+				-4 æ¨¡æ€æŒ‡ä»¤æ”¹å˜ï¼Œè¯¥æŒ‡ä»¤èƒ½å¿«é€Ÿå¤„ç†ï¼Œä½†éæ¨¡æ€G/Mä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+				-5 æ¨¡æ€æŒ‡ä»¤æ”¹å˜ï¼Œä¸”è¯¥æ¨¡æ€ä¸èƒ½å¿«é€Ÿå¤„ç†
+				-6 1.ç¨‹åºæœ‰è¾“å…¥F/Så€¼	2.ç»ˆç‚¹æ”¹å˜	3.åˆ€æ¶æ¨¡å¼ä¸ºåˆ€å¡”æ¨¡å¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 JudgeGodeQuickHandleType(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum)
 {
-	//²»¿ìËÙ´¦ÀíµÄÇé¿ö:1.³ÌĞòÓĞÊäÈëF/SÖµ	2.ÖÕµã¸Ä±ä	3.µ¶¼ÜÄ£Ê½Îªµ¶ËşÄ£Ê½¸Ä±äµ¶¾ß
-	if (!IsFeedrateOrSpindleSpeedChanged(pSAssignConfig) && IsGodeCoordSustained(pSAssignConfig) && !IsTurretModeTCodeChanged(pSAssignConfig))
-	{
-		//Ä£Ì¬¸Ä±ä»òÅÅµ¶»úÄ£Ê½ÏÂ¸Ä±äµ¶¾ß
-		if (IsModalInfoChangedAPI(pSAssignConfig) || IsToolRawModeTCodeChanged(pSAssignConfig))
-		{
-			if (CanModalChangedQuickHandleAPI(pSAssignConfig))	//µ«ÈÔÄÜ¸ù¾İÄ£Ì¬¸Ä±äµÄĞÅÏ¢¾ö¶¨ÊÇ·ñÄÜ¿ìËÙ´¦Àí
-			{
-				if (JudgeNonModalCodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum) > 0)	//ÅĞ¶Ï·ÇÄ£Ì¬Ö¸Áî
-				{
-					return GCODE_CAN_QUICKHANDLE;	//·ÇÄ£Ì¬G´úÂëÄÜ¿ìËÙ´¦Àí,·ÇÄ£Ì¬M´úÂëÒ²ÄÜ¿ìËÙ´¦Àí£¬µ«Ä£Ì¬´úÂë¸Ä±ä£¬²»ÄÜÈÚºÏ,Ö»ÄÜ½«ÀàĞÍÉèÎª¿ìËÙ´¦Àí
-				}
-				else
-				{
-					return -4;	//·ÇÄ£Ì¬G/M´úÂë²»ÄÜ¿ìËÙ´¦Àí
-				}
-			}
-			else
-			{
-				return -5;	//Ä£Ì¬¸Ä±ä²»ÄÜ¿ìËÙ´¦Àí
-			}
-		}
-		else
-		{
-			return JudgeNonModalCodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum);	//ÅĞ¶Ï·ÇÄ£Ì¬Ö¸Áî
-		}
-	}
-	return -6;
-
+    //ä¸å¿«é€Ÿå¤„ç†çš„æƒ…å†µ:1.ç¨‹åºæœ‰è¾“å…¥F/Så€¼	2.ç»ˆç‚¹æ”¹å˜	3.åˆ€æ¶æ¨¡å¼ä¸ºåˆ€å¡”æ¨¡å¼æ”¹å˜åˆ€å…·
+    if (!IsFeedrateOrSpindleSpeedChanged(pSAssignConfig) && IsGodeCoordSustained(pSAssignConfig) &&
+        !IsTurretModeTCodeChanged(pSAssignConfig))
+    {
+        //æ¨¡æ€æ”¹å˜æˆ–æ’åˆ€æœºæ¨¡å¼ä¸‹æ”¹å˜åˆ€å…·
+        if (IsModalInfoChangedAPI(pSAssignConfig) || IsToolRawModeTCodeChanged(pSAssignConfig))
+        {
+            if (CanModalChangedQuickHandleAPI(pSAssignConfig)) //ä½†ä»èƒ½æ ¹æ®æ¨¡æ€æ”¹å˜çš„ä¿¡æ¯å†³å®šæ˜¯å¦èƒ½å¿«é€Ÿå¤„ç†
+            {
+                if (JudgeNonModalCodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum) > 0) //åˆ¤æ–­éæ¨¡æ€æŒ‡ä»¤
+                {
+                    return GCODE_CAN_QUICKHANDLE; //éæ¨¡æ€Gä»£ç èƒ½å¿«é€Ÿå¤„ç†,éæ¨¡æ€Mä»£ç ä¹Ÿèƒ½å¿«é€Ÿå¤„ç†ï¼Œä½†æ¨¡æ€ä»£ç æ”¹å˜ï¼Œä¸èƒ½èåˆ,åªèƒ½å°†ç±»å‹è®¾ä¸ºå¿«é€Ÿå¤„ç†
+                }
+                else
+                {
+                    return -4; //éæ¨¡æ€G/Mä»£ç ä¸èƒ½å¿«é€Ÿå¤„ç†
+                }
+            }
+            else
+            {
+                return -5; //æ¨¡æ€æ”¹å˜ä¸èƒ½å¿«é€Ÿå¤„ç†
+            }
+        }
+        else
+        {
+            return JudgeNonModalCodeNeedQuickHandle(pSAssignConfig, pGCodeBuf, ucChannelNum); //åˆ¤æ–­éæ¨¡æ€æŒ‡ä»¤
+        }
+    }
+    return -6;
 }

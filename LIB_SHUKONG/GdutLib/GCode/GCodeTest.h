@@ -1,33 +1,31 @@
 #ifndef __GCODETEST_H
 #define __GCODETEST_H
 
-
-//ĞŞ¸ÄÎÄ¼şÃû
+//ä¿®æ”¹æ–‡ä»¶å
 void addPathSTM32FileName(int8* cOutput, int8* pInput, int8 cProgramListSize);
 
-//´ò¿ªÎÄ±¾
+//æ‰“å¼€æ–‡æœ¬
 void GCODE_OPEN_FILE(uint8 ucChannelNum);
 
-//¹Ø±ÕÎÄ±¾
+//å…³é—­æ–‡æœ¬
 void GCODE_CLOSE_FILE(uint8 ucChannelNum);
 
-//³õÊ¼»¯Ä¿±ê×Ö·û´®»º³åÇø
+//åˆå§‹åŒ–ç›®æ ‡å­—ç¬¦ä¸²ç¼“å†²åŒº
 void initTextBuf();
 
-//³õÊ¼»¯Ä¿±ê×Ö·û´®»º³åÇø
+//åˆå§‹åŒ–ç›®æ ‡å­—ç¬¦ä¸²ç¼“å†²åŒº
 void initDesinatedBuf(uint8 ucIdx);
 
-//»ñÈ¡Ò»ĞĞ×Ö·û´®
+//è·å–ä¸€è¡Œå­—ç¬¦ä¸²
 uint8 tryToGetLine(int8* pName, uint32 unTargetLineNum, int8 cProgramListSize, uint8 ucChannelNum);
 
-//´òÓ¡G´úÂë»º³åÇøµ¥Ôª
+//æ‰“å°Gä»£ç ç¼“å†²åŒºå•å…ƒ
 void printGCodeBuffUnit(struct SGCodeParse* pSGCodeParseUnit, int32 nNo);
 
-//´òÓ¡G´úÂëNCÎÄ¼ş
+//æ‰“å°Gä»£ç NCæ–‡ä»¶
 void printGCodeNCFile(struct SGCodeParse* pSGCodeParseUnit, int32 nNo);
 
-//´òÓ¡²å²¹µãNCÎÄ¼ş
+//æ‰“å°æ’è¡¥ç‚¹NCæ–‡ä»¶
 void printInterpolatePointNCFile(int32 nLineNum);
-
 
 #endif // !__GCODETEST_H

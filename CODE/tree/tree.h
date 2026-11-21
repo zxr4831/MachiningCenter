@@ -3,25 +3,25 @@
 
 #include "common.h"
 
-typedef struct TreeNodeData// Ê÷½ÚµãÊı¾İ½á¹¹Ìå
+typedef struct TreeNodeData // æ ‘èŠ‚ç‚¹æ•°æ®ç»“æ„ä½“
 {
-	int nIDentifier;//±êÊ¶·û
-	void* pData;//Êı¾İÓòÖ¸Õë
-}TreeNodeData;
+    int nIDentifier; //æ ‡è¯†ç¬¦
+    void* pData;     //æ•°æ®åŸŸæŒ‡é’ˆ
+} TreeNodeData;
 
-typedef struct TreeNode//Ê÷½Úµã
+typedef struct TreeNode //æ ‘èŠ‚ç‚¹
 {
-	TreeNodeData STreeNodeData;//Ê÷½ÚµãÊı¾İ½á¹¹ÌåÖ¸Õë
-	int8 height;//Ê÷¸ß
-	struct  TreeNode* left;//×ó×ÓÊ÷
-	struct  TreeNode* right;//ÓÒ×ÓÊ÷
-}TreeNode;
+    TreeNodeData STreeNodeData; //æ ‘èŠ‚ç‚¹æ•°æ®ç»“æ„ä½“æŒ‡é’ˆ
+    int8 height;                //æ ‘é«˜
+    struct TreeNode* left;      //å·¦å­æ ‘
+    struct TreeNode* right;     //å³å­æ ‘
+} TreeNode;
 
-typedef struct tree//Ê÷½á¹¹Ìå
+typedef struct tree //æ ‘ç»“æ„ä½“
 {
-	TreeNode* Root;//½ÚµãÖ¸Õë
-	int cize;//´óĞ¡
-}Tree;
+    TreeNode* Root; //èŠ‚ç‚¹æŒ‡é’ˆ
+    int cize;       //å¤§å°
+} Tree;
 
 Tree* creatTree(int16 tree_ORAM_NUM);
 TreeNode* mallocTreeNode(void* data, double dIDentifier, int16 node_ORAM_NUM);
@@ -31,6 +31,5 @@ TreeNode* rightRotate(TreeNode* root);
 int8 getBalance(TreeNode* root);
 TreeNode* insertTreeNode(TreeNode* root, void* date, int32 nIDentifier, int8* cErrorSign, int16 node_ORAM_NUM);
 void* findTreeNodeData(TreeNode* root, int32 dGCodeNum);
-
 
 #endif

@@ -1,1053 +1,1045 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include<string.h>
-#include<math.h>
+#include <string.h>
+#include <math.h>
 
 #include "ringbuff.h"
 #include "Config.h"
-#include"GeneralFunctions.h"
+#include "GeneralFunctions.h"
 
+#include "Gcode.h"
 
-#include"Gcode.h"
-
-#include"NCDataPara.h"
-#include"IOCommand.h"
-#include"ToolChanger.h"
-#include"Channel.h"
-
+#include "NCDataPara.h"
+#include "IOCommand.h"
+#include "ToolChanger.h"
+#include "Channel.h"
 
 #if STM32_MODE
-#include "dir.h"  
+#include "dir.h"
 #include "app_warning.h"
 #endif
 
-
-
-
-
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫SSyntaxConfiguration* getSyntaxConfig(uint8 ucChannelNum)
-  ∫Ø ˝π¶ƒ‹: ªÒ»°ƒ≥∏ˆÕ®µ¿µƒG¥˙¬ÎºÏ≤ÈΩ·ππÃÂ
-   ‰»Î≤Œ ˝£∫ucChannelNum     Õ®µ¿∫≈
+  ÂáΩÊï∞ÂêçÁß∞ÔºöSSyntaxConfiguration* getSyntaxConfig(uint8 ucChannelNum)
+  ÂáΩÊï∞ÂäüËÉΩ: Ëé∑ÂèñÊüê‰∏™ÈÄöÈÅìÁöÑG‰ª£Á†ÅÊ£ÄÊü•ÁªìÊûÑ‰Ωì
+  ËæìÂÖ•ÂèÇÊï∞ÔºöucChannelNum     ÈÄöÈÅìÂè∑
 
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
-  ±∏    ◊¢£∫
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
+  Â§á    Ê≥®Ôºö
 **************************************************/
 SSyntaxConfiguration* getSyntaxConfig(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM301);
-		return NULL;
-	}
-	SChannelConfiguration* pSChannelConfig = getChannelConfig(ucChannelNum);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM301);
+        return NULL;
+    }
+    SChannelConfiguration* pSChannelConfig = getChannelConfig(ucChannelNum);
 
-	if (pSChannelConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return NULL; 
-	}
+    if (pSChannelConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return NULL;
+    }
 
-	return &pSChannelConfig->SSyntaxConfig;
+    return &pSChannelConfig->SSyntaxConfig;
 }
 
-
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫void initSyntaxConfig(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
-  ∫Ø ˝π¶ƒ‹: ≥ı ºªØºÏ≤ÈΩ·ππÃÂ
-   ‰»Î≤Œ ˝£∫pSSyntaxConfig	ºÏ≤ÈΩ·ππÃÂ
-			ucChannelNum	Õ®µ¿∫≈
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
-  ±∏    ◊¢£∫≥ı ºªØΩ·ππÃÂ±‰¡øµƒ≤Ω÷Ë»Áœ¬
-			1. Õ∑≈Ω·ππÃÂ÷–ø™±Ÿµƒƒ⁄¥Ê
-			2.Ω·ππÃÂƒ⁄»´≤ø÷√0
-			3.∂‘Ω·ππÃÂ±‰¡ø≥ı ºªØ
-			4.∂‘≥ı º÷µ∑«0µƒ±‰¡ø∏≥÷µ
-			£®“ª¥ŒG¥˙¬ÎΩ‚ŒˆΩˆ≥ı ºªØ“ª¥Œ£©
+  ÂáΩÊï∞ÂêçÁß∞Ôºövoid initSyntaxConfig(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
+  ÂáΩÊï∞ÂäüËÉΩ: ÂàùÂßãÂåñÊ£ÄÊü•ÁªìÊûÑ‰Ωì
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpSSyntaxConfig	Ê£ÄÊü•ÁªìÊûÑ‰Ωì
+			ucChannelNum	ÈÄöÈÅìÂè∑
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
+  Â§á    Ê≥®ÔºöÂàùÂßãÂåñÁªìÊûÑ‰ΩìÂèòÈáèÁöÑÊ≠•È™§Â¶Ç‰∏ã
+			1.ÈáäÊîæÁªìÊûÑ‰Ωì‰∏≠ÂºÄËæüÁöÑÂÜÖÂ≠ò
+			2.ÁªìÊûÑ‰ΩìÂÜÖÂÖ®ÈÉ®ÁΩÆ0
+			3.ÂØπÁªìÊûÑ‰ΩìÂèòÈáèÂàùÂßãÂåñ
+			4.ÂØπÂàùÂßãÂÄºÈùû0ÁöÑÂèòÈáèËµãÂÄº
+			Ôºà‰∏ÄÊ¨°G‰ª£Á†ÅËß£Êûê‰ªÖÂàùÂßãÂåñ‰∏ÄÊ¨°Ôºâ
 **************************************************/
 void initSyntaxConfig(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1. Õ∑≈∏≥÷µΩ·ππÃÂ÷–ø™±Ÿµƒƒ⁄¥Ê
-	//Ω·ππÃÂƒ⁄Œ¥ø™±Ÿƒ⁄¥Ê
+    //1.ÈáäÊîæËµãÂÄºÁªìÊûÑ‰Ωì‰∏≠ÂºÄËæüÁöÑÂÜÖÂ≠ò
+    //ÁªìÊûÑ‰ΩìÂÜÖÊú™ÂºÄËæüÂÜÖÂ≠ò
 
-	//2.«Âø’ºÏ≤ÈΩ·ππÃÂ
-	memset(pSSyntaxConfig, 0, sizeof(struct _SSyntaxConfiguration));
+    //2.Ê∏ÖÁ©∫Ê£ÄÊü•ÁªìÊûÑ‰Ωì
+    memset(pSSyntaxConfig, 0, sizeof(struct _SSyntaxConfiguration));
 
-//3.≥ı ºªØΩ·ππÃÂ±‰¡ø
-	//3.1≥ı ºªØªÒ»°Œƒ±æ◊¥Ã¨
-	initGetTextStateInfo(&pSSyntaxConfig->SGetTextStateInfo);
-	//3.2≥ı ºªØ…®√ËΩ·ππÃÂ
-	initScanContainer(&pSSyntaxConfig->SScanContainer, TRUE);
-	//3.3≥ı ºªØœµÕ≥◊¥Ã¨Ω·ππÃÂ
-	initGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState,  ucChannelNum);
+    //3.ÂàùÂßãÂåñÁªìÊûÑ‰ΩìÂèòÈáè
+    //3.1ÂàùÂßãÂåñËé∑ÂèñÊñáÊú¨Áä∂ÊÄÅ
+    initGetTextStateInfo(&pSSyntaxConfig->SGetTextStateInfo);
+    //3.2ÂàùÂßãÂåñÊâ´ÊèèÁªìÊûÑ‰Ωì
+    initScanContainer(&pSSyntaxConfig->SScanContainer, TRUE);
+    //3.3ÂàùÂßãÂåñÁ≥ªÁªüÁä∂ÊÄÅÁªìÊûÑ‰Ωì
+    initGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, ucChannelNum);
 
-//4.≥ı ºªØ∑«0µƒ±‰¡ø
-	//4.1≥ı ºªØÕ®µ¿∫≈
-	pSSyntaxConfig->ucChannelNum = ucChannelNum;
-	//4.2≥ı ºªØG¥˙¬ÎºÏ≤È◊¥Ã¨ª˙
-	pSSyntaxConfig->ucStatus = GCODE_IDLE;
-	//4.3≥ı ºªØG¥˙¬Î«–∆¨
-	pSSyntaxConfig->cPart = SYNTAX_PART_1;
-	//4.4
-	pSSyntaxConfig->cTargetStatus = UNASSIGNED_VALUE;
+    //4.ÂàùÂßãÂåñÈùû0ÁöÑÂèòÈáè
+    //4.1ÂàùÂßãÂåñÈÄöÈÅìÂè∑
+    pSSyntaxConfig->ucChannelNum = ucChannelNum;
+    //4.2ÂàùÂßãÂåñG‰ª£Á†ÅÊ£ÄÊü•Áä∂ÊÄÅÊú∫
+    pSSyntaxConfig->ucStatus = GCODE_IDLE;
+    //4.3ÂàùÂßãÂåñG‰ª£Á†ÅÂàáÁâá
+    pSSyntaxConfig->cPart = SYNTAX_PART_1;
+    //4.4
+    pSSyntaxConfig->cTargetStatus = UNASSIGNED_VALUE;
 
-	pSSyntaxConfig->SGetTextStateInfo.nEndLineNum= UNASSIGNED_VALUE;
+    pSSyntaxConfig->SGetTextStateInfo.nEndLineNum = UNASSIGNED_VALUE;
 
-	//4.4≥ı ºªØ∆ ºµ•Ω⁄
+    //4.4ÂàùÂßãÂåñËµ∑ÂßãÂçïËäÇ
 #if STM32_MODE
-	//pSSyntaxConfig->usMainProStartLine = re_gcoderunline(ucChannelNum);//ªÒ»°∆ ºµ•Ω⁄
-	pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = re_gcoderunline(ucChannelNum);
-	if (g_SChannel[0].cSubRunMode == 0)
-	{
-		pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = 0;
-	}
+    //pSSyntaxConfig->usMainProStartLine = re_gcoderunline(ucChannelNum);//Ëé∑ÂèñËµ∑ÂßãÂçïËäÇ
+    pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = re_gcoderunline(ucChannelNum);
+    if (g_SChannel[0].cSubRunMode == 0)
+    {
+        pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = 0;
+    }
 #else
-	//pSSyntaxConfig->usMainProStartLine = 0;//ªÒ»°∆ ºµ•Ω⁄
-	pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = 0;
+    //pSSyntaxConfig->usMainProStartLine = 0;//Ëé∑ÂèñËµ∑ÂßãÂçïËäÇ
+    pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = 0;
 #endif
-	//4.5≥ı ºªØG¥˙¬ÎΩ‚ŒˆΩ·ππÃÂ
-	initGCodeBufUnit(&pSSyntaxConfig->SCurrRecord);
-	//4.6∆´÷√÷µµƒ≥ı ºªØ
+    //4.5ÂàùÂßãÂåñG‰ª£Á†ÅËß£ÊûêÁªìÊûÑ‰Ωì
+    initGCodeBufUnit(&pSSyntaxConfig->SCurrRecord);
+    //4.6ÂÅèÁΩÆÂÄºÁöÑÂàùÂßãÂåñ
 
-	//°£°£°£°£°£°£°£°£°£°£°£°£°£
-
+    //„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ„ÄÇ
 }
 
-
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫void syntaxStatusMachine(struct _SSyntaxConfiguration *pSSyntaxConfig, uint8 ucChannelNum)
-  ∫Ø ˝π¶ƒ‹£∫”Ô∑®ºÏ≤È◊¥Ã¨ª˙
-   ‰»Î≤Œ ˝£∫pSSyntaxConfig”Ô∑®Ω·ππÃÂ
-			ucChannelNumÕ®µ¿∫≈
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
-  ±∏    ◊¢£∫
+  ÂáΩÊï∞ÂêçÁß∞Ôºövoid syntaxStatusMachine(struct _SSyntaxConfiguration *pSSyntaxConfig, uint8 ucChannelNum)
+  ÂáΩÊï∞ÂäüËÉΩÔºöËØ≠Ê≥ïÊ£ÄÊü•Áä∂ÊÄÅÊú∫
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpSSyntaxConfigËØ≠Ê≥ïÁªìÊûÑ‰Ωì
+			ucChannelNumÈÄöÈÅìÂè∑
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
+  Â§á    Ê≥®Ôºö
 **************************************************/
-void syntaxStatusMachine(struct _SSyntaxConfiguration *pSSyntaxConfig, uint8 ucChannelNum)
+void syntaxStatusMachine(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	switch (pSSyntaxConfig->ucStatus)
-	{
-	case GCODE_IDLE:  //≤ª‘À––
-	{
-		break;
-	}
+    switch (pSSyntaxConfig->ucStatus)
+    {
+    case GCODE_IDLE: //‰∏çËøêË°å
+    {
+        break;
+    }
 
-	case GCODE_RUN:  //÷±Ω”‘À––
-	{
-		checkSegments(pSSyntaxConfig, ucChannelNum);
-		//≈–∂œƒø±Í◊¥Ã¨ «∑Ò∑¢…˙∏ƒ±‰
-		if (pSSyntaxConfig->cTargetStatus != pSSyntaxConfig->ucStatus && pSSyntaxConfig->cPart == SYNTAX_PART_1)
-		{
-			//changeGCodeStatus(GC_SYNTAX, ucChannelNum, pSSyntaxConfig->ucTargetStatus, TRUE, 0);
+    case GCODE_RUN: //Áõ¥Êé•ËøêË°å
+    {
+        checkSegments(pSSyntaxConfig, ucChannelNum);
+        //Âà§Êñ≠ÁõÆÊ†áÁä∂ÊÄÅÊòØÂê¶ÂèëÁîüÊîπÂèò
+        if (pSSyntaxConfig->cTargetStatus != pSSyntaxConfig->ucStatus && pSSyntaxConfig->cPart == SYNTAX_PART_1)
+        {
+            //changeGCodeStatus(GC_SYNTAX, ucChannelNum, pSSyntaxConfig->ucTargetStatus, TRUE, 0);
+        }
+        break;
+    }
+    case GCODE_RUN2FINISHED:
+    {
+        changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_FINISHED, TRUE,
+                          pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+        break;
+    }
 
-		}
-		break;
-	}
-	case GCODE_RUN2FINISHED:
-	{
-		changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_FINISHED, TRUE, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-		break;
-	}
+    case GCODE_FINISHED: //‰∏çËøêË°å
+    {
+        break;
+    }
 
-	case GCODE_FINISHED:  //≤ª‘À––
-	{
-		break;
-	}
+    case GCODE_WARN:
+    {
+        ///	//ÈáçËØªÂ≠óÁ¨¶‰∏≤
+        ///	pSSyntaxConfig->ucStatus = GCODE_RUN;  //‰øÆÊîπÁä∂ÊÄÅÔºåÂÜçÊ¨°Ê£ÄÊü•Ê≠§Ë°å   G71Â•ΩÂÉè‰∏çË°åÂïäÔºÅÔºÅÔºÅ
+        break;
+    }
+    case GCODE_WAIT: //Á≠âÂæÖÊåá‰ª§
+    {
+        SAssignConfiguration* pSAssignConfig = getAssignConfig(ucChannelNum);
 
-	case GCODE_WARN:
-	{
-	///	//÷ÿ∂¡◊÷∑˚¥Æ
-	///	pSSyntaxConfig->ucStatus = GCODE_RUN;  //–ﬁ∏ƒ◊¥Ã¨£¨‘Ÿ¥ŒºÏ≤È¥À––   G71∫√œÒ≤ª––∞°£°£°£°
-		break;
-	}
-	case GCODE_WAIT:  //µ»¥˝÷∏¡Ó
-	{
-		SAssignConfiguration* pSAssignConfig = getAssignConfig(ucChannelNum);
-		
-		if (pSSyntaxConfig->unTotalCommandCnt == pSAssignConfig->unTotalCommandCnt)
-		{
-			changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+        if (pSSyntaxConfig->unTotalCommandCnt == pSAssignConfig->unTotalCommandCnt)
+        {
+            changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE,
+                              pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
 
-			//”ˆµΩ≥Ã–Úøÿ÷∆÷∏¡Ó£¨»ÁM98£¨M99£¨G65£¨G66
-			//ºÏ≤È¡˜≥Ã≤ª“™’“ªÒ»°––∫≈°£“ÚŒ™øÁ≥Ã–ÚŒƒº˛ ±£¨ºÏ≤È’“––∫≈’“≤ª∂‘
-			//Ω´∏≥÷µ¡˜≥ÃµƒªÒ»°––∫≈ ∏≥÷µ ºÏ≤È¡˜≥ÃµƒªÒ»°––∫≈
-			pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = pSAssignConfig->SGetTextStateInfo.unGetLineNum;
-			pSSyntaxConfig->SGetTextStateInfo.ucOriStrIndex = pSAssignConfig->SGetTextStateInfo.ucOriStrIndex;
-			//––ƒ⁄∆´“∆±ÿ–Î≈‰Ã◊‘≠ º––∫Õ◊¢ Õ◊¥Ã¨£ª…®√Ë÷∏’Î»‘ π”√ºÏ≤È¡˜≥Ã◊‘…Ìµƒª∫≥Â°£
-			memcpy(pSSyntaxConfig->SGetTextStateInfo.cOriginalStr, pSAssignConfig->SGetTextStateInfo.cOriginalStr, sizeof(pSSyntaxConfig->SGetTextStateInfo.cOriginalStr));
-			pSSyntaxConfig->SGetTextStateInfo.bIgnored = pSAssignConfig->SGetTextStateInfo.bIgnored;
+            //ÈÅáÂà∞Á®ãÂ∫èÊéßÂà∂Êåá‰ª§ÔºåÂ¶ÇM98ÔºåM99ÔºåG65ÔºåG66
+            //Ê£ÄÊü•ÊµÅÁ®ã‰∏çË¶ÅÊâæËé∑ÂèñË°åÂè∑„ÄÇÂõ†‰∏∫Ë∑®Á®ãÂ∫èÊñá‰ª∂Êó∂ÔºåÊ£ÄÊü•ÊâæË°åÂè∑Êâæ‰∏çÂØπ
+            //Â∞ÜËµãÂÄºÊµÅÁ®ãÁöÑËé∑ÂèñË°åÂè∑ ËµãÂÄº Ê£ÄÊü•ÊµÅÁ®ãÁöÑËé∑ÂèñË°åÂè∑
+            pSSyntaxConfig->SGetTextStateInfo.unGetLineNum = pSAssignConfig->SGetTextStateInfo.unGetLineNum;
+            pSSyntaxConfig->SGetTextStateInfo.ucOriStrIndex = pSAssignConfig->SGetTextStateInfo.ucOriStrIndex;
+            //Ë°åÂÜÖÂÅèÁßªÂøÖÈ°ªÈÖçÂ•óÂéüÂßãË°åÂíåÊ≥®ÈáäÁä∂ÊÄÅÔºõÊâ´ÊèèÊåáÈíà‰ªç‰ΩøÁî®Ê£ÄÊü•ÊµÅÁ®ãËá™Ë∫´ÁöÑÁºìÂÜ≤„ÄÇ
+            memcpy(pSSyntaxConfig->SGetTextStateInfo.cOriginalStr, pSAssignConfig->SGetTextStateInfo.cOriginalStr,
+                   sizeof(pSSyntaxConfig->SGetTextStateInfo.cOriginalStr));
+            pSSyntaxConfig->SGetTextStateInfo.bIgnored = pSAssignConfig->SGetTextStateInfo.bIgnored;
 
-			pSSyntaxConfig->unTotalCommandCnt = 0;
-			pSAssignConfig->unTotalCommandCnt = 0;
-		}
+            pSSyntaxConfig->unTotalCommandCnt = 0;
+            pSAssignConfig->unTotalCommandCnt = 0;
+        }
 
+        ////Êñ∞Êû∂ÊûÑ‰∏≠G‰ª£Á†ÅËß£ÊûêÂêÑÈÄöÈÅìÂÆåÂÖ®Áã¨Á´ãÔºåÁ≠âÂæÖÁä∂ÊÄÅÊú∫‰ªÖÁî®‰∫éÁ®ãÂ∫èÊñáÊú¨Èó¥ÁöÑÂàáÊç¢Ôºü
+        //if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_IDLE || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_FINISHED
+        //          || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_ASSIGN_WAIT)
+        //{
+        //	changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+        //
+        //}
+        //else if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_WAIT
+        //          || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN2FINISHED )
+        //{
+        //	//‰∏çÁî®Â§ÑÁêÜ
+        //}
 
-		////–¬º‹ππ÷–G¥˙¬ÎΩ‚Œˆ∏˜Õ®µ¿ÕÍ»´∂¿¡¢£¨µ»¥˝◊¥Ã¨ª˙Ωˆ”√”⁄≥Ã–ÚŒƒ±æº‰µƒ«–ªª£ø
-		//if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_IDLE || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_FINISHED 
-  //          || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_ASSIGN_WAIT)
-		//{
-		//	changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-		//	
-		//}
-		//else if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_WAIT 
-  //          || getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN2FINISHED )
-		//{
-		//	//≤ª”√¥¶¿Ì
-		//}
+        //else
+        //{
+        //	//Áî®‰∫éÊçïËé∑Êú™ËÄÉËôëÁöÑÊÉÖÂÜµ
+        //	parseGCodeErrorB(0, GCODE_ERROR_NUM306);
+        //}
 
-		//else 
-		//{
-		//	//”√”⁄≤∂ªÒŒ¥øº¬«µƒ«Èøˆ
-		//	parseGCodeErrorB(0, GCODE_ERROR_NUM306);
-		//}
+        break;
+    }
+    case GCODE_SYNTAX_WAIT: //‰∏çËøêË°å
+    {
 
-		break;
-	}
-	case GCODE_SYNTAX_WAIT:  //≤ª‘À––
-	{
+        //SAssignConfiguration* pSAssignConfig_Channel = getAssignConfig(ucChannelNum);  //ËµãÂÄºÁªìÊûÑ‰Ωì
+        //if (pSAssignConfig_Channel->bFinshed==TRUE)
+        //{
+        //	pSAssignConfig_Channel->bFinshed = FALSE;//Èò≤Ê≠¢ËØ≠Ê≥ïËøõÂÖ•Ê≠§Áä∂ÊÄÅÊó∂ÔºåËµãÂÄºÁöÑbfinshed‰∏∫1ÔºåËÄåËØ≠Ê≥ïÁöÑbfinshed‰∏∫0
+        //}
+        //break;
+    }
 
-		//SAssignConfiguration* pSAssignConfig_Channel = getAssignConfig(ucChannelNum);  //∏≥÷µΩ·ππÃÂ
-		//if (pSAssignConfig_Channel->bFinshed==TRUE)
-		//{
-		//	pSAssignConfig_Channel->bFinshed = FALSE;//∑¿÷π”Ô∑®Ω¯»Î¥À◊¥Ã¨ ±£¨∏≥÷µµƒbfinshedŒ™1£¨∂¯”Ô∑®µƒbfinshedŒ™0
-		//}
-		//break;
-	}
-
-	default:
-		parseGCodeErrorB(0, GCODE_ERROR_NUM306);
-		break;
-	}
+    default:
+        parseGCodeErrorB(0, GCODE_ERROR_NUM306);
+        break;
+    }
 }
 
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫void checkSegments(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
-  ∫Ø ˝π¶ƒ‹£∫ºÏ≤ÈcGa°¢cGz≥Ã–Ú∂Œ£®◊‹øÚº‹£©
-   ‰»Î≤Œ ˝£∫pSSyntaxConfig”Ô∑®Ω·ππÃÂ
-			ucChannelNumÕ®µ¿∫≈
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
-  ±∏    ◊¢£∫£°£°£°◊¢“‚ºÏ≤È∂‘πÊ‘ÚΩ·ππÃÂ∫Ø ˝÷∏’Î∑√Œ «∞“ª∂®“™≈–∂œ «∑ÒŒ™ø’£°£°£°
+  ÂáΩÊï∞ÂêçÁß∞Ôºövoid checkSegments(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
+  ÂáΩÊï∞ÂäüËÉΩÔºöÊ£ÄÊü•cGa„ÄÅcGzÁ®ãÂ∫èÊÆµÔºàÊÄªÊ°ÜÊû∂Ôºâ
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpSSyntaxConfigËØ≠Ê≥ïÁªìÊûÑ‰Ωì
+			ucChannelNumÈÄöÈÅìÂè∑
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
+  Â§á    Ê≥®ÔºöÔºÅÔºÅÔºÅÊ≥®ÊÑèÊ£ÄÊü•ÂØπËßÑÂàôÁªìÊûÑ‰ΩìÂáΩÊï∞ÊåáÈíàËÆøÈóÆÂâç‰∏ÄÂÆöË¶ÅÂà§Êñ≠ÊòØÂê¶‰∏∫Á©∫ÔºÅÔºÅÔºÅ
 **************************************************/
 void checkSegments(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
-	if (ucChannelNum > CHANNEL_NUM_MAX - 1)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM301);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
+    if (ucChannelNum > CHANNEL_NUM_MAX - 1)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM301);
+        return;
+    }
 
-	switch (pSSyntaxConfig->cPart)
-	{
-	//¥”Œƒ±æ÷–ªÒ»°“ª∂Œ≥Ã–Ú∂Œ
-	case SYNTAX_PART_1:
-	{
-		uint8 ucRet;
-		SProgram* pSCurrProgram = NULL;   //µ±«∞≥Ã–ÚΩ·ππÃÂ
-		pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);  //ªÒ»°µ±«∞≥Ã–ÚΩ·ππÃÂ
-		if (pSCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		//ucRet = processProgramTextCheck(pSSyntaxConfig, ucChannelNum, pSCurrProgram);
-		ucRet = processProgramText(GC_SYNTAX, &pSSyntaxConfig->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
+    switch (pSSyntaxConfig->cPart)
+    {
+    //‰ªéÊñáÊú¨‰∏≠Ëé∑Âèñ‰∏ÄÊÆµÁ®ãÂ∫èÊÆµ
+    case SYNTAX_PART_1:
+    {
+        uint8 ucRet;
+        SProgram* pSCurrProgram = NULL;                                //ÂΩìÂâçÁ®ãÂ∫èÁªìÊûÑ‰Ωì
+        pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //Ëé∑ÂèñÂΩìÂâçÁ®ãÂ∫èÁªìÊûÑ‰Ωì
+        if (pSCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        //ucRet = processProgramTextCheck(pSSyntaxConfig, ucChannelNum, pSCurrProgram);
+        ucRet = processProgramText(GC_SYNTAX, &pSSyntaxConfig->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
 
-		//≥Ã–ÚŒƒ±æŒ¥¥¶¿ÌÕÍ||“—¥¶¿Ì%||“—º«¬ºDEFINE£¨≤ª–Ë“™÷¥––∫Û–¯«–∆¨
-		if (ucRet == 0 || ucRet == 2 || ucRet == 3)
-		{
-			//≤ª–Ë“™¥¶¿Ì
-		}
-		else if (ucRet == 1)
-		{
-			pSSyntaxConfig->cCommandSegmentCnt++;
-			pSSyntaxConfig->cPart = SYNTAX_PART_2;
-		}
-		break;
-	}
+        //Á®ãÂ∫èÊñáÊú¨Êú™Â§ÑÁêÜÂÆå||Â∑≤Â§ÑÁêÜ%||Â∑≤ËÆ∞ÂΩïDEFINEÔºå‰∏çÈúÄË¶ÅÊâßË°åÂêéÁª≠ÂàáÁâá
+        if (ucRet == 0 || ucRet == 2 || ucRet == 3)
+        {
+            //‰∏çÈúÄË¶ÅÂ§ÑÁêÜ
+        }
+        else if (ucRet == 1)
+        {
+            pSSyntaxConfig->cCommandSegmentCnt++;
+            pSSyntaxConfig->cPart = SYNTAX_PART_2;
+        }
+        break;
+    }
 
-	//…®√Ë≥Ã–Ú∂Œ£¨Ω´÷∏¡Ó◊÷∑≈»Îƒ£Ã¨Ω·ππÃÂ£¨…®√ËΩ·ππÃÂ
-	case SYNTAX_PART_2:
-	{
-		//…®√Ë«∞–Ë“™≥ı ºªØ…®√ËΩ·ππÃÂ
-		//µ±«∞…®√Ë≥Ã–Ú∂ŒŒ™÷∏¡Óµƒµ⁄“ª∂Œ£¨–Ë“™«Âø’…®√ËΩ·ππÃÂ
-		if (pSSyntaxConfig->cCommandSegmentCnt == 1)
-		{
-			initScanContainer(&pSSyntaxConfig->SScanContainer, 1);
-		}
-		//µ±«∞…®√Ë≥Ã–Ú∂Œ∑«÷∏¡Óµƒµ⁄“ª∂Œ£¨≤ª–Ë«Âø’MFST÷µ
-		//∑¿÷π∂‡≥Ã–Ú∂Œ∂™ ßMFSTµƒ÷µ
-		else
-		{
-			initScanContainer(&pSSyntaxConfig->SScanContainer, 0);
-		}
+    //Êâ´ÊèèÁ®ãÂ∫èÊÆµÔºåÂ∞ÜÊåá‰ª§Â≠óÊîæÂÖ•Ê®°ÊÄÅÁªìÊûÑ‰ΩìÔºåÊâ´ÊèèÁªìÊûÑ‰Ωì
+    case SYNTAX_PART_2:
+    {
+        //Êâ´ÊèèÂâçÈúÄË¶ÅÂàùÂßãÂåñÊâ´ÊèèÁªìÊûÑ‰Ωì
+        //ÂΩìÂâçÊâ´ÊèèÁ®ãÂ∫èÊÆµ‰∏∫Êåá‰ª§ÁöÑÁ¨¨‰∏ÄÊÆµÔºåÈúÄË¶ÅÊ∏ÖÁ©∫Êâ´ÊèèÁªìÊûÑ‰Ωì
+        if (pSSyntaxConfig->cCommandSegmentCnt == 1)
+        {
+            initScanContainer(&pSSyntaxConfig->SScanContainer, 1);
+        }
+        //ÂΩìÂâçÊâ´ÊèèÁ®ãÂ∫èÊÆµÈùûÊåá‰ª§ÁöÑÁ¨¨‰∏ÄÊÆµÔºå‰∏çÈúÄÊ∏ÖÁ©∫MFSTÂÄº
+        //Èò≤Ê≠¢Â§öÁ®ãÂ∫èÊÆµ‰∏¢Â§±MFSTÁöÑÂÄº
+        else
+        {
+            initScanContainer(&pSSyntaxConfig->SScanContainer, 0);
+        }
 
-		//…®√Ë«∞Ω´pCurrPtr÷∏œÚ≥Ã–Ú∂Œ◊÷∑˚¥Æ ◊◊÷∑˚
-		pSSyntaxConfig->SGetTextStateInfo.pCurrPtr = pSSyntaxConfig->SGetTextStateInfo.cStr;
+        //Êâ´ÊèèÂâçÂ∞ÜpCurrPtrÊåáÂêëÁ®ãÂ∫èÊÆµÂ≠óÁ¨¶‰∏≤È¶ñÂ≠óÁ¨¶
+        pSSyntaxConfig->SGetTextStateInfo.pCurrPtr = pSSyntaxConfig->SGetTextStateInfo.cStr;
 
-		pSSyntaxConfig->cPart = SYNTAX_PART_3;
+        pSSyntaxConfig->cPart = SYNTAX_PART_3;
 
-		break;
-	}
+        break;
+    }
 
-	case SYNTAX_PART_3:
-	{
-		uint8 ucRet;
-		int16 sLastCommandVal;
-		int16 sCurrCommandVal;
-		const SGCommandRegulation* pSLastCommandRegulation;
-		const SGCommandRegulation* pSCurrCommandRegulation;
+    case SYNTAX_PART_3:
+    {
+        uint8 ucRet;
+        int16 sLastCommandVal;
+        int16 sCurrCommandVal;
+        const SGCommandRegulation* pSLastCommandRegulation;
+        const SGCommandRegulation* pSCurrCommandRegulation;
 
+        //Ëé∑ÂèñÂΩìÂâçÁ®ãÂ∫èÁªìÊûÑ‰Ωì
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		//ªÒ»°µ±«∞≥Ã–ÚΩ·ππÃÂ
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);   
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+        //Êâ´ÊèèÁ®ãÂ∫èÊÆµ
+        ucRet = scanSegment(GC_SYNTAX, &pSSyntaxConfig->SGetTextStateInfo, &pSSyntaxConfig->SScanContainer,
+                            pCurrProgram, ucChannelNum);
 
-		//…®√Ë≥Ã–Ú∂Œ
-		ucRet = scanSegment(GC_SYNTAX, &pSSyntaxConfig->SGetTextStateInfo, &pSSyntaxConfig->SScanContainer, pCurrProgram, ucChannelNum);
+        //ÂΩìÂâçÁ®ãÂ∫èÊÆµÊâ´ÊèèÂÆåÊàê
+        if (ucRet == TRUE)
+        {
+            //1.Ëé∑Âèñ‰∏ä‰∏ÄÁ®ãÂ∫èÊÆµËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§ÔºàGzÁªÑ‰ºòÂÖàÁ∫ßÈ´ò‰∫éGaÁªÑÔºâ
+            if (pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGz != 0)
+            {
+                sLastCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGz;
+                pSLastCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGzRegulation;
+            }
+            else
+            {
+                sLastCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGa;
+                pSLastCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+            }
 
-		//µ±«∞≥Ã–Ú∂Œ…®√ËÕÍ≥…
-		if (ucRet == TRUE)
-		{
-			//1.ªÒ»°…œ“ª≥Ã–Ú∂Œ‘À∂Øœ‡πÿ÷∏¡Ó£®Gz◊È”≈œ»º∂∏ﬂ”⁄Ga◊È£©
-			if (pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGz != 0)
-			{
-				sLastCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGz;		
-				pSLastCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGzRegulation;
+            //2.Ëé∑ÂèñÂΩìÂâçÁ®ãÂ∫èÊÆµËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§
+            //2.1ÂΩìÂâçÁ®ãÂ∫èÊÆµÂá∫Áé∞GaÁªÑÊåá‰ª§
+            if (pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
+            {
+                sCurrCommandVal = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
+                pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
+                pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
+            }
+            //2.2ÂΩìÂâçÁ®ãÂ∫èÊÆµÂá∫Áé∞GzÁªÑÊåá‰ª§
+            else if (pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
+            {
+                sCurrCommandVal = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
+                pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
+                pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
+            }
+            //2.3ÂΩìÂâçÁ®ãÂ∫èÊÆµÊú™Âá∫Áé∞GaGzÁªÑÊåá‰ª§,ÂàôÂèñÂΩìÂâçÁ≥ªÁªüÁä∂ÊÄÅGaÁªÑÊåá‰ª§
+            else
+            {
+                sCurrCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGa;
+                pSCurrCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+                pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+            }
 
-			}
-			else
-			{
-				sLastCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGa;
-				pSLastCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-			}
+            //3.Âà§Êñ≠Â§öÁ®ãÂ∫èÊÆµÊåá‰ª§ÁöÑÊØè‰∏ÄÁ®ãÂ∫èÊÆµËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§ÊòØÂê¶‰∏ÄËá¥
+            if (pSSyntaxConfig->cCommandSegmentCnt == 1)
+            {
+                pSSyntaxConfig->sCurrCommandVal = sCurrCommandVal;
+            }
+            else
+            {
+                if (pSSyntaxConfig->sCurrCommandVal != sCurrCommandVal)
+                {
+                    //Â§öÁ®ãÂ∫èÊÆµÊåá‰ª§ÁöÑÁ¨¨‰∏ÄÊÆµÁ®ãÂ∫èÊÆµÁöÑÊåá‰ª§‰∏éÂêéÁª≠Á®ãÂ∫èÊÆµÊåá‰ª§‰∏ç‰∏ÄËá¥ÔºåÂ¶ÇÔºöÁ¨¨‰∏ÄÊÆµ‰∏∫G71ÔºåÁ¨¨‰∫åÊÆµÈùûG71
+                    parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
+                    break;
+                }
+            }
 
-			//2.ªÒ»°µ±«∞≥Ã–Ú∂Œ‘À∂Øœ‡πÿ÷∏¡Ó
-			//2.1µ±«∞≥Ã–Ú∂Œ≥ˆœ÷Ga◊È÷∏¡Ó
-			if (pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
-			{
-				sCurrCommandVal = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
-				pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
-				pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
-			}
-			//2.2µ±«∞≥Ã–Ú∂Œ≥ˆœ÷Gz◊È÷∏¡Ó
-			else if (pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
-			{
-				sCurrCommandVal = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
-				pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
-				pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
-			}
-			//2.3µ±«∞≥Ã–Ú∂ŒŒ¥≥ˆœ÷GaGz◊È÷∏¡Ó,‘Ú»°µ±«∞œµÕ≥◊¥Ã¨Ga◊È÷∏¡Ó
-			else
-			{
-				sCurrCommandVal = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.sGa;
-				pSCurrCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-				pSSyntaxConfig->pSCurrCommandRegulation = pSSyntaxConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-			}
+            //4.Âà§Êñ≠ÊòØÂê¶ÈúÄË¶ÅÈáäÊîæÂºÄËæüÊåá‰ª§ÂèÇÊï∞ÁªìÊûÑ‰ΩìÂÜÖÂ≠òÔºà‰ªÖËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§Á¨¨‰∏ÄÁ®ãÂ∫èÊÆµÈúÄË¶ÅÂà§Êñ≠Ôºâ
+            if (pSSyntaxConfig->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
+            {
+                //4.1ÈáäÊîæ‰∏ä‰∏ÄÊåá‰ª§Â≠óÁöÑÂèÇÊï∞ÁªìÊûÑ‰Ωì
+                if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
+                {
+                    pSLastCommandRegulation->pFreeParaStructAPI(GC_SYNTAX, pSSyntaxConfig->ucChannelNum);
+                }
+                //4.2ÂºÄËæüÂΩìÂâçÊåá‰ª§Â≠óÁöÑÂèÇÊï∞ÁªìÊûÑ‰Ωì
+                if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                {
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum) <= 0)
+                    {
+                        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
+                        break;
+                    }
+                }
+            }
+            else if (pSSyntaxConfig->cCommandSegmentCnt == 1 && (sLastCommandVal == sCurrCommandVal))
+            {
+                //4.2ÂºÄËæüÂΩìÂâçÊåá‰ª§Â≠óÁöÑÂèÇÊï∞ÁªìÊûÑ‰Ωì
+                if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                {
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum) <= 0)
+                    {
+                        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
+                        break;
+                    }
+                }
+            }
 
-			//3.≈–∂œ∂‡≥Ã–Ú∂Œ÷∏¡Óµƒ√ø“ª≥Ã–Ú∂Œ‘À∂Øœ‡πÿ÷∏¡Ó «∑Ò“ª÷¬
-			if (pSSyntaxConfig->cCommandSegmentCnt == 1)
-			{
-				pSSyntaxConfig->sCurrCommandVal = sCurrCommandVal;
-			}
-			else
-			{
-				if (pSSyntaxConfig->sCurrCommandVal != sCurrCommandVal)
-				{
-					//∂‡≥Ã–Ú∂Œ÷∏¡Óµƒµ⁄“ª∂Œ≥Ã–Ú∂Œµƒ÷∏¡Ó”Î∫Û–¯≥Ã–Ú∂Œ÷∏¡Ó≤ª“ª÷¬£¨»Á£∫µ⁄“ª∂ŒŒ™G71£¨µ⁄∂˛∂Œ∑«G71
-					parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
-					break;
-				}
-			}
+            //5.Âà§Êñ≠ÂΩìÂâçÊåá‰ª§Â≠óÊòØÂê¶ÈúÄË¶ÅÂÜôÂèÇÊï∞ÁªìÊûÑ‰Ωì
+            if (pSCurrCommandRegulation->pGetParaAPI != NULL)
+            {
+                pSCurrCommandRegulation->pGetParaAPI(GC_SYNTAX, &pSSyntaxConfig->SScanContainer, ucChannelNum,
+                                                     &pSSyntaxConfig->SGCodeCurrSysState);
+            }
 
-			//4.≈–∂œ «∑Ò–Ë“™ Õ∑≈ø™±Ÿ÷∏¡Ó≤Œ ˝Ω·ππÃÂƒ⁄¥Ê£®Ωˆ‘À∂Øœ‡πÿ÷∏¡Óµ⁄“ª≥Ã–Ú∂Œ–Ë“™≈–∂œ£©
-			if (pSSyntaxConfig->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
-			{
-				//4.1 Õ∑≈…œ“ª÷∏¡Ó◊÷µƒ≤Œ ˝Ω·ππÃÂ
-				if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
-				{
-					pSLastCommandRegulation->pFreeParaStructAPI(GC_SYNTAX, pSSyntaxConfig->ucChannelNum);
-				}
-				//4.2ø™±Ÿµ±«∞÷∏¡Ó◊÷µƒ≤Œ ˝Ω·ππÃÂ
-				if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-				{
-					if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum) <= 0)
-					{
-						parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
-						break;
-					}
-				}
-			}
-			else if (pSSyntaxConfig->cCommandSegmentCnt == 1 && (sLastCommandVal == sCurrCommandVal))
-			{
-				//4.2ø™±Ÿµ±«∞÷∏¡Ó◊÷µƒ≤Œ ˝Ω·ππÃÂ
-				if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-				{
-					if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum) <= 0)
-					{
-						parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
-						break;
-					}
-				}
-			}
+            //6.Âà§Êñ≠cGa,cGzÊåá‰ª§ÊâÄÊúâÁ®ãÂ∫èÊÆµÊòØÂê¶Êâ´ÊèèÂÆåÊàê
+            if (pSSyntaxConfig->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
+            {
+                //6.1ËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§ÊâÄÊúâÁ®ãÂ∫èÊÆµÂ∑≤ÂÖ®ÈÉ®Êâ´Êèè
+                pSSyntaxConfig->cPart = SYNTAX_PART_4;
+            }
+            else
+            {
+                //6.2ËøòÈúÄÁªßÁª≠Ëé∑ÂèñËøêÂä®Áõ∏ÂÖ≥Êåá‰ª§Á®ãÂ∫èÊÆµ
+                pSSyntaxConfig->cPart = SYNTAX_PART_1;
+            }
+        }
 
-			//5.≈–∂œµ±«∞÷∏¡Ó◊÷ «∑Ò–Ë“™–¥≤Œ ˝Ω·ππÃÂ
-			if (pSCurrCommandRegulation->pGetParaAPI != NULL)
-			{
-				pSCurrCommandRegulation->pGetParaAPI(GC_SYNTAX, &pSSyntaxConfig->SScanContainer, ucChannelNum, &pSSyntaxConfig->SGCodeCurrSysState);
-			}
+        break;
+    }
 
-			//6.≈–∂œcGa,cGz÷∏¡ÓÀ˘”–≥Ã–Ú∂Œ «∑Ò…®√ËÕÍ≥…
-			if (pSSyntaxConfig->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
-			{				
-				//6.1‘À∂Øœ‡πÿ÷∏¡ÓÀ˘”–≥Ã–Ú∂Œ“—»´≤ø…®√Ë
-				pSSyntaxConfig->cPart = SYNTAX_PART_4;
-			}
-			else
-			{
-				//6.2ªπ–ËºÃ–¯ªÒ»°‘À∂Øœ‡πÿ÷∏¡Ó≥Ã–Ú∂Œ
-				pSSyntaxConfig->cPart = SYNTAX_PART_1;
-			}
-		}
+    case SYNTAX_PART_4:
+    {
+        //ÁºìÂÜ≤Âå∫ÂàùÂßãÂåñ
+        initGCodeBufUnit(&pSSyntaxConfig->SCurrRecord);
 
-		break;
-	}
+        //ÁºìÂÜ≤Âå∫ÁªßÊâø1Ôºö‰ªéÂΩìÂâçËß£ÊûêÈÄöÈÅìÁä∂ÊÄÅ‰∏≠ÁªßÊâøÔºàÂ¶ÇÔºöÂàÄÂÖ∑Âè∑ÔºåÂàÄË°•Âè∑Á≠âÔºâ
+        inheritFromGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, &pSSyntaxConfig->SCurrRecord);
 
-	case SYNTAX_PART_4:
-	{
-		//ª∫≥Â«¯≥ı ºªØ
-		initGCodeBufUnit(&pSSyntaxConfig->SCurrRecord);
+        //Ê£ÄÊü•cGa„ÄÅcGz‰ª•Â§ñÁöÑGÊåá‰ª§
+        checkGbCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGcCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGdCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGeCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGfCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGgCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGjCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGhCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkGxCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
 
-		//ª∫≥Â«¯ºÃ≥–1£∫¥”µ±«∞Ω‚ŒˆÕ®µ¿◊¥Ã¨÷–ºÃ≥–£®»Á£∫µ∂æﬂ∫≈£¨µ∂≤π∫≈µ»£©
-		inheritFromGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, &pSSyntaxConfig->SCurrRecord);
+        //Ê£ÄÊü•Ââç‰ΩúÁî®M
+        for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
+        {
+            if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
+            {
+                if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_PRE_ACTION)
+                {
+                    if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI != NULL)
+                    {
+                        pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI(
+                            pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+                    }
+                }
+            }
+        }
 
-		//ºÏ≤ÈcGa°¢cGz“‘Õ‚µƒG÷∏¡Ó
-		checkGbCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGcCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGdCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGeCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGfCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGgCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGjCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGhCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-		checkGxCommand(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
+        //Ê£ÄÊü•F,S,T
+        checkFCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkSCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        checkTCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
 
-		//ºÏ≤È«∞◊˜”√M
-		for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
-		{
-			if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
-			{
-				if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_PRE_ACTION)
-				{
-					if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI != NULL)
-					{
-						pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-					}
-				}
-			}
-		}
+        pSSyntaxConfig->cPart = SYNTAX_PART_5;
 
+        break;
+    }
 
+    case SYNTAX_PART_5:
+    {
+        int8 cRet = 0;
+        struct SGCodeParse* pSGCodeParseUnit = &pSSyntaxConfig->SCurrRecord;
+        //ÂØπÂΩìÂâçcGa„ÄÅcGzÊåá‰ª§ËøõË°åÊ£ÄÊü•
 
-		//ºÏ≤ÈF,S,T
-		checkFCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
-		checkSCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
-		checkTCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        //ÊñπÂºè1ÔºöÁî®ÂáΩÊï∞ÂåÖË£ÖËµ∑Êù•
+        //checkGaOrGzCommand(struct _SSyntaxConfiguration* pSSyntaxConfig)
 
-		pSSyntaxConfig->cPart = SYNTAX_PART_5;
+        //ÊñπÂºè2Ôºö‰∏çËøõË°åÂåÖË£Ö
+        //Ë¶ÅÂä†‰∏äÁ©∫ÊåáÈíàÊ£ÄÊü•
+        //1.Ê£ÄÊü•ÂÜôÂÖ•ÁºìÂÜ≤Âå∫ÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºü
+        //2. Ê£ÄÊü•Áõ¥Êé•ÂÜôÂÖ•Áä∂ÊÄÅÁªìÊûÑ‰ΩìÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºüÔºü
+        if (pSSyntaxConfig->pSCurrCommandRegulation->pCheckCommandAPI != NULL)
+        {
+            cRet =
+                pSSyntaxConfig->pSCurrCommandRegulation->pCheckCommandAPI(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        }
 
-		break;
-	}
+        //cGa„ÄÅcGzÊåá‰ª§Ê£ÄÊü•ÂÆåÊàê
+        if (cRet == 1 || cRet == 2)
+        {
+            //ÂÜôÁºìÂÜ≤Âå∫‰∏≠G‰ª£Á†ÅË°åÂè∑‰ø°ÊÅØ
+            pSGCodeParseUnit->unGCodeLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
+            //ÂÜôÁºìÂÜ≤Âå∫‰∏≠GaÁªÑÊ®°ÊÄÅ‰ø°ÊÅØ
+            if (pSSyntaxConfig->pSCurrCommandRegulation->cGroup == sGa)
+            {
+                pSGCodeParseUnit->SModalInfo.sGa = pSSyntaxConfig->sCurrCommandVal;
+                pSGCodeParseUnit->SModalInfo.pSGaRegulation = pSSyntaxConfig->pSCurrCommandRegulation;
+            }
+            //ÂÜôÁºìÂÜ≤Âå∫‰∏≠GzÁªÑÊ®°ÊÄÅ‰ø°ÊÅØ
+            else
+            {
+                pSGCodeParseUnit->SModalInfo.sGz = pSSyntaxConfig->sCurrCommandVal;
+                pSGCodeParseUnit->SModalInfo.pSGzRegulation = pSSyntaxConfig->pSCurrCommandRegulation;
+            }
+            //4.1Âú®Ga/GzÁªÑÊåá‰ª§ËµãÂÄºÊé•Âè£‰∏≠Ëµã‰∫ÜÂÄºÔºå‰ΩÜÊú™ËµãÂÄºÂÆåÔºàÂØπÁºìÂÜ≤Âå∫ÂçïÂÖÉÈó¥ËøõË°åËøáÊ∏°Ôºâ
+            if (cRet == 1)
+            {
+                //Êõ¥Êñ∞G‰ª£Á†ÅÁ≥ªÁªüÁä∂ÊÄÅ
+                updataGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, pSGCodeParseUnit);
 
-	case SYNTAX_PART_5:
-	{
-		int8 cRet = 0;
-		struct SGCodeParse* pSGCodeParseUnit = &pSSyntaxConfig->SCurrRecord;
-		//∂‘µ±«∞cGa°¢cGz÷∏¡ÓΩ¯––ºÏ≤È
-		
-		//∑Ω Ω1£∫”√∫Ø ˝∞¸◊∞∆¿¥
-		//checkGaOrGzCommand(struct _SSyntaxConfiguration* pSSyntaxConfig)
+                //ÂàùÂßãÂåñG‰ª£Á†ÅÁºìÂÜ≤Âå∫ÂçïÂÖÉ
+                initGCodeBufUnit(pSGCodeParseUnit);
+                //‰ªéG‰ª£Á†ÅÁ≥ªÁªüÁä∂ÊÄÅ‰∏≠ÁªßÊâø
+                inheritFromGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+            }
+            else if (cRet == 2)
+            {
+                pSSyntaxConfig->cPart = ASSIGN_PART_6;
+            }
+        }
 
-		//∑Ω Ω2£∫≤ªΩ¯––∞¸◊∞
-		//“™º”…œø’÷∏’ÎºÏ≤È
-		//1.ºÏ≤È–¥»Îª∫≥Â«¯£ø£ø£ø£ø£ø£ø£ø£ø£ø£ø
-		//2. ºÏ≤È÷±Ω”–¥»Î◊¥Ã¨Ω·ππÃÂ£ø£ø£ø£ø£ø£ø£ø£ø£ø£ø£ø
-		if (pSSyntaxConfig->pSCurrCommandRegulation->pCheckCommandAPI != NULL)
-		{	
-			cRet = pSSyntaxConfig->pSCurrCommandRegulation->pCheckCommandAPI(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
-		}
+        break;
+    }
 
-		//cGa°¢cGz÷∏¡ÓºÏ≤ÈÕÍ≥…
-		if (cRet == 1 || cRet == 2)
-		{
-			//–¥ª∫≥Â«¯÷–G¥˙¬Î––∫≈–≈œ¢
-			pSGCodeParseUnit->unGCodeLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
-			//–¥ª∫≥Â«¯÷–Ga◊Èƒ£Ã¨–≈œ¢
-			if (pSSyntaxConfig->pSCurrCommandRegulation->cGroup == sGa)
-			{
-				pSGCodeParseUnit->SModalInfo.sGa = pSSyntaxConfig->sCurrCommandVal;
-				pSGCodeParseUnit->SModalInfo.pSGaRegulation = pSSyntaxConfig->pSCurrCommandRegulation;
-			}
-			//–¥ª∫≥Â«¯÷–Gz◊Èƒ£Ã¨–≈œ¢
-			else
-			{
-				pSGCodeParseUnit->SModalInfo.sGz = pSSyntaxConfig->sCurrCommandVal;
-				pSGCodeParseUnit->SModalInfo.pSGzRegulation = pSSyntaxConfig->pSCurrCommandRegulation;
-			}
-			//4.1‘⁄Ga/Gz◊È÷∏¡Ó∏≥÷µΩ”ø⁄÷–∏≥¡À÷µ£¨µ´Œ¥∏≥÷µÕÍ£®∂‘ª∫≥Â«¯µ•‘™º‰Ω¯––π˝∂…£©
-			if (cRet == 1)
-			{
-				//∏¸–¬G¥˙¬ÎœµÕ≥◊¥Ã¨
-				updataGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+    case SYNTAX_PART_6:
+    {
+        //Ê£ÄÊü•Âêé‰ΩúÁî®M
+        for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
+        {
+            if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
+            {
+                if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_POST_ACTION)
+                {
+                    if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI != NULL)
+                    {
+                        pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI(
+                            pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+                    }
+                }
+            }
+        }
 
-				//≥ı ºªØG¥˙¬Îª∫≥Â«¯µ•‘™
-				initGCodeBufUnit(pSGCodeParseUnit);
-				//¥”G¥˙¬ÎœµÕ≥◊¥Ã¨÷–ºÃ≥–
-				inheritFromGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, pSGCodeParseUnit);
-			}
-			else if (cRet == 2)
-			{
-				pSSyntaxConfig->cPart = ASSIGN_PART_6;
-			}
-		}
+        pSSyntaxConfig->cPart = SYNTAX_PART_7;
 
-		break;
-	}
+        break;
+    }
 
-	case SYNTAX_PART_6:
-	{
-		//ºÏ≤È∫Û◊˜”√M
-		for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
-		{
-			if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
-			{
-				if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_POST_ACTION)
-				{
-					if (pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI != NULL)
-					{
-						pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pCheckCommandAPI(pSSyntaxConfig,&pSSyntaxConfig->SCurrRecord);
-					}
-				}
-			}
-		}
+    case SYNTAX_PART_7:
+    {
+        int8 cRet = 0;
+        cRet = checkSpecialCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
 
-		pSSyntaxConfig->cPart = SYNTAX_PART_7;
+        if (cRet == 1)
+        {
+            pSSyntaxConfig->cPart = ASSIGN_PART_8;
+        }
+        break;
+    }
 
-		break;
-	}
+    case SYNTAX_PART_8:
+    {
 
-	case SYNTAX_PART_7:
-	{		
-		int8 cRet = 0;
-		cRet = checkSpecialCommand(pSSyntaxConfig, &pSSyntaxConfig->SCurrRecord);
+        if (pSSyntaxConfig->cTargetStatus != UNASSIGNED_VALUE)
+        {
+            changeGCodeStatus(GC_SYNTAX, ucChannelNum, (uint8)pSSyntaxConfig->cTargetStatus, TRUE,
+                              pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+            pSSyntaxConfig->cTargetStatus = UNASSIGNED_VALUE;
+        }
 
-		if (cRet == 1)
-		{
-			pSSyntaxConfig->cPart = ASSIGN_PART_8;
-		}
-		break;
+        //Êõ¥Êñ∞G‰ª£Á†ÅÁ≥ªÁªüÁä∂ÊÄÅ
+        updataGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState, &pSSyntaxConfig->SCurrRecord);
 
-	}
+        pSSyntaxConfig->unTotalCommandCnt += pSSyntaxConfig->cCommandSegmentCnt;
+        pSSyntaxConfig->cCommandSegmentCnt = 0;
 
-	case SYNTAX_PART_8:
-	{
-
-		if (pSSyntaxConfig->cTargetStatus != UNASSIGNED_VALUE)
-		{
-			changeGCodeStatus(GC_SYNTAX, ucChannelNum, (uint8)pSSyntaxConfig->cTargetStatus, TRUE, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-			pSSyntaxConfig->cTargetStatus = UNASSIGNED_VALUE;
-		}
-
-		//∏¸–¬G¥˙¬ÎœµÕ≥◊¥Ã¨
-		updataGCodeSystemState(&pSSyntaxConfig->SGCodeCurrSysState,&pSSyntaxConfig->SCurrRecord);
-
-		pSSyntaxConfig->unTotalCommandCnt += pSSyntaxConfig->cCommandSegmentCnt;
-		pSSyntaxConfig->cCommandSegmentCnt = 0;
-
-		pSSyntaxConfig->cPart = SYNTAX_PART_1;
-		break;
-	}
-	default:
-		parseGCodeErrorB(0, GCODE_ERROR_NUM304);
-		break;
-	}
+        pSSyntaxConfig->cPart = SYNTAX_PART_1;
+        break;
+    }
+    default:
+        parseGCodeErrorB(0, GCODE_ERROR_NUM304);
+        break;
+    }
 }
 
-
-//ºÏ≤È∑«Ga°¢Gz◊È÷∏¡Ó
-void checkGbCommand(struct _SSyntaxConfiguration* pSSyntaxConfig,struct SGCodeParse* pSGCodeParseUnit)
+//Ê£ÄÊü•ÈùûGa„ÄÅGzÁªÑÊåá‰ª§
+void checkGbCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGbRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGbRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGcCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGcRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGcRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGdCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGdRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGdRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGeCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGeRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGeRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGfCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGfRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGfRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGgCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGgRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGgRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫checkGjCommand
-  ∫Ø ˝π¶ƒ‹£∫µ˜”√µ±«∞≥Ã–Ú∂Œ j ◊È÷∏¡ÓµƒºÏ≤ÈΩ”ø⁄°£
-   ‰»Î≤Œ ˝£∫pSSyntaxConfig Œ™ºÏ≤È≈‰÷√£ªpSGCodeParseUnit Œ™”––ßµƒµ±«∞ºÏ≤Èº«¬º°£
-   ‰≥ˆ≤Œ ˝£∫”…∂‘”¶Ω”ø⁄∏¸–¬ºÏ≤È◊¥Ã¨£ª≈‰÷√Œ™ø’ªÚºÏ≤ÈΩ”ø⁄»± ß ±±® 300°£
-  ∑µ ªÿ ÷µ£∫Œﬁ°£
-  ±∏    ◊¢£∫±æ∂ŒŒﬁ j ◊È÷∏¡Ó ±±£¡Ù‘≠ƒ£Ã¨£ª±®æØ¥¶¿Ì—ÿ”√∆‰À˚◊È∑÷∑¢∫Ø ˝°£
+  ÂáΩÊï∞ÂêçÁß∞ÔºöcheckGjCommand
+  ÂáΩÊï∞ÂäüËÉΩÔºöË∞ÉÁî®ÂΩìÂâçÁ®ãÂ∫èÊÆµ j ÁªÑÊåá‰ª§ÁöÑÊ£ÄÊü•Êé•Âè£„ÄÇ
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpSSyntaxConfig ‰∏∫Ê£ÄÊü•ÈÖçÁΩÆÔºõpSGCodeParseUnit ‰∏∫ÊúâÊïàÁöÑÂΩìÂâçÊ£ÄÊü•ËÆ∞ÂΩï„ÄÇ
+  ËæìÂá∫ÂèÇÊï∞ÔºöÁî±ÂØπÂ∫îÊé•Âè£Êõ¥Êñ∞Ê£ÄÊü•Áä∂ÊÄÅÔºõÈÖçÁΩÆ‰∏∫Á©∫ÊàñÊ£ÄÊü•Êé•Âè£Áº∫Â§±Êó∂Êä• 300„ÄÇ
+  Ëøî Âõû ÂÄºÔºöÊó†„ÄÇ
+  Â§á    Ê≥®ÔºöÊú¨ÊÆµÊó† j ÁªÑÊåá‰ª§Êó∂‰øùÁïôÂéüÊ®°ÊÄÅÔºõÊä•Ë≠¶Â§ÑÁêÜÊ≤øÁî®ÂÖ∂‰ªñÁªÑÂàÜÂèëÂáΩÊï∞„ÄÇ
 **************************************************/
 void checkGjCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	const SGCommandRegulation* pTemp; // µ±«∞≥Ã–Ú∂Œµƒ j ◊È÷∏¡ÓπÊ‘Ú°£
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGjRegulation;
+    const SGCommandRegulation* pTemp; // ÂΩìÂâçÁ®ãÂ∫èÊÆµÁöÑ j ÁªÑÊåá‰ª§ËßÑÂàô„ÄÇ
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGjRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			// Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝°£
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            // Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞„ÄÇ
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 
 void checkGhCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGhRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanModalInfo.pSGhRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 void checkGxCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSGxRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSSyntaxConfig->SScanContainer.SScanNonModalInfo.pSGxRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pCheckCommandAPI == NULL)
-		{
-			//Œ¥∏¯≥ˆ÷∏¡ÓµƒºÏ≤È∫Ø ˝
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
-	}
+    if (pTemp != NULL)
+    {
+        if (pTemp->pCheckCommandAPI == NULL)
+        {
+            //Êú™ÁªôÂá∫Êåá‰ª§ÁöÑÊ£ÄÊü•ÂáΩÊï∞
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        pTemp->pCheckCommandAPI(pSSyntaxConfig, pSGCodeParseUnit);
+    }
 }
 
-
-//ºÏ≤ÈFST÷∏¡Ó
+//Ê£ÄÊü•FSTÊåá‰ª§
 void checkFCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//≥Ã–Ú∂Œ÷–≥ˆœ÷F≤≈ºÏ≤È
-	if (pSSyntaxConfig->SScanContainer.bF == TRUE)
-	{
-		//2026.10.10 Ã∆◊”Ω‹ Ω¯∏¯ÀŸ∂»F≤ªƒ‹Œ™∏∫ ˝£®G84/G88π•Àø÷∏¡ÓµƒF‘ –ÌŒ™∏∫£¨±Ì æ◊Û–˝£©
-		if (pSSyntaxConfig->SScanContainer.dF < 0 
-			&&pSSyntaxConfig->sCurrCommandVal != 84 * pow(10, GCOMMAND_DECIMAL_PLACE) 
-			&&pSSyntaxConfig->sCurrCommandVal != 88 * pow(10, GCOMMAND_DECIMAL_PLACE))
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
-			return;
-		}
-		pGCodeBufUnit->dFeedrate = pSSyntaxConfig->SScanContainer.dF;
-	}
+    //Á®ãÂ∫èÊÆµ‰∏≠Âá∫Áé∞FÊâçÊ£ÄÊü•
+    if (pSSyntaxConfig->SScanContainer.bF == TRUE)
+    {
+        //2026.10.10 ÂîêÂ≠êÊù∞ ËøõÁªôÈÄüÂ∫¶F‰∏çËÉΩ‰∏∫Ë¥üÊï∞ÔºàG84/G88Êîª‰∏ùÊåá‰ª§ÁöÑFÂÖÅËÆ∏‰∏∫Ë¥üÔºåË°®Á§∫Â∑¶ÊóãÔºâ
+        if (pSSyntaxConfig->SScanContainer.dF < 0 &&
+            pSSyntaxConfig->sCurrCommandVal != 84 * pow(10, GCOMMAND_DECIMAL_PLACE) &&
+            pSSyntaxConfig->sCurrCommandVal != 88 * pow(10, GCOMMAND_DECIMAL_PLACE))
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
+            return;
+        }
+        pGCodeBufUnit->dFeedrate = pSSyntaxConfig->SScanContainer.dF;
+    }
 }
-void checkSCommand(struct _SSyntaxConfiguration*pSSyntaxConfig,  struct SGCodeParse* pGCodeBufUnit)
+void checkSCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	if (pSSyntaxConfig->SScanContainer.bS == TRUE )
-	{
-		if(pSSyntaxConfig->SScanContainer.dS < 0.0)
-		{
-			setErrorType(GCODE_ERROR_NUM130);
-			findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-			return;
-		}
-		
-		//1.∂‘dSpindleSpeed∏≥÷µ
-		if (pSSyntaxConfig->cSpindleSpeedAssignFlag == 0)
-		{
-			pGCodeBufUnit->dSpindleSpeed = pSSyntaxConfig->SScanContainer.dS;
-		}
-		//2.∂‘dSecondSpindleSpeed∏≥÷µ
-		else if (pSSyntaxConfig->cSpindleSpeedAssignFlag == 1)
-		{
-			pGCodeBufUnit->dSecondSpindleSpeed = pSSyntaxConfig->SScanContainer.dS;
-		}
-	}
+    if (pSSyntaxConfig->SScanContainer.bS == TRUE)
+    {
+        if (pSSyntaxConfig->SScanContainer.dS < 0.0)
+        {
+            setErrorType(GCODE_ERROR_NUM130);
+            findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+            return;
+        }
+
+        //1.ÂØπdSpindleSpeedËµãÂÄº
+        if (pSSyntaxConfig->cSpindleSpeedAssignFlag == 0)
+        {
+            pGCodeBufUnit->dSpindleSpeed = pSSyntaxConfig->SScanContainer.dS;
+        }
+        //2.ÂØπdSecondSpindleSpeedËµãÂÄº
+        else if (pSSyntaxConfig->cSpindleSpeedAssignFlag == 1)
+        {
+            pGCodeBufUnit->dSecondSpindleSpeed = pSSyntaxConfig->SScanContainer.dS;
+        }
+    }
 }
 void checkTCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
-	//≥Ã–Ú∂Œ÷–≥ˆœ÷T≤≈ºÏ≤È
-	if (pSSyntaxConfig->SScanContainer.bT == TRUE)
-	{
-		int8 cToolNum;//µ∂æﬂ∫≈
-		int8 cToolCompNum;//µ∂≤π∫≈
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
+    //Á®ãÂ∫èÊÆµ‰∏≠Âá∫Áé∞TÊâçÊ£ÄÊü•
+    if (pSSyntaxConfig->SScanContainer.bT == TRUE)
+    {
+        int8 cToolNum;     //ÂàÄÂÖ∑Âè∑
+        int8 cToolCompNum; //ÂàÄË°•Âè∑
 
-	//“‘œ¬∂‘dTΩ¯––ºÏ≤È£∫
-		//1.dT±ÿ–ÎŒ™’˝’˚ ˝
-		if (!isZero(pSSyntaxConfig->SScanContainer.dT - (int)pSSyntaxConfig->SScanContainer.dT) || pSSyntaxConfig->SScanContainer.dT < 0)
-		{
-			setErrorType(GCODE_ERROR_NUM129);
-			findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-			return;
-		}
+        //‰ª•‰∏ãÂØπdTËøõË°åÊ£ÄÊü•Ôºö
+        //1.dTÂøÖÈ°ª‰∏∫Ê≠£Êï¥Êï∞
+        if (!isZero(pSSyntaxConfig->SScanContainer.dT - (int)pSSyntaxConfig->SScanContainer.dT) ||
+            pSSyntaxConfig->SScanContainer.dT < 0)
+        {
+            setErrorType(GCODE_ERROR_NUM129);
+            findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+            return;
+        }
 
-		//2.dT◊Ó¥ÛŒ™4Œª ˝
-		if (pSSyntaxConfig->SScanContainer.dT > 9999)
-		{
-			setErrorType(GCODE_ERROR_NUM129);
-			findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-			return;
-		}
-	//nTºÏ≤ÈΩ· ¯
+        //2.dTÊúÄÂ§ß‰∏∫4‰ΩçÊï∞
+        if (pSSyntaxConfig->SScanContainer.dT > 9999)
+        {
+            setErrorType(GCODE_ERROR_NUM129);
+            findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+            return;
+        }
+        //nTÊ£ÄÊü•ÁªìÊùü
 
-		int32 nT = (int32)pSSyntaxConfig->SScanContainer.dT;
-		
-		if (nT < 100)
-		{
-			//∆Û“µ“™«Û£¨µ±≥§∂»–°”⁄µ»”⁄2 ±£¨»ÁT02,∏ƒ±‰µƒ «µ∂≥§∫≈º”ƒ•À∫≈
-			cToolNum = pSSyntaxConfig->SGCodeCurrSysState.ucToolID;
-			cToolCompNum = nT;
+        int32 nT = (int32)pSSyntaxConfig->SScanContainer.dT;
 
-		}
-		else
-		{
-			cToolNum = nT / 100;
-			cToolCompNum = nT % 100;
+        if (nT < 100)
+        {
+            //‰ºÅ‰∏öË¶ÅÊ±ÇÔºåÂΩìÈïøÂ∫¶Â∞è‰∫éÁ≠â‰∫é2Êó∂ÔºåÂ¶ÇT02,ÊîπÂèòÁöÑÊòØÂàÄÈïøÂè∑Âä†Á£®ÊçüÂè∑
+            cToolNum = pSSyntaxConfig->SGCodeCurrSysState.ucToolID;
+            cToolCompNum = nT;
+        }
+        else
+        {
+            cToolNum = nT / 100;
+            cToolCompNum = nT % 100;
+        }
 
-		}
+        if (cToolCompNum < 1 || cToolCompNum > TOOL_NUM_MAX)
+        {
+            setErrorType(GCODE_ERROR_NUM129);
+            findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+            return;
+        }
 
-		if (cToolCompNum < 1 || cToolCompNum > TOOL_NUM_MAX)
-		{
-			setErrorType(GCODE_ERROR_NUM129);
-			findError(pSSyntaxConfig->SGetTextStateInfo.pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
-			return;
-		}
+        pSGCodeParseUnit->ucToolID = cToolNum;
+        pSGCodeParseUnit->ucToolCompNum = cToolCompNum;
 
-		pSGCodeParseUnit->ucToolID = cToolNum;
-		pSGCodeParseUnit->ucToolCompNum = cToolCompNum;
+        pSSyntaxConfig->SGCodeCurrSysState.ucToolID = cToolNum;          //ÂÆûÊó∂Ë∑üÊñ∞ÂàÄÂè∑
+        pSSyntaxConfig->SGCodeCurrSysState.ucToolCompNum = cToolCompNum; //ÂÆûÊó∂Ë∑üÊñ∞ÂàÄË°•Âè∑
 
+        //Êõ¥Êñ∞ÂàÄÂÖ∑ÂÅèÁΩÆÂÄºÔºàÈïøÂ∫¶+Á£®ËÄóÔºâ
+        pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolLengthOffset =
+            g_SSystemPara.SToolPara[pSSyntaxConfig->ucChannelNum][cToolCompNum - 1].SToolCoord;
+        pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolWearOffset =
+            pSSyntaxConfig->SGCodeCurrSysState.SToolWearPara[cToolCompNum - 1];
 
-		pSSyntaxConfig->SGCodeCurrSysState.ucToolID = cToolNum;				// µ ±∏˙–¬µ∂∫≈
-		pSSyntaxConfig->SGCodeCurrSysState.ucToolCompNum = cToolCompNum;	// µ ±∏˙–¬µ∂≤π∫≈
-
-		//∏¸–¬µ∂æﬂ∆´÷√÷µ£®≥§∂»+ƒ•∫ƒ£©
-		pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolLengthOffset = g_SSystemPara.SToolPara[pSSyntaxConfig->ucChannelNum][cToolCompNum - 1].SToolCoord;
-		pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolWearOffset = pSSyntaxConfig->SGCodeCurrSysState.SToolWearPara[cToolCompNum - 1];
-
-		//∏¸–¬◊‹∆´÷√
-		calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
-
-	}
+        //Êõ¥Êñ∞ÊÄªÂÅèÁΩÆ
+        calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    }
 }
 
-//ºÏ≤ÈÃÿ ‚÷∏¡Ó
+//Ê£ÄÊü•ÁâπÊÆäÊåá‰ª§
 int8 checkSpecialCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	int8 cRet = 1;
-	//1.B¿‡∫Íπÿº¸◊÷
-	if (pSSyntaxConfig->SScanContainer.cMacroType != 0)
-	{
-		switch (pSSyntaxConfig->SScanContainer.cMacroType)
-		{
-			//GOTO
-		case 1:
-		{
-			cRet = checkGOTO(pSSyntaxConfig, pGCodeBufUnit);
-			break;
-		}
-		//IF
-		case 2:
-		{
-			cRet = checkIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		//ELSEIF
-		case 3:
-		{
-			cRet = checkELSEIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		//ELSE
-		case 4:
-		{
-			cRet = checkELSE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		//ENDIF
-		case 5:
-		{
-			cRet = checkENDIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		//WHILE
-		case 6:
-		{
-			cRet = checkWHILE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		//ENDWHILE
-		case 7:
-		{
-			cRet = checkENDWHILE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
-			break;
-		}
-		default:
-			cRet = 1;
-			break;
-		}
+    int8 cRet = 1;
+    //1.BÁ±ªÂÆèÂÖ≥ÈîÆÂ≠ó
+    if (pSSyntaxConfig->SScanContainer.cMacroType != 0)
+    {
+        switch (pSSyntaxConfig->SScanContainer.cMacroType)
+        {
+            //GOTO
+        case 1:
+        {
+            cRet = checkGOTO(pSSyntaxConfig, pGCodeBufUnit);
+            break;
+        }
+        //IF
+        case 2:
+        {
+            cRet = checkIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer,
+                           &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        //ELSEIF
+        case 3:
+        {
+            cRet = checkELSEIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer,
+                               &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        //ELSE
+        case 4:
+        {
+            cRet = checkELSE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        //ENDIF
+        case 5:
+        {
+            cRet = checkENDIF(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        //WHILE
+        case 6:
+        {
+            cRet = checkWHILE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer,
+                              &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        //ENDWHILE
+        case 7:
+        {
+            cRet = checkENDWHILE(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SGetTextStateInfo);
+            break;
+        }
+        default:
+            cRet = 1;
+            break;
+        }
+    }
 
-	}
-
-	return cRet;
-
+    /* ÂΩìÂâçÈì£ÂâäÊåá‰ª§ÈõÜÂØπ G65/G66/G67 ÊåâÊú™ÊîØÊåÅÊåá‰ª§Â§ÑÁêÜ„ÄÇ */
+    return cRet;
 }
 
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫void findErrorStart(struct _SSyntaxConfiguration *pSSyntaxConfig,uint16 ErrorType,int8 character)
-  ∫Ø ˝π¶ƒ‹£∫’“≥ˆ¥ÌŒÛ£¨≤¢¥´»Î¥ÌŒÛª∫≥Â«¯
-   ‰»Î≤Œ ˝£∫pSSyntaxConfig ”Ô∑®ºÏ≤ÈΩ·ππÃÂ,ErrorType¥ÌŒÛ¿‡–Õ£¨character–°–¥◊÷ƒ∏
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
+  ÂáΩÊï∞ÂêçÁß∞Ôºövoid findErrorStart(struct _SSyntaxConfiguration *pSSyntaxConfig,uint16 ErrorType,int8 character)
+  ÂáΩÊï∞ÂäüËÉΩÔºöÊâæÂá∫ÈîôËØØÔºåÂπ∂‰º†ÂÖ•ÈîôËØØÁºìÂÜ≤Âå∫
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpSSyntaxConfig ËØ≠Ê≥ïÊ£ÄÊü•ÁªìÊûÑ‰Ωì,ErrorTypeÈîôËØØÁ±ªÂûãÔºåcharacterÂ∞èÂÜôÂ≠óÊØç
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
 
-  ±∏    ◊¢£∫
+  Â§á    Ê≥®Ôºö
 **************************************************/
 void findErrorStart(struct _SSyntaxConfiguration* pSSyntaxConfig, uint16 ErrorType, int8 character)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	const int8* pStartPtr = pSSyntaxConfig->SGetTextStateInfo.cStr;
-	while (*pStartPtr != character && *pStartPtr != character + 32)
-	{
-		pStartPtr += 1;
-	}
-	setErrorType(ErrorType);
-	findError(pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
+    const int8* pStartPtr = pSSyntaxConfig->SGetTextStateInfo.cStr;
+    while (*pStartPtr != character && *pStartPtr != character + 32)
+    {
+        pStartPtr += 1;
+    }
+    setErrorType(ErrorType);
+    findError(pStartPtr, pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum);
 }
 
 /*************************************************
-  ∫Ø ˝√˚≥∆£∫void findError(const int8* const pStartPtr,  const uint32 SGetTextStateInfo.unLineNum)
-  ∫Ø ˝π¶ƒ‹£∫’“≥ˆ¥ÌŒÛ£¨≤¢¥´»Î¥ÌŒÛª∫≥Â«¯
-   ‰»Î≤Œ ˝£∫pStartPtr÷∏’Î÷∏œÚ¥ ∑®µ•‘™ø™Õ∑£¨SGetTextStateInfo.unLineNum––∫≈
-   ‰≥ˆ≤Œ ˝£∫
-  ∑µ ªÿ ÷µ£∫
+  ÂáΩÊï∞ÂêçÁß∞Ôºövoid findError(const int8* const pStartPtr,  const uint32 SGetTextStateInfo.unLineNum)
+  ÂáΩÊï∞ÂäüËÉΩÔºöÊâæÂá∫ÈîôËØØÔºåÂπ∂‰º†ÂÖ•ÈîôËØØÁºìÂÜ≤Âå∫
+  ËæìÂÖ•ÂèÇÊï∞ÔºöpStartPtrÊåáÈíàÊåáÂêëËØçÊ≥ïÂçïÂÖÉÂºÄÂ§¥ÔºåSGetTextStateInfo.unLineNumË°åÂè∑
+  ËæìÂá∫ÂèÇÊï∞Ôºö
+  Ëøî Âõû ÂÄºÔºö
 
-  ±∏    ◊¢£∫
+  Â§á    Ê≥®Ôºö
 **************************************************/
 void findError(const int8* pStartPtr, const uint32 unLineNum)
 {
-	if (pStartPtr == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pStartPtr == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	const int8* pAssistStart = NULL;                  //”√”⁄∏®÷˙º«¬º¥ÌŒÛ∆µ„
-	const int8* pAssistEnd = NULL;                    //”√”⁄∏®÷˙º«¬º¥ÌŒÛ÷’µ„
-	setErrorWriteFlag(TRUE);
+    const int8* pAssistStart = NULL; //Áî®‰∫éËæÖÂä©ËÆ∞ÂΩïÈîôËØØËµ∑ÁÇπ
+    const int8* pAssistEnd = NULL;   //Áî®‰∫éËæÖÂä©ËÆ∞ÂΩïÈîôËØØÁªàÁÇπ
+    setErrorWriteFlag(TRUE);
 
-	pAssistStart = pStartPtr;
-	pAssistEnd = pStartPtr + 1;
+    pAssistStart = pStartPtr;
+    pAssistEnd = pStartPtr + 1;
 
-	while (1)
-	{
-		if ((*pAssistEnd >= 'a' && *pAssistEnd <= 'z') || (*pAssistEnd >= 'A' && *pAssistEnd <= 'Z') 
-			|| *pAssistEnd == '\0' || *pAssistEnd == '\r' || *pAssistEnd == '\n')
-		{
-			break;
-		}
+    while (1)
+    {
+        if ((*pAssistEnd >= 'a' && *pAssistEnd <= 'z') || (*pAssistEnd >= 'A' && *pAssistEnd <= 'Z') ||
+            *pAssistEnd == '\0' || *pAssistEnd == '\r' || *pAssistEnd == '\n')
+        {
+            break;
+        }
 
-		pAssistEnd += 1;
-	}
+        pAssistEnd += 1;
+    }
 
-	if(parseGCodeError(pAssistStart, unLineNum, (uint8)(pAssistEnd - pAssistStart)) == FALSE)  //µ˜”∂¥ÌŒÛ∫Ø ˝
-	{
-        #if STM32_MODE
-		if(Check_ErrorNum(OTHER_ERROR_NUM410)==0)// ≤È∆‰À˚π ’œ±‡∫≈ «∑Ò÷ÿ∏¥
-		Other_Error_Add(OTHER_ERROR_NUM410);
-        #endif
-	}
-	pAssistStart = NULL;
-	pAssistEnd = NULL;
+    if (parseGCodeError(pAssistStart, unLineNum, (uint8)(pAssistEnd - pAssistStart)) == FALSE) //Ë∞É‰Ω£ÈîôËØØÂáΩÊï∞
+    {
+#if STM32_MODE
+        if (Check_ErrorNum(OTHER_ERROR_NUM410) == 0) // Êü•ÂÖ∂‰ªñÊïÖÈöúÁºñÂè∑ÊòØÂê¶ÈáçÂ§ç
+            Other_Error_Add(OTHER_ERROR_NUM410);
+#endif
+    }
+    pAssistStart = NULL;
+    pAssistEnd = NULL;
 }

@@ -1,84 +1,78 @@
 #ifndef __GCODEREGULATION_H
 #define __GCODEREGULATION_H
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
 
-//¸÷Ö¸ÁîÔÊĞí³öÏÖµÄ¹²ÓĞ²ÎÊı
-#define CommonPara "GMFSTRCN"//GM FST RC
+//å„æŒ‡ä»¤å…è®¸å‡ºç°çš„å…±æœ‰å‚æ•°
+#define CommonPara "GMFSTRCN" //GM FST RC
 
 /**********************/
-//È«¾Ö±äÁ¿ÉùÃ÷
+//å…¨å±€å˜é‡å£°æ˜
 /**********************/
 
-extern Tree* g_pSGCommandRegulationTree;//GÖ¸Áî¹æÔò½á¹¹ÌåÊ÷
-extern Tree* g_pSMCommandRegulationTree;//MÖ¸Áî¹æÔò½á¹¹ÌåÊ÷
+extern Tree* g_pSGCommandRegulationTree; //GæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘
+extern Tree* g_pSMCommandRegulationTree; //MæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘
 
+typedef int8 (*MallocParaStruct)(uint8, uint8);                                 //å¼€è¾Ÿå‚æ•°ç»“æ„ä½“å‡½æ•°æŒ‡é’ˆ
+typedef int8 (*FreeParaStruct)(uint8, uint8);                                   //é‡Šæ”¾å‚æ•°ç»“æ„ä½“å‡½æ•°æŒ‡é’ˆ
+typedef int8 (*GetPara)(uint8, struct _SScan*, uint8, struct _SGCodeSysState*); //è·å–å‚æ•°å‡½æ•°æŒ‡é’ˆ
+//typedef uint8(*CheckCommand)(void*, void*);		//æ£€æŸ¥æŒ‡ä»¤å‡½æ•°æŒ‡é’ˆ
+//typedef uint8(*AssignCommand)(void*, void*);		//èµ‹å€¼æŒ‡ä»¤å‡½æ•°æŒ‡é’ˆ
 
-typedef int8(*MallocParaStruct)(uint8, uint8);		//¿ª±Ù²ÎÊı½á¹¹Ìåº¯ÊıÖ¸Õë
-typedef int8(*FreeParaStruct)(uint8, uint8);		//ÊÍ·Å²ÎÊı½á¹¹Ìåº¯ÊıÖ¸Õë
-typedef int8(*GetPara)(uint8, struct _SScan*, uint8, struct _SGCodeSysState*);				//»ñÈ¡²ÎÊıº¯ÊıÖ¸Õë
-//typedef uint8(*CheckCommand)(void*, void*);		//¼ì²éÖ¸Áîº¯ÊıÖ¸Õë
-//typedef uint8(*AssignCommand)(void*, void*);		//¸³ÖµÖ¸Áîº¯ÊıÖ¸Õë
-
-
-typedef int8(*CheckCommand)(struct _SSyntaxConfiguration*, struct SGCodeParse*);		//¼ì²éÖ¸Áîº¯ÊıÖ¸Õë
-typedef int8(*AssignCommand)(struct _SAssignConfiguration*, struct SGCodeParse*);		//¸³ÖµÖ¸Áîº¯ÊıÖ¸Õë
+typedef int8 (*CheckCommand)(struct _SSyntaxConfiguration*, struct SGCodeParse*);  //æ£€æŸ¥æŒ‡ä»¤å‡½æ•°æŒ‡é’ˆ
+typedef int8 (*AssignCommand)(struct _SAssignConfiguration*, struct SGCodeParse*); //èµ‹å€¼æŒ‡ä»¤å‡½æ•°æŒ‡é’ˆ
 
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
 typedef struct _SGCommandRegulation
 {
-	int nCommandVal;			//Ö¸ÁîÖµ nCommandVal = Êµ¼ÊÖµ * DEFINE
-	int8 cGroup;				//ËùÊô×é±ğ
-	int8 cSegmentNum;			//Ö¸Áî³ÌĞò¶ÎÊı£¨½öcGa¡¢cGz×éGÖ¸ÁîÓÃµ½£©
-	//bool bHasParaStruct;//ÊÇ·ñÊ¹ÓÃ²ÎÊı½á¹¹Ìå  
-	MallocParaStruct pMallocParaStructAPI;//¿ª±Ù²ÎÊı½á¹¹ÌåAPI  
-	FreeParaStruct pFreeParaStructAPI;//ÊÍ·Å²ÎÊı½á¹¹ÌåAPI  
-	GetPara pGetParaAPI;//»ñÈ¡²ÎÊıAPI  
-	CheckCommand pCheckCommandAPI;//¼ì²éÖ¸ÁîAPI  
-	AssignCommand pAssignCommandAPI;//¸³ÖµÖ¸ÁîAPI
-}SGCommandRegulation;
+    int nCommandVal;  //æŒ‡ä»¤å€¼ nCommandVal = å®é™…å€¼ * DEFINE
+    int8 cGroup;      //æ‰€å±ç»„åˆ«
+    int8 cSegmentNum; //æŒ‡ä»¤ç¨‹åºæ®µæ•°ï¼ˆä»…cGaã€cGzç»„GæŒ‡ä»¤ç”¨åˆ°ï¼‰
+    //bool bHasParaStruct;//æ˜¯å¦ä½¿ç”¨å‚æ•°ç»“æ„ä½“
+    MallocParaStruct pMallocParaStructAPI; //å¼€è¾Ÿå‚æ•°ç»“æ„ä½“API
+    FreeParaStruct pFreeParaStructAPI;     //é‡Šæ”¾å‚æ•°ç»“æ„ä½“API
+    GetPara pGetParaAPI;                   //è·å–å‚æ•°API
+    CheckCommand pCheckCommandAPI;         //æ£€æŸ¥æŒ‡ä»¤API
+    AssignCommand pAssignCommandAPI;       //èµ‹å€¼æŒ‡ä»¤API
+} SGCommandRegulation;
 
 typedef struct _SMCommandRegulation
 {
-	int32 nCommandVal;			//Ö¸ÁîÖµ nCommandVal = Êµ¼ÊÖµ * DEFINE
-	int8 cType;//Ç°ºó×÷ÓÃÀàĞÍ 0£ºÇ°×÷ÓÃ 1£ººó×÷ÓÃ
-	int32 nAllow;					//ÔİÊ±Î´ÓÃµ½
-	int8 cGroup;				//ËùÊô×é±ğ
-	int8 cSegmentNum;			//Ö¸Áî³ÌĞò¶ÎÊı£¨½öcGa¡¢cGz×éGÖ¸ÁîÓÃµ½£©
-	//bool bHasParaStruct;//ÊÇ·ñÊ¹ÓÃ²ÎÊı½á¹¹Ìå  
-	MallocParaStruct pMallocParaStructAPI;//¿ª±Ù²ÎÊı½á¹¹ÌåAPI  
-	FreeParaStruct pFreeParaStructAPI;//ÊÍ·Å²ÎÊı½á¹¹ÌåAPI  
-	GetPara pGetParaAPI;//»ñÈ¡²ÎÊıAPI  
-	CheckCommand pCheckCommandAPI;//¼ì²éÖ¸ÁîAPI  
-	AssignCommand pAssignCommandAPI;//¸³ÖµÖ¸ÁîAPI
-}SMCommandRegulation;
+    int32 nCommandVal; //æŒ‡ä»¤å€¼ nCommandVal = å®é™…å€¼ * DEFINE
+    int8 cType;        //å‰åä½œç”¨ç±»å‹ 0ï¼šå‰ä½œç”¨ 1ï¼šåä½œç”¨
+    int32 nAllow;      //æš‚æ—¶æœªç”¨åˆ°
+    int8 cGroup;       //æ‰€å±ç»„åˆ«
+    int8 cSegmentNum;  //æŒ‡ä»¤ç¨‹åºæ®µæ•°ï¼ˆä»…cGaã€cGzç»„GæŒ‡ä»¤ç”¨åˆ°ï¼‰
+    //bool bHasParaStruct;//æ˜¯å¦ä½¿ç”¨å‚æ•°ç»“æ„ä½“
+    MallocParaStruct pMallocParaStructAPI; //å¼€è¾Ÿå‚æ•°ç»“æ„ä½“API
+    FreeParaStruct pFreeParaStructAPI;     //é‡Šæ”¾å‚æ•°ç»“æ„ä½“API
+    GetPara pGetParaAPI;                   //è·å–å‚æ•°API
+    CheckCommand pCheckCommandAPI;         //æ£€æŸ¥æŒ‡ä»¤API
+    AssignCommand pAssignCommandAPI;       //èµ‹å€¼æŒ‡ä»¤API
+} SMCommandRegulation;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
+//GæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘ä¸­æ·»åŠ æŒ‡ä»¤
+int8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum, MallocParaStruct pMallocParaStructAPI,
+                          FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI, CheckCommand pCheckCommandAPI,
+                          AssignCommand pAssignCommandAPI);
 
-//GÖ¸Áî¹æÔò½á¹¹ÌåÊ÷ÖĞÌí¼ÓÖ¸Áî
-int8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
-	MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
-	CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI);
+//MæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘ä¸­æ·»åŠ æŒ‡ä»¤
+int8 addMCommadRegulation(double dCommandVal, int8 cType, int8 cGroup, int8 cSegmentNum,
+                          MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
+                          CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI);
 
-//MÖ¸Áî¹æÔò½á¹¹ÌåÊ÷ÖĞÌí¼ÓÖ¸Áî
-int8 addMCommadRegulation(double dCommandVal, int8 cType,int8 cGroup, int8 cSegmentNum,
-	MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
-	CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI);
-
-//¼ÓÔØËùÓĞGÖ¸ÁîµÄ¹æÔò½á¹¹Ìå(×Ü½Ó¿Ú£¬¿ª»úÊ±µ÷ÓÃ)
+//åŠ è½½æ‰€æœ‰GæŒ‡ä»¤çš„è§„åˆ™ç»“æ„ä½“(æ€»æ¥å£ï¼Œå¼€æœºæ—¶è°ƒç”¨)
 void addAllGCommandRegulationAPI();
 
-//¼ÓÔØËùÓĞMÖ¸ÁîµÄ¹æÔò½á¹¹Ìå(×Ü½Ó¿Ú£¬¿ª»úÊ±µ÷ÓÃ)
+//åŠ è½½æ‰€æœ‰MæŒ‡ä»¤çš„è§„åˆ™ç»“æ„ä½“(æ€»æ¥å£ï¼Œå¼€æœºæ—¶è°ƒç”¨)
 void addAllMCommandRegulationAPI();
-
-
-
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef __GCODECOMMANDAPI_H
 #define __GCODECOMMANDAPI_H
 
-
 #include "GCodeG0.h"
 #include "GCodeG1.h"
 #include "GCodeG2.h"
@@ -23,7 +22,7 @@
 #include "GCodeG32.h"
 #include "GCodeG32.2.h"
 #include "GCodeG32.3.h"
-#include"GCodeG33.h"
+#include "GCodeG33.h"
 #include "GCodeG34.h"
 #include "GCodeG40G41G42.h"
 
@@ -31,7 +30,6 @@
 
 #include "GCodeG50.2.h"
 #include "GCodeG51.2.h"
-
 
 #include "GCodeG54.h"
 
@@ -48,13 +46,12 @@
 #include "GCodeG75.h"
 #include "GCodeG76.h"
 
-
 #include "GCodeG80.h"
 #include "GCodeG83.h"
 #include "GCodeG83.1.h"
 #include "GCodeG83.2.h"
 
-#include"GCodeG84.h"
+#include "GCodeG84.h"
 
 #include "GCodeG87.h"
 #include "GCodeG87.1.h"
@@ -68,258 +65,256 @@
 #include "GCodeG96G97.h"
 #include "GCodeG98G99.h"
 
-#include"MCodeMa.h"
-#include"MCodeMb.h"
-#include"MCodeMc.h"
-#include"MCodeMe.h"
-#include"MCodeMf.h"
-#include"MCodeMg.h"
-#include"MCodeMh.h"
-#include"MCodeMi.h"
-#include"MCodeMj.h"
-#include"MCodeMk.h"
+#include "MCodeMa.h"
+#include "MCodeMb.h"
+#include "MCodeMc.h"
+#include "MCodeMe.h"
+#include "MCodeMf.h"
+#include "MCodeMg.h"
+#include "MCodeMh.h"
+#include "MCodeMi.h"
+#include "MCodeMj.h"
+#include "MCodeMk.h"
 
 #include "GCodeIfAndWhile.h"
 
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
 typedef struct _SDot
 {
-	int16 sCommand;//Ô´ÓÚÄÄ¸öÖ¸Áî£¨ÈçG1µÄÖ±Ïß»¹ÊÇG93µÄÖ±Ïß£©
-	SPointDouble SPoint;//µã£¨»úĞµ×ø±ê£©
-	//VAL_STRUCT_TYPE ucRelaVal;//×ø±êÒÔÏà¶ÔÖµ·½Ê½¼ÆËãµÄ±êÊ¶·û£¨ÔİÊ±É¾³ı£©
-}SDot;
+    int16 sCommand;      //æºäºå“ªä¸ªæŒ‡ä»¤ï¼ˆå¦‚G1çš„ç›´çº¿è¿˜æ˜¯G93çš„ç›´çº¿ï¼‰
+    SPointDouble SPoint; //ç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+                         //VAL_STRUCT_TYPE ucRelaVal;//åæ ‡ä»¥ç›¸å¯¹å€¼æ–¹å¼è®¡ç®—çš„æ ‡è¯†ç¬¦ï¼ˆæš‚æ—¶åˆ é™¤ï¼‰
+} SDot;
 
-//Ö±Ïß¶ÎĞÅÏ¢½á¹¹Ìå
+//ç›´çº¿æ®µä¿¡æ¯ç»“æ„ä½“
 typedef struct _SLine
 {
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬OTHERTYPE: LINE:1, ARC:3
-	SPointDouble SStartPoint;//Æğµã£¨»úĞµ×ø±ê£©
-	SPointDouble SEndPoint;//ÖÕµã£¨»úĞµ×ø±ê£©
-	int16 sCommand;//Ô´ÓÚÄÄ¸öÖ¸Áî£¨ÈçG1µÄÖ±Ïß»¹ÊÇG93µÄÖ±Ïß£©ÊÇ·ñÓĞ±ØÒª?lxw£ºÔİÊ±ÆúÓÃ¸Ã±äÁ¿
+    enum ENTITY EntityType;   //å®ä½“ç±»å‹ï¼ŒOTHERTYPE: LINE:1, ARC:3
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    int16 sCommand;           //æºäºå“ªä¸ªæŒ‡ä»¤ï¼ˆå¦‚G1çš„ç›´çº¿è¿˜æ˜¯G93çš„ç›´çº¿ï¼‰æ˜¯å¦æœ‰å¿…è¦?lxwï¼šæš‚æ—¶å¼ƒç”¨è¯¥å˜é‡
 
-	//bool bIsG0;
-	//VAL_STRUCT_TYPE ucRelaVal;//×ø±êÒÔÏà¶ÔÖµ·½Ê½¼ÆËãµÄ±êÊ¶·û£¨ÔİÊ±É¾³ı£©
-}SLine;
+    //bool bIsG0;
+    //VAL_STRUCT_TYPE ucRelaVal;//åæ ‡ä»¥ç›¸å¯¹å€¼æ–¹å¼è®¡ç®—çš„æ ‡è¯†ç¬¦ï¼ˆæš‚æ—¶åˆ é™¤ï¼‰
+} SLine;
 
-//Ô²»¡¶ÎĞÅÏ¢½á¹¹Ìå£¨²»ÄÜÎªÕûÔ²£©
+//åœ†å¼§æ®µä¿¡æ¯ç»“æ„ä½“ï¼ˆä¸èƒ½ä¸ºæ•´åœ†ï¼‰
 typedef struct _SArc
 {
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬LINE:1, ARC:3
-	SPointDouble SStartPoint;//Æğµã£¨»úĞµ×ø±ê£©
-	SPointDouble SEndPoint;//ÖÕµã£¨»úĞµ×ø±ê£©
-	SPointDouble SCenterPoint; //Ô²ĞÄ
+    enum ENTITY EntityType;    //å®ä½“ç±»å‹ï¼ŒLINE:1, ARC:3
+    SPointDouble SStartPoint;  //èµ·ç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SEndPoint;    //ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SCenterPoint; //åœ†å¿ƒ
 
-	double dRadius;//Ô²»¡°ë¾¶
-	int8 cArcDir;//Ô²»¡·½Ïò
-	int16 sCommand;//Ô´ÓÚÄÄ¸öÖ¸Áî£¨ÈçG1µÄÖ±Ïß»¹ÊÇG93µÄÖ±Ïß£©£¨lxw£ºÔİÊ±ÆúÓÃ£©
+    double dRadius; //åœ†å¼§åŠå¾„
+    int8 cArcDir;   //åœ†å¼§æ–¹å‘
+    int16 sCommand; //æºäºå“ªä¸ªæŒ‡ä»¤ï¼ˆå¦‚G1çš„ç›´çº¿è¿˜æ˜¯G93çš„ç›´çº¿ï¼‰ï¼ˆlxwï¼šæš‚æ—¶å¼ƒç”¨ï¼‰
 
-	//VAL_STRUCT_TYPE ucRelaVal;//Ïà¶ÔÖá
-}SArc;
+    //VAL_STRUCT_TYPE ucRelaVal;//ç›¸å¯¹è½´
+} SArc;
 
-//ÂİÎÆ¶ÎĞÅÏ¢½á¹¹Ìå
+//èºçº¹æ®µä¿¡æ¯ç»“æ„ä½“
 typedef struct _SThread
 {
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬LINE:1, ARC:3
+    enum ENTITY EntityType; //å®ä½“ç±»å‹ï¼ŒLINE:1, ARC:3
 
-	SPointDouble SStartPoint;//Æğµã£¨»úĞµ×ø±ê£©
-	SPointDouble SEndPoint;//ÖÕµã£¨»úĞµ×ø±ê£©
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
-	double dF;
-	double dJ;      //[¶ÌÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬]  [G76 0¡«99999999¡Á×îĞ¡ÊäÈëÔöÁ¿ ·ÇÄ£Ì¬]
-	double dK;      //[³¤ÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬]  [G76 0¡«99999999¡Á×îĞ¡ÊäÈëÔöÁ¿ ·ÇÄ£Ì¬]
-	double dQ;      //[G32:1.ÆğÊ¼½Ç¶È ·ÇÄ£Ì¬]   [G76: µÚ1ĞĞ.Q(¡÷dmin):ÂİÎÆ´Ö³µÊ±µÄ×îĞ¡ÇĞÏ÷Á¿ 0¡«99999,  µÚ2ĞĞ.Q(¡÷d):µÚÒ»´ÎÂİÎÆÇĞÏ÷Éî¶È 1¡«99999999]
-	uint16 usL;  
+    double dF;
+    double dJ; //[çŸ­è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€]  [G76 0ï½99999999Ã—æœ€å°è¾“å…¥å¢é‡ éæ¨¡æ€]
+    double dK; //[é•¿è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€]  [G76 0ï½99999999Ã—æœ€å°è¾“å…¥å¢é‡ éæ¨¡æ€]
+    double
+        dQ; //[G32:1.èµ·å§‹è§’åº¦ éæ¨¡æ€]   [G76: ç¬¬1è¡Œ.Q(â–³dmin):èºçº¹ç²—è½¦æ—¶çš„æœ€å°åˆ‡å‰Šé‡ 0ï½99999,  ç¬¬2è¡Œ.Q(â–³d):ç¬¬ä¸€æ¬¡èºçº¹åˆ‡å‰Šæ·±åº¦ 1ï½99999999]
+    uint16 usL;
 
-	bool bRepeatG32Flag;    //ÊÇ·ñÎªÁ¬ĞøG32
-	bool bG32LetterQ;       //ÊÇ·ñ³öÏÖQ
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4 ³ÂÃô´ÏÔö 2023/6/13
+    bool bRepeatG32Flag; //æ˜¯å¦ä¸ºè¿ç»­G32
+    bool bG32LetterQ;    //æ˜¯å¦å‡ºç°Q
+    uint8 ucG32SubMode;  //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4 é™ˆæ•èªå¢ 2023/6/13
 
-	//G32.2 ºÍG32.3Ô²»¡ÂİÎÆ×¨ÓÃ
-	double dRadius;    //°ë¾¶
-	int8 cArcDir;         //Ô²»¡·½Ïò
-	SPointDouble SCenterPoint;//Ô²ĞÄ
-}SThread;
+    //G32.2 å’ŒG32.3åœ†å¼§èºçº¹ä¸“ç”¨
+    double dRadius;            //åŠå¾„
+    int8 cArcDir;              //åœ†å¼§æ–¹å‘
+    SPointDouble SCenterPoint; //åœ†å¿ƒ
+} SThread;
 
-//¹¥ÑÀ¶ÎĞÅÏ¢½á¹¹Ìå
+//æ”»ç‰™æ®µä¿¡æ¯ç»“æ„ä½“
 typedef struct _STapping
 {
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬LINE:1, ARC:3
-	int16 sCommand;//Ô´ÓÚÄÄ¸öÖ¸Áî£¨ÈçG1µÄÖ±Ïß»¹ÊÇG93µÄÖ±Ïß£©
-	SPointDouble SStartPoint;//Æğµã£¨»úĞµ×ø±ê£©
-	SPointDouble SEndPoint;//ÖÕµã£¨»úĞµ×ø±ê£©
-    
-	int8 G33RotateAxis;//  G33 Ğı×ªÖá  ¿ÉÑ¡AÖá»òCÖá
-	int8 G33TappingMode;		//G33¹¥ÑÀÄ£Ê½ 0:¸ÕĞÔ¹¥ÑÀ 1:ÈáĞÔ¹¥ÑÀ
-	uint16 usL;      //ÂİÎÆÍ·Êı
-	double dF;// ÂİÎÆµ¼³Ì
+    enum ENTITY EntityType;   //å®ä½“ç±»å‹ï¼ŒLINE:1, ARC:3
+    int16 sCommand;           //æºäºå“ªä¸ªæŒ‡ä»¤ï¼ˆå¦‚G1çš„ç›´çº¿è¿˜æ˜¯G93çš„ç›´çº¿ï¼‰
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
-}STapping;
+    int8 G33RotateAxis;  //  G33 æ—‹è½¬è½´  å¯é€‰Aè½´æˆ–Cè½´
+    int8 G33TappingMode; //G33æ”»ç‰™æ¨¡å¼ 0:åˆšæ€§æ”»ç‰™ 1:æŸ”æ€§æ”»ç‰™
+    uint16 usL;          //èºçº¹å¤´æ•°
+    double dF;           // èºçº¹å¯¼ç¨‹
 
+} STapping;
 
-
-//Å×ÎïÏß¶ÎĞÅÏ¢½á¹¹Ìå(ÔİÊ±Ã»ÓĞ)
+//æŠ›ç‰©çº¿æ®µä¿¡æ¯ç»“æ„ä½“(æš‚æ—¶æ²¡æœ‰)
 typedef struct _SParabola
 {
-	int a;
-}SParabola;
+    int a;
+} SParabola;
 
-//Nurbs¶ÎĞÅÏ¢½á¹¹Ìå(ÔİÊ±Ã»ÓĞ)
+//Nurbsæ®µä¿¡æ¯ç»“æ„ä½“(æš‚æ—¶æ²¡æœ‰)
 typedef struct _SNurbs
 {
-	int a;
-}SNurbs;
-
-
-
+    int a;
+} SNurbs;
 
 typedef struct _SPathCurrState
 {
-	int8 sGa;				//ÓÃÓÚ¼Ì³Ğ
-	int8 sGz;
-	SGCommandRegulation* pSGaRegulation;
-	SGCommandRegulation* pSGzRegulation;
+    int8 sGa; //ç”¨äºç»§æ‰¿
+    int8 sGz;
+    SGCommandRegulation* pSGaRegulation;
+    SGCommandRegulation* pSGzRegulation;
 
-	SPointDouble SCurrPoint;		//ÓÃÓÚ¼Ì³Ğ
-}SPathCurrState;
+    SPointDouble SCurrPoint; //ç”¨äºç»§æ‰¿
+} SPathCurrState;
 
 typedef struct _SCheckPathInfo
 {
-	int8 cStep;
-	int8 cPart;
+    int8 cStep;
+    int8 cPart;
 
-	int8 cCommandSegmentCnt;//ÓÃÓÚ¼ÇÂ¼¶à³ÌĞò¶ÎÖ¸ÁîÊ±£¬µ±Ç°´¦ÀíµÄ³ÌĞò¶ÎÊı£¬
+    int8 cCommandSegmentCnt; //ç”¨äºè®°å½•å¤šç¨‹åºæ®µæŒ‡ä»¤æ—¶ï¼Œå½“å‰å¤„ç†çš„ç¨‹åºæ®µæ•°ï¼Œ
 
-	int16 sCurrCommandVal;
-	SGCommandRegulation* pSCurrCommandRegulation;
+    int16 sCurrCommandVal;
+    SGCommandRegulation* pSCurrCommandRegulation;
 
-	SGetTextStateInfo SGetTextStateInfo;
-	SScan SScanContainer;
+    SGetTextStateInfo SGetTextStateInfo;
+    SScan SScanContainer;
 
-	SPointDouble STotalOffset;
-	SPathCurrState SCurrState;
+    SPointDouble STotalOffset;
+    SPathCurrState SCurrState;
 
+    SPointDouble SPointA; //èµ·åˆ€ç‚¹
+    SPointDouble SPointC; //åŠ å·¥è½¨è¿¹ç»ˆç‚¹
 
-	SPointDouble SPointA;//Æğµ¶µã
-	SPointDouble SPointC;//¼Ó¹¤¹ì¼£ÖÕµã
+    bool bIsXMotionInNS;     //ç¨‹åºæ®µNSä¸­Xè½´æ˜¯å¦ç§»åŠ¨
+    bool bIsZMotionInNS;     //ç¨‹åºæ®µNSä¸­Zè½´æ˜¯å¦ç§»åŠ¨
+    bool cXMonotonicityInNS; //ç¨‹åºæ®µNSä¸­Xè½´çš„å•è°ƒæ€§
+    bool cZMonotonicityInNS; //ç¨‹åºæ®µNSä¸­Zè½´çš„å•è°ƒæ€§
 
-	bool bIsXMotionInNS;		//³ÌĞò¶ÎNSÖĞXÖáÊÇ·ñÒÆ¶¯
-	bool bIsZMotionInNS;		//³ÌĞò¶ÎNSÖĞZÖáÊÇ·ñÒÆ¶¯
-	bool cXMonotonicityInNS;	//³ÌĞò¶ÎNSÖĞXÖáµÄµ¥µ÷ĞÔ
-	bool cZMonotonicityInNS;	//³ÌĞò¶ÎNSÖĞZÖáµÄµ¥µ÷ĞÔ
+    int8
+        cXMonotonicityInPath; //Xçš„å•è°ƒæ€§  0ï¼šæš‚æ—¶æœªçŸ¥é“å•è°ƒæ€§  1ï¼šé€’å¢  -1ï¼šé€’å‡        æ­¤å¤–è¿˜æœ‰å¦ä¸€ä½œç”¨ï¼ŒG71äºŒå‹åˆ†æ§½æ—¶ï¼ŒXè¿˜æ˜¯è¡¨ç¤ºå•è°ƒæ€§ï¼Œè€ŒZ=0è¡¨ç¤ºç›®å‰å¤„äºèµ·å§‹è¾¹ï¼ŒZ=1å¤„äºç»ˆæ­¢è¾¹
+    int8 cZMonotonicityInPath; //Zçš„å•è°ƒæ€§  0ï¼šæš‚æ—¶æœªçŸ¥é“å•è°ƒæ€§  1ï¼šé€’å¢  -1ï¼šé€’å‡
 
-	int8 cXMonotonicityInPath;        //XµÄµ¥µ÷ĞÔ  0£ºÔİÊ±Î´ÖªµÀµ¥µ÷ĞÔ  1£ºµİÔö  -1£ºµİ¼õ        ´ËÍâ»¹ÓĞÁíÒ»×÷ÓÃ£¬G71¶şĞÍ·Ö²ÛÊ±£¬X»¹ÊÇ±íÊ¾µ¥µ÷ĞÔ£¬¶øZ=0±íÊ¾Ä¿Ç°´¦ÓÚÆğÊ¼±ß£¬Z=1´¦ÓÚÖÕÖ¹±ß
-	int8 cZMonotonicityInPath;        //ZµÄµ¥µ÷ĞÔ  0£ºÔİÊ±Î´ÖªµÀµ¥µ÷ĞÔ  1£ºµİÔö  -1£ºµİ¼õ
-
-
-
-}SCheckPathInfo;
+} SCheckPathInfo;
 
 typedef struct _SGetPathInfo
 {
-	int8 cStep;
-	int8 cPart;
+    int8 cStep;
+    int8 cPart;
 
-	int8 cCommandSegmentCnt;
+    int8 cCommandSegmentCnt;
 
-	int16 sCurrCommandVal;
-	SGCommandRegulation* pSCurrCommandRegulation;
+    int16 sCurrCommandVal;
+    SGCommandRegulation* pSCurrCommandRegulation;
 
-	SGetTextStateInfo SGetTextStateInfo;
-	SScan SScanContainer;
-	
-	SPointDouble STotalOffset;
-	SPathCurrState SCurrState;
+    SGetTextStateInfo SGetTextStateInfo;
+    SScan SScanContainer;
 
-	SList* pSPathList;
+    SPointDouble STotalOffset;
+    SPathCurrState SCurrState;
 
-}SGetPathInfo;
+    SList* pSPathList;
 
-
-
-
-
-
+} SGetPathInfo;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//Ìí¼ÓËùÓĞGÖ¸Áî¹æÔò
+//æ·»åŠ æ‰€æœ‰GæŒ‡ä»¤è§„åˆ™
 void addAllGCommandRegulationAPI();
 void initGCodeCommand(uint8 ucChannelNum);
 
-//Ìí¼ÓËùÓĞMÖ¸Áî¹æÔò
+//æ·»åŠ æ‰€æœ‰MæŒ‡ä»¤è§„åˆ™
 void addAllMCommandRegulationAPI();
 void freeAllCommandParaStruct(uint8 ucChannelNum);
 
-//¼ì²é²ÎÊı×Ö¡¢²ÎÊıÖµ·¶Î§
+//æ£€æŸ¥å‚æ•°å­—ã€å‚æ•°å€¼èŒƒå›´
 int8 checkParaLetter(char* pAllowLetter, SScan* pSScanContainer);
 int8 checkParaRange(int8 cLetter, SScan* pSScanContainer, double dMin, double dMax);
 int8 checkPolarCoordinateInput(const SScan* pSScanContainer, const SGCodeSysState* pSGCodeCurrSysState);
-int8 checkParaInteger(int8 cLetter, SScan* pSScanContainer);  
+int8 checkParaInteger(int8 cLetter, SScan* pSScanContainer);
 bool isSegmentHaveCoordInfo(SScan* pSScanContainer);
 void getCoordInfoFromScanInfo(SCoord* pSCoordInfo, SScan* pSScanContainer);
 
 int8 calculateTotalOffset(SGCodeSysState* pSGCodeSysState);
 
-//»ñÈ¡³ÌĞò¶ÎÖĞµÄ¾ø¶Ô×ø±ê
-void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState);
-void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState);
+//è·å–ç¨‹åºæ®µä¸­çš„ç»å¯¹åæ ‡
+void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDouble* pSStartPoint,
+                           SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState);
+void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDouble* pSStartPoint,
+                            SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState);
 void getLeadByCoordInfo(SScan* pSScanContainer, double* pLead);
-
 
 //void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, SPointDouble* pSTotalOffset, bool bIsAbsMethod);
 //void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, SPointDouble* pSTotalOffset, bool bIsAbsMethod);
 
-//»ñÈ¡ºáÖá×İÖá£¨½á¹¹ÌåÖá£©
+//è·å–æ¨ªè½´çºµè½´ï¼ˆç»“æ„ä½“è½´ï¼‰
 int8 getHorAndVerAxis(uint8* pHor, uint8* pVer, int8 cInterpolationState, int16 sGc);
 
-//Á½µã×ø±êÊÇ·ñÏàÍ¬
+//ä¸¤ç‚¹åæ ‡æ˜¯å¦ç›¸åŒ
 bool isSamePoint(SPointDouble* pSPoint1, SPointDouble* pSPoint2);
 
-//»ñÈ¡Ô²»¡µÄÔ²ĞÄÓë°ë¾¶
-double getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, int8 cArcDir, SPointDouble* pSCenterPoint, double* pRadius, uint8 ucHorAxis, uint8 ucVerAxis);
+//è·å–åœ†å¼§çš„åœ†å¿ƒä¸åŠå¾„
+double getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint,
+                                  int8 cArcDir, SPointDouble* pSCenterPoint, double* pRadius, uint8 ucHorAxis,
+                                  uint8 ucVerAxis);
 
-//»ñÈ¡Ô²»¡ÀàĞÍ
-int8 getArcType(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, double dRadius, uint8 ucHor, uint8 ucVer);
+//è·å–åœ†å¼§ç±»å‹
+int8 getArcType(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, double dRadius,
+                uint8 ucHor, uint8 ucVer);
 
-//½«Ö±Ïß¶ÎĞÅÏ¢SLineĞ´Èë½âÎö½á¹¹Ìå
+//å°†ç›´çº¿æ®µä¿¡æ¯SLineå†™å…¥è§£æç»“æ„ä½“
 void writeLineIntoGCodeBuf(SLine* pSLineInfo, struct SGCodeParse* pSGCodeBufUnit);
 
-//½«Ô²»¡¶ÎĞÅÏ¢SArcĞ´Èë½âÎö½á¹¹Ìå
+//å°†åœ†å¼§æ®µä¿¡æ¯SArcå†™å…¥è§£æç»“æ„ä½“
 void writeArcIntoGCodeBuf(SArc* pSArcInfo, struct SGCodeParse* pSGCodeBufUnit);
 
-//½«Ö±Ïß¶ÎĞÅÏ¢SThreadĞ´Èë½âÎö½á¹¹Ìå
+//å°†ç›´çº¿æ®µä¿¡æ¯SThreadå†™å…¥è§£æç»“æ„ä½“
 void writeThreadIntoGCodeBuf(SThread* pSThreadInfo, struct SGCodeParse* pSGCodeBufUnit);
-//½«¹¥ÑÀ¶ÎĞÅÏ¢SThreadĞ´Èë½âÎö½á¹¹Ìå
+//å°†æ”»ç‰™æ®µä¿¡æ¯SThreadå†™å…¥è§£æç»“æ„ä½“
 void writeTrappingIntoGCodeBuf(STapping* pSTappingInfo, struct SGCodeParse* pSGCodeBufUnit);
 
-void writeEntityIntoGCodeBuf(enum ENTITY* pEntity, struct SGCodeParse* pSGCodeBufUnit, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, int8 cMachineDir);
+void writeEntityIntoGCodeBuf(enum ENTITY* pEntity, struct SGCodeParse* pSGCodeBufUnit, SPointDouble* pSStartPoint,
+                             SPointDouble* pSEndPoint, int8 cMachineDir);
 
-int8 writePathListIntoGCodeBuf(SList* pSPathList, uint16 usStartPos, uint16 usEndPos, uint16* pCurPos, struct SGCodeParse* pSGCodeBufUnit, int8 cMachineDir);
+int8 writePathListIntoGCodeBuf(SList* pSPathList, uint16 usStartPos, uint16 usEndPos, uint16* pCurPos,
+                               struct SGCodeParse* pSGCodeBufUnit, int8 cMachineDir);
 
-//µ±Ç°×ø±ê±à³Ì·½Ê½ÊÇ·ñÎª¾ø¶Ô±à³Ì£¨ÊÇ¾ø¶Ô±à³Ì»¹ÊÇÏà¶Ô±à³Ì£©
+//å½“å‰åæ ‡ç¼–ç¨‹æ–¹å¼æ˜¯å¦ä¸ºç»å¯¹ç¼–ç¨‹ï¼ˆæ˜¯ç»å¯¹ç¼–ç¨‹è¿˜æ˜¯ç›¸å¯¹ç¼–ç¨‹ï¼‰
 bool isAbsProgrammingMethod(uint8 ucMod, uint8 ucChannelNum);
 
-int8 findTargetSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, uint32 unTargetN, SGetTextStateInfo* pSTargetTextInfo);
-int8 findIfAndWhileSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, SGetTextStateInfo* pSGetTextStateInfo);
-
+int8 findTargetSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, uint32 unTargetN,
+                       SGetTextStateInfo* pSTargetTextInfo);
+int8 findIfAndWhileSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram,
+                           SGetTextStateInfo* pSGetTextStateInfo);
 
 bool isBasicMotionCommand(int16 sCommandVal);
 
 bool isAllowGCommandInPath(SScan* pSScanContainer);
-void getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8 cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono);
+void getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8 cArcDir,
+                        bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono);
 
-int8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cNSMod, bool bXRequestMono, bool bZRequestMono);
+int8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF,
+                                    SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cNSMod,
+                                    bool bXRequestMono, bool bZRequestMono);
 int8 checkPathMonotonicity(SList* pPathList);
 int8 checkPathAxisMonotonicity(SList* pPathList, uint8 ucAxis);
-int8 checkPathXZMonotonicity(SList* pPathList);//ÅĞ¶ÏG7172H0Ê±XZµ¥µ÷ĞÔ
+int8 checkPathXZMonotonicity(SList* pPathList); //åˆ¤æ–­G7172H0æ—¶XZå•è°ƒæ€§
 
-
-int8 getMachiningPath(uint8 ucMod, SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, double dDeltaU, double dDeltaW, SList** ppSPathList, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cG71orG72);
+int8 getMachiningPath(uint8 ucMod, SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, double dDeltaU, double dDeltaW,
+                      SList** ppSPathList, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cG71orG72);
 void removeEntryAndExitPath(SList* pSPathList, int8 cAxis, bool bRemoveEntry, bool bRemoveExit);
 
 void offsetEntity(enum ENTITY* pEntity, double dDeltaX, double dDeltaZ);
@@ -329,29 +324,29 @@ void offsetPathList(SList** ppSPathList, double dDeltaX, double dDeltaZ);
 int8 offsetPathList_2(SList* pSPathList, SList** ppSPathList_2, double dDeltaX, double dDeltaZ);
 
 void mirrorEntity(enum ENTITY* pEntity);
-//¾µÏñ¹ì¼£Á´±í
+//é•œåƒè½¨è¿¹é“¾è¡¨
 void mirrorPathList(SList** ppSPathList);
 
 int8 getLocalMacroVarBySegment(SGetTextStateInfo* pSGetTextStateInfo, SScan* pScan, SLocalMacroVar* pSLocalMacroVar);
 
-//ÅĞ¶ÏÔ²»¡ÊÇ·ñÎª°¼²Û
-int8 isArcIsGroove(SPointDouble* SStartPt, SPointDouble* SEndPt, SPointDouble* SCenterPt, int8  cArcDir, int8 cFlag);
+//åˆ¤æ–­åœ†å¼§æ˜¯å¦ä¸ºå‡¹æ§½
+int8 isArcIsGroove(SPointDouble* SStartPt, SPointDouble* SEndPt, SPointDouble* SCenterPt, int8 cArcDir, int8 cFlag);
 int8 getPathDataMonotonicity(enum ENTITY* pSPathData, int8 cAxisXorZ);
-//·Ö²Û
+//åˆ†æ§½
 bool divideGroove(SList** ppPathList, SList** ppGrooveList, int8 cAxisXorZ, int8 cFeedDir);
 //bool divideGroove(SList** pathList, SList** pGrooveList, int8 cAxisXorZ, int16* sCurrPathPos, int16* sStartOrEnd, int8* cMonotonicity);
 
 int8 getPathMachineDir(SList* pPathList, int8* cMachineXDir, int8* cMachineZDir);
 
-
 int16 findEntityPosInGroove(SGrooveData* pSGrooveData, bool bFeed, SPointDouble* pSTargetPoint, bool bStartLine);
-
 
 SGrooveData* getGrooveDataByGrooveNum(SList* pGrooveList, int16 cGrooveNum);
 int8 findTargetPointInEntity(enum ENTITY* pEntity, int8 cAixsXorZ, double dXorZVal, double* pTargetVal);
-int8 findTargetPointInGroove(SGrooveData* pSGrooveData, bool bStartPath, int8 cAixsXorZ, double dXorZVal, double* pTargetVal);
+int8 findTargetPointInGroove(SGrooveData* pSGrooveData, bool bStartPath, int8 cAixsXorZ, double dXorZVal,
+                             double* pTargetVal);
 //int8 findCutEndPoint(SList* pGrooveList, int8 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir, double* pTargetVal);
-int8 findCutEndPoint(SList* pGrooveList, int16 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir, double* pTargetVal, int8 cMachineXDir);
+int8 findCutEndPoint(SList* pGrooveList, int16 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir,
+                     double* pTargetVal, int8 cMachineXDir);
 
 int8 splitPathByBlank(SList* pSPathList, double dX, double dZ);
 int8 entityCrossBlank(SLine* pEntity, double dX, double dZ, double* pTargetX, double* pTargetZ);
@@ -361,51 +356,48 @@ int8 addEntityInPath(SList* pSPathList);
 int8 isArcCrossQuadrant(SArc* pSArc, SPointDouble* pSPoint);
 void divideArcInPath(SList* pSPathList);
 
-//µÈ¾àÊµÌå
+//ç­‰è·å®ä½“
 void equidistantEntity(enum ENTITY* pEntity, double dDist, int8 cDir);
-//µÈ¾à¹ì¼£Á´±í
+//ç­‰è·è½¨è¿¹é“¾è¡¨
 void equidistantPath(SList* pSOriPathList, SList** ppSNewPathList, double dDist, int8 cDir);
-//ÔÚµÈ¾àÏß¼äÌí¼ÓÔ²»¡
+//åœ¨ç­‰è·çº¿é—´æ·»åŠ åœ†å¼§
 void addArcInequidistanLine(SList* pSOriPathList, SList* pSNewPathList, double dDist);
-//É¾³ı»·
+//åˆ é™¤ç¯
 void deleteRings(SList* pSPathList);
-//¼ÆËãÖ±Ïß¶ÎÓëÖ±Ïß¶Î½»µã×ø±ê
+//è®¡ç®—ç›´çº¿æ®µä¸ç›´çº¿æ®µäº¤ç‚¹åæ ‡
 int8 calcIntersectionInLineAndLine(SLine* pSLine1, SLine* pSLine2, SPointDouble* pSPoint);
-//¼ÆËãÖ±Ïß¶ÎÓëÔ²»¡¶Î½»µã×ø±ê£¨ÊäÈëÔ²»¡²»ÄÜ¿çÏóÏŞ£©
+//è®¡ç®—ç›´çº¿æ®µä¸åœ†å¼§æ®µäº¤ç‚¹åæ ‡ï¼ˆè¾“å…¥åœ†å¼§ä¸èƒ½è·¨è±¡é™ï¼‰
 int8 calcIntersectionInLineAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint);
-//¼ÆËãÔ²»¡¶ÎÓëÔ²»¡¶Î½»µã×ø±ê£¨ÊäÈëÔ²»¡²»ÄÜ¿çÏóÏŞ£©
+//è®¡ç®—åœ†å¼§æ®µä¸åœ†å¼§æ®µäº¤ç‚¹åæ ‡ï¼ˆè¾“å…¥åœ†å¼§ä¸èƒ½è·¨è±¡é™ï¼‰
 int8 calcIntersectionInArcAndArc(SArc* pSArc1, SArc* pSArc2, SPointDouble* pSPoint);
-//¼ÆËãÁ½¶ÎÊµÌåµÄ½»µã×ø±ê£¨Ïà½»·µ»Ø1 ²»Ïà½»·µ»Ø0£©
+//è®¡ç®—ä¸¤æ®µå®ä½“çš„äº¤ç‚¹åæ ‡ï¼ˆç›¸äº¤è¿”å›1 ä¸ç›¸äº¤è¿”å›0ï¼‰
 int8 calcIntersectionInTwoEntity(void* pEntity1, void* pEntity2, SPointDouble* pSPoint);
 
-
-//»ñÈ¡Ô²»¡·½Ïò
+//è·å–åœ†å¼§æ–¹å‘
 void getArcDir(SArc* pSArc);
-//¼ÆËãÔ²½ÇÓëÖ±Ïß»òÕßÔ²»¡½»µã
-void calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter, SPointDouble* psPoint);
-/* ×Ô¶¯µ¹Ô²¹«¹²½Ó¿ÚÔ¼¶¨£º
- * ÊäÈëÎª G18 Æ½ÃæµÄÓĞÏŞÂÖÀª¼°ÕæÊµºÁÃ×°ë¾¶£»ÊäÈë¹ì¼£²»±»ĞŞ¸Ä¡£
- * ·µ»Ø 1 ³É¹¦£¬0 Í¬Ïò¹²ÏßÖ±ÏßÎŞĞèµ¹Ô²£¬-1 ÎŞ½â£¬-2 ·Ç·¨ÊäÈë¡£
- * Ö»ÓĞ·µ»Ø 1 Ê± pArcInfo ²ÅÓĞĞ§£»Ê§°Ü»òÎŞĞèµ¹Ô²Ê±±£³Öµ÷ÓÃÇ°ÄÚÈİ¡£
- * Ä£Ì¬¡¢¸½´øÖ¸Áî¡¢·ÇÆ½ÃæÖáºÍ¶Î±ß½çÏŞÖÆÓÉĞ´Èë²ã¼ì²é£¬º¯ÊıËµÃ÷¼û¶ÔÓ¦ÊµÏÖ¡£
+//è®¡ç®—åœ†è§’ä¸ç›´çº¿æˆ–è€…åœ†å¼§äº¤ç‚¹
+void calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter,
+                                    SPointDouble* psPoint);
+/* è‡ªåŠ¨å€’åœ†å…¬å…±æ¥å£çº¦å®šï¼š
+ * è¾“å…¥ä¸º G18 å¹³é¢çš„æœ‰é™è½®å»“åŠçœŸå®æ¯«ç±³åŠå¾„ï¼›è¾“å…¥è½¨è¿¹ä¸è¢«ä¿®æ”¹ã€‚
+ * è¿”å› 1 æˆåŠŸï¼Œ0 åŒå‘å…±çº¿ç›´çº¿æ— éœ€å€’åœ†ï¼Œ-1 æ— è§£ï¼Œ-2 éæ³•è¾“å…¥ã€‚
+ * åªæœ‰è¿”å› 1 æ—¶ pArcInfo æ‰æœ‰æ•ˆï¼›å¤±è´¥æˆ–æ— éœ€å€’åœ†æ—¶ä¿æŒè°ƒç”¨å‰å†…å®¹ã€‚
+ * æ¨¡æ€ã€é™„å¸¦æŒ‡ä»¤ã€éå¹³é¢è½´å’Œæ®µè¾¹ç•Œé™åˆ¶ç”±å†™å…¥å±‚æ£€æŸ¥ï¼Œå‡½æ•°è¯´æ˜è§å¯¹åº”å®ç°ã€‚
  */
-//¼ÆËãÖ±Ïß½ÓÖ±Ïß Ô²½Ç¹ì¼£ĞÅÏ¢
+//è®¡ç®—ç›´çº¿æ¥ç›´çº¿ åœ†è§’è½¨è¿¹ä¿¡æ¯
 int8 calAngleRoundedInfoInLineAndLine(SLine* pLine1, SLine* pLine2, double dRadius, SArc* pArcInfo);
-//¼ÆËãÖ±Ïß½ÓÔ²»¡ Ô²½Ç¹ì¼£ĞÅÏ¢
+//è®¡ç®—ç›´çº¿æ¥åœ†å¼§ åœ†è§’è½¨è¿¹ä¿¡æ¯
 int8 calAngleRoundedInfoInLineAndArc(SLine* pLine1, SArc* pSArc2, double dRadius, SArc* pArcInfo);
-//¼ÆËãÔ²»¡½ÓÔ²»¡ Ô²½Ç¹ì¼£ĞÅÏ¢
+//è®¡ç®—åœ†å¼§æ¥åœ†å¼§ åœ†è§’è½¨è¿¹ä¿¡æ¯
 int8 calAngleRoundedInfoInArcAndArc(SArc* pSArc1, SArc* pSArc2, double dRadius, SArc* pArcInfo);
-//¼ÆËãÔ²»¡½ÓÖ±Ïß Ô²½Ç¹ì¼£ĞÅÏ¢
+//è®¡ç®—åœ†å¼§æ¥ç›´çº¿ åœ†è§’è½¨è¿¹ä¿¡æ¯
 int8 calAngleRoundedInfoInArcAndLine(SArc* pSArc1, SLine* pLine2, double dRadius, SArc* pArcInfo);
 
-
-
-
-//´òÓ¡¹ì¼£Á´±íµÄ¹ì¼£µã
+//æ‰“å°è½¨è¿¹é“¾è¡¨çš„è½¨è¿¹ç‚¹
 void printDataG71G72I(void* data);
-//´òÓ¡²Û¹ì¼£µã
+//æ‰“å°æ§½è½¨è¿¹ç‚¹
 void printDataG71G72II(void* data);
-//´òÓ¡²ÛÁ´±íÖĞ¸÷¸ö²Û¹ì¼£Êı¾İ
+//æ‰“å°æ§½é“¾è¡¨ä¸­å„ä¸ªæ§½è½¨è¿¹æ•°æ®
 void printListII(SList* pList, PrintNode print);
 
 #endif

@@ -13,5 +13,4 @@ int8 AssignG40(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeB
 int8 AssignG41(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG42(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 #endif

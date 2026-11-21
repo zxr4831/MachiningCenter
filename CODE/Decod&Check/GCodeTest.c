@@ -1,11 +1,11 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 //#include <cstring>
-#include"Gcode.h"
-#include"ErrorFunction.h"
-#include"GeneralFunctions.h"
+#include "Gcode.h"
+#include "ErrorFunction.h"
+#include "GeneralFunctions.h"
 #include "Config.h"
 #include "ringbuff.h"
 
@@ -13,533 +13,506 @@
 #include "flash_task.h"
 #endif
 
-
-uint8 g_ucNameType = 1;     //1£º¼ÓO £¬0£º²»¼ÓO    ²âÊÔ×Ó³ÌĞòµ÷ÓÃ²âÊÔ±ØĞëÖÃÎª1
+uint8 g_ucNameType = 1; //1ï¼šåŠ O ï¼Œ0ï¼šä¸åŠ O    æµ‹è¯•å­ç¨‹åºè°ƒç”¨æµ‹è¯•å¿…é¡»ç½®ä¸º1
 #if !STM32_MODE
-//int8  g_cMapBufferS0[FILESIZE];      //Í¨µÀ0
-//int8  g_cMapBufferS1[1234];      //Í¨µÀ1
+//int8  g_cMapBufferS0[FILESIZE];      //é€šé“0
+//int8  g_cMapBufferS1[1234];      //é€šé“1
 
-static FILE *s_p0, *s_p1;//´æ·ÅÊä³öÎÄ¼şµÄÖ¸Õë
-static int32 s_idx_0, s_idx_1;//µ±Ç°Êä³öĞĞºÅ
+static FILE *s_p0, *s_p1;      //å­˜æ”¾è¾“å‡ºæ–‡ä»¶çš„æŒ‡é’ˆ
+static int32 s_idx_0, s_idx_1; //å½“å‰è¾“å‡ºè¡Œå·
 
+int8 g_cName_C0[20]; //é€šé“0çš„ä¸»ç¨‹åºå
+int8 g_cName_C1[20]; //é€šé“1çš„ä¸»ç¨‹åºå
 
-int8 g_cName_C0[20];    //Í¨µÀ0µÄÖ÷³ÌĞòÃû
-int8 g_cName_C1[20];    //Í¨µÀ1µÄÖ÷³ÌĞòÃû
+int8 g_textBuf[20][MAX_LENGTH_OF_LINE]; //å­˜æ”¾ä¸€è¡Œå­—ç¬¦ä¸²
+bool s_bIsWritable[20];                 //1ä¸ºå¯å†™ 0ä¸ºä¸å¯å†™
 
-
-int8 g_textBuf[20][MAX_LENGTH_OF_LINE];//´æ·ÅÒ»ĞĞ×Ö·û´®
-bool s_bIsWritable[20];  //1Îª¿ÉĞ´ 0Îª²»¿ÉĞ´
-
-
-//¸øÎÄ¼şÃûÔö¼ÓÂ·¾¶ºÍºó×º,ÓÃÓÚ´ò¿ªÎÄ¼ş
-void addPathVsFileName(int8 cOutput[50], int8 *pInput)
+//ç»™æ–‡ä»¶åå¢åŠ è·¯å¾„å’Œåç¼€,ç”¨äºæ‰“å¼€æ–‡ä»¶
+void addPathVsFileName(int8 cOutput[50], int8* pInput)
 {
-	uint8 ucIdx;
-	memset(cOutput, 0, 50);
-	if (g_ucNameType == 1 && MDI_MODE != getRunMode())
-	{
-		strcpy(cOutput, "./resource/O");
-	}
-	else
-	{
-		strcpy(cOutput, "./resource/");
-	}
-	ucIdx = (uint8)strlen(cOutput);
-	for (uint8 i = 0; pInput[i] != 0; ucIdx++, i++)
-	{
-		cOutput[ucIdx] = pInput[i];
-	}
-	cOutput[ucIdx++] = '.';
-	cOutput[ucIdx++] = 't';
-	cOutput[ucIdx++] = 'x';
-	cOutput[ucIdx++] = 't';
-	cOutput[ucIdx] = 0;
+    uint8 ucIdx;
+    memset(cOutput, 0, 50);
+    if (g_ucNameType == 1 && MDI_MODE != getRunMode())
+    {
+        strcpy(cOutput, "./resource/O");
+    }
+    else
+    {
+        strcpy(cOutput, "./resource/");
+    }
+    ucIdx = (uint8)strlen(cOutput);
+    for (uint8 i = 0; pInput[i] != 0; ucIdx++, i++)
+    {
+        cOutput[ucIdx] = pInput[i];
+    }
+    cOutput[ucIdx++] = '.';
+    cOutput[ucIdx++] = 't';
+    cOutput[ucIdx++] = 'x';
+    cOutput[ucIdx++] = 't';
+    cOutput[ucIdx] = 0;
 }
 
-//´ò¿ªÎÄ¼ş
+//æ‰“å¼€æ–‡ä»¶
 void GCODE_OPEN_FILE(uint8 ucChannelNum)
 {
-	FILE* file1 = NULL;
-	switch (ucChannelNum)
-	{
-	case 0:
-		file1 = fopen("./outputFile/Gnc0.txt", "w");  //Ö»Ğ´·½Ê½´ò¿ª£¬»áÇå¿Õ
-		break;
-	case 1:
-		file1 = fopen("./outputFile/Gnc1.txt", "w");
-		break;
-	default:
-		break;
-	}
+    FILE* file1 = NULL;
+    switch (ucChannelNum)
+    {
+    case 0:
+        file1 = fopen("./outputFile/Gnc0.txt", "w"); //åªå†™æ–¹å¼æ‰“å¼€ï¼Œä¼šæ¸…ç©º
+        break;
+    case 1:
+        file1 = fopen("./outputFile/Gnc1.txt", "w");
+        break;
+    default:
+        break;
+    }
 
-	if (!file1)
-	{
-		fclose(file1);
-		exit(0);
-	}
-	fclose(file1);
+    if (!file1)
+    {
+        fclose(file1);
+        exit(0);
+    }
+    fclose(file1);
 
-	switch (ucChannelNum)
-	{
-	case 0:
-		file1 = fopen("./outputFile/Gnc0.txt", "a");  //×·¼Ó·½Ê½·½Ê½´ò¿ª
-		break;
-	case 1:
-		file1 = fopen("./outputFile/Gnc1.txt", "a");
-		break;
-	default:
-		break;
-	}
-	
-	if (!file1)
-	{
-		fclose(file1);
-		exit(0);
-	}
+    switch (ucChannelNum)
+    {
+    case 0:
+        file1 = fopen("./outputFile/Gnc0.txt", "a"); //è¿½åŠ æ–¹å¼æ–¹å¼æ‰“å¼€
+        break;
+    case 1:
+        file1 = fopen("./outputFile/Gnc1.txt", "a");
+        break;
+    default:
+        break;
+    }
 
-	switch (ucChannelNum)
-	{
-	case 0:
-		s_p0 = file1;
-		break;
-	case 1:
-		s_p1 = file1;
-		break;
-	default:
-		break;
-	}
+    if (!file1)
+    {
+        fclose(file1);
+        exit(0);
+    }
 
-	
+    switch (ucChannelNum)
+    {
+    case 0:
+        s_p0 = file1;
+        break;
+    case 1:
+        s_p1 = file1;
+        break;
+    default:
+        break;
+    }
 }
 
-//¹Ø±ÕÎÄ¼ş
+//å…³é—­æ–‡ä»¶
 void GCODE_CLOSE_FILE(uint8 ucChannelNum)
 {
-	FILE* file1 = NULL;
-	switch (ucChannelNum)
-	{
-	case 0:
-		file1 = s_p0;
-		break;
-	case 1:
-		file1 = s_p1;
-		break;
-	default:
-		break;
-	}
+    FILE* file1 = NULL;
+    switch (ucChannelNum)
+    {
+    case 0:
+        file1 = s_p0;
+        break;
+    case 1:
+        file1 = s_p1;
+        break;
+    default:
+        break;
+    }
 
-	if (file1)
-	{
-		fclose(file1);
-		file1 = NULL;
-	}
-	switch (ucChannelNum)
-	{
-	case 0:
-		s_p0 = file1;
-		break;
-	case 1:
-		s_p1 = file1;
-		break;
-	default:
-		break;
-	}
+    if (file1)
+    {
+        fclose(file1);
+        file1 = NULL;
+    }
+    switch (ucChannelNum)
+    {
+    case 0:
+        s_p0 = file1;
+        break;
+    case 1:
+        s_p1 = file1;
+        break;
+    default:
+        break;
+    }
 }
 
- //³õÊ¼»¯²âÊÔÎÄ±¾»º³åÇø
+//åˆå§‹åŒ–æµ‹è¯•æ–‡æœ¬ç¼“å†²åŒº
 void initTextBuf()
 {
-	memset(g_textBuf, 0, MAX_LENGTH_OF_LINE * 20);
-	memset(s_bIsWritable, 1, 20);
+    memset(g_textBuf, 0, MAX_LENGTH_OF_LINE * 20);
+    memset(s_bIsWritable, 1, 20);
 }
 
-//³õÊ¼»¯Ö¸¶¨»º³åÇø
+//åˆå§‹åŒ–æŒ‡å®šç¼“å†²åŒº
 void initDesinatedBuf(uint8 ucIdx)
 {
-	memset(g_textBuf[ucIdx], 0, MAX_LENGTH_OF_LINE);
-	s_bIsWritable[ucIdx] = 1;
+    memset(g_textBuf[ucIdx], 0, MAX_LENGTH_OF_LINE);
+    s_bIsWritable[ucIdx] = 1;
 }
 
-
-
-//°´Ö¸¶¨²ÛÎ»×·¼ÓÒÑ¶¨ĞÍ¹ì¼££¬¹©µ¹Ô²ºóµÄÑÓ³Ù´òÓ¡Ê¹ÓÃ¡£
+//æŒ‰æŒ‡å®šæ§½ä½è¿½åŠ å·²å®šå‹è½¨è¿¹ï¼Œä¾›å€’åœ†åçš„å»¶è¿Ÿæ‰“å°ä½¿ç”¨ã€‚
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid printGCodeAt(int16 idx, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£º°´Ö¸¶¨»·ĞÎ»º³åË÷ÒıÊä³ö¹ì¼£»ò²å²¹ÈÕÖ¾¡£
-  ÊäÈë²ÎÊı£ºidx ²ÛÎ»Ë÷Òı£¬¿ÉÔ½½ç»ØÈÆ£»ucChannelNum Í¨µÀºÅ¡£
-  Êä³ö²ÎÊı£º¶ÔÓ¦Í¨µÀÈÕÖ¾¼°´òÓ¡ĞòºÅ£»ÎŞÓĞĞ§ÎÄ¼ş»òÍ¨µÀÊ±Ö±½Ó·µ»Ø¡£
-  ·µ »Ø Öµ£ºÎŞ¡£
-  ±¸    ×¢£º¹ì¼£Ä£Ê½µ÷ÓÃ·½Ğë±£Ö¤¸Ã¶ÎÒÑ¶¨ĞÍ£»Ä£Ì¬¸ñÊ½ÊÊÅäÖ»¸ÄÏÔÊ¾¸±±¾£¬²»¸ÄÖ´ĞĞ¼ÇÂ¼¡£
+  å‡½æ•°åç§°ï¼švoid printGCodeAt(int16 idx, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæŒ‰æŒ‡å®šç¯å½¢ç¼“å†²ç´¢å¼•è¾“å‡ºè½¨è¿¹æˆ–æ’è¡¥æ—¥å¿—ã€‚
+  è¾“å…¥å‚æ•°ï¼šidx æ§½ä½ç´¢å¼•ï¼Œå¯è¶Šç•Œå›ç»•ï¼›ucChannelNum é€šé“å·ã€‚
+  è¾“å‡ºå‚æ•°ï¼šå¯¹åº”é€šé“æ—¥å¿—åŠæ‰“å°åºå·ï¼›æ— æœ‰æ•ˆæ–‡ä»¶æˆ–é€šé“æ—¶ç›´æ¥è¿”å›ã€‚
+  è¿” å› å€¼ï¼šæ— ã€‚
+  å¤‡    æ³¨ï¼šè½¨è¿¹æ¨¡å¼è°ƒç”¨æ–¹é¡»ä¿è¯è¯¥æ®µå·²å®šå‹ï¼›æ¨¡æ€æ ¼å¼é€‚é…åªæ”¹æ˜¾ç¤ºå‰¯æœ¬ï¼Œä¸æ”¹æ‰§è¡Œè®°å½•ã€‚
 **************************************************/
 void printGCodeAt(int16 idx, uint8 ucChannelNum)
 {
-    FILE* file1=NULL;
-    idx=(idx % GCODEPARSEBUF_MAX + GCODEPARSEBUF_MAX) % GCODEPARSEBUF_MAX;
-	int32 *lineNum  = NULL;
-	switch (ucChannelNum)
-	{
-	case 0:
-		file1 = s_p0;
-		lineNum = &s_idx_0;
-		break;
-	case 1:
-		file1 = s_p1;
-		lineNum = &s_idx_1;
-		break;
-	default:
-		break;
-	}
-	if (!file1 || !lineNum) return;
-	*lineNum += 1;
-	//fprintf(file1, "ĞĞºÅ%d\n", g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx].unGCodeLineNum);
+    FILE* file1 = NULL;
+    idx = (idx % GCODEPARSEBUF_MAX + GCODEPARSEBUF_MAX) % GCODEPARSEBUF_MAX;
+    int32* lineNum = NULL;
+    switch (ucChannelNum)
+    {
+    case 0:
+        file1 = s_p0;
+        lineNum = &s_idx_0;
+        break;
+    case 1:
+        file1 = s_p1;
+        lineNum = &s_idx_1;
+        break;
+    default:
+        break;
+    }
+    if (!file1 || !lineNum)
+        return;
+    *lineNum += 1;
+    //fprintf(file1, "è¡Œå·%d\n", g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx].unGCodeLineNum);
 
 #if PRINTMODE == 1
-	//´òÓ¡G´úÂë»º³åÇøµ¥ÔªÄÚÈİ
-	{
-        struct SGCodeParse display=g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx];
-        /* ¾ÉÎÄ±¾¸ñÊ½»¯Æ÷ĞèÒª½âÎö½×¶Î±àÂë£»½öÔÚÏÔÊ¾¸±±¾ÖĞ·Å´ó£¬½ûÖ¹¸ÄÔ­²ÛÎ»¡£ */
-        if (display.SModalInfo.sGc >= 17 && display.SModalInfo.sGc <= 19) {
-            display.SModalInfo.sGa *= 10; display.SModalInfo.sGb *= 10;
-            display.SModalInfo.sGc *= 10; display.SModalInfo.sGd *= 10;
-            display.SModalInfo.sGe *= 10; display.SModalInfo.sGf *= 10;
-            display.SModalInfo.sGg *= 10; display.SModalInfo.sGh *= 10;
+    //æ‰“å°Gä»£ç ç¼“å†²åŒºå•å…ƒå†…å®¹
+    {
+        struct SGCodeParse display = g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx];
+        /* æ—§æ–‡æœ¬æ ¼å¼åŒ–å™¨éœ€è¦è§£æé˜¶æ®µç¼–ç ï¼›ä»…åœ¨æ˜¾ç¤ºå‰¯æœ¬ä¸­æ”¾å¤§ï¼Œç¦æ­¢æ”¹åŸæ§½ä½ã€‚ */
+        if (display.SModalInfo.sGc >= 17 && display.SModalInfo.sGc <= 19)
+        {
+            display.SModalInfo.sGa *= 10;
+            display.SModalInfo.sGb *= 10;
+            display.SModalInfo.sGc *= 10;
+            display.SModalInfo.sGd *= 10;
+            display.SModalInfo.sGe *= 10;
+            display.SModalInfo.sGf *= 10;
+            display.SModalInfo.sGg *= 10;
+            display.SModalInfo.sGh *= 10;
         }
-        printGCodeBuffUnit(&display,*lineNum);
+        printGCodeBuffUnit(&display, *lineNum);
     }
 #elif PRINTMODE == 2
-	//´òÓ¡G´úÂëNCÎÄ¼ş
-	printGCodeNCFile(&g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx], 0);
+    //æ‰“å°Gä»£ç NCæ–‡ä»¶
+    printGCodeNCFile(&g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx], 0);
 #elif PRINTMODE == 3
-	//´òÓ¡ÔË¶¯²å²¹µãNCÎÄ¼ş
-	printInterpolatePointNCFile(*lineNum);
-
+    //æ‰“å°è¿åŠ¨æ’è¡¥ç‚¹NCæ–‡ä»¶
+    printInterpolatePointNCFile(*lineNum);
 
 #endif
-
 }
 
 #endif
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 tryToGetLine(int8 *pName, uint32 unTargetLineNum)
-  º¯Êı¹¦ÄÜ: »ñÈ¡Ä¿±êÎÄ±¾µÄÄ³Ò»ĞĞ
-  ÊäÈë²ÎÊı£ºpNameÎÄ¼şÃû£¬unTargetLineNumÄ¿±êĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·µ»ØµÄÊı×éÏÂ±ê0-19¹²20¸ö
-			·µ»Ø 0xF1Ê±ĞèÒªµÈ´ı
-			·µ»Ø 0XF2Ê±³¬³ö·¶Î§
-			·µ»Ø 0XF3Ê±³ö´í
-  ±¸    ×¢£ºÀıÈç:ĞèÒª´ò¿ª./resouce/O0001.txt, pNameÖ»ĞèÒªÊäÈë0001£¨g_ucNameTypeÎª1Ê±£©»òO0001£¨g_ucNameTypeÎª0Ê±£©
+  å‡½æ•°åç§°ï¼šuint8 tryToGetLine(int8 *pName, uint32 unTargetLineNum)
+  å‡½æ•°åŠŸèƒ½: è·å–ç›®æ ‡æ–‡æœ¬çš„æŸä¸€è¡Œ
+  è¾“å…¥å‚æ•°ï¼špNameæ–‡ä»¶åï¼ŒunTargetLineNumç›®æ ‡è¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¿”å›çš„æ•°ç»„ä¸‹æ ‡0-19å…±20ä¸ª
+			è¿”å› 0xF1æ—¶éœ€è¦ç­‰å¾…
+			è¿”å› 0XF2æ—¶è¶…å‡ºèŒƒå›´
+			è¿”å› 0XF3æ—¶å‡ºé”™
+  å¤‡    æ³¨ï¼šä¾‹å¦‚:éœ€è¦æ‰“å¼€./resouce/O0001.txt, pNameåªéœ€è¦è¾“å…¥0001ï¼ˆg_ucNameTypeä¸º1æ—¶ï¼‰æˆ–O0001ï¼ˆg_ucNameTypeä¸º0æ—¶ï¼‰
 **************************************************/
 uint8 tryToGetLine(int8* pName, uint32 unTargetLineNum, int8 cProgramListSize, uint8 ucChannelNum)
 {
-	uint32 unWriteIdx = 0;
-	FILE* pFile = NULL;
+    uint32 unWriteIdx = 0;
+    FILE* pFile = NULL;
 
-	uint32  unCurrLine = 0;
-	int8 cPathName[50];
-	if (!pName)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM89);
-		return 0xF3;  //³ö´í
-	}
-
+    uint32 unCurrLine = 0;
+    int8 cPathName[50];
+    if (!pName)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM89);
+        return 0xF3; //å‡ºé”™
+    }
 
 #if STM32_MODE
-	memset(cPathName, 0, 50);
+    memset(cPathName, 0, 50);
 
-	addPathSTM32FileName(cPathName, pName, cProgramListSize);  //Èç¹ûpNameÊäÈë0001£¬cPathNameµÈÓÚO0001.TXT
+    addPathSTM32FileName(cPathName, pName, cProgramListSize); //å¦‚æœpNameè¾“å…¥0001ï¼ŒcPathNameç­‰äºO0001.TXT
 
-
-
-	return Flash_listRe((char*)cPathName, unTargetLineNum, ucChannelNum);
-
+    return Flash_listRe((char*)cPathName, unTargetLineNum, ucChannelNum);
 
 #else
-	for (; unWriteIdx < 20; unWriteIdx++)
-	{
-		if (s_bIsWritable[unWriteIdx] == TRUE)
-		{
-			break;
-		}
-	}
-	if (unWriteIdx >= 20)
-	{
-		return 0xF1;  //ĞèÒªµÈ´ı
-	}
-	else
-	{
-		int8 cAStatamentArray[MAX_LENGTH_OF_LINE];    //Ò»ĞĞÎÄ±¾×Ö·û´®
+    for (; unWriteIdx < 20; unWriteIdx++)
+    {
+        if (s_bIsWritable[unWriteIdx] == TRUE)
+        {
+            break;
+        }
+    }
+    if (unWriteIdx >= 20)
+    {
+        return 0xF1; //éœ€è¦ç­‰å¾…
+    }
+    else
+    {
+        int8 cAStatamentArray[MAX_LENGTH_OF_LINE]; //ä¸€è¡Œæ–‡æœ¬å­—ç¬¦ä¸²
 
-		memset(cPathName, 0, 50);
-		memset(cAStatamentArray, 0, MAX_LENGTH_OF_LINE);
+        memset(cPathName, 0, 50);
+        memset(cAStatamentArray, 0, MAX_LENGTH_OF_LINE);
 
-		addPathVsFileName(cPathName, pName);  //Ôö¼ÓÎÄ¼şÂ·¾¶ºÍºó×º
-		pFile = fopen(cPathName, "r");
+        addPathVsFileName(cPathName, pName); //å¢åŠ æ–‡ä»¶è·¯å¾„å’Œåç¼€
+        pFile = fopen(cPathName, "r");
 
-		if (!pFile)
-		{
-			int errNum = errno;
-			printf("open fail errno = %d reason =  \n", errno);
-			parseGCodeErrorB(0, GCODE_ERROR_NUM89);
-			return 0xF3;   //³ö´í
-		}
+        if (!pFile)
+        {
+            int errNum = errno;
+            printf("open fail errno = %d reason =  \n", errno);
+            parseGCodeErrorB(0, GCODE_ERROR_NUM89);
+            return 0xF3; //å‡ºé”™
+        }
 
-		for (; unCurrLine <= unTargetLineNum; unCurrLine++)
-		{
-			if (!fgets(cAStatamentArray, MAX_LENGTH_OF_LINE, pFile))
-			{
-				memset(cAStatamentArray, 0, MAX_LENGTH_OF_LINE);
-				fclose(pFile);
-				return 0xF2;  //³¬³ö·¶Î§
-			}
-		}
+        for (; unCurrLine <= unTargetLineNum; unCurrLine++)
+        {
+            if (!fgets(cAStatamentArray, MAX_LENGTH_OF_LINE, pFile))
+            {
+                memset(cAStatamentArray, 0, MAX_LENGTH_OF_LINE);
+                fclose(pFile);
+                return 0xF2; //è¶…å‡ºèŒƒå›´
+            }
+        }
 
-		//ÄÜµ½ÕâÀï¾ÍÊÇ»ñÈ¡³É¹¦
-		g_textBuf[unWriteIdx];//Ğ´Èë»º³å
-		memset(g_textBuf[unWriteIdx], 0, MAX_LENGTH_OF_LINE);
-		strcpy(g_textBuf[unWriteIdx], cAStatamentArray);
-		s_bIsWritable[unWriteIdx] = FALSE;  //ÖÃÎª²»¿ÉĞ´
-		fclose(pFile);
-		return unWriteIdx;
-
-	}
+        //èƒ½åˆ°è¿™é‡Œå°±æ˜¯è·å–æˆåŠŸ
+        g_textBuf[unWriteIdx]; //å†™å…¥ç¼“å†²
+        memset(g_textBuf[unWriteIdx], 0, MAX_LENGTH_OF_LINE);
+        strcpy(g_textBuf[unWriteIdx], cAStatamentArray);
+        s_bIsWritable[unWriteIdx] = FALSE; //ç½®ä¸ºä¸å¯å†™
+        fclose(pFile);
+        return unWriteIdx;
+    }
 #endif
-
 }
-
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid addPathSTM32FileName(int8 cOutput[50], int8 *pInput)
-  º¯Êı¹¦ÄÜ: µ¥Æ¬»ú»·¾³ÏÂÌí¼ÓĞŞ¸ÄÎÄ¼şÃû
-  ÊäÈë²ÎÊı£ºpInputÊäÈë×Ö·û´®
-  Êä³ö²ÎÊı£ºcOutputÊä³ö×Ö·û´®
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÒòÎªµÚÒ»´ÎÊÇ½çÃæ´«¹ıÀ´ÊÇÍêÕûÎÄ¼şÃû£¬²»ÓÃ¼ÓÇ°ºó×º£¬Ö»ÓĞ×Ó³ÌĞòĞèÒª
+  å‡½æ•°åç§°ï¼švoid addPathSTM32FileName(int8 cOutput[50], int8 *pInput)
+  å‡½æ•°åŠŸèƒ½: å•ç‰‡æœºç¯å¢ƒä¸‹æ·»åŠ ä¿®æ”¹æ–‡ä»¶å
+  è¾“å…¥å‚æ•°ï¼špInputè¾“å…¥å­—ç¬¦ä¸²
+  è¾“å‡ºå‚æ•°ï¼šcOutputè¾“å‡ºå­—ç¬¦ä¸²
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šå› ä¸ºç¬¬ä¸€æ¬¡æ˜¯ç•Œé¢ä¼ è¿‡æ¥æ˜¯å®Œæ•´æ–‡ä»¶åï¼Œä¸ç”¨åŠ å‰åç¼€ï¼Œåªæœ‰å­ç¨‹åºéœ€è¦
 **************************************************/
-void addPathSTM32FileName(int8 *cOutput, int8 *pInput, int8 cProgramListSize)
+void addPathSTM32FileName(int8* cOutput, int8* pInput, int8 cProgramListSize)
 {
-	uint8 ucIdx;
+    uint8 ucIdx;
 #if STM32_MODE
-	if (cProgramListSize < 0)//×Ó³ÌĞò ĞèÒªÏÈ¼Ó×Ö·û'O'
-	{
+    if (cProgramListSize < 0) //å­ç¨‹åº éœ€è¦å…ˆåŠ å­—ç¬¦'O'
+    {
 #endif
-		strcpy((char*)cOutput, "O");
+        strcpy((char*)cOutput, "O");
 #if STM32_MODE
-	}
+    }
 #endif
-	ucIdx = (uint8)strlen((char*)cOutput);
-	for (uint8 i = 0; pInput[i] != 0; ucIdx++, i++)
-	{
-		cOutput[ucIdx] = pInput[i];
-	}
+    ucIdx = (uint8)strlen((char*)cOutput);
+    for (uint8 i = 0; pInput[i] != 0; ucIdx++, i++)
+    {
+        cOutput[ucIdx] = pInput[i];
+    }
 #if STM32_MODE
-	if (cProgramListSize < 0)//×Ó³ÌĞò ĞèÒªÏÈ¼Ó×Ö·û'O'
-	{
+    if (cProgramListSize < 0) //å­ç¨‹åº éœ€è¦å…ˆåŠ å­—ç¬¦'O'
+    {
 #endif
-		cOutput[ucIdx++] = '.';
-		cOutput[ucIdx++] = 'T';
-		cOutput[ucIdx++] = 'X';
-		cOutput[ucIdx++] = 'T';
+        cOutput[ucIdx++] = '.';
+        cOutput[ucIdx++] = 'T';
+        cOutput[ucIdx++] = 'X';
+        cOutput[ucIdx++] = 'T';
 #if STM32_MODE
-	}
+    }
 #endif
-	cOutput[ucIdx] = 0;
+    cOutput[ucIdx] = 0;
 }
-
-
-
-
 
 #if !STM32_MODE
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ´òÓ¡G´úÂë»º³åÇøÊı¾İ
-  ÊäÈë²ÎÊı£ºnNo		±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºlxw´òÓ¡G´úÂë»º³åÇøµ¥ÔªÊı¾İ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: æ‰“å°Gä»£ç ç¼“å†²åŒºæ•°æ®
+  è¾“å…¥å‚æ•°ï¼šnNo		ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šlxwæ‰“å°Gä»£ç ç¼“å†²åŒºå•å…ƒæ•°æ®
 **************************************************/
 void printGCodeBuffUnit(struct SGCodeParse* pSGCodeParseUnit, int32 nNo)
 {
-	//1.´òÓ¡»º³åÇøĞòºÅ
-	fprintf(s_p0, "»º³åÇøµ¥Ôª%d£º£¨ĞĞºÅ£º%d£©\n", nNo, pSGCodeParseUnit->unGCodeLineNum);
+    //1.æ‰“å°ç¼“å†²åŒºåºå·
+    fprintf(s_p0, "ç¼“å†²åŒºå•å…ƒ%dï¼šï¼ˆè¡Œå·ï¼š%dï¼‰\n", nNo, pSGCodeParseUnit->unGCodeLineNum);
 
-	//2.´òÓ¡»º³åÇø×´Ì¬
-	{
-		int8 cGa = pSGCodeParseUnit->SModalInfo.sGa / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGb = pSGCodeParseUnit->SModalInfo.sGb / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGc = pSGCodeParseUnit->SModalInfo.sGc / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGd = pSGCodeParseUnit->SModalInfo.sGd / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGe = pSGCodeParseUnit->SModalInfo.sGe / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGf = pSGCodeParseUnit->SModalInfo.sGf / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGg = pSGCodeParseUnit->SModalInfo.sGg / (pow(10, GCOMMAND_DECIMAL_PLACE));
-		int8 cGh = pSGCodeParseUnit->SModalInfo.sGh / (pow(10, GCOMMAND_DECIMAL_PLACE));
+    //2.æ‰“å°ç¼“å†²åŒºçŠ¶æ€
+    {
+        int8 cGa = pSGCodeParseUnit->SModalInfo.sGa / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGb = pSGCodeParseUnit->SModalInfo.sGb / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGc = pSGCodeParseUnit->SModalInfo.sGc / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGd = pSGCodeParseUnit->SModalInfo.sGd / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGe = pSGCodeParseUnit->SModalInfo.sGe / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGf = pSGCodeParseUnit->SModalInfo.sGf / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGg = pSGCodeParseUnit->SModalInfo.sGg / (pow(10, GCOMMAND_DECIMAL_PLACE));
+        int8 cGh = pSGCodeParseUnit->SModalInfo.sGh / (pow(10, GCOMMAND_DECIMAL_PLACE));
 
-		fprintf(s_p0, "Ä£Ì¬Ö¸Áî£º");
-		fprintf(s_p0, "G%d¡¢", cGa);
-		fprintf(s_p0, "G%d¡¢", cGb);
-		fprintf(s_p0, "G%d¡¢", cGc);
-		fprintf(s_p0, "G%d¡¢", cGd);
-		fprintf(s_p0, "G%d¡¢", cGe);
-		fprintf(s_p0, "G%d¡¢", cGf);
-		fprintf(s_p0, "G%d¡¢", cGg);
-		fprintf(s_p0, "G%d\n", cGh);
+        fprintf(s_p0, "æ¨¡æ€æŒ‡ä»¤ï¼š");
+        fprintf(s_p0, "G%dã€", cGa);
+        fprintf(s_p0, "G%dã€", cGb);
+        fprintf(s_p0, "G%dã€", cGc);
+        fprintf(s_p0, "G%dã€", cGd);
+        fprintf(s_p0, "G%dã€", cGe);
+        fprintf(s_p0, "G%dã€", cGf);
+        fprintf(s_p0, "G%dã€", cGg);
+        fprintf(s_p0, "G%d\n", cGh);
 
-		fprintf(s_p0, "½ø¸øËÙ¶È£º%d\t", (int32)pSGCodeParseUnit->dFeedrate);
-		fprintf(s_p0, "Ö÷Öá×ªËÙ£º%d\t", (int32)pSGCodeParseUnit->dSpindleSpeed);
-		fprintf(s_p0, "µÚ¶şÖ÷Öá×ªËÙ£º%d\t", (int32)pSGCodeParseUnit->dSecondSpindleSpeed);
-		fprintf(s_p0, "µ¶ºÅ£º%d\tµ¶²¹ºÅ£º%d\n", pSGCodeParseUnit->ucToolID, pSGCodeParseUnit->ucToolCompNum);
+        fprintf(s_p0, "è¿›ç»™é€Ÿåº¦ï¼š%d\t", (int32)pSGCodeParseUnit->dFeedrate);
+        fprintf(s_p0, "ä¸»è½´è½¬é€Ÿï¼š%d\t", (int32)pSGCodeParseUnit->dSpindleSpeed);
+        fprintf(s_p0, "ç¬¬äºŒä¸»è½´è½¬é€Ÿï¼š%d\t", (int32)pSGCodeParseUnit->dSecondSpindleSpeed);
+        fprintf(s_p0, "åˆ€å·ï¼š%d\tåˆ€è¡¥å·ï¼š%d\n", pSGCodeParseUnit->ucToolID, pSGCodeParseUnit->ucToolCompNum);
+    }
 
+    //æ‰“å°å®ä½“ä¿¡æ¯
+    {
+        fprintf(s_p0, "å®ä½“ç±»å‹ï¼š");
+        switch (pSGCodeParseUnit->EntityType)
+        {
+        case DOT:
+            fprintf(s_p0, "DOT\n");
+            break;
+        case L1NE:
+            fprintf(s_p0, "LINE\n");
+            break;
+        case ARC:
+            fprintf(s_p0, "ARC\t");
+            fprintf(s_p0, "åœ†å¿ƒåæ ‡ï¼š");
+            fprintf(s_p0, "Xï¼š%.3f\t\t", pSGCodeParseUnit->SCenterPoint.dArray[0]); //X
+            fprintf(s_p0, "Yï¼š%.3f\t\t", pSGCodeParseUnit->SCenterPoint.dArray[1]); //Y
+            fprintf(s_p0, "Zï¼š%.3f\n", pSGCodeParseUnit->SCenterPoint.dArray[2]);   //Z
+            break;
+        case TAPPING:
+            fprintf(s_p0, "TAPPING\n");
+            break;
+        default:
+            fprintf(s_p0, "OTHERTYPE\n");
+            break;
+        }
+    }
 
-	}
+    //æ‰“å°åæ ‡ä¿¡æ¯
+    {
+        //æ‰“å°èµ·ç‚¹åæ ‡
+        fprintf(s_p0, "èµ·ç‚¹åæ ‡ï¼š");
+        fprintf(s_p0, "Xï¼š%.3f\t\t", pSGCodeParseUnit->SStartPoint.dArray[0]); //X
+        fprintf(s_p0, "Yï¼š%.3f\t\t", pSGCodeParseUnit->SStartPoint.dArray[1]); //Y
+        fprintf(s_p0, "Zï¼š%.3f\n", pSGCodeParseUnit->SStartPoint.dArray[2]);   //Z
+        fprintf(s_p0, "Cï¼š%.3f\n", pSGCodeParseUnit->SStartPoint.dArray[5]);   //C
 
-	//´òÓ¡ÊµÌåĞÅÏ¢
-	{
-		fprintf(s_p0, "ÊµÌåÀàĞÍ£º");
-		switch (pSGCodeParseUnit->EntityType)
-		{
-		case DOT:
-			fprintf(s_p0, "DOT\n" );
-			break;
-		case L1NE:
-			fprintf(s_p0, "LINE\n");
-			break;
-		case ARC:
-			fprintf(s_p0, "ARC\t");
-			fprintf(s_p0, "Ô²ĞÄ×ø±ê£º");
-			fprintf(s_p0, "X£º%.3f\t\t", pSGCodeParseUnit->SCenterPoint.dArray[0]);//X
-			fprintf(s_p0, "Y£º%.3f\t\t", pSGCodeParseUnit->SCenterPoint.dArray[1]);//Y
-			fprintf(s_p0, "Z£º%.3f\n", pSGCodeParseUnit->SCenterPoint.dArray[2]);//Z
-			break;
-		case TAPPING:
-			fprintf(s_p0, "TAPPING\n");
-			break;
-		default:
-			fprintf(s_p0, "OTHERTYPE\n");
-			break;
-		}
+        //æ‰“å°ç»ˆç‚¹åæ ‡
+        fprintf(s_p0, "ç»ˆç‚¹åæ ‡ï¼š");
+        fprintf(s_p0, "Xï¼š%.3f\t\t", pSGCodeParseUnit->SEndPoint.dArray[0]); //X
+        fprintf(s_p0, "Yï¼š%.3f\t\t", pSGCodeParseUnit->SEndPoint.dArray[1]); //Y
+        fprintf(s_p0, "Zï¼š%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[2]);   //Z
+        fprintf(s_p0, "Cï¼š%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[5]);   //C
+    }
+    //æ‰“å°å»¶æ—¶æ—¶é—´
+    {
+        if (pSGCodeParseUnit->unDelayTime != 0)
+        {
+            fprintf(s_p0, "å»¶æ—¶æ—¶é—´ï¼š%dms", pSGCodeParseUnit->unDelayTime);
+        }
+    }
 
-
-	}
-
-	//´òÓ¡×ø±êĞÅÏ¢
-	{
-		//´òÓ¡Æğµã×ø±ê
-		fprintf(s_p0, "Æğµã×ø±ê£º");
-		fprintf(s_p0, "X£º%.3f\t\t", pSGCodeParseUnit->SStartPoint.dArray[0]);//X
-		fprintf(s_p0, "Y£º%.3f\t\t", pSGCodeParseUnit->SStartPoint.dArray[1]);//Y
-		fprintf(s_p0, "Z£º%.3f\n", pSGCodeParseUnit->SStartPoint.dArray[2]);//Z
-		fprintf(s_p0, "C£º%.3f\n", pSGCodeParseUnit->SStartPoint.dArray[5]);//C
-
-		//´òÓ¡ÖÕµã×ø±ê
-		fprintf(s_p0, "ÖÕµã×ø±ê£º");
-		fprintf(s_p0, "X£º%.3f\t\t", pSGCodeParseUnit->SEndPoint.dArray[0]);//X
-		fprintf(s_p0, "Y£º%.3f\t\t", pSGCodeParseUnit->SEndPoint.dArray[1]);//Y
-		fprintf(s_p0, "Z£º%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[2]);//Z
-		fprintf(s_p0, "C£º%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[5]);//C
-
-	}
-	//´òÓ¡ÑÓÊ±Ê±¼ä
-	{
-		if (pSGCodeParseUnit->unDelayTime != 0)
-		{
-			fprintf(s_p0, "ÑÓÊ±Ê±¼ä£º%dms", pSGCodeParseUnit->unDelayTime);
-		}
-	}
-
-
-
-
-	//»º³åÇøÊı¾İÈ«²¿´òÓ¡
-	fprintf(s_p0, "\n");
-
+    //ç¼“å†²åŒºæ•°æ®å…¨éƒ¨æ‰“å°
+    fprintf(s_p0, "\n");
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ´òÓ¡G´úÂë¹ì¼£µÄNCÎÄ¼ş
-  ÊäÈë²ÎÊı£ºnNo		±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºlxw´òÓ¡G´úÂë»º³åÇøµ¥ÔªÊı¾İ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: æ‰“å°Gä»£ç è½¨è¿¹çš„NCæ–‡ä»¶
+  è¾“å…¥å‚æ•°ï¼šnNo		ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šlxwæ‰“å°Gä»£ç ç¼“å†²åŒºå•å…ƒæ•°æ®
 **************************************************/
 void printGCodeNCFile(struct SGCodeParse* pSGCodeParseUnit, int32 nNo)
 {
-	//2.´òÓ¡GÖµ
-	switch (pSGCodeParseUnit->EntityType)
-	{
-	case OTHERTYPE:
-		fprintf(s_p0, "G0\t");
+    //2.æ‰“å°Gå€¼
+    switch (pSGCodeParseUnit->EntityType)
+    {
+    case OTHERTYPE:
+        fprintf(s_p0, "G0\t");
 #if CONSOLEPRINT
-		printf("G0\t");
+        printf("G0\t");
 #endif
 
-		break;
-	case L1NE:
-		fprintf(s_p0, "G1\t");
+        break;
+    case L1NE:
+        fprintf(s_p0, "G1\t");
 #if CONSOLEPRINT
-		printf("G1\t");
+        printf("G1\t");
 #endif
 
-		break;
-	case ARC:
-		if (pSGCodeParseUnit->cArcDir == 1)
-		{
-			fprintf(s_p0, "G2\tR%.3f\t", pSGCodeParseUnit->dRadius);
+        break;
+    case ARC:
+        if (pSGCodeParseUnit->cArcDir == 1)
+        {
+            fprintf(s_p0, "G2\tR%.3f\t", pSGCodeParseUnit->dRadius);
 #if CONSOLEPRINT
-			printf("G2\tR%.3f\t", pSGCodeParseUnit->dRadius);
+            printf("G2\tR%.3f\t", pSGCodeParseUnit->dRadius);
 #endif
-
-		}
-		else
-		{
-			fprintf(s_p0, "G3\tR%.3f\t", pSGCodeParseUnit->dRadius);
+        }
+        else
+        {
+            fprintf(s_p0, "G3\tR%.3f\t", pSGCodeParseUnit->dRadius);
 #if CONSOLEPRINT
-			printf("G3\tR%.3f\t", pSGCodeParseUnit->dRadius);
+            printf("G3\tR%.3f\t", pSGCodeParseUnit->dRadius);
 #endif
+        }
+        break;
+    default:
+        break;
+    }
 
-		}
-		break;
-	default:
-		break;
-	}
-
-	//3.´òÓ¡×ø±êÖµ
-	fprintf(s_p0, "X%.3f\tY%.3f\tZ%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[0]*2, pSGCodeParseUnit->SEndPoint.dArray[1], pSGCodeParseUnit->SEndPoint.dArray[2]);
+    //3.æ‰“å°åæ ‡å€¼
+    fprintf(s_p0, "X%.3f\tY%.3f\tZ%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[0] * 2,
+            pSGCodeParseUnit->SEndPoint.dArray[1], pSGCodeParseUnit->SEndPoint.dArray[2]);
 #if CONSOLEPRINT
-	printf("X%.3f\tY%.3f\tZ%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[0] * 2, pSGCodeParseUnit->SEndPoint.dArray[1], pSGCodeParseUnit->SEndPoint.dArray[2]);
+    printf("X%.3f\tY%.3f\tZ%.3f\n", pSGCodeParseUnit->SEndPoint.dArray[0] * 2, pSGCodeParseUnit->SEndPoint.dArray[1],
+           pSGCodeParseUnit->SEndPoint.dArray[2]);
 #endif
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ´òÓ¡G´úÂë¹ì¼£µÄNCÎÄ¼ş
-  ÊäÈë²ÎÊı£ºnNo		±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºlxw´òÓ¡G´úÂë»º³åÇøµ¥ÔªÊı¾İ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: æ‰“å°Gä»£ç è½¨è¿¹çš„NCæ–‡ä»¶
+  è¾“å…¥å‚æ•°ï¼šnNo		ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šlxwæ‰“å°Gä»£ç ç¼“å†²åŒºå•å…ƒæ•°æ®
 **************************************************/
 void printInterpolatePointNCFile(int32 nLineNum)
 {
-	//¾ø¶Ô×ø±êÊä³ö
-	fprintf(s_p0, "G1 Z%.3f X%.3f(%d)\n", getMachCoordDouble(0, AXIS_Z), getMachCoordDouble(0, AXIS_X), nLineNum);
+    //ç»å¯¹åæ ‡è¾“å‡º
+    fprintf(s_p0, "G1 Z%.3f X%.3f(%d)\n", getMachCoordDouble(0, AXIS_Z), getMachCoordDouble(0, AXIS_X), nLineNum);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid GCODE_PRINT(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£º±£Áô¾É´òÓ¡Èë¿Ú£¬×ª·¢µ±Ç°Ğ´²ÛË÷Òı¡£
-  ÊäÈë²ÎÊı£ºucChannelNum ÓĞĞ§Í¨µÀºÅ¡£
-  Êä³ö²ÎÊı£ºÓë printGCodeAt ÏàÍ¬¡£
-  ·µ »Ø Öµ£ºÎŞ¡£
-  ±¸    ×¢£ºµ¹Ô²µÄÑÓ³Ù¹ì¼£´òÓ¡Ê¹ÓÃÏÔÊ½Ë÷Òı£¬²»ÄÜ¼Ù¶¨´ı´òÓ¡¶ÎÊ¼ÖÕÔÚµ±Ç°Ğ´²Û¡£
+  å‡½æ•°åç§°ï¼švoid GCODE_PRINT(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šä¿ç•™æ—§æ‰“å°å…¥å£ï¼Œè½¬å‘å½“å‰å†™æ§½ç´¢å¼•ã€‚
+  è¾“å…¥å‚æ•°ï¼šucChannelNum æœ‰æ•ˆé€šé“å·ã€‚
+  è¾“å‡ºå‚æ•°ï¼šä¸ printGCodeAt ç›¸åŒã€‚
+  è¿” å› å€¼ï¼šæ— ã€‚
+  å¤‡    æ³¨ï¼šå€’åœ†çš„å»¶è¿Ÿè½¨è¿¹æ‰“å°ä½¿ç”¨æ˜¾å¼ç´¢å¼•ï¼Œä¸èƒ½å‡å®šå¾…æ‰“å°æ®µå§‹ç»ˆåœ¨å½“å‰å†™æ§½ã€‚
 **************************************************/
 void GCODE_PRINT(uint8 ucChannelNum)
 {
-    printGCodeAt(getSGCodeParsePointerIndex(GCODE_WRITE,ucChannelNum),ucChannelNum);
+    printGCodeAt(getSGCodeParsePointerIndex(GCODE_WRITE, ucChannelNum), ucChannelNum);
 }
 
 #endif

@@ -1,8 +1,6 @@
 
 #include "common.h"
 
-
-
 #include "GCode.h"
 
 //int8 CheckG90(SSyntaxConfiguration* pSSyntaxConfig);
@@ -10,59 +8,55 @@
 //int8 AssignG90(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 //int8 AssignG91(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-
-
-//Ìí¼ÓG90¹æÔò½á¹¹Ìå
+//æ·»åŠ G90è§„åˆ™ç»“æž„ä½“
 void addG90RegulationAPI()
 {
-	//Ö¸Áî£ºG90   //ÆäÊµÎªG93
-	//×é±ð£ºsGh
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(90, sGh, 1, NULL, NULL, NULL, CheckG90, AssignG90);
+    // é“£å‰Šé…ç½®å°† G90 è§£é‡Šä¸ºç»å¯¹åæ ‡ç¼–ç¨‹ã€‚
+    //ç»„åˆ«ï¼šsGh
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(90, sGh, 1, NULL, NULL, NULL, CheckG90, AssignG90);
 }
-//Ìí¼ÓG91¹æÔò½á¹¹Ìå
+//æ·»åŠ G91è§„åˆ™ç»“æž„ä½“
 void addG91RegulationAPI()
 {
-	//Ö¸Áî£ºG91
-	//×é±ð£ºsGa
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(91, sGh, 1, NULL, NULL, NULL, CheckG91, AssignG91);
+    //æŒ‡ä»¤ï¼šG91
+    //ç»„åˆ«ï¼šsGa
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(91, sGh, 1, NULL, NULL, NULL, CheckG91, AssignG91);
 }
 
-
-//¼ì²éG90
-int8 CheckG90(SSyntaxConfiguration* pSSyntaxConfig ,struct SGCodeParse* pSGCodeParseUnit)
+//æ£€æŸ¥G90
+int8 CheckG90(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGh = G90 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSSyntaxConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = FALSE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGh = G90 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSSyntaxConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = FALSE;
+    return 2;
 }
-//¼ì²éG91
+//æ£€æŸ¥G91
 int8 CheckG91(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGh = G91 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSSyntaxConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = TRUE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGh = G91 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSSyntaxConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = TRUE;
+    return 2;
 }
 
-
-//¸³ÖµG90
+//èµ‹å€¼G90
 int8 AssignG90(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGh = G90 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSAssignConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = FALSE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGh = G90 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSAssignConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = FALSE;
+    return 2;
 }
-//¸³ÖµG91
+//èµ‹å€¼G91
 int8 AssignG91(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGh = G91 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSAssignConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = TRUE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGh = G91 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSAssignConfig->SGCodeCurrSysState.bRelativeCoordinateProgramming = TRUE;
+    return 2;
 }

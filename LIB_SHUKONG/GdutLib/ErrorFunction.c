@@ -1,738 +1,869 @@
-#include<string.h>
-#include<stdio.h>
+#include <string.h>
+#include <stdio.h>
 
-#include"ErrorFunction.h"
+#include "ErrorFunction.h"
 #include "Config.h"
 //#include"IOCommand.h"
 #if STM32_MODE
-#include"ram_mu.h"
+#include "ram_mu.h"
 #include "app_warning.h"
 #endif
-static uint16 s_ErrorType;                //¼ÇÂ¼´íÎóµÄÀàĞÍ
-static bool s_bErrorFlag;                 //µ¥¸ö´Ê·¨µ¥Ôª³ö´íµÄ±êÖ¾
-static bool s_bErrorHasBeenWritten;            //ÒÑÓĞ´íÎó±»Ğ´Èë´íÎó»º³åÇøµÄ±êÖ¾
-static uint8 s_ucPosSGCodeErrorBuf;       //G´úÂë´íÎóĞÅÏ¢½á¹¹ÌåÊı×éµÄµ±Ç°Î»ÖÃ
-static struct SGCodeError s_SGCodeErrorBuf[GCODEERRORBUF_MAX];  //½âÎöG´úÂë³ö´íÊ±£¬±£´æµ±Ç°G´úÂë´íÎóĞÅÏ¢µÄ½á¹¹ÌåÊı×é
-static char s_cStrArray[SIZE_OF_ERROR_STRING + 1];       //ÓÃÓÚ·µ»Ø×Ö·û´®
+static uint16 s_ErrorType;                                     //è®°å½•é”™è¯¯çš„ç±»å‹
+static bool s_bErrorFlag;                                      //å•ä¸ªè¯æ³•å•å…ƒå‡ºé”™çš„æ ‡å¿—
+static bool s_bErrorHasBeenWritten;                            //å·²æœ‰é”™è¯¯è¢«å†™å…¥é”™è¯¯ç¼“å†²åŒºçš„æ ‡å¿—
+static uint8 s_ucPosSGCodeErrorBuf;                            //Gä»£ç é”™è¯¯ä¿¡æ¯ç»“æ„ä½“æ•°ç»„çš„å½“å‰ä½ç½®
+static struct SGCodeError s_SGCodeErrorBuf[GCODEERRORBUF_MAX]; //è§£æGä»£ç å‡ºé”™æ—¶ï¼Œä¿å­˜å½“å‰Gä»£ç é”™è¯¯ä¿¡æ¯çš„ç»“æ„ä½“æ•°ç»„
+static char s_cStrArray[SIZE_OF_ERROR_STRING + 1];             //ç”¨äºè¿”å›å­—ç¬¦ä¸²
 #if STM32_MODE
 static u8 erbuff[SIZE_OF_ERROR_STRING];
-extern u32 warn_num;//±¨ÕûÒ³ÏÔÊ¾Á´±í:
-extern current_warning* c_warn;			    //µ±Ç°¹ÊÕÏ
-extern historical_warning* h_warn;			//ÀúÊ·¹ÊÕÏ
+extern u32 warn_num;               //æŠ¥æ•´é¡µæ˜¾ç¤ºé“¾è¡¨:
+extern current_warning* c_warn;    //å½“å‰æ•…éšœ
+extern historical_warning* h_warn; //å†å²æ•…éšœ
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid printError()
-  º¯Êı¹¦ÄÜ  ´íÎó´òÓ¡º¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid printError()
+  å‡½æ•°åŠŸèƒ½  é”™è¯¯æ‰“å°å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 #if !STM32_MODE
 void printError(void)
 {
-	int i;
-	printf("--------------------ERROR INFOMATION -----------------------------\n");
-	for (i = 0; i < s_ucPosSGCodeErrorBuf; ++i)
-	{
-		/*printf("g_SGCodeErrorBuf[i].usErrorCode:%d\n", g_SGCodeErrorBuf[i].usErrorCode);*/
-		printf("Type:%4d   LineNumber:%6d   ErrorCode:%5s  Info:%s\n", s_SGCodeErrorBuf[i].usErrorCode, s_SGCodeErrorBuf[i].unLineNum + 1, s_SGCodeErrorBuf[i].ucErrorGCode, getStrByNum(s_SGCodeErrorBuf[i].usErrorCode, NULL, NULL));
-	}
-
+    int i;
+    printf("--------------------ERROR INFOMATION -----------------------------\n");
+    for (i = 0; i < s_ucPosSGCodeErrorBuf; ++i)
+    {
+        /*printf("g_SGCodeErrorBuf[i].usErrorCode:%d\n", g_SGCodeErrorBuf[i].usErrorCode);*/
+        printf("Type:%4d   LineNumber:%6d   ErrorCode:%5s  Info:%s\n", s_SGCodeErrorBuf[i].usErrorCode,
+               s_SGCodeErrorBuf[i].unLineNum + 1, s_SGCodeErrorBuf[i].ucErrorGCode,
+               getStrByNum(s_SGCodeErrorBuf[i].usErrorCode, NULL, NULL));
+    }
 }
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid initErrorBuf()
-  º¯Êı¹¦ÄÜ: ³õÊ¼»¯´íÎó»º³åÇø¼°Ïà¹Ø±äÁ¿
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid initErrorBuf()
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–é”™è¯¯ç¼“å†²åŒºåŠç›¸å…³å˜é‡
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void initErrorBuf()
 {
-	s_ErrorType = -1;                     //¼ÇÂ¼´íÎóµÄÀàĞÍ
-	s_bErrorFlag = FALSE;                 //µ¥¸ö´Ê·¨µ¥Ôª³ö´íµÄ±êÖ¾
-	s_bErrorHasBeenWritten = FALSE;            ///ÒÑÓĞ´íÎó±»Ğ´Èë´íÎó»º³åÇøµÄ±êÖ¾
-	s_ucPosSGCodeErrorBuf = 0;            ///G´úÂë´íÎóĞÅÏ¢½á¹¹ÌåÊı×éµÄµ±Ç°Î»ÖÃ
-	memset(s_SGCodeErrorBuf, 0, sizeof(struct SGCodeError) * GCODEERRORBUF_MAX);
-
+    s_ErrorType = -1;               //è®°å½•é”™è¯¯çš„ç±»å‹
+    s_bErrorFlag = FALSE;           //å•ä¸ªè¯æ³•å•å…ƒå‡ºé”™çš„æ ‡å¿—
+    s_bErrorHasBeenWritten = FALSE; ///å·²æœ‰é”™è¯¯è¢«å†™å…¥é”™è¯¯ç¼“å†²åŒºçš„æ ‡å¿—
+    s_ucPosSGCodeErrorBuf = 0;      ///Gä»£ç é”™è¯¯ä¿¡æ¯ç»“æ„ä½“æ•°ç»„çš„å½“å‰ä½ç½®
+    memset(s_SGCodeErrorBuf, 0, sizeof(struct SGCodeError) * GCODEERRORBUF_MAX);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºparseGCodeError(const char *pGCode, uint32 unLineNum, uint16 usErrorNum, uint8 ucWord_Len)
-  º¯Êı¹¦ÄÜ  ½âÎöG´úÂë³ö´íÊ±£¬½«ĞĞºÅÓëÕıÔÚ½âÎöµÄG´úÂë±£´æµ½g_SGCodeErrorBufÊı×éÖĞ
-  ÊäÈë²ÎÊı£ºpGCodeÖ¸ÏòÕıÔÚ½âÎöµÄG´úÂë£¬unLineNumÎªÕıÔÚ½âÎöµÄĞĞºÅ,usErrorNum´íÎó´úÂë±àºÅ£¬ucWord_Len´Ê·¨µ¥Ôª³¤¶È
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºº¯ÊıÒÑ¾­ÕıÈ·´¦ÀíÍê³É
-			1£º????????
-			2£º£¿£¿£¿
-  ±¸    ×¢£ºG´úÂëµÄ´íÎó´úÂëÒ²ÔÚ¸Ãº¯ÊıÖĞÉú³É£¬²¢±£´æÔÚg_SGCodeErrorBufÊı×éÖĞ
+  å‡½æ•°åç§°ï¼šparseGCodeError(const char *pGCode, uint32 unLineNum, uint16 usErrorNum, uint8 ucWord_Len)
+  å‡½æ•°åŠŸèƒ½  è§£æGä»£ç å‡ºé”™æ—¶ï¼Œå°†è¡Œå·ä¸æ­£åœ¨è§£æçš„Gä»£ç ä¿å­˜åˆ°g_SGCodeErrorBufæ•°ç»„ä¸­
+  è¾“å…¥å‚æ•°ï¼špGCodeæŒ‡å‘æ­£åœ¨è§£æçš„Gä»£ç ï¼ŒunLineNumä¸ºæ­£åœ¨è§£æçš„è¡Œå·,usErrorNumé”™è¯¯ä»£ç ç¼–å·ï¼ŒucWord_Lenè¯æ³•å•å…ƒé•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šå‡½æ•°å·²ç»æ­£ç¡®å¤„ç†å®Œæˆ
+			1ï¼š????????
+			2ï¼šï¼Ÿï¼Ÿï¼Ÿ
+  å¤‡    æ³¨ï¼šGä»£ç çš„é”™è¯¯ä»£ç ä¹Ÿåœ¨è¯¥å‡½æ•°ä¸­ç”Ÿæˆï¼Œå¹¶ä¿å­˜åœ¨g_SGCodeErrorBufæ•°ç»„ä¸­
 **************************************************/
-uint8 parseGCodeError(const char *pGCode, uint32 unLineNum, uint8 ucWord_Len)
+uint8 parseGCodeError(const char* pGCode, uint32 unLineNum, uint8 ucWord_Len)
 {
-	//uint8 ucLoopCount;
-	int i;
-	if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX)    //´íÎó»º´æÇøÂú£¬²»ÔÙ´æ·Å
-	{
-		s_bErrorHasBeenWritten = TRUE;
-		return FALSE;
-	}
+    //uint8 ucLoopCount;
+    int i;
+    if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX) //é”™è¯¯ç¼“å­˜åŒºæ»¡ï¼Œä¸å†å­˜æ”¾
+    {
+        s_bErrorHasBeenWritten = TRUE;
+        return FALSE;
+    }
 
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = s_ErrorType;
-	//printf("g_SGCodeErrorBuf[i].usErrorCode:%d\tusErrorNum:%d\n", g_SGCodeErrorBuf[ucPosSGCodeErrorBuf].usErrorCode, usErrorNum);
-	ucWord_Len = ucWord_Len > ErrorGCode_MAX ? ErrorGCode_MAX : ucWord_Len;
-	//ucLoopCount = ucWord_Len > ErrorGCode_MAX ? ErrorGCode_MAX : ucWord_Len;    //È¡×îĞ¡³¤¶È£¬±ÜÃâÒç³ö»ò·ÃÎÊÔ½½çµ¥Ôª
-	for (i = 0; i < ucWord_Len; ++i)
-	{
-		s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucErrorGCode[i] = *(pGCode + i);
-	}
-	s_ucPosSGCodeErrorBuf++;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = s_ErrorType;
+    //printf("g_SGCodeErrorBuf[i].usErrorCode:%d\tusErrorNum:%d\n", g_SGCodeErrorBuf[ucPosSGCodeErrorBuf].usErrorCode, usErrorNum);
+    ucWord_Len = ucWord_Len > ErrorGCode_MAX ? ErrorGCode_MAX : ucWord_Len;
+    //ucLoopCount = ucWord_Len > ErrorGCode_MAX ? ErrorGCode_MAX : ucWord_Len;    //å–æœ€å°é•¿åº¦ï¼Œé¿å…æº¢å‡ºæˆ–è®¿é—®è¶Šç•Œå•å…ƒ
+    for (i = 0; i < ucWord_Len; ++i)
+    {
+        s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucErrorGCode[i] = *(pGCode + i);
+    }
+    s_ucPosSGCodeErrorBuf++;
 
-	return TRUE;
+    return TRUE;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum)
-  º¯Êı¹¦ÄÜ  ´¦ÀíÆäËûÀàĞÍ´íÎó
-  ÊäÈë²ÎÊı£ºunLineNumÎªÕıÔÚ½âÎöµÄĞĞºÅ,usErrorNum´íÎó´úÂë±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºº¯ÊıÒÑ¾­ÕıÈ·´¦ÀíÍê³É
-			1£ºÒÑÂú
-			2£º£¿£¿£¿
-  ±¸    ×¢£ºG´úÂëµÄ´íÎó´úÂëÒ²ÔÚ¸Ãº¯ÊıÖĞÉú³É£¬²¢±£´æÔÚg_SGCodeErrorBufÊı×éÖĞ
+  å‡½æ•°åç§°ï¼šuint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum)
+  å‡½æ•°åŠŸèƒ½  å¤„ç†å…¶ä»–ç±»å‹é”™è¯¯
+  è¾“å…¥å‚æ•°ï¼šunLineNumä¸ºæ­£åœ¨è§£æçš„è¡Œå·,usErrorNumé”™è¯¯ä»£ç ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šå‡½æ•°å·²ç»æ­£ç¡®å¤„ç†å®Œæˆ
+			1ï¼šå·²æ»¡
+			2ï¼šï¼Ÿï¼Ÿï¼Ÿ
+  å¤‡    æ³¨ï¼šGä»£ç çš„é”™è¯¯ä»£ç ä¹Ÿåœ¨è¯¥å‡½æ•°ä¸­ç”Ÿæˆï¼Œå¹¶ä¿å­˜åœ¨g_SGCodeErrorBufæ•°ç»„ä¸­
 **************************************************/
 uint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum)
 {
-	if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX)    //´íÎó»º´æÇøÂú£¬²»ÔÙ´æ·Å
-	{
-		s_bErrorHasBeenWritten = TRUE;
-		return 1;
-	}
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
-	s_bErrorHasBeenWritten = TRUE;
+    if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX) //é”™è¯¯ç¼“å­˜åŒºæ»¡ï¼Œä¸å†å­˜æ”¾
+    {
+        s_bErrorHasBeenWritten = TRUE;
+        return 1;
+    }
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
+    s_bErrorHasBeenWritten = TRUE;
 #if STM32_MODE
-	getStrByWord(usErrorNum, s_ucPosSGCodeErrorBuf, 2);   //G´úÂë´íÎóĞÅÏ¢
+    getStrByWord(usErrorNum, s_ucPosSGCodeErrorBuf, 2); //Gä»£ç é”™è¯¯ä¿¡æ¯
 #endif
-	s_ucPosSGCodeErrorBuf++;
+    s_ucPosSGCodeErrorBuf++;
 #if EN_GCODE_DEBUG
-	printf("parseGCodeErrorBµÚ%d¸ö´íÎó\n", g_ucPosSGCodeErrorBuf);
+    printf("parseGCodeErrorBç¬¬%dä¸ªé”™è¯¯\n", g_ucPosSGCodeErrorBuf);
 #endif
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum)
-  º¯Êı¹¦ÄÜ  ´¦ÀíÆäËûÀàĞÍ´íÎó
-  ÊäÈë²ÎÊı£ºunLineNumÎªÕıÔÚ½âÎöµÄĞĞºÅ,usErrorNum´íÎó´úÂë±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºº¯ÊıÒÑ¾­ÕıÈ·´¦ÀíÍê³É
-			1£ºÒÑÂú
-			2£º£¿£¿£¿
-  ±¸    ×¢£ºCNCËµÃ÷ÊéÖĞµÄPLC´íÎó£¬½âÎöµÄĞĞºÅÌî9999
+  å‡½æ•°åç§°ï¼šuint8 parseGCodeErrorB(uint32 unLineNum, uint16 usErrorNum)
+  å‡½æ•°åŠŸèƒ½  å¤„ç†å…¶ä»–ç±»å‹é”™è¯¯
+  è¾“å…¥å‚æ•°ï¼šunLineNumä¸ºæ­£åœ¨è§£æçš„è¡Œå·,usErrorNumé”™è¯¯ä»£ç ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šå‡½æ•°å·²ç»æ­£ç¡®å¤„ç†å®Œæˆ
+			1ï¼šå·²æ»¡
+			2ï¼šï¼Ÿï¼Ÿï¼Ÿ
+  å¤‡    æ³¨ï¼šCNCè¯´æ˜ä¹¦ä¸­çš„PLCé”™è¯¯ï¼Œè§£æçš„è¡Œå·å¡«9999
 **************************************************/
 uint8 parseErrorC(uint32 unLineNum, uint16 usErrorNum)
 {
-	if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX)    //´íÎó»º´æÇøÂú£¬²»ÔÙ´æ·Å
-	{
-		s_bErrorHasBeenWritten = TRUE;
-		return 1;
-	}
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
-	s_bErrorHasBeenWritten = TRUE;
+    if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX) //é”™è¯¯ç¼“å­˜åŒºæ»¡ï¼Œä¸å†å­˜æ”¾
+    {
+        s_bErrorHasBeenWritten = TRUE;
+        return 1;
+    }
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
+    s_bErrorHasBeenWritten = TRUE;
 
-	s_ucPosSGCodeErrorBuf++;
+    s_ucPosSGCodeErrorBuf++;
 #if EN_GCODE_DEBUG
-	printf("parseGCodeErrorBµÚ%d¸ö´íÎó\n", g_ucPosSGCodeErrorBuf);
+    printf("parseGCodeErrorBç¬¬%dä¸ªé”™è¯¯\n", g_ucPosSGCodeErrorBuf);
 #endif
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºparseRunningErrorC(uint32 unLineNum, uint16 usErrorNum)
-  º¯Êı¹¦ÄÜ£ºÖĞ¶ÏÖĞÔËĞĞÖĞ±¨´í
-  ÊäÈë²ÎÊı£ºunLineNumÎªÕıÔÚ½âÎöµÄĞĞºÅ,usErrorNum´íÎó´úÂë±àºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºº¯ÊıÒÑ¾­ÕıÈ·´¦ÀíÍê³É
-			1£ºÒÑÂú
-			2£º£¿£¿£¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šparseRunningErrorC(uint32 unLineNum, uint16 usErrorNum)
+  å‡½æ•°åŠŸèƒ½ï¼šä¸­æ–­ä¸­è¿è¡Œä¸­æŠ¥é”™
+  è¾“å…¥å‚æ•°ï¼šunLineNumä¸ºæ­£åœ¨è§£æçš„è¡Œå·,usErrorNumé”™è¯¯ä»£ç ç¼–å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šå‡½æ•°å·²ç»æ­£ç¡®å¤„ç†å®Œæˆ
+			1ï¼šå·²æ»¡
+			2ï¼šï¼Ÿï¼Ÿï¼Ÿ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 parseRunningError(uint32 unLineNum, uint16 usErrorNum, uint32 ucIOIndex)
 {
-	if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX)    //´íÎó»º´æÇøÂú£¬²»ÔÙ´æ·Å
-	{
-		return 1;
-	}
+    if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX) //é”™è¯¯ç¼“å­˜åŒºæ»¡ï¼Œä¸å†å­˜æ”¾
+    {
+        return 1;
+    }
 
-	//ÔİÊ±ÏÈÓÃG´úÂëµÄ»º³åÇø
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
-	s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex = ucIOIndex;
-	s_bErrorHasBeenWritten = TRUE;
+    //æš‚æ—¶å…ˆç”¨Gä»£ç çš„ç¼“å†²åŒº
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].unLineNum = unLineNum;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].usErrorCode = usErrorNum;
+    s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex = ucIOIndex;
+    s_bErrorHasBeenWritten = TRUE;
 #if STM32_MODE
-	getStrByWord(usErrorNum, s_ucPosSGCodeErrorBuf, 2);
+    getStrByWord(usErrorNum, s_ucPosSGCodeErrorBuf, 2);
 #endif
-	s_ucPosSGCodeErrorBuf++;
+    s_ucPosSGCodeErrorBuf++;
 #if EN_GCODE_DEBUG
-	printf("parseGCodeErrorBµÚ%d¸ö´íÎó\n", g_ucPosSGCodeErrorBuf);
+    printf("parseGCodeErrorBç¬¬%dä¸ªé”™è¯¯\n", g_ucPosSGCodeErrorBuf);
 #endif
-	return TRUE;
+    return TRUE;
 }
 #if STM32_MODE
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getStrByWord(uint16 sNum,uint16 c_num, uint16 mode)
-  º¯Êı¹¦ÄÜ: 1.ÏÔÊ¾µ±Ç°¹ÊÕÏÒ³ºÍÀúÊ·¹ÊÕÏÒ³µÄ´íÎó 2.¸ù¾İ´íÎó±àºÅ´«µİIO¶Ë¿ÚºÅ
-  ÊäÈë²ÎÊı£ºsNumÎª´íÎó±àºÅ£¬c_numÈô¸É´íÎóÅÅĞòĞòºÅ£¬mode¹ÊÕÏÒ³
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 getStrByWord(uint16 sNum,uint16 c_num, uint16 mode)
+  å‡½æ•°åŠŸèƒ½: 1.æ˜¾ç¤ºå½“å‰æ•…éšœé¡µå’Œå†å²æ•…éšœé¡µçš„é”™è¯¯ 2.æ ¹æ®é”™è¯¯ç¼–å·ä¼ é€’IOç«¯å£å·
+  è¾“å…¥å‚æ•°ï¼šsNumä¸ºé”™è¯¯ç¼–å·ï¼Œc_numè‹¥å¹²é”™è¯¯æ’åºåºå·ï¼Œmodeæ•…éšœé¡µ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getStrByWord(uint16 sNum, uint16 c_num, uint16 mode)
 {
-	if (mode == 0)//µ±Ç°¹ÊÕÏ
-		return c_warn->warn_word[c_num];
-	else if(mode == 1)//ÀúÊ·¹ÊÕÏ
-		return h_warn->warn_word[c_num];
-	else
-	{
-		switch (sNum)
-		{
-			case 31:
-				c_warn->warn_word[c_num] = s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex;
-				break;
-			
-			case 101:
-				c_warn->warn_word[c_num] = warn_num;
-				break;
+    if (mode == 0) //å½“å‰æ•…éšœ
+        return c_warn->warn_word[c_num];
+    else if (mode == 1) //å†å²æ•…éšœ
+        return h_warn->warn_word[c_num];
+    else
+    {
+        switch (sNum)
+        {
+        case 31:
+            c_warn->warn_word[c_num] = s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex;
+            break;
 
-			case 406:
-				c_warn->warn_word[c_num] = warn_num;
-				break;
-				
-			default:
-				break;
-		}
-		
-	}
+        case 101:
+            c_warn->warn_word[c_num] = warn_num;
+            break;
+
+        case 406:
+            c_warn->warn_word[c_num] = warn_num;
+            break;
+
+        default:
+            break;
+        }
+    }
 }
 #endif
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 *getStrByNum(uint16 sNum, uint16 c_num, uint16 mode)
-  º¯Êı¹¦ÄÜ: ·µ»Ø´íÎóºÅÏà¶ÔµÄÄÚÈİ
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 *getStrByNum(uint16 sNum, uint16 c_num, uint16 mode)
+  å‡½æ•°åŠŸèƒ½: è¿”å›é”™è¯¯å·ç›¸å¯¹çš„å†…å®¹
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 *getStrByNum(uint16 sNum, uint16 c_num, uint16 mode)
+int8* getStrByNum(uint16 sNum, uint16 c_num, uint16 mode)
 {
-	int ver;
-	memset(s_cStrArray, 0, SIZE_OF_ERROR_STRING);
-	switch (sNum)
-	{
-	case 1:
-		strncpy(s_cStrArray, "¼±Í£±¨¾¯!¼±Í£°´Å¥ÒÑ°´ÏÂ»òÎ´½Ó¼±Í£°´Å¥!", SIZE_OF_ERROR_STRING); //¼±Í£±¨¾¯!¼±Í£°´Å¥ÒÑ°´ÏÂ»òÎ´½Ó¼±Í£°´Å¥!
-		break;
-	//ÈíÏŞÎ»±¨¾¯ ÖìÎÈÖĞ 2023.6.16
-	case 29:
-		strncpy(s_cStrArray, " M35¹¦ÄÜµÈ´ıÊ±¼ä³¬Ê±", SIZE_OF_ERROR_STRING); //¼±Í£±¨¾¯!¼±Í£°´Å¥ÒÑ°´ÏÂ»òÎ´½Ó¼±Í£°´Å¥!
-		break;
-	case 30:
-		strncpy(s_cStrArray, " ÊäÈë¶Ë¿Ú´íÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 31:
-		strncpy(s_cStrArray, "ÊäÈë", 4);
+    int ver;
+    memset(s_cStrArray, 0, SIZE_OF_ERROR_STRING);
+    switch (sNum)
+    {
+    case 1:
+        strncpy(s_cStrArray, "æ€¥åœæŠ¥è­¦!æ€¥åœæŒ‰é’®å·²æŒ‰ä¸‹æˆ–æœªæ¥æ€¥åœæŒ‰é’®!",
+                SIZE_OF_ERROR_STRING); //æ€¥åœæŠ¥è­¦!æ€¥åœæŒ‰é’®å·²æŒ‰ä¸‹æˆ–æœªæ¥æ€¥åœæŒ‰é’®!
+        break;
+    //è½¯é™ä½æŠ¥è­¦ æœ±ç¨³ä¸­ 2023.6.16
+    case 29:
+        strncpy(s_cStrArray, " M35åŠŸèƒ½ç­‰å¾…æ—¶é—´è¶…æ—¶", SIZE_OF_ERROR_STRING); //æ€¥åœæŠ¥è­¦!æ€¥åœæŒ‰é’®å·²æŒ‰ä¸‹æˆ–æœªæ¥æ€¥åœæŒ‰é’®!
+        break;
+    case 30:
+        strncpy(s_cStrArray, " è¾“å…¥ç«¯å£é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 31:
+        strncpy(s_cStrArray, "è¾“å…¥", 4);
 #if STM32_MODE
-		ver = getStrByWord(sNum, c_num, mode);
+        ver = getStrByWord(sNum, c_num, mode);
 #else
-		ver = s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex;
+        ver = s_SGCodeErrorBuf[s_ucPosSGCodeErrorBuf].ucIOIndex;
 #endif
-		sprintf(s_cStrArray + 4, "%d ", ver);
-		strncpy(s_cStrArray + 6, "¶Ë¿Ú¼ì²â³¬Ê±", SIZE_OF_ERROR_STRING);
-		break;
-	case 41:
-	case 42:
-	case 43:
-		sNum += 'X' - 'A' + 3;
-		//s_cStrArray[0] = 'X'+ sNum-41;
-		//strncpy(s_cStrArray+1, "Öá³¬³öÕıÏòÈí¼şÏŞÎ»!", SIZE_OF_ERROR_STRING);
-		//break;
-	case 44:
-	case 45:
-	case 46:
-		s_cStrArray[0] = 'A' + sNum - 44;
-		strncpy(s_cStrArray + 1, "Öá³¬³öÕıÏòÈí¼şÏŞÎ»!", SIZE_OF_ERROR_STRING);
-		break;
-	case 47:
-	case 48:
-	case 49:
-		sNum += 'X' - 'A' + 3;
-		//s_cStrArray[0] = 'X' + sNum - 47;
-		//strncpy(s_cStrArray + 1, "Öá³¬³ö¸ºÏòÈí¼şÏŞÎ»!", SIZE_OF_ERROR_STRING);
-		//break;
-	case 50:
-	case 51:
-	case 52:
-		s_cStrArray[0] = 'A' + sNum - 50;
-		strncpy(s_cStrArray + 1, "Öá³¬³ö¸ºÏòÈí¼şÏŞÎ»!", SIZE_OF_ERROR_STRING);
-		break;
+        sprintf(s_cStrArray + 4, "%d ", ver);
+        strncpy(s_cStrArray + 6, "ç«¯å£æ£€æµ‹è¶…æ—¶", SIZE_OF_ERROR_STRING);
+        break;
+    case 41:
+    case 42:
+    case 43:
+        sNum += 'X' - 'A' + 3;
+        //s_cStrArray[0] = 'X'+ sNum-41;
+        //strncpy(s_cStrArray+1, "è½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!", SIZE_OF_ERROR_STRING);
+        //break;
+    case 44:
+    case 45:
+    case 46:
+        s_cStrArray[0] = 'A' + sNum - 44;
+        strncpy(s_cStrArray + 1, "è½´è¶…å‡ºæ­£å‘è½¯ä»¶é™ä½!", SIZE_OF_ERROR_STRING);
+        break;
+    case 47:
+    case 48:
+    case 49:
+        sNum += 'X' - 'A' + 3;
+        //s_cStrArray[0] = 'X' + sNum - 47;
+        //strncpy(s_cStrArray + 1, "è½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!", SIZE_OF_ERROR_STRING);
+        //break;
+    case 50:
+    case 51:
+    case 52:
+        s_cStrArray[0] = 'A' + sNum - 50;
+        strncpy(s_cStrArray + 1, "è½´è¶…å‡ºè´Ÿå‘è½¯ä»¶é™ä½!", SIZE_OF_ERROR_STRING);
+        break;
 
-
-
-
-	case 81:strncpy(s_cStrArray, "´úÂëµØÖ·ÊäÈë´íÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 82:strncpy(s_cStrArray, "¶ÎºÅ²»ÄÜÓĞ¸ºÖµ»òĞ¡Êıµã", SIZE_OF_ERROR_STRING);
-		break;
-	case 83:strncpy(s_cStrArray, ":G-´úÂë²»ÄÜÓĞ¸ºÊı", SIZE_OF_ERROR_STRING);
-		break;
-	case 84:strncpy(s_cStrArray, "³ÌĞòÊäÈëµÄ´úÂëÖµ·Ç·¨", SIZE_OF_ERROR_STRING);
-		break;
-	case 85:strncpy(s_cStrArray, "´úÂë×ÖµÄ×Ö·ûÊı²»ÄÜĞ¡ÓÚ2»ò´óÓÚ11", SIZE_OF_ERROR_STRING);
-		break;
-		//case 
-		// :strncpy(cStrArray, "", SIZE_OF_ERROR_STRING);
-		//	break;
-	case 87:strncpy(s_cStrArray, "ÊäÈëÁË²»Ö§³ÖµÄG´úÂë", SIZE_OF_ERROR_STRING);
-		break;
-	case 88:strncpy(s_cStrArray, "³ÌĞò¶ÎµÚÒ»ĞĞ»ò×îºóÒ»ĞĞÈ±ÉÙ±êÊ¶·û%ºÅ£¬%±ØĞëÊÇÒ»ĞĞµÄµÚÒ»¸ö×Ö·û", SIZE_OF_ERROR_STRING);
-		break;
-	case 89:strncpy(s_cStrArray, "Òª¶ÁÈ¡µÄ³ÌĞò²»´æÔÚ»ò´ò¿ªÊ§°Ü", SIZE_OF_ERROR_STRING);
-		break;
-		/*case 90:
+    case 81:
+        strncpy(s_cStrArray, "ä»£ç åœ°å€è¾“å…¥é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 82:
+        strncpy(s_cStrArray, "æ®µå·ä¸èƒ½æœ‰è´Ÿå€¼æˆ–å°æ•°ç‚¹", SIZE_OF_ERROR_STRING);
+        break;
+    case 83:
+        strncpy(s_cStrArray, ":G-ä»£ç ä¸èƒ½æœ‰è´Ÿæ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 84:
+        strncpy(s_cStrArray, "ç¨‹åºè¾“å…¥çš„ä»£ç å€¼éæ³•", SIZE_OF_ERROR_STRING);
+        break;
+    case 85:
+        strncpy(s_cStrArray, "ä»£ç å­—çš„å­—ç¬¦æ•°ä¸èƒ½å°äº2æˆ–å¤§äº11", SIZE_OF_ERROR_STRING);
+        break;
+        //case
+        // :strncpy(cStrArray, "", SIZE_OF_ERROR_STRING);
+        //	break;
+    case 87:
+        strncpy(s_cStrArray, "è¾“å…¥äº†ä¸æ”¯æŒçš„Gä»£ç ", SIZE_OF_ERROR_STRING);
+        break;
+    case 88:
+        strncpy(s_cStrArray, "ç¨‹åºæ®µç¬¬ä¸€è¡Œæˆ–æœ€åä¸€è¡Œç¼ºå°‘æ ‡è¯†ç¬¦%å·ï¼Œ%å¿…é¡»æ˜¯ä¸€è¡Œçš„ç¬¬ä¸€ä¸ªå­—ç¬¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 89:
+        strncpy(s_cStrArray, "è¦è¯»å–çš„ç¨‹åºä¸å­˜åœ¨æˆ–æ‰“å¼€å¤±è´¥", SIZE_OF_ERROR_STRING);
+        break;
+        /*case 90:
 			break;*/
-	case 91:strncpy(s_cStrArray, "¶ÁÈ¡³ÌĞò¶ÎÄÚÈİÊ±³ö´í", SIZE_OF_ERROR_STRING);
-		break;
-	case 92:strncpy(s_cStrArray, "ÊÖ¶¯ÊäÈë·½Ê½ÏÂ²»ÄÜÖ´ĞĞM98, M99Ö¸Áî", SIZE_OF_ERROR_STRING);
-		break;
-	case 93:strncpy(s_cStrArray, "ËÑË÷²»µ½Ö¸¶¨µÄ³ÌĞò¶ÎºÅ", SIZE_OF_ERROR_STRING);
-		break;
-	case 94:strncpy(s_cStrArray, "×Ó³ÌĞòµÄÇ¶Ì×²ãÊı³¬¹ı×î´óÏŞÖÆ", SIZE_OF_ERROR_STRING);
-		break;
-	case 95:strncpy(s_cStrArray, "G75Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 96:strncpy(s_cStrArray, "G74Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 97:strncpy(s_cStrArray, "G70¡«G73´úÂëÖĞ¾«¼Ó¹¤³ÌĞò¶Î³¬³öÏŞÖÆ", SIZE_OF_ERROR_STRING);
-		break;
-	case 98:strncpy(s_cStrArray, "Ô²»¡²ÎÊıR,I,KÖÁÉÙÊäÈëÒ»¸ö", SIZE_OF_ERROR_STRING);
-		break;
-	case 99:strncpy(s_cStrArray, "Ô²»¡²å²¹ÖĞÏÒ³¤´óÓÚ2±¶°ë¾¶R ", SIZE_OF_ERROR_STRING);
-		break;
-	case 100:strncpy(s_cStrArray, "ns³ÌĞò¶ÎÖ»ÄÜÊÇG00,G01´úÂë ", SIZE_OF_ERROR_STRING);
-		break;
-	case 101:strncpy(s_cStrArray, "ns¡«nf³ÌĞò¶Î±ØĞèÔÚG71~G73ºóÒ»¶ÎÊäÈë ", SIZE_OF_ERROR_STRING);
-		break;
-	case 102:strncpy(s_cStrArray, "G73Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ· ", SIZE_OF_ERROR_STRING);
-		break;
-	case 103:strncpy(s_cStrArray, "G71¡«G73´úÂëÎ´ÊäÈëPÖµ ", SIZE_OF_ERROR_STRING);
-		break;
-	case 104:strncpy(s_cStrArray, "G71¡«G73´úÂëÎ´ÊäÈëQÖµ ", SIZE_OF_ERROR_STRING);
-		break;
-	case 105:strncpy(s_cStrArray, "G72´úÂëµÚÒ»¶ÎÎ´ÊäÈëZ»òZÖáÒÆ¶¯Á¿Îª0 ", SIZE_OF_ERROR_STRING);
-		break;
-	case 106:strncpy(s_cStrArray, " G72´úÂëµÚÒ»¶ÎÖ»ÄÜÊÇZÖá¿ìËÙÒÆ¶¯»òÇĞÏ÷½ø¸ø", SIZE_OF_ERROR_STRING);
-		break;
-	case 107:strncpy(s_cStrArray, "G72Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 108:strncpy(s_cStrArray, "G71´úÂëµÚÒ»¶ÎÎ´ÊäÈëX»òXÖáÒÆ¶¯Á¿Îª0", SIZE_OF_ERROR_STRING);
-		break;
-	case 109:strncpy(s_cStrArray, "G71´úÂëµÚÒ»¶ÎÖ»ÄÜÊÇXÖá¿ìËÙÒÆ¶¯»òÇĞÏ÷½ø¸ø ", SIZE_OF_ERROR_STRING);
-		break;
-	case 110:strncpy(s_cStrArray, "G71Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ· ", SIZE_OF_ERROR_STRING);
-		break;
-	case 111:strncpy(s_cStrArray, "G76´úÂë¸ñÊ½²»ÕıÈ· ", SIZE_OF_ERROR_STRING);
-		break;
-	case 112:strncpy(s_cStrArray, "G76ÖĞÃ»ÓĞÖ¸¶¨ÂİÎÆÑÀ¸ßPÖµ»òÎª0", SIZE_OF_ERROR_STRING);
-		break;
-	case 113:strncpy(s_cStrArray, "G76ÖĞÃ»ÓĞÖ¸¶¨µÚÒ»´ÎÇĞÏ÷Éî¶ÈQ»òÎª0 ", SIZE_OF_ERROR_STRING);
-		break;
-	case 114:strncpy(s_cStrArray, "G76ÖĞPÖµ¸ñÊ½²»ÕıÈ·»ò³¬³ö·¶Î§", SIZE_OF_ERROR_STRING);
-		break;
-	case 115:strncpy(s_cStrArray, "ÊÖ¶¯ÊäÈëMDIÄ£Ê½ÏÂ²»ÄÜÊ¹ÓÃG31¡¢G70¡«G76´úÂë", SIZE_OF_ERROR_STRING);
-		break;
-	case 116:strncpy(s_cStrArray, "Ö´ĞĞG70´úÂëÇ°ÇëÏÈÖ´ĞĞG71¡«G73´úÂë", SIZE_OF_ERROR_STRING);
-		break;
-	case 117:strncpy(s_cStrArray, "Cµ¶²¹ÖĞ²»ÄÜÖ´ĞĞTÖ¸Áî£¬Çë³·ÏúCµ¶²¹", SIZE_OF_ERROR_STRING);
-		break;
-	case 118:strncpy(s_cStrArray, "Cµ¶²¹ÖĞÃ»ÓĞÒÆ¶¯µÄ´úÂë¶Î³¬¹ı¹æ¶¨µÄÊıÁ¿", SIZE_OF_ERROR_STRING);
-		break;
-		//case 119:
-		//	break;
+    case 91:
+        strncpy(s_cStrArray, "è¯»å–ç¨‹åºæ®µå†…å®¹æ—¶å‡ºé”™", SIZE_OF_ERROR_STRING);
+        break;
+    case 92:
+        strncpy(s_cStrArray, "æ‰‹åŠ¨è¾“å…¥æ–¹å¼ä¸‹ä¸èƒ½æ‰§è¡ŒM98, M99æŒ‡ä»¤", SIZE_OF_ERROR_STRING);
+        break;
+    case 93:
+        strncpy(s_cStrArray, "æœç´¢ä¸åˆ°æŒ‡å®šçš„ç¨‹åºæ®µå·", SIZE_OF_ERROR_STRING);
+        break;
+    case 94:
+        strncpy(s_cStrArray, "å­ç¨‹åºçš„åµŒå¥—å±‚æ•°è¶…è¿‡æœ€å¤§é™åˆ¶", SIZE_OF_ERROR_STRING);
+        break;
+    case 95:
+        strncpy(s_cStrArray, "G75æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
+        break;
+    case 96:
+        strncpy(s_cStrArray, "G74æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
+        break;
+    case 97:
+        strncpy(s_cStrArray, "G70ï½G73ä»£ç ä¸­ç²¾åŠ å·¥ç¨‹åºæ®µè¶…å‡ºé™åˆ¶", SIZE_OF_ERROR_STRING);
+        break;
+    case 98:
+        strncpy(s_cStrArray, "åœ†å¼§å‚æ•°R,I,Kè‡³å°‘è¾“å…¥ä¸€ä¸ª", SIZE_OF_ERROR_STRING);
+        break;
+    case 99:
+        strncpy(s_cStrArray, "åœ†å¼§æ’è¡¥ä¸­å¼¦é•¿å¤§äº2å€åŠå¾„R ", SIZE_OF_ERROR_STRING);
+        break;
+    case 100:
+        strncpy(s_cStrArray, "nsç¨‹åºæ®µåªèƒ½æ˜¯G00,G01ä»£ç  ", SIZE_OF_ERROR_STRING);
+        break;
+    case 101:
+        strncpy(s_cStrArray, "nsï½nfç¨‹åºæ®µå¿…éœ€åœ¨G71~G73åä¸€æ®µè¾“å…¥ ", SIZE_OF_ERROR_STRING);
+        break;
+    case 102:
+        strncpy(s_cStrArray, "G73æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡® ", SIZE_OF_ERROR_STRING);
+        break;
+    case 103:
+        strncpy(s_cStrArray, "G71ï½G73ä»£ç æœªè¾“å…¥På€¼ ", SIZE_OF_ERROR_STRING);
+        break;
+    case 104:
+        strncpy(s_cStrArray, "G71ï½G73ä»£ç æœªè¾“å…¥Qå€¼ ", SIZE_OF_ERROR_STRING);
+        break;
+    case 105:
+        strncpy(s_cStrArray, "G72ä»£ç ç¬¬ä¸€æ®µæœªè¾“å…¥Zæˆ–Zè½´ç§»åŠ¨é‡ä¸º0 ", SIZE_OF_ERROR_STRING);
+        break;
+    case 106:
+        strncpy(s_cStrArray, " G72ä»£ç ç¬¬ä¸€æ®µåªèƒ½æ˜¯Zè½´å¿«é€Ÿç§»åŠ¨æˆ–åˆ‡å‰Šè¿›ç»™", SIZE_OF_ERROR_STRING);
+        break;
+    case 107:
+        strncpy(s_cStrArray, "G72æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
+        break;
+    case 108:
+        strncpy(s_cStrArray, "G71ä»£ç ç¬¬ä¸€æ®µæœªè¾“å…¥Xæˆ–Xè½´ç§»åŠ¨é‡ä¸º0", SIZE_OF_ERROR_STRING);
+        break;
+    case 109:
+        strncpy(s_cStrArray, "G71ä»£ç ç¬¬ä¸€æ®µåªèƒ½æ˜¯Xè½´å¿«é€Ÿç§»åŠ¨æˆ–åˆ‡å‰Šè¿›ç»™ ", SIZE_OF_ERROR_STRING);
+        break;
+    case 110:
+        strncpy(s_cStrArray, "G71æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡® ", SIZE_OF_ERROR_STRING);
+        break;
+    case 111:
+        strncpy(s_cStrArray, "G76ä»£ç æ ¼å¼ä¸æ­£ç¡® ", SIZE_OF_ERROR_STRING);
+        break;
+    case 112:
+        strncpy(s_cStrArray, "G76ä¸­æ²¡æœ‰æŒ‡å®šèºçº¹ç‰™é«˜På€¼æˆ–ä¸º0", SIZE_OF_ERROR_STRING);
+        break;
+    case 113:
+        strncpy(s_cStrArray, "G76ä¸­æ²¡æœ‰æŒ‡å®šç¬¬ä¸€æ¬¡åˆ‡å‰Šæ·±åº¦Qæˆ–ä¸º0 ", SIZE_OF_ERROR_STRING);
+        break;
+    case 114:
+        strncpy(s_cStrArray, "G76ä¸­På€¼æ ¼å¼ä¸æ­£ç¡®æˆ–è¶…å‡ºèŒƒå›´", SIZE_OF_ERROR_STRING);
+        break;
+    case 115:
+        strncpy(s_cStrArray, "æ‰‹åŠ¨è¾“å…¥MDIæ¨¡å¼ä¸‹ä¸èƒ½ä½¿ç”¨G31ã€G70ï½G76ä»£ç ", SIZE_OF_ERROR_STRING);
+        break;
+    case 116:
+        strncpy(s_cStrArray, "æ‰§è¡ŒG70ä»£ç å‰è¯·å…ˆæ‰§è¡ŒG71ï½G73ä»£ç ", SIZE_OF_ERROR_STRING);
+        break;
+    case 117:
+        strncpy(s_cStrArray, "Cåˆ€è¡¥ä¸­ä¸èƒ½æ‰§è¡ŒTæŒ‡ä»¤ï¼Œè¯·æ’¤é”€Cåˆ€è¡¥", SIZE_OF_ERROR_STRING);
+        break;
+    case 118:
+        strncpy(s_cStrArray, "Cåˆ€è¡¥ä¸­æ²¡æœ‰ç§»åŠ¨çš„ä»£ç æ®µè¶…è¿‡è§„å®šçš„æ•°é‡", SIZE_OF_ERROR_STRING);
+        break;
+        //case 119:
+        //	break;
 
-
-	case 126:strncpy(s_cStrArray, "µ±Ç°²»ÊÇÄ£ÄâÖ÷Öá,ÎŞ·¨Ê¹ÓÃG96ºãÏßËÙ¹¦ÄÜ", SIZE_OF_ERROR_STRING);
-		break;
-	case 127:strncpy(s_cStrArray, "Ò»ĞĞ³öÏÖÁËÍ¬×éÄ£Ì¬´úÂë", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 129:strncpy(s_cStrArray, "ÊäÈëÁËÎŞĞ§µÄµ¶¾ßºÅ", SIZE_OF_ERROR_STRING);
-		break;
-	case 130:strncpy(s_cStrArray, "³ÌĞòÖ¸Áî´úÂë¸ñÊ½´íÎó", SIZE_OF_ERROR_STRING);
-		break;
-
-
-    case 131:strncpy(s_cStrArray, "º¯ÊıÔËËãÊäÈëµÄ²ÎÊıÎŞĞ§", SIZE_OF_ERROR_STRING);
+    case 126:
+        strncpy(s_cStrArray, "å½“å‰ä¸æ˜¯æ¨¡æ‹Ÿä¸»è½´,æ— æ³•ä½¿ç”¨G96æ’çº¿é€ŸåŠŸèƒ½", SIZE_OF_ERROR_STRING);
         break;
-    case 132:strncpy(s_cStrArray, "³ı·¨ÔËËã³ıÊı²»ÄÜÎª0", SIZE_OF_ERROR_STRING);
-        break;
-
-    case 133:strncpy(s_cStrArray, "Æ½·½¸ùÊäÈëÊı¾İ²»ÄÜĞ¡ÓÚ0", SIZE_OF_ERROR_STRING);
-        break;
-    case 134:strncpy(s_cStrArray, "ºêÓï¾äÔËËã¸ñÊ½´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 135:strncpy(s_cStrArray, "WHILE-ENDÑ­»·ÌåÓï¾ä¸ñÊ½´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 136:strncpy(s_cStrArray, "IFÓï¾ä¸ñÊ½´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-
-	case 147:strncpy(s_cStrArray, "G83»òG87Ö¸ÁîÃ»ÓĞÖ¸Áî½øµ¶Á¿Q»òQ=0", SIZE_OF_ERROR_STRING);
-		break;
-	case 148:strncpy(s_cStrArray, "Ö÷Öá±»É²³µËø½ô£¬²»ÄÜĞı×ªÖ÷Öá", SIZE_OF_ERROR_STRING);
-		break;
-	case 149:strncpy(s_cStrArray, "¼Ğ¾ßÎ´¼ĞÖ÷Öá²»¿ÉÔË×ª", SIZE_OF_ERROR_STRING);
-		break;
-	case 150:strncpy(s_cStrArray, "Î´Ó³ÉäÎïÀíÖá", SIZE_OF_ERROR_STRING);
-		break;
-	case 151:strncpy(s_cStrArray, "±àÂëÆ÷ÏàÎ»´íÎó", SIZE_OF_ERROR_STRING);
-			break;
-	case 152:strncpy(s_cStrArray, "ËÙ¶È·¢ÉúÍ»±ä", SIZE_OF_ERROR_STRING);
-			break;
-	case 153:strncpy(s_cStrArray, "²ÎÊıÊäÈë / ÏµÍ³²ÎÊı´íÎó£¬³öÏÖÁËÁãÖµ", SIZE_OF_ERROR_STRING);
-		break;
-    /* ËÕÏò±ê 2026-10-14£º¹«¹²Í£Ö¹×´Ì¬Òì³£Õï¶Ï¡£ */
-    case 155:strncpy(s_cStrArray, "Ö÷ÖáÍ£Ö¹×´Ì¬»ò¿ØÖÆÈ¨Òì³£", SIZE_OF_ERROR_STRING);
-        break;
-	case 154:strncpy(s_cStrArray, "³¬Ê±/³¬ËÙ´íÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 160:strncpy(s_cStrArray, "¸ÃÖ¸Áî×ÖÎ´Ôö¼Ó¼ì²éº¯Êı", SIZE_OF_ERROR_STRING);
-		break;
-	case 161:strncpy(s_cStrArray, "¸ÃÖ¸Áî×ÖÎ´Ôö¼Ó²ÎÊı¸³Öµº¯Êı", SIZE_OF_ERROR_STRING);
-		break;
-	case 162:strncpy(s_cStrArray, "¸ÃÖ¸Áî×ÖÎ´Ôö¼Ó¹ì¼£¼ÆËãº¯Êı", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 280:strncpy(s_cStrArray, "D/L²ÎÊıÍ¬Ê±³öÏÖ", SIZE_OF_ERROR_STRING);
-		break;
-	case 281:strncpy(s_cStrArray, "µ¹½Ç³¤¶È¹ı³¤", SIZE_OF_ERROR_STRING);
-		break;
-	case 282:strncpy(s_cStrArray, "µ¹Ô²°ë¾¶¹ı´ó", SIZE_OF_ERROR_STRING);
-		break;
-	case 283:strncpy(s_cStrArray, "µ¹½Ç/µ¹Ô²Ç°ÌáÌõ¼ş²»Âú×ã»ò¼¸ºÎÊı¾İÓĞÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 284:strncpy(s_cStrArray, "×Ô¶¯µ¹½Ç»º³åÇø²»×ã", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 300:strncpy(s_cStrArray, "´«ÈëÖ¸Õë±äÁ¿ÎªNULL", SIZE_OF_ERROR_STRING);
-		break;
-    case 301:strncpy(s_cStrArray, "ÊäÈëÁËÎŞĞ§µÄº¯Êı²ÎÊı", SIZE_OF_ERROR_STRING);
-        break;
-    case 302:strncpy(s_cStrArray, "¹¤Ñ­»·¹¦ÄÜ´«ÈëÖ¸Õë±äÁ¿ÎªNULL", SIZE_OF_ERROR_STRING);
-        break;
-    case 303:strncpy(s_cStrArray, "Á´±í´«ÈëÖ¸Õë±äÁ¿ÎªNULL", SIZE_OF_ERROR_STRING);
-        break;
-    case 304:strncpy(s_cStrArray, "²»´æÔÚ´Ë·ÖÖ§", SIZE_OF_ERROR_STRING);
-        break;
-    case 305:strncpy(s_cStrArray, "G66Ç¶Ì×²ãÊı¹ı¶à", SIZE_OF_ERROR_STRING);
-        break;
-    case 306:strncpy(s_cStrArray, "ÒëÂë×´Ì¬»ú³ö´í", SIZE_OF_ERROR_STRING);
-        break;
-    case 307:strncpy(s_cStrArray, "³¢ÊÔ¸ø²»ÎªNULLµÄµØÖ·¿ª±ÙÄÚ´æ", SIZE_OF_ERROR_STRING);
+    case 127:
+        strncpy(s_cStrArray, "ä¸€è¡Œå‡ºç°äº†åŒç»„æ¨¡æ€ä»£ç ", SIZE_OF_ERROR_STRING);
         break;
 
-	case 399:strncpy(s_cStrArray, "Ò»ĞĞÖĞ³öÏÖM¹¦ÄÜÊıÄ¿²»ÄÜ³¬¹ı6¸ö", SIZE_OF_ERROR_STRING);
-		break;
-	case 400:strncpy(s_cStrArray, "²»ÄÜ³öÏÖÁ½¸öÕı¸ººÅ", SIZE_OF_ERROR_STRING);
-		break;
-	case 401:strncpy(s_cStrArray, "²»ÄÜ³öÏÖÁ½¸öĞ¡Êıµã", SIZE_OF_ERROR_STRING);
-		break;
-	case 402:strncpy(s_cStrArray, "Ò»ĞĞÖĞÖØ¸´³öÏÖ¸Ã×Ö·û", SIZE_OF_ERROR_STRING);
-		break;
-	case 403:strncpy(s_cStrArray, "µ±Ç°ĞĞÄ£Ì¬¹¦ÄÜ²»Ö§³ÖÊäÈë¸Ã×Ö·û¹¦ÄÜ»òÎŞÄ£Ì¬Ö¸Áî", SIZE_OF_ERROR_STRING);
-		break;
-	case 404:strncpy(s_cStrArray, "Ô²»¡²ÎÊıI,KÊäÈëÓĞÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 405:strncpy(s_cStrArray, "Ö´ĞĞ¸ÃÄ£Ì¬Ö¸ÁîÈ±ÉÙÔËĞĞ²ÎÊı(Ö÷Öá×ªÏò¡¢×ªËÙ¡¢½ø¸øËÙ¶È)", SIZE_OF_ERROR_STRING);
-		break;
-	case 406:
-		//strncpy(s_cStrArray, "ÄÚ´æ¿Õ¼ä²»×ã£¬ÄÚ´æ·ÖÅäÊ§°Ü", SIZE_OF_ERROR_STRING);
+    case 129:
+        strncpy(s_cStrArray, "è¾“å…¥äº†æ— æ•ˆçš„åˆ€å…·å·", SIZE_OF_ERROR_STRING);
+        break;
+    case 130:
+        strncpy(s_cStrArray, "ç¨‹åºæŒ‡ä»¤ä»£ç æ ¼å¼é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 131:
+        strncpy(s_cStrArray, "å‡½æ•°è¿ç®—è¾“å…¥çš„å‚æ•°æ— æ•ˆ", SIZE_OF_ERROR_STRING);
+        break;
+    case 132:
+        strncpy(s_cStrArray, "é™¤æ³•è¿ç®—é™¤æ•°ä¸èƒ½ä¸º0", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 133:
+        strncpy(s_cStrArray, "å¹³æ–¹æ ¹è¾“å…¥æ•°æ®ä¸èƒ½å°äº0", SIZE_OF_ERROR_STRING);
+        break;
+    case 134:
+        strncpy(s_cStrArray, "å®è¯­å¥è¿ç®—æ ¼å¼é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 135:
+        strncpy(s_cStrArray, "WHILE-ENDå¾ªç¯ä½“è¯­å¥æ ¼å¼é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 136:
+        strncpy(s_cStrArray, "IFè¯­å¥æ ¼å¼é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 147:
+        strncpy(s_cStrArray, "G83æˆ–G87æŒ‡ä»¤æ²¡æœ‰æŒ‡ä»¤è¿›åˆ€é‡Qæˆ–Q=0", SIZE_OF_ERROR_STRING);
+        break;
+    case 148:
+        strncpy(s_cStrArray, "ä¸»è½´è¢«åˆ¹è½¦é”ç´§ï¼Œä¸èƒ½æ—‹è½¬ä¸»è½´", SIZE_OF_ERROR_STRING);
+        break;
+    case 149:
+        strncpy(s_cStrArray, "å¤¹å…·æœªå¤¹ä¸»è½´ä¸å¯è¿è½¬", SIZE_OF_ERROR_STRING);
+        break;
+    case 150:
+        strncpy(s_cStrArray, "æœªæ˜ å°„ç‰©ç†è½´", SIZE_OF_ERROR_STRING);
+        break;
+    case 151:
+        strncpy(s_cStrArray, "ç¼–ç å™¨ç›¸ä½é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 152:
+        strncpy(s_cStrArray, "é€Ÿåº¦å‘ç”Ÿçªå˜", SIZE_OF_ERROR_STRING);
+        break;
+    case 153:
+        strncpy(s_cStrArray, "å‚æ•°è¾“å…¥ / ç³»ç»Ÿå‚æ•°é”™è¯¯ï¼Œå‡ºç°äº†é›¶å€¼", SIZE_OF_ERROR_STRING);
+        break;
+    /* è‹å‘æ ‡ 2026-10-14ï¼šå…¬å…±åœæ­¢çŠ¶æ€å¼‚å¸¸è¯Šæ–­ã€‚ */
+    case 155:
+        strncpy(s_cStrArray, "ä¸»è½´åœæ­¢çŠ¶æ€æˆ–æ§åˆ¶æƒå¼‚å¸¸", SIZE_OF_ERROR_STRING);
+        break;
+    case 154:
+        strncpy(s_cStrArray, "è¶…æ—¶/è¶…é€Ÿé”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 160:
+        strncpy(s_cStrArray, "è¯¥æŒ‡ä»¤å­—æœªå¢åŠ æ£€æŸ¥å‡½æ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 161:
+        strncpy(s_cStrArray, "è¯¥æŒ‡ä»¤å­—æœªå¢åŠ å‚æ•°èµ‹å€¼å‡½æ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 162:
+        strncpy(s_cStrArray, "è¯¥æŒ‡ä»¤å­—æœªå¢åŠ è½¨è¿¹è®¡ç®—å‡½æ•°", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 280:
+        strncpy(s_cStrArray, "D/Lå‚æ•°åŒæ—¶å‡ºç°", SIZE_OF_ERROR_STRING);
+        break;
+    case 281:
+        strncpy(s_cStrArray, "å€’è§’é•¿åº¦è¿‡é•¿", SIZE_OF_ERROR_STRING);
+        break;
+    case 282:
+        strncpy(s_cStrArray, "å€’åœ†åŠå¾„è¿‡å¤§", SIZE_OF_ERROR_STRING);
+        break;
+    case 283:
+        strncpy(s_cStrArray, "å€’è§’/å€’åœ†å‰ææ¡ä»¶ä¸æ»¡è¶³æˆ–å‡ ä½•æ•°æ®æœ‰è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 284:
+        strncpy(s_cStrArray, "è‡ªåŠ¨å€’è§’ç¼“å†²åŒºä¸è¶³", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 300:
+        strncpy(s_cStrArray, "ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL", SIZE_OF_ERROR_STRING);
+        break;
+    case 301:
+        strncpy(s_cStrArray, "è¾“å…¥äº†æ— æ•ˆçš„å‡½æ•°å‚æ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 302:
+        strncpy(s_cStrArray, "å·¥å¾ªç¯åŠŸèƒ½ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL", SIZE_OF_ERROR_STRING);
+        break;
+    case 303:
+        strncpy(s_cStrArray, "é“¾è¡¨ä¼ å…¥æŒ‡é’ˆå˜é‡ä¸ºNULL", SIZE_OF_ERROR_STRING);
+        break;
+    case 304:
+        strncpy(s_cStrArray, "ä¸å­˜åœ¨æ­¤åˆ†æ”¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 305:
+        strncpy(s_cStrArray, "G66åµŒå¥—å±‚æ•°è¿‡å¤š", SIZE_OF_ERROR_STRING);
+        break;
+    case 306:
+        strncpy(s_cStrArray, "è¯‘ç çŠ¶æ€æœºå‡ºé”™", SIZE_OF_ERROR_STRING);
+        break;
+    case 307:
+        strncpy(s_cStrArray, "å°è¯•ç»™ä¸ä¸ºNULLçš„åœ°å€å¼€è¾Ÿå†…å­˜", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 399:
+        strncpy(s_cStrArray, "ä¸€è¡Œä¸­å‡ºç°MåŠŸèƒ½æ•°ç›®ä¸èƒ½è¶…è¿‡6ä¸ª", SIZE_OF_ERROR_STRING);
+        break;
+    case 400:
+        strncpy(s_cStrArray, "ä¸èƒ½å‡ºç°ä¸¤ä¸ªæ­£è´Ÿå·", SIZE_OF_ERROR_STRING);
+        break;
+    case 401:
+        strncpy(s_cStrArray, "ä¸èƒ½å‡ºç°ä¸¤ä¸ªå°æ•°ç‚¹", SIZE_OF_ERROR_STRING);
+        break;
+    case 402:
+        strncpy(s_cStrArray, "ä¸€è¡Œä¸­é‡å¤å‡ºç°è¯¥å­—ç¬¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 403:
+        strncpy(s_cStrArray, "å½“å‰è¡Œæ¨¡æ€åŠŸèƒ½ä¸æ”¯æŒè¾“å…¥è¯¥å­—ç¬¦åŠŸèƒ½æˆ–æ— æ¨¡æ€æŒ‡ä»¤", SIZE_OF_ERROR_STRING);
+        break;
+    case 404:
+        strncpy(s_cStrArray, "åœ†å¼§å‚æ•°I,Kè¾“å…¥æœ‰è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 405:
+        strncpy(s_cStrArray, "æ‰§è¡Œè¯¥æ¨¡æ€æŒ‡ä»¤ç¼ºå°‘è¿è¡Œå‚æ•°(ä¸»è½´è½¬å‘ã€è½¬é€Ÿã€è¿›ç»™é€Ÿåº¦)", SIZE_OF_ERROR_STRING);
+        break;
+    case 406:
+        //strncpy(s_cStrArray, "å†…å­˜ç©ºé—´ä¸è¶³ï¼Œå†…å­˜åˆ†é…å¤±è´¥", SIZE_OF_ERROR_STRING);
 #if STM32_MODE
-		ver = getStrByWord(sNum, c_num, mode);
-		snprintf((char*)erbuff, SIZE_OF_ERROR_STRING,"¶¯Ì¬ÄÚ´æ·ÖÅä²»×ã,ÄÚ´æ±àºÅ:%d ·ÖÅäÊ§°Ü",ver);
-		erbuff[SIZE_OF_ERROR_STRING - 1] = 0;
-		strncpy(s_cStrArray, erbuff, SIZE_OF_ERROR_STRING);
-		break;
+        ver = getStrByWord(sNum, c_num, mode);
+        snprintf((char*)erbuff, SIZE_OF_ERROR_STRING, "åŠ¨æ€å†…å­˜åˆ†é…ä¸è¶³,å†…å­˜ç¼–å·:%d åˆ†é…å¤±è´¥", ver);
+        erbuff[SIZE_OF_ERROR_STRING - 1] = 0;
+        strncpy(s_cStrArray, erbuff, SIZE_OF_ERROR_STRING);
+        break;
 #endif
-		//case 407:strncpy(cStrArray, "", SIZE_OF_ERROR_STRING);
-		//	break;
-	case 408:strncpy(s_cStrArray, "¸ü»»µ¶²¹ÀàĞÍÇ°£¬ÇëÏÈ³·Ïúµ¶²¹", SIZE_OF_ERROR_STRING);
-		break;
-	case 409:strncpy(s_cStrArray, "Ö»ÄÜÒÔÖ±Ïß½øĞĞµ¶²¹½¨Á¢»ò³·Ïú", SIZE_OF_ERROR_STRING);
-		break;
-	case 410:strncpy(s_cStrArray, "G32»òG92´úÂë²ÎÊı²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 411:strncpy(s_cStrArray, "G90»òG92²ÎÊıR´íÎó", SIZE_OF_ERROR_STRING);
-		break;
-	case 412:strncpy(s_cStrArray, "ÂİÎÆµ¼³Ì±ØĞë´óÓÚ0", SIZE_OF_ERROR_STRING);
-		break;
-	case 413:strncpy(s_cStrArray, "ÂİÎÆÍËÎ²Á¿²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 414:strncpy(s_cStrArray, "G92²»ÄÜ¼Ó¹¤¶ËÃæÂİÎÆ", SIZE_OF_ERROR_STRING);
-		break;
-	case 415:strncpy(s_cStrArray, "G´úÂë¹ı³¤£¬³¬¹ı256¸ö×Ö·û", SIZE_OF_ERROR_STRING);
-		break;
-	case 416:strncpy(s_cStrArray, "Ê¹ÓÃG71¡«G73¹¦ÄÜºóĞèÒªÊ¹ÓÃG70", SIZE_OF_ERROR_STRING);
-		break;
-	case 417:strncpy(s_cStrArray, ":G71Æğµ¶µãA²»ºÏÀí", SIZE_OF_ERROR_STRING);
-		break;
-	case 418:strncpy(s_cStrArray, "G71ÔÚX·½ÏòµÄµ¥µ÷ĞÔ±ä»¯²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 419:strncpy(s_cStrArray, "G70PÖµ»òQÖµ²»ÕıÈ·»òÃ»ÊäÈë", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 421:strncpy(s_cStrArray, "G72ÔÚZ·½ÏòµÄµ¥µ÷ĞÔ±ä»¯²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-		break;
-	case 422:strncpy(s_cStrArray, "G72Æğµ¶µãA²»ºÏÀí", SIZE_OF_ERROR_STRING);
-		break;
-	
-
-	case 425:strncpy(s_cStrArray, "G74Ö¸ÁîÖĞÎ´ÊäÈëZµÄÖµ", SIZE_OF_ERROR_STRING);
-		break;
-	case 426:strncpy(s_cStrArray, "G74Ö¸ÁîÖĞQµÄÖµÎª0»òÎ´ÊäÈë", SIZE_OF_ERROR_STRING);
-		break;
-    case 427:strncpy(s_cStrArray, "G74»òG75Ö¸ÁîÖĞÎ´ÊäÈëXµÄÖµ", SIZE_OF_ERROR_STRING);
+        //case 407:strncpy(cStrArray, "", SIZE_OF_ERROR_STRING);
+        //	break;
+    case 408:
+        strncpy(s_cStrArray, "æ›´æ¢åˆ€è¡¥ç±»å‹å‰ï¼Œè¯·å…ˆæ’¤é”€åˆ€è¡¥", SIZE_OF_ERROR_STRING);
         break;
-    case 428:strncpy(s_cStrArray, "G75Ö¸ÁîÖĞPµÄÖµÎª0»òÎ´ÊäÈë", SIZE_OF_ERROR_STRING);
+    case 409:
+        strncpy(s_cStrArray, "åªèƒ½ä»¥ç›´çº¿è¿›è¡Œåˆ€è¡¥å»ºç«‹æˆ–æ’¤é”€", SIZE_OF_ERROR_STRING);
         break;
-    case 429:strncpy(s_cStrArray, "G74»òG75ÖĞµÄµ¥´ÎÍËµ¶Á¿ R(e)³¬³öÔÊĞí·¶Î§", SIZE_OF_ERROR_STRING);
+    case 410:
+        strncpy(s_cStrArray, "G32æˆ–G92ä»£ç å‚æ•°ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
         break;
-    case 430:strncpy(s_cStrArray, "G74»òG75ÖĞX»òZ·½ÏòµÄµ¥´ÎÇĞÏ÷Á¿³¬³öÔÊĞí·¶Î§", SIZE_OF_ERROR_STRING);
+    case 411:
+        strncpy(s_cStrArray, "G90æˆ–G92å‚æ•°Ré”™è¯¯", SIZE_OF_ERROR_STRING);
         break;
-    case 431:strncpy(s_cStrArray, "G74»òG75ÖĞµÄµ¥´ÎÍËµ¶Á¿R(¦¤d)³¬³öÔÊĞí·¶Î§", SIZE_OF_ERROR_STRING);
+    case 412:
+        strncpy(s_cStrArray, "èºçº¹å¯¼ç¨‹å¿…é¡»å¤§äº0", SIZE_OF_ERROR_STRING);
         break;
-    case 432:strncpy(s_cStrArray, "Á¬ĞøÊ¹ÓÃG71¡¢G72¡¢G73¹¦ÄÜÇÒÉĞÎ´Ö´ĞĞG70´ÎÊı¹ı¶à", SIZE_OF_ERROR_STRING);
+    case 413:
+        strncpy(s_cStrArray, "èºçº¹é€€å°¾é‡ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
         break;
-    case 433:strncpy(s_cStrArray, "G71¡¢G72¡¢G73Ê¹ÓÃ¶ÎºÅÖØ¸´", SIZE_OF_ERROR_STRING);
+    case 414:
+        strncpy(s_cStrArray, "G92ä¸èƒ½åŠ å·¥ç«¯é¢èºçº¹", SIZE_OF_ERROR_STRING);
         break;
-	case 434:strncpy(s_cStrArray, "G33/G32ÏµÍ³×î´óËÙ¶ÈÎŞ·¨Âú×ã", SIZE_OF_ERROR_STRING);
-		break;
-    case 435:strncpy(s_cStrArray, "G71IIĞÍ¼ÆËã´íÎó", SIZE_OF_ERROR_STRING);
+    case 415:
+        strncpy(s_cStrArray, "Gä»£ç è¿‡é•¿ï¼Œè¶…è¿‡256ä¸ªå­—ç¬¦", SIZE_OF_ERROR_STRING);
         break;
-    case 436:strncpy(s_cStrArray, "G71IIĞÍÊı¾İ´æ´¢Ê§°Ü", SIZE_OF_ERROR_STRING);
+    case 416:
+        strncpy(s_cStrArray, "ä½¿ç”¨G71ï½G73åŠŸèƒ½åéœ€è¦ä½¿ç”¨G70", SIZE_OF_ERROR_STRING);
         break;
-    case 437:strncpy(s_cStrArray, "G71¶şĞÍNF¶Î²»ÔÊĞí³öÏÖXÖµ±ä»¯ZÖµ²»±äÊ±µÄÆğÊ¼±ß", SIZE_OF_ERROR_STRING);
+    case 417:
+        strncpy(s_cStrArray, ":G71èµ·åˆ€ç‚¹Aä¸åˆç†", SIZE_OF_ERROR_STRING);
         break;
-    case 438:strncpy(s_cStrArray, "Ô²»¡G32»¡¶È²»·ûºÏÒªÇó", SIZE_OF_ERROR_STRING);
+    case 418:
+        strncpy(s_cStrArray, "G71åœ¨Xæ–¹å‘çš„å•è°ƒæ€§å˜åŒ–ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
         break;
-    case 439:strncpy(s_cStrArray, "µ÷ÓÃ³ÌĞò³ö´í", SIZE_OF_ERROR_STRING);
-        break;
-    case 440:strncpy(s_cStrArray, "ºê³ÌĞòÇ¶Ì×²ãÊı³¬³öÏŞÖÆ", SIZE_OF_ERROR_STRING);
-        break;
-    case 441:strncpy(s_cStrArray, "M97Ö¸Áî´úÂë¸ñÊ½²»ÕıÈ·", SIZE_OF_ERROR_STRING);
-        break;
-    case 442:strncpy(s_cStrArray, "µÈ´ıÖ¸Áî´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 443:strncpy(s_cStrArray, "×Ô¶¨ÒåºêÓï·¨´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 444:strncpy(s_cStrArray, "IFÓï¾äÓï·¨´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 445:strncpy(s_cStrArray, "WHILEÓï¾äÓï·¨´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 446:strncpy(s_cStrArray, "GOTOÓï¾äÊäÈë¶ÎºÅÎŞĞ§", SIZE_OF_ERROR_STRING);
-        break;
-    case 447:strncpy(s_cStrArray, "ºêÖ¸ÁîÓï·¨´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 448:strncpy(s_cStrArray, "ÊäÈëµÄ³ÌĞòºÅ´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 449:strncpy(s_cStrArray, "ÊäÈëµÄµ÷ÓÃ´ÎÊı´íÎó", SIZE_OF_ERROR_STRING);
-        break;
-    case 450:strncpy(s_cStrArray, "²»´æÔÚ´ËAÀàºêÖ¸Áî", SIZE_OF_ERROR_STRING);
-        break;
-    case 451:strncpy(s_cStrArray, "È±ÉÙÖ´ĞĞ´ËAÀàºêÖ¸ÁîËùĞèµÄ²ÎÊı", SIZE_OF_ERROR_STRING);
-        break;
-    case 452:strncpy(s_cStrArray, "¸ùºÅÄÚµÄÖµ²»ÄÜÎª¸ºÊı", SIZE_OF_ERROR_STRING);
-        break;
-    case 453:strncpy(s_cStrArray, "G34µÄRÖµ²»ÔÚ·¶Î§ÄÚ", SIZE_OF_ERROR_STRING);
-        break;
-    case 454:strncpy(s_cStrArray, "G32µÄ³¤Öá×î´óËÙ¶È¹ıĞ¡", SIZE_OF_ERROR_STRING);
-        break;
-    case 455:strncpy(s_cStrArray, "G32µÄ¶ÌÖá×î´óËÙ¶È¹ıĞ¡", SIZE_OF_ERROR_STRING);
-        break;
-	case 456:strncpy(s_cStrArray, "G32ÂİÎÆ³µÏ÷µÄ½ø¸øËÙÂÊ´óÓÚ1000", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 457:strncpy(s_cStrArray, "×Ó³ÌĞòÖĞÃ»ÓĞM99Ö÷³ÌĞò·µ»Ø", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 458:strncpy(s_cStrArray, "ÁíÒ»Í¨µÀµ¶²¹Î´È¡Ïû", SIZE_OF_ERROR_STRING);
-		break;
-	case 459:strncpy(s_cStrArray, "FLASHÈÎÎñ·±Ã¦", SIZE_OF_ERROR_STRING);
-		break;
-	case 460:strncpy(s_cStrArray, "ÉêÇëIOÊ§°Ü", SIZE_OF_ERROR_STRING);
-		break;
-	case 461:strncpy(s_cStrArray, "G90ÍâÔ²³µÏ÷Ñ­»·Ö»ÄÜÔÚG18(ZX)Æ½ÃæÖ´ĞĞ", SIZE_OF_ERROR_STRING);
-		break;
-
-	case 1000:strncpy(s_cStrArray, "µç¶¯µ¶¼Ü»»µ¶³¬Ê±", SIZE_OF_ERROR_STRING);
-		break;
-	case 1001:strncpy(s_cStrArray, "»»µ¶½áÊøÊ±£¬µ¶¼ÜÎ´µ½Î»±¨¾¯", SIZE_OF_ERROR_STRING);
-		break;
-	case 1002:strncpy(s_cStrArray, "»»µ¶Î´Íê³É±¨¾¯", SIZE_OF_ERROR_STRING);
-		break;
-	case 1003:strncpy(s_cStrArray, "Î´¼ì²âµ½µ¶¼ÜËø½ôTCPĞÅºÅ", SIZE_OF_ERROR_STRING);
-		break;
-	case 1004:strncpy(s_cStrArray, "»»µ¶·½Ê½A»òB×î¶àÖ»Ö§³Ö8°Ñµ¶", SIZE_OF_ERROR_STRING);
-		break;
-    case 1005:strncpy(s_cStrArray, "ÏµÍ³¶ÏµçÇ°»»µ¶³ö´í", SIZE_OF_ERROR_STRING);
+    case 419:
+        strncpy(s_cStrArray, "G70På€¼æˆ–Qå€¼ä¸æ­£ç¡®æˆ–æ²¡è¾“å…¥", SIZE_OF_ERROR_STRING);
         break;
 
-	case 2042:strncpy(s_cStrArray, "ÉÏµçºó¶ÁÈ¡µ¶Î»ĞÅºÅÒì³£±¨¾¯", SIZE_OF_ERROR_STRING);
-		break;
-	case 2155:strncpy(s_cStrArray, "»»µ¶ºóµÄµ¶ºÅÓëÖ¸¶¨µ¶ºÅ²»·û", SIZE_OF_ERROR_STRING);
-		break;
-	case 2178:strncpy(s_cStrArray, "ËÅ·şÇı¶¯Æ÷±¨¾¯", SIZE_OF_ERROR_STRING);
-		break;
-	case 2186:strncpy(s_cStrArray, "µ¶Ëş¶¨Î»Íê³ÉĞÅºÅÎ´¼ì²âµ½", SIZE_OF_ERROR_STRING);
-		break;
-	case 2187:strncpy(s_cStrArray, "Î´¼ì²âµ½µ¶¼ÜËø½ôµ½Î»»òËÉ¿ªµ½Î»ĞÅºÅ", SIZE_OF_ERROR_STRING);
-		break;
-	case 2188:strncpy(s_cStrArray, "µ¶¾ß×´Ì¬Î´¶¨Òå", SIZE_OF_ERROR_STRING);
-		break;
-	default:
-		strncpy(s_cStrArray, "ÔİÎ´Ìí¼Ó", SIZE_OF_ERROR_STRING);
-		break;
-	}
+    case 421:
+        strncpy(s_cStrArray, "G72åœ¨Zæ–¹å‘çš„å•è°ƒæ€§å˜åŒ–ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
+        break;
+    case 422:
+        strncpy(s_cStrArray, "G72èµ·åˆ€ç‚¹Aä¸åˆç†", SIZE_OF_ERROR_STRING);
+        break;
 
-	return s_cStrArray;
+    case 425:
+        strncpy(s_cStrArray, "G74æŒ‡ä»¤ä¸­æœªè¾“å…¥Zçš„å€¼", SIZE_OF_ERROR_STRING);
+        break;
+    case 426:
+        strncpy(s_cStrArray, "G74æŒ‡ä»¤ä¸­Qçš„å€¼ä¸º0æˆ–æœªè¾“å…¥", SIZE_OF_ERROR_STRING);
+        break;
+    case 427:
+        strncpy(s_cStrArray, "G74æˆ–G75æŒ‡ä»¤ä¸­æœªè¾“å…¥Xçš„å€¼", SIZE_OF_ERROR_STRING);
+        break;
+    case 428:
+        strncpy(s_cStrArray, "G75æŒ‡ä»¤ä¸­Pçš„å€¼ä¸º0æˆ–æœªè¾“å…¥", SIZE_OF_ERROR_STRING);
+        break;
+    case 429:
+        strncpy(s_cStrArray, "G74æˆ–G75ä¸­çš„å•æ¬¡é€€åˆ€é‡ R(e)è¶…å‡ºå…è®¸èŒƒå›´", SIZE_OF_ERROR_STRING);
+        break;
+    case 430:
+        strncpy(s_cStrArray, "G74æˆ–G75ä¸­Xæˆ–Zæ–¹å‘çš„å•æ¬¡åˆ‡å‰Šé‡è¶…å‡ºå…è®¸èŒƒå›´", SIZE_OF_ERROR_STRING);
+        break;
+    case 431:
+        strncpy(s_cStrArray, "G74æˆ–G75ä¸­çš„å•æ¬¡é€€åˆ€é‡R(Î”d)è¶…å‡ºå…è®¸èŒƒå›´", SIZE_OF_ERROR_STRING);
+        break;
+    case 432:
+        strncpy(s_cStrArray, "è¿ç»­ä½¿ç”¨G71ã€G72ã€G73åŠŸèƒ½ä¸”å°šæœªæ‰§è¡ŒG70æ¬¡æ•°è¿‡å¤š", SIZE_OF_ERROR_STRING);
+        break;
+    case 433:
+        strncpy(s_cStrArray, "G71ã€G72ã€G73ä½¿ç”¨æ®µå·é‡å¤", SIZE_OF_ERROR_STRING);
+        break;
+    case 434:
+        strncpy(s_cStrArray, "G33/G32ç³»ç»Ÿæœ€å¤§é€Ÿåº¦æ— æ³•æ»¡è¶³", SIZE_OF_ERROR_STRING);
+        break;
+    case 435:
+        strncpy(s_cStrArray, "G71IIå‹è®¡ç®—é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 436:
+        strncpy(s_cStrArray, "G71IIå‹æ•°æ®å­˜å‚¨å¤±è´¥", SIZE_OF_ERROR_STRING);
+        break;
+    case 437:
+        strncpy(s_cStrArray, "G71äºŒå‹NFæ®µä¸å…è®¸å‡ºç°Xå€¼å˜åŒ–Zå€¼ä¸å˜æ—¶çš„èµ·å§‹è¾¹", SIZE_OF_ERROR_STRING);
+        break;
+    case 438:
+        strncpy(s_cStrArray, "åœ†å¼§G32å¼§åº¦ä¸ç¬¦åˆè¦æ±‚", SIZE_OF_ERROR_STRING);
+        break;
+    case 439:
+        strncpy(s_cStrArray, "è°ƒç”¨ç¨‹åºå‡ºé”™", SIZE_OF_ERROR_STRING);
+        break;
+    case 440:
+        strncpy(s_cStrArray, "å®ç¨‹åºåµŒå¥—å±‚æ•°è¶…å‡ºé™åˆ¶", SIZE_OF_ERROR_STRING);
+        break;
+    case 441:
+        strncpy(s_cStrArray, "M97æŒ‡ä»¤ä»£ç æ ¼å¼ä¸æ­£ç¡®", SIZE_OF_ERROR_STRING);
+        break;
+    case 442:
+        strncpy(s_cStrArray, "ç­‰å¾…æŒ‡ä»¤é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 443:
+        strncpy(s_cStrArray, "è‡ªå®šä¹‰å®è¯­æ³•é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 444:
+        strncpy(s_cStrArray, "IFè¯­å¥è¯­æ³•é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 445:
+        strncpy(s_cStrArray, "WHILEè¯­å¥è¯­æ³•é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 446:
+        strncpy(s_cStrArray, "GOTOè¯­å¥è¾“å…¥æ®µå·æ— æ•ˆ", SIZE_OF_ERROR_STRING);
+        break;
+    case 447:
+        strncpy(s_cStrArray, "å®æŒ‡ä»¤è¯­æ³•é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 448:
+        strncpy(s_cStrArray, "è¾“å…¥çš„ç¨‹åºå·é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 449:
+        strncpy(s_cStrArray, "è¾“å…¥çš„è°ƒç”¨æ¬¡æ•°é”™è¯¯", SIZE_OF_ERROR_STRING);
+        break;
+    case 450:
+        strncpy(s_cStrArray, "ä¸å­˜åœ¨æ­¤Aç±»å®æŒ‡ä»¤", SIZE_OF_ERROR_STRING);
+        break;
+    case 451:
+        strncpy(s_cStrArray, "ç¼ºå°‘æ‰§è¡Œæ­¤Aç±»å®æŒ‡ä»¤æ‰€éœ€çš„å‚æ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 452:
+        strncpy(s_cStrArray, "æ ¹å·å†…çš„å€¼ä¸èƒ½ä¸ºè´Ÿæ•°", SIZE_OF_ERROR_STRING);
+        break;
+    case 453:
+        strncpy(s_cStrArray, "G34çš„Rå€¼ä¸åœ¨èŒƒå›´å†…", SIZE_OF_ERROR_STRING);
+        break;
+    case 454:
+        strncpy(s_cStrArray, "G32çš„é•¿è½´æœ€å¤§é€Ÿåº¦è¿‡å°", SIZE_OF_ERROR_STRING);
+        break;
+    case 455:
+        strncpy(s_cStrArray, "G32çš„çŸ­è½´æœ€å¤§é€Ÿåº¦è¿‡å°", SIZE_OF_ERROR_STRING);
+        break;
+    case 456:
+        strncpy(s_cStrArray, "G32èºçº¹è½¦å‰Šçš„è¿›ç»™é€Ÿç‡å¤§äº1000", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 457:
+        strncpy(s_cStrArray, "å­ç¨‹åºä¸­æ²¡æœ‰M99ä¸»ç¨‹åºè¿”å›", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 458:
+        strncpy(s_cStrArray, "å¦ä¸€é€šé“åˆ€è¡¥æœªå–æ¶ˆ", SIZE_OF_ERROR_STRING);
+        break;
+    case 459:
+        strncpy(s_cStrArray, "FLASHä»»åŠ¡ç¹å¿™", SIZE_OF_ERROR_STRING);
+        break;
+    case 460:
+        strncpy(s_cStrArray, "ç”³è¯·IOå¤±è´¥", SIZE_OF_ERROR_STRING);
+        break;
+    case 461:
+        strncpy(s_cStrArray, "G90å¤–åœ†è½¦å‰Šå¾ªç¯åªèƒ½åœ¨G18(ZX)å¹³é¢æ‰§è¡Œ", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 1000:
+        strncpy(s_cStrArray, "ç”µåŠ¨åˆ€æ¶æ¢åˆ€è¶…æ—¶", SIZE_OF_ERROR_STRING);
+        break;
+    case 1001:
+        strncpy(s_cStrArray, "æ¢åˆ€ç»“æŸæ—¶ï¼Œåˆ€æ¶æœªåˆ°ä½æŠ¥è­¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 1002:
+        strncpy(s_cStrArray, "æ¢åˆ€æœªå®ŒæˆæŠ¥è­¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 1003:
+        strncpy(s_cStrArray, "æœªæ£€æµ‹åˆ°åˆ€æ¶é”ç´§TCPä¿¡å·", SIZE_OF_ERROR_STRING);
+        break;
+    case 1004:
+        strncpy(s_cStrArray, "æ¢åˆ€æ–¹å¼Aæˆ–Bæœ€å¤šåªæ”¯æŒ8æŠŠåˆ€", SIZE_OF_ERROR_STRING);
+        break;
+    case 1005:
+        strncpy(s_cStrArray, "ç³»ç»Ÿæ–­ç”µå‰æ¢åˆ€å‡ºé”™", SIZE_OF_ERROR_STRING);
+        break;
+
+    case 2042:
+        strncpy(s_cStrArray, "ä¸Šç”µåè¯»å–åˆ€ä½ä¿¡å·å¼‚å¸¸æŠ¥è­¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 2155:
+        strncpy(s_cStrArray, "æ¢åˆ€åçš„åˆ€å·ä¸æŒ‡å®šåˆ€å·ä¸ç¬¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 2178:
+        strncpy(s_cStrArray, "ä¼ºæœé©±åŠ¨å™¨æŠ¥è­¦", SIZE_OF_ERROR_STRING);
+        break;
+    case 2186:
+        strncpy(s_cStrArray, "åˆ€å¡”å®šä½å®Œæˆä¿¡å·æœªæ£€æµ‹åˆ°", SIZE_OF_ERROR_STRING);
+        break;
+    case 2187:
+        strncpy(s_cStrArray, "æœªæ£€æµ‹åˆ°åˆ€æ¶é”ç´§åˆ°ä½æˆ–æ¾å¼€åˆ°ä½ä¿¡å·", SIZE_OF_ERROR_STRING);
+        break;
+    case 2188:
+        strncpy(s_cStrArray, "åˆ€å…·çŠ¶æ€æœªå®šä¹‰", SIZE_OF_ERROR_STRING);
+        break;
+    default:
+        strncpy(s_cStrArray, "æš‚æœªæ·»åŠ ", SIZE_OF_ERROR_STRING);
+        break;
+    }
+
+    return s_cStrArray;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool isErrorFull()
-  º¯Êı¹¦ÄÜ: ·µ»Ø±êÖ¾Î»£¬ÅĞ¶Ï´íÎó»º³åÊÇ·ñÂú
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šbool isErrorFull()
+  å‡½æ•°åŠŸèƒ½: è¿”å›æ ‡å¿—ä½ï¼Œåˆ¤æ–­é”™è¯¯ç¼“å†²æ˜¯å¦æ»¡
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isErrorFull()
 {
-	if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX)    //´íÎó»º´æÇøÂú£¬²»ÔÙ´æ·Å
-	{
-		return TRUE;
-	}
+    if (s_ucPosSGCodeErrorBuf >= GCODEERRORBUF_MAX) //é”™è¯¯ç¼“å­˜åŒºæ»¡ï¼Œä¸å†å­˜æ”¾
+    {
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid setErrorType(uint16 usType)
-  º¯Êı¹¦ÄÜ: ÉèÖÃ´íÎóÀàĞÍ
-  ÊäÈë²ÎÊı£ºusType	´íÎó´úÂë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid setErrorType(uint16 usType)
+  å‡½æ•°åŠŸèƒ½: è®¾ç½®é”™è¯¯ç±»å‹
+  è¾“å…¥å‚æ•°ï¼šusType	é”™è¯¯ä»£ç 
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void setErrorType(uint16 usType)
 {
-	s_ErrorType = usType;
+    s_ErrorType = usType;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool isErrorHasBeenWritten()
-  º¯Êı¹¦ÄÜ: ÅĞ¶ÏÊÇ·ñÒÑÓĞ´íÎóĞ´Èë
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šbool isErrorHasBeenWritten()
+  å‡½æ•°åŠŸèƒ½: åˆ¤æ–­æ˜¯å¦å·²æœ‰é”™è¯¯å†™å…¥
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isErrorHasBeenWritten()
 {
-	return s_bErrorHasBeenWritten;
+    return s_bErrorHasBeenWritten;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid setErrorWriteFlag(bool bFlag)
-  º¯Êı¹¦ÄÜ: ÉèÖÃ´íÎóÒÑĞ´Èë±êÖ¾Î»
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid setErrorWriteFlag(bool bFlag)
+  å‡½æ•°åŠŸèƒ½: è®¾ç½®é”™è¯¯å·²å†™å…¥æ ‡å¿—ä½
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void setErrorWriteFlag(bool bFlag)
 {
-	s_bErrorHasBeenWritten = bFlag;
+    s_bErrorHasBeenWritten = bFlag;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 getErrorNum()
-  º¯Êı¹¦ÄÜ: »ñÈ¡´íÎóÊıÁ¿
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šuint8 getErrorNum()
+  å‡½æ•°åŠŸèƒ½: è·å–é”™è¯¯æ•°é‡
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 getErrorNum()
 {
-	return s_ucPosSGCodeErrorBuf;
+    return s_ucPosSGCodeErrorBuf;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid setErrorFlag(bool bFlag)
-  º¯Êı¹¦ÄÜ: ÉèÖÃ´íÎó±êÖ¾Î»
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid setErrorFlag(bool bFlag)
+  å‡½æ•°åŠŸèƒ½: è®¾ç½®é”™è¯¯æ ‡å¿—ä½
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void setErrorFlag(bool bFlag)
 {
 
-	s_bErrorFlag = bFlag;
+    s_bErrorFlag = bFlag;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool getErrorFlag()
-  º¯Êı¹¦ÄÜ: »ñÈ¡´íÎó±êÖ¾Î»
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šbool getErrorFlag()
+  å‡½æ•°åŠŸèƒ½: è·å–é”™è¯¯æ ‡å¿—ä½
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool getErrorFlag()
 {
-	return s_bErrorFlag;
+    return s_bErrorFlag;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºSGCodeError* getErrorStruct(int8 cIndex)
-  º¯Êı¹¦ÄÜ: ·µ»Ø´íÎó½á¹¹ÌåµÄµØÖ·
-  ÊäÈë²ÎÊı£ºcIndex´íÎó»º´æË÷Òı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šSGCodeError* getErrorStruct(int8 cIndex)
+  å‡½æ•°åŠŸèƒ½: è¿”å›é”™è¯¯ç»“æ„ä½“çš„åœ°å€
+  è¾“å…¥å‚æ•°ï¼šcIndexé”™è¯¯ç¼“å­˜ç´¢å¼•
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SGCodeError getErrorStructAdd(int8 cIndex)
 {
-	struct SGCodeError STemp = {0};
-	if (cIndex < 0 || cIndex>GCODEERRORBUF_MAX-1)
-	{
-		return STemp;
-		parseGCodeErrorB(0,GCODE_ERROR_NUM305);
-	}
-	else
-	{
-		STemp= s_SGCodeErrorBuf[cIndex];
-		return STemp;
-	}
-
+    struct SGCodeError STemp = {0};
+    if (cIndex < 0 || cIndex > GCODEERRORBUF_MAX - 1)
+    {
+        return STemp;
+        parseGCodeErrorB(0, GCODE_ERROR_NUM305);
+    }
+    else
+    {
+        STemp = s_SGCodeErrorBuf[cIndex];
+        return STemp;
+    }
 }

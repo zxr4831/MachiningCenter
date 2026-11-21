@@ -1,385 +1,374 @@
-#include<math.h>
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include"Gcode.h"
-#include"ErrorFunction.h"
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "Gcode.h"
+#include "ErrorFunction.h"
 #include "Config.h"
 #if STM32_MODE
 #include "flread_task.h"
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeDefineData(SUserDefineData *pData)
-  º¯Êı¹¦ÄÜ: ÊÍ·Å×Ô¶¨Òåºê½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-  ÊäÈë²ÎÊı£ºpData	Êı¾İ½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid freeDefineData(SUserDefineData *pData)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾è‡ªå®šä¹‰å®ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+  è¾“å…¥å‚æ•°ï¼špData	æ•°æ®ç»“æ„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º1.ÊÍ·ÅpName
-			2.ÊÍ·ÅpReplaceStr
+  å¤‡    æ³¨ï¼š1.é‡Šæ”¾pName
+			2.é‡Šæ”¾pReplaceStr
 **************************************************/
 void freeDefineData(SUserDefineData* pData)
 {
-	if (pData == NULL)
-	{
-		return;
-	}
+    if (pData == NULL)
+    {
+        return;
+    }
 
-	freeGCode(pData->pName);
-	pData->pName = NULL;
+    freeGCode(pData->pName);
+    pData->pName = NULL;
 
-	freeGCode(pData->pReplaceStr);
-	pData->pReplaceStr = NULL;
+    freeGCode(pData->pReplaceStr);
+    pData->pReplaceStr = NULL;
 
-	//freeGCode(pData);
+    //freeGCode(pData);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid recordDefineMacro(SSyntaxConfiguration *SSyntaxConfig, uint8 ucChannelNum, SProgram *pCurrProgram)
-  º¯Êı¹¦ÄÜ: ¼ÇÂ¼×Ô¶¨Òåºê
-  ÊäÈë²ÎÊı£ºSSyntaxConfig		Óï·¨½á¹¹Ìå
-			pDefineList			×Ô¶¨ÒåºêÊı¾İÁ´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	¼ÇÂ¼Íê³É
-			-1	´íÎó
-  ±¸    ×¢£º1.¾­¹ıcheckDefineº¯Êıºó²ÅÄÜ½øÈë´Ëº¯Êı£¬¼´½øÈë´Ëº¯ÊıÒ»¶¨»á¼ÇÂ¼define
-			2.ÔİÊ±ÈÏÎªÒ»¸ö³ÌĞò¶ÎÖ»ÓÉÒ»¸ödefine×é³É
+  å‡½æ•°åç§°ï¼švoid recordDefineMacro(SSyntaxConfiguration *SSyntaxConfig, uint8 ucChannelNum, SProgram *pCurrProgram)
+  å‡½æ•°åŠŸèƒ½: è®°å½•è‡ªå®šä¹‰å®
+  è¾“å…¥å‚æ•°ï¼šSSyntaxConfig		è¯­æ³•ç»“æ„ä½“
+			pDefineList			è‡ªå®šä¹‰å®æ•°æ®é“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	è®°å½•å®Œæˆ
+			-1	é”™è¯¯
+  å¤‡    æ³¨ï¼š1.ç»è¿‡checkDefineå‡½æ•°åæ‰èƒ½è¿›å…¥æ­¤å‡½æ•°ï¼Œå³è¿›å…¥æ­¤å‡½æ•°ä¸€å®šä¼šè®°å½•define
+			2.æš‚æ—¶è®¤ä¸ºä¸€ä¸ªç¨‹åºæ®µåªç”±ä¸€ä¸ªdefineç»„æˆ
 **************************************************/
 int8 recordDefine(SGetTextStateInfo* pSGetTextStateInfo, SList* pDefineList)
 {
-	uint8 ucRet;
-	SUserDefineData* pDefineData = NULL;
-	uint16 usLen = 0;
-	if (pSGetTextStateInfo == NULL || pDefineList == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    uint8 ucRet;
+    SUserDefineData* pDefineData = NULL;
+    uint16 usLen = 0;
+    if (pSGetTextStateInfo == NULL || pDefineList == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	pDefineData = mallocGCode(sizeof(SUserDefineData), ORAM_NUM321);   //¸øºê¶¨Òå·ÖÅäÄÚ´æ
-	if (pDefineData == NULL)
-	{
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
-		return -1;
-	}
-	memset(pDefineData, 0, sizeof(SUserDefineData));
+    pDefineData = mallocGCode(sizeof(SUserDefineData), ORAM_NUM321); //ç»™å®å®šä¹‰åˆ†é…å†…å­˜
+    if (pDefineData == NULL)
+    {
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    memset(pDefineData, 0, sizeof(SUserDefineData));
 
-	pSGetTextStateInfo->pCurrPtr = pSGetTextStateInfo->cStr;
-	//1.¿ªÊ¼ÕÒDEFINE
-	while (*pSGetTextStateInfo->pCurrPtr != 'D')
-	{
-		pSGetTextStateInfo->pCurrPtr++;
-	}
-	if (*(pSGetTextStateInfo->pCurrPtr + 1) == 'E' &&
-		*(pSGetTextStateInfo->pCurrPtr + 2) == 'F' &&
-		*(pSGetTextStateInfo->pCurrPtr + 3) == 'I' &&
-		*(pSGetTextStateInfo->pCurrPtr + 4) == 'N' &&
-		*(pSGetTextStateInfo->pCurrPtr + 5) == 'E')
-	{
-		pSGetTextStateInfo->pCurrPtr += 6;
-	}
-	else
-	{
-		//freeDefineData(pDefineData);
-		freeGCode(pDefineData);
-		//±¨´í£¬(Ö´ĞĞ´Ëº¯ÊıÇ°ÒÑÈ·ÈÏ³ÌĞò¶ÎÖĞº¬ÓĞDEFINE)
-		return -1;
-	}
+    pSGetTextStateInfo->pCurrPtr = pSGetTextStateInfo->cStr;
+    //1.å¼€å§‹æ‰¾DEFINE
+    while (*pSGetTextStateInfo->pCurrPtr != 'D')
+    {
+        pSGetTextStateInfo->pCurrPtr++;
+    }
+    if (*(pSGetTextStateInfo->pCurrPtr + 1) == 'E' && *(pSGetTextStateInfo->pCurrPtr + 2) == 'F' &&
+        *(pSGetTextStateInfo->pCurrPtr + 3) == 'I' && *(pSGetTextStateInfo->pCurrPtr + 4) == 'N' &&
+        *(pSGetTextStateInfo->pCurrPtr + 5) == 'E')
+    {
+        pSGetTextStateInfo->pCurrPtr += 6;
+    }
+    else
+    {
+        //freeDefineData(pDefineData);
+        freeGCode(pDefineData);
+        //æŠ¥é”™ï¼Œ(æ‰§è¡Œæ­¤å‡½æ•°å‰å·²ç¡®è®¤ç¨‹åºæ®µä¸­å«æœ‰DEFINE)
+        return -1;
+    }
 
-	//DEFINEºó±ØĞëÎª¿Õ¸ñ
-	if (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
-	{
-		pSGetTextStateInfo->pCurrPtr += 1;
-	}
-	else
-	{
-		//freeDefineData(pDefineData);
-		freeGCode(pDefineData);
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
-		return -1;
-	}
+    //DEFINEåå¿…é¡»ä¸ºç©ºæ ¼
+    if (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
+    {
+        pSGetTextStateInfo->pCurrPtr += 1;
+    }
+    else
+    {
+        //freeDefineData(pDefineData);
+        freeGCode(pDefineData);
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
+        return -1;
+    }
 
-	//2.1¿ªÊ¼ÕÒºêÃûÊ××Ö·û
-	while (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
-	{
-		pSGetTextStateInfo->pCurrPtr += 1;
-	}
-	//ºêÃûÊ××Ö·û±ØĞëÎª×ÖÄ¸
-	if (('a' <= *pSGetTextStateInfo->pCurrPtr && *pSGetTextStateInfo->pCurrPtr <= 'z') ||
-		('A' <= *pSGetTextStateInfo->pCurrPtr && *pSGetTextStateInfo->pCurrPtr <= 'Z'))
-	{
-		pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
-	}
-	else
-	{
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
-		return -1;
-	}
-	//2.2¿ªÊ¼ÕÒºêÃûÄ©×Ö·û
-	while ((*pSGetTextStateInfo->pCurrPtr >= 'a' && *pSGetTextStateInfo->pCurrPtr <= 'z')
-		|| (*pSGetTextStateInfo->pCurrPtr >= 'A' && *pSGetTextStateInfo->pCurrPtr <= 'Z')
-		|| (*pSGetTextStateInfo->pCurrPtr >= '0' && *pSGetTextStateInfo->pCurrPtr <= '9'))  //ºêÃûÓÉ×ÖÄ¸ºÍÊı×Ö×é³É
-	{
-		pSGetTextStateInfo->pCurrPtr += 1;
-	}
-	//ºêÃûºó±ØĞëÎª¿Õ¸ñ
-	if (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
-	{
-		pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
-	}
-	else
-	{
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
-		return -1;
-	}
-	//2.3¿ª±ÙÄÚ´æ¼ÇÂ¼ºêÃû
-	usLen = (uint16)(pSGetTextStateInfo->pCurrPtr - pSGetTextStateInfo->pStartPtr);  //ÕÒµ½ºêÃû½áÎ²,¼ÆËãºêÃû³¤¶È
-	pDefineData->pName = mallocGCode((usLen + 1), ORAM_NUM322);   //¸øºêÃû·ÖÅäÄÚ´æ,³¤¶È¼ÓÒ»ÊÇÎªÁË¼Ó½ØÖ¹·û
-	if (pDefineData->pName == NULL)
-	{
-		freeDefineData(pDefineData);
-		freeGCode(pDefineData);
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
-		return -1;
-	}
-	memset(pDefineData->pName, 0, (usLen + 1));
-	memcpy(pDefineData->pName, pSGetTextStateInfo->pStartPtr, usLen);   //¸´ÖÆºêÃû
-	pDefineData->pName[usLen] = '\0';    //¼Ó½ØÖ¹·û
-	
+    //2.1å¼€å§‹æ‰¾å®åé¦–å­—ç¬¦
+    while (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
+    {
+        pSGetTextStateInfo->pCurrPtr += 1;
+    }
+    //å®åé¦–å­—ç¬¦å¿…é¡»ä¸ºå­—æ¯
+    if (('a' <= *pSGetTextStateInfo->pCurrPtr && *pSGetTextStateInfo->pCurrPtr <= 'z') ||
+        ('A' <= *pSGetTextStateInfo->pCurrPtr && *pSGetTextStateInfo->pCurrPtr <= 'Z'))
+    {
+        pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
+    }
+    else
+    {
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
+        return -1;
+    }
+    //2.2å¼€å§‹æ‰¾å®åæœ«å­—ç¬¦
+    while ((*pSGetTextStateInfo->pCurrPtr >= 'a' && *pSGetTextStateInfo->pCurrPtr <= 'z') ||
+           (*pSGetTextStateInfo->pCurrPtr >= 'A' && *pSGetTextStateInfo->pCurrPtr <= 'Z') ||
+           (*pSGetTextStateInfo->pCurrPtr >= '0' && *pSGetTextStateInfo->pCurrPtr <= '9')) //å®åç”±å­—æ¯å’Œæ•°å­—ç»„æˆ
+    {
+        pSGetTextStateInfo->pCurrPtr += 1;
+    }
+    //å®ååå¿…é¡»ä¸ºç©ºæ ¼
+    if (*pSGetTextStateInfo->pCurrPtr == ' ' || *pSGetTextStateInfo->pCurrPtr == '\t')
+    {
+        pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
+    }
+    else
+    {
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM443);
+        return -1;
+    }
+    //2.3å¼€è¾Ÿå†…å­˜è®°å½•å®å
+    usLen = (uint16)(pSGetTextStateInfo->pCurrPtr - pSGetTextStateInfo->pStartPtr); //æ‰¾åˆ°å®åç»“å°¾,è®¡ç®—å®åé•¿åº¦
+    pDefineData->pName = mallocGCode((usLen + 1), ORAM_NUM322); //ç»™å®ååˆ†é…å†…å­˜,é•¿åº¦åŠ ä¸€æ˜¯ä¸ºäº†åŠ æˆªæ­¢ç¬¦
+    if (pDefineData->pName == NULL)
+    {
+        freeDefineData(pDefineData);
+        freeGCode(pDefineData);
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    memset(pDefineData->pName, 0, (usLen + 1));
+    memcpy(pDefineData->pName, pSGetTextStateInfo->pStartPtr, usLen); //å¤åˆ¶å®å
+    pDefineData->pName[usLen] = '\0';                                 //åŠ æˆªæ­¢ç¬¦
 
-	//3.1¿ªÊ¼ÕÒ×Ö·û´®Ê××Ö·û
-	while (*pSGetTextStateInfo->pCurrPtr == ' ')
-	{
-		pSGetTextStateInfo->pCurrPtr += 1;
-	}
-	pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
+    //3.1å¼€å§‹æ‰¾å­—ç¬¦ä¸²é¦–å­—ç¬¦
+    while (*pSGetTextStateInfo->pCurrPtr == ' ')
+    {
+        pSGetTextStateInfo->pCurrPtr += 1;
+    }
+    pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
 
-	//3.2¿ªÊ¼ÕÒ×Ö·û´®Ä©×Ö·û 1000\0
-	while (pSGetTextStateInfo->pCurrPtr != ';' &&
-		*pSGetTextStateInfo->pCurrPtr != '\r' &&
-		*pSGetTextStateInfo->pCurrPtr != '\n' &&
-		*pSGetTextStateInfo->pCurrPtr != '\0')
-	{
-		pSGetTextStateInfo->pCurrPtr += 1;
-	}
-	pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
+    //3.2å¼€å§‹æ‰¾å­—ç¬¦ä¸²æœ«å­—ç¬¦ 1000\0
+    while (pSGetTextStateInfo->pCurrPtr != ';' && *pSGetTextStateInfo->pCurrPtr != '\r' &&
+           *pSGetTextStateInfo->pCurrPtr != '\n' && *pSGetTextStateInfo->pCurrPtr != '\0')
+    {
+        pSGetTextStateInfo->pCurrPtr += 1;
+    }
+    pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
 
-	//3.3¿ª±ÙÄÚ´æ¼ÇÂ¼×Ö·û´®
-	usLen = (uint16)(pSGetTextStateInfo->pCurrPtr - pSGetTextStateInfo->pStartPtr);  //ÕÒµ½×Ö·û´®½áÎ²,¼ÆËã×Ö·û´®³¤¶È
-	pDefineData->pReplaceStr = mallocGCode((usLen + 1), ORAM_NUM323);   //¸ø×Ö·û´®·ÖÅäÄÚ´æ,³¤¶È¼ÓÒ»ÊÇÎªÁË¼Ó½ØÖ¹·û
-	if (pDefineData->pReplaceStr == NULL)
-	{
-		freeDefineData(pDefineData);
-		freeGCode(pDefineData);
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
-		return -1;
-	}
-	memset(pDefineData->pReplaceStr, 0, (usLen + 1));
-	memcpy(pDefineData->pReplaceStr, pSGetTextStateInfo->pStartPtr, usLen);   //¸´ÖÆ×Ö·û´®
-	pDefineData->pReplaceStr[usLen] = '\0';    //¼Ó½ØÖ¹·û
+    //3.3å¼€è¾Ÿå†…å­˜è®°å½•å­—ç¬¦ä¸²
+    usLen = (uint16)(pSGetTextStateInfo->pCurrPtr - pSGetTextStateInfo->pStartPtr); //æ‰¾åˆ°å­—ç¬¦ä¸²ç»“å°¾,è®¡ç®—å­—ç¬¦ä¸²é•¿åº¦
+    pDefineData->pReplaceStr = mallocGCode((usLen + 1), ORAM_NUM323); //ç»™å­—ç¬¦ä¸²åˆ†é…å†…å­˜,é•¿åº¦åŠ ä¸€æ˜¯ä¸ºäº†åŠ æˆªæ­¢ç¬¦
+    if (pDefineData->pReplaceStr == NULL)
+    {
+        freeDefineData(pDefineData);
+        freeGCode(pDefineData);
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    memset(pDefineData->pReplaceStr, 0, (usLen + 1));
+    memcpy(pDefineData->pReplaceStr, pSGetTextStateInfo->pStartPtr, usLen); //å¤åˆ¶å­—ç¬¦ä¸²
+    pDefineData->pReplaceStr[usLen] = '\0';                                 //åŠ æˆªæ­¢ç¬¦
 
-	//4  Êı¾İ²åÈëÁ´±íÍ·
-	ucRet = insertList(pDefineList, 0, pDefineData, ORAM_NUM320);
-	if (ucRet == FALSE)
-	{
-		freeDefineData(pDefineData);
-		freeGCode(pDefineData);
-		parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
-		return -1;
-	}
+    //4  æ•°æ®æ’å…¥é“¾è¡¨å¤´
+    ucRet = insertList(pDefineList, 0, pDefineData, ORAM_NUM320);
+    if (ucRet == FALSE)
+    {
+        freeDefineData(pDefineData);
+        freeGCode(pDefineData);
+        parseGCodeErrorB(pSGetTextStateInfo->unCurrLineNum, GCODE_ERROR_NUM406);
+        return -1;
+    }
 
-	return 1;
+    return 1;
 }
 
-
-static int8 safe_append(char *dst, uint16 dstMax, const char *src)
+static int8 safe_append(char* dst, uint16 dstMax, const char* src)
 {
     uint16 dstLen = (uint16)strlen(dst);
     uint16 srcLen = (uint16)strlen(src);
 
-    // ĞèÒªÔ¤Áô '\0'£¬ËùÒÔ dstLen + srcLen < dstMax ²Å°²È«
-    if (dstLen + srcLen >= dstMax) {
-        parseGCodeErrorB(0, GCODE_ERROR_NUM134); // »ò»»³É¸üºÏÊÊµÄ¡°ĞĞ¹ı³¤/Ìæ»»Òç³ö¡±´íÎóÂë
+    // éœ€è¦é¢„ç•™ '\0'ï¼Œæ‰€ä»¥ dstLen + srcLen < dstMax æ‰å®‰å…¨
+    if (dstLen + srcLen >= dstMax)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM134); // æˆ–æ¢æˆæ›´åˆé€‚çš„â€œè¡Œè¿‡é•¿/æ›¿æ¢æº¢å‡ºâ€é”™è¯¯ç 
         return -1;
     }
 
-    memcpy(dst + dstLen, src, srcLen + 1); // Á¬ '\0' Ò»Æğ¿½±´
+    memcpy(dst + dstLen, src, srcLen + 1); // è¿ '\0' ä¸€èµ·æ‹·è´
     return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 replaceDefineInSegment(SGetTextStateInfo* pSGetTextStateInfo, uint8 cSize, SList* pDefineList)
-  º¯Êı¹¦ÄÜ: ×Ô¶¨ÒåºêµÄÌæ»»
-  ÊäÈë²ÎÊı£ºpSGetTextStateInfo	»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢½á¹¹Ìå
-			cSize				×Ô¶¨ÒåºêÁ´±í
-			pDefineList			ĞĞºÅ£¨ÓÃÓÚ±¨´í£©
+  å‡½æ•°åç§°ï¼šint8 replaceDefineInSegment(SGetTextStateInfo* pSGetTextStateInfo, uint8 cSize, SList* pDefineList)
+  å‡½æ•°åŠŸèƒ½: è‡ªå®šä¹‰å®çš„æ›¿æ¢
+  è¾“å…¥å‚æ•°ï¼špSGetTextStateInfo	è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯ç»“æ„ä½“
+			cSize				è‡ªå®šä¹‰å®é“¾è¡¨
+			pDefineList			è¡Œå·ï¼ˆç”¨äºæŠ¥é”™ï¼‰
 
-			ucChannelNum		Í¨µÀºÅ
-			pCurrProgram		µ±Ç°³ÌĞò½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	´íÎó
-			0	³ÌĞò¶ÎÖĞºêÃûÎ´Ìæ»»Íê³É
-			1	³ÌĞò¶ÎÖĞºêÃûÒÑÌæ»»Íê³É
-  ±¸    ×¢£º
+			ucChannelNum		é€šé“å·
+			pCurrProgram		å½“å‰ç¨‹åºç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	é”™è¯¯
+			0	ç¨‹åºæ®µä¸­å®åæœªæ›¿æ¢å®Œæˆ
+			1	ç¨‹åºæ®µä¸­å®åå·²æ›¿æ¢å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 replaceDefineInSegment(SGetTextStateInfo* pSGetTextStateInfo, SList* pDefineList)
 {
-	if (pSGetTextStateInfo == NULL || pDefineList == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSGetTextStateInfo == NULL || pDefineList == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	//×Ô¶¨ÒåºêÁ´±íÎŞÊı¾İ£¬²»ĞèÒªÌæ»»
-	if (pDefineList->cSize <= 0)
-	{
-		return 1;
-	}
-	//×Ô¶¨ÒåºêÁ´±íÓĞÊı¾İ£¬ĞèÒªÕÒµ½¶ÔÓ¦Ìæ»»µÄ×Ö·û´®²¢Íê³ÉÌæ»»
-	else
-	{    
-		uint8 ucCnt = 0;
-		uint16 cIndex = 0;
-		int8 cString[MAX_LENGTH_OF_LINE] = { 0 };				//´æ·ÅÔ­Ê¼Á¬Ğø×Ö·û´®
-		int8 cTargetString[MAX_LENGTH_OF_LINE] = { 0 };			//´æ·ÅÌæ»»ºóµÄ×Ö·û´®
-		int8 cFinalSegmentString[MAX_LENGTH_OF_LINE] = { 0 };	//´æ·ÅÌæ»»Íê³ÉµÄ³ÌĞò¶Î×Ö·û´®
-		int8 *pointstart= pSGetTextStateInfo->pCurrPtr;
-		//ÏŞÖÆÌæ»»´ÎÊı
-		while (1)
-		{	
-			cIndex = 0;
-			memset(cString, 0, MAX_LENGTH_OF_LINE);
-			memset(cTargetString, 0, MAX_LENGTH_OF_LINE);
+    //è‡ªå®šä¹‰å®é“¾è¡¨æ— æ•°æ®ï¼Œä¸éœ€è¦æ›¿æ¢
+    if (pDefineList->cSize <= 0)
+    {
+        return 1;
+    }
+    //è‡ªå®šä¹‰å®é“¾è¡¨æœ‰æ•°æ®ï¼Œéœ€è¦æ‰¾åˆ°å¯¹åº”æ›¿æ¢çš„å­—ç¬¦ä¸²å¹¶å®Œæˆæ›¿æ¢
+    else
+    {
+        uint8 ucCnt = 0;
+        uint16 cIndex = 0;
+        int8 cString[MAX_LENGTH_OF_LINE] = {0};             //å­˜æ”¾åŸå§‹è¿ç»­å­—ç¬¦ä¸²
+        int8 cTargetString[MAX_LENGTH_OF_LINE] = {0};       //å­˜æ”¾æ›¿æ¢åçš„å­—ç¬¦ä¸²
+        int8 cFinalSegmentString[MAX_LENGTH_OF_LINE] = {0}; //å­˜æ”¾æ›¿æ¢å®Œæˆçš„ç¨‹åºæ®µå­—ç¬¦ä¸²
+        int8* pointstart = pSGetTextStateInfo->pCurrPtr;
+        //é™åˆ¶æ›¿æ¢æ¬¡æ•°
+        while (1)
+        {
+            cIndex = 0;
+            memset(cString, 0, MAX_LENGTH_OF_LINE);
+            memset(cTargetString, 0, MAX_LENGTH_OF_LINE);
 
-			//1.ÅĞ¶Ï³ÌĞò¶ÎÊÇ·ñÌæ»»Íê³É
-			if (isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) ||
-				isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
-			{
-				memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
-				strcpy(pSGetTextStateInfo->cStr, cFinalSegmentString);
+            //1.åˆ¤æ–­ç¨‹åºæ®µæ˜¯å¦æ›¿æ¢å®Œæˆ
+            if (isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) || isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
+            {
+                memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
+                strcpy(pSGetTextStateInfo->cStr, cFinalSegmentString);
 
-				return 1;
-			}
-
-			//2.ÕÒµ½Á¬Ğø×Ö·û´®Ê××Ö·û
-			while (*pSGetTextStateInfo->pCurrPtr == ' ')
-			{
-				pSGetTextStateInfo->pCurrPtr++;
-			}
-			//1.ÅĞ¶Ï³ÌĞò¶ÎÊÇ·ñÌæ»»Íê³É
-			if (isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) ||
-				isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
-			{
-				memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
-				strcpy(pSGetTextStateInfo->cStr, cFinalSegmentString);
-
-				return 1;
-			}
-
-			if((uint32)pSGetTextStateInfo->pCurrPtr -(uint32)pointstart >=MAX_LENGTH_OF_LINE - 1)
-			{
-				memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
-				strcpy(pSGetTextStateInfo->cStr,cFinalSegmentString);
-				return 1;
-			}
-			pSGetTextStateInfo->pStartPtr  = pSGetTextStateInfo->pCurrPtr;
-			cString[cIndex] = *pSGetTextStateInfo->pCurrPtr;
-			cIndex++;
-			pSGetTextStateInfo->pCurrPtr++;
-
-			//3.ÕÒµ½Á¬Ğø×Ö·û´®Ä©×Ö·û
-			while (*pSGetTextStateInfo->pCurrPtr != ' ' &&
-				!isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) &&
-				!isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
-			{
-				cString[cIndex] = *pSGetTextStateInfo->pCurrPtr;
-				cIndex++;
-				pSGetTextStateInfo->pCurrPtr++;
-			}
-			pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
-
-			//4.ÅĞ¶ÏÁ¬Ğø×Ö·û´®Ê××Ö·ûÊÇ×ÖÄ¸
-			if (!(('A' <= *pSGetTextStateInfo->pStartPtr && *pSGetTextStateInfo->pStartPtr <= 'Z')
-				|| ('a' <= *pSGetTextStateInfo->pStartPtr && *pSGetTextStateInfo->pStartPtr <= 'z')))
-			{
-			   if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cString) < 0) {
-					return -1;
-				}
-				continue;
-			}
-
-			//5.²éÑ¯Á¬Ğø×Ö·û´®ÊÇ·ñÎªºêÃû
-			if (!getTargetStringByMacroName(cString, cIndex, cTargetString, pDefineList))
-			{
-			   if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cString) < 0) {
-					return -1;
-				}
-				continue;
-			}
-
-			//6.¶ÔºêÃûÌæ»»ÎªÄ¿±ê×Ö·û´®
-            if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cTargetString) < 0) {
-                return -1;
+                return 1;
             }
 
-		}
+            //2.æ‰¾åˆ°è¿ç»­å­—ç¬¦ä¸²é¦–å­—ç¬¦
+            while (*pSGetTextStateInfo->pCurrPtr == ' ')
+            {
+                pSGetTextStateInfo->pCurrPtr++;
+            }
+            //1.åˆ¤æ–­ç¨‹åºæ®µæ˜¯å¦æ›¿æ¢å®Œæˆ
+            if (isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) || isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
+            {
+                memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
+                strcpy(pSGetTextStateInfo->cStr, cFinalSegmentString);
 
-	}
+                return 1;
+            }
+
+            if ((uint32)pSGetTextStateInfo->pCurrPtr - (uint32)pointstart >= MAX_LENGTH_OF_LINE - 1)
+            {
+                memset(pSGetTextStateInfo->cStr, 0, MAX_LENGTH_OF_LINE);
+                strcpy(pSGetTextStateInfo->cStr, cFinalSegmentString);
+                return 1;
+            }
+            pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
+            cString[cIndex] = *pSGetTextStateInfo->pCurrPtr;
+            cIndex++;
+            pSGetTextStateInfo->pCurrPtr++;
+
+            //3.æ‰¾åˆ°è¿ç»­å­—ç¬¦ä¸²æœ«å­—ç¬¦
+            while (*pSGetTextStateInfo->pCurrPtr != ' ' && !isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) &&
+                   !isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
+            {
+                cString[cIndex] = *pSGetTextStateInfo->pCurrPtr;
+                cIndex++;
+                pSGetTextStateInfo->pCurrPtr++;
+            }
+            pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
+
+            //4.åˆ¤æ–­è¿ç»­å­—ç¬¦ä¸²é¦–å­—ç¬¦æ˜¯å­—æ¯
+            if (!(('A' <= *pSGetTextStateInfo->pStartPtr && *pSGetTextStateInfo->pStartPtr <= 'Z') ||
+                  ('a' <= *pSGetTextStateInfo->pStartPtr && *pSGetTextStateInfo->pStartPtr <= 'z')))
+            {
+                if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cString) < 0)
+                {
+                    return -1;
+                }
+                continue;
+            }
+
+            //5.æŸ¥è¯¢è¿ç»­å­—ç¬¦ä¸²æ˜¯å¦ä¸ºå®å
+            if (!getTargetStringByMacroName(cString, cIndex, cTargetString, pDefineList))
+            {
+                if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cString) < 0)
+                {
+                    return -1;
+                }
+                continue;
+            }
+
+            //6.å¯¹å®åæ›¿æ¢ä¸ºç›®æ ‡å­—ç¬¦ä¸²
+            if (safe_append((char*)cFinalSegmentString, MAX_LENGTH_OF_LINE, (const char*)cTargetString) < 0)
+            {
+                return -1;
+            }
+        }
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getTargetStringByMacroName(int8* pMacroName, int8 cNameSize, int8* pTargetString, SList* pDefineList)
-  º¯Êı¹¦ÄÜ: ÔÚ×Ô¶¨ÒåºêÁ´±íÖĞÕÒÄ¿±êºêÃû¶ÔÓ¦Ìæ»»µÄ×Ö·û´®
-  ÊäÈë²ÎÊı£ºpMacroName		ºêÃû×Ö·û´®Ê××Ö·û
-			cNameSize		ºêÃû×Ö·û´®³¤¶È
-			pTargetString	Ä¿±êÌæ»»µÄ×Ö·û´®ÄÚ´æµØÖ·£¨Êä³ö£©
-			pDefineList		×Ô¶¨ÒåºêÁ´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	´íÎó
-			0	ÊäÈë×Ö·û´®·ÇºêÃû
-			1	ÕÒµ½ºêÃû¶ÔÓ¦µÄÄ¿±ê×Ö·û´®
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 getTargetStringByMacroName(int8* pMacroName, int8 cNameSize, int8* pTargetString, SList* pDefineList)
+  å‡½æ•°åŠŸèƒ½: åœ¨è‡ªå®šä¹‰å®é“¾è¡¨ä¸­æ‰¾ç›®æ ‡å®åå¯¹åº”æ›¿æ¢çš„å­—ç¬¦ä¸²
+  è¾“å…¥å‚æ•°ï¼špMacroName		å®åå­—ç¬¦ä¸²é¦–å­—ç¬¦
+			cNameSize		å®åå­—ç¬¦ä¸²é•¿åº¦
+			pTargetString	ç›®æ ‡æ›¿æ¢çš„å­—ç¬¦ä¸²å†…å­˜åœ°å€ï¼ˆè¾“å‡ºï¼‰
+			pDefineList		è‡ªå®šä¹‰å®é“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	é”™è¯¯
+			0	è¾“å…¥å­—ç¬¦ä¸²éå®å
+			1	æ‰¾åˆ°å®åå¯¹åº”çš„ç›®æ ‡å­—ç¬¦ä¸²
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getTargetStringByMacroName(int8* pMacroName, uint16 cNameSize, int8* pTargetString, SList* pDefineList)
 {
-	if (pMacroName == NULL || pDefineList == NULL)
-	{
-		//±¨´í
-		return -1;
-	
-	}
-	int16 cCount = 0;
-	//±éÀúSDefineList
-	while (cCount < pDefineList->cSize)
-	{
-		SUserDefineData* pData;
-		pData = (SUserDefineData*)FindNodeData(pDefineList, cCount);
-        if(FindNodeData == NULL)
+    if (pMacroName == NULL || pDefineList == NULL)
+    {
+        //æŠ¥é”™
+        return -1;
+    }
+    int16 cCount = 0;
+    //éå†SDefineList
+    while (cCount < pDefineList->cSize)
+    {
+        SUserDefineData* pData;
+        pData = (SUserDefineData*)FindNodeData(pDefineList, cCount);
+        if (FindNodeData == NULL)
         {
-        	return -1;
+            return -1;
         }
-		//1.³¤¶È±È¶Ô³É¹¦
-		if (cNameSize == strlen(pData->pName))
-		{
-			//2.Öğ×Ö±È¶Ô³É¹¦
-			if (isTagetStr_B(pData->pName, pMacroName))
-			{
-				strcpy(pTargetString, pData->pReplaceStr);
-				return 1;
-			}
-		}
+        //1.é•¿åº¦æ¯”å¯¹æˆåŠŸ
+        if (cNameSize == strlen(pData->pName))
+        {
+            //2.é€å­—æ¯”å¯¹æˆåŠŸ
+            if (isTagetStr_B(pData->pName, pMacroName))
+            {
+                strcpy(pTargetString, pData->pReplaceStr);
+                return 1;
+            }
+        }
 
-		cCount++;
-
-	}
-	return 0;
-
+        cCount++;
+    }
+    return 0;
 }
-
 
 static void printDefineData(void* data)
 {
-	SUserDefineData* a = (SUserDefineData*)data;
-	printf("ºêÃû:%s\t×Ö·û´®:%s\n", a->pName, a->pReplaceStr);
+    SUserDefineData* a = (SUserDefineData*)data;
+    printf("å®å:%s\tå­—ç¬¦ä¸²:%s\n", a->pName, a->pReplaceStr);
 }

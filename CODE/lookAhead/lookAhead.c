@@ -1,583 +1,605 @@
 /************************************************************
-  Copyright (C), ¹ã¶«¹¤Òµ´óÑ§. 2021
-  ÎÄ¼şÃû£ºlookAhead.c
-  ×÷Õß£º¹ùÇ¿    °æ±¾£ºV24.0    ´´½¨ÈÕÆÚ£º2023/06/23
-  Ä£¿éÃèÊö£ºËÙ¶ÈÇ°Õ°Ïà¹Øº¯ÊıÊµÏÖ
-  ÀúÊ·ĞŞ¸Ä¼ÇÂ¼£º<author><time><version ><desc>
-				  **    2021/08/10     V3.0      Ç°Õ°¶ÎÊıÌí¼Ó×îĞ¡Ç°Õ°¶ÎÊıÏŞÖÆ
-				  **    2021/08/12     V4.0      1.ĞÂÔöÏÎ½Óµã¸öÊıº¯Êı¼ÓÈë¼ÆËãÏÎ½Óµã½Ç¶ÈÔ¼Êøº¯ÊıÖĞ
-												 2.¶ÔÈ«¾Ö±äÁ¿Èı¸ö±êÖ¾Î»²Ù×÷²»ÔÙÊ¹ÓÃÖ¸Õë¸ÄÓÃexternÖ±½Ó²Ù×÷
+  Copyright (C), å¹¿ä¸œå·¥ä¸šå¤§å­¦. 2021
+  æ–‡ä»¶åï¼šlookAhead.c
+  ä½œè€…ï¼šéƒ­å¼º    ç‰ˆæœ¬ï¼šV24.0    åˆ›å»ºæ—¥æœŸï¼š2023/06/23
+  æ¨¡å—æè¿°ï¼šé€Ÿåº¦å‰ç»ç›¸å…³å‡½æ•°å®ç°
+  å†å²ä¿®æ”¹è®°å½•ï¼š<author><time><version ><desc>
+				  **    2021/08/10     V3.0      å‰ç»æ®µæ•°æ·»åŠ æœ€å°å‰ç»æ®µæ•°é™åˆ¶
+				  **    2021/08/12     V4.0      1.æ–°å¢è¡”æ¥ç‚¹ä¸ªæ•°å‡½æ•°åŠ å…¥è®¡ç®—è¡”æ¥ç‚¹è§’åº¦çº¦æŸå‡½æ•°ä¸­
+												 2.å¯¹å…¨å±€å˜é‡ä¸‰ä¸ªæ ‡å¿—ä½æ“ä½œä¸å†ä½¿ç”¨æŒ‡é’ˆæ”¹ç”¨externç›´æ¥æ“ä½œ
 
-				  **    2021/08/15     V5.0      1.¶Ôµ¶²¹»º³åÇøÖĞµ¥Ôª¿ÉÄÜ²»ĞèËÙ¶ÈÇ°Õ°µÄÇé¿ö½øĞĞ´¦Àí
-												 2.²»ÔÙÒªÇóµ¶²¹Ã¿´ÎÑ­»·Ìá¹©Ğ´Èë¸öÊı£¬ËÙ¶ÈÇ°Õ°·´Ëã¹ı³ÌÖĞÔÙ¼ÆËãVeer
-												   ÔÚµ¶²¹½á¹¹ÌåÖĞÔö¼Óbool bHasVeerFlag£»±êÖ¾Î»ÓÃÓÚ¼ÇÂ¼VeerÊÇ·ñ¼ÆËã¹ı£»
-												   ĞèÒªµ¶²¹Ğ´ÈëÊ±½«¸Ã±êÖ¾Î» ÖÃFALSE;
-												 3.Ä¿Ç°Ôİ¶¨µ¶²¹½á¹¹ÌåµÄ±äÁ¿£ºucCommandType == 1 ¶ÔÓ¦ÎªĞèÒªËÙ¶ÈÇ°Õ°µÄ½ø¸øÖ¸Áî
+				  **    2021/08/15     V5.0      1.å¯¹åˆ€è¡¥ç¼“å†²åŒºä¸­å•å…ƒå¯èƒ½ä¸éœ€é€Ÿåº¦å‰ç»çš„æƒ…å†µè¿›è¡Œå¤„ç†
+												 2.ä¸å†è¦æ±‚åˆ€è¡¥æ¯æ¬¡å¾ªç¯æä¾›å†™å…¥ä¸ªæ•°ï¼Œé€Ÿåº¦å‰ç»åç®—è¿‡ç¨‹ä¸­å†è®¡ç®—Veer
+												   åœ¨åˆ€è¡¥ç»“æ„ä½“ä¸­å¢åŠ bool bHasVeerFlagï¼›æ ‡å¿—ä½ç”¨äºè®°å½•Veeræ˜¯å¦è®¡ç®—è¿‡ï¼›
+												   éœ€è¦åˆ€è¡¥å†™å…¥æ—¶å°†è¯¥æ ‡å¿—ä½ ç½®FALSE;
+												 3.ç›®å‰æš‚å®šåˆ€è¡¥ç»“æ„ä½“çš„å˜é‡ï¼šucCommandType == 1 å¯¹åº”ä¸ºéœ€è¦é€Ÿåº¦å‰ç»çš„è¿›ç»™æŒ‡ä»¤
 
-				  **    2021/08/18     V6.0      1.¼ò»¯³ÌĞò£¬µ±ĞèÒª½øĞĞÇ°Õ°¼ÆËãÊ±£¬¶Ô¼ÆËã¹ı³Ì·â×°³Éº¯Êı
+				  **    2021/08/18     V6.0      1.ç®€åŒ–ç¨‹åºï¼Œå½“éœ€è¦è¿›è¡Œå‰ç»è®¡ç®—æ—¶ï¼Œå¯¹è®¡ç®—è¿‡ç¨‹å°è£…æˆå‡½æ•°
 
-				  **    2021/08/19     V7.0      1.¸Ä±äg_bLookAheadNewBeginFlagÈ¡·´Î»ÖÃ£¬ÔÚÅĞ¶ÏÎªÊ×¶Î¾ÍÈ¡·´
+				  **    2021/08/19     V7.0      1.æ”¹å˜g_bLookAheadNewBeginFlagå–åä½ç½®ï¼Œåœ¨åˆ¤æ–­ä¸ºé¦–æ®µå°±å–å
 
-				  **    2021/08/20     V8.0      1.¸üÕıÇóËÙ¶ÈÏµÊıº¯ÊıgetCoef(),
-												   µ÷ÓÃ¸Ãº¯ÊıÊ±¶ÔÓ¦¹ì¼£µÄËÙ¶ÈÇúÏßÀàĞÍ±äÁ¿ucVelPlanType»¹Î´¸³Öµ
-												   Ó¦Í¨¹ıÏµÍ³²ÎÊı½á¹¹Ìå»ñÈ¡ËÙ¶ÈÇúÏßÀàĞÍ
+				  **    2021/08/20     V8.0      1.æ›´æ­£æ±‚é€Ÿåº¦ç³»æ•°å‡½æ•°getCoef(),
+												   è°ƒç”¨è¯¥å‡½æ•°æ—¶å¯¹åº”è½¨è¿¹çš„é€Ÿåº¦æ›²çº¿ç±»å‹å˜é‡ucVelPlanTypeè¿˜æœªèµ‹å€¼
+												   åº”é€šè¿‡ç³»ç»Ÿå‚æ•°ç»“æ„ä½“è·å–é€Ÿåº¦æ›²çº¿ç±»å‹
 
-												 2.½«Ô­±¾ÔÚcalcVeer£¨£©º¯ÊıÄÚµÄ¶ÔbHasVeerFlagÖÃTRUEµÄ²Ù×÷£¬
-												   ÒÆµ½º¯ÊıÍâ£¨±ÜÃâÒşº¬²Ù×÷£©
+												 2.å°†åŸæœ¬åœ¨calcVeerï¼ˆï¼‰å‡½æ•°å†…çš„å¯¹bHasVeerFlagç½®TRUEçš„æ“ä½œï¼Œ
+												   ç§»åˆ°å‡½æ•°å¤–ï¼ˆé¿å…éšå«æ“ä½œï¼‰
 
-				  **    2021/08/22     V9.0      1.·ÂÕæ
+				  **    2021/08/22     V9.0      1.ä»¿çœŸ
 
-				  **    2021/08/25     V10.0     1.½«Ç°Õ°ĞÂµÄ¿ªÊ¼±êÖ¾Î»ÔÚËÙ¶ÈÇ°Õ°.cÖĞ¶¨Òå
+				  **    2021/08/25     V10.0     1.å°†å‰ç»æ–°çš„å¼€å§‹æ ‡å¿—ä½åœ¨é€Ÿåº¦å‰ç».cä¸­å®šä¹‰
 
-												 2.Ç°Õ°º¯Êı¿ªÊ¼¼ÓÈë¶ÔÏµÍ³ÊÖ¶¯ÔİÍ£×´Ì¬µÄÅĞ¶Ï£¬Èç¹ûÊÇSYS_RUN_TO_PAUSE
-												 Ôò²»Ç°Õ°£¬²¢½«bLookAheadNewBeginFlagÖÃTRUE
+												 2.å‰ç»å‡½æ•°å¼€å§‹åŠ å…¥å¯¹ç³»ç»Ÿæ‰‹åŠ¨æš‚åœçŠ¶æ€çš„åˆ¤æ–­ï¼Œå¦‚æœæ˜¯SYS_RUN_TO_PAUSE
+												 åˆ™ä¸å‰ç»ï¼Œå¹¶å°†bLookAheadNewBeginFlagç½®TRUE
 
-				  **	2021/09/01     V10.0     1.Ôö¼Ó¿ØÖÆÖ¸ÁîÀàĞÍÖĞ¶¨Òå£¬#define CMD_TYPE_LINE   1  //Ö±ÏßÔË¶¯
-																		   #define CMD_TYPE_ARC   2  //Ô²»¡ÔË¶¯
-																		   ÏàÓ¦ĞŞ¸ÄjudgeG01G02G03º¯Êı
+				  **	2021/09/01     V10.0     1.å¢åŠ æ§åˆ¶æŒ‡ä»¤ç±»å‹ä¸­å®šä¹‰ï¼Œ#define CMD_TYPE_LINE   1  //ç›´çº¿è¿åŠ¨
+																		   #define CMD_TYPE_ARC   2  //åœ†å¼§è¿åŠ¨
+																		   ç›¸åº”ä¿®æ”¹judgeG01G02G03å‡½æ•°
 
-												 2.Ôö¼ÓËÙ¶ÈÇúÏßÀàĞÍºê¶¨Òå£¬ÏàÓ¦¸Ä±ägetCoef()º¯Êı
+												 2.å¢åŠ é€Ÿåº¦æ›²çº¿ç±»å‹å®å®šä¹‰ï¼Œç›¸åº”æ”¹å˜getCoef()å‡½æ•°
 
-												 3.¸ÄÓÃºê¶¨Òåmin()º¯Êı
+												 3.æ”¹ç”¨å®å®šä¹‰min()å‡½æ•°
 
-				  **	2021/09/05     V11.0     1.½«ÊµÌåÀàĞÍEntityType = DOTµÄG01G02G03¹éÎª²»ĞèÇ°Õ°ÀàĞÍ£¬ÕâÖÖG´úÂëÖ»¸Ä±äIO×´Ì¬µ«¼Ì³ĞÁËG**Ä£Ì¬
+				  **	2021/09/05     V11.0     1.å°†å®ä½“ç±»å‹EntityType = DOTçš„G01G02G03å½’ä¸ºä¸éœ€å‰ç»ç±»å‹ï¼Œè¿™ç§Gä»£ç åªæ”¹å˜IOçŠ¶æ€ä½†ç»§æ‰¿äº†G**æ¨¡æ€
 
-				  **    2021/11/18     V12.0     1.¶ÔÖ÷ÖáµÄÇ°ºó×÷ÓÃ´øÀ´µÄ×èÈû¶ÔÇ°Õ°µÄÓ°Ïì½øĞĞĞŞ¸Ä
-												   µ±´æÔÚ×èÈûµ«ĞèÒªÇ°Õ°µÄµ¥Ôª³öÏÖÊ±´¦ÀíÈçÏÂ£º
-													 ´æÔÚÇ°×èÈûÔòÎª¶ÀÁ¢Ç°Õ°Çø¼äµÄ¿ªÊ¼
-													 ´æÔÚºó×èÈûÔòÎªÒ»¶Î¶ÀÁ¢µÄÇ°Õ°Çø¼ä×îºóÒ»¸öµ¥Ôª
-													 ÌØÊâÇé¿ö£ºµ±Ò»µ¥Ôª¼È´æÔÚÇ°×èÈûÓÖ´æÔÚºó×èÈû£¬½«Æä¹éÎª²»ĞèÇ°Õ°µ¥Ôª£¬µ«Òª¶ÔÆä¸³ÖµVsVe
+				  **    2021/11/18     V12.0     1.å¯¹ä¸»è½´çš„å‰åä½œç”¨å¸¦æ¥çš„é˜»å¡å¯¹å‰ç»çš„å½±å“è¿›è¡Œä¿®æ”¹
+												   å½“å­˜åœ¨é˜»å¡ä½†éœ€è¦å‰ç»çš„å•å…ƒå‡ºç°æ—¶å¤„ç†å¦‚ä¸‹ï¼š
+													 å­˜åœ¨å‰é˜»å¡åˆ™ä¸ºç‹¬ç«‹å‰ç»åŒºé—´çš„å¼€å§‹
+													 å­˜åœ¨åé˜»å¡åˆ™ä¸ºä¸€æ®µç‹¬ç«‹çš„å‰ç»åŒºé—´æœ€åä¸€ä¸ªå•å…ƒ
+													 ç‰¹æ®Šæƒ…å†µï¼šå½“ä¸€å•å…ƒæ—¢å­˜åœ¨å‰é˜»å¡åˆå­˜åœ¨åé˜»å¡ï¼Œå°†å…¶å½’ä¸ºä¸éœ€å‰ç»å•å…ƒï¼Œä½†è¦å¯¹å…¶èµ‹å€¼VsVe
 
-												 2.¶ÔÇ°Õ°Ê±µÄÒªÇó½ø¸øËÙ¶ÈdFeedrate<dSysMinVelÊ±£¬ÔË¶¯¶ÎVsVe°´dFeedrate´¦Àí
+												 2.å¯¹å‰ç»æ—¶çš„è¦æ±‚è¿›ç»™é€Ÿåº¦dFeedrate<dSysMinVelæ—¶ï¼Œè¿åŠ¨æ®µVsVeæŒ‰dFeedrateå¤„ç†
 
-				  **    2021/11/26     V13.0     1.Õë¶ÔÏµÍ³²ÎÊıÖĞ¼ÓËÙ¶ÎºÍ¼õËÙ¶ÎËÙ¶ÈÇúÏßÀàĞÍ·Ö¿ªÉèÖÃÏàÓ¦µ÷Õû£¬¸ü¸Ä»òÌí¼ÓÈçÏÂº¯Êı
+				  **    2021/11/26     V13.0     1.é’ˆå¯¹ç³»ç»Ÿå‚æ•°ä¸­åŠ é€Ÿæ®µå’Œå‡é€Ÿæ®µé€Ÿåº¦æ›²çº¿ç±»å‹åˆ†å¼€è®¾ç½®ç›¸åº”è°ƒæ•´ï¼Œæ›´æ”¹æˆ–æ·»åŠ å¦‚ä¸‹å‡½æ•°
 												   double getCoef(uint8 ucVelType);double getMaxAcc(uint8 ucVelType);double getMaxDec(uint8 ucVelType);
 
-				  **	2021/12/30     V14.0     1.¸üÕıÖ®Ç°¶ÔÍ¬Ê±´æÔÚÇ°ºóÀàĞÍµÄG123µÄ´¦Àí
-												 2.¼ÓÈë±¶ÂÊ£¬Ê¹ÓÃ×î´ó±¶ÂÊ¼ÆËãÇ°ºó¶Î³¤¶ÈµÄËÙ¶ÈÔ¼Êø£¬G´úÂëµÄÔ­Ê¼dFeedrate²»ÔÙ¸Ä±ä
-												 3.µ¶²¹½á¹¹ÌåĞÂÔö²ÎÊıdVmax¼ÇÂ¼ÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
+				  **	2021/12/30     V14.0     1.æ›´æ­£ä¹‹å‰å¯¹åŒæ—¶å­˜åœ¨å‰åç±»å‹çš„G123çš„å¤„ç†
+												 2.åŠ å…¥å€ç‡ï¼Œä½¿ç”¨æœ€å¤§å€ç‡è®¡ç®—å‰åæ®µé•¿åº¦çš„é€Ÿåº¦çº¦æŸï¼ŒGä»£ç çš„åŸå§‹dFeedrateä¸å†æ”¹å˜
+												 3.åˆ€è¡¥ç»“æ„ä½“æ–°å¢å‚æ•°dVmaxè®°å½•è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
 
-				  **	2022/03/01     V15.0     1.Õë¶ÔG99Ã¿×ª½ø¸ø¶ÔÏÎ½ÓµãÇ°ºó¶Î³¤¶ÈÔ¼ÊøËÙ¶È½øĞĞĞŞ¸Ä
+				  **	2022/03/01     V15.0     1.é’ˆå¯¹G99æ¯è½¬è¿›ç»™å¯¹è¡”æ¥ç‚¹å‰åæ®µé•¿åº¦çº¦æŸé€Ÿåº¦è¿›è¡Œä¿®æ”¹
 				  *
-				  **	2022/04/11     V16.0     1.Ìí¼ÓÇ°Õ°¹¦ÄÜ¿ªÆôÈ«¾Ö±äÁ¿
+				  **	2022/04/11     V16.0     1.æ·»åŠ å‰ç»åŠŸèƒ½å¼€å¯å…¨å±€å˜é‡
 
-				  **	2022/04/25     V17.0     1.Õë¶ÔÖáÊı×é¼°¶àÍ¨µÀÄ£Ê½½øĞĞĞŞ¸Ä,
-												   Ç°Õ°Èı¸öÖá£¬ÄÄÈı¸öÖáÔÚlookAheadInit£¨£©ÖĞ³õÊ¼»¯£¬²¢´æÔÚ	g_ucLookAheadAxisArray[3]Êı×éÖĞ
+				  **	2022/04/25     V17.0     1.é’ˆå¯¹è½´æ•°ç»„åŠå¤šé€šé“æ¨¡å¼è¿›è¡Œä¿®æ”¹,
+												   å‰ç»ä¸‰ä¸ªè½´ï¼Œå“ªä¸‰ä¸ªè½´åœ¨lookAheadInitï¼ˆï¼‰ä¸­åˆå§‹åŒ–ï¼Œå¹¶å­˜åœ¨	g_ucLookAheadAxisArray[3]æ•°ç»„ä¸­
 
-				  **	2022/06/15     V18.0     1.¶àÖáÇ°Õ°¸ü¸Ä£¨Version1£©
+				  **	2022/06/15     V18.0     1.å¤šè½´å‰ç»æ›´æ”¹ï¼ˆVersion1ï¼‰
 
-				  **	2022/06/29     V19.0     1.¶àÖáÇ°Õ°¸ü¸Ä£¨Version2£©£¨Ö÷Òª¸ü¸Ä¸´ºÏÔË¶¯×î´óËÙ¶È×îĞ¡ËÙ¶È¼ÓËÙ¶È¼õËÙ¶ÈÓÉµ¥Öá¼°ËãµÃµ½£©
+				  **	2022/06/29     V19.0     1.å¤šè½´å‰ç»æ›´æ”¹ï¼ˆVersion2ï¼‰ï¼ˆä¸»è¦æ›´æ”¹å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦æœ€å°é€Ÿåº¦åŠ é€Ÿåº¦å‡é€Ÿåº¦ç”±å•è½´åŠç®—å¾—åˆ°ï¼‰
 				  
-				  **    2022/11/22     V20.0     1.¸ù¾İÏµÍ³²ÎÊıÖĞµÄÇ°Õ°Ä£Ê½ºÍ²å²¹·½Ê½²ÎÊı¼¯³É¶àÖÖÇ°Õ°
-				                                 2.Ôö¼ÓËÕ×ÜÒªÇóµÄÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ¼°µµÎ»¹¦ÄÜ
-												 3.·¢ÏÖÖ®Ç°¶àÍ¨µÀ³õ°æ£¨Î´¹«¿ª£©Ç°Õ°moveToG01G02G03()º¯ÊıµÄ´íÎó²¢ĞŞ¸Ä£¨2022/11/25£©
+				  **    2022/11/22     V20.0     1.æ ¹æ®ç³»ç»Ÿå‚æ•°ä¸­çš„å‰ç»æ¨¡å¼å’Œæ’è¡¥æ–¹å¼å‚æ•°é›†æˆå¤šç§å‰ç»
+				                                 2.å¢åŠ è‹æ€»è¦æ±‚çš„åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼åŠæ¡£ä½åŠŸèƒ½
+												 3.å‘ç°ä¹‹å‰å¤šé€šé“åˆç‰ˆï¼ˆæœªå…¬å¼€ï¼‰å‰ç»moveToG01G02G03()å‡½æ•°çš„é”™è¯¯å¹¶ä¿®æ”¹ï¼ˆ2022/11/25ï¼‰
 
-				  **	2023/02/16     V21.0     1.Ôö¼ÓĞŞÕı½ø¸øËÙ¶ÈdFeedrateÊ±¶ÔG99Ä£Ê½µÄÅĞ¶ÏºÍ´¦Àí(Ö®Ç°°æ±¾¾ùÄ¬ÈÏG98Ä£Ê½)
+				  **	2023/02/16     V21.0     1.å¢åŠ ä¿®æ­£è¿›ç»™é€Ÿåº¦dFeedrateæ—¶å¯¹G99æ¨¡å¼çš„åˆ¤æ–­å’Œå¤„ç†(ä¹‹å‰ç‰ˆæœ¬å‡é»˜è®¤G98æ¨¡å¼)
 				  
-                  **	2023/05/26     V22.0     1.Ô²»¡×î´ó·¨Ïò¼ÓËÙ¶ÈÔ¼Êø¶ÔÓ¦ËÙ¶È¼ÆËãº¯ÊıcalcArcMaxNormalAccVmax()Ôö¼Ó¶Ô0ÖµµÄÅĞ¶Ï£¬ÈôÎªÁã£¬Ê¹ÓÃÒ»¸ö·ÇÁãÖµ½øĞĞ¼ÆËã
-				                                 2.Ô²»¡¹­¸ßÎó²îËÙ¶È¼ÆËãº¯ÊıcalcArcMaxChordErrorVmax()Ôö¼Ó¶Ô0ÖµµÄÅĞ¶Ï£¬ÈôÎªÁã£¬Ê¹ÓÃÒ»¸ö·ÇÁãÖµ½øĞĞ¼ÆËã
-												   ¸ü¸ÄÎó²î¶ÔÓ¦ËÙ¶ÈµÄ¼ÆËã·½Ê½£¬·ÖÈıÖÖÇé¿öÌÖÂÛ¡£
+                  **	2023/05/26     V22.0     1.åœ†å¼§æœ€å¤§æ³•å‘åŠ é€Ÿåº¦çº¦æŸå¯¹åº”é€Ÿåº¦è®¡ç®—å‡½æ•°calcArcMaxNormalAccVmax()å¢åŠ å¯¹0å€¼çš„åˆ¤æ–­ï¼Œè‹¥ä¸ºé›¶ï¼Œä½¿ç”¨ä¸€ä¸ªéé›¶å€¼è¿›è¡Œè®¡ç®—
+				                                 2.åœ†å¼§å¼“é«˜è¯¯å·®é€Ÿåº¦è®¡ç®—å‡½æ•°calcArcMaxChordErrorVmax()å¢åŠ å¯¹0å€¼çš„åˆ¤æ–­ï¼Œè‹¥ä¸ºé›¶ï¼Œä½¿ç”¨ä¸€ä¸ªéé›¶å€¼è¿›è¡Œè®¡ç®—
+												   æ›´æ”¹è¯¯å·®å¯¹åº”é€Ÿåº¦çš„è®¡ç®—æ–¹å¼ï¼Œåˆ†ä¸‰ç§æƒ…å†µè®¨è®ºã€‚
 
-				  **	2023/06/16     V23.0     1.¼ÆËã×îĞ¡³õËÙ¶È¡¢×îĞ¡Ä©ËÙ¶È¡¢ÏÎ½ÓµãËÙ¶ÈÊ±Ôö¼Ó(¹ì¼£³¤¶È/²å²¹ÖÜÆÚ)Ô¼Êø
+				  **	2023/06/16     V23.0     1.è®¡ç®—æœ€å°åˆé€Ÿåº¦ã€æœ€å°æœ«é€Ÿåº¦ã€è¡”æ¥ç‚¹é€Ÿåº¦æ—¶å¢åŠ (è½¨è¿¹é•¿åº¦/æ’è¡¥å‘¨æœŸ)çº¦æŸ
 				  
-				  **	2023/06/23     V24.0     1.¸ü¸ÄÇ°Õ°¶àÖáÄ£Ê½ÏÂ¼Ğ½ÇÔ¼Êø¼ÆËãÖĞdTempVeerµÄ³õÊ¼»¯
+				  **	2023/06/23     V24.0     1.æ›´æ”¹å‰ç»å¤šè½´æ¨¡å¼ä¸‹å¤¹è§’çº¦æŸè®¡ç®—ä¸­dTempVeerçš„åˆå§‹åŒ–
 				  
-				  **    2024/05/23     V25.0     1.Ôö¼ÓG0Ç°Õ°£¬G0ÓëG1¼äµ¥ÖáÍ¬ÏòÊ±Ç°Õ°
+				  **    2024/05/23     V25.0     1.å¢åŠ G0å‰ç»ï¼ŒG0ä¸G1é—´å•è½´åŒå‘æ—¶å‰ç»
 *************************************************************/
 
-#include"lookAhead.h"
-#include"GeneralFunctions.h"
+#include "lookAhead.h"
+#include "GeneralFunctions.h"
 #include "IOCommand.h"
 #include <math.h>
 #include <stdlib.h>
-#include"Channel.h"
+#include "Channel.h"
 #include "CTrajPlanning.h"
 #include "ringbuff.h"
 
-//Ç°Õ°¹¦ÄÜ¿ªÆô±êÖ¾Î»
+//å‰ç»åŠŸèƒ½å¼€å¯æ ‡å¿—ä½
 bool g_bLookAheadFunctionOpenFlag;
 
-//¶¨ÒåÇ°Õ°µÄÈı¸öÖá£¨ÓÃÓÚÖ»ÓĞÈıÒÆ¶¯Öá²ÎÓëÁª¶¯²å²¹µÄÓ¦ÓÃ³¡¾°£©
+//å®šä¹‰å‰ç»çš„ä¸‰ä¸ªè½´ï¼ˆç”¨äºåªæœ‰ä¸‰ç§»åŠ¨è½´å‚ä¸è”åŠ¨æ’è¡¥çš„åº”ç”¨åœºæ™¯ï¼‰
 uint8 g_ucLookAheadAxisArray[3];
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºlookAheadInit(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ç°Õ°ĞèÒª³õÊ¼»¯µÄ²ÎÊı
-  ÊäÈë²ÎÊı£ºÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šlookAheadInit(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å‰ç»éœ€è¦åˆå§‹åŒ–çš„å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 lookAheadInit(struct SChannel* pSChannel)
 {
-	if (pSChannel == NULL)
-	{
-		return -1;
-	}
-	pSChannel->bLookAheadNewBeginFlag = TRUE;  //¿ª»ú¡¢ĞÂ¿ªÊ¼ĞèÒªÖÃTRUE
+    if (pSChannel == NULL)
+    {
+        return -1;
+    }
+    pSChannel->bLookAheadNewBeginFlag = TRUE; //å¼€æœºã€æ–°å¼€å§‹éœ€è¦ç½®TRUE
 
-	//³õÊ¼»¯Ç°Õ°µÄÈı¸öÖá,´Ë³õÊ¼»¯ÓÃÓÚÈıÖáÇ°Õ°
-	g_ucLookAheadAxisArray[0] = AXIS_X;
-	g_ucLookAheadAxisArray[1] = AXIS_Y;
-	g_ucLookAheadAxisArray[2] = AXIS_Z;
+    //åˆå§‹åŒ–å‰ç»çš„ä¸‰ä¸ªè½´,æ­¤åˆå§‹åŒ–ç”¨äºä¸‰è½´å‰ç»
+    g_ucLookAheadAxisArray[0] = AXIS_X;
+    g_ucLookAheadAxisArray[1] = AXIS_Y;
+    g_ucLookAheadAxisArray[2] = AXIS_Z;
 
-	return 1;
+    return 1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºjudgeG0(struct SToolCompensation* pToolElement, uint8 ucChannelNum, int16 sIndex)
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÊÇ·ñÎªĞèÒªÇ°Õ°µÄGO
-  ÊäÈë²ÎÊı£ºpToolElement  µ¶²¹»º³åÇøµ¥ÔªÖ¸Õë
-			ucChannelNum  Í¨µÀºÅ
-			sIndex        µ¶²¹»º³åÇøµ¥ÔªÖ¸ÕëË÷ÒıºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ:	 0  £ºµ±Ç°µ¥ÔªºÍÇ°Ò»¸öµ¥ÔªµÄÖáºÅ²»Ò»ÖÂ»ò·½Ïò²»Ò»ÖÂ->²»Ç°Õ°
-			 1  £ºµ±Ç°µ¥ÔªºÍÇ°Ò»¸öµ¥ÔªÎªÏàÍ¬µ¥ÖáµÄÍ¬ÏòÔË¶¯->Ç°Õ°
-			 -1 £ºÇ°Ò»¸öµ¥Ôª²»Îªµ¥ÖáÔË¶¯
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šjudgeG0(struct SToolCompensation* pToolElement, uint8 ucChannelNum, int16 sIndex)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æ˜¯å¦ä¸ºéœ€è¦å‰ç»çš„GO
+  è¾“å…¥å‚æ•°ï¼špToolElement  åˆ€è¡¥ç¼“å†²åŒºå•å…ƒæŒ‡é’ˆ
+			ucChannelNum  é€šé“å·
+			sIndex        åˆ€è¡¥ç¼“å†²åŒºå•å…ƒæŒ‡é’ˆç´¢å¼•å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼:	 0  ï¼šå½“å‰å•å…ƒå’Œå‰ä¸€ä¸ªå•å…ƒçš„è½´å·ä¸ä¸€è‡´æˆ–æ–¹å‘ä¸ä¸€è‡´->ä¸å‰ç»
+			 1  ï¼šå½“å‰å•å…ƒå’Œå‰ä¸€ä¸ªå•å…ƒä¸ºç›¸åŒå•è½´çš„åŒå‘è¿åŠ¨->å‰ç»
+			 -1 ï¼šå‰ä¸€ä¸ªå•å…ƒä¸ä¸ºå•è½´è¿åŠ¨
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 judgeG0(struct SToolCompensation* pToolElement, uint8 ucChannelNum, int16 sIndex)
-{	
-	int16 sBeforeIndex = sIndex - 1;		//»ñÈ¡Ç°Ò»¸öµ¥ÔªµÄË÷Òı
+{
+    int16 sBeforeIndex = sIndex - 1; //è·å–å‰ä¸€ä¸ªå•å…ƒçš„ç´¢å¼•
 
-	struct SToolCompensation* pBeforeToolElement = NULL;	//Ç°Ò»¸öµ¥ÔªµÄÖ¸Õë³õÊ¼»¯
-	pBeforeToolElement = getSToolCompPointerByIndex(sBeforeIndex, ucChannelNum);  //»ñÈ¡Ç°Ò»¸öµ¥ÔªµÄÊı¾İ
-	uint8 ucBeforeAxisNumOfNeedLookAhead; //±£´æÇ°Ò»¸öµ¥Ôªµ¥ÖáÔË¶¯µÄÖáºÅ
-	uint8 ucBeforeAxisDirOfNeedLookAhead; //±£´æÇ°Ò»¸öµ¥Ôªµ¥ÖáÔË¶¯µÄ·½Ïò
+    struct SToolCompensation* pBeforeToolElement = NULL;                         //å‰ä¸€ä¸ªå•å…ƒçš„æŒ‡é’ˆåˆå§‹åŒ–
+    pBeforeToolElement = getSToolCompPointerByIndex(sBeforeIndex, ucChannelNum); //è·å–å‰ä¸€ä¸ªå•å…ƒçš„æ•°æ®
+    uint8 ucBeforeAxisNumOfNeedLookAhead;                                        //ä¿å­˜å‰ä¸€ä¸ªå•å…ƒå•è½´è¿åŠ¨çš„è½´å·
+    uint8 ucBeforeAxisDirOfNeedLookAhead;                                        //ä¿å­˜å‰ä¸€ä¸ªå•å…ƒå•è½´è¿åŠ¨çš„æ–¹å‘
 
-	//Ç°Ò»¸öµ¥Ôª²»Îªµ¥ÖáÔË¶¯
-	if (getBits(pBeforeToolElement->unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_QUICKMOVE)
-	{
-		return -1;
-	}
+    //å‰ä¸€ä¸ªå•å…ƒä¸ä¸ºå•è½´è¿åŠ¨
+    if (getBits(pBeforeToolElement->unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_QUICKMOVE)
+    {
+        return -1;
+    }
 
-	//»ñÈ¡Ç°Ò»¸öµ¥ÔªĞèÒªÇ°Õ°µÄ²å²¹µ¥ÖáÖáºÅ
-	if (pBeforeToolElement == NULL)
-	{
-		ucBeforeAxisNumOfNeedLookAhead = AXIS_NULL;
-		ucBeforeAxisDirOfNeedLookAhead = INP_GO_AHEAD;
-	}
-	else
-	{
-		ucBeforeAxisNumOfNeedLookAhead = pBeforeToolElement->ucAxisNumOfNeedLookAhead;
-		ucBeforeAxisDirOfNeedLookAhead = pBeforeToolElement->cAxisDirOfNeedLookAhead;
-	}
+    //è·å–å‰ä¸€ä¸ªå•å…ƒéœ€è¦å‰ç»çš„æ’è¡¥å•è½´è½´å·
+    if (pBeforeToolElement == NULL)
+    {
+        ucBeforeAxisNumOfNeedLookAhead = AXIS_NULL;
+        ucBeforeAxisDirOfNeedLookAhead = INP_GO_AHEAD;
+    }
+    else
+    {
+        ucBeforeAxisNumOfNeedLookAhead = pBeforeToolElement->ucAxisNumOfNeedLookAhead;
+        ucBeforeAxisDirOfNeedLookAhead = pBeforeToolElement->cAxisDirOfNeedLookAhead;
+    }
 
-	//µ±Ç°µ¥ÔªºÍÇ°Ò»¸öµ¥ÔªÎªÏàÍ¬µ¥ÖáµÄÍ¬ÏòÔË¶¯
-	if (pToolElement->ucAxisNumOfNeedLookAhead == ucBeforeAxisNumOfNeedLookAhead && pToolElement->cAxisDirOfNeedLookAhead == ucBeforeAxisDirOfNeedLookAhead)
-	{
-		return 1;//¼ÓÈëĞèÒªÇ°Õ°Á¬Ğø¹ì¼£¶Î
-	}
-	//µ±Ç°µ¥ÔªºÍÇ°Ò»µ¥ÔªÖáºÅ²»Í¬/·½Ïò²»Í¬
-	pToolElement->ucAxisNumOfNeedLookAhead = AXIS_NULL;//½«¡°ĞèÒªÇ°Õ°µÄµ¥ÖáÖáºÅ¡±ÖÃÎª¿Õ
-	return 0;//²»¼ÓÈëĞèÒªÇ°Õ°Á¬Ğø¹ì¼£¶Î
-	
+    //å½“å‰å•å…ƒå’Œå‰ä¸€ä¸ªå•å…ƒä¸ºç›¸åŒå•è½´çš„åŒå‘è¿åŠ¨
+    if (pToolElement->ucAxisNumOfNeedLookAhead == ucBeforeAxisNumOfNeedLookAhead &&
+        pToolElement->cAxisDirOfNeedLookAhead == ucBeforeAxisDirOfNeedLookAhead)
+    {
+        return 1; //åŠ å…¥éœ€è¦å‰ç»è¿ç»­è½¨è¿¹æ®µ
+    }
+    //å½“å‰å•å…ƒå’Œå‰ä¸€å•å…ƒè½´å·ä¸åŒ/æ–¹å‘ä¸åŒ
+    pToolElement->ucAxisNumOfNeedLookAhead = AXIS_NULL; //å°†â€œéœ€è¦å‰ç»çš„å•è½´è½´å·â€ç½®ä¸ºç©º
+    return 0;                                           //ä¸åŠ å…¥éœ€è¦å‰ç»è¿ç»­è½¨è¿¹æ®µ
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºjudgeCircularArc(struct SToolCompensation* pToolElement, int nArraySize)
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÊÇ·ñÎªÆ½ÃæÔ²»¡
-  ÊäÈë²ÎÊı£ºpToolElement  µ¶²¹»º³åÇøµ¥ÔªÖ¸Õë
-		   nArraySize    ÖáÊı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º TRUE   : ÊÇÆ½ÃæÔ²»¡
-			FALSE  : ·ÇÆ½ÃæÔ²»¡
-  ±¸    ×¢£º´ËÅĞ¶ÏÄ¬ÈÏG2/3Ö¸ÁîÖĞÎŞĞı×ªÖáÒÆ¶¯£¨2022/06/15£©
-            ¼ÇÂ¼³¤ÖáÖáºÅ±£´æÔÚ pToolcode->ucLongAxisNum ÖĞ
-			µ±Ô²»¡ÖáÎª³¤Öá£¬³¤ÖáÖáºÅÖÃÎªAXIS_NULL£¬
-			Íâ²¿³ÌĞò¿ÉÍ¨¹ıpToolcode->ucLongAxisNumÊÇ·ñÎªAXIS_NULLÈ·¶¨³¤ÖáÊÇ·ñÎªµÚÈıÖá,
-			µ±´æÔÚµÚÈıÖá£¬Æä³¤¶ÈÏà¶ÔÓÚÔ²»¡³¤¶ÈµÄ±ÈÂÊ±£´æÔÚÆğµãÏòÁ¿ÖĞ£¨ÓĞ·ûºÅ£©
+  å‡½æ•°åç§°ï¼šjudgeCircularArc(struct SToolCompensation* pToolElement, int nArraySize)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æ˜¯å¦ä¸ºå¹³é¢åœ†å¼§
+  è¾“å…¥å‚æ•°ï¼špToolElement  åˆ€è¡¥ç¼“å†²åŒºå•å…ƒæŒ‡é’ˆ
+		   nArraySize    è½´æ•°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š TRUE   : æ˜¯å¹³é¢åœ†å¼§
+			FALSE  : éå¹³é¢åœ†å¼§
+  å¤‡    æ³¨ï¼šæ­¤åˆ¤æ–­é»˜è®¤G2/3æŒ‡ä»¤ä¸­æ— æ—‹è½¬è½´ç§»åŠ¨ï¼ˆ2022/06/15ï¼‰
+            è®°å½•é•¿è½´è½´å·ä¿å­˜åœ¨ pToolcode->ucLongAxisNum ä¸­
+			å½“åœ†å¼§è½´ä¸ºé•¿è½´ï¼Œé•¿è½´è½´å·ç½®ä¸ºAXIS_NULLï¼Œ
+			å¤–éƒ¨ç¨‹åºå¯é€šè¿‡pToolcode->ucLongAxisNumæ˜¯å¦ä¸ºAXIS_NULLç¡®å®šé•¿è½´æ˜¯å¦ä¸ºç¬¬ä¸‰è½´,
+			å½“å­˜åœ¨ç¬¬ä¸‰è½´ï¼Œå…¶é•¿åº¦ç›¸å¯¹äºåœ†å¼§é•¿åº¦çš„æ¯”ç‡ä¿å­˜åœ¨èµ·ç‚¹å‘é‡ä¸­ï¼ˆæœ‰ç¬¦å·ï¼‰
 **************************************************/
 bool judgePlanarArc(struct SToolCompensation* pToolElement, int nArraySize)
 {
-	int i     = 0,
-		res   = 0,
-		Axis1 = 0,
-		Axis2 = 0;
+    int i = 0, res = 0, Axis1 = 0, Axis2 = 0;
 
-	double dTempLength = 0;//ÁÙÊ±±äÁ¿³¤¶È
-	double dOtherAxisMaxLength = 0;//¼ÇÂ¼ÆäËûÖá×î´óÎ»ÒÆÁ¿
-	double dArcLength = pToolElement->dLength;//Æ½ÃæÔ²»¡µÄ³¤¶È
+    double dTempLength = 0;                    //ä¸´æ—¶å˜é‡é•¿åº¦
+    double dOtherAxisMaxLength = 0;            //è®°å½•å…¶ä»–è½´æœ€å¤§ä½ç§»é‡
+    double dArcLength = pToolElement->dLength; //å¹³é¢åœ†å¼§çš„é•¿åº¦
 
+    //å½“æœ€å¤§è½´æ•°ä¸º2æ—¶ä¸ºå¹³é¢åœ†å¼§
+    if (nArraySize == 2)
+    {
+        return TRUE;
+    }
 
-	//µ±×î´óÖáÊıÎª2Ê±ÎªÆ½ÃæÔ²»¡
-	if (nArraySize == 2)
-	{
-		return TRUE;
-	}
+    //ç¡®å®šæ’è¡¥å¹³é¢
+    switch (getBits(pToolElement->unCommandType, CMD_PLANE_ADDR))
+    {
+    case CMD_PLANE_G17:
+        Axis1 = AXIS_X;
+        Axis2 = AXIS_Y;
+        break;
+    case CMD_PLANE_G18:
+        Axis1 = AXIS_Z;
+        Axis2 = AXIS_X;
+        break;
+    case CMD_PLANE_G19:
+        Axis1 = AXIS_Y;
+        Axis2 = AXIS_Z;
+        break;
+    default:
+        Axis1 = AXIS_Z;
+        Axis2 = AXIS_X;
+        break;
+    }
 
-	//È·¶¨²å²¹Æ½Ãæ
-	switch (getBits(pToolElement->unCommandType, CMD_PLANE_ADDR))
-	{
-	case CMD_PLANE_G17:
-		Axis1 = AXIS_X;
-		Axis2 = AXIS_Y;
-		break;
-	case CMD_PLANE_G18:
-		Axis1 = AXIS_Z;
-		Axis2 = AXIS_X;
-		break;
-	case CMD_PLANE_G19:
-		Axis1 = AXIS_Y;
-		Axis2 = AXIS_Z;
-		break;
-	default:
-		Axis1 = AXIS_Z;
-		Axis2 = AXIS_X;
-		break;
-	}
+    //åˆ¤æ–­æ’è¡¥å¹³é¢å¤–çš„è½´èµ·ç»ˆç‚¹æ˜¯å¦ç›¸ç­‰
+    for (i = 0; i < nArraySize; i++)
+    {
+        if (i == Axis1 || i == Axis2)
+        {
+            continue; //æ’è¡¥å¹³é¢è½´è·³è¿‡
+        }
+        else
+        {
+            dTempLength = fabs(pToolElement->SEndPoint.dArray[i] - pToolElement->SStartPoint.dArray[i]);
+            //å½“å…¶ä»–è½´èµ·ç»ˆç‚¹ä¸åŒï¼Œæ­¤æ—¶éå¹³é¢åœ†å¼§
+            if (!isZero(dTempLength))
+            {
+                res = 1;
+                if (dTempLength > dOtherAxisMaxLength)
+                {
+                    pToolElement->ucLongAxisNum = i;   //æ›´æ–°é•¿è½´è½´å·
+                    dOtherAxisMaxLength = dTempLength; //æ›´æ–°æœ€é•¿è½´ä½ç§»é‡
+                }
+            }
+        }
+    }
 
-	//ÅĞ¶Ï²å²¹Æ½ÃæÍâµÄÖáÆğÖÕµãÊÇ·ñÏàµÈ
-	for (i = 0; i < nArraySize; i++)
-	{
-		if (i == Axis1 || i == Axis2)
-		{
-			continue;//²å²¹Æ½ÃæÖáÌø¹ı
-		}
-		else
-		{	
-			dTempLength = fabs(pToolElement->SEndPoint.dArray[i] - pToolElement->SStartPoint.dArray[i]);
-			//µ±ÆäËûÖáÆğÖÕµã²»Í¬£¬´ËÊ±·ÇÆ½ÃæÔ²»¡
-			if (!isZero(dTempLength))
-			{
-				res = 1;
-				if (dTempLength > dOtherAxisMaxLength)
-				{
-					pToolElement->ucLongAxisNum = i;//¸üĞÂ³¤ÖáÖáºÅ
-					dOtherAxisMaxLength = dTempLength;//¸üĞÂ×î³¤ÖáÎ»ÒÆÁ¿
-				}	
-			}
-		}
+    //å¯¹æ¯”å…¶ä»–è½´æœ€å¤§å¢é‡å’Œåœ†å¼§é•¿åº¦ï¼Œç»´æŠ¤é•¿è½´è½´å·
+    if (dArcLength < dOtherAxisMaxLength) //ç¬¬ä¸‰è½´ä¸ºé•¿è½´
+    {
+        //è®¡ç®—ç¬¬ä¸‰è½´é•¿è½´ä½ç§»å¢é‡ç›¸å¯¹äºå¹³é¢åœ†å¼§çš„å€ç‡ä¿å­˜åœ¨å‘é‡ä¸­
+        pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum] =
+            (pToolElement->SEndPoint.dArray[pToolElement->ucLongAxisNum] -
+             pToolElement->SStartPoint.dArray[pToolElement->ucLongAxisNum]) /
+            dArcLength;
 
-	}
+        //æ­¤æ—¶é•¿è½´è½´å·å³ä¸ºæ­£ç¡®ï¼Œä¸ç”¨ä¿®æ”¹
 
-	//¶Ô±ÈÆäËûÖá×î´óÔöÁ¿ºÍÔ²»¡³¤¶È£¬Î¬»¤³¤ÖáÖáºÅ
-	if (dArcLength < dOtherAxisMaxLength)//µÚÈıÖáÎª³¤Öá
-	{
-		//¼ÆËãµÚÈıÖá³¤ÖáÎ»ÒÆÔöÁ¿Ïà¶ÔÓÚÆ½ÃæÔ²»¡µÄ±¶ÂÊ±£´æÔÚÏòÁ¿ÖĞ
-		pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum] = (pToolElement->SEndPoint.dArray[pToolElement->ucLongAxisNum] - pToolElement->SStartPoint.dArray[pToolElement->ucLongAxisNum]) / dArcLength;
-		
-		//´ËÊ±³¤ÖáÖáºÅ¼´ÎªÕıÈ·£¬²»ÓÃĞŞ¸Ä
+        return FALSE;
+    }
+    else
+    {
+        if (res == 1) //å­˜åœ¨ç¬¬ä¸‰è½´ä½†ä¸æ˜¯é•¿è½´
+        {
+            //è®¡ç®—ç¬¬ä¸‰è½´ä½ç§»å¢é‡ç›¸å¯¹äºå¹³é¢åœ†å¼§çš„å€ç‡ä¿å­˜åœ¨å‘é‡ä¸­
+            pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum] =
+                (pToolElement->SEndPoint.dArray[pToolElement->ucLongAxisNum] -
+                 pToolElement->SStartPoint.dArray[pToolElement->ucLongAxisNum]) /
+                dArcLength;
 
-		return FALSE;
-	}
-	else
-	{
-		if (res == 1)//´æÔÚµÚÈıÖáµ«²»ÊÇ³¤Öá
-		{
-			//¼ÆËãµÚÈıÖáÎ»ÒÆÔöÁ¿Ïà¶ÔÓÚÆ½ÃæÔ²»¡µÄ±¶ÂÊ±£´æÔÚÏòÁ¿ÖĞ
-			pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum] = (pToolElement->SEndPoint.dArray[pToolElement->ucLongAxisNum] - pToolElement->SStartPoint.dArray[pToolElement->ucLongAxisNum]) / dArcLength;
+            pToolElement->ucArcThirdAxisNum = pToolElement->ucLongAxisNum; //ä¿å­˜éé•¿è½´ç¬¬ä¸‰è½´è½´å·
+        }
 
-			pToolElement->ucArcThirdAxisNum = pToolElement->ucLongAxisNum;//±£´æ·Ç³¤ÖáµÚÈıÖáÖáºÅ
-		}
+        pToolElement->ucLongAxisNum = AXIS_NULL; //åœ†å¼§è½´ä¸ºé•¿è½´ï¼Œé•¿è½´è½´å·ç½®ä¸ºAXIS_NULL
+    }
 
-		pToolElement->ucLongAxisNum = AXIS_NULL;//Ô²»¡ÖáÎª³¤Öá£¬³¤ÖáÖáºÅÖÃÎªAXIS_NULL
-	}
+    if (res == 1)
+    {
+        return FALSE; //å­˜åœ¨ç¬¬ä¸‰è½´ï¼Œä½†åœ¨è¿™é‡Œè¿”å›ç¬¬ä¸‰è½´ä¸æ˜¯é•¿è½´
+    }
 
-	if (res == 1)
-	{
-		return FALSE;//´æÔÚµÚÈıÖá£¬µ«ÔÚÕâÀï·µ»ØµÚÈıÖá²»ÊÇ³¤Öá
-	}
-	
-	return TRUE;//Æ½ÃæÔ²»¡
+    return TRUE; //å¹³é¢åœ†å¼§
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºjudgeG00G01G02G03(struct *SToolCompensation pToolElement, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ïµ¶²¹Ğ´ÈëµÄµ¥ÔªÊÇ·ñĞèÒªËÙ¶ÈÇ°Õ°¼´ÊÇ·ñÊÇG01G02G03
-  ÊäÈë²ÎÊı£ºpToolElement  µ¶²¹»º³åÇøµ¥ÔªÖ¸Õë ucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1:Ö¸ÕëÎª¿Õ
-			 0£º²»ĞèÇ°Õ°µ¥Ôª
-			 1: ĞèÒªÇ°Õ°µ¥Ôª
-			 2£ºÔ­±¾ĞèÒªÇ°Õ°£¬µ«´æÔÚÇ°ºó×èÈûµÄµ¥ÔªM03/M04 + M05£¨ÕâÖÖµ¥Ôª´¦ÀíÎª»á±»Ìø¹ıµÄµ¥Ôª£©
-			 3£ºÔ­±¾ĞèÒªÇ°Õ°£¬µ«´æÔÚÇ°×÷ÓÃºÍÍ¨µÀµÈ´ı£¬´ËÊ±Ïàµ±ÓÚ2£¬ÕâÖÖÇé¿ö´¦ÀíÍ¬2
-			 4£ºÔ²»¡Ö¸ÁîÔË¶¯·ÇÆ½ÃæÔ²»¡
-			 5£ºÇ°Õ°Ê×µ¥ÔªÇÒº¬ÓĞºó×÷ÓÃ
-  ±¸    ×¢£º  ÓĞÍ¨µÀµÈ´ıÎŞÇ°×÷ÓÃÊ±ÎªĞèÒªÇ°Õ°µ¥Ôª£¬ÇÒÎª×îºóÒ»¶Î
+  å‡½æ•°åç§°ï¼šjudgeG00G01G02G03(struct *SToolCompensation pToolElement, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­åˆ€è¡¥å†™å…¥çš„å•å…ƒæ˜¯å¦éœ€è¦é€Ÿåº¦å‰ç»å³æ˜¯å¦æ˜¯G01G02G03
+  è¾“å…¥å‚æ•°ï¼špToolElement  åˆ€è¡¥ç¼“å†²åŒºå•å…ƒæŒ‡é’ˆ ucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1:æŒ‡é’ˆä¸ºç©º
+			 0ï¼šä¸éœ€å‰ç»å•å…ƒ
+			 1: éœ€è¦å‰ç»å•å…ƒ
+			 2ï¼šåŸæœ¬éœ€è¦å‰ç»ï¼Œä½†å­˜åœ¨å‰åé˜»å¡çš„å•å…ƒM03/M04 + M05ï¼ˆè¿™ç§å•å…ƒå¤„ç†ä¸ºä¼šè¢«è·³è¿‡çš„å•å…ƒï¼‰
+			 3ï¼šåŸæœ¬éœ€è¦å‰ç»ï¼Œä½†å­˜åœ¨å‰ä½œç”¨å’Œé€šé“ç­‰å¾…ï¼Œæ­¤æ—¶ç›¸å½“äº2ï¼Œè¿™ç§æƒ…å†µå¤„ç†åŒ2
+			 4ï¼šåœ†å¼§æŒ‡ä»¤è¿åŠ¨éå¹³é¢åœ†å¼§
+			 5ï¼šå‰ç»é¦–å•å…ƒä¸”å«æœ‰åä½œç”¨
+  å¤‡    æ³¨ï¼š  æœ‰é€šé“ç­‰å¾…æ— å‰ä½œç”¨æ—¶ä¸ºéœ€è¦å‰ç»å•å…ƒï¼Œä¸”ä¸ºæœ€åä¸€æ®µ
 **************************************************/
 int8 judgeG00G01G02G03(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
 {
-	if (pToolElement == NULL)
-	{
-		return -1;
-	}
+    if (pToolElement == NULL)
+    {
+        return -1;
+    }
 
-	if (pToolElement->EntityType == DOT || isZero(pToolElement->dLength))//µãÀàĞÍ²»ĞèÇ°Õ°//2023.3.23¼ÓÈë¶ÔdLengthÎªÁãÅĞ¶Ï
-	{
-		return 0;
-	}
+    if (pToolElement->EntityType == DOT ||
+        isZero(pToolElement->dLength)) //ç‚¹ç±»å‹ä¸éœ€å‰ç»//2023.3.23åŠ å…¥å¯¹dLengthä¸ºé›¶åˆ¤æ–­
+    {
+        return 0;
+    }
 
-	switch (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR))
-	{
-	case CMD_MOTION_QUICKMOVE://¿ìËÙÔË¶¯  2024/5/27 ºé¹ÚÅô Ôö¼ÓG0µÄÇ°Õ°
-		//µ¥¸öÖáÔË¶¯
-		if (pToolElement->ucAxisNumOfNeedLookAhead != AXIS_NULL)
-		{
-			return 1;//µ¥¸öÖáÔË¶¯£¬ÒªÇ°Õ°
-		}
-		return 0;//¶à¸öÖáÔË¶¯£¬²»Ç°Õ°
-		break;
+    switch (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR))
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨  2024/5/27 æ´ªå† é¹ å¢åŠ G0çš„å‰ç»
+        //å•ä¸ªè½´è¿åŠ¨
+        if (pToolElement->ucAxisNumOfNeedLookAhead != AXIS_NULL)
+        {
+            return 1; //å•ä¸ªè½´è¿åŠ¨ï¼Œè¦å‰ç»
+        }
+        return 0; //å¤šä¸ªè½´è¿åŠ¨ï¼Œä¸å‰ç»
+        break;
 
-	case CMD_MOTION_LINE://Ö±Ïß
-		//µ±Í¬Ê±Ç°ºó×èÈû´Ë¶Î²»ĞèÇ°Õ°M03/M04 + M05
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 3)
-		{
-			return 2;
-		}
-		//µ±´æÔÚÇ°×èÈûºÍÍ¨µÀµÈ´ıÖ¸ÁîÊ±
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 1 && pToolElement->sChannelCommand.ucType != UNASSIGNED_VALUE)
-		{
-			return 3;
-		}
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 2 && g_SChannel->bLookAheadNewBeginFlag == TRUE)	//Ç°Õ°Ê×µ¥ÔªÇÒº¬ÓĞºó×÷ÓÃ	³ÂÃô´Ï	7/15
-		{
-			return 5;
-		}
-		return 1;
-		break;
+    case CMD_MOTION_LINE: //ç›´çº¿
+        //å½“åŒæ—¶å‰åé˜»å¡æ­¤æ®µä¸éœ€å‰ç»M03/M04 + M05
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 3)
+        {
+            return 2;
+        }
+        //å½“å­˜åœ¨å‰é˜»å¡å’Œé€šé“ç­‰å¾…æŒ‡ä»¤æ—¶
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 1 &&
+            pToolElement->sChannelCommand.ucType != UNASSIGNED_VALUE)
+        {
+            return 3;
+        }
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 2 &&
+            g_SChannel->bLookAheadNewBeginFlag == TRUE) //å‰ç»é¦–å•å…ƒä¸”å«æœ‰åä½œç”¨	é™ˆæ•èª	7/15
+        {
+            return 5;
+        }
+        return 1;
+        break;
 
-	case CMD_MOTION_ARC:     //Ë³Ô²
-	case CMD_MOTION_ANTI_ARC: //ÄæÔ²
+    case CMD_MOTION_ARC:      //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC: //é€†åœ†
 
-		//ÅĞ¶ÏÔ²»¡²å²¹Æ½ÃæÖáÍâÊÇ·ñÓĞÁíÍâµÄÖáĞèÒªÒÆ¶¯£¬Èô´æÔÚ²»Ç°Õ°£¬´ËÅĞ¶ÏÓÅÏÈ¼¶¸ßÓÚºó±ßÁ½ÖÖÇé¿ö
-		if (!judgePlanarArc(pToolElement, AXIS_NUM_MAX))
-		{
-			return 4;
-		}
-		//µ±Í¬Ê±Ç°ºó×èÈû´Ë¶Î²»ĞèÇ°Õ°M03/M04 + M05
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 3)
-		{
-			return 2;
-		}
-		//µ±´æÔÚÇ°×èÈûºÍÍ¨µÀµÈ´ıÖ¸ÁîÊ±
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 1 && pToolElement->sChannelCommand.ucType != UNASSIGNED_VALUE)
-		{
-			return 3;
-		}
-		if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 2 && g_SChannel->bLookAheadNewBeginFlag == TRUE)
-		{
-			return 5;
-		}
-		return 1;
-		break;
+        //åˆ¤æ–­åœ†å¼§æ’è¡¥å¹³é¢è½´å¤–æ˜¯å¦æœ‰å¦å¤–çš„è½´éœ€è¦ç§»åŠ¨ï¼Œè‹¥å­˜åœ¨ä¸å‰ç»ï¼Œæ­¤åˆ¤æ–­ä¼˜å…ˆçº§é«˜äºåè¾¹ä¸¤ç§æƒ…å†µ
+        if (!judgePlanarArc(pToolElement, AXIS_NUM_MAX))
+        {
+            return 4;
+        }
+        //å½“åŒæ—¶å‰åé˜»å¡æ­¤æ®µä¸éœ€å‰ç»M03/M04 + M05
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 3)
+        {
+            return 2;
+        }
+        //å½“å­˜åœ¨å‰é˜»å¡å’Œé€šé“ç­‰å¾…æŒ‡ä»¤æ—¶
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 1 &&
+            pToolElement->sChannelCommand.ucType != UNASSIGNED_VALUE)
+        {
+            return 3;
+        }
+        if (isBlockedInCommand(pToolElement->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE) == 2 &&
+            g_SChannel->bLookAheadNewBeginFlag == TRUE)
+        {
+            return 5;
+        }
+        return 1;
+        break;
 
-	default://ÆäËûÇé¿ö²»Ç°Õ°
-		return 0;
-		break;
-	}
+    default: //å…¶ä»–æƒ…å†µä¸å‰ç»
+        return 0;
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcorrectFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, SVector SStartVector, int nArraySize)
-  ÊäÈë²ÎÊı£º
-			Toolcode	       µ¶²¹ºóµÄ½á¹¹Ìå
-			nArraySize         ÖáÊı×é´óĞ¡
-			bPlanarArcFlag     Æ½ÃæÔ²»¡±êÖ¾Î» £ºÆ½ÃæÔ²»¡TRUE¡¢·ÇÆ½ÃæÔ²»¡FALSE
-			uint8 ucChannelNum  Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¶àÖáÄ£Ê½ÏÂĞŞÕı³¤Öá½ø¸øËÙ¶È¶ÔÓ¦µÄºÏ³ÉËÙ¶È
-			2.¼ÇÂ¼³¤ÖáÖáºÅ±£´æÔÚ pToolcode->ucLongAxisNum ÖĞ
-			3.¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯
-			4.·ÇÆ½ÃæÔ²»¡Ê±£¬³¤ÖáÎªµÚÈıÖáĞŞÕıÔ²»¡¹­¸ßÎó²î¼°×î´ó·¨Ïò¼ÓËÙ¶ÈÎó²î¶ÔÓ¦ËÙ¶È
-			×¢£º´Ëº¯ÊıÖĞÎŞ½ø¸øËÙ¶ÈdFeedrateºÍÆäËûËÙ¶È×÷¶Ô±È£¬ËùÒÔÎŞĞèÅĞ¶ÏG99
+  å‡½æ•°åç§°ï¼šcorrectFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, SVector SStartVector, int nArraySize)
+  è¾“å…¥å‚æ•°ï¼š
+			Toolcode	       åˆ€è¡¥åçš„ç»“æ„ä½“
+			nArraySize         è½´æ•°ç»„å¤§å°
+			bPlanarArcFlag     å¹³é¢åœ†å¼§æ ‡å¿—ä½ ï¼šå¹³é¢åœ†å¼§TRUEã€éå¹³é¢åœ†å¼§FALSE
+			uint8 ucChannelNum  é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.å¤šè½´æ¨¡å¼ä¸‹ä¿®æ­£é•¿è½´è¿›ç»™é€Ÿåº¦å¯¹åº”çš„åˆæˆé€Ÿåº¦
+			2.è®°å½•é•¿è½´è½´å·ä¿å­˜åœ¨ pToolcode->ucLongAxisNum ä¸­
+			3.æ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨
+			4.éå¹³é¢åœ†å¼§æ—¶ï¼Œé•¿è½´ä¸ºç¬¬ä¸‰è½´ä¿®æ­£åœ†å¼§å¼“é«˜è¯¯å·®åŠæœ€å¤§æ³•å‘åŠ é€Ÿåº¦è¯¯å·®å¯¹åº”é€Ÿåº¦
+			æ³¨ï¼šæ­¤å‡½æ•°ä¸­æ— è¿›ç»™é€Ÿåº¦dFeedrateå’Œå…¶ä»–é€Ÿåº¦ä½œå¯¹æ¯”ï¼Œæ‰€ä»¥æ— éœ€åˆ¤æ–­G99
 **************************************************/
-void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int nArraySize, bool bPlanarArcFlag, uint8 ucChannelNum)
+void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int nArraySize, bool bPlanarArcFlag,
+                                       uint8 ucChannelNum)
 {
-	double dCoefOfFeedrate;
+    double dCoefOfFeedrate;
 
-	if (pToolcode == NULL)
-	{
-		return;
-	}
+    if (pToolcode == NULL)
+    {
+        return;
+    }
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pToolcode, ucChannelNum); //2024/5/27 ºé¹ÚÅô G0²»ÊÜG98»òG99Ó°Ïì,×ª»»ÏµÊıÉèÎª1
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate =
+        getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+            ? 1.0
+            : calcCoefOfFeedrate(pToolcode, ucChannelNum); //2024/5/27 æ´ªå† é¹ G0ä¸å—G98æˆ–G99å½±å“,è½¬æ¢ç³»æ•°è®¾ä¸º1
 
-	double dSpeedGear = 0;//ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµµµÎ»
+    double dSpeedGear = 0; //åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼æ¡£ä½
 
-	if (g_SSystemPara.ucGearOfSysLowerLimitSpeed == 1)
-	{
-		dSpeedGear = 1.0;
-	}
-	else if (g_SSystemPara.ucGearOfSysLowerLimitSpeed == 2)
-	{
-		dSpeedGear = 1.25;
-	}
-	else//µÚÈıµµÎ»
-	{
-		dSpeedGear = 1.5;
-	}
-	//¸ù¾İÖ¸Áî×÷½øÒ»²½¼ÆËã
-	if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)//G0  ºé¹ÚÅô 2024/5/25
-	{
-		if (pToolcode->ucAxisNumOfNeedLookAhead != AXIS_NULL)//ĞèÒªÇ°Õ°µÄG0
-		{
-			if (pToolcode->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX || g_SChannel[ucChannelNum].pMapAxisArray[pToolcode->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
-			{
-				parseRunningError(9999,GCODE_ERROR_NUM150,9999);
-				return;
-			}
-			//1.»ñÈ¡½ø¸øËÙ¶È
-			pToolcode->dFeedrate = g_SSystemPara.SAxisPara[g_SChannel[ucChannelNum].pMapAxisArray[pToolcode->ucAxisNumOfNeedLookAhead]].dVmax;
-			//2.»ñÈ¡ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-			pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear;
-		}
-	}
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-	else if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE)//G1
-	{
-		if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£ºÓë³£¹æ·½Ê½²»Í¬£¬ÖØĞÂ¼ÆËãÎïÀíÖá³¤Öá
-		{
-			double dMaxNum = 0;//¼ÇÂ¼ÎïÀíÖáÒÆ¶¯Á¿×î´óÖµ
-			double dTemp = 0;
-			double dLengthTemp[AXIS_NUM_MAX] = { 0 };//¼ÇÂ¼ÎïÀíÖáµÄÒÆ¶¯¾àÀë£¬ÓÃÓÚÉ¸Ñ¡³ö³¤Öá
-			double dLength = 0;//¸÷ÎïÀíÖáÒÆ¶¯Á¿ºÏ³ÉµÄÔË¶¯×ÜÁ¿
-			//¼ÆËãÎïÀíÖáµÄÒÆ¶¯Á¿ 
-			for (int i = 0; i < nArraySize; i++)
-			{
-				if (i == AXIS_X)//X1=X+Y*tan¦È
-				{
-					dLengthTemp[i] = pToolcode->SStartVector.dArray[i] * pToolcode->dLength + 1.0 * g_SChannel[ucChannelNum].dTANAngleYY1 * pToolcode->SStartVector.dArray[AXIS_Y] * pToolcode->dLength;
-					dLength += pow(dLengthTemp[i], 2);
-				}
-				else if (i == AXIS_Y)//Y1=Y/cos¦È
-				{
-					dLengthTemp[i] = pToolcode->SStartVector.dArray[i] * pToolcode->dLength / g_SChannel[ucChannelNum].dCOSAngleYY1;
-					dLength += pow(dLengthTemp[i], 2);
-				}
-				else
-				{
-					dLengthTemp[i] = pToolcode->SStartVector.dArray[i] * pToolcode->dLength;
-					dLength += pow(dLengthTemp[i], 2);
-				}
-			}
-			//É¸Ñ¡³¤Öá
-			dLength = sqrt(dLength);
-			for (int i = 0; i < nArraySize; i++)
-			{
-				dTemp = fabs(dLengthTemp[i] / dLength);
-				if (dTemp > dMaxNum)
-				{
-					pToolcode->ucLongAxisNum = i;//¸üĞÂ³¤ÖáÖáºÅ
-					dMaxNum = dTemp;
-				}
-			}
+    if (g_SSystemPara.ucGearOfSysLowerLimitSpeed == 1)
+    {
+        dSpeedGear = 1.0;
+    }
+    else if (g_SSystemPara.ucGearOfSysLowerLimitSpeed == 2)
+    {
+        dSpeedGear = 1.25;
+    }
+    else //ç¬¬ä¸‰æ¡£ä½
+    {
+        dSpeedGear = 1.5;
+    }
+    //æ ¹æ®æŒ‡ä»¤ä½œè¿›ä¸€æ­¥è®¡ç®—
+    if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE) //G0  æ´ªå† é¹ 2024/5/25
+    {
+        if (pToolcode->ucAxisNumOfNeedLookAhead != AXIS_NULL) //éœ€è¦å‰ç»çš„G0
+        {
+            if (pToolcode->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX ||
+                g_SChannel[ucChannelNum].pMapAxisArray[pToolcode->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
+            {
+                parseRunningError(9999, GCODE_ERROR_NUM150, 9999);
+                return;
+            }
+            //1.è·å–è¿›ç»™é€Ÿåº¦
+            pToolcode->dFeedrate =
+                g_SSystemPara.SAxisPara[g_SChannel[ucChannelNum].pMapAxisArray[pToolcode->ucAxisNumOfNeedLookAhead]]
+                    .dVmax;
+            //2.è·å–åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+            pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear;
+        }
+    }
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE          //å€¾æ–œYè½´æœº
+    else if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE) //G1
+    {
+        if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šä¸å¸¸è§„æ–¹å¼ä¸åŒï¼Œé‡æ–°è®¡ç®—ç‰©ç†è½´é•¿è½´
+        {
+            double dMaxNum = 0; //è®°å½•ç‰©ç†è½´ç§»åŠ¨é‡æœ€å¤§å€¼
+            double dTemp = 0;
+            double dLengthTemp[AXIS_NUM_MAX] = {0}; //è®°å½•ç‰©ç†è½´çš„ç§»åŠ¨è·ç¦»ï¼Œç”¨äºç­›é€‰å‡ºé•¿è½´
+            double dLength = 0;                     //å„ç‰©ç†è½´ç§»åŠ¨é‡åˆæˆçš„è¿åŠ¨æ€»é‡
+            //è®¡ç®—ç‰©ç†è½´çš„ç§»åŠ¨é‡
+            for (int i = 0; i < nArraySize; i++)
+            {
+                if (i == AXIS_X) //X1=X+Y*tanÎ¸
+                {
+                    dLengthTemp[i] = pToolcode->SStartVector.dArray[i] * pToolcode->dLength +
+                                     1.0 * g_SChannel[ucChannelNum].dTANAngleYY1 *
+                                         pToolcode->SStartVector.dArray[AXIS_Y] * pToolcode->dLength;
+                    dLength += pow(dLengthTemp[i], 2);
+                }
+                else if (i == AXIS_Y) //Y1=Y/cosÎ¸
+                {
+                    dLengthTemp[i] =
+                        pToolcode->SStartVector.dArray[i] * pToolcode->dLength / g_SChannel[ucChannelNum].dCOSAngleYY1;
+                    dLength += pow(dLengthTemp[i], 2);
+                }
+                else
+                {
+                    dLengthTemp[i] = pToolcode->SStartVector.dArray[i] * pToolcode->dLength;
+                    dLength += pow(dLengthTemp[i], 2);
+                }
+            }
+            //ç­›é€‰é•¿è½´
+            dLength = sqrt(dLength);
+            for (int i = 0; i < nArraySize; i++)
+            {
+                dTemp = fabs(dLengthTemp[i] / dLength);
+                if (dTemp > dMaxNum)
+                {
+                    pToolcode->ucLongAxisNum = i; //æ›´æ–°é•¿è½´è½´å·
+                    dMaxNum = dTemp;
+                }
+            }
 
-			if (!isZero(dMaxNum))
-			{
-				if (pToolcode->ucLongAxisNum == AXIS_X)//X1ÖáÊÇ³¤Öá
-				{
-					//1.ĞŞÕıÖ¸ÁîÖáºÏ³É·½ÏòµÄ½ø¸øËÙ¶È£¬±£Ö¤ÎïÀíÖá³¤Öá×î´óËÙ¶ÈÎªFÖµ 
-					pToolcode->dFeedrate = pToolcode->dFeedrate / (fabs(pToolcode->SStartVector.dArray[AXIS_X]) + 1.0 * fabs(pToolcode->SStartVector.dArray[AXIS_Y]) * g_SChannel[ucChannelNum].dTANAngleYY1);
-					//2.¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-					pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / (fabs(pToolcode->SStartVector.dArray[AXIS_X]) + 1.0 * fabs(pToolcode->SStartVector.dArray[AXIS_Y]) * g_SChannel[ucChannelNum].dTANAngleYY1);
-				}
-				else if (pToolcode->ucLongAxisNum == AXIS_Y)//Y1ÖáÊÇ³¤Öá
-				{
-					//1.ĞŞÕıÖ¸ÁîÖáºÏ³É·½ÏòµÄ½ø¸øËÙ¶È£¬±£Ö¤ÎïÀíÖá³¤Öá×î´óËÙ¶ÈÎªFÖµ 
-					pToolcode->dFeedrate = pToolcode->dFeedrate * g_SChannel[ucChannelNum].dCOSAngleYY1 / (fabs(pToolcode->SStartVector.dArray[AXIS_Y]));
-					//2.¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-					pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear * g_SChannel[ucChannelNum].dCOSAngleYY1 / (fabs(pToolcode->SStartVector.dArray[AXIS_Y]));
-				}
-				else
-				{
-					//1.ĞŞÕı½ø¸øËÙ¶È
-					pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
-					//2.¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-					pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
-				}
-			}
-		}
-		else//Î´¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£ºÓë³£¹æ·½Ê½Ò»ÖÂ£¬³¤ÖáÎªÖ¸ÁîÖá×î³¤Öá
-		{
-			int i = 0;
-			double dMaxNum = 0;//¼ÇÂ¼ÏòÁ¿·ÖÁ¿×î´óÖµ
-			double dTemp = 0;
-			pToolcode->ucLongAxisNum = 0;//³¤ÖáÖáºÅ
-			if (pToolcode == NULL)
-			{
-				return;
-			}
+            if (!isZero(dMaxNum))
+            {
+                if (pToolcode->ucLongAxisNum == AXIS_X) //X1è½´æ˜¯é•¿è½´
+                {
+                    //1.ä¿®æ­£æŒ‡ä»¤è½´åˆæˆæ–¹å‘çš„è¿›ç»™é€Ÿåº¦ï¼Œä¿è¯ç‰©ç†è½´é•¿è½´æœ€å¤§é€Ÿåº¦ä¸ºFå€¼
+                    pToolcode->dFeedrate = pToolcode->dFeedrate / (fabs(pToolcode->SStartVector.dArray[AXIS_X]) +
+                                                                   1.0 * fabs(pToolcode->SStartVector.dArray[AXIS_Y]) *
+                                                                       g_SChannel[ucChannelNum].dTANAngleYY1);
+                    //2.æ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+                    pToolcode->dLowerLimitSpeed =
+                        g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear /
+                        (fabs(pToolcode->SStartVector.dArray[AXIS_X]) +
+                         1.0 * fabs(pToolcode->SStartVector.dArray[AXIS_Y]) * g_SChannel[ucChannelNum].dTANAngleYY1);
+                }
+                else if (pToolcode->ucLongAxisNum == AXIS_Y) //Y1è½´æ˜¯é•¿è½´
+                {
+                    //1.ä¿®æ­£æŒ‡ä»¤è½´åˆæˆæ–¹å‘çš„è¿›ç»™é€Ÿåº¦ï¼Œä¿è¯ç‰©ç†è½´é•¿è½´æœ€å¤§é€Ÿåº¦ä¸ºFå€¼
+                    pToolcode->dFeedrate = pToolcode->dFeedrate * g_SChannel[ucChannelNum].dCOSAngleYY1 /
+                                           (fabs(pToolcode->SStartVector.dArray[AXIS_Y]));
+                    //2.æ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+                    pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear *
+                                                  g_SChannel[ucChannelNum].dCOSAngleYY1 /
+                                                  (fabs(pToolcode->SStartVector.dArray[AXIS_Y]));
+                }
+                else
+                {
+                    //1.ä¿®æ­£è¿›ç»™é€Ÿåº¦
+                    pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
+                    //2.æ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+                    pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
+                }
+            }
+        }
+        else //æœªå¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šä¸å¸¸è§„æ–¹å¼ä¸€è‡´ï¼Œé•¿è½´ä¸ºæŒ‡ä»¤è½´æœ€é•¿è½´
+        {
+            int i = 0;
+            double dMaxNum = 0; //è®°å½•å‘é‡åˆ†é‡æœ€å¤§å€¼
+            double dTemp = 0;
+            pToolcode->ucLongAxisNum = 0; //é•¿è½´è½´å·
+            if (pToolcode == NULL)
+            {
+                return;
+            }
 
-			for (i = 0; i < nArraySize; i++)
-			{
-				dTemp = fabs(pToolcode->SStartVector.dArray[i]);
-				if (dTemp > dMaxNum)
-				{
-					pToolcode->ucLongAxisNum = i;//¸üĞÂ³¤ÖáÖáºÅ
-					dMaxNum = dTemp;
-				}
-			}
+            for (i = 0; i < nArraySize; i++)
+            {
+                dTemp = fabs(pToolcode->SStartVector.dArray[i]);
+                if (dTemp > dMaxNum)
+                {
+                    pToolcode->ucLongAxisNum = i; //æ›´æ–°é•¿è½´è½´å·
+                    dMaxNum = dTemp;
+                }
+            }
 
-			if (!isZero(dMaxNum))
-			{
-				//1.ĞŞÕı½ø¸øËÙ¶È
-				pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
+            if (!isZero(dMaxNum))
+            {
+                //1.ä¿®æ­£è¿›ç»™é€Ÿåº¦
+                pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
 
-				//2£¬¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-				pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
-			}
-			else
-			{
-				pToolcode->dFeedrate = 0;
-				pToolcode->dLowerLimitSpeed = 0;
-			}
-		}
-	}
+                //2ï¼Œæ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+                pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
+            }
+            else
+            {
+                pToolcode->dFeedrate = 0;
+                pToolcode->dLowerLimitSpeed = 0;
+            }
+        }
+    }
 #else
-	else if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE)//G1
-	{
-		int i = 0;
-		double dMaxNum = 0;//¼ÇÂ¼ÏòÁ¿·ÖÁ¿×î´óÖµ
-		double dTemp = 0;
-		pToolcode->ucLongAxisNum = 0;//³¤ÖáÖáºÅ
-		if (pToolcode == NULL)
-		{
-			return;
-		}
+    else if (getBits(pToolcode->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE) //G1
+    {
+        int i = 0;
+        double dMaxNum = 0; //è®°å½•å‘é‡åˆ†é‡æœ€å¤§å€¼
+        double dTemp = 0;
+        pToolcode->ucLongAxisNum = 0; //é•¿è½´è½´å·
+        if (pToolcode == NULL)
+        {
+            return;
+        }
 
-		for (i = 0; i < nArraySize; i++)
-		{
-			dTemp = fabs(pToolcode->SStartVector.dArray[i]);
-			if (dTemp > dMaxNum)
-			{
-				pToolcode->ucLongAxisNum = i;//¸üĞÂ³¤ÖáÖáºÅ
-				dMaxNum = dTemp;
-			}
-		}
+        for (i = 0; i < nArraySize; i++)
+        {
+            dTemp = fabs(pToolcode->SStartVector.dArray[i]);
+            if (dTemp > dMaxNum)
+            {
+                pToolcode->ucLongAxisNum = i; //æ›´æ–°é•¿è½´è½´å·
+                dMaxNum = dTemp;
+            }
+        }
 
-		if (!isZero(dMaxNum))
-		{
-			//1.ĞŞÕı½ø¸øËÙ¶È
-			pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
+        if (!isZero(dMaxNum))
+        {
+            //1.ä¿®æ­£è¿›ç»™é€Ÿåº¦
+            pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
 
-			//2£¬¸ù¾İ³¤ÖáÖáºÅ·´Ëã¶ÔÓ¦µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-			pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
-		}
-		else
-		{
-			pToolcode->dFeedrate = 0;
-			pToolcode->dLowerLimitSpeed = 0;
-		}
-
-	}
+            //2ï¼Œæ ¹æ®é•¿è½´è½´å·åç®—å¯¹åº”çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+            pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
+        }
+        else
+        {
+            pToolcode->dFeedrate = 0;
+            pToolcode->dLowerLimitSpeed = 0;
+        }
+    }
 #endif
-	else//G2G3
-	{	
-		//1.¶Î¼äÏÂÏŞÖµ²»ÓÃĞŞÕıµ«ÊÇÒªËã³öÀ´¸³Öµ£¨³õ°æµÄÕâ¸öÖµÊÇÔÚµ¶²¹´¦¼ÆËãµÄ£¬µ«Éè¼ÆËÙ¶ÈÕâÀï¸ÄÎªÔÚÇ°Õ°¼ÆËã£©
-		pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear;
+    else //G2G3
+    {
+        //1.æ®µé—´ä¸‹é™å€¼ä¸ç”¨ä¿®æ­£ä½†æ˜¯è¦ç®—å‡ºæ¥èµ‹å€¼ï¼ˆåˆç‰ˆçš„è¿™ä¸ªå€¼æ˜¯åœ¨åˆ€è¡¥å¤„è®¡ç®—çš„ï¼Œä½†è®¾è®¡é€Ÿåº¦è¿™é‡Œæ”¹ä¸ºåœ¨å‰ç»è®¡ç®—ï¼‰
+        pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear;
 
-		//ÅĞ¶ÏÊÇ·ñÊÇÆ½ÃæÔ²»¡
-		if (!bPlanarArcFlag)//·ÇÆ½ÃæÔ²»¡
-		{
+        //åˆ¤æ–­æ˜¯å¦æ˜¯å¹³é¢åœ†å¼§
+        if (!bPlanarArcFlag) //éå¹³é¢åœ†å¼§
+        {
 #if MC_PROFILE_XYZ
-            /* G94 µÄ F ±íÊ¾ÑØÈıÎ¬ÂİĞıÏßµÄÂ·¾¶ËÙ¶È¡£Ô­ÓĞ²å²¹Æ÷Ê¹ÓÃ²ÎÊı q ÍÆ½ø£¬
-             * Æä³¤¶ÈÈ¡Æ½Ãæ»¡³¤Óë´¹Ö±ÖáĞĞ³ÌµÄ½Ï´óÖµ¡£
-             * ½«Êµ¼ÊÂ·¾¶ËÙ¶È»»Ëãµ½Í¬Ò» q ²ÎÊı£¬±£Ö¤¹æ»®Óë²å²¹Ê¹ÓÃÒ»ÖÂµÄ³¤¶È»ù×¼¡£ */
+            /* G94 çš„ F è¡¨ç¤ºæ²¿ä¸‰ç»´èºæ—‹çº¿çš„è·¯å¾„é€Ÿåº¦ã€‚åŸæœ‰æ’è¡¥å™¨ä½¿ç”¨å‚æ•° q æ¨è¿›ï¼Œ
+             * å…¶é•¿åº¦å–å¹³é¢å¼§é•¿ä¸å‚ç›´è½´è¡Œç¨‹çš„è¾ƒå¤§å€¼ã€‚
+             * å°†å®é™…è·¯å¾„é€Ÿåº¦æ¢ç®—åˆ°åŒä¸€ q å‚æ•°ï¼Œä¿è¯è§„åˆ’ä¸æ’è¡¥ä½¿ç”¨ä¸€è‡´çš„é•¿åº¦åŸºå‡†ã€‚ */
             uint8 plane[2];
             chooseInterpPlane(plane, pToolcode->unCommandType);
             uint8 perpendicular = (uint8)(AXIS_X + AXIS_Y + AXIS_Z - plane[0] - plane[1]);
@@ -592,1931 +614,2010 @@ void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int 
                 pToolcode->dLowerLimitSpeed *= parameter_ratio;
             }
 #endif
-			if (pToolcode->ucLongAxisNum != AXIS_NULL)//³¤ÖáÎªµÚÈıÖá
-			{
-				//ĞŞÕıÖ®Ç°¼ÆËãµÄÔ²»¡¹­¸ßÎó²î¼°·¨Ïò¼ÓËÙ¶ÈÎó²î¶ÔÓ¦µÄµÚÈıÖá³¤ÖáËÙ¶È
-				//×¢ÒâÔ²»¡µÄ³¤ÖáÖáºÅÊÇÔÚº¯ÊıjudgePlanarArc()ÖĞ¼ÆËãÎ¬»¤µÄ£¬G1µÄ³¤ÖáÖáºÅÔÚ´Ëº¯ÊıÖĞÎ¬»¤£¨ÔİÊ±Ã»ÓÃ£©
-				double dRatio = fabs(pToolcode->SStartVector.dArray[pToolcode->ucLongAxisNum]);
+            if (pToolcode->ucLongAxisNum != AXIS_NULL) //é•¿è½´ä¸ºç¬¬ä¸‰è½´
+            {
+                //ä¿®æ­£ä¹‹å‰è®¡ç®—çš„åœ†å¼§å¼“é«˜è¯¯å·®åŠæ³•å‘åŠ é€Ÿåº¦è¯¯å·®å¯¹åº”çš„ç¬¬ä¸‰è½´é•¿è½´é€Ÿåº¦
+                //æ³¨æ„åœ†å¼§çš„é•¿è½´è½´å·æ˜¯åœ¨å‡½æ•°judgePlanarArc()ä¸­è®¡ç®—ç»´æŠ¤çš„ï¼ŒG1çš„é•¿è½´è½´å·åœ¨æ­¤å‡½æ•°ä¸­ç»´æŠ¤ï¼ˆæš‚æ—¶æ²¡ç”¨ï¼‰
+                double dRatio = fabs(pToolcode->SStartVector.dArray[pToolcode->ucLongAxisNum]);
 
-				//¹­¸ßÎó²îËÙ¶ÈÔ¼Êø
-				pToolcode->dArcMaxChordErrorVmax = dRatio * pToolcode->dArcMaxChordErrorVmax;
-				//×î´ó·¨Ïò¼ÓËÙ¶ÈËÙ¶ÈÔ¼Êø
-				pToolcode->dArcMaxNormalAccVmax = dRatio * pToolcode->dArcMaxNormalAccVmax;
-			}
-		}
+                //å¼“é«˜è¯¯å·®é€Ÿåº¦çº¦æŸ
+                pToolcode->dArcMaxChordErrorVmax = dRatio * pToolcode->dArcMaxChordErrorVmax;
+                //æœ€å¤§æ³•å‘åŠ é€Ÿåº¦é€Ÿåº¦çº¦æŸ
+                pToolcode->dArcMaxNormalAccVmax = dRatio * pToolcode->dArcMaxNormalAccVmax;
+            }
+        }
 
-		//2.ĞŞÕıÔ²»¡½ø¸øËÙ¶È²»³¬¹ı¹­¸ßºÍ·¨Ïò¼ÓËÙ¶ÈÔ¼Êø£¨2023.3.14¹ùÇ¿£©
-		pToolcode->dFeedrate = pToolcode->dFeedrate * dCoefOfFeedrate > pToolcode->dArcMaxChordErrorVmax ? pToolcode->dArcMaxChordErrorVmax / dCoefOfFeedrate : pToolcode->dFeedrate;
-		pToolcode->dFeedrate = pToolcode->dFeedrate * dCoefOfFeedrate > pToolcode->dArcMaxNormalAccVmax ? pToolcode->dArcMaxNormalAccVmax / dCoefOfFeedrate : pToolcode->dFeedrate;
-	}
-
+        //2.ä¿®æ­£åœ†å¼§è¿›ç»™é€Ÿåº¦ä¸è¶…è¿‡å¼“é«˜å’Œæ³•å‘åŠ é€Ÿåº¦çº¦æŸï¼ˆ2023.3.14éƒ­å¼ºï¼‰
+        pToolcode->dFeedrate = pToolcode->dFeedrate * dCoefOfFeedrate > pToolcode->dArcMaxChordErrorVmax
+                                   ? pToolcode->dArcMaxChordErrorVmax / dCoefOfFeedrate
+                                   : pToolcode->dFeedrate;
+        pToolcode->dFeedrate = pToolcode->dFeedrate * dCoefOfFeedrate > pToolcode->dArcMaxNormalAccVmax
+                                   ? pToolcode->dArcMaxNormalAccVmax / dCoefOfFeedrate
+                                   : pToolcode->dFeedrate;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcVAndAPara(struct SToolCompensation* pToolElement, struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ: Ïòµ¶²¹½á¹¹ÌåÖĞÌí¼Ó ¼ÓËÙ¶È¡¢ËÙ¶ÈÒÔ¼°¼Ó¼õËÙÀàĞÍĞÅÏ¢
-		   °üÀ¨£º
-			double dAcc;	    ///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-			double dDec;	    ///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
+  å‡½æ•°åç§°ï¼šcalcVAndAPara(struct SToolCompensation* pToolElement, struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½: å‘åˆ€è¡¥ç»“æ„ä½“ä¸­æ·»åŠ  åŠ é€Ÿåº¦ã€é€Ÿåº¦ä»¥åŠåŠ å‡é€Ÿç±»å‹ä¿¡æ¯
+		   åŒ…æ‹¬ï¼š
+			double dAcc;	    ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+			double dDec;	    ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
 
-			double dCommonVMaxFromSingleAxis;    //G1£¬G2,G3¸´ºÏÔË¶¯×î´óËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½        ¹ùÇ¿ 2022/6/16
-			double dCommonVsMinFromSingleAxis;    //G1£¬G2,G3¸´ºÏÔË¶¯×îĞ¡ÆğÌøËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½   ¹ùÇ¿ 2022/6/16
-			double dCommonVeMinFromSingleAxis;    //G1£¬G2,G3¸´ºÏÔË¶¯×îĞ¡ÖÕÖ¹ËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½   ¹ùÇ¿ 2022/6/16
+			double dCommonVMaxFromSingleAxis;    //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°        éƒ­å¼º 2022/6/16
+			double dCommonVsMinFromSingleAxis;    //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å°èµ·è·³é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°   éƒ­å¼º 2022/6/16
+			double dCommonVeMinFromSingleAxis;    //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å°ç»ˆæ­¢é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°   éƒ­å¼º 2022/6/16
 
-			uint8 ucAccVelPlanType; //¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-			uint8 ucDecVelPlanType; //¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
+			uint8 ucAccVelPlanType; //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+			uint8 ucDecVelPlanType; //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
 
-  ÊäÈë²ÎÊı£ºstruct SToolCompensation* pToolElement    µ¶²¹»º³åÇøÖ¸Õë
-		   pSChannel                   Í¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 Ö¸ÕëÎª¿Õ
-			1 ¼ÆËã³É¹¦
-  ±¸    ×¢£º
+  è¾“å…¥å‚æ•°ï¼šstruct SToolCompensation* pToolElement    åˆ€è¡¥ç¼“å†²åŒºæŒ‡é’ˆ
+		   pSChannel                   é€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 æŒ‡é’ˆä¸ºç©º
+			1 è®¡ç®—æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 calcVAndAPara(struct SToolCompensation* pToolElement, struct SChannel* pSChannel, bool bPlanarArcFlag)
 {
-	uint8* ucMapArray = pSChannel->pMapAxisArray;//Ó³Éä
+    uint8* ucMapArray = pSChannel->pMapAxisArray; //æ˜ å°„
 
-	if (pToolElement == NULL || pSChannel == NULL || ucMapArray == NULL)
-	{
-		return -1;
-	}
+    if (pToolElement == NULL || pSChannel == NULL || ucMapArray == NULL)
+    {
+        return -1;
+    }
 
-	//¼Ó¼õËÙÀàĞÍ
-	pToolElement->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType;
-	pToolElement->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType;
+    //åŠ å‡é€Ÿç±»å‹
+    pToolElement->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType;
+    pToolElement->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType;
 
-	//¼ÓËÙ¶È¼õËÙ¶È
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı²å²¹Ä£Ê½
-	{
-		int i = 0;
-		double dAccArray[AXIS_NUM_MAX];
-		double dDecArray[AXIS_NUM_MAX];
-		double dVMaxArray[AXIS_NUM_MAX];
-		double dVsArray[AXIS_NUM_MAX];
-		double dVeArray[AXIS_NUM_MAX];
+    //åŠ é€Ÿåº¦å‡é€Ÿåº¦
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°æ’è¡¥æ¨¡å¼
+    {
+        int i = 0;
+        double dAccArray[AXIS_NUM_MAX];
+        double dDecArray[AXIS_NUM_MAX];
+        double dVMaxArray[AXIS_NUM_MAX];
+        double dVsArray[AXIS_NUM_MAX];
+        double dVeArray[AXIS_NUM_MAX];
 
-		for (i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			if (ucMapArray[i] == AXIS_NULL)//2023.3.23¶Ô¿ÕÖáÅĞ¶Ï¹ùÇ¿
-			{
-				dAccArray[i] = 0;
-				dDecArray[i] = 0;
-				dVMaxArray[i] = 0;
-				dVsArray[i] = 0;
-				dVeArray[i] = 0;
-				continue;
-			}
+        for (i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            if (ucMapArray[i] == AXIS_NULL) //2023.3.23å¯¹ç©ºè½´åˆ¤æ–­éƒ­å¼º
+            {
+                dAccArray[i] = 0;
+                dDecArray[i] = 0;
+                dVMaxArray[i] = 0;
+                dVsArray[i] = 0;
+                dVeArray[i] = 0;
+                continue;
+            }
 
-			dAccArray[i] = getSingleAxisMaxAcc(i, g_SSystemPara.ucCommonAccVelPlanType, ucMapArray);
-			dDecArray[i] = getSingleAxisMaxDec(i, g_SSystemPara.ucCommonDecVelPlanType, ucMapArray);
-			dVMaxArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVmax;
-			dVsArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVs;
-			dVeArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVe;
-		}
-		//·ÖÎªÖ±ÏßºÍÔ²»¡Á½ÖÖÇé¿ö
-		if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE)//Ö±Ïß°´¸÷Öá¼°Æä±ÈÀıÏµÊı¼ÆËã
-		{
-			pToolElement->dAcc = calcMinTwoArrays(dAccArray, pToolElement->SStartVector.dArray);
-			pToolElement->dDec = calcMinTwoArrays(dDecArray, pToolElement->SStartVector.dArray);
-			pToolElement->dCommonVMaxFromSingleAxis = calcMinTwoArrays(dVMaxArray, pToolElement->SStartVector.dArray);
-			pToolElement->dCommonVsMinFromSingleAxis = calcMinTwoArrays(dVsArray, pToolElement->SStartVector.dArray);
-			pToolElement->dCommonVeMinFromSingleAxis = calcMinTwoArrays(dVeArray, pToolElement->SStartVector.dArray);
-		}
-		else if(getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC || getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)//Ô²»¡£¬ĞèÒª·ÖÇé¿öÌÖÂÛÊÇ·ñÓĞµÚÈıÖá
-		{
-			int Axis1 = 0,
-				Axis2 = 0;
-			//È·¶¨²å²¹Æ½Ãæ
-			switch (getBits(pToolElement->unCommandType, CMD_PLANE_ADDR))
-			{
-			case CMD_PLANE_G17:
-				Axis1 = AXIS_X;
-				Axis2 = AXIS_Y;
-				break;
-			case CMD_PLANE_G18:
-				Axis1 = AXIS_Z;
-				Axis2 = AXIS_X;
-				break;
-			case CMD_PLANE_G19:
-				Axis1 = AXIS_Y;
-				Axis2 = AXIS_Z;
-				break;
-			default:
-				Axis1 = AXIS_Z;
-				Axis2 = AXIS_X;
-				break;
-			}
+            dAccArray[i] = getSingleAxisMaxAcc(i, g_SSystemPara.ucCommonAccVelPlanType, ucMapArray);
+            dDecArray[i] = getSingleAxisMaxDec(i, g_SSystemPara.ucCommonDecVelPlanType, ucMapArray);
+            dVMaxArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVmax;
+            dVsArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVs;
+            dVeArray[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVe;
+        }
+        //åˆ†ä¸ºç›´çº¿å’Œåœ†å¼§ä¸¤ç§æƒ…å†µ
+        if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE) //ç›´çº¿æŒ‰å„è½´åŠå…¶æ¯”ä¾‹ç³»æ•°è®¡ç®—
+        {
+            pToolElement->dAcc = calcMinTwoArrays(dAccArray, pToolElement->SStartVector.dArray);
+            pToolElement->dDec = calcMinTwoArrays(dDecArray, pToolElement->SStartVector.dArray);
+            pToolElement->dCommonVMaxFromSingleAxis = calcMinTwoArrays(dVMaxArray, pToolElement->SStartVector.dArray);
+            pToolElement->dCommonVsMinFromSingleAxis = calcMinTwoArrays(dVsArray, pToolElement->SStartVector.dArray);
+            pToolElement->dCommonVeMinFromSingleAxis = calcMinTwoArrays(dVeArray, pToolElement->SStartVector.dArray);
+        }
+        else if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+                 getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) ==
+                     CMD_MOTION_ANTI_ARC) //åœ†å¼§ï¼Œéœ€è¦åˆ†æƒ…å†µè®¨è®ºæ˜¯å¦æœ‰ç¬¬ä¸‰è½´
+        {
+            int Axis1 = 0, Axis2 = 0;
+            //ç¡®å®šæ’è¡¥å¹³é¢
+            switch (getBits(pToolElement->unCommandType, CMD_PLANE_ADDR))
+            {
+            case CMD_PLANE_G17:
+                Axis1 = AXIS_X;
+                Axis2 = AXIS_Y;
+                break;
+            case CMD_PLANE_G18:
+                Axis1 = AXIS_Z;
+                Axis2 = AXIS_X;
+                break;
+            case CMD_PLANE_G19:
+                Axis1 = AXIS_Y;
+                Axis2 = AXIS_Z;
+                break;
+            default:
+                Axis1 = AXIS_Z;
+                Axis2 = AXIS_X;
+                break;
+            }
 
-			//¸ù¾İ²å²¹Æ½ÃæÑ¡³ö²å²¹ÖáÖĞÖµ½ÏĞ¡µÄÄÇ¸ö²ÎÊı
-			pToolElement->dAcc = min(dAccArray[Axis1], dAccArray[Axis2]);
-			pToolElement->dDec = min(dDecArray[Axis1], dDecArray[Axis2]);
-			pToolElement->dCommonVMaxFromSingleAxis = min(dVMaxArray[Axis1], dVMaxArray[Axis2]);
-			pToolElement->dCommonVsMinFromSingleAxis = min(dVsArray[Axis1], dVsArray[Axis2]);
-			pToolElement->dCommonVeMinFromSingleAxis = min(dVeArray[Axis1], dVeArray[Axis2]);
+            //æ ¹æ®æ’è¡¥å¹³é¢é€‰å‡ºæ’è¡¥è½´ä¸­å€¼è¾ƒå°çš„é‚£ä¸ªå‚æ•°
+            pToolElement->dAcc = min(dAccArray[Axis1], dAccArray[Axis2]);
+            pToolElement->dDec = min(dDecArray[Axis1], dDecArray[Axis2]);
+            pToolElement->dCommonVMaxFromSingleAxis = min(dVMaxArray[Axis1], dVMaxArray[Axis2]);
+            pToolElement->dCommonVsMinFromSingleAxis = min(dVsArray[Axis1], dVsArray[Axis2]);
+            pToolElement->dCommonVeMinFromSingleAxis = min(dVeArray[Axis1], dVeArray[Axis2]);
 
-			if (!bPlanarArcFlag)//·ÇÆ½ÃæÔ²»¡£¬ÒªÔÚ²å²¹Æ½ÃæºÍµÚÈıÖáÖĞÑ¡Ôñ³ö×îÖÕµÄ²ÎÊı
-			{
-				double dRatio = 0;
-				if (pToolElement->ucLongAxisNum == AXIS_NULL)//³¤ÖáÊÇ²å²¹Æ½Ãæ
-				{
-					dRatio = fabs(pToolElement->SStartVector.dArray[pToolElement->ucArcThirdAxisNum]);//×¢Òâ´ËÊ±µÚÈıÖáÖáºÅ
-					pToolElement->dAcc = min(pToolElement->dAcc, dAccArray[pToolElement->ucArcThirdAxisNum] / dRatio);
-					pToolElement->dDec = min(pToolElement->dDec, dDecArray[pToolElement->ucArcThirdAxisNum] / dRatio);
-					pToolElement->dCommonVMaxFromSingleAxis = min(pToolElement->dCommonVMaxFromSingleAxis, dVMaxArray[pToolElement->ucArcThirdAxisNum] / dRatio);
-					pToolElement->dCommonVsMinFromSingleAxis = min(pToolElement->dCommonVsMinFromSingleAxis, dVsArray[pToolElement->ucArcThirdAxisNum] / dRatio);
-					pToolElement->dCommonVeMinFromSingleAxis = min(pToolElement->dCommonVeMinFromSingleAxis, dVeArray[pToolElement->ucArcThirdAxisNum] / dRatio);
-				}
-				else//³¤ÖáÊÇµÚÈıÖá
-				{
-					dRatio = fabs(pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum]);//×¢Òâ´ËÊ±ÓÃµÄ³¤ÖáÖáºÅ
-					pToolElement->dAcc = min(pToolElement->dAcc * dRatio, dAccArray[pToolElement->ucLongAxisNum]);
-					pToolElement->dDec = min(pToolElement->dDec * dRatio, dDecArray[pToolElement->ucLongAxisNum]);
-					pToolElement->dCommonVMaxFromSingleAxis = min(pToolElement->dCommonVMaxFromSingleAxis * dRatio, dVMaxArray[pToolElement->ucLongAxisNum]);
-					pToolElement->dCommonVsMinFromSingleAxis = min(pToolElement->dCommonVsMinFromSingleAxis * dRatio, dVsArray[pToolElement->ucLongAxisNum]);
-					pToolElement->dCommonVeMinFromSingleAxis = min(pToolElement->dCommonVeMinFromSingleAxis * dRatio, dVeArray[pToolElement->ucLongAxisNum]);
-				}
-			}
-		}
-		else//µ¥ÖáÔË¶¯µÄG0  2024/5/27 ºé¹ÚÅô
-		{
-			if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_PHYSICS_NUM_MAX)
-			{
-				return -1;
-			}
-			pToolElement->dAcc = dAccArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
-			pToolElement->dDec = dDecArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
-			pToolElement->dCommonVMaxFromSingleAxis = dVMaxArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
-			pToolElement->dCommonVsMinFromSingleAxis = dVsArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
-			pToolElement->dCommonVeMinFromSingleAxis = dVeArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
-		}
-	}
-	else //³¤ÖáÄ£Ê½ºÍ¹Ì¶¨²ÎÊıÀ©Õ¹ÏßÎ»ÒÆÄ£Ê½
-	{
-		if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)//2024/5/27 ºé¹ÚÅô
-		{
-			if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_PHYSICS_NUM_MAX)
-			{
-				return -1;
-			}
-			pToolElement->dAcc = getSingleAxisMaxAcc(pToolElement->ucAxisNumOfNeedLookAhead, g_SSystemPara.ucCommonAccVelPlanType, ucMapArray);
-			pToolElement->dDec = getSingleAxisMaxDec(pToolElement->ucAxisNumOfNeedLookAhead, g_SSystemPara.ucCommonDecVelPlanType, ucMapArray);
-		}
-		else
-		{
-			pToolElement->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);
-			pToolElement->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);
-		}
-	}
+            if (!bPlanarArcFlag) //éå¹³é¢åœ†å¼§ï¼Œè¦åœ¨æ’è¡¥å¹³é¢å’Œç¬¬ä¸‰è½´ä¸­é€‰æ‹©å‡ºæœ€ç»ˆçš„å‚æ•°
+            {
+                double dRatio = 0;
+                if (pToolElement->ucLongAxisNum == AXIS_NULL) //é•¿è½´æ˜¯æ’è¡¥å¹³é¢
+                {
+                    dRatio =
+                        fabs(pToolElement->SStartVector.dArray[pToolElement->ucArcThirdAxisNum]); //æ³¨æ„æ­¤æ—¶ç¬¬ä¸‰è½´è½´å·
+                    pToolElement->dAcc = min(pToolElement->dAcc, dAccArray[pToolElement->ucArcThirdAxisNum] / dRatio);
+                    pToolElement->dDec = min(pToolElement->dDec, dDecArray[pToolElement->ucArcThirdAxisNum] / dRatio);
+                    pToolElement->dCommonVMaxFromSingleAxis = min(pToolElement->dCommonVMaxFromSingleAxis,
+                                                                  dVMaxArray[pToolElement->ucArcThirdAxisNum] / dRatio);
+                    pToolElement->dCommonVsMinFromSingleAxis = min(pToolElement->dCommonVsMinFromSingleAxis,
+                                                                   dVsArray[pToolElement->ucArcThirdAxisNum] / dRatio);
+                    pToolElement->dCommonVeMinFromSingleAxis = min(pToolElement->dCommonVeMinFromSingleAxis,
+                                                                   dVeArray[pToolElement->ucArcThirdAxisNum] / dRatio);
+                }
+                else //é•¿è½´æ˜¯ç¬¬ä¸‰è½´
+                {
+                    dRatio =
+                        fabs(pToolElement->SStartVector.dArray[pToolElement->ucLongAxisNum]); //æ³¨æ„æ­¤æ—¶ç”¨çš„é•¿è½´è½´å·
+                    pToolElement->dAcc = min(pToolElement->dAcc * dRatio, dAccArray[pToolElement->ucLongAxisNum]);
+                    pToolElement->dDec = min(pToolElement->dDec * dRatio, dDecArray[pToolElement->ucLongAxisNum]);
+                    pToolElement->dCommonVMaxFromSingleAxis =
+                        min(pToolElement->dCommonVMaxFromSingleAxis * dRatio, dVMaxArray[pToolElement->ucLongAxisNum]);
+                    pToolElement->dCommonVsMinFromSingleAxis =
+                        min(pToolElement->dCommonVsMinFromSingleAxis * dRatio, dVsArray[pToolElement->ucLongAxisNum]);
+                    pToolElement->dCommonVeMinFromSingleAxis =
+                        min(pToolElement->dCommonVeMinFromSingleAxis * dRatio, dVeArray[pToolElement->ucLongAxisNum]);
+                }
+            }
+        }
+        else //å•è½´è¿åŠ¨çš„G0  2024/5/27 æ´ªå† é¹
+        {
+            if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_PHYSICS_NUM_MAX)
+            {
+                return -1;
+            }
+            pToolElement->dAcc = dAccArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
+            pToolElement->dDec = dDecArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
+            pToolElement->dCommonVMaxFromSingleAxis = dVMaxArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
+            pToolElement->dCommonVsMinFromSingleAxis = dVsArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
+            pToolElement->dCommonVeMinFromSingleAxis = dVeArray[(pToolElement->ucAxisNumOfNeedLookAhead)];
+        }
+    }
+    else //é•¿è½´æ¨¡å¼å’Œå›ºå®šå‚æ•°æ‰©å±•çº¿ä½ç§»æ¨¡å¼
+    {
+        if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE) //2024/5/27 æ´ªå† é¹
+        {
+            if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_PHYSICS_NUM_MAX)
+            {
+                return -1;
+            }
+            pToolElement->dAcc = getSingleAxisMaxAcc(pToolElement->ucAxisNumOfNeedLookAhead,
+                                                     g_SSystemPara.ucCommonAccVelPlanType, ucMapArray);
+            pToolElement->dDec = getSingleAxisMaxDec(pToolElement->ucAxisNumOfNeedLookAhead,
+                                                     g_SSystemPara.ucCommonDecVelPlanType, ucMapArray);
+        }
+        else
+        {
+            pToolElement->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);
+            pToolElement->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcCoefOfFeedrate(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
-  ÊäÈë²ÎÊı£ºpToolElement	       µ¶²¹ºóµÄ½á¹¹Ìå
-			uint8 ucChannelNum     Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÏµÊı
-  ±¸    ×¢£º¼ÆËã½ø¸øËÙ¶È¶Ô±ÈÏµÊı(·ÀÖ¹G99Ä£Ê½ÏÂ½ø¸øËÙ¶Èµ¥Î»Îªmm/RÖ±½ÓÓëmm/msËÙ¶ÈÁ¿¶¼±È½Ï)
+  å‡½æ•°åç§°ï¼šcalcCoefOfFeedrate(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
+  è¾“å…¥å‚æ•°ï¼špToolElement	       åˆ€è¡¥åçš„ç»“æ„ä½“
+			uint8 ucChannelNum     é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šç³»æ•°
+  å¤‡    æ³¨ï¼šè®¡ç®—è¿›ç»™é€Ÿåº¦å¯¹æ¯”ç³»æ•°(é˜²æ­¢G99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å•ä½ä¸ºmm/Rç›´æ¥ä¸mm/msé€Ÿåº¦é‡éƒ½æ¯”è¾ƒ)
 **************************************************/
 double calcCoefOfFeedrate(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
 {
-	double dCoef;
-	double dG97AbsSpindleSpeed;
+    double dCoef;
+    double dG97AbsSpindleSpeed;
 
-	if (pToolElement == NULL)
-	{
-		return 1.0;
-	}
-	//»ñÈ¡Ö÷Öá×ªËÙr/ms
-	// ²»ÓÃÉÏ·½º¯ÊıÊÇÒòÎªÍ¨µÀ½á¹¹ÌåÖĞµÄÖ÷Öá×ªËÙÖ»ÊÇµ±Ç°ÕıÔÚ²å²¹µÄÖ¸ÁîµÄÄ¿±êÖ÷Öá×ªËÙ£¬²¢²»´ú±íÇ°Õ°µ±Ç°´¦ÀíµÄÖ÷Öá×ªËÙ¡£
-	//µ¶²¹»º³åÇøÖĞÖ÷Öá×ªËÙµ¥Î»Îªr/min,×¢Òâ×ª»»
-	dG97AbsSpindleSpeed = pToolElement->dSpindleSpeed / 60 / 1000;
-
+    if (pToolElement == NULL)
+    {
+        return 1.0;
+    }
+    //è·å–ä¸»è½´è½¬é€Ÿr/ms
+    // ä¸ç”¨ä¸Šæ–¹å‡½æ•°æ˜¯å› ä¸ºé€šé“ç»“æ„ä½“ä¸­çš„ä¸»è½´è½¬é€Ÿåªæ˜¯å½“å‰æ­£åœ¨æ’è¡¥çš„æŒ‡ä»¤çš„ç›®æ ‡ä¸»è½´è½¬é€Ÿï¼Œå¹¶ä¸ä»£è¡¨å‰ç»å½“å‰å¤„ç†çš„ä¸»è½´è½¬é€Ÿã€‚
+    //åˆ€è¡¥ç¼“å†²åŒºä¸­ä¸»è½´è½¬é€Ÿå•ä½ä¸ºr/min,æ³¨æ„è½¬æ¢
+    dG97AbsSpindleSpeed = pToolElement->dSpindleSpeed / 60 / 1000;
 
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE && ucChannelNum == 1)
-	dCoef = getBits(pToolElement->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? 1.0
-		: g_SSystemPara.SAxisPara[g_SChannel[0].pMapAxisArray[AXIS_C]].dVmax / DEGREE_OF_CIRCLE;	//³ÂÃô´Ï	2023/7/31 Í¨µÀ¶şÔËĞĞG99Ê±£¬½«Í¨µÀÒ»µÄÖ÷Öá×î¸ß×ªËÙÓÃÓÚÇ°Õ°¡£
+    dCoef = getBits(pToolElement->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
+                ? 1.0
+                : g_SSystemPara.SAxisPara[g_SChannel[0].pMapAxisArray[AXIS_C]].dVmax /
+                      DEGREE_OF_CIRCLE; //é™ˆæ•èª	2023/7/31 é€šé“äºŒè¿è¡ŒG99æ—¶ï¼Œå°†é€šé“ä¸€çš„ä¸»è½´æœ€é«˜è½¬é€Ÿç”¨äºå‰ç»ã€‚
 #else
-	//ÅĞ¶Ïµ±Ç°Ö¸ÁîÊÇ·ñÊÇG99Ä£Ê½£¬G98Ê±ÏµÊıÎª1.0
-	dCoef = getBits(pToolElement->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? 1.0
-		: dG97AbsSpindleSpeed;
+    //åˆ¤æ–­å½“å‰æŒ‡ä»¤æ˜¯å¦æ˜¯G99æ¨¡å¼ï¼ŒG98æ—¶ç³»æ•°ä¸º1.0
+    dCoef = getBits(pToolElement->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? 1.0 : dG97AbsSpindleSpeed;
 #endif
 
-	//·ÀÖ¹·ÖÄ¸ÎªÁã
-	if (isZero(dG97AbsSpindleSpeed))
-	{
-		dCoef = 1.0;
-	}
+    //é˜²æ­¢åˆ†æ¯ä¸ºé›¶
+    if (isZero(dG97AbsSpindleSpeed))
+    {
+        dCoef = 1.0;
+    }
 
-	return dCoef;
+    return dCoef;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcorrectFeedrateAndLowerLimitSpeedAgain(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
-  ÊäÈë²ÎÊı£ºpToolElement	       µ¶²¹ºóµÄ½á¹¹Ìå
-			uint8 ucChannelNum     Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºcalcVAndAParaº¯Êıµ÷ÓÃÍê±ÏºóÒÑ¾­¼ÆËã³ö×î´óËÙ¶ÈÒªÇó
-            ÔÙ´ÎĞŞÕıÇĞÏ÷ËÙ¶ÈºÍµÍËÙÏÂÏŞÖµ
-			½ø¸øËÙ¶È²»ÄÜ¸ßÓÚ×î´óËÙ¶È¡¢µÍËÙÏÂÏŞÖµ²»ÄÜ¸ßÓÚ½ø¸øËÙ¶È
+  å‡½æ•°åç§°ï¼šcorrectFeedrateAndLowerLimitSpeedAgain(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
+  è¾“å…¥å‚æ•°ï¼špToolElement	       åˆ€è¡¥åçš„ç»“æ„ä½“
+			uint8 ucChannelNum     é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šcalcVAndAParaå‡½æ•°è°ƒç”¨å®Œæ¯•åå·²ç»è®¡ç®—å‡ºæœ€å¤§é€Ÿåº¦è¦æ±‚
+            å†æ¬¡ä¿®æ­£åˆ‡å‰Šé€Ÿåº¦å’Œä½é€Ÿä¸‹é™å€¼
+			è¿›ç»™é€Ÿåº¦ä¸èƒ½é«˜äºæœ€å¤§é€Ÿåº¦ã€ä½é€Ÿä¸‹é™å€¼ä¸èƒ½é«˜äºè¿›ç»™é€Ÿåº¦
 **************************************************/
 void correctFeedrateAndLowerLimitSpeedAgain(struct SToolCompensation* pToolElement, uint8 ucChannelNum)
 {
-	double dCoefOfFeedrate;
+    double dCoefOfFeedrate;
 
-	if (pToolElement == NULL)
-	{
-		return;
-	}
+    if (pToolElement == NULL)
+    {
+        return;
+    }
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pToolElement, ucChannelNum); //2024/5/27 ºé¹ÚÅô G0²»ÊÜG98»òG99Ó°Ïì,×ª»»ÏµÊıÉèÎª1
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate =
+        getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+            ? 1.0
+            : calcCoefOfFeedrate(pToolElement, ucChannelNum); //2024/5/27 æ´ªå† é¹ G0ä¸å—G98æˆ–G99å½±å“,è½¬æ¢ç³»æ•°è®¾ä¸º1
 
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı
-	{
-		pToolElement->dFeedrate = (pToolElement->dFeedrate * dCoefOfFeedrate) > pToolElement->dCommonVMaxFromSingleAxis ? (pToolElement->dCommonVMaxFromSingleAxis / dCoefOfFeedrate) : pToolElement->dFeedrate;
-	}
-	else//¹Ì¶¨²ÎÊı
-	{
-		if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)//2024/5/27 ºé¹ÚÅô
-		{
-			if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX || g_SChannel[ucChannelNum].pMapAxisArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
-			{
-				parseRunningError(9999,GCODE_ERROR_NUM150,9999);
-				return ;
-			}
-			pToolElement->dFeedrate = g_SSystemPara.SAxisPara[g_SChannel[ucChannelNum].pMapAxisArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVmax;
-		}
-		else 
-		{
-			pToolElement->dFeedrate = (pToolElement->dFeedrate * dCoefOfFeedrate) > g_SSystemPara.dSysMaxVel ? (g_SSystemPara.dSysMaxVel / dCoefOfFeedrate) : pToolElement->dFeedrate;
-		}
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°
+    {
+        pToolElement->dFeedrate = (pToolElement->dFeedrate * dCoefOfFeedrate) > pToolElement->dCommonVMaxFromSingleAxis
+                                      ? (pToolElement->dCommonVMaxFromSingleAxis / dCoefOfFeedrate)
+                                      : pToolElement->dFeedrate;
+    }
+    else //å›ºå®šå‚æ•°
+    {
+        if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE) //2024/5/27 æ´ªå† é¹
+        {
+            if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX ||
+                g_SChannel[ucChannelNum].pMapAxisArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
+            {
+                parseRunningError(9999, GCODE_ERROR_NUM150, 9999);
+                return;
+            }
+            pToolElement->dFeedrate =
+                g_SSystemPara.SAxisPara[g_SChannel[ucChannelNum].pMapAxisArray[pToolElement->ucAxisNumOfNeedLookAhead]]
+                    .dVmax;
+        }
+        else
+        {
+            pToolElement->dFeedrate = (pToolElement->dFeedrate * dCoefOfFeedrate) > g_SSystemPara.dSysMaxVel
+                                          ? (g_SSystemPara.dSysMaxVel / dCoefOfFeedrate)
+                                          : pToolElement->dFeedrate;
+        }
+    }
 
-	}
-
-	pToolElement->dLowerLimitSpeed = pToolElement->dLowerLimitSpeed > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : pToolElement->dLowerLimitSpeed;
+    pToolElement->dLowerLimitSpeed = pToolElement->dLowerLimitSpeed > (pToolElement->dFeedrate * dCoefOfFeedrate)
+                                         ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                                         : pToolElement->dLowerLimitSpeed;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºmoveToG0G01G02G03(int16 sLookAheadRes,struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ  ½«Ç°Õ°¶ÁĞ´Ö¸ÕëÒÆ¶¯ÖÁG0/G01/ G02 /G03µ¥Ôª£¬ÆäËûµ¥ÔªÌí¼Ó¼ÓËÙ¶È£¬ËÙ¶ÈÀàĞÍĞÅÏ¢
-  ÊäÈë²ÎÊı£ºsLookAheadRes Ç°Õ°¿É¶ÁÇø¼ä¸öÊı
-		   ucChannelNum  Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE:Ö¸ÕëÎ´ÒÆ¶¯£¬¿ªÊ¼Ö¸ÏòĞèÇ°Õ°µ¥Ôª
-			TRUE:Ö¸ÕëÒÆ¶¯£¬¿ªÊ¼Ö¸Ïò²»ĞèÇ°Õ°µ¥Ôª
+  å‡½æ•°åç§°ï¼šmoveToG0G01G02G03(int16 sLookAheadRes,struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½  å°†å‰ç»è¯»å†™æŒ‡é’ˆç§»åŠ¨è‡³G0/G01/ G02 /G03å•å…ƒï¼Œå…¶ä»–å•å…ƒæ·»åŠ åŠ é€Ÿåº¦ï¼Œé€Ÿåº¦ç±»å‹ä¿¡æ¯
+  è¾“å…¥å‚æ•°ï¼šsLookAheadRes å‰ç»å¯è¯»åŒºé—´ä¸ªæ•°
+		   ucChannelNum  é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE:æŒ‡é’ˆæœªç§»åŠ¨ï¼Œå¼€å§‹æŒ‡å‘éœ€å‰ç»å•å…ƒ
+			TRUE:æŒ‡é’ˆç§»åŠ¨ï¼Œå¼€å§‹æŒ‡å‘ä¸éœ€å‰ç»å•å…ƒ
 
-  ±¸    ×¢£º×î¶àÑ­»·sLookAheadRes´Î¶ÔÓ¦Ç°Õ°¿É¶ÁÇø¼äÈ«Îª²»ĞèÒªÇ°Õ°µÄÖ¸Áî
-			Ò²¿ÉÄÜÒ»Ñ­»·£¬µ¶²¹Ğ´Ö¸ÕëÉÏÀ´¾ÍÖ¸ÏòĞèÒªÇ°Õ°µÄµ¥Ôª
+  å¤‡    æ³¨ï¼šæœ€å¤šå¾ªç¯sLookAheadResæ¬¡å¯¹åº”å‰ç»å¯è¯»åŒºé—´å…¨ä¸ºä¸éœ€è¦å‰ç»çš„æŒ‡ä»¤
+			ä¹Ÿå¯èƒ½ä¸€å¾ªç¯ï¼Œåˆ€è¡¥å†™æŒ‡é’ˆä¸Šæ¥å°±æŒ‡å‘éœ€è¦å‰ç»çš„å•å…ƒ
 **************************************************/
 bool moveToG00G01G02G03(int16 sLookAheadRes, uint8 ucChannelNum)
 {
-	int16 sNum = 0;//ÓÃÓÚ¼ÇÂ¼Ñ­»·´ÎÊı 
+    int16 sNum = 0; //ç”¨äºè®°å½•å¾ªç¯æ¬¡æ•°
 
-	struct SToolCompensation* pLookAheadRW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum);//Ç°Õ°¶ÁĞ´Ö¸Õë
+    struct SToolCompensation* pLookAheadRW =
+        getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum); //å‰ç»è¯»å†™æŒ‡é’ˆ
 
-	int8 res = judgeG00G01G02G03(pLookAheadRW, ucChannelNum);
+    int8 res = judgeG00G01G02G03(pLookAheadRW, ucChannelNum);
 
-	while ((res == 0 || res == 2 || res == 3 || res == 4 || res == 5) && sNum < sLookAheadRes)
-	{
-		//²»ĞèÇ°Õ°µ¥ÔªÖĞµÄ
-		if (res == 2 || res == 3 || res == 4 || res == 5)//G123
-		{
-			bool bPlanarArcFlag;
+    while ((res == 0 || res == 2 || res == 3 || res == 4 || res == 5) && sNum < sLookAheadRes)
+    {
+        //ä¸éœ€å‰ç»å•å…ƒä¸­çš„
+        if (res == 2 || res == 3 || res == 4 || res == 5) //G123
+        {
+            bool bPlanarArcFlag;
 
-			if (res == 4)
-			{
-				bPlanarArcFlag = FALSE;
-			}
-			else
-			{
-				bPlanarArcFlag = TRUE;
-			}
+            if (res == 4)
+            {
+                bPlanarArcFlag = FALSE;
+            }
+            else
+            {
+                bPlanarArcFlag = TRUE;
+            }
 
-			//ÒÆ¶¯Ç°Õ°¶ÁĞ´Ö¸ÕëÇ°¶Ô½á¹¹ÌåËÙ¶ÈĞÅÏ¢¸³Öµ
-			//³õÄ©ËÙ¶È
-			//1.Ô²»¡·¨Ïò¼°¹­¸ßÎó²îËÙ¶È¼ÆËã
-			if (getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC || getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
-			{
-				double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadRW, ucChannelNum);
-				double dF = dCoefOfFeedrate * pLookAheadRW->dFeedrate;
+            //ç§»åŠ¨å‰ç»è¯»å†™æŒ‡é’ˆå‰å¯¹ç»“æ„ä½“é€Ÿåº¦ä¿¡æ¯èµ‹å€¼
+            //åˆæœ«é€Ÿåº¦
+            //1.åœ†å¼§æ³•å‘åŠå¼“é«˜è¯¯å·®é€Ÿåº¦è®¡ç®—
+            if (getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC ||
+                getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
+            {
+                double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadRW, ucChannelNum);
+                double dF = dCoefOfFeedrate * pLookAheadRW->dFeedrate;
 
-				pLookAheadRW->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadRW->dRadius);
+                pLookAheadRW->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadRW->dRadius);
 
-				pLookAheadRW->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadRW->dRadius, dF);
-			}
+                pLookAheadRW->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadRW->dRadius, dF);
+            }
 
-			//2.ĞŞÕı½ø¸øËÙ¶È²¢¼ÆËãÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¬²¢ĞŞÕı·ÇÆ½ÃæÔ²»¡µÚÈıÖáÊÇ³¤ÖáÊ±µÄ¹­¸ßÎó²î¼°·¨Ïò¼ÓËÙ¶ÈÎó²î
-			correctFeedrateAndLowerLimitSpeed(pLookAheadRW, AXIS_NUM_MAX, bPlanarArcFlag, ucChannelNum);
+            //2.ä¿®æ­£è¿›ç»™é€Ÿåº¦å¹¶è®¡ç®—åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼Œå¹¶ä¿®æ­£éå¹³é¢åœ†å¼§ç¬¬ä¸‰è½´æ˜¯é•¿è½´æ—¶çš„å¼“é«˜è¯¯å·®åŠæ³•å‘åŠ é€Ÿåº¦è¯¯å·®
+            correctFeedrateAndLowerLimitSpeed(pLookAheadRW, AXIS_NUM_MAX, bPlanarArcFlag, ucChannelNum);
 
-			//3.¸ù¾İ²å²¹Ä£Ê½ÌîÈëËÙ¶ÈÀàĞÍ£¬¼ÓËÙ¶È¼õËÙ¶È
-			//×ÔÊÊÓ¦²ÎÊı²å²¹Ä£Ê½£¬Òª¶à¼ÆËãÓÉ¸÷Öá·´ËãµÃµ½µÄ²ÎÊı£º
-			//pToolElement->dCommonVMaxFromSingleAxis 
-			//pToolElement->dCommonVsMinFromSingleAxis 
-			//pToolElement->dCommonVeMinFromSingleAxis
-			calcVAndAPara(pLookAheadRW, &g_SChannel[ucChannelNum], bPlanarArcFlag);
+            //3.æ ¹æ®æ’è¡¥æ¨¡å¼å¡«å…¥é€Ÿåº¦ç±»å‹ï¼ŒåŠ é€Ÿåº¦å‡é€Ÿåº¦
+            //è‡ªé€‚åº”å‚æ•°æ’è¡¥æ¨¡å¼ï¼Œè¦å¤šè®¡ç®—ç”±å„è½´åç®—å¾—åˆ°çš„å‚æ•°ï¼š
+            //pToolElement->dCommonVMaxFromSingleAxis
+            //pToolElement->dCommonVsMinFromSingleAxis
+            //pToolElement->dCommonVeMinFromSingleAxis
+            calcVAndAPara(pLookAheadRW, &g_SChannel[ucChannelNum], bPlanarArcFlag);
 
-			//4.ÔÙ´ÎĞŞÕı½ø¸øËÙ¶ÈºÍÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¬½ø¸øËÙ¶È²»ÄÜ¸ßÓÚ×î´óËÙ¶È,µÍËÙÏÂÏŞÖµ²»ÄÜ¸ßÓÚ½ø¸øËÙ¶È
-			correctFeedrateAndLowerLimitSpeedAgain(pLookAheadRW, ucChannelNum);
+            //4.å†æ¬¡ä¿®æ­£è¿›ç»™é€Ÿåº¦å’Œåˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼Œè¿›ç»™é€Ÿåº¦ä¸èƒ½é«˜äºæœ€å¤§é€Ÿåº¦,ä½é€Ÿä¸‹é™å€¼ä¸èƒ½é«˜äºè¿›ç»™é€Ÿåº¦
+            correctFeedrateAndLowerLimitSpeedAgain(pLookAheadRW, ucChannelNum);
 
-			//5.Ğ£ÕıVsVe£¬Ö÷ÒªÊÇ±£Ö¤vsve²»³¬³ö½ø¸øËÙ¶È£¬Ô²»¡³õÄ©ËÙ¶È²»ÄÜ³¬¹ı¹­¸ßÎó²îºÍ·¨Ïò¼ÓËÙ¶È£¬¼ÓÈëÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµÔ¼Êø
-			pLookAheadRW->dMinVs = calcFirstElementVs(pLookAheadRW, g_SChannel[ucChannelNum].pMapAxisArray, ucChannelNum);
-			pLookAheadRW->dMinVe = calcLastElementVe(pLookAheadRW, g_SChannel[ucChannelNum].pMapAxisArray, ucChannelNum);
+            //5.æ ¡æ­£VsVeï¼Œä¸»è¦æ˜¯ä¿è¯vsveä¸è¶…å‡ºè¿›ç»™é€Ÿåº¦ï¼Œåœ†å¼§åˆæœ«é€Ÿåº¦ä¸èƒ½è¶…è¿‡å¼“é«˜è¯¯å·®å’Œæ³•å‘åŠ é€Ÿåº¦ï¼ŒåŠ å…¥åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼çº¦æŸ
+            pLookAheadRW->dMinVs =
+                calcFirstElementVs(pLookAheadRW, g_SChannel[ucChannelNum].pMapAxisArray, ucChannelNum);
+            pLookAheadRW->dMinVe =
+                calcLastElementVe(pLookAheadRW, g_SChannel[ucChannelNum].pMapAxisArray, ucChannelNum);
 
-			//6.Ïà¹ØËÙ¶È¼ÆËãÍê±Ï±êÖ¾Î»ÖÃTRUE,¼´Íê³ÉÒÔÉÏ5²½Öè
-			pLookAheadRW->bLookAheadVParaCalcOverFlag = TRUE;
+            //6.ç›¸å…³é€Ÿåº¦è®¡ç®—å®Œæ¯•æ ‡å¿—ä½ç½®TRUE,å³å®Œæˆä»¥ä¸Š5æ­¥éª¤
+            pLookAheadRW->bLookAheadVParaCalcOverFlag = TRUE;
 
-			//¸³Öµ³õÄ©ËÙ¶È
-			pLookAheadRW->dVs = pLookAheadRW->dMinVs;
-			pLookAheadRW->dVe = pLookAheadRW->dMinVe;
-		}
+            //èµ‹å€¼åˆæœ«é€Ÿåº¦
+            pLookAheadRW->dVs = pLookAheadRW->dMinVs;
+            pLookAheadRW->dVe = pLookAheadRW->dMinVe;
+        }
 
-		//ÒÆ¶¯Ç°Õ°¶ÁĞ´Ö¸Õë
-		moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, ucChannelNum);
+        //ç§»åŠ¨å‰ç»è¯»å†™æŒ‡é’ˆ
+        moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, ucChannelNum);
 
-		//¸ü¸ÄÖ®Ç°¶àÍ¨µÀ°æ±¾µÄÖÂÃü´íÎó£¬¸üĞÂpLookAheadRWÖ¸Ïò
-		pLookAheadRW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum);//Ç°Õ°¶ÁĞ´Ö¸Õë
+        //æ›´æ”¹ä¹‹å‰å¤šé€šé“ç‰ˆæœ¬çš„è‡´å‘½é”™è¯¯ï¼Œæ›´æ–°pLookAheadRWæŒ‡å‘
+        pLookAheadRW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum); //å‰ç»è¯»å†™æŒ‡é’ˆ
 
-		//¸ü¸ÄÖ®Ç°¶àÍ¨µÀ°æ±¾µÄÖÂÃü´íÎó£¬¸üĞÂresµÄÖµ
-		res = judgeG00G01G02G03(pLookAheadRW, ucChannelNum);
+        //æ›´æ”¹ä¹‹å‰å¤šé€šé“ç‰ˆæœ¬çš„è‡´å‘½é”™è¯¯ï¼Œæ›´æ–°resçš„å€¼
+        res = judgeG00G01G02G03(pLookAheadRW, ucChannelNum);
 
-		sNum++;
-	}
+        sNum++;
+    }
 
-	if (sNum == 0)
-	{
-		return FALSE;
-	}
-	return TRUE;
+    if (sNum == 0)
+    {
+        return FALSE;
+    }
+    return TRUE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcArcMaxNormalAccVmax(double dR)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÔ²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøÏÂµÄ×î´óËÙ¶È
-  ÊäÈë²ÎÊı£ºdR Ô²»¡°ë¾¶
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÔ¼ÊøËÙ¶È
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcArcMaxNormalAccVmax(double dR)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—åœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šdR åœ†å¼§åŠå¾„
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šçº¦æŸé€Ÿåº¦
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double calcArcMaxNormalAccVmax(double dR)
 {
-	double dArcMaxNormalAcc;
+    double dArcMaxNormalAcc;
 
-	//¶ÔÔ²»¡·¨Ïò¼ÓËÙ¶È²ÎÊıÊÇ·ñÎª0½øĞĞÅĞ¶Ï£¬Îª0Ê±È¡0.001mm/ms2£¬·ÀÖ¹Ô²»¡×î´óËÙ¶ÈÉèÖÃÎª0  ¹ùÇ¿ 2023.5.26
-	if (isZero(g_SSystemPara.dArcMaxNormalAcc))
-	{
-		dArcMaxNormalAcc = 0.001;
-	}
-	else
-	{
-		dArcMaxNormalAcc = g_SSystemPara.dArcMaxNormalAcc;
-	}
+    //å¯¹åœ†å¼§æ³•å‘åŠ é€Ÿåº¦å‚æ•°æ˜¯å¦ä¸º0è¿›è¡Œåˆ¤æ–­ï¼Œä¸º0æ—¶å–0.001mm/ms2ï¼Œé˜²æ­¢åœ†å¼§æœ€å¤§é€Ÿåº¦è®¾ç½®ä¸º0  éƒ­å¼º 2023.5.26
+    if (isZero(g_SSystemPara.dArcMaxNormalAcc))
+    {
+        dArcMaxNormalAcc = 0.001;
+    }
+    else
+    {
+        dArcMaxNormalAcc = g_SSystemPara.dArcMaxNormalAcc;
+    }
 
-	return sqrt(dArcMaxNormalAcc * fabs(dR));
+    return sqrt(dArcMaxNormalAcc * fabs(dR));
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcArcMaxChordErrorVmax(double dR)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÔ²»¡¹­¸ßÎó²îÔ¼ÊøÏÂµÄ×î´óËÙ¶È
-  ÊäÈë²ÎÊı£ºdR Ô²»¡°ë¾¶
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÔ¼ÊøËÙ¶È
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcArcMaxChordErrorVmax(double dR)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—åœ†å¼§å¼“é«˜è¯¯å·®çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šdR åœ†å¼§åŠå¾„
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šçº¦æŸé€Ÿåº¦
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double calcArcMaxChordErrorVmax(double dR, double dF)
 {
-	double dr = fabs(dR);
-	double dArcMaxChordError = g_SSystemPara.dArcMaxChordError;
+    double dr = fabs(dR);
+    double dArcMaxChordError = g_SSystemPara.dArcMaxChordError;
 
-	//¶Ô¹­¸ßÎó²î½øĞĞ0ÅĞ¶Ï£¬ÎªÁãÊ±Ä¬ÈÏÈ¡0.05mm,È·±£Ô²»¡²å²¹ÄÜ¹»ÔË¶¯ÆğÀ´ ¹ùÇ¿ 2023.5.26
-	if (isZero(dArcMaxChordError))
-	{
-		dArcMaxChordError = 0.05;
-	}
+    //å¯¹å¼“é«˜è¯¯å·®è¿›è¡Œ0åˆ¤æ–­ï¼Œä¸ºé›¶æ—¶é»˜è®¤å–0.05mm,ç¡®ä¿åœ†å¼§æ’è¡¥èƒ½å¤Ÿè¿åŠ¨èµ·æ¥ éƒ­å¼º 2023.5.26
+    if (isZero(dArcMaxChordError))
+    {
+        dArcMaxChordError = 0.05;
+    }
 
-	//·ÖÈıÖÖÇé¿ö¶Ô¹­¸ßÎó²îºÍ°ë¾¶µÄ´óĞ¡¹ØÏµÇé¿ö½øĞĞ´¦Àí      ¹ùÇ¿ 2023.5.26
-	if (!(dr < dArcMaxChordError))//dr >= dArcMaxChordError
-	{
-		return 2 * dr * acos((dr - dArcMaxChordError) / dr) / g_SSystemPara.dInterpolationTime;
-	}
-	else if((dArcMaxChordError > dr) && (!(dArcMaxChordError > 2 * dr)))//   dr < dArcMaxChordError <= 2 * dr
-	{
-		return (2 * PI * dr - 2 * dr * acos((dArcMaxChordError - dr) / dr)) / g_SSystemPara.dInterpolationTime;
-	}
-	else//dArcMaxChordError > 2 * dr£¬´ËÊ±¹­¸ßÎó²î³¬¹ıÁËÖ±¾¶Öµ£¬Ö±½Ó·µ»Ø½ø¸øËÙ¶È
-	{
-		return dF;
-	}
+    //åˆ†ä¸‰ç§æƒ…å†µå¯¹å¼“é«˜è¯¯å·®å’ŒåŠå¾„çš„å¤§å°å…³ç³»æƒ…å†µè¿›è¡Œå¤„ç†      éƒ­å¼º 2023.5.26
+    if (!(dr < dArcMaxChordError)) //dr >= dArcMaxChordError
+    {
+        return 2 * dr * acos((dr - dArcMaxChordError) / dr) / g_SSystemPara.dInterpolationTime;
+    }
+    else if ((dArcMaxChordError > dr) && (!(dArcMaxChordError > 2 * dr))) //   dr < dArcMaxChordError <= 2 * dr
+    {
+        return (2 * PI * dr - 2 * dr * acos((dArcMaxChordError - dr) / dr)) / g_SSystemPara.dInterpolationTime;
+    }
+    else //dArcMaxChordError > 2 * drï¼Œæ­¤æ—¶å¼“é«˜è¯¯å·®è¶…è¿‡äº†ç›´å¾„å€¼ï¼Œç›´æ¥è¿”å›è¿›ç»™é€Ÿåº¦
+    {
+        return dF;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcorrectVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
-  º¯Êı¹¦ÄÜ  ´¿¼¸ºÎVeer¼ÆËãºó£¬¶ÔVeer½øĞĞĞŞÕı
-  ÊäÈë²ÎÊı£º
-		   pPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-		   uint8 ucChannelNum £ºÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcorrectVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+  å‡½æ•°åŠŸèƒ½  çº¯å‡ ä½•Veerè®¡ç®—åï¼Œå¯¹Veerè¿›è¡Œä¿®æ­£
+  è¾“å…¥å‚æ•°ï¼š
+		   pPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+		   uint8 ucChannelNum ï¼šé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-void correctVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+void correctVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj,
+                              struct SToolCompensation* pLaterTraj)
 {
-	double dV;
+    double dV;
 
-	double dPreCoefOfFeedrate;
-	double dLaterCoefOfFeedrate;
+    double dPreCoefOfFeedrate;
+    double dLaterCoefOfFeedrate;
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	//2024.5.25Ôö¼ÓG0µÄ´¦Àí
-	dPreCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
-	dLaterCoefOfFeedrate = getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pLaterTraj, ucChannelNum);
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    //2024.5.25å¢åŠ G0çš„å¤„ç†
+    dPreCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                             ? 1.0
+                             : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
+    dLaterCoefOfFeedrate = getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                               ? 1.0
+                               : calcCoefOfFeedrate(pLaterTraj, ucChannelNum);
 
-	if (pPreTraj == NULL || pLaterTraj == NULL)
-	{
-		return;
-	}
+    if (pPreTraj == NULL || pLaterTraj == NULL)
+    {
+        return;
+    }
 
-	//1.ÔÚÇ°¶ÎdMinVeºÍºó¶ÎdMinVsÖĞÑ¡ÔñÒ»¸ö½ÏĞ¡Öµ
-	dV = pPreTraj->dMinVe < pLaterTraj->dMinVs ? pPreTraj->dMinVe : pLaterTraj->dMinVs;
+    //1.åœ¨å‰æ®µdMinVeå’Œåæ®µdMinVsä¸­é€‰æ‹©ä¸€ä¸ªè¾ƒå°å€¼
+    dV = pPreTraj->dMinVe < pLaterTraj->dMinVs ? pPreTraj->dMinVe : pLaterTraj->dMinVs;
 
-	//2.È¡VeerºÍdVÖĞµÄ½Ï´óÖµ
-	dV = pPreTraj->dVeer > dV ? pPreTraj->dVeer : dV;
+    //2.å–Veerå’ŒdVä¸­çš„è¾ƒå¤§å€¼
+    dV = pPreTraj->dVeer > dV ? pPreTraj->dVeer : dV;
 
-	//3.dV²»ÄÜ³¬¹ıÇ°ºó¶ÎµÄ½ø¸øËÙ¶È
-	dV = dV > (pPreTraj->dFeedrate * dPreCoefOfFeedrate) ? (pPreTraj->dFeedrate * dPreCoefOfFeedrate) : dV;
-	dV = dV > (pLaterTraj->dFeedrate * dLaterCoefOfFeedrate) ? (pLaterTraj->dFeedrate * dLaterCoefOfFeedrate) : dV;
+    //3.dVä¸èƒ½è¶…è¿‡å‰åæ®µçš„è¿›ç»™é€Ÿåº¦
+    dV = dV > (pPreTraj->dFeedrate * dPreCoefOfFeedrate) ? (pPreTraj->dFeedrate * dPreCoefOfFeedrate) : dV;
+    dV = dV > (pLaterTraj->dFeedrate * dLaterCoefOfFeedrate) ? (pLaterTraj->dFeedrate * dLaterCoefOfFeedrate) : dV;
 
-	//4.¹­¸ßÎó²î¡¢×î´ó·¨Ïò¼ÓËÙ¶È±È½Ï£¬È¡×îĞ¡Öµ
-	if (getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC || getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
-	{
-		dV = dV > pPreTraj->dArcMaxChordErrorVmax ? pPreTraj->dArcMaxChordErrorVmax : dV;
-		dV = dV > pPreTraj->dArcMaxNormalAccVmax ? pPreTraj->dArcMaxNormalAccVmax : dV;
-	}
+    //4.å¼“é«˜è¯¯å·®ã€æœ€å¤§æ³•å‘åŠ é€Ÿåº¦æ¯”è¾ƒï¼Œå–æœ€å°å€¼
+    if (getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+        getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
+    {
+        dV = dV > pPreTraj->dArcMaxChordErrorVmax ? pPreTraj->dArcMaxChordErrorVmax : dV;
+        dV = dV > pPreTraj->dArcMaxNormalAccVmax ? pPreTraj->dArcMaxNormalAccVmax : dV;
+    }
 
-	if (getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC || getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
-	{
-		dV = dV > pLaterTraj->dArcMaxChordErrorVmax ? pLaterTraj->dArcMaxChordErrorVmax : dV;
-		dV = dV > pLaterTraj->dArcMaxNormalAccVmax ? pLaterTraj->dArcMaxNormalAccVmax : dV;
-	}
+    if (getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+        getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
+    {
+        dV = dV > pLaterTraj->dArcMaxChordErrorVmax ? pLaterTraj->dArcMaxChordErrorVmax : dV;
+        dV = dV > pLaterTraj->dArcMaxNormalAccVmax ? pLaterTraj->dArcMaxNormalAccVmax : dV;
+    }
 
-	//5.½«ĞŞÕıºóµÄdV¸³¸øÇ°¶ÎdVeer
-	pPreTraj->dVeer = dV;
+    //5.å°†ä¿®æ­£åçš„dVèµ‹ç»™å‰æ®µdVeer
+    pPreTraj->dVeer = dV;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
-  º¯Êı¹¦ÄÜ ¼ÆËãÇ°ºó¶Î¹ì¼£½ø¸øËÙ¶È×îĞ¡Öµ
-  ÊäÈë²ÎÊı£º
-		   pPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-		   uint8 ucChannelNum £ºÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+  å‡½æ•°åŠŸèƒ½ è®¡ç®—å‰åæ®µè½¨è¿¹è¿›ç»™é€Ÿåº¦æœ€å°å€¼
+  è¾“å…¥å‚æ•°ï¼š
+		   pPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+		   uint8 ucChannelNum ï¼šé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double calcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+double calcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj,
+                                         struct SToolCompensation* pLaterTraj)
 {
-	double dV;
+    double dV;
 
-	double dPreCoefOfFeedrate;
-	double dLaterCoefOfFeedrate;
+    double dPreCoefOfFeedrate;
+    double dLaterCoefOfFeedrate;
 
-	if (pPreTraj == NULL || pLaterTraj == NULL)
-	{
-		return 0;
-	}
+    if (pPreTraj == NULL || pLaterTraj == NULL)
+    {
+        return 0;
+    }
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dPreCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
-	dLaterCoefOfFeedrate = getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pLaterTraj, ucChannelNum);
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dPreCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                             ? 1.0
+                             : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
+    dLaterCoefOfFeedrate = getBits(pLaterTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                               ? 1.0
+                               : calcCoefOfFeedrate(pLaterTraj, ucChannelNum);
 
-	//dVÈ¡Ç°ºó¹ì¼£¶ÎµÄ½ø¸øËÙ¶È¼«Ğ¡Öµ
-	dV = min(pPreTraj->dFeedrate * dPreCoefOfFeedrate, pLaterTraj->dFeedrate * dLaterCoefOfFeedrate);
+    //dVå–å‰åè½¨è¿¹æ®µçš„è¿›ç»™é€Ÿåº¦æå°å€¼
+    dV = min(pPreTraj->dFeedrate * dPreCoefOfFeedrate, pLaterTraj->dFeedrate * dLaterCoefOfFeedrate);
 
-	return dV;
-}
-
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºcalcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÁ½ÏàÁÚ¹ì¼£ÏÎ½Óµã½Ç¶ÈÔ¼ÊøËÙ¶È
-  ÊäÈë²ÎÊı£ºpSChannel:  Í¨µÀÖ¸Õë
-		   pPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE £º´«ÈëÖ¸Õë²»Îª¿Õ
-			FALSE:´«ÈëÖ¸ÕëÎª¿Õ£¬²»¼ÆËã
-  ±¸    ×¢£º¶àÍ¨µÀÇé¿öÏÂ£¬ÔİÊ±Ç°Õ°XYZÈı¸öÖ±ÏßÖá
-**************************************************/
-bool calcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
-{  
-	//·Ö±ğ´æ·ÅÇ°ºó¹ì¼£XYZÏòÁ¿·ÖÁ¿µÄ³Ë»ıºÍ²î£¨Ç°¶Î¹ì¼£µÄÖÕµã·½ÏòÏòÁ¿ - ºó¶Î¹ì¼£µÄÆğµã·½ÏòÏòÁ¿£©
-	double dES_Vector_MultiArray[3];
-	double dES_Vector_SubArray[3];
-	const uint8* ucMapArray = pSChannel->pMapAxisArray;//Í¨µÀÖáÓ³ÉäÊı×é
-
-	double dPreCoefOfFeedrate;
-
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dPreCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pPreTraj, pSChannel->ucChannelNum);//2024/5/25 Ôö¼Ó¶ÔG0Ö¸ÁîµÄ´¦Àí ºé¹ÚÅô
-
-	//Ö¸ÕëÅĞ¶¨
-	if (pPreTraj == NULL || pLaterTraj == NULL)
-	{
-		return FALSE;
-	}
-
-	//È¡Öµ
-	//ÏàÁÚ¹ì¼£·½ÏòÏòÁ¿Ä³Öá¶ÔÓ¦·ÖÁ¿µÄ³Ë»ıÎª¸º,Ôò¸ÃÖáÔË¶¯·½Ïò·¢Éú¸Ä±ä
-	dES_Vector_MultiArray[VECTOR_N1] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] * pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]];
-	dES_Vector_MultiArray[VECTOR_N2] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] * pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]];
-	dES_Vector_MultiArray[VECTOR_N3] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] * pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]];
-
-	//·½ÏòÏòÁ¿¶ÔÓ¦·ÖÁ¿×÷²îÅĞ¶ÏÊÇ·ñÎªÁã
-	dES_Vector_SubArray[VECTOR_N1] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]];
-	dES_Vector_SubArray[VECTOR_N2] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]];
-	dES_Vector_SubArray[VECTOR_N3] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]];
- 
-	//´æÔÚµ¥Öá·½Ïò¸Ä±ä
-	if (dES_Vector_MultiArray[VECTOR_N1] < 0 || dES_Vector_MultiArray[VECTOR_N2] < 0 || dES_Vector_MultiArray[VECTOR_N3] < 0)
-	{
-		calcVeerWhenAxisRev(pPreTraj, pSChannel->ucChannelNum, dES_Vector_MultiArray, dES_Vector_SubArray, ucMapArray);
-	}
-	else//²»´æÔÚµ¥ÖáÔË¶¯·½ÏòµÄ¸Ä±ä
-	{
-		//°ë½ÇÕıÏÒ£¬ÓÃÓÚ¼ÆËã¼Ğ½ÇËÙ¶È
-		double dSin_half_angle = 0.5 * sqrt(pow(dES_Vector_SubArray[VECTOR_N1], 2) + pow(dES_Vector_SubArray[VECTOR_N2], 2) + pow(dES_Vector_SubArray[VECTOR_N3], 2));
-
-		//ÅĞ¶Ï¼Ğ½ÇÊÇ·ñÎªÁã
-		if (isZero(dSin_half_angle))//¼Ğ½ÇÎªÁã
-		{
-			pPreTraj->dVeer = pPreTraj->dFeedrate * dPreCoefOfFeedrate;
-		}
-		else//¼Ğ½Ç²»ÎªÁã
-		{
-			//double dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);
-			double dAcc = (pPreTraj->dAcc + pLaterTraj->dAcc) / 2;//ÓÉÓÚ×ÔÊÊÓ¦²ÎÊı·¨Ç°ºó¶ÎµÄ¼ÓËÙ¶È²»Í¬ÕâÀïÈ¡Æ½¾ùÖµ
-
-			//¼Ğ½Ç²»ÎªÁãÊ±ËÙ¶È¹«Ê½£¬Ê±¼ä³£ÊıÓÃ²å²¹ÖÜÆÚ
-			double dV = dAcc * g_SSystemPara.dInterpolationTime / 2 / dSin_half_angle;
-
-			//ÅĞ¶ÏÏÂÒ»¶Î¹ì¼£Ò»¸ö²å²¹ÖÜÆÚÊÇ·ñ¿ÉÒÔ²å²¹Íê
-			if (pLaterTraj->dLength / dV < g_SSystemPara.dInterpolationTime)//²»×ãÒ»¸ö²å²¹ÖÜÆÚ¾Í¿É²å²¹Íê
-			{
-				//´ËÊ±Ê±¼ä³£Êı²»Îª²å²¹ÖÜÆÚ
-				pPreTraj->dVeer = sqrt(dAcc * pLaterTraj->dLength / 2 / dSin_half_angle);
-			}
-			else
-			{
-				pPreTraj->dVeer = dV;
-			}
-
-		}
-	}
-
-	//ÒÔÉÏÎª´¿¼¸ºÎÒâÒåÉÏµÄVeer,¼ÆËãÍê±ÏºóÒª¶ÔÆä½øĞĞĞŞÕı£¬Ö÷Òª±£Ö¤×îÖÕµÄVeer²»Ğ¡ÓÚÇ°¶ÎµÄdMinVe£¬ºó¶ÎµÄdMinVs£¬ÓÖ²»¸ßÓÚÇ°ºó¶Î½ø¸øËÙ¶È£¬Ô²»¡Á½¸öÎó²î
-	correctVeerAfterCalcVeer(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
-
-	return TRUE;
+    return dV;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitMultiAndSubArray(int nArraySize,double* dES_Vector_MultiArray, double* dES_Vector_SubArray, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯ÉÏ·½Á½Êı×é
-  ÊäÈë²ÎÊı£ºnArraySize: ÖáÊı£¨Êı×é³¤¶È£©
-		   dES_Vector_MultiArray £º Êı×éÖ¸Õë
-		   dES_Vector_SubArray   £º Êı×éÖ¸Õë
-		   pPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-  Êä³ö²ÎÊı£º
-		   dES_Vector_MultiArray £º Êı×éÖ¸Õë ¾Ö²¿±äÁ¿
-		   dES_Vector_SubArray   £º Êı×éÖ¸Õë ¾Ö²¿±äÁ¿
-  ·µ »Ø Öµ£º 1£º´«ÈëÖ¸Õë²»Îª¿Õ
-			-1:´«ÈëÖ¸ÕëÎª¿Õ£¬²»¼ÆËã
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—ä¸¤ç›¸é‚»è½¨è¿¹è¡”æ¥ç‚¹è§’åº¦çº¦æŸé€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼špSChannel:  é€šé“æŒ‡é’ˆ
+		   pPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ï¼šä¼ å…¥æŒ‡é’ˆä¸ä¸ºç©º
+			FALSE:ä¼ å…¥æŒ‡é’ˆä¸ºç©ºï¼Œä¸è®¡ç®—
+  å¤‡    æ³¨ï¼šå¤šé€šé“æƒ…å†µä¸‹ï¼Œæš‚æ—¶å‰ç»XYZä¸‰ä¸ªç›´çº¿è½´
 **************************************************/
-int8 initMultiAndSubArray(int nArraySize, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+bool calcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation* pPreTraj,
+                            struct SToolCompensation* pLaterTraj)
 {
-	int i = 0;
-	if (dES_Vector_MultiArray == NULL || dES_Vector_SubArray == NULL || pPreTraj == NULL || pLaterTraj == NULL)
-	{
-		return -1;
-	}
+    //åˆ†åˆ«å­˜æ”¾å‰åè½¨è¿¹XYZå‘é‡åˆ†é‡çš„ä¹˜ç§¯å’Œå·®ï¼ˆå‰æ®µè½¨è¿¹çš„ç»ˆç‚¹æ–¹å‘å‘é‡ - åæ®µè½¨è¿¹çš„èµ·ç‚¹æ–¹å‘å‘é‡ï¼‰
+    double dES_Vector_MultiArray[3];
+    double dES_Vector_SubArray[3];
+    const uint8* ucMapArray = pSChannel->pMapAxisArray; //é€šé“è½´æ˜ å°„æ•°ç»„
 
-	for (i = 0; i < nArraySize; i++)
-	{
-		dES_Vector_MultiArray[i] = pPreTraj->SEndVector.dArray[i] * pLaterTraj->SStartVector.dArray[i];
-		dES_Vector_SubArray[i] = pPreTraj->SEndVector.dArray[i] - pLaterTraj->SStartVector.dArray[i];
-	}
+    double dPreCoefOfFeedrate;
 
-	return 1;
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dPreCoefOfFeedrate =
+        getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+            ? 1.0
+            : calcCoefOfFeedrate(pPreTraj, pSChannel->ucChannelNum); //2024/5/25 å¢åŠ å¯¹G0æŒ‡ä»¤çš„å¤„ç† æ´ªå† é¹
+
+    //æŒ‡é’ˆåˆ¤å®š
+    if (pPreTraj == NULL || pLaterTraj == NULL)
+    {
+        return FALSE;
+    }
+
+    //å–å€¼
+    //ç›¸é‚»è½¨è¿¹æ–¹å‘å‘é‡æŸè½´å¯¹åº”åˆ†é‡çš„ä¹˜ç§¯ä¸ºè´Ÿ,åˆ™è¯¥è½´è¿åŠ¨æ–¹å‘å‘ç”Ÿæ”¹å˜
+    dES_Vector_MultiArray[VECTOR_N1] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] *
+                                       pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]];
+    dES_Vector_MultiArray[VECTOR_N2] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] *
+                                       pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]];
+    dES_Vector_MultiArray[VECTOR_N3] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] *
+                                       pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]];
+
+    //æ–¹å‘å‘é‡å¯¹åº”åˆ†é‡ä½œå·®åˆ¤æ–­æ˜¯å¦ä¸ºé›¶
+    dES_Vector_SubArray[VECTOR_N1] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] -
+                                     pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]];
+    dES_Vector_SubArray[VECTOR_N2] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] -
+                                     pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]];
+    dES_Vector_SubArray[VECTOR_N3] = pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] -
+                                     pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]];
+
+    //å­˜åœ¨å•è½´æ–¹å‘æ”¹å˜
+    if (dES_Vector_MultiArray[VECTOR_N1] < 0 || dES_Vector_MultiArray[VECTOR_N2] < 0 ||
+        dES_Vector_MultiArray[VECTOR_N3] < 0)
+    {
+        calcVeerWhenAxisRev(pPreTraj, pSChannel->ucChannelNum, dES_Vector_MultiArray, dES_Vector_SubArray, ucMapArray);
+    }
+    else //ä¸å­˜åœ¨å•è½´è¿åŠ¨æ–¹å‘çš„æ”¹å˜
+    {
+        //åŠè§’æ­£å¼¦ï¼Œç”¨äºè®¡ç®—å¤¹è§’é€Ÿåº¦
+        double dSin_half_angle =
+            0.5 * sqrt(pow(dES_Vector_SubArray[VECTOR_N1], 2) + pow(dES_Vector_SubArray[VECTOR_N2], 2) +
+                       pow(dES_Vector_SubArray[VECTOR_N3], 2));
+
+        //åˆ¤æ–­å¤¹è§’æ˜¯å¦ä¸ºé›¶
+        if (isZero(dSin_half_angle)) //å¤¹è§’ä¸ºé›¶
+        {
+            pPreTraj->dVeer = pPreTraj->dFeedrate * dPreCoefOfFeedrate;
+        }
+        else //å¤¹è§’ä¸ä¸ºé›¶
+        {
+            //double dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);
+            double dAcc = (pPreTraj->dAcc + pLaterTraj->dAcc) / 2; //ç”±äºè‡ªé€‚åº”å‚æ•°æ³•å‰åæ®µçš„åŠ é€Ÿåº¦ä¸åŒè¿™é‡Œå–å¹³å‡å€¼
+
+            //å¤¹è§’ä¸ä¸ºé›¶æ—¶é€Ÿåº¦å…¬å¼ï¼Œæ—¶é—´å¸¸æ•°ç”¨æ’è¡¥å‘¨æœŸ
+            double dV = dAcc * g_SSystemPara.dInterpolationTime / 2 / dSin_half_angle;
+
+            //åˆ¤æ–­ä¸‹ä¸€æ®µè½¨è¿¹ä¸€ä¸ªæ’è¡¥å‘¨æœŸæ˜¯å¦å¯ä»¥æ’è¡¥å®Œ
+            if (pLaterTraj->dLength / dV < g_SSystemPara.dInterpolationTime) //ä¸è¶³ä¸€ä¸ªæ’è¡¥å‘¨æœŸå°±å¯æ’è¡¥å®Œ
+            {
+                //æ­¤æ—¶æ—¶é—´å¸¸æ•°ä¸ä¸ºæ’è¡¥å‘¨æœŸ
+                pPreTraj->dVeer = sqrt(dAcc * pLaterTraj->dLength / 2 / dSin_half_angle);
+            }
+            else
+            {
+                pPreTraj->dVeer = dV;
+            }
+        }
+    }
+
+    //ä»¥ä¸Šä¸ºçº¯å‡ ä½•æ„ä¹‰ä¸Šçš„Veer,è®¡ç®—å®Œæ¯•åè¦å¯¹å…¶è¿›è¡Œä¿®æ­£ï¼Œä¸»è¦ä¿è¯æœ€ç»ˆçš„Veerä¸å°äºå‰æ®µçš„dMinVeï¼Œåæ®µçš„dMinVsï¼Œåˆä¸é«˜äºå‰åæ®µè¿›ç»™é€Ÿåº¦ï¼Œåœ†å¼§ä¸¤ä¸ªè¯¯å·®
+    correctVeerAfterCalcVeer(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
+
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcVeerMultiAxisMode(struct SChannel* pSChannel, struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÁ½ÏàÁÚ¹ì¼£ÏÎ½Óµã½Ç¶ÈÔ¼ÊøËÙ¶È
-  ÊäÈë²ÎÊı£ºpSChannel:  Í¨µÀÖ¸Õë
-		   nArraySize: ÖáÊı
-		   pPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE £º´«ÈëÖ¸Õë²»Îª¿Õ
-			FALSE:´«ÈëÖ¸ÕëÎª¿Õ£¬²»¼ÆËã
-  ±¸    ×¢£º¶Î¼äÏÎ½ÓµãËÙ¶ÈÓÉ¸÷µ¥ÖáËÙ¶È±ä»¯ĞÔÄÜ¼ÆËãµÃµ½
+  å‡½æ•°åç§°ï¼šinitMultiAndSubArray(int nArraySize,double* dES_Vector_MultiArray, double* dES_Vector_SubArray, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–ä¸Šæ–¹ä¸¤æ•°ç»„
+  è¾“å…¥å‚æ•°ï¼šnArraySize: è½´æ•°ï¼ˆæ•°ç»„é•¿åº¦ï¼‰
+		   dES_Vector_MultiArray ï¼š æ•°ç»„æŒ‡é’ˆ
+		   dES_Vector_SubArray   ï¼š æ•°ç»„æŒ‡é’ˆ
+		   pPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+		   dES_Vector_MultiArray ï¼š æ•°ç»„æŒ‡é’ˆ å±€éƒ¨å˜é‡
+		   dES_Vector_SubArray   ï¼š æ•°ç»„æŒ‡é’ˆ å±€éƒ¨å˜é‡
+  è¿” å› å€¼ï¼š 1ï¼šä¼ å…¥æŒ‡é’ˆä¸ä¸ºç©º
+			-1:ä¼ å…¥æŒ‡é’ˆä¸ºç©ºï¼Œä¸è®¡ç®—
+  å¤‡    æ³¨ï¼š
 **************************************************/
-bool calcVeerMultiAxisMode(struct SChannel* pSChannel, int nArraySize, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
+int8 initMultiAndSubArray(int nArraySize, double* dES_Vector_MultiArray, double* dES_Vector_SubArray,
+                          struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
 {
-	int i;
-	const uint8* ucMapArray = pSChannel->pMapAxisArray;//Í¨µÀÖáÓ³ÉäÊı×é
-	double dTc = g_SSystemPara.dInterpolationTime;//²å²¹ÖÜÆÚ
+    int i = 0;
+    if (dES_Vector_MultiArray == NULL || dES_Vector_SubArray == NULL || pPreTraj == NULL || pLaterTraj == NULL)
+    {
+        return -1;
+    }
 
-	//·Ö±ğ´æ·ÅÇ°ºó¹ì¼£ÏòÁ¿·ÖÁ¿µÄ³Ë»ıºÍ²î£¨Ç°¶Î¹ì¼£µÄÖÕµã·½ÏòÏòÁ¿ - ºó¶Î¹ì¼£µÄÆğµã·½ÏòÏòÁ¿£©
-	double dES_Vector_MultiArray[AXIS_NUM_MAX];
-	double dES_Vector_SubArray[AXIS_NUM_MAX];
+    for (i = 0; i < nArraySize; i++)
+    {
+        dES_Vector_MultiArray[i] = pPreTraj->SEndVector.dArray[i] * pLaterTraj->SStartVector.dArray[i];
+        dES_Vector_SubArray[i] = pPreTraj->SEndVector.dArray[i] - pLaterTraj->SStartVector.dArray[i];
+    }
 
-	//´æ·ÅÓÉ¸÷µ¥Öá·´ËãµÄÏÎ½Óµã¸´ºÏµ±Á¿ËÙ¶È
-	double dVeerFromSingleAxis[AXIS_NUM_MAX] = { 0.0 };
-
-	//µ±dES_Vector_SubArray[i] = 0Ê±£¬Îª±ÜÃâ³ı0ÌîÈëµÄËÙ¶È(³õÊ¼ÖµÎªÇ°ºó¶Î¹ì¼£µÄ½ø¸øËÙ¶È×îĞ¡Öµ) 2023.6.23 ¹ùÇ¿
-	double dTempVeer = calcMinFeedrateBtnPreAndLaterTraj(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
-
-	//dES_Vector_SubArray[i] = 0 ±ê¼ÇÊı×é£¬µ±Îª0Ê±ÖÃ1
-	int nSubZeroFlag[AXIS_NUM_MAX] = { 0 };//È«²¿³õÊ¼»¯Îª0£»
-
-	//Ö¸ÕëÅĞ¶¨
-	if (pPreTraj == NULL || pLaterTraj == NULL)
-	{
-		return FALSE;
-	}
-
-	//³õÊ¼»¯ÉÏ·½Á½Êı×é
-	initMultiAndSubArray(nArraySize, dES_Vector_MultiArray, dES_Vector_SubArray, pPreTraj, pLaterTraj);
-
-	//ÅĞ¶Ïµ¥ÖáÊÇ·ñ·´Ïò¸ù¾İ·´Ïò·Ç·´Ïò¼ÆËã¸÷µ¥ÖáËÙ¶È±ä»¯Ô¼ÊøÏÂ¶ÔÓ¦µÄÏÎ½Óµã¸´ºÏËÙ¶È£¬È¡×îĞ¡Öµ£¨×¢ÒâÓĞĞ©ÖáÔÚÇ°ºó¶Î¼äËÙ¶È±ä»¯Á¿Îª0£¬´ËÊ±×¢Òâ·ÖÄ¸ÎªÁãµÄÌØÊâÇé¿ö£©
-	for (i = 0; i < nArraySize; i++)
-	{
-		//±È½ÏÌØÊâµÄÇé¿öÊÇÄ³Ğ©ÖáÔÚÇ°ºó¶Î¹ì¼£ÖĞµÄ±ÈÀı²»±ä(k1 - k2 = 0)
-		// Çé¿ö1£ºÓĞ¿ÉÄÜ´ËÖáÇ°ºó¶¼²ÎÓë²å²¹µ«Ç°¶ÎÖÕµãºÍºó¶ÎÆğµã±ÈÀıÏµÊıÏàµÈ£¨k1 = k2 µ«k1 != 0£©
-		// Çé¿ö2£ºÒ²ÓĞ¿ÉÄÜÇ°ºóÁ½¶Î´ËÖá¾ù²»²ÎÓë²å²¹£©(k1 = k2 = 0)
-		// ´ËÊ±ÀíÂÛÉÏÎŞÂÛÏÎ½Óµã¸´ºÏËÙ¶È¶à´ó£¬¸ÃÖá¶¼²»»á³¬¹ıÔ¼Êø£¬Òª×¢Òâ´ËÊ±¸ÃÖá¶ÔÓ¦dVeerFromSingleAxis[]Êı×éÓ¦¸ÃÌîÈë¶à´óÖµ
-
-		if (dES_Vector_MultiArray[i] < 0)//´ËÊ±µ±Ç°Öá·´Ïò£¨²»°üÀ¨ k1 - k2 = 0£©
-		{
-			dVeerFromSingleAxis[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVeerDeltaVMax / fabs(dES_Vector_SubArray[i]);
-
-			//ÓëdTempVeer¶Ô±È£¬ÈôdVeerFromSingleAxis[i]±ÈdTempVeer´ó£¬¸üĞÂdTempVeerÎª½Ï´óÖµ
-			dTempVeer = dTempVeer < dVeerFromSingleAxis[i] ? dVeerFromSingleAxis[i] : dTempVeer;
-		}
-		else//ÎŞ·´Ïò(×¢Òâ£º´æÔÚk1 - k2 = 0µÄÌØÊâÇé¿ö)
-		{
-			if (isZero(dES_Vector_SubArray[i]))//k1 - k2 = 0
-			{
-				//±ê¼ÇÊı×éÖÃ1£»
-				nSubZeroFlag[i] = 1;
-			}
-			else
-			{
-				dVeerFromSingleAxis[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dVeerAMax * dTc / fabs(dES_Vector_SubArray[i]);
-
-				//ÓëdTempVeer¶Ô±È£¬ÈôdVeerFromSingleAxis[i]±ÈdTempVeer´ó£¬¸üĞÂdTempVeerÎª½Ï´óÖµ
-				dTempVeer = dTempVeer < dVeerFromSingleAxis[i] ? dVeerFromSingleAxis[i] : dTempVeer;
-			}
-		}
-	}
-
-	//¶ÔÓÚisZero(dES_Vector_SubArray[i])µÄÖá¶ÔÓ¦µÄdVeerFromSingleAxis¸³Öµ
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (nSubZeroFlag[i] == 1)
-		{
-			dVeerFromSingleAxis[i] = dTempVeer;
-		}
-	}
-
-	//Ñ­»·±È½Ï¸÷µ¥Öá·´ËãËÙ¶È£¬È¡×îĞ¡Öµ
-	pPreTraj->dVeer = dVeerFromSingleAxis[0];
-	for (i = 0; i < AXIS_NUM_MAX - 1; i++)
-	{
-		pPreTraj->dVeer = pPreTraj->dVeer < dVeerFromSingleAxis[i + 1] ? pPreTraj->dVeer : dVeerFromSingleAxis[i + 1];
-	}
-
-	//µ¥ÖáËÙ¶È±ä»¯Á¿ÉÏ·ÖÎöµÄdVeer¼ÆËãÍê±Ï£¬Òª¶ÔÆä½øĞĞĞŞÕı£¬Ö÷Òª±£Ö¤×îÖÕµÄVeer²»Ğ¡ÓÚÇ°¶ÎµÄdMinVe£¬ºó¶ÎµÄdMinVs£¬ÓÖ²»¸ßÓÚÇ°ºó¶Î½ø¸øËÙ¶È£¬Ô²»¡Á½¸öÎó²î
-	correctVeerAfterCalcVeer(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
-
-	return TRUE;
+    return 1;
 }
 
+/*************************************************
+  å‡½æ•°åç§°ï¼šcalcVeerMultiAxisMode(struct SChannel* pSChannel, struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—ä¸¤ç›¸é‚»è½¨è¿¹è¡”æ¥ç‚¹è§’åº¦çº¦æŸé€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼špSChannel:  é€šé“æŒ‡é’ˆ
+		   nArraySize: è½´æ•°
+		   pPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ï¼šä¼ å…¥æŒ‡é’ˆä¸ä¸ºç©º
+			FALSE:ä¼ å…¥æŒ‡é’ˆä¸ºç©ºï¼Œä¸è®¡ç®—
+  å¤‡    æ³¨ï¼šæ®µé—´è¡”æ¥ç‚¹é€Ÿåº¦ç”±å„å•è½´é€Ÿåº¦å˜åŒ–æ€§èƒ½è®¡ç®—å¾—åˆ°
+**************************************************/
+bool calcVeerMultiAxisMode(struct SChannel* pSChannel, int nArraySize, struct SToolCompensation* pPreTraj,
+                           struct SToolCompensation* pLaterTraj)
+{
+    int i;
+    const uint8* ucMapArray = pSChannel->pMapAxisArray; //é€šé“è½´æ˜ å°„æ•°ç»„
+    double dTc = g_SSystemPara.dInterpolationTime;      //æ’è¡¥å‘¨æœŸ
+
+    //åˆ†åˆ«å­˜æ”¾å‰åè½¨è¿¹å‘é‡åˆ†é‡çš„ä¹˜ç§¯å’Œå·®ï¼ˆå‰æ®µè½¨è¿¹çš„ç»ˆç‚¹æ–¹å‘å‘é‡ - åæ®µè½¨è¿¹çš„èµ·ç‚¹æ–¹å‘å‘é‡ï¼‰
+    double dES_Vector_MultiArray[AXIS_NUM_MAX];
+    double dES_Vector_SubArray[AXIS_NUM_MAX];
+
+    //å­˜æ”¾ç”±å„å•è½´åç®—çš„è¡”æ¥ç‚¹å¤åˆå½“é‡é€Ÿåº¦
+    double dVeerFromSingleAxis[AXIS_NUM_MAX] = {0.0};
+
+    //å½“dES_Vector_SubArray[i] = 0æ—¶ï¼Œä¸ºé¿å…é™¤0å¡«å…¥çš„é€Ÿåº¦(åˆå§‹å€¼ä¸ºå‰åæ®µè½¨è¿¹çš„è¿›ç»™é€Ÿåº¦æœ€å°å€¼) 2023.6.23 éƒ­å¼º
+    double dTempVeer = calcMinFeedrateBtnPreAndLaterTraj(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
+
+    //dES_Vector_SubArray[i] = 0 æ ‡è®°æ•°ç»„ï¼Œå½“ä¸º0æ—¶ç½®1
+    int nSubZeroFlag[AXIS_NUM_MAX] = {0}; //å…¨éƒ¨åˆå§‹åŒ–ä¸º0ï¼›
+
+    //æŒ‡é’ˆåˆ¤å®š
+    if (pPreTraj == NULL || pLaterTraj == NULL)
+    {
+        return FALSE;
+    }
+
+    //åˆå§‹åŒ–ä¸Šæ–¹ä¸¤æ•°ç»„
+    initMultiAndSubArray(nArraySize, dES_Vector_MultiArray, dES_Vector_SubArray, pPreTraj, pLaterTraj);
+
+    //åˆ¤æ–­å•è½´æ˜¯å¦åå‘æ ¹æ®åå‘éåå‘è®¡ç®—å„å•è½´é€Ÿåº¦å˜åŒ–çº¦æŸä¸‹å¯¹åº”çš„è¡”æ¥ç‚¹å¤åˆé€Ÿåº¦ï¼Œå–æœ€å°å€¼ï¼ˆæ³¨æ„æœ‰äº›è½´åœ¨å‰åæ®µé—´é€Ÿåº¦å˜åŒ–é‡ä¸º0ï¼Œæ­¤æ—¶æ³¨æ„åˆ†æ¯ä¸ºé›¶çš„ç‰¹æ®Šæƒ…å†µï¼‰
+    for (i = 0; i < nArraySize; i++)
+    {
+        //æ¯”è¾ƒç‰¹æ®Šçš„æƒ…å†µæ˜¯æŸäº›è½´åœ¨å‰åæ®µè½¨è¿¹ä¸­çš„æ¯”ä¾‹ä¸å˜(k1 - k2 = 0)
+        // æƒ…å†µ1ï¼šæœ‰å¯èƒ½æ­¤è½´å‰åéƒ½å‚ä¸æ’è¡¥ä½†å‰æ®µç»ˆç‚¹å’Œåæ®µèµ·ç‚¹æ¯”ä¾‹ç³»æ•°ç›¸ç­‰ï¼ˆk1 = k2 ä½†k1 != 0ï¼‰
+        // æƒ…å†µ2ï¼šä¹Ÿæœ‰å¯èƒ½å‰åä¸¤æ®µæ­¤è½´å‡ä¸å‚ä¸æ’è¡¥ï¼‰(k1 = k2 = 0)
+        // æ­¤æ—¶ç†è®ºä¸Šæ— è®ºè¡”æ¥ç‚¹å¤åˆé€Ÿåº¦å¤šå¤§ï¼Œè¯¥è½´éƒ½ä¸ä¼šè¶…è¿‡çº¦æŸï¼Œè¦æ³¨æ„æ­¤æ—¶è¯¥è½´å¯¹åº”dVeerFromSingleAxis[]æ•°ç»„åº”è¯¥å¡«å…¥å¤šå¤§å€¼
+
+        if (dES_Vector_MultiArray[i] < 0) //æ­¤æ—¶å½“å‰è½´åå‘ï¼ˆä¸åŒ…æ‹¬ k1 - k2 = 0ï¼‰
+        {
+            dVeerFromSingleAxis[i] =
+                g_SSystemPara.SAxisPara[ucMapArray[i]].dVeerDeltaVMax / fabs(dES_Vector_SubArray[i]);
+
+            //ä¸dTempVeerå¯¹æ¯”ï¼Œè‹¥dVeerFromSingleAxis[i]æ¯”dTempVeerå¤§ï¼Œæ›´æ–°dTempVeerä¸ºè¾ƒå¤§å€¼
+            dTempVeer = dTempVeer < dVeerFromSingleAxis[i] ? dVeerFromSingleAxis[i] : dTempVeer;
+        }
+        else //æ— åå‘(æ³¨æ„ï¼šå­˜åœ¨k1 - k2 = 0çš„ç‰¹æ®Šæƒ…å†µ)
+        {
+            if (isZero(dES_Vector_SubArray[i])) //k1 - k2 = 0
+            {
+                //æ ‡è®°æ•°ç»„ç½®1ï¼›
+                nSubZeroFlag[i] = 1;
+            }
+            else
+            {
+                dVeerFromSingleAxis[i] =
+                    g_SSystemPara.SAxisPara[ucMapArray[i]].dVeerAMax * dTc / fabs(dES_Vector_SubArray[i]);
+
+                //ä¸dTempVeerå¯¹æ¯”ï¼Œè‹¥dVeerFromSingleAxis[i]æ¯”dTempVeerå¤§ï¼Œæ›´æ–°dTempVeerä¸ºè¾ƒå¤§å€¼
+                dTempVeer = dTempVeer < dVeerFromSingleAxis[i] ? dVeerFromSingleAxis[i] : dTempVeer;
+            }
+        }
+    }
+
+    //å¯¹äºisZero(dES_Vector_SubArray[i])çš„è½´å¯¹åº”çš„dVeerFromSingleAxisèµ‹å€¼
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (nSubZeroFlag[i] == 1)
+        {
+            dVeerFromSingleAxis[i] = dTempVeer;
+        }
+    }
+
+    //å¾ªç¯æ¯”è¾ƒå„å•è½´åç®—é€Ÿåº¦ï¼Œå–æœ€å°å€¼
+    pPreTraj->dVeer = dVeerFromSingleAxis[0];
+    for (i = 0; i < AXIS_NUM_MAX - 1; i++)
+    {
+        pPreTraj->dVeer = pPreTraj->dVeer < dVeerFromSingleAxis[i + 1] ? pPreTraj->dVeer : dVeerFromSingleAxis[i + 1];
+    }
+
+    //å•è½´é€Ÿåº¦å˜åŒ–é‡ä¸Šåˆ†æçš„dVeerè®¡ç®—å®Œæ¯•ï¼Œè¦å¯¹å…¶è¿›è¡Œä¿®æ­£ï¼Œä¸»è¦ä¿è¯æœ€ç»ˆçš„Veerä¸å°äºå‰æ®µçš„dMinVeï¼Œåæ®µçš„dMinVsï¼Œåˆä¸é«˜äºå‰åæ®µè¿›ç»™é€Ÿåº¦ï¼Œåœ†å¼§ä¸¤ä¸ªè¯¯å·®
+    correctVeerAfterCalcVeer(pSChannel->ucChannelNum, pPreTraj, pLaterTraj);
+
+    return TRUE;
+}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCoef()
-  º¯Êı¹¦ÄÜ: ¸ù¾İ¹ì¼£ËÙ¶ÈÇúÏßÀàĞÍ£¬»ñÈ¡Î»ÒÆËÙ¶È¼ÆËãÏµÊı
-  ÊäÈë²ÎÊı£ºuint8 ucVelType ËÙ¶ÈÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼ÆËãÎ»ÒÆËÙ¶È¹«Ê½ÖĞµÄ²ÎÊı
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCoef()
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®è½¨è¿¹é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œè·å–ä½ç§»é€Ÿåº¦è®¡ç®—ç³»æ•°
+  è¾“å…¥å‚æ•°ï¼šuint8 ucVelType é€Ÿåº¦ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè®¡ç®—ä½ç§»é€Ÿåº¦å…¬å¼ä¸­çš„å‚æ•°
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getCoef(uint8 ucVelType)
 {
-	//´ÓÏµÍ³²ÎÊı½á¹¹ÌåÖĞ»ñÈ¡ËÙ¶ÈÇúÏßÀàĞÍ
-	//uint8 ucVelType = g_SSystemPara.ucCommonAccVelPlanType;
+    //ä»ç³»ç»Ÿå‚æ•°ç»“æ„ä½“ä¸­è·å–é€Ÿåº¦æ›²çº¿ç±»å‹
+    //uint8 ucVelType = g_SSystemPara.ucCommonAccVelPlanType;
 
-	//»ñÈ¡¼ÆËãÏµÊı
-	if (ucVelType == VEL_PLAN_T_CURVE)//TĞÍ
-	{
-		return 0.5;
-	}
-	else if (ucVelType == VEL_PLAN_S3_CURVE)//Èı´ÎSĞÍ
-	{
-		return 1.0;
-	}
-	else//ËÄ´ÎSĞÍ
-	{
-		return 0.75;
-	}
+    //è·å–è®¡ç®—ç³»æ•°
+    if (ucVelType == VEL_PLAN_T_CURVE) //Tå‹
+    {
+        return 0.5;
+    }
+    else if (ucVelType == VEL_PLAN_S3_CURVE) //ä¸‰æ¬¡Så‹
+    {
+        return 1.0;
+    }
+    else //å››æ¬¡Så‹
+    {
+        return 0.75;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSingleAxisMaxAcc(int i, uint8 ucVelType, uint8* ucMapArray)
-  º¯Êı¹¦ÄÜ: ¸ù¾İµÚÒ»²ãÓ³ÉäµÄÖáºÅ£¬ËÙ¶ÈÀàĞÍ»ñÈ¡¸ÃÖá×î´ó¼ÓËÙ¶È
-  ÊäÈë²ÎÊı£ºi            µÚÒ»²ãÓ³ÉäµÄÖáºÅ
-		   ucVelType    ËÙ¶ÈÀàĞÍ
-		   ucMapArray   ÖÜÓ³Éä
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼ÓËÙ¶ÈÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSingleAxisMaxAcc(int i, uint8 ucVelType, uint8* ucMapArray)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®ç¬¬ä¸€å±‚æ˜ å°„çš„è½´å·ï¼Œé€Ÿåº¦ç±»å‹è·å–è¯¥è½´æœ€å¤§åŠ é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼ši            ç¬¬ä¸€å±‚æ˜ å°„çš„è½´å·
+		   ucVelType    é€Ÿåº¦ç±»å‹
+		   ucMapArray   å‘¨æ˜ å°„
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåŠ é€Ÿåº¦å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getSingleAxisMaxAcc(int i, uint8 ucVelType, uint8* ucMapArray)
 {
-	if (ucMapArray == NULL || i >= AXIS_NUM_MAX || ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX)//2023.3.23¶Ô¿ÕÖáÅĞ¶Ï¹ùÇ¿
-	{
-		return 0.0;
-	}
+    if (ucMapArray == NULL || i >= AXIS_NUM_MAX || ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX) //2023.3.23å¯¹ç©ºè½´åˆ¤æ–­éƒ­å¼º
+    {
+        return 0.0;
+    }
 
-	switch (ucVelType)
-	{
-	case VEL_PLAN_T_CURVE:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxAcc;
-		break;
-	case VEL_PLAN_S3_CURVE:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS3MaxAcc;
-		break;
-	default:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS4MaxAcc;
-		break;
-	}
-
+    switch (ucVelType)
+    {
+    case VEL_PLAN_T_CURVE:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxAcc;
+        break;
+    case VEL_PLAN_S3_CURVE:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS3MaxAcc;
+        break;
+    default:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS4MaxAcc;
+        break;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSingleAxisMaxDec(int i, uint8 ucVelType, uint8* ucMapArray)
-  º¯Êı¹¦ÄÜ: ¸ù¾İµÚÒ»²ãÓ³ÉäµÄÖáºÅ£¬ËÙ¶ÈÀàĞÍ»ñÈ¡¸ÃÖá×î´ó¼õËÙ¶È
-  ÊäÈë²ÎÊı£ºi            µÚÒ»²ãÓ³ÉäµÄÖáºÅ
-		   ucVelType    ËÙ¶ÈÀàĞÍ
-		   ucMapArray   ÖÜÓ³Éä
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¼õËÙ¶ÈÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSingleAxisMaxDec(int i, uint8 ucVelType, uint8* ucMapArray)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®ç¬¬ä¸€å±‚æ˜ å°„çš„è½´å·ï¼Œé€Ÿåº¦ç±»å‹è·å–è¯¥è½´æœ€å¤§å‡é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼ši            ç¬¬ä¸€å±‚æ˜ å°„çš„è½´å·
+		   ucVelType    é€Ÿåº¦ç±»å‹
+		   ucMapArray   å‘¨æ˜ å°„
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šå‡é€Ÿåº¦å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getSingleAxisMaxDec(int i, uint8 ucVelType, uint8* ucMapArray)
 {
-	if (ucMapArray == NULL || i >= AXIS_NUM_MAX || ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX)//2023.3.23¶Ô¿ÕÖáÅĞ¶Ï¹ùÇ¿
-	{
-		return 0.0;
-	}
+    if (ucMapArray == NULL || i >= AXIS_NUM_MAX || ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX) //2023.3.23å¯¹ç©ºè½´åˆ¤æ–­éƒ­å¼º
+    {
+        return 0.0;
+    }
 
-	switch (ucVelType)
-	{
-	case VEL_PLAN_T_CURVE:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec;
-		break;
-	case VEL_PLAN_S3_CURVE:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS3MaxDec;
-		break;
-	default:
-		return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS4MaxDec;
-		break;
-	}
+    switch (ucVelType)
+    {
+    case VEL_PLAN_T_CURVE:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec;
+        break;
+    case VEL_PLAN_S3_CURVE:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS3MaxDec;
+        break;
+    default:
+        return g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanS4MaxDec;
+        break;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcMinTwoArrays(double* dArray1, double* dArray2)
-  º¯Êı¹¦ÄÜ: ÇóÁ½Êı×é±ÈÖµ½á¹û×îĞ¡Öµ£¨ÏàÍ¬Î»ÖÃÊıÖµµÄ±ÈÖµ£©
-  ÊäÈë²ÎÊı£ºdArray1    ·Ö×ÓÊı×éÃû
-		   dArray2    ·ÖÄ¸Êı×éÃû
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º±ÈÖµÖĞµÄ×îĞ¡Öµ
-  ±¸    ×¢£ºÖ÷Òª´¦ÀíÁË·ÖÄ¸ÎªÁãÊ±µÄÎÊÌâ
+  å‡½æ•°åç§°ï¼šcalcMinTwoArrays(double* dArray1, double* dArray2)
+  å‡½æ•°åŠŸèƒ½: æ±‚ä¸¤æ•°ç»„æ¯”å€¼ç»“æœæœ€å°å€¼ï¼ˆç›¸åŒä½ç½®æ•°å€¼çš„æ¯”å€¼ï¼‰
+  è¾“å…¥å‚æ•°ï¼šdArray1    åˆ†å­æ•°ç»„å
+		   dArray2    åˆ†æ¯æ•°ç»„å
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ¯”å€¼ä¸­çš„æœ€å°å€¼
+  å¤‡    æ³¨ï¼šä¸»è¦å¤„ç†äº†åˆ†æ¯ä¸ºé›¶æ—¶çš„é—®é¢˜
 **************************************************/
 double calcMinTwoArrays(double* dArray1, double* dArray2)
 {
-	int i = 0;
-	double res = 0;
-	//´æ·ÅÓÉ¸÷µ¥Öá·´ËãµÄÏÎ½Óµã¸´ºÏµ±Á¿ËÙ¶È
-	double dNum[AXIS_NUM_MAX] = { 0 };
+    int i = 0;
+    double res = 0;
+    //å­˜æ”¾ç”±å„å•è½´åç®—çš„è¡”æ¥ç‚¹å¤åˆå½“é‡é€Ÿåº¦
+    double dNum[AXIS_NUM_MAX] = {0};
 
-	//µ±dES_Vector_SubArray[i] = 0Ê±£¬Îª±ÜÃâ³ı0ÌîÈëµÄËÙ¶È(³õÊ¼ÖµÎª0.05)
-	double dTemp = 0.05;
+    //å½“dES_Vector_SubArray[i] = 0æ—¶ï¼Œä¸ºé¿å…é™¤0å¡«å…¥çš„é€Ÿåº¦(åˆå§‹å€¼ä¸º0.05)
+    double dTemp = 0.05;
 
-	//µÚ¶ş¸öÊı×éÏàÓ¦Î»µÄÖµÎª0Ê±ÖÃ1
-	int nSubZeroFlag[AXIS_NUM_MAX] = { 0 };//È«²¿³õÊ¼»¯Îª0£»
+    //ç¬¬äºŒä¸ªæ•°ç»„ç›¸åº”ä½çš„å€¼ä¸º0æ—¶ç½®1
+    int nSubZeroFlag[AXIS_NUM_MAX] = {0}; //å…¨éƒ¨åˆå§‹åŒ–ä¸º0ï¼›
 
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (!isZero(dArray2[i]))
-		{
-			dNum[i] = fabs(dArray1[i] / dArray2[i]);
-			dTemp = dTemp > dNum[i] ? dTemp : dNum[i];//ÈÃdTempÊ¼ÖÕ±£³Ö×î´ó
-		}
-		else
-		{
-			nSubZeroFlag[i] = 1;
-		}
-	}
+    for (int i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (!isZero(dArray2[i]))
+        {
+            dNum[i] = fabs(dArray1[i] / dArray2[i]);
+            dTemp = dTemp > dNum[i] ? dTemp : dNum[i]; //è®©dTempå§‹ç»ˆä¿æŒæœ€å¤§
+        }
+        else
+        {
+            nSubZeroFlag[i] = 1;
+        }
+    }
 
-	//½«dArray2Î»ÖÃÎªÁãµÄÖµÈ«²¿ÖÃÒ»¸ö×î´óÖµdTemp£¬ÒòÎª×îÖØÒªÈ¡×îĞ¡Öµ
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (nSubZeroFlag[i] == 1)
-		{
-			dNum[i] = dTemp;
-		}
-	}
+    //å°†dArray2ä½ç½®ä¸ºé›¶çš„å€¼å…¨éƒ¨ç½®ä¸€ä¸ªæœ€å¤§å€¼dTempï¼Œå› ä¸ºæœ€é‡è¦å–æœ€å°å€¼
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (nSubZeroFlag[i] == 1)
+        {
+            dNum[i] = dTemp;
+        }
+    }
 
-	//Ñ­»·µÃµ½×îĞ¡Öµ·µ»Ø
-	res = dNum[0];
-	for (i = 0; i < AXIS_NUM_MAX - 1; i++)
-	{
-		res = res < dNum[i + 1] ? res : dNum[i + 1];
-	}
-	return res;
+    //å¾ªç¯å¾—åˆ°æœ€å°å€¼è¿”å›
+    res = dNum[0];
+    for (i = 0; i < AXIS_NUM_MAX - 1; i++)
+    {
+        res = res < dNum[i + 1] ? res : dNum[i + 1];
+    }
+    return res;
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMaxAcc(uint8 ucVelType)
-  º¯Êı¹¦ÄÜ: ¸ù¾İ¹ì¼£¼ÓËÙÇúÏßÀàĞÍ£¬»ñÈ¡¼ÓËÙ¶Î×î´ó¼ÓËÙ¶È
-  ÊäÈë²ÎÊı£ºuint8 ucVelType ËÙ¶ÈÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º×î´ó¼ÓËÙ¶È
-  ±¸    ×¢£º¹Ì¶¨²ÎÊı¸´ºÏÔË¶¯²ÎÊı
+  å‡½æ•°åç§°ï¼šgetMaxAcc(uint8 ucVelType)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®è½¨è¿¹åŠ é€Ÿæ›²çº¿ç±»å‹ï¼Œè·å–åŠ é€Ÿæ®µæœ€å¤§åŠ é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šuint8 ucVelType é€Ÿåº¦ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæœ€å¤§åŠ é€Ÿåº¦
+  å¤‡    æ³¨ï¼šå›ºå®šå‚æ•°å¤åˆè¿åŠ¨å‚æ•°
 **************************************************/
 double getMaxAcc(uint8 ucVelType)
 {
-	if (ucVelType == VEL_PLAN_T_CURVE)//TĞÍ
-	{
-		return g_SSystemPara.dSysPlanTMaxAcc;
-	}
-	else if (ucVelType == VEL_PLAN_S3_CURVE)//Èı´ÎSĞÍ
-	{
-		return g_SSystemPara.dSysPlanS3MaxAcc;//S3ĞÍÇúÏß¼Ó¼õËÙ¶È
-	}
-	else//ËÄ´ÎSĞÍ
-	{
-		return g_SSystemPara.dSysPlanS4MaxAcc;//S4ĞÍÇúÏß¼Ó¼õËÙ¶È
-	}
+    if (ucVelType == VEL_PLAN_T_CURVE) //Tå‹
+    {
+        return g_SSystemPara.dSysPlanTMaxAcc;
+    }
+    else if (ucVelType == VEL_PLAN_S3_CURVE) //ä¸‰æ¬¡Så‹
+    {
+        return g_SSystemPara.dSysPlanS3MaxAcc; //S3å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+    }
+    else //å››æ¬¡Så‹
+    {
+        return g_SSystemPara.dSysPlanS4MaxAcc; //S4å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMaxDec(uint8 ucVelType)
-  º¯Êı¹¦ÄÜ: ¸ù¾İ¹ì¼£¼õËÙÇúÏßÀàĞÍ£¬»ñÈ¡¼ÓËÙ¶Î×î´ó¼õËÙ¶È
-  ÊäÈë²ÎÊı£ºuint8 ucVelType ËÙ¶ÈÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º×î´ó¼õËÙ¶È
-  ±¸    ×¢£º¹Ì¶¨²ÎÊı¸´ºÏÔË¶¯²ÎÊı
+  å‡½æ•°åç§°ï¼šgetMaxDec(uint8 ucVelType)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®è½¨è¿¹å‡é€Ÿæ›²çº¿ç±»å‹ï¼Œè·å–åŠ é€Ÿæ®µæœ€å¤§å‡é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šuint8 ucVelType é€Ÿåº¦ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæœ€å¤§å‡é€Ÿåº¦
+  å¤‡    æ³¨ï¼šå›ºå®šå‚æ•°å¤åˆè¿åŠ¨å‚æ•°
 **************************************************/
 double getMaxDec(uint8 ucVelType)
 {
-	if (ucVelType == VEL_PLAN_T_CURVE)//TĞÍ
-	{
-		return g_SSystemPara.dSysPlanTMaxDec;
-	}
-	else if (ucVelType == VEL_PLAN_S3_CURVE)//Èı´ÎSĞÍ
-	{
-		return g_SSystemPara.dSysPlanS3MaxDec;
-	}
-	else//ËÄ´ÎSĞÍ
-	{
-		return g_SSystemPara.dSysPlanS4MaxDec;
-	}
+    if (ucVelType == VEL_PLAN_T_CURVE) //Tå‹
+    {
+        return g_SSystemPara.dSysPlanTMaxDec;
+    }
+    else if (ucVelType == VEL_PLAN_S3_CURVE) //ä¸‰æ¬¡Så‹
+    {
+        return g_SSystemPara.dSysPlanS3MaxDec;
+    }
+    else //å››æ¬¡Så‹
+    {
+        return g_SSystemPara.dSysPlanS4MaxDec;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºdouble calcVac(struct SToolCompensation *p , struct SChannel* struct SChannel* pSChannel);
-  º¯Êı¹¦ÄÜ: ¼ÆËãÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
-  ÊäÈë²ÎÊı£ºp £º¹ì¼£Ö¸Õë
-		   struct SChannel* pSChannel :Í¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º  -1£ºÖ¸ÕëÎª¿Õ
-			ÕıÖµ£ºÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
-  ±¸    ×¢£º³¤¶ÈÔ¼ÊøËÙ¶ÈÖ»±£Ö¤ÁË²»´óÓÚ×î´óËÙ¶ÈºÍÔ²»¡¹­¸ß¼°·¨Ïò¼ÓËÙ¶ÈÔ¼Êø£¬Îª±£Ö¤½ø¸øËÙ¶È£¬µ«²»ÓÃµ£ĞÄ£¬
-			×îÖÕÈ¡µÃÊÇdVac,veer,dVdeÈıÕßÖĞ¼«Ğ¡Öµ£¬veerÔÚ¼ÆËãºó½øĞĞÁËĞŞÕı£¬±£Ö¤ÁË²»´óÓÚÇ°ºó¶ÎµÄ½ø¸øËÙ¶È
+  å‡½æ•°åç§°ï¼šdouble calcVac(struct SToolCompensation *p , struct SChannel* struct SChannel* pSChannel);
+  å‡½æ•°åŠŸèƒ½: è®¡ç®—è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šp ï¼šè½¨è¿¹æŒ‡é’ˆ
+		   struct SChannel* pSChannel :é€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š  -1ï¼šæŒ‡é’ˆä¸ºç©º
+			æ­£å€¼ï¼šè¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
+  å¤‡    æ³¨ï¼šé•¿åº¦çº¦æŸé€Ÿåº¦åªä¿è¯äº†ä¸å¤§äºæœ€å¤§é€Ÿåº¦å’Œåœ†å¼§å¼“é«˜åŠæ³•å‘åŠ é€Ÿåº¦çº¦æŸï¼Œä¸ºä¿è¯è¿›ç»™é€Ÿåº¦ï¼Œä½†ä¸ç”¨æ‹…å¿ƒï¼Œ
+			æœ€ç»ˆå–å¾—æ˜¯dVac,veer,dVdeä¸‰è€…ä¸­æå°å€¼ï¼Œveeråœ¨è®¡ç®—åè¿›è¡Œäº†ä¿®æ­£ï¼Œä¿è¯äº†ä¸å¤§äºå‰åæ®µçš„è¿›ç»™é€Ÿåº¦
 **************************************************/
 double calcVac(struct SToolCompensation* p, struct SChannel* pSChannel)
 {
-	double dSac;//¼ÓËÙ¾àÀë
-	double dAcc;
-	double dCoef;//Î»ÒÆËÙ¶È¼ÆËãÏµÊı
-	double dVmax;//´æ·Å×î´ó½ø¸øËÙ¶È£¨·ÖG98/G99£©
-	uint8* ucMapArray = pSChannel->pMapAxisArray;//Ó³Éä
-	double dLengthV;   
+    double dSac; //åŠ é€Ÿè·ç¦»
+    double dAcc;
+    double dCoef;                                 //ä½ç§»é€Ÿåº¦è®¡ç®—ç³»æ•°
+    double dVmax;                                 //å­˜æ”¾æœ€å¤§è¿›ç»™é€Ÿåº¦ï¼ˆåˆ†G98/G99ï¼‰
+    uint8* ucMapArray = pSChannel->pMapAxisArray; //æ˜ å°„
+    double dLengthV;
 
-	if (p == NULL)
-	{
-		return -1;
-	}
+    if (p == NULL)
+    {
+        return -1;
+    }
 
-	//¼ÓËÙ¶È
-	dAcc = p->dAcc;
-	if (dAcc <= 0)
-	{
-		return 0;
-	}
-	//ÏµÊı
-	dCoef = getCoef(g_SSystemPara.ucCommonAccVelPlanType);
+    //åŠ é€Ÿåº¦
+    dAcc = p->dAcc;
+    if (dAcc <= 0)
+    {
+        return 0;
+    }
+    //ç³»æ•°
+    dCoef = getCoef(g_SSystemPara.ucCommonAccVelPlanType);
 
-	//G98Ã¿·ÖÖÓ½ø¸øÄ£Ê½\G99Ã¿×ª½ø¸øÄ£Ê½      
-	//×¢Òâ£ºÕâÀïG99Ö÷ÖáÓÃµÄÊÇCÖá£¬ÔÚ³µÏ³¸´ºÏËÄÖá(´ËÊ±Ö÷ÖáÎª¶¯Á¦µ¶)³ÌĞòÉÏÊÇ·ñÓĞÓĞG99´ıÈ·¶¨
-	//×¢Òâ:G99Ê±dFeedrateµ¥Î»Îª(mm/×ª)£¬Ğı×ªÖáËÙ¶Èµ¥Î»Îª(¡ã/ms),×¢Òâµ¥Î»×ª»¯
-	dVmax = getBits(p->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? p->dFeedrate * MAX_FEED_RATIO
-		: p->dFeedrate * (p->dSpindleSpeed / 60 / 1000) * MAX_FEED_RATIO;
+    //G98æ¯åˆ†é’Ÿè¿›ç»™æ¨¡å¼\G99æ¯è½¬è¿›ç»™æ¨¡å¼
+    //æ³¨æ„ï¼šè¿™é‡ŒG99ä¸»è½´ç”¨çš„æ˜¯Cè½´ï¼Œåœ¨è½¦é“£å¤åˆå››è½´(æ­¤æ—¶ä¸»è½´ä¸ºåŠ¨åŠ›åˆ€)ç¨‹åºä¸Šæ˜¯å¦æœ‰æœ‰G99å¾…ç¡®å®š
+    //æ³¨æ„:G99æ—¶dFeedrateå•ä½ä¸º(mm/è½¬)ï¼Œæ—‹è½¬è½´é€Ÿåº¦å•ä½ä¸º(Â°/ms),æ³¨æ„å•ä½è½¬åŒ–
+    dVmax = getBits(p->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
+                ? p->dFeedrate * MAX_FEED_RATIO
+                : p->dFeedrate * (p->dSpindleSpeed / 60 / 1000) * MAX_FEED_RATIO;
 
-	//Óë¸´ºÏÔË¶¯×î´óËÙ¶È×÷±È½Ï£¬ÓÉÓÚ³ËÁË±¶ÂÊ£¬ËùÒÔÒªÖØĞÂ±È½ÏÒ»ÏÂ
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı
-	{
-		dVmax = dVmax > p->dCommonVMaxFromSingleAxis ? p->dCommonVMaxFromSingleAxis : dVmax;
-	}
-	else
-	{
-		dVmax = dVmax > g_SSystemPara.dSysMaxVel ? g_SSystemPara.dSysMaxVel : dVmax;
-	}
+    //ä¸å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ä½œæ¯”è¾ƒï¼Œç”±äºä¹˜äº†å€ç‡ï¼Œæ‰€ä»¥è¦é‡æ–°æ¯”è¾ƒä¸€ä¸‹
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°
+    {
+        dVmax = dVmax > p->dCommonVMaxFromSingleAxis ? p->dCommonVMaxFromSingleAxis : dVmax;
+    }
+    else
+    {
+        dVmax = dVmax > g_SSystemPara.dSysMaxVel ? g_SSystemPara.dSysMaxVel : dVmax;
+    }
 
-	//ÈôÎªÔ²»¡Ö¸Áî£¬»¹ÒªÓë·¨Ïò¼ÓËÙ¶È¡¢¹­¸ßÎó²îÔ¼ÊøËÙ¶È±È½Ï
-	if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC || getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
-	{
-		dVmax = dVmax < p->dArcMaxNormalAccVmax ? dVmax : p->dArcMaxNormalAccVmax;
-		dVmax = dVmax < p->dArcMaxChordErrorVmax ? dVmax : p->dArcMaxChordErrorVmax;
-	}
+    //è‹¥ä¸ºåœ†å¼§æŒ‡ä»¤ï¼Œè¿˜è¦ä¸æ³•å‘åŠ é€Ÿåº¦ã€å¼“é«˜è¯¯å·®çº¦æŸé€Ÿåº¦æ¯”è¾ƒ
+    if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+        getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
+    {
+        dVmax = dVmax < p->dArcMaxNormalAccVmax ? dVmax : p->dArcMaxNormalAccVmax;
+        dVmax = dVmax < p->dArcMaxChordErrorVmax ? dVmax : p->dArcMaxChordErrorVmax;
+    }
 
-	//¼ÆËãÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈËÙ¶ÈÔ¼Êø
-	dSac = dCoef * (pow(dVmax, 2) - pow(p->dVs, 2)) / dAcc;
+    //è®¡ç®—è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦é€Ÿåº¦çº¦æŸ
+    dSac = dCoef * (pow(dVmax, 2) - pow(p->dVs, 2)) / dAcc;
 
-	//³¤¶È²»¹»¼ÓËÙµ½×î´óËÙ¶È£¬ÖØËã×î´óËÙ¶È,·ñÔò×î´óËÙ¶È²»±ä
-	dVmax = (p->dLength - p->dPreDist) < dSac ? sqrt((p->dLength - p->dPreDist) * dAcc / dCoef + pow(p->dVs, 2))
-		: dVmax;
+    //é•¿åº¦ä¸å¤ŸåŠ é€Ÿåˆ°æœ€å¤§é€Ÿåº¦ï¼Œé‡ç®—æœ€å¤§é€Ÿåº¦,å¦åˆ™æœ€å¤§é€Ÿåº¦ä¸å˜
+    dVmax =
+        (p->dLength - p->dPreDist) < dSac ? sqrt((p->dLength - p->dPreDist) * dAcc / dCoef + pow(p->dVs, 2)) : dVmax;
 
-	//¼ÓÈë¹ì¼£³¤¶ÈÔ¼Êø 2023 / 06 / 16 ¹ùÇ¿
-	dLengthV = p->dLength / g_SSystemPara.dInterpolationTime;
+    //åŠ å…¥è½¨è¿¹é•¿åº¦çº¦æŸ 2023 / 06 / 16 éƒ­å¼º
+    dLengthV = p->dLength / g_SSystemPara.dInterpolationTime;
 
-	dVmax = min(dVmax,dLengthV);
+    dVmax = min(dVmax, dLengthV);
 
-	return dVmax;
+    return dVmax;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcVde(struct SToolCompensation *p ,struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ: ¼ÆËãÏÎ½Óµãºó¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
-  ÊäÈë²ÎÊı£ºp £º¹ì¼£Ö¸Õë
-		   struct SChannel* pSChannel£ºÍ¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º  0£ºÖ¸ÕëÎª¿Õ/¼õËÙ¶ÈĞ¡ÓÚ0
-			ÕıÖµ£ºÏÎ½Óµãºó¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
-  ±¸    ×¢£º³¤¶ÈÔ¼ÊøËÙ¶ÈÖ»±£Ö¤ÁË²»´óÓÚ×î´óËÙ¶ÈºÍÔ²»¡¹­¸ß¼°·¨Ïò¼ÓËÙ¶ÈÔ¼Êø£¬Îª±£Ö¤½ø¸øËÙ¶È£¬µ«²»ÓÃµ£ĞÄ£¬
-			×îÖÕÈ¡µÃÊÇdVac,veer,dVdeÈıÕßÖĞ¼«Ğ¡Öµ£¬veerÔÚ¼ÆËãºó½øĞĞÁËĞŞÕı£¬±£Ö¤ÁË²»´óÓÚÇ°ºó¶ÎµÄ½ø¸øËÙ¶È
+  å‡½æ•°åç§°ï¼šcalcVde(struct SToolCompensation *p ,struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½: è®¡ç®—è¡”æ¥ç‚¹åæ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šp ï¼šè½¨è¿¹æŒ‡é’ˆ
+		   struct SChannel* pSChannelï¼šé€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š  0ï¼šæŒ‡é’ˆä¸ºç©º/å‡é€Ÿåº¦å°äº0
+			æ­£å€¼ï¼šè¡”æ¥ç‚¹åæ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
+  å¤‡    æ³¨ï¼šé•¿åº¦çº¦æŸé€Ÿåº¦åªä¿è¯äº†ä¸å¤§äºæœ€å¤§é€Ÿåº¦å’Œåœ†å¼§å¼“é«˜åŠæ³•å‘åŠ é€Ÿåº¦çº¦æŸï¼Œä¸ºä¿è¯è¿›ç»™é€Ÿåº¦ï¼Œä½†ä¸ç”¨æ‹…å¿ƒï¼Œ
+			æœ€ç»ˆå–å¾—æ˜¯dVac,veer,dVdeä¸‰è€…ä¸­æå°å€¼ï¼Œveeråœ¨è®¡ç®—åè¿›è¡Œäº†ä¿®æ­£ï¼Œä¿è¯äº†ä¸å¤§äºå‰åæ®µçš„è¿›ç»™é€Ÿåº¦
 **************************************************/
 double calcVde(struct SToolCompensation* p, struct SChannel* pSChannel)
 {
-	double dSde;//¼õËÙ¾àÀë
-	double dDec;
-	double dCoef;//Î»ÒÆËÙ¶È¼ÆËãÏµÊı
-	double dVmax;//´æ·Å×î´ó½ø¸øËÙ¶È£¨·ÖG98/G99£©
-	uint8* ucMapArray = pSChannel->pMapAxisArray;
-	double dLengthV;
+    double dSde; //å‡é€Ÿè·ç¦»
+    double dDec;
+    double dCoef; //ä½ç§»é€Ÿåº¦è®¡ç®—ç³»æ•°
+    double dVmax; //å­˜æ”¾æœ€å¤§è¿›ç»™é€Ÿåº¦ï¼ˆåˆ†G98/G99ï¼‰
+    uint8* ucMapArray = pSChannel->pMapAxisArray;
+    double dLengthV;
 
-	if (p == NULL)
-	{
-		return 0;
-	}
+    if (p == NULL)
+    {
+        return 0;
+    }
 
-	//¼õËÙ¶È
-	dDec = p->dDec;
+    //å‡é€Ÿåº¦
+    dDec = p->dDec;
 
-	if (dDec <= 0)
-	{
-		return 0;
-	}
-	
+    if (dDec <= 0)
+    {
+        return 0;
+    }
 
-	dCoef = getCoef(g_SSystemPara.ucCommonDecVelPlanType);
+    dCoef = getCoef(g_SSystemPara.ucCommonDecVelPlanType);
 
-	//G98Ã¿·ÖÖÓ½ø¸øÄ£Ê½\G99Ã¿×ª½ø¸øÄ£Ê½
-	dVmax = getBits(p->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? p->dFeedrate * MAX_FEED_RATIO
-		: p->dFeedrate * (p->dSpindleSpeed / 60 / 1000) * MAX_FEED_RATIO;
+    //G98æ¯åˆ†é’Ÿè¿›ç»™æ¨¡å¼\G99æ¯è½¬è¿›ç»™æ¨¡å¼
+    dVmax = getBits(p->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
+                ? p->dFeedrate * MAX_FEED_RATIO
+                : p->dFeedrate * (p->dSpindleSpeed / 60 / 1000) * MAX_FEED_RATIO;
 
-	//Óë¸´ºÏÔË¶¯×î´óËÙ¶È×÷±È½Ï
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı
-	{
-		dVmax = dVmax > p->dCommonVMaxFromSingleAxis ? p->dCommonVMaxFromSingleAxis : dVmax;
-	}
-	else
-	{
-		dVmax = dVmax > g_SSystemPara.dSysMaxVel ? g_SSystemPara.dSysMaxVel : dVmax;
-	}
+    //ä¸å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ä½œæ¯”è¾ƒ
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°
+    {
+        dVmax = dVmax > p->dCommonVMaxFromSingleAxis ? p->dCommonVMaxFromSingleAxis : dVmax;
+    }
+    else
+    {
+        dVmax = dVmax > g_SSystemPara.dSysMaxVel ? g_SSystemPara.dSysMaxVel : dVmax;
+    }
 
-	//ÈôÎªÔ²»¡Ö¸Áî£¬»¹ÒªÓë·¨Ïò¼ÓËÙ¶È¡¢¹­¸ßÎó²îÔ¼ÊøËÙ¶È±È½Ï£¬´ËÊ±ºó¶Î¹ì¼£µÄÕâÁ½¸öÔ¼ÊøËÙ¶ÈÒªÏÈ¼ÆËã³öÀ´
-	if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC || getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
-	{
-		dVmax = dVmax < p->dArcMaxNormalAccVmax ? dVmax : p->dArcMaxNormalAccVmax;
-		dVmax = dVmax < p->dArcMaxChordErrorVmax ? dVmax : p->dArcMaxChordErrorVmax;
-	}
+    //è‹¥ä¸ºåœ†å¼§æŒ‡ä»¤ï¼Œè¿˜è¦ä¸æ³•å‘åŠ é€Ÿåº¦ã€å¼“é«˜è¯¯å·®çº¦æŸé€Ÿåº¦æ¯”è¾ƒï¼Œæ­¤æ—¶åæ®µè½¨è¿¹çš„è¿™ä¸¤ä¸ªçº¦æŸé€Ÿåº¦è¦å…ˆè®¡ç®—å‡ºæ¥
+    if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+        getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
+    {
+        dVmax = dVmax < p->dArcMaxNormalAccVmax ? dVmax : p->dArcMaxNormalAccVmax;
+        dVmax = dVmax < p->dArcMaxChordErrorVmax ? dVmax : p->dArcMaxChordErrorVmax;
+    }
 
-	//¼ÆËãÏÎ½Óµãºó¶Î¹ì¼£³¤¶ÈËÙ¶ÈÔ¼Êø
-	dSde = dCoef * (pow(dVmax, 2) - pow(p->dVe, 2)) / dDec;
+    //è®¡ç®—è¡”æ¥ç‚¹åæ®µè½¨è¿¹é•¿åº¦é€Ÿåº¦çº¦æŸ
+    dSde = dCoef * (pow(dVmax, 2) - pow(p->dVe, 2)) / dDec;
 
-	//³¤¶È²»¹»¼õËÙµ½×î´óËÙ¶È£¬ÖØËã×î´óËÙ¶È£¨±äĞ¡£©,·ñÔò×î´óËÙ¶È²»±ä
-	dVmax =  p->dLength < dSde ? sqrt(p->dLength * dDec / dCoef + pow(p->dVe, 2))
-		: dVmax;
+    //é•¿åº¦ä¸å¤Ÿå‡é€Ÿåˆ°æœ€å¤§é€Ÿåº¦ï¼Œé‡ç®—æœ€å¤§é€Ÿåº¦ï¼ˆå˜å°ï¼‰,å¦åˆ™æœ€å¤§é€Ÿåº¦ä¸å˜
+    dVmax = p->dLength < dSde ? sqrt(p->dLength * dDec / dCoef + pow(p->dVe, 2)) : dVmax;
 
+    //åŠ å…¥è½¨è¿¹é•¿åº¦çº¦æŸ 2023 / 06 / 16 éƒ­å¼º
+    dLengthV = p->dLength / g_SSystemPara.dInterpolationTime;
 
-	//¼ÓÈë¹ì¼£³¤¶ÈÔ¼Êø 2023 / 06 / 16 ¹ùÇ¿
-	dLengthV = p->dLength / g_SSystemPara.dInterpolationTime;
+    dVmax = min(dVmax, dLengthV);
 
-	dVmax = min(dVmax, dLengthV);
-
-	return dVmax;
+    return dVmax;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcNeedLookAheadNum(int16 sLookAheadWIndex , int16 sLookAheadRes)
-  º¯Êı¹¦ÄÜ  ¼ÆËãĞèÒªÇ°Õ°µÄÁ¬Ğø¹ì¼£¶ÎÊı
-  ÊäÈë²ÎÊı£ºsLookAheadWIndex £ºÇ°Õ°¶ÁĞ´Ö¸ÕëË÷Òı  sLookAheadRes£ºÇ°Õ°¿É¶ÁÇø¼ä¶ÎÊı  uint8 ucChannelNum:Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºsNeedLookAheadNum £ºĞèÒªÇ°Õ°µÄÁ¬Ğø¹ì¼£¶ÎÊı
-  ±¸    ×¢£ºÓÉÓÚµ¶²¹Ğ´ÈëµÄÄ³¸ö½á¹¹Ìåµ¥Ôª¿ÉÄÜ²»ĞèÒªÇ°Õ°G00,G04µÈ£¬
-			ÁíÍâ£¬ÓÉÓÚM03M04MO5Ç°ºó×èÈûµÄÔ­Òò£¬¼´Ê¹ÏàÁÚÁ½µ¥Ôª¶¼ĞèÒªÇ°Õ°£¬µ«ÊÇÈÔÈ»»á±»×èÈû´ò¶ÏÔË¶¯
-			Òò´ËĞèÒª´¦Àí¶à¶Î¶ÀÁ¢Ç°Õ°Çø¼ä
-			¼ÓÈëÍ¨µÀµÈ´ıÅĞ¶Ï
+  å‡½æ•°åç§°ï¼šcalcNeedLookAheadNum(int16 sLookAheadWIndex , int16 sLookAheadRes)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—éœ€è¦å‰ç»çš„è¿ç»­è½¨è¿¹æ®µæ•°
+  è¾“å…¥å‚æ•°ï¼šsLookAheadWIndex ï¼šå‰ç»è¯»å†™æŒ‡é’ˆç´¢å¼•  sLookAheadResï¼šå‰ç»å¯è¯»åŒºé—´æ®µæ•°  uint8 ucChannelNum:é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šsNeedLookAheadNum ï¼šéœ€è¦å‰ç»çš„è¿ç»­è½¨è¿¹æ®µæ•°
+  å¤‡    æ³¨ï¼šç”±äºåˆ€è¡¥å†™å…¥çš„æŸä¸ªç»“æ„ä½“å•å…ƒå¯èƒ½ä¸éœ€è¦å‰ç»G00,G04ç­‰ï¼Œ
+			å¦å¤–ï¼Œç”±äºM03M04MO5å‰åé˜»å¡çš„åŸå› ï¼Œå³ä½¿ç›¸é‚»ä¸¤å•å…ƒéƒ½éœ€è¦å‰ç»ï¼Œä½†æ˜¯ä»ç„¶ä¼šè¢«é˜»å¡æ‰“æ–­è¿åŠ¨
+			å› æ­¤éœ€è¦å¤„ç†å¤šæ®µç‹¬ç«‹å‰ç»åŒºé—´
+			åŠ å…¥é€šé“ç­‰å¾…åˆ¤æ–­
 **************************************************/
 int16 calcNeedLookAheadNum(int16 sLookAheadWIndex, int16 sLookAheadRes, uint8 ucChannelNum)
 {
-	int16 sNeedLookAheadNum = 1;//ĞèÒªÇ°Õ°µÄÁ¬Ğøµ¥ÔªÊıÁ¿£¬³õÊ¼ÖµÎª1£¬¼´Ç°Õ°¶ÁĞ´Ö¸Õëµ±Ç°Ö¸Ïòµ¥Ôª
-	int16 i = 1;//Ñ­»·±äÁ¿
+    int16 sNeedLookAheadNum = 1; //éœ€è¦å‰ç»çš„è¿ç»­å•å…ƒæ•°é‡ï¼Œåˆå§‹å€¼ä¸º1ï¼Œå³å‰ç»è¯»å†™æŒ‡é’ˆå½“å‰æŒ‡å‘å•å…ƒ
+    int16 i = 1;                 //å¾ªç¯å˜é‡
 
-	//¶¯Ì¬Ö¸ÕëË÷Òı
-	int16 sPIndex;
+    //åŠ¨æ€æŒ‡é’ˆç´¢å¼•
+    int16 sPIndex;
 
-	//¶¯Ì¬Ö¸Õë Ö¸ÏòÇ°Õ°¿É¶ÁÇø¼äµ¥Ôª
-	struct SToolCompensation* p;
+    //åŠ¨æ€æŒ‡é’ˆ æŒ‡å‘å‰ç»å¯è¯»åŒºé—´å•å…ƒ
+    struct SToolCompensation* p;
 
-	//Ñ­»·¼ÆËãĞèÒªÇ°Õ°µÄÁ¬Ğøµ¥ÔªÊıÁ¿
-	for (i = 1; i < sLookAheadRes; i++)//µ±sLookAheadRes=1Ê±£¬²»½øÈëÑ­»·ucMapArray
-	{
-		sPIndex = sLookAheadWIndex + i;//´ÓÇ°Õ°¶ÁĞ´Ö¸ÕëÏÂÒ»¸ö¿ªÊ¼¼ì²é
-		p = getSToolCompPointerByIndex(sPIndex, ucChannelNum);
+    //å¾ªç¯è®¡ç®—éœ€è¦å‰ç»çš„è¿ç»­å•å…ƒæ•°é‡
+    for (i = 1; i < sLookAheadRes; i++) //å½“sLookAheadRes=1æ—¶ï¼Œä¸è¿›å…¥å¾ªç¯ucMapArray
+    {
+        sPIndex = sLookAheadWIndex + i; //ä»å‰ç»è¯»å†™æŒ‡é’ˆä¸‹ä¸€ä¸ªå¼€å§‹æ£€æŸ¥
+        p = getSToolCompPointerByIndex(sPIndex, ucChannelNum);
 
-		if (judgeG00G01G02G03(p, ucChannelNum) == 1 || judgeG00G01G02G03(p, ucChannelNum) == 5)
-		{
-			if (!(getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE))//²»ÎªG0Ö¸Áî
-			{
-				uint8 res = isBlockedInCommand(p->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
-				//¿´´Ëµ¥ÔªÊÇ·ñ´æÔÚÇ°ºó×èÈû
-				if (res == 1)//Ç°×èÈû
-				{
-					return sNeedLookAheadNum;//´Ëµ¥Ôª²»°üº¬ÔÚµ±Ç°¶ÀÁ¢Ç°Õ°Çø¼äÄÚ
-				}
-				if (res == 2 || p->sChannelCommand.ucType != UNASSIGNED_VALUE)//ºó×èÈû»òÓĞÍ¨µÀµÈ´ı
-				{
-					sNeedLookAheadNum++;
-					return sNeedLookAheadNum;//´Ëµ¥Ôª°üº¬ÔÚµ±Ç°¶ÀÁ¢Ç°Õ°Çø¼äÄÚ£¬Îª×îºóÒ»¸öµ¥Ôª
-				}
-				if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE)//Ö±ÏßÖ¸Áî
-				{
-					if (p->ucAxisNumOfNeedLookAhead == AXIS_NULL && judgeG0(p, ucChannelNum, sPIndex) == 0)//¶àÖáÔË¶¯£¬µ«Ç°Ò»µ¥ÔªÎªG0µ¥ÖáÔË¶¯
-					{
-						return sNeedLookAheadNum;//´Ëµ¥Ôª²»°üº¬ÔÚµ±Ç°¶ÀÁ¢Ç°Õ°Çø¼äÄÚ
-					}
-				}
-			}
-			else//ÎªG0Ö¸Áî
-			{
-				if (p->sChannelCommand.ucType != UNASSIGNED_VALUE)//ÓĞÍ¨µÀµÈ´ı
-				{
-					sNeedLookAheadNum++;
-					return sNeedLookAheadNum;//´Ëµ¥Ôª°üº¬ÔÚµ±Ç°¶ÀÁ¢Ç°Õ°Çø¼äÄÚ£¬Îª×îºóÒ»¸öµ¥Ôª
-				}
-				if (p->ucAxisNumOfNeedLookAhead != AXIS_NULL && judgeG0(p, ucChannelNum, sPIndex) != 1)//µ¥ÖáÔË¶¯£¬µ«ÓëÇ°Ò»µ¥ÔªÖáºÅ/·½Ïò²»Ò»ÖÂ  //2026.3.28 ĞŞ¸ÄÎªµ¥ÖáÔË¶¯ÇÒ²»ÎªÇ°Õ°
-				{
-					return sNeedLookAheadNum;//´Ëµ¥Ôª²»°üº¬ÔÚµ±Ç°¶ÀÁ¢Ç°Õ°Çø¼äÄÚ
-				}
-			}
+        if (judgeG00G01G02G03(p, ucChannelNum) == 1 || judgeG00G01G02G03(p, ucChannelNum) == 5)
+        {
+            if (!(getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)) //ä¸ä¸ºG0æŒ‡ä»¤
+            {
+                uint8 res = isBlockedInCommand(p->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
+                //çœ‹æ­¤å•å…ƒæ˜¯å¦å­˜åœ¨å‰åé˜»å¡
+                if (res == 1) //å‰é˜»å¡
+                {
+                    return sNeedLookAheadNum; //æ­¤å•å…ƒä¸åŒ…å«åœ¨å½“å‰ç‹¬ç«‹å‰ç»åŒºé—´å†…
+                }
+                if (res == 2 || p->sChannelCommand.ucType != UNASSIGNED_VALUE) //åé˜»å¡æˆ–æœ‰é€šé“ç­‰å¾…
+                {
+                    sNeedLookAheadNum++;
+                    return sNeedLookAheadNum; //æ­¤å•å…ƒåŒ…å«åœ¨å½“å‰ç‹¬ç«‹å‰ç»åŒºé—´å†…ï¼Œä¸ºæœ€åä¸€ä¸ªå•å…ƒ
+                }
+                if (getBits(p->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE) //ç›´çº¿æŒ‡ä»¤
+                {
+                    if (p->ucAxisNumOfNeedLookAhead == AXIS_NULL &&
+                        judgeG0(p, ucChannelNum, sPIndex) == 0) //å¤šè½´è¿åŠ¨ï¼Œä½†å‰ä¸€å•å…ƒä¸ºG0å•è½´è¿åŠ¨
+                    {
+                        return sNeedLookAheadNum; //æ­¤å•å…ƒä¸åŒ…å«åœ¨å½“å‰ç‹¬ç«‹å‰ç»åŒºé—´å†…
+                    }
+                }
+            }
+            else //ä¸ºG0æŒ‡ä»¤
+            {
+                if (p->sChannelCommand.ucType != UNASSIGNED_VALUE) //æœ‰é€šé“ç­‰å¾…
+                {
+                    sNeedLookAheadNum++;
+                    return sNeedLookAheadNum; //æ­¤å•å…ƒåŒ…å«åœ¨å½“å‰ç‹¬ç«‹å‰ç»åŒºé—´å†…ï¼Œä¸ºæœ€åä¸€ä¸ªå•å…ƒ
+                }
+                if (p->ucAxisNumOfNeedLookAhead != AXIS_NULL &&
+                    judgeG0(p, ucChannelNum, sPIndex) !=
+                        1) //å•è½´è¿åŠ¨ï¼Œä½†ä¸å‰ä¸€å•å…ƒè½´å·/æ–¹å‘ä¸ä¸€è‡´  //2026.3.28 ä¿®æ”¹ä¸ºå•è½´è¿åŠ¨ä¸”ä¸ä¸ºå‰ç»
+                {
+                    return sNeedLookAheadNum; //æ­¤å•å…ƒä¸åŒ…å«åœ¨å½“å‰ç‹¬ç«‹å‰ç»åŒºé—´å†…
+                }
+            }
 
-			sNeedLookAheadNum++;
-		}
-		else
-		{
-			break;
-		}
-	}
+            sNeedLookAheadNum++;
+        }
+        else
+        {
+            break;
+        }
+    }
 
-	//·µ»ØĞèÒªÇ°Õ°µÄÁ¬Ğø¹ì¼£¶ÎÊı
-	return sNeedLookAheadNum;
+    //è¿”å›éœ€è¦å‰ç»çš„è¿ç»­è½¨è¿¹æ®µæ•°
+    return sNeedLookAheadNum;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcFirstElementVs(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ: ¼ÆËãÇ°Õ°Çø¼äÊ×¶Î³õËÙ¶È
-  ÊäÈë²ÎÊı£ºpToolElement µ¶²¹»º³åÇøÖ¸Õë
-            uint8 ucChannelNum  Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º2022/11/25¼ÓÈëÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµÔ¼Êø
+  å‡½æ•°åç§°ï¼šcalcFirstElementVs(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: è®¡ç®—å‰ç»åŒºé—´é¦–æ®µåˆé€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼špToolElement åˆ€è¡¥ç¼“å†²åŒºæŒ‡é’ˆ
+            uint8 ucChannelNum  é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š2022/11/25åŠ å…¥åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼çº¦æŸ
 **************************************************/
-double calcFirstElementVs(struct SToolCompensation*  pToolElement, uint8* ucMapArray, uint8 ucChannelNum)
+double calcFirstElementVs(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum)
 {
-	double dVs = 0;
-	double dCoefOfFeedrate;
-	double dLengthV;//¹ì¼£³¤¶ÈÔ¼ÊøÏÂµÄ×î´óVs
+    double dVs = 0;
+    double dCoefOfFeedrate;
+    double dLengthV; //è½¨è¿¹é•¿åº¦çº¦æŸä¸‹çš„æœ€å¤§Vs
 
-	if (pToolElement == NULL)
-	{
-		return 0;
-	}
+    if (pToolElement == NULL)
+    {
+        return 0;
+    }
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pToolElement, ucChannelNum);//2024/5/27 ºé¹ÚÅô G0²»ÊÜG98»òG99Ó°Ïì,×ª»»ÏµÊıÉèÎª1
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate =
+        getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+            ? 1.0
+            : calcCoefOfFeedrate(pToolElement, ucChannelNum); //2024/5/27 æ´ªå† é¹ G0ä¸å—G98æˆ–G99å½±å“,è½¬æ¢ç³»æ•°è®¾ä¸º1
 
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı
-	{
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°
+    {
 
-		if (pToolElement->dCommonVsMinFromSingleAxis < pToolElement->dLowerLimitSpeed)//·´Ëã³õËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-		{
-			dVs = pToolElement->dLowerLimitSpeed;
-		}
-		else//²»±ÈÏÂÏŞÖµĞ¡,È·±£·´ËãÖµ²»³¬¹ı½ø¸øËÙ¶È
-		{
-			dVs = pToolElement->dCommonVsMinFromSingleAxis > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : pToolElement->dCommonVsMinFromSingleAxis;
+        if (pToolElement->dCommonVsMinFromSingleAxis <
+            pToolElement->dLowerLimitSpeed) //åç®—åˆé€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+        {
+            dVs = pToolElement->dLowerLimitSpeed;
+        }
+        else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿åç®—å€¼ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+        {
+            dVs = pToolElement->dCommonVsMinFromSingleAxis > (pToolElement->dFeedrate * dCoefOfFeedrate)
+                      ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                      : pToolElement->dCommonVsMinFromSingleAxis;
+        }
+    }
+    else
+    {
+        if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE) //å•è½´çš„G0
+        {
+            if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX ||
+                ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
+            {
+                return 0;
+            }
+            if (g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs <
+                pToolElement->dLowerLimitSpeed) //ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+            {
+                dVs = pToolElement->dLowerLimitSpeed;
+            }
+            else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+            {
+                dVs = g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs >
+                              (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          : g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs;
+            }
+        }
+        else //G01G02G03
+        {
+            if (g_SSystemPara.dSysMinVel < pToolElement->dLowerLimitSpeed) //ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+            {
+                dVs = pToolElement->dLowerLimitSpeed;
+            }
+            else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+            {
+                dVs = g_SSystemPara.dSysMinVel > (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          : g_SSystemPara.dSysMinVel;
+            }
+        }
+    }
 
-		}
-	}
-	else
-	{
-		if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)//µ¥ÖáµÄG0
-		{
-			if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX || ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
-			{
-				return 0;
-			}
-			if (g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs < pToolElement->dLowerLimitSpeed)//ÏµÍ³×îĞ¡³õËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-			{
-				dVs = pToolElement->dLowerLimitSpeed;
-			}
-			else//²»±ÈÏÂÏŞÖµĞ¡,È·±£ÏµÍ³×îĞ¡³õËÙ¶È²»³¬¹ı½ø¸øËÙ¶È
-			{
-				dVs = g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVs;
-			}
-		}
-		else//G01G02G03
-		{
-			if (g_SSystemPara.dSysMinVel < pToolElement->dLowerLimitSpeed)//ÏµÍ³×îĞ¡³õËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-			{
-				dVs = pToolElement->dLowerLimitSpeed;
-			}
-			else//²»±ÈÏÂÏŞÖµĞ¡,È·±£ÏµÍ³×îĞ¡³õËÙ¶È²»³¬¹ı½ø¸øËÙ¶È
-			{
-				dVs = g_SSystemPara.dSysMinVel > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : g_SSystemPara.dSysMinVel;
-			}
-		}
-	
-	}
+    //åœ†å¼§éœ€è¦å†åŠ ä¸Šå¼“é«˜å’Œæœ€å¤§æ³•å‘åŠ é€Ÿåº¦çº¦æŸ
+    if ((getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC) ||
+        (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC))
+    {
+        //dVså†ä¸æ³•å‘ã€å¼“é«˜å¾—åˆ°æœ€å°å€¼
+        int i;
+        double dV[3] = {0}; //å¼€è¾Ÿå˜é‡å­˜æ”¾ä¸Šæ–¹ä¸‰ä¸ªé€Ÿåº¦ï¼Œä»¥ä¾¿ç®—å‡ºæœ€å°å€¼
 
+        dV[0] = dVs;
+        dV[1] = pToolElement->dArcMaxNormalAccVmax;
+        dV[2] = pToolElement->dArcMaxChordErrorVmax;
 
-	//Ô²»¡ĞèÒªÔÙ¼ÓÉÏ¹­¸ßºÍ×î´ó·¨Ïò¼ÓËÙ¶ÈÔ¼Êø
-	if ((getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC) || (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC))
-	{		
-		//dVsÔÙÓë·¨Ïò¡¢¹­¸ßµÃµ½×îĞ¡Öµ
-		int i;
-		double dV[3] = { 0 };//¿ª±Ù±äÁ¿´æ·ÅÉÏ·½Èı¸öËÙ¶È£¬ÒÔ±ãËã³ö×îĞ¡Öµ
+        for (i = 0; i < 3 - 1; i++)
+        {
+            dVs = dVs < dV[i + 1] ? dVs : dV[i + 1];
+        }
+    }
 
-		dV[0] = dVs;
-		dV[1] = pToolElement->dArcMaxNormalAccVmax;
-		dV[2] = pToolElement->dArcMaxChordErrorVmax;
+    //åŠ å…¥è½¨è¿¹é•¿åº¦çº¦æŸ 2023/06/16 éƒ­å¼º
+    dLengthV = pToolElement->dLength / g_SSystemPara.dInterpolationTime;
 
-		for (i = 0; i < 3 - 1; i++)
-		{
-			dVs = dVs < dV[i + 1] ? dVs : dV[i + 1];
-		}
-	}
+    dVs = min(dVs, dLengthV);
 
-	//¼ÓÈë¹ì¼£³¤¶ÈÔ¼Êø 2023/06/16 ¹ùÇ¿
-	dLengthV = pToolElement->dLength / g_SSystemPara.dInterpolationTime;
-
-	dVs = min(dVs, dLengthV);
-
-	return dVs;
+    return dVs;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcLastElementVe(struct SToolCompensation* pToolElement)
-  º¯Êı¹¦ÄÜ: ¼ÆËãÇ°Õ°Çø¼äÄ©¶ÎÄ©ËÙ¶È
-  ÊäÈë²ÎÊı£ºpToolElement         Ç°Õ°¶ÁĞ´Ö¸Õë
-            uint8 ucChannelNum   Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcLastElementVe(struct SToolCompensation* pToolElement)
+  å‡½æ•°åŠŸèƒ½: è®¡ç®—å‰ç»åŒºé—´æœ«æ®µæœ«é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼špToolElement         å‰ç»è¯»å†™æŒ‡é’ˆ
+            uint8 ucChannelNum   é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double calcLastElementVe(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum)
 {
-	double dVe = 0;
-	double dCoefOfFeedrate;
+    double dVe = 0;
+    double dCoefOfFeedrate;
 
-	double dLengthV;//¹ì¼£³¤¶ÈÔ¼ÊøÏÂµÄ×î´óVs
+    double dLengthV; //è½¨è¿¹é•¿åº¦çº¦æŸä¸‹çš„æœ€å¤§Vs
 
-	if (pToolElement == NULL)
-	{
-		return 0;
-	}
+    if (pToolElement == NULL)
+    {
+        return 0;
+    }
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pToolElement, ucChannelNum);//2024/5/27 ºé¹ÚÅô G0²»ÊÜG98»òG99Ó°Ïì,×ª»»ÏµÊıÉèÎª1
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate =
+        getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+            ? 1.0
+            : calcCoefOfFeedrate(pToolElement, ucChannelNum); //2024/5/27 æ´ªå† é¹ G0ä¸å—G98æˆ–G99å½±å“,è½¬æ¢ç³»æ•°è®¾ä¸º1
 
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)//×ÔÊÊÓ¦²ÎÊı
-	{
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE) //è‡ªé€‚åº”å‚æ•°
+    {
 
-		if (pToolElement->dCommonVeMinFromSingleAxis < pToolElement->dLowerLimitSpeed)//·´Ëã³õËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-		{
-			dVe = pToolElement->dLowerLimitSpeed;
-		}
-		else//²»±ÈÏÂÏŞÖµĞ¡,È·±£·´ËãÖµ²»³¬¹ı½ø¸øËÙ¶È
-		{
-			dVe = pToolElement->dCommonVeMinFromSingleAxis > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : pToolElement->dCommonVeMinFromSingleAxis;
-		}
-	}
-	else
-	{
-		if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)//µ¥ÖáG0
-		{
-			if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX || ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
-			{
-				return 0;
-			}
-			if (g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe < pToolElement->dLowerLimitSpeed)//ÏµÍ³×îĞ¡Ä©ËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-			{
-				dVe = pToolElement->dLowerLimitSpeed;
-			}
-			else//²»±ÈÏÂÏŞÖµĞ¡,È·±£ÏµÍ³×îĞ¡Ä©ËÙ¶È²»³¬¹ı½ø¸øËÙ¶È
-			{
-				dVe = g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe;
-			}
-		}
-		else//G01G02G03
-		{
-			if (g_SSystemPara.dSysMinVel < pToolElement->dLowerLimitSpeed)//ÏµÍ³×îĞ¡³õËÙ¶È±ÈÏÂÏŞÖµĞ¡£¬´ËÊ±ÓÃÏÂÏŞÖµ
-			{
-				dVe = pToolElement->dLowerLimitSpeed;
-			}
-			else//²»±ÈÏÂÏŞÖµĞ¡,È·±£ÏµÍ³×îĞ¡³õËÙ¶È²»³¬¹ı½ø¸øËÙ¶È
-			{
-				dVe = g_SSystemPara.dSysMinVel > (pToolElement->dFeedrate * dCoefOfFeedrate) ? (pToolElement->dFeedrate * dCoefOfFeedrate) : g_SSystemPara.dSysMinVel;
-			}
-		}
-		
-	}
+        if (pToolElement->dCommonVeMinFromSingleAxis <
+            pToolElement->dLowerLimitSpeed) //åç®—åˆé€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+        {
+            dVe = pToolElement->dLowerLimitSpeed;
+        }
+        else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿åç®—å€¼ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+        {
+            dVe = pToolElement->dCommonVeMinFromSingleAxis > (pToolElement->dFeedrate * dCoefOfFeedrate)
+                      ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                      : pToolElement->dCommonVeMinFromSingleAxis;
+        }
+    }
+    else
+    {
+        if (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE) //å•è½´G0
+        {
+            if (pToolElement->ucAxisNumOfNeedLookAhead >= AXIS_NUM_MAX ||
+                ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead] >= AXIS_PHYSICS_NUM_MAX)
+            {
+                return 0;
+            }
+            if (g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe <
+                pToolElement->dLowerLimitSpeed) //ç³»ç»Ÿæœ€å°æœ«é€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+            {
+                dVe = pToolElement->dLowerLimitSpeed;
+            }
+            else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿ç³»ç»Ÿæœ€å°æœ«é€Ÿåº¦ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+            {
+                dVe = g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe >
+                              (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          : g_SSystemPara.SAxisPara[ucMapArray[pToolElement->ucAxisNumOfNeedLookAhead]].dVe;
+            }
+        }
+        else //G01G02G03
+        {
+            if (g_SSystemPara.dSysMinVel < pToolElement->dLowerLimitSpeed) //ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦æ¯”ä¸‹é™å€¼å°ï¼Œæ­¤æ—¶ç”¨ä¸‹é™å€¼
+            {
+                dVe = pToolElement->dLowerLimitSpeed;
+            }
+            else //ä¸æ¯”ä¸‹é™å€¼å°,ç¡®ä¿ç³»ç»Ÿæœ€å°åˆé€Ÿåº¦ä¸è¶…è¿‡è¿›ç»™é€Ÿåº¦
+            {
+                dVe = g_SSystemPara.dSysMinVel > (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          ? (pToolElement->dFeedrate * dCoefOfFeedrate)
+                          : g_SSystemPara.dSysMinVel;
+            }
+        }
+    }
 
+    //åœ†å¼§éœ€è¦å†åŠ ä¸Šå¼“é«˜å’Œæœ€å¤§æ³•å‘åŠ é€Ÿåº¦çº¦æŸ
+    if ((getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC) ||
+        (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC))
+    {
+        //dVså†ä¸æ³•å‘ã€å¼“é«˜å¾—åˆ°æœ€å°å€¼
+        int i;
+        double dV[3] = {0}; //å¼€è¾Ÿå˜é‡å­˜æ”¾ä¸Šæ–¹ä¸‰ä¸ªé€Ÿåº¦ï¼Œä»¥ä¾¿ç®—å‡ºæœ€å°å€¼
 
-	//Ô²»¡ĞèÒªÔÙ¼ÓÉÏ¹­¸ßºÍ×î´ó·¨Ïò¼ÓËÙ¶ÈÔ¼Êø
-	if ((getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC) || (getBits(pToolElement->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC))
-	{
-		//dVsÔÙÓë·¨Ïò¡¢¹­¸ßµÃµ½×îĞ¡Öµ
-		int i;
-		double dV[3] = { 0 };//¿ª±Ù±äÁ¿´æ·ÅÉÏ·½Èı¸öËÙ¶È£¬ÒÔ±ãËã³ö×îĞ¡Öµ
+        dV[0] = dVe;
+        dV[1] = pToolElement->dArcMaxNormalAccVmax;
+        dV[2] = pToolElement->dArcMaxChordErrorVmax;
 
-		dV[0] = dVe;
-		dV[1] = pToolElement->dArcMaxNormalAccVmax;
-		dV[2] = pToolElement->dArcMaxChordErrorVmax;
+        for (i = 0; i < 3 - 1; i++)
+        {
+            dVe = dVe < dV[i + 1] ? dVe : dV[i + 1];
+        }
+    }
 
-		for (i = 0; i < 3 - 1; i++)
-		{
-			dVe = dVe < dV[i + 1] ? dVe : dV[i + 1];
-		}
-	}
+    //åŠ å…¥è½¨è¿¹é•¿åº¦çº¦æŸ  2023/06/16 éƒ­å¼º
+    dLengthV = pToolElement->dLength / g_SSystemPara.dInterpolationTime;
 
-	//¼ÓÈë¹ì¼£³¤¶ÈÔ¼Êø  2023/06/16 ¹ùÇ¿
-	dLengthV = pToolElement->dLength / g_SSystemPara.dInterpolationTime;
+    dVe = min(dVe, dLengthV);
 
-	dVe = min(dVe, dLengthV);
-
-	return dVe;
+    return dVe;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcVsVe(int16 sNeedLookAheadNum, struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ: µ±Âú×ãÇ°Õ°¼ÆËãÌõ¼şÊ±£¬´Ëº¯ÊıÓÃÓÚÇ°Õ°¼ÆËã
-  ÊäÈë²ÎÊı£ºsNeedLookAheadNum ĞèÒªÇ°Õ°µÄÁ¬ĞøÇø¼ä³¤¶È
-		  struct SChannel* pSChannel Í¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1£ºÇ°Õ°´¦Àí¶ÀÁ¢Ç°Õ°Çø¼ä×îºóÒ»¶Î
-			2£ºÇ°Õ°´¦Àí·Ç×îºóÒ»¶Î
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalcVsVe(int16 sNeedLookAheadNum, struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½: å½“æ»¡è¶³å‰ç»è®¡ç®—æ¡ä»¶æ—¶ï¼Œæ­¤å‡½æ•°ç”¨äºå‰ç»è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼šsNeedLookAheadNum éœ€è¦å‰ç»çš„è¿ç»­åŒºé—´é•¿åº¦
+		  struct SChannel* pSChannel é€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1ï¼šå‰ç»å¤„ç†ç‹¬ç«‹å‰ç»åŒºé—´æœ€åä¸€æ®µ
+			2ï¼šå‰ç»å¤„ç†éæœ€åä¸€æ®µ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 calcVsVe(int16 sNeedLookAheadNum, struct SChannel* pSChannel)
 {
-	//»ñÈ¡Í¨µÀºÅ
-	uint8 ucChannelNum = pSChannel->ucChannelNum;
+    //è·å–é€šé“å·
+    uint8 ucChannelNum = pSChannel->ucChannelNum;
 
-	//Ç°Õ°¶ÁĞ´Ö¸ÕëË÷Òı
-	int16 sLookAheadWIndex = getSToolCompPointerIndex(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å‰ç»è¯»å†™æŒ‡é’ˆç´¢å¼•
+    int16 sLookAheadWIndex = getSToolCompPointerIndex(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	//Ç°Õ°¶ÁĞ´Ö¸Õë
-	struct SToolCompensation* pLookAheadW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å‰ç»è¯»å†™æŒ‡é’ˆ
+    struct SToolCompensation* pLookAheadW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	if (!pLookAheadW->bLookAheadVParaCalcOverFlag)//Ïà¹ØËÙ¶È²ÎÊıÎ´¼ÆËã¹ı
-	{
-		//1.µ±µ±Ç°¶ÎÎªÆ½ÃæÔ²»¡Ê±£¬¼ÆËãµ±Ç°¶ÎÔ²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøËÙ¶ÈºÍ¹­¸ßÎó²îÔ¼ÊøËÙ¶È
-		if (getBits(pLookAheadW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC || getBits(pLookAheadW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
-		{
-			double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadW, ucChannelNum);
-			double dF = dCoefOfFeedrate * pLookAheadW->dFeedrate;
+    if (!pLookAheadW->bLookAheadVParaCalcOverFlag) //ç›¸å…³é€Ÿåº¦å‚æ•°æœªè®¡ç®—è¿‡
+    {
+        //1.å½“å½“å‰æ®µä¸ºå¹³é¢åœ†å¼§æ—¶ï¼Œè®¡ç®—å½“å‰æ®µåœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸé€Ÿåº¦å’Œå¼“é«˜è¯¯å·®çº¦æŸé€Ÿåº¦
+        if (getBits(pLookAheadW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC ||
+            getBits(pLookAheadW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
+        {
+            double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadW, ucChannelNum);
+            double dF = dCoefOfFeedrate * pLookAheadW->dFeedrate;
 
-			pLookAheadW->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadW->dRadius);
+            pLookAheadW->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadW->dRadius);
 
-			pLookAheadW->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadW->dRadius, dF);
-		}
+            pLookAheadW->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadW->dRadius, dF);
+        }
 
-		//2.ĞŞÕı½ø¸øËÙ¶È²¢¼ÆËãÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ,½øÈëÇ°Õ°µÄÔ²»¡¶¼ÊÇÆ½ÃæÔ²»¡£¬ËùÒÔ²ÎÊı¶¼ÊÇTRUE
-		correctFeedrateAndLowerLimitSpeed(pLookAheadW, AXIS_NUM_MAX, TRUE, ucChannelNum);
+        //2.ä¿®æ­£è¿›ç»™é€Ÿåº¦å¹¶è®¡ç®—åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼,è¿›å…¥å‰ç»çš„åœ†å¼§éƒ½æ˜¯å¹³é¢åœ†å¼§ï¼Œæ‰€ä»¥å‚æ•°éƒ½æ˜¯TRUE
+        correctFeedrateAndLowerLimitSpeed(pLookAheadW, AXIS_NUM_MAX, TRUE, ucChannelNum);
 
-		//3.Ìí¼Óµ±Ç°Ö¸ÕëµÄ¼ÓËÙ¶È£¬ËÙ¶ÈÀàĞÍ£¬ËÙ¶ÈĞÅÏ¢,½øÈëÇ°Õ°µÄÔ²»¡¶¼ÊÇÆ½ÃæÔ²»¡£¬ËùÒÔ²ÎÊı¶¼ÊÇTRUE
-		calcVAndAPara(pLookAheadW, pSChannel, TRUE);
+        //3.æ·»åŠ å½“å‰æŒ‡é’ˆçš„åŠ é€Ÿåº¦ï¼Œé€Ÿåº¦ç±»å‹ï¼Œé€Ÿåº¦ä¿¡æ¯,è¿›å…¥å‰ç»çš„åœ†å¼§éƒ½æ˜¯å¹³é¢åœ†å¼§ï¼Œæ‰€ä»¥å‚æ•°éƒ½æ˜¯TRUE
+        calcVAndAPara(pLookAheadW, pSChannel, TRUE);
 
-		//4.ÔÙ´ÎĞŞÕı½ø¸øËÙ¶ÈºÍÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¬½ø¸øËÙ¶È²»ÄÜ¸ßÓÚ×î´óËÙ¶È,µÍËÙÏÂÏŞÖµ²»ÄÜ¸ßÓÚ½ø¸øËÙ¶È
-		correctFeedrateAndLowerLimitSpeedAgain(pLookAheadW, ucChannelNum);
+        //4.å†æ¬¡ä¿®æ­£è¿›ç»™é€Ÿåº¦å’Œåˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼Œè¿›ç»™é€Ÿåº¦ä¸èƒ½é«˜äºæœ€å¤§é€Ÿåº¦,ä½é€Ÿä¸‹é™å€¼ä¸èƒ½é«˜äºè¿›ç»™é€Ÿåº¦
+        correctFeedrateAndLowerLimitSpeedAgain(pLookAheadW, ucChannelNum);
 
-		//5.×îĞ¡³õËÙ¶ÈÄ©ËÙ¶È
-		pLookAheadW->dMinVs = calcFirstElementVs(pLookAheadW, pSChannel->pMapAxisArray, ucChannelNum);
-		pLookAheadW->dMinVe = calcLastElementVe(pLookAheadW, pSChannel->pMapAxisArray, ucChannelNum);
+        //5.æœ€å°åˆé€Ÿåº¦æœ«é€Ÿåº¦
+        pLookAheadW->dMinVs = calcFirstElementVs(pLookAheadW, pSChannel->pMapAxisArray, ucChannelNum);
+        pLookAheadW->dMinVe = calcLastElementVe(pLookAheadW, pSChannel->pMapAxisArray, ucChannelNum);
 
-		//6.Ïà¹ØËÙ¶È¼ÆËãÍê±Ï±êÖ¾Î»ÖÃTRUE,¼´Íê³ÉÒÔÉÏ5²½Öè
-		pLookAheadW->bLookAheadVParaCalcOverFlag = TRUE;
-	}
+        //6.ç›¸å…³é€Ÿåº¦è®¡ç®—å®Œæ¯•æ ‡å¿—ä½ç½®TRUE,å³å®Œæˆä»¥ä¸Š5æ­¥éª¤
+        pLookAheadW->bLookAheadVParaCalcOverFlag = TRUE;
+    }
 
-	//µ±Îª¶ÀÁ¢Á¬ĞøÇ°Õ°Çø¼äÆğÊ¼¶ÎÊ±
-	//¶ÀÁ¢Ç°Õ°Çø¼ä£ºµ¶²¹»º³åÇøÖĞĞèÒªÇ°Õ°µÄµ¥Ôª¿ÉÄÜ²¢·ÇÍêÈ«Á¬Ğø£¬
-	//              ±»·Ö¸î³ÉÈô¸É¸ö²»Á¬ĞøµÄ½ø¸øÔË¶¯Çø¼ä£¬ÔÚÇ°Õ°Ê±£¬³ÆÕâĞ©Çø¼äÎª"¶ÀÁ¢Ç°Õ°Çø¼ä"
-	if (pSChannel->bLookAheadNewBeginFlag == TRUE)
-	{
-		pLookAheadW->dVs = pLookAheadW->dMinVs;
-		//³ÌĞò½øÈëÕâÀï¿É¶ÔÇ°Õ°ĞÂµÄ¿ªÊ¼±êÖ¾Î»ÖÃFALSE
-		//×¢Òâ£ºÈç²»ÖÃFALSE£¬Ç°Õ°Çø¼äÃ¿¸öµ¥Ôª¶¼»á±»ÈÏÎªÊÇÇ°Õ°Çø¼äÊ×¶Î£¬
-		//      ³õËÙ¶ÈÎª×îĞ¡ËÙ¶È£¬Ç°Õ°¼ÆËã¾Í»á³ö´í
-		pSChannel->bLookAheadNewBeginFlag = FALSE;
-	}
+    //å½“ä¸ºç‹¬ç«‹è¿ç»­å‰ç»åŒºé—´èµ·å§‹æ®µæ—¶
+    //ç‹¬ç«‹å‰ç»åŒºé—´ï¼šåˆ€è¡¥ç¼“å†²åŒºä¸­éœ€è¦å‰ç»çš„å•å…ƒå¯èƒ½å¹¶éå®Œå…¨è¿ç»­ï¼Œ
+    //              è¢«åˆ†å‰²æˆè‹¥å¹²ä¸ªä¸è¿ç»­çš„è¿›ç»™è¿åŠ¨åŒºé—´ï¼Œåœ¨å‰ç»æ—¶ï¼Œç§°è¿™äº›åŒºé—´ä¸º"ç‹¬ç«‹å‰ç»åŒºé—´"
+    if (pSChannel->bLookAheadNewBeginFlag == TRUE)
+    {
+        pLookAheadW->dVs = pLookAheadW->dMinVs;
+        //ç¨‹åºè¿›å…¥è¿™é‡Œå¯å¯¹å‰ç»æ–°çš„å¼€å§‹æ ‡å¿—ä½ç½®FALSE
+        //æ³¨æ„ï¼šå¦‚ä¸ç½®FALSEï¼Œå‰ç»åŒºé—´æ¯ä¸ªå•å…ƒéƒ½ä¼šè¢«è®¤ä¸ºæ˜¯å‰ç»åŒºé—´é¦–æ®µï¼Œ
+        //      åˆé€Ÿåº¦ä¸ºæœ€å°é€Ÿåº¦ï¼Œå‰ç»è®¡ç®—å°±ä¼šå‡ºé”™
+        pSChannel->bLookAheadNewBeginFlag = FALSE;
+    }
 
-	//¶ÀÁ¢Ç°Õ°Çø¼äµÄ×îºóÒ»¶Î
-	if (sNeedLookAheadNum == 1)
-	{
+    //ç‹¬ç«‹å‰ç»åŒºé—´çš„æœ€åä¸€æ®µ
+    if (sNeedLookAheadNum == 1)
+    {
 
-		pLookAheadW->dVe = pLookAheadW->dMinVe;
-		//¶ÀÁ¢Ç°Õ°Çø¼ä¶Î´¦ÀíÍê±Ï
-		//Ö®ºóÈô³öÏÖĞèÇ°Õ°µ¥Ôª£¬ÔòÊÇĞÂµÄÇ°Õ°¿ªÊ¼,
-		pSChannel->bLookAheadNewBeginFlag = TRUE;//ÖÃTRUE£¬ÊÇÎªÁËĞÂµÄ¶ÀÁ¢Ç°Õ°¶ÎµÄÉèÖÃ£¨³õËÙ¶È£¬Ç°Õ°¶ÎÊı£©
+        pLookAheadW->dVe = pLookAheadW->dMinVe;
+        //ç‹¬ç«‹å‰ç»åŒºé—´æ®µå¤„ç†å®Œæ¯•
+        //ä¹‹åè‹¥å‡ºç°éœ€å‰ç»å•å…ƒï¼Œåˆ™æ˜¯æ–°çš„å‰ç»å¼€å§‹,
+        pSChannel->bLookAheadNewBeginFlag = TRUE; //ç½®TRUEï¼Œæ˜¯ä¸ºäº†æ–°çš„ç‹¬ç«‹å‰ç»æ®µçš„è®¾ç½®ï¼ˆåˆé€Ÿåº¦ï¼Œå‰ç»æ®µæ•°ï¼‰
 
-		//ÒÆ¶¯Ç°Õ°¶ÁĞ´Ö¸Õë
-		moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
+        //ç§»åŠ¨å‰ç»è¯»å†™æŒ‡é’ˆ
+        moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
 
-		return 1;
-	}
-	else//ĞèÒªÇ°Õ°µÄÁ¬Ğøµ¥Ôª¸öÊı´óÓÚÒ»£¬ĞèÒª·´Ëã
-	{
-		//ÏµÍ³ÒªÇó×î´óÇ°Õ°¶ÎÊı
-		int16 sLookAheadNum = (int16)g_SSystemPara.ucLookAheadNum;
+        return 1;
+    }
+    else //éœ€è¦å‰ç»çš„è¿ç»­å•å…ƒä¸ªæ•°å¤§äºä¸€ï¼Œéœ€è¦åç®—
+    {
+        //ç³»ç»Ÿè¦æ±‚æœ€å¤§å‰ç»æ®µæ•°
+        int16 sLookAheadNum = (int16)g_SSystemPara.ucLookAheadNum;
 
-		int16 sK;//¼ÇÂ¼Ç°Õ°¶ÎÊı
+        int16 sK; //è®°å½•å‰ç»æ®µæ•°
 
-		double dVde;//ÓÃÓÚ¼ÇÂ¼·´Ëã¹ı³ÌÖĞºó¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
+        double dVde; //ç”¨äºè®°å½•åç®—è¿‡ç¨‹ä¸­åæ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
 
-		int16 sLookAheadEndIndex;               //Ç°Õ°Çø¼ä×îºóÒ»¶ÎË÷Òı
-		struct SToolCompensation* pLookAheadEnd;//ÁÙÊ±Ö¸Õë Ö¸ÏòÇ°Õ°Çø¼ä×îºóÒ»¶Î
+        int16 sLookAheadEndIndex;                //å‰ç»åŒºé—´æœ€åä¸€æ®µç´¢å¼•
+        struct SToolCompensation* pLookAheadEnd; //ä¸´æ—¶æŒ‡é’ˆ æŒ‡å‘å‰ç»åŒºé—´æœ€åä¸€æ®µ
 
-		int16 sNextIndex;               //Ç°Õ°Ğ´Ö¸ÕëÏÂÒ»¶Î¹ì¼£Ë÷Òı
-		struct SToolCompensation* pNext;//Ö¸ÏòÇ°Õ°Ğ´Ö¸ÕëÏÂÒ»¶Î¹ì¼£
+        int16 sNextIndex;                //å‰ç»å†™æŒ‡é’ˆä¸‹ä¸€æ®µè½¨è¿¹ç´¢å¼•
+        struct SToolCompensation* pNext; //æŒ‡å‘å‰ç»å†™æŒ‡é’ˆä¸‹ä¸€æ®µè½¨è¿¹
 
-		//µÃµ½µ±Ç°¶Î£¨Ç°Õ°Ğ´Ö¸Ïò¹ì¼££©µÄÏÂÒ»¶ÎË÷Òı
-		sNextIndex = sLookAheadWIndex + 1;
+        //å¾—åˆ°å½“å‰æ®µï¼ˆå‰ç»å†™æŒ‡å‘è½¨è¿¹ï¼‰çš„ä¸‹ä¸€æ®µç´¢å¼•
+        sNextIndex = sLookAheadWIndex + 1;
 
-		//µÃµ½µ±Ç°¶Î£¨Ç°Õ°Ğ´Ö¸Ïò¹ì¼££©µÄÏÂÒ»¶ÎÖ¸Õë£¬
-		//ÏÎ½ÓµãËÙ¶È¼ÆËãÍêºó¸³Öµ¸ø´Ë¶Î×÷ÎªdVs
-		pNext = getSToolCompPointerByIndex(sNextIndex, pSChannel->ucChannelNum);
+        //å¾—åˆ°å½“å‰æ®µï¼ˆå‰ç»å†™æŒ‡å‘è½¨è¿¹ï¼‰çš„ä¸‹ä¸€æ®µæŒ‡é’ˆï¼Œ
+        //è¡”æ¥ç‚¹é€Ÿåº¦è®¡ç®—å®Œåèµ‹å€¼ç»™æ­¤æ®µä½œä¸ºdVs
+        pNext = getSToolCompPointerByIndex(sNextIndex, pSChannel->ucChannelNum);
 
-		//¼ÆËãÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈËÙ¶ÈÔ¼Êø
-		//pLookAheadW->dFeedrate = calcVac(pLookAheadW);
-		pLookAheadW->dVmax = calcVac(pLookAheadW, pSChannel);
+        //è®¡ç®—è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦é€Ÿåº¦çº¦æŸ
+        //pLookAheadW->dFeedrate = calcVac(pLookAheadW);
+        pLookAheadW->dVmax = calcVac(pLookAheadW, pSChannel);
 
-		//¼ÆËãÇ°Õ°¶ÎÊı£¬È·¶¨Ç°Õ°¼ÆËãÇø¼ä
-		if (sNeedLookAheadNum >= sLookAheadNum + 1)//ĞèÒªÇ°Õ°µÄ¶ÎÊı±ÈÏµÍ³Ç°Õ°¶ÎÊı»¹¶à£¬Ôò°´ÏµÍ³²ÎÊı½øĞĞÇ°Õ°
-		{
-			sK = sLookAheadNum;
-		}
-		else
-		{
-			sK = sNeedLookAheadNum - 1;
-		}
+        //è®¡ç®—å‰ç»æ®µæ•°ï¼Œç¡®å®šå‰ç»è®¡ç®—åŒºé—´
+        if (sNeedLookAheadNum >= sLookAheadNum + 1) //éœ€è¦å‰ç»çš„æ®µæ•°æ¯”ç³»ç»Ÿå‰ç»æ®µæ•°è¿˜å¤šï¼Œåˆ™æŒ‰ç³»ç»Ÿå‚æ•°è¿›è¡Œå‰ç»
+        {
+            sK = sLookAheadNum;
+        }
+        else
+        {
+            sK = sNeedLookAheadNum - 1;
+        }
 
-		//µÃµ½Ç°Õ°Çø¼ä×îºó¶ÎË÷Òı
-		sLookAheadEndIndex = sLookAheadWIndex + sK;
+        //å¾—åˆ°å‰ç»åŒºé—´æœ€åæ®µç´¢å¼•
+        sLookAheadEndIndex = sLookAheadWIndex + sK;
 
-		//µÃµ½Ç°Õ°Çø¼ä×îºó¶ÎÖ¸Õë
-		pLookAheadEnd = getSToolCompPointerByIndex(sLookAheadEndIndex, pSChannel->ucChannelNum);
+        //å¾—åˆ°å‰ç»åŒºé—´æœ€åæ®µæŒ‡é’ˆ
+        pLookAheadEnd = getSToolCompPointerByIndex(sLookAheadEndIndex, pSChannel->ucChannelNum);
 
-		//¼ÆËã×îºó¶Îµ¥ÔªµÄËÙ¶ÈĞÅÏ¢
-		if (!pLookAheadEnd->bLookAheadVParaCalcOverFlag)
-		{
-			//1.µ±µ±Ç°¶ÎÎªÆ½ÃæÔ²»¡Ê±£¬¼ÆËãµ±Ç°¶ÎÔ²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøËÙ¶ÈºÍ¹­¸ßÎó²îÔ¼ÊøËÙ¶È£¨·´Ëã¹ı³ÌÖĞ»áÖØ¶Á¼ÆËã£¬¼ÆËãÁ¿²»´ó£©
-			if (getBits(pLookAheadEnd->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC || getBits(pLookAheadEnd->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
-			{
-				double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadEnd, ucChannelNum);
-				double dF = dCoefOfFeedrate * pLookAheadEnd->dFeedrate;
+        //è®¡ç®—æœ€åæ®µå•å…ƒçš„é€Ÿåº¦ä¿¡æ¯
+        if (!pLookAheadEnd->bLookAheadVParaCalcOverFlag)
+        {
+            //1.å½“å½“å‰æ®µä¸ºå¹³é¢åœ†å¼§æ—¶ï¼Œè®¡ç®—å½“å‰æ®µåœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸé€Ÿåº¦å’Œå¼“é«˜è¯¯å·®çº¦æŸé€Ÿåº¦ï¼ˆåç®—è¿‡ç¨‹ä¸­ä¼šé‡è¯»è®¡ç®—ï¼Œè®¡ç®—é‡ä¸å¤§ï¼‰
+            if (getBits(pLookAheadEnd->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC ||
+                getBits(pLookAheadEnd->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
+            {
+                double dCoefOfFeedrate = calcCoefOfFeedrate(pLookAheadEnd, ucChannelNum);
+                double dF = dCoefOfFeedrate * pLookAheadEnd->dFeedrate;
 
-				pLookAheadEnd->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadEnd->dRadius);
-				pLookAheadEnd->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadEnd->dRadius, dF);
-			}
+                pLookAheadEnd->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pLookAheadEnd->dRadius);
+                pLookAheadEnd->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pLookAheadEnd->dRadius, dF);
+            }
 
-			//2.ĞŞÕı½ø¸øËÙ¶È²¢¼ÆËãÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ,½øÈëÇ°Õ°µÄÔ²»¡¶¼ÊÇÆ½ÃæÔ²»¡£¬ËùÒÔ²ÎÊı¶¼ÊÇTRUE
-			correctFeedrateAndLowerLimitSpeed(pLookAheadEnd, AXIS_NUM_MAX, TRUE, ucChannelNum);
+            //2.ä¿®æ­£è¿›ç»™é€Ÿåº¦å¹¶è®¡ç®—åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼,è¿›å…¥å‰ç»çš„åœ†å¼§éƒ½æ˜¯å¹³é¢åœ†å¼§ï¼Œæ‰€ä»¥å‚æ•°éƒ½æ˜¯TRUE
+            correctFeedrateAndLowerLimitSpeed(pLookAheadEnd, AXIS_NUM_MAX, TRUE, ucChannelNum);
 
-			//3.Ìí¼Óµ±Ç°Ö¸ÕëµÄ¼ÓËÙ¶È£¬ËÙ¶ÈÀàĞÍ£¬ËÙ¶ÈĞÅÏ¢,½øÈëÇ°Õ°µÄÔ²»¡¶¼ÊÇÆ½ÃæÔ²»¡£¬ËùÒÔ²ÎÊı¶¼ÊÇTRUE
-			calcVAndAPara(pLookAheadEnd, pSChannel, TRUE);
+            //3.æ·»åŠ å½“å‰æŒ‡é’ˆçš„åŠ é€Ÿåº¦ï¼Œé€Ÿåº¦ç±»å‹ï¼Œé€Ÿåº¦ä¿¡æ¯,è¿›å…¥å‰ç»çš„åœ†å¼§éƒ½æ˜¯å¹³é¢åœ†å¼§ï¼Œæ‰€ä»¥å‚æ•°éƒ½æ˜¯TRUE
+            calcVAndAPara(pLookAheadEnd, pSChannel, TRUE);
 
-			//4.ÔÙ´ÎĞŞÕı½ø¸øËÙ¶ÈºÍÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¬½ø¸øËÙ¶È²»ÄÜ¸ßÓÚ×î´óËÙ¶È,µÍËÙÏÂÏŞÖµ²»ÄÜ¸ßÓÚ½ø¸øËÙ¶È
-			correctFeedrateAndLowerLimitSpeedAgain(pLookAheadEnd, ucChannelNum);
+            //4.å†æ¬¡ä¿®æ­£è¿›ç»™é€Ÿåº¦å’Œåˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼Œè¿›ç»™é€Ÿåº¦ä¸èƒ½é«˜äºæœ€å¤§é€Ÿåº¦,ä½é€Ÿä¸‹é™å€¼ä¸èƒ½é«˜äºè¿›ç»™é€Ÿåº¦
+            correctFeedrateAndLowerLimitSpeedAgain(pLookAheadEnd, ucChannelNum);
 
-			//5.×îĞ¡³õËÙ¶ÈÄ©ËÙ¶È
-			pLookAheadEnd->dMinVs = calcFirstElementVs(pLookAheadEnd, pSChannel->pMapAxisArray, ucChannelNum);
-			pLookAheadEnd->dMinVe = calcLastElementVe(pLookAheadEnd, pSChannel->pMapAxisArray, ucChannelNum);
+            //5.æœ€å°åˆé€Ÿåº¦æœ«é€Ÿåº¦
+            pLookAheadEnd->dMinVs = calcFirstElementVs(pLookAheadEnd, pSChannel->pMapAxisArray, ucChannelNum);
+            pLookAheadEnd->dMinVe = calcLastElementVe(pLookAheadEnd, pSChannel->pMapAxisArray, ucChannelNum);
 
-			//6.Ïà¹ØËÙ¶È¼ÆËãÍê±Ï±êÖ¾Î»ÖÃTRUE,¼´Íê³ÉÒÔÉÏ5²½Öè
-			pLookAheadEnd->bLookAheadVParaCalcOverFlag = TRUE;
+            //6.ç›¸å…³é€Ÿåº¦è®¡ç®—å®Œæ¯•æ ‡å¿—ä½ç½®TRUE,å³å®Œæˆä»¥ä¸Š5æ­¥éª¤
+            pLookAheadEnd->bLookAheadVParaCalcOverFlag = TRUE;
+        }
 
-		}
+        //ä»¤å…¶ç»ˆç‚¹é€Ÿåº¦ä¸ºæœ€å°é€Ÿåº¦
+        pLookAheadEnd->dVe = pLookAheadEnd->dMinVe;
 
-		//ÁîÆäÖÕµãËÙ¶ÈÎª×îĞ¡ËÙ¶È
-		pLookAheadEnd->dVe = pLookAheadEnd->dMinVe;
+        //åå‘è®¡ç®—åˆ°å½“å‰æ®µè½¨è¿¹"ç»ˆç‚¹é€Ÿåº¦"ä¸ºæ­¢
+        //æ­¤æ—¶"ç»ˆç‚¹é€Ÿåº¦"ä¸ºè§’åº¦çº¦æŸé€Ÿåº¦å’Œåä¸€æ®µé•¿åº¦çº¦æŸé€Ÿåº¦çš„æå°å€¼,è¿˜éœ€ä¸å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦æ¯”è¾ƒ
+        while (sK >= 1)
+        {
+            int16 sTempIndex = sLookAheadWIndex + sK;        //é•¿åº¦çº¦æŸæ®µç´¢å¼•
+            int16 sPreTempIndex = sLookAheadWIndex + sK - 1; //é•¿åº¦çº¦æŸæ®µå‰ä¸€æ®µç´¢å¼•
+            double dLengthV;
 
-		//·´Ïò¼ÆËãµ½µ±Ç°¶Î¹ì¼£"ÖÕµãËÙ¶È"ÎªÖ¹
-		//´ËÊ±"ÖÕµãËÙ¶È"Îª½Ç¶ÈÔ¼ÊøËÙ¶ÈºÍºóÒ»¶Î³¤¶ÈÔ¼ÊøËÙ¶ÈµÄ¼«Ğ¡Öµ,»¹ĞèÓëÇ°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È±È½Ï
-		while (sK >= 1)
-		{
-			int16 sTempIndex = sLookAheadWIndex + sK;       //³¤¶ÈÔ¼Êø¶ÎË÷Òı
-			int16 sPreTempIndex = sLookAheadWIndex + sK - 1;//³¤¶ÈÔ¼Êø¶ÎÇ°Ò»¶ÎË÷Òı
-			double dLengthV;
+            //åŠ¨æ€æŒ‡é’ˆ æŒ‡å‘é•¿åº¦çº¦æŸæ®µ
+            struct SToolCompensation* pTemp = getSToolCompPointerByIndex(sTempIndex, pSChannel->ucChannelNum);
+            //åŠ¨æ€æŒ‡é’ˆ æŒ‡å‘åç®—è¿‡ç¨‹ä¸­é•¿åº¦çº¦æŸæ®µçš„å‰ä¸€æ®µ
+            struct SToolCompensation* pPreTemp = getSToolCompPointerByIndex(sPreTempIndex, pSChannel->ucChannelNum);
 
-			//¶¯Ì¬Ö¸Õë Ö¸Ïò³¤¶ÈÔ¼Êø¶Î
-			struct SToolCompensation* pTemp = getSToolCompPointerByIndex(sTempIndex, pSChannel->ucChannelNum);
-			//¶¯Ì¬Ö¸Õë Ö¸Ïò·´Ëã¹ı³ÌÖĞ³¤¶ÈÔ¼Êø¶ÎµÄÇ°Ò»¶Î
-			struct SToolCompensation* pPreTemp = getSToolCompPointerByIndex(sPreTempIndex, pSChannel->ucChannelNum);
+            //æ­¤æ—¶åªç”¨è®¡ç®—pPreTempçš„ç›¸å…³é€Ÿåº¦å‚æ•°
+            if (!pPreTemp->bLookAheadVParaCalcOverFlag)
+            {
+                //1.å½“ä¸ºåœ†å¼§æ—¶ï¼Œè®¡ç®—å½“å‰æ®µåœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸé€Ÿåº¦å’Œå¼“é«˜è¯¯å·®çº¦æŸé€Ÿåº¦
+                if (getBits(pPreTemp->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC ||
+                    getBits(pPreTemp->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
+                {
+                    double dCoefOfFeedrate = calcCoefOfFeedrate(pPreTemp, ucChannelNum);
+                    double dF = dCoefOfFeedrate * pPreTemp->dFeedrate;
 
-			//´ËÊ±Ö»ÓÃ¼ÆËãpPreTempµÄÏà¹ØËÙ¶È²ÎÊı
-			if(!pPreTemp->bLookAheadVParaCalcOverFlag)
-			{
-				//1.µ±ÎªÔ²»¡Ê±£¬¼ÆËãµ±Ç°¶ÎÔ²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøËÙ¶ÈºÍ¹­¸ßÎó²îÔ¼ÊøËÙ¶È
-				if (getBits(pPreTemp->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC || getBits(pPreTemp->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC)
-				{
-					double dCoefOfFeedrate = calcCoefOfFeedrate(pPreTemp, ucChannelNum);
-					double dF = dCoefOfFeedrate * pPreTemp->dFeedrate;
+                    pPreTemp->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pPreTemp->dRadius);
+                    pPreTemp->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pPreTemp->dRadius, dF);
+                }
 
-					pPreTemp->dArcMaxNormalAccVmax = calcArcMaxNormalAccVmax(pPreTemp->dRadius);
-					pPreTemp->dArcMaxChordErrorVmax = calcArcMaxChordErrorVmax(pPreTemp->dRadius, dF);
-				}
+                //2.ä¿®æ­£è¿›ç»™é€Ÿåº¦å¹¶è®¡ç®—åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼,è¿›å…¥å‰ç»çš„åœ†å¼§éƒ½æ˜¯å¹³é¢åœ†å¼§ï¼Œæ‰€ä»¥å‚æ•°éƒ½æ˜¯TRUE
+                correctFeedrateAndLowerLimitSpeed(pPreTemp, AXIS_NUM_MAX, TRUE, ucChannelNum);
 
-				//2.ĞŞÕı½ø¸øËÙ¶È²¢¼ÆËãÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ,½øÈëÇ°Õ°µÄÔ²»¡¶¼ÊÇÆ½ÃæÔ²»¡£¬ËùÒÔ²ÎÊı¶¼ÊÇTRUE
-				correctFeedrateAndLowerLimitSpeed(pPreTemp, AXIS_NUM_MAX, TRUE, ucChannelNum);
+                //3.æ·»åŠ å½“å‰æŒ‡é’ˆçš„åŠ é€Ÿåº¦ï¼Œé€Ÿåº¦ç±»å‹ï¼Œé€Ÿåº¦ä¿¡æ¯
+                calcVAndAPara(pPreTemp, pSChannel, TRUE);
 
-				//3.Ìí¼Óµ±Ç°Ö¸ÕëµÄ¼ÓËÙ¶È£¬ËÙ¶ÈÀàĞÍ£¬ËÙ¶ÈĞÅÏ¢
-				calcVAndAPara(pPreTemp, pSChannel, TRUE);
+                //4.å†æ¬¡ä¿®æ­£è¿›ç»™é€Ÿåº¦å’Œåˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼Œè¿›ç»™é€Ÿåº¦ä¸èƒ½é«˜äºæœ€å¤§é€Ÿåº¦,ä½é€Ÿä¸‹é™å€¼ä¸èƒ½é«˜äºè¿›ç»™é€Ÿåº¦
+                correctFeedrateAndLowerLimitSpeedAgain(pPreTemp, ucChannelNum);
 
-				//4.ÔÙ´ÎĞŞÕı½ø¸øËÙ¶ÈºÍÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¬½ø¸øËÙ¶È²»ÄÜ¸ßÓÚ×î´óËÙ¶È,µÍËÙÏÂÏŞÖµ²»ÄÜ¸ßÓÚ½ø¸øËÙ¶È
-				correctFeedrateAndLowerLimitSpeedAgain(pPreTemp, ucChannelNum);
+                //5.æœ€å°åˆé€Ÿåº¦æœ«é€Ÿåº¦
+                pPreTemp->dMinVs = calcFirstElementVs(pPreTemp, pSChannel->pMapAxisArray, ucChannelNum);
+                pPreTemp->dMinVe = calcLastElementVe(pPreTemp, pSChannel->pMapAxisArray, ucChannelNum);
 
-				//5.×îĞ¡³õËÙ¶ÈÄ©ËÙ¶È
-				pPreTemp->dMinVs = calcFirstElementVs(pPreTemp, pSChannel->pMapAxisArray, ucChannelNum);
-				pPreTemp->dMinVe = calcLastElementVe(pPreTemp, pSChannel->pMapAxisArray, ucChannelNum);
+                //6.ç›¸å…³é€Ÿåº¦è®¡ç®—å®Œæ¯•æ ‡å¿—ä½ç½®TRUE,å³å®Œæˆä»¥ä¸Š5æ­¥éª¤
+                pPreTemp->bLookAheadVParaCalcOverFlag = TRUE;
+            }
 
-				//6.Ïà¹ØËÙ¶È¼ÆËãÍê±Ï±êÖ¾Î»ÖÃTRUE,¼´Íê³ÉÒÔÉÏ5²½Öè
-				pPreTemp->bLookAheadVParaCalcOverFlag = TRUE;
-			}
+            //è®¡ç®—æ­¤æ®µé•¿åº¦çº¦æŸé€Ÿåº¦ï¼ˆæ­¤æ®µç»ˆç‚¹é€Ÿåº¦å·²ç®—å‡ºï¼Œçœ‹æ­¤æ®µé•¿åº¦çº¦æŸï¼ˆä»¥åŠåœ†å¼§å¼“é«˜å’Œæ³•å‘ï¼‰ä¸‹æœ€é«˜é€Ÿåº¦ä¸ºå¤šå°‘ï¼‰
+            dVde = calcVde(pTemp, pSChannel);
 
-			//¼ÆËã´Ë¶Î³¤¶ÈÔ¼ÊøËÙ¶È£¨´Ë¶ÎÖÕµãËÙ¶ÈÒÑËã³ö£¬¿´´Ë¶Î³¤¶ÈÔ¼Êø£¨ÒÔ¼°Ô²»¡¹­¸ßºÍ·¨Ïò£©ÏÂ×î¸ßËÙ¶ÈÎª¶àÉÙ£©
-			dVde = calcVde(pTemp, pSChannel);
+            //å‰ä¸€æ®µè½¨è¿¹çš„dVeerè‹¥æœªè®¡ç®—å…ˆè®¡ç®—
+            if (pPreTemp->bHasVeerFlag == FALSE)
+            {
+                if (g_SSystemPara.ucLookAheadMode == LOOKAHEAD_MULTI_AXIS_MODE) //3å¤šè½´å‰ç»ï¼ˆå«æ—‹è½¬è½´ï¼‰æ¨¡å¼
+                {
+                    if (calcVeerMultiAxisMode(pSChannel, AXIS_NUM_MAX, pPreTemp, pTemp) == TRUE)
+                    {
+                        //å°†è¯¥æ ‡å¿—ä½ç½®TRUE
+                        pPreTemp->bHasVeerFlag = TRUE;
+                    }
+                }
+                else //ucLookAheadModeçš„å€¼1å’Œ2æ—¶é‡‡ç”¨ä¸‰ç›´çº¿è½´å¤¹è§’çº¦æŸè®¡ç®—
+                {
+                    if (calcVeerLinearAxisMode(pSChannel, pPreTemp, pTemp) == TRUE)
+                    {
+                        //å°†è¯¥æ ‡å¿—ä½ç½®TRUE
+                        pPreTemp->bHasVeerFlag = TRUE;
+                    }
+                }
+            }
 
-			//Ç°Ò»¶Î¹ì¼£µÄdVeerÈôÎ´¼ÆËãÏÈ¼ÆËã
-			if (pPreTemp->bHasVeerFlag == FALSE)
-			{
-				if(g_SSystemPara.ucLookAheadMode == LOOKAHEAD_MULTI_AXIS_MODE)//3¶àÖáÇ°Õ°£¨º¬Ğı×ªÖá£©Ä£Ê½
-				{
-					if (calcVeerMultiAxisMode(pSChannel, AXIS_NUM_MAX, pPreTemp, pTemp) == TRUE)
-					{
-						//½«¸Ã±êÖ¾Î»ÖÃTRUE
-						pPreTemp->bHasVeerFlag = TRUE;
-					}
-				}
-				else//ucLookAheadModeµÄÖµ1ºÍ2Ê±²ÉÓÃÈıÖ±ÏßÖá¼Ğ½ÇÔ¼Êø¼ÆËã
-				{
-					if (calcVeerLinearAxisMode(pSChannel, pPreTemp, pTemp) == TRUE)
-					{
-						//½«¸Ã±êÖ¾Î»ÖÃTRUE
-						pPreTemp->bHasVeerFlag = TRUE;
-					}
-				}
+            //æ¯”è¾ƒdVdeå’Œå‰ä¸€æ®µè½¨è¿¹çš„dVeerï¼Œè‹¥å‰ä¸€æ®µè½¨è¿¹ä¸ºåœ†å¼§è¿˜éœ€åŠ å…¥æ³•å‘åŠ é€Ÿåº¦å’Œå¼“é«˜è¯¯å·®çº¦æŸï¼Œå–æœ€å°å€¼ä½œä¸ºå‰ä¸€æ®µçš„ç»ˆç‚¹é€Ÿåº¦
+            //ç¬¬ä¸€è½®æ¯”è¾ƒï¼š
+            pPreTemp->dVe = min(dVde, pPreTemp->dVeer);
 
-			}
+            //åŠ å…¥è½¨è¿¹é•¿åº¦çº¦æŸ  2023/06/16 éƒ­å¼º
+            dLengthV = pPreTemp->dLength / g_SSystemPara.dInterpolationTime;
 
-			//±È½ÏdVdeºÍÇ°Ò»¶Î¹ì¼£µÄdVeer£¬ÈôÇ°Ò»¶Î¹ì¼£ÎªÔ²»¡»¹Ğè¼ÓÈë·¨Ïò¼ÓËÙ¶ÈºÍ¹­¸ßÎó²îÔ¼Êø£¬È¡×îĞ¡Öµ×÷ÎªÇ°Ò»¶ÎµÄÖÕµãËÙ¶È
-			//µÚÒ»ÂÖ±È½Ï£º
-			pPreTemp->dVe = min(dVde, pPreTemp->dVeer);
+            pPreTemp->dVe = min(pPreTemp->dVe, dLengthV);
 
-			//¼ÓÈë¹ì¼£³¤¶ÈÔ¼Êø  2023/06/16 ¹ùÇ¿
-			dLengthV = pPreTemp->dLength / g_SSystemPara.dInterpolationTime;
+            sK--;
+        }
 
-			pPreTemp->dVe = min(pPreTemp->dVe, dLengthV);
+        //æ¯”è¾ƒè¡”æ¥ç‚¹å¤„å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦å’Œåç®—è¿‡ç¨‹ä¸­çš„dVe,å–æœ€å°å€¼ä½œä¸ºè¡”æ¥ç‚¹é€Ÿåº¦
+        pLookAheadW->dVe = min(pLookAheadW->dVe, pLookAheadW->dVmax);
 
-			sK--;
-		}
+        //å½“å‰ç‚¹ç»ˆç‚¹é€Ÿåº¦èµ‹å€¼ç»™ä¸‹ä¸€æ®µèµ·ç‚¹
+        pNext->dVs = pLookAheadW->dVe;
 
-		//±È½ÏÏÎ½Óµã´¦Ç°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶ÈºÍ·´Ëã¹ı³ÌÖĞµÄdVe,È¡×îĞ¡Öµ×÷ÎªÏÎ½ÓµãËÙ¶È
-		pLookAheadW->dVe = min(pLookAheadW->dVe, pLookAheadW->dVmax);
+        //ç§»åŠ¨å‰ç»è¯»å†™æŒ‡é’ˆ
+        moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
 
-		//µ±Ç°µãÖÕµãËÙ¶È¸³Öµ¸øÏÂÒ»¶ÎÆğµã
-		pNext->dVs = pLookAheadW->dVe;
-
-
-		//ÒÆ¶¯Ç°Õ°¶ÁĞ´Ö¸Õë
-		moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
-
-		return 2;
-	}
+        return 2;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºnoLookAheadMode()
-  º¯Êı¹¦ÄÜ  ²»½øĞĞÇ°Õ°Ä£Ê½
-  ÊäÈë²ÎÊı£ºuint8  ucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE  Ç°Õ°Ö¸ÕëÒÆ¶¯
-  ±¸    ×¢£º³¤ÖáÄ£Ê½µ÷ÓÃÎŞÇ°Õ°Ä£Ê½
+  å‡½æ•°åç§°ï¼šnoLookAheadMode()
+  å‡½æ•°åŠŸèƒ½  ä¸è¿›è¡Œå‰ç»æ¨¡å¼
+  è¾“å…¥å‚æ•°ï¼šuint8  ucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE  å‰ç»æŒ‡é’ˆç§»åŠ¨
+  å¤‡    æ³¨ï¼šé•¿è½´æ¨¡å¼è°ƒç”¨æ— å‰ç»æ¨¡å¼
 **************************************************/
 bool noLookAheadMode(uint8 ucChannelNum)
 {
-	double dCoefOfFeedrate;
+    double dCoefOfFeedrate;
 
-	//µ¶²¹Ö¸Õë
-	struct SToolCompensation* pLookAheadRW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum);
+    //åˆ€è¡¥æŒ‡é’ˆ
+    struct SToolCompensation* pLookAheadRW = getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum);
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pLookAheadRW, ucChannelNum); 
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate = getBits(pLookAheadRW->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                          ? 1.0
+                          : calcCoefOfFeedrate(pLookAheadRW, ucChannelNum);
 
-	//µ±ÒªÇóËÙ¶È±ÈÏµÍ³¸´ºÏÔË¶¯×îĞ¡ËÙ¶È²ÎÊıĞ¡Ê±£¬VeVsÓëÒªÇóµÄdFeedrateÏàÍ¬
-	pLookAheadRW->dVs = pLookAheadRW->dVe = (pLookAheadRW->dFeedrate * dCoefOfFeedrate) > g_SSystemPara.dSysMinVel ? g_SSystemPara.dSysMinVel : (pLookAheadRW->dFeedrate * dCoefOfFeedrate);
-	pLookAheadRW->dVmax = g_SSystemPara.dSysMaxVel;						//×î´óËÙ¶È
-	pLookAheadRW->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);	//¼ÓËÙ¶È
-	pLookAheadRW->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);	//¼õËÙ¶È
-	pLookAheadRW->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType;	//¼ÓËÙÀàĞÍ
-	pLookAheadRW->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType;	//¼õËÙÀàĞÍ
+    //å½“è¦æ±‚é€Ÿåº¦æ¯”ç³»ç»Ÿå¤åˆè¿åŠ¨æœ€å°é€Ÿåº¦å‚æ•°å°æ—¶ï¼ŒVeVsä¸è¦æ±‚çš„dFeedrateç›¸åŒ
+    pLookAheadRW->dVs = pLookAheadRW->dVe = (pLookAheadRW->dFeedrate * dCoefOfFeedrate) > g_SSystemPara.dSysMinVel
+                                                ? g_SSystemPara.dSysMinVel
+                                                : (pLookAheadRW->dFeedrate * dCoefOfFeedrate);
+    pLookAheadRW->dVmax = g_SSystemPara.dSysMaxVel;                        //æœ€å¤§é€Ÿåº¦
+    pLookAheadRW->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);  //åŠ é€Ÿåº¦
+    pLookAheadRW->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);  //å‡é€Ÿåº¦
+    pLookAheadRW->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType; //åŠ é€Ÿç±»å‹
+    pLookAheadRW->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType; //å‡é€Ÿç±»å‹
 
-	pLookAheadRW->dMinVs = pLookAheadRW->dMinVe = g_SSystemPara.dSysMinVel;
+    pLookAheadRW->dMinVs = pLookAheadRW->dMinVe = g_SSystemPara.dSysMinVel;
 
-	//ÒÆ¶¯Ö¸Õë
-	moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, ucChannelNum);
-	return TRUE;
+    //ç§»åŠ¨æŒ‡é’ˆ
+    moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, ucChannelNum);
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºlookAheadMode(int16 sLookAheadRes,struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ  Ç°Õ°Ä£Ê½
-  ÊäÈë²ÎÊı£ºsLookAheadRes Ç°Õ°¿É¶Á¶ÎÊı
-		   pSChannel Í¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1:½øĞĞÇ°Õ°ÁË
-		   -1£ºÎ´½øĞĞÇ°Õ°
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šlookAheadMode(int16 sLookAheadRes,struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½  å‰ç»æ¨¡å¼
+  è¾“å…¥å‚æ•°ï¼šsLookAheadRes å‰ç»å¯è¯»æ®µæ•°
+		   pSChannel é€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1:è¿›è¡Œå‰ç»äº†
+		   -1ï¼šæœªè¿›è¡Œå‰ç»
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 lookAheadMode(int16 sLookAheadRes, struct SChannel* pSChannel)
 {
-	//ÏµÍ³ÒªÇó×î´óÇ°Õ°¶ÎÊı
-	int16 sLookAheadNum = (int16)g_SSystemPara.ucLookAheadNum;
+    //ç³»ç»Ÿè¦æ±‚æœ€å¤§å‰ç»æ®µæ•°
+    int16 sLookAheadNum = (int16)g_SSystemPara.ucLookAheadNum;
 
-	//½ÓÏÂÀ´ÒªÅĞ¶ÏÊÇ²»ÊÇÒªÇ°Õ°£¬Ç°Õ°¶ÎÊı¶àÉÙ
+    //æ¥ä¸‹æ¥è¦åˆ¤æ–­æ˜¯ä¸æ˜¯è¦å‰ç»ï¼Œå‰ç»æ®µæ•°å¤šå°‘
 
-	//Ç°Õ°¶ÁĞ´Ö¸ÕëË÷Òı ÓÃÓÚ¼ÆËãsNeedLookAheadNum
-	int16 sLookAheadWIndex = getSToolCompPointerIndex(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å‰ç»è¯»å†™æŒ‡é’ˆç´¢å¼• ç”¨äºè®¡ç®—sNeedLookAheadNum
+    int16 sLookAheadWIndex = getSToolCompPointerIndex(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	//ĞèÒªÇ°Õ°µÄÁ¬Ğøµ¥ÔªÊıÁ¿£¨¿ÉÒÔÇ°Õ°¶ÎÊı£©
-	int16 sNeedLookAheadNum = calcNeedLookAheadNum(sLookAheadWIndex, sLookAheadRes, pSChannel->ucChannelNum);
+    //éœ€è¦å‰ç»çš„è¿ç»­å•å…ƒæ•°é‡ï¼ˆå¯ä»¥å‰ç»æ®µæ•°ï¼‰
+    int16 sNeedLookAheadNum = calcNeedLookAheadNum(sLookAheadWIndex, sLookAheadRes, pSChannel->ucChannelNum);
 
-	//ÓëÇ°Õ°¿É¶Á¶ÎÊı±È½Ï¿ÉÅĞ¶ÏÇ°Õ°¿É¶ÁÇø¼äÊÇ·ñÓĞ²»ĞèÒªÇ°Õ°µÄµ¥Ôª´æÔÚ
-	if (sNeedLookAheadNum < sLookAheadRes)//ÓĞ²»ĞèÒªÇ°Õ°µÄµ¥Ôª,´ËÊ±±ØĞëÒª½øĞĞÇ°Õ°¼ÆËã
-	{
-		calcVsVe(sNeedLookAheadNum, pSChannel);
+    //ä¸å‰ç»å¯è¯»æ®µæ•°æ¯”è¾ƒå¯åˆ¤æ–­å‰ç»å¯è¯»åŒºé—´æ˜¯å¦æœ‰ä¸éœ€è¦å‰ç»çš„å•å…ƒå­˜åœ¨
+    if (sNeedLookAheadNum < sLookAheadRes) //æœ‰ä¸éœ€è¦å‰ç»çš„å•å…ƒ,æ­¤æ—¶å¿…é¡»è¦è¿›è¡Œå‰ç»è®¡ç®—
+    {
+        calcVsVe(sNeedLookAheadNum, pSChannel);
 
-		return 1;
-	}
-	else//Ç°Õ°¿É¶ÁÇø¼äÈ«²¿ÎªĞèÒªÇ°Õ°µÄ¹ì¼£
-	{
-		//×îĞ¡Ç°Õ°¶ÎÊı£¬µ±µ¶²¹Î´ÍêÈ«Ğ´ÈëÇÒÇ°Õ°¿É¶ÁÇø¼äÈ«ÎªĞèÒªÇ°Õ°µÄ¹ì¼£ÇÒ·ÇµÚÒ»´ÎÇ°Õ°´¦ÀíÊ±£¬
-		//Ç°Õ°Çø¼ä´ïµ½´ËÖµ¼´¿ÉÇ°Õ°´¦Àí(ÏµÍ³×î´ó¶ÎÊı - 5)
-		int16 sMinLookAheadNum = sLookAheadNum - 5;
+        return 1;
+    }
+    else //å‰ç»å¯è¯»åŒºé—´å…¨éƒ¨ä¸ºéœ€è¦å‰ç»çš„è½¨è¿¹
+    {
+        //æœ€å°å‰ç»æ®µæ•°ï¼Œå½“åˆ€è¡¥æœªå®Œå…¨å†™å…¥ä¸”å‰ç»å¯è¯»åŒºé—´å…¨ä¸ºéœ€è¦å‰ç»çš„è½¨è¿¹ä¸”éç¬¬ä¸€æ¬¡å‰ç»å¤„ç†æ—¶ï¼Œ
+        //å‰ç»åŒºé—´è¾¾åˆ°æ­¤å€¼å³å¯å‰ç»å¤„ç†(ç³»ç»Ÿæœ€å¤§æ®µæ•° - 5)
+        int16 sMinLookAheadNum = sLookAheadNum - 5;
 
-		//Ç°Õ°Çø¼ä¶ÎÊıÏŞÖÆ±äÁ¿
-		int16 sLookAheadLimitNum;
+        //å‰ç»åŒºé—´æ®µæ•°é™åˆ¶å˜é‡
+        int16 sLookAheadLimitNum;
 
-		if (pSChannel->bLookAheadNewBeginFlag == TRUE)
-		{
-			//Ç°Õ°¿É¶ÁÇø¼äÈ«ĞèÒªÇ°Õ°£¬Ç°Õ°µÚÒ»´ÎĞ´ÇÒµ¶²¹Î´ÍêÈ«Ğ´ÈëÊ±£¬Ç°Õ°Çø¼ä´ïµ½sLookAheadNumÎªÇ°Õ°¿ªÊ¼µÄÌõ¼ş
-			sLookAheadLimitNum = sLookAheadNum;
-		}
-		else
-		{
-			//Ç°Õ°¿É¶ÁÇø¼äÈ«ĞèÒªÇ°Õ°£¬·ÇµÚÒ»´ÎÇ°Õ°Ğ´£¬µ±µ¶²¹Î´ÍêÈ«Ğ´ÈëÊ±£¬Ç°Õ°Çø¼ä´ïµ½sMinLookAheadNum¼´¿É¿ªÊ¼Ç°Õ°
-			sLookAheadLimitNum = sMinLookAheadNum;
-		}
+        if (pSChannel->bLookAheadNewBeginFlag == TRUE)
+        {
+            //å‰ç»å¯è¯»åŒºé—´å…¨éœ€è¦å‰ç»ï¼Œå‰ç»ç¬¬ä¸€æ¬¡å†™ä¸”åˆ€è¡¥æœªå®Œå…¨å†™å…¥æ—¶ï¼Œå‰ç»åŒºé—´è¾¾åˆ°sLookAheadNumä¸ºå‰ç»å¼€å§‹çš„æ¡ä»¶
+            sLookAheadLimitNum = sLookAheadNum;
+        }
+        else
+        {
+            //å‰ç»å¯è¯»åŒºé—´å…¨éœ€è¦å‰ç»ï¼Œéç¬¬ä¸€æ¬¡å‰ç»å†™ï¼Œå½“åˆ€è¡¥æœªå®Œå…¨å†™å…¥æ—¶ï¼Œå‰ç»åŒºé—´è¾¾åˆ°sMinLookAheadNumå³å¯å¼€å§‹å‰ç»
+            sLookAheadLimitNum = sMinLookAheadNum;
+        }
 
-		//µ¶²¹Î´Ğ´ÈëÍêÇÒÇ°Õ°Çø¼ä¶ÎÊı²»Âú×ãÒªÇó
-		if (pSChannel->bToolWriteOverFlag == FALSE && sNeedLookAheadNum < sLookAheadLimitNum + 1)
-		{
-			return -1;//´ËÊ±²»Ç°Õ°¼ÆËã
-		}
-		else
-		{
-			//´ËÊ±¶ÔÓ¦Á½ÖÖÇé¿ö,´ËÁ½ÖÖÇé¿ö¾ù¿É¼ÌĞøÇ°Õ°Ğ´
-			//1.(sNeedLookAheadNum >= sLookAheadLimitNum + 1)//ĞèÒªÇ°Õ°µÄÇø¼ä³¤¶È´ïµ½ÒªÇóÇ°Õ°¶ÎÊı
-			//2.(g_bToolWriteOverFlag == TRUE &&  sNeedLookAheadNum < sLookAheadLimitNum + 1)µ¶²¹Ğ´ÈëÍê±ÏÇÒĞèÒªÇ°Õ°Çø¼äÎ´´ïµ½ÒªÇóÇ°Õ°¶ÎÊı
+        //åˆ€è¡¥æœªå†™å…¥å®Œä¸”å‰ç»åŒºé—´æ®µæ•°ä¸æ»¡è¶³è¦æ±‚
+        if (pSChannel->bToolWriteOverFlag == FALSE && sNeedLookAheadNum < sLookAheadLimitNum + 1)
+        {
+            return -1; //æ­¤æ—¶ä¸å‰ç»è®¡ç®—
+        }
+        else
+        {
+            //æ­¤æ—¶å¯¹åº”ä¸¤ç§æƒ…å†µ,æ­¤ä¸¤ç§æƒ…å†µå‡å¯ç»§ç»­å‰ç»å†™
+            //1.(sNeedLookAheadNum >= sLookAheadLimitNum + 1)//éœ€è¦å‰ç»çš„åŒºé—´é•¿åº¦è¾¾åˆ°è¦æ±‚å‰ç»æ®µæ•°
+            //2.(g_bToolWriteOverFlag == TRUE &&  sNeedLookAheadNum < sLookAheadLimitNum + 1)åˆ€è¡¥å†™å…¥å®Œæ¯•ä¸”éœ€è¦å‰ç»åŒºé—´æœªè¾¾åˆ°è¦æ±‚å‰ç»æ®µæ•°
 
-			calcVsVe(sNeedLookAheadNum, pSChannel);
-			return 1;
-		}
-	}
+            calcVsVe(sNeedLookAheadNum, pSChannel);
+            return 1;
+        }
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºlookAheadForbidden(struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ  ²»Ç°Õ°(Ö±½ÓÌîÈëÏµÍ³²ÎÊı)
-  ÊäÈë²ÎÊı£ºpSChannelÍ¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE  £º½øĞĞÁË´¦Àí£¨½øĞĞÁË¸³Öµ£©
-			FALSE £ºÃ»ÓĞ´¦Àí
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šlookAheadForbidden(struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½  ä¸å‰ç»(ç›´æ¥å¡«å…¥ç³»ç»Ÿå‚æ•°)
+  è¾“å…¥å‚æ•°ï¼špSChannelé€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE  ï¼šè¿›è¡Œäº†å¤„ç†ï¼ˆè¿›è¡Œäº†èµ‹å€¼ï¼‰
+			FALSE ï¼šæ²¡æœ‰å¤„ç†
+  å¤‡    æ³¨ï¼š
   **************************************************/
 bool lookAheadForbidden(struct SChannel* pSChannel)
 {
-	//Ç°Õ°¶ÎÊı
-	int16 sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å‰ç»æ®µæ•°
+    int16 sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	//´óÓÚ0  ¸³Öµ
-	if (sLookAheadRes > 0)
-	{
-		//µ¶²¹Ö¸Õë
-		struct SToolCompensation* pSToolPointer = getSToolCompPointerByType(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å¤§äº0  èµ‹å€¼
+    if (sLookAheadRes > 0)
+    {
+        //åˆ€è¡¥æŒ‡é’ˆ
+        struct SToolCompensation* pSToolPointer =
+            getSToolCompPointerByType(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-		pSToolPointer->dVs = pSToolPointer->dVe = g_SSystemPara.dSysMinVel;		//ÆğÊ¼ËÙ¶È¡¢ÖÕÖ¹ËÙ¶È
-		pSToolPointer->dVmax = g_SSystemPara.dSysMaxVel;						//×î´óËÙ¶È
-		pSToolPointer->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);	//¼ÓËÙ¶È
-		pSToolPointer->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);	//¼õËÙ¶È
-		pSToolPointer->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType;	//¼ÓËÙÀàĞÍ
-		pSToolPointer->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType;	//¼õËÙÀàĞÍ
+        pSToolPointer->dVs = pSToolPointer->dVe = g_SSystemPara.dSysMinVel;     //èµ·å§‹é€Ÿåº¦ã€ç»ˆæ­¢é€Ÿåº¦
+        pSToolPointer->dVmax = g_SSystemPara.dSysMaxVel;                        //æœ€å¤§é€Ÿåº¦
+        pSToolPointer->dAcc = getMaxAcc(g_SSystemPara.ucCommonAccVelPlanType);  //åŠ é€Ÿåº¦
+        pSToolPointer->dDec = getMaxDec(g_SSystemPara.ucCommonDecVelPlanType);  //å‡é€Ÿåº¦
+        pSToolPointer->ucAccVelPlanType = g_SSystemPara.ucCommonAccVelPlanType; //åŠ é€Ÿç±»å‹
+        pSToolPointer->ucDecVelPlanType = g_SSystemPara.ucCommonDecVelPlanType; //å‡é€Ÿç±»å‹
 
-		//ÒÆ¶¯Ö¸Õë
-		moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
-		return TRUE;
-	}
-	return FALSE;
+        //ç§»åŠ¨æŒ‡é’ˆ
+        moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_AHEAD, pSChannel->ucChannelNum);
+        return TRUE;
+    }
+    return FALSE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvelocityLookAhead(struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ  ËÙ¶ÈÇ°Õ°
-  ÊäÈë²ÎÊı£ºpSChannelÍ¨µÀÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE  £º½øĞĞÁËÇ°Õ°´¦Àí£¨¶ÔĞèÒªÇ°Õ°µÄµ¥Ôª½øĞĞÁË¸³Öµ£©
-			FALSE £ºÃ»ÓĞÇ°Õ°´¦Àí£¨°üÀ¨Ö»Ìø¹ı²»ĞèÇ°Õ°µ¥Ôª£¬²»Ç°Õ°´¦ÀíµÄÇé¿ö£©
-  ±¸    ×¢£ºËÙ¶ÈÇ°Õ°º¯ÊıÒªÅĞ¶Ïµ±Ç°×´Ì¬ÊÇ·ñÄÜ¹»½øĞĞÇ°Õ°´¦Àí£¬Ç°Õ°´¦Àíºó½«ĞÅÏ¢Ğ´Èëµ¶²¹»º³åÇø
+  å‡½æ•°åç§°ï¼švelocityLookAhead(struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½  é€Ÿåº¦å‰ç»
+  è¾“å…¥å‚æ•°ï¼špSChannelé€šé“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE  ï¼šè¿›è¡Œäº†å‰ç»å¤„ç†ï¼ˆå¯¹éœ€è¦å‰ç»çš„å•å…ƒè¿›è¡Œäº†èµ‹å€¼ï¼‰
+			FALSE ï¼šæ²¡æœ‰å‰ç»å¤„ç†ï¼ˆåŒ…æ‹¬åªè·³è¿‡ä¸éœ€å‰ç»å•å…ƒï¼Œä¸å‰ç»å¤„ç†çš„æƒ…å†µï¼‰
+  å¤‡    æ³¨ï¼šé€Ÿåº¦å‰ç»å‡½æ•°è¦åˆ¤æ–­å½“å‰çŠ¶æ€æ˜¯å¦èƒ½å¤Ÿè¿›è¡Œå‰ç»å¤„ç†ï¼Œå‰ç»å¤„ç†åå°†ä¿¡æ¯å†™å…¥åˆ€è¡¥ç¼“å†²åŒº
 **************************************************/
 bool velocityLookAhead(struct SChannel* pSChannel)
 {
-	//Ç°Õ°¿É¶Á¶ÎÊı
-	int16 sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    //å‰ç»å¯è¯»æ®µæ•°
+    int16 sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	//Ç°Õ°ÎŞ¿É¶Á¶ÎÊı
-	if (pSChannel == NULL || sLookAheadRes <= 0)
-	{
-		return FALSE;
-	}
+    //å‰ç»æ— å¯è¯»æ®µæ•°
+    if (pSChannel == NULL || sLookAheadRes <= 0)
+    {
+        return FALSE;
+    }
 
-	if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE)//³¤Öá²å²¹Ä£Ê½²ÉÓÃÎŞÇ°Õ°Ä£Ê½
-	{
-		noLookAheadMode(pSChannel->ucChannelNum);
-		return TRUE;
-	}
+    if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE) //é•¿è½´æ’è¡¥æ¨¡å¼é‡‡ç”¨æ— å‰ç»æ¨¡å¼
+    {
+        noLookAheadMode(pSChannel->ucChannelNum);
+        return TRUE;
+    }
 
-	//ÅĞ¶ÏÏµÍ³×´Ì¬ÈôÎª´ÓÔËĞĞµ½ÔİÍ££¬²»Ç°Õ°£¨¶àÍ¨µÀ×´Ì¬Ä£Ê½ÏµÍ³×´Ì¬¸ÄÎªÍ¨µÀ½á¹¹Ìå³ÉÔ±£©
-	if (pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE)
-	{
-		pSChannel->bLookAheadNewBeginFlag = TRUE;
-		return FALSE;
-	}
+    //åˆ¤æ–­ç³»ç»ŸçŠ¶æ€è‹¥ä¸ºä»è¿è¡Œåˆ°æš‚åœï¼Œä¸å‰ç»ï¼ˆå¤šé€šé“çŠ¶æ€æ¨¡å¼ç³»ç»ŸçŠ¶æ€æ”¹ä¸ºé€šé“ç»“æ„ä½“æˆå‘˜ï¼‰
+    if (pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE)
+    {
+        pSChannel->bLookAheadNewBeginFlag = TRUE;
+        return FALSE;
+    }
 
+    //ç§»åŠ¨å‰ç»è¯»å†™æŒ‡é’ˆç›´è‡³åˆ°è¾¾éœ€è¦å‰ç»å•å…ƒ
+    //ç‰¹æ®Šæƒ…å†µï¼š1.å½“å¯è¯»åŒºé—´æ²¡æœ‰éœ€è¦å‰ç»çš„å•å…ƒï¼Œå‰ç»è¯»å†™æŒ‡é’ˆç§»åŠ¨åˆ°åˆ€è¡¥å†™æŒ‡é’ˆå¤„
+    //          2.å‰ç»æŒ‡é’ˆä¸éœ€ç§»åŠ¨ï¼Œå› ä¸ºä¸€å¼€å§‹å°±æŒ‡å‘éœ€è¦å‰ç»çš„å•å…ƒ
+    moveToG00G01G02G03(sLookAheadRes, pSChannel->ucChannelNum);
 
-	//ÒÆ¶¯Ç°Õ°¶ÁĞ´Ö¸ÕëÖ±ÖÁµ½´ïĞèÒªÇ°Õ°µ¥Ôª
-	//ÌØÊâÇé¿ö£º1.µ±¿É¶ÁÇø¼äÃ»ÓĞĞèÒªÇ°Õ°µÄµ¥Ôª£¬Ç°Õ°¶ÁĞ´Ö¸ÕëÒÆ¶¯µ½µ¶²¹Ğ´Ö¸Õë´¦
-	//          2.Ç°Õ°Ö¸Õë²»ĞèÒÆ¶¯£¬ÒòÎªÒ»¿ªÊ¼¾ÍÖ¸ÏòĞèÒªÇ°Õ°µÄµ¥Ôª
-	moveToG00G01G02G03(sLookAheadRes, pSChannel->ucChannelNum);
+    //é‡æ–°åˆ¤æ–­å‰ç»å¯è¯»æ®µæ•°
+    sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
 
-	//ÖØĞÂÅĞ¶ÏÇ°Õ°¿É¶Á¶ÎÊı
-	sLookAheadRes = getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, pSChannel->ucChannelNum);
+    if (sLookAheadRes <= 0)
+    {
+        return FALSE;
+    }
+    else //æ­¤æ—¶å¯¹åº”çš„å‰ç»å¯è¯»åŒºé—´å†…å«æœ‰éœ€è¦å‰ç»çš„å•å…ƒï¼ˆä¸”åˆ€è¡¥è¯»å†™æœ€åˆå°±æŒ‡å‘äº†éœ€è¦å‰ç»çš„å•å…ƒï¼‰
+    {
 
-	if (sLookAheadRes <= 0)
-	{
-		return FALSE;
-	}
-	else//´ËÊ±¶ÔÓ¦µÄÇ°Õ°¿É¶ÁÇø¼äÄÚº¬ÓĞĞèÒªÇ°Õ°µÄµ¥Ôª£¨ÇÒµ¶²¹¶ÁĞ´×î³õ¾ÍÖ¸ÏòÁËĞèÒªÇ°Õ°µÄµ¥Ôª£©
-	{
+        int8 res = 0;
 
-		int8 res = 0;
+        //å‰ç»
+        res = lookAheadMode(sLookAheadRes, pSChannel);
 
-		//Ç°Õ°
-		res = lookAheadMode(sLookAheadRes, pSChannel);
-
-		if (res == 1)//½øĞĞÁËÇ°Õ°´¦Àí
-		{
-			return  TRUE;
-		}
-		return FALSE;
-	}
+        if (res == 1) //è¿›è¡Œäº†å‰ç»å¤„ç†
+        {
+            return TRUE;
+        }
+        return FALSE;
+    }
 }
 
-//²âÊÔÓÃÇóÏÎµã½Ç¶È
+//æµ‹è¯•ç”¨æ±‚è¡”ç‚¹è§’åº¦
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcAngle(struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
-  º¯Êı¹¦ÄÜ  ²âÊÔÓÃÇóÏÎµã½Ç¶È
-  ÊäÈë²ÎÊı£ºpPreTraj £º ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë  pLaterTraj£ºÏÎ½ÓµãºóÒ»¶Î¹ì¼£Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·µ»ØµÄÊÇ¡ã£¨·Ç»¡¶È£©
-  ±¸    ×¢£º£¨µÑ¿¨¶û¿Õ¼ä£¬XYZÈıÖá£©
+  å‡½æ•°åç§°ï¼šcalcAngle(struct SToolCompensation *pPreTraj , struct SToolCompensation *pLaterTraj)
+  å‡½æ•°åŠŸèƒ½  æµ‹è¯•ç”¨æ±‚è¡”ç‚¹è§’åº¦
+  è¾“å…¥å‚æ•°ï¼špPreTraj ï¼š è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ  pLaterTrajï¼šè¡”æ¥ç‚¹åä¸€æ®µè½¨è¿¹æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¿”å›çš„æ˜¯Â°ï¼ˆéå¼§åº¦ï¼‰
+  å¤‡    æ³¨ï¼šï¼ˆç¬›å¡å°”ç©ºé—´ï¼ŒXYZä¸‰è½´ï¼‰
 **************************************************/
 double calcAngle(struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj)
 {
-	//°ë½ÇÕıÏÒ
-	double dSin_half_angle = 0.5 * sqrt(pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]], 2)
-		+ pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]], 2)
-		+ pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] - pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]], 2));
+    //åŠè§’æ­£å¼¦
+    double dSin_half_angle = 0.5 * sqrt(pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[0]] -
+                                                pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[0]],
+                                            2) +
+                                        pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[1]] -
+                                                pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[1]],
+                                            2) +
+                                        pow(pPreTraj->SEndVector.dArray[g_ucLookAheadAxisArray[2]] -
+                                                pLaterTraj->SStartVector.dArray[g_ucLookAheadAxisArray[2]],
+                                            2));
 
-	//½Ç¶È
-	return acos(1 - 2 * pow(dSin_half_angle, 2)) * 180.0 / PI;
+    //è§’åº¦
+    return acos(1 - 2 * pow(dSin_half_angle, 2)) * 180.0 / PI;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
-  º¯Êı¹¦ÄÜ  µ¥Öá·´ÏòÊ±VEER¼ÆËã
-  ÊäÈë²ÎÊı£ºpPreTraj:  ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-		   dES_Vector_MultiArray £º ÏòÁ¿·ÖÁ¿Ïà³ËÊı×éÖ¸Õë
-		   dES_Vector_SubArray£º    ÏòÁ¿·ÖÁ¿Ïà¼õÊı×éÖ¸Õë
-		   const uint8* ucMapArray £º     µ±Ç°Í¨µÀÖáÓ³ÉäÊı×éÖ¸Õë
-			ucChannelNum        Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE £º´«ÈëÖ¸Õë²»Îª¿Õ
-			FALSE:´«ÈëÖ¸ÕëÎª¿Õ£¬²»¼ÆËã
-  ±¸    ×¢£º¶àÍ¨µÀÇé¿öÏÂ£¬ÔİÊ±Ç°Õ°Èı¸öÖá
+  å‡½æ•°åç§°ï¼šcalcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
+  å‡½æ•°åŠŸèƒ½  å•è½´åå‘æ—¶VEERè®¡ç®—
+  è¾“å…¥å‚æ•°ï¼špPreTraj:  è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+		   dES_Vector_MultiArray ï¼š å‘é‡åˆ†é‡ç›¸ä¹˜æ•°ç»„æŒ‡é’ˆ
+		   dES_Vector_SubArrayï¼š    å‘é‡åˆ†é‡ç›¸å‡æ•°ç»„æŒ‡é’ˆ
+		   const uint8* ucMapArray ï¼š     å½“å‰é€šé“è½´æ˜ å°„æ•°ç»„æŒ‡é’ˆ
+			ucChannelNum        é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ï¼šä¼ å…¥æŒ‡é’ˆä¸ä¸ºç©º
+			FALSE:ä¼ å…¥æŒ‡é’ˆä¸ºç©ºï¼Œä¸è®¡ç®—
+  å¤‡    æ³¨ï¼šå¤šé€šé“æƒ…å†µä¸‹ï¼Œæš‚æ—¶å‰ç»ä¸‰ä¸ªè½´
 **************************************************/
-bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
+bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum, double* dES_Vector_MultiArray,
+                         double* dES_Vector_SubArray, const uint8* ucMapArray)
 {
-	if (pPreTraj == NULL || dES_Vector_MultiArray == NULL || dES_Vector_SubArray == NULL || ucMapArray == NULL)
-	{
-		return FALSE;
-	}
+    if (pPreTraj == NULL || dES_Vector_MultiArray == NULL || dES_Vector_SubArray == NULL || ucMapArray == NULL)
+    {
+        return FALSE;
+    }
 
-	//¸ù¾İ¸÷Öá·´ÏòÇé¿ö·ÖÇé¿ö¼ÆËã½Ç¶ÈÔ¼ÊøËÙ¶È
-	//´ÓÏµÍ³²ÎÊı½á¹¹ÌåÖĞ»ñÈ¡ĞèÒªµÄ²ÎÊı    µ¥Öá×ªÏòÔÊĞí±ä»¯µÄ×î´óËÙ¶È mm/s 
-	//AXIS_X  AXIS_Z ÔÚcommon.hÖĞºê¶¨Òå
-	double dVeerDeltaVMaxArrays[LINEARAXIS_NUM_MAX];	//¹ı¶ÉËÙ¶ÈÊı×é
-	double dAxisAccArrays[LINEARAXIS_NUM_MAX];			//¼ÓËÙ¶ÈÊı×é
-	double dVeercArrays[LINEARAXIS_NUM_MAX];			//¹ı¶ÉËÙ¶ÈÊı×é
-	double dVeercVaildArrays[LINEARAXIS_NUM_MAX];		//¹ı¶ÉËÙ¶ÈÓĞĞ§Êı×é
-	int8   cValidAxis[LINEARAXIS_NUM_MAX];			
-	int8   cArraySize = 0;
-	int8   cArrayIndex = 0;
+    //æ ¹æ®å„è½´åå‘æƒ…å†µåˆ†æƒ…å†µè®¡ç®—è§’åº¦çº¦æŸé€Ÿåº¦
+    //ä»ç³»ç»Ÿå‚æ•°ç»“æ„ä½“ä¸­è·å–éœ€è¦çš„å‚æ•°    å•è½´è½¬å‘å…è®¸å˜åŒ–çš„æœ€å¤§é€Ÿåº¦ mm/s
+    //AXIS_X  AXIS_Z åœ¨common.hä¸­å®å®šä¹‰
+    double dVeerDeltaVMaxArrays[LINEARAXIS_NUM_MAX]; //è¿‡æ¸¡é€Ÿåº¦æ•°ç»„
+    double dAxisAccArrays[LINEARAXIS_NUM_MAX];       //åŠ é€Ÿåº¦æ•°ç»„
+    double dVeercArrays[LINEARAXIS_NUM_MAX];         //è¿‡æ¸¡é€Ÿåº¦æ•°ç»„
+    double dVeercVaildArrays[LINEARAXIS_NUM_MAX];    //è¿‡æ¸¡é€Ÿåº¦æœ‰æ•ˆæ•°ç»„
+    int8 cValidAxis[LINEARAXIS_NUM_MAX];
+    int8 cArraySize = 0;
+    int8 cArrayIndex = 0;
 
-	memset(dVeerDeltaVMaxArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
-	memset(dAxisAccArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
-	memset(dVeercArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
-	memset(dVeercVaildArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
-	memset(cValidAxis, 0, sizeof(int8) * LINEARAXIS_NUM_MAX);
+    memset(dVeerDeltaVMaxArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
+    memset(dAxisAccArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
+    memset(dVeercArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
+    memset(dVeercVaildArrays, 0, sizeof(double) * LINEARAXIS_NUM_MAX);
+    memset(cValidAxis, 0, sizeof(int8) * LINEARAXIS_NUM_MAX);
 
-	for (int i = 0; i < LINEARAXIS_NUM_MAX; i++)
-	{
-		if (AXIS_NULL == ucMapArray[g_ucLookAheadAxisArray[i]] || ucMapArray[g_ucLookAheadAxisArray[i]] >= AXIS_PHYSICS_NUM_MAX)		continue;
-		cArraySize++;
-		dVeerDeltaVMaxArrays[i] = g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[i]]].dVeerDeltaVMax;
-		cValidAxis[i] = TRUE;
-		dAxisAccArrays[i] = getSingleAxisAcc(g_ucLookAheadAxisArray[i], g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[i]]].ucAccVelPlanType, ucMapArray);
-	}
+    for (int i = 0; i < LINEARAXIS_NUM_MAX; i++)
+    {
+        if (AXIS_NULL == ucMapArray[g_ucLookAheadAxisArray[i]] ||
+            ucMapArray[g_ucLookAheadAxisArray[i]] >= AXIS_PHYSICS_NUM_MAX)
+            continue;
+        cArraySize++;
+        dVeerDeltaVMaxArrays[i] = g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[i]]].dVeerDeltaVMax;
+        cValidAxis[i] = TRUE;
+        dAxisAccArrays[i] = getSingleAxisAcc(
+            g_ucLookAheadAxisArray[i], g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[i]]].ucAccVelPlanType,
+            ucMapArray);
+    }
 
-	double dTc = g_SSystemPara.dInterpolationTime;
+    double dTc = g_SSystemPara.dInterpolationTime;
 
-	double dCoefOfFeedrate;
+    double dCoefOfFeedrate;
 
+    //åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+    //å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+    //å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+    //è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
+    dCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+                          ? 1.0
+                          : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
+    for (int i = 0; i < LINEARAXIS_NUM_MAX; i++)
+    {
+        if (!cValidAxis[i])
+            continue;
+        if (dES_Vector_MultiArray[i] < 0)
+        {
+            dVeercArrays[i] = fabs(dVeerDeltaVMaxArrays[i] / dES_Vector_SubArray[i]);
+        }
+        else
+        {
+            dVeercArrays[i] = isZero(dES_Vector_SubArray[i]) == TRUE
+                                  ? (pPreTraj->dFeedrate * dCoefOfFeedrate)
+                                  : fabs(dAxisAccArrays[i] * dTc / dES_Vector_SubArray[i]);
+        }
+        dVeercVaildArrays[cArrayIndex++] = dVeercArrays[i];
+    }
+    double dVeerMin = 0;
 
-	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
-	dCoefOfFeedrate = getBits(pPreTraj->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE ? 1.0 : calcCoefOfFeedrate(pPreTraj, ucChannelNum);
-	for (int i = 0; i < LINEARAXIS_NUM_MAX; i++)
-	{
-		if (!cValidAxis[i]) continue;
-		if (dES_Vector_MultiArray[i] < 0)
-		{
-			dVeercArrays[i] = fabs(dVeerDeltaVMaxArrays[i] / dES_Vector_SubArray[i]);
-		}
-		else
-		{
-			dVeercArrays[i] = isZero(dES_Vector_SubArray[i]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dAxisAccArrays[i] * dTc / dES_Vector_SubArray[i]);
-		}
-		dVeercVaildArrays[cArrayIndex++] = dVeercArrays[i];
-	}
-	double dVeerMin = 0;
+    if (cArraySize > 1) //å¦‚æœæ•°ç»„æœ‰æ•ˆå€¼å¤§äº1ï¼Œæ‰¾åˆ°æ•°ç»„çš„æœ€å°å€¼
+    {
+        for (int i = 1; i < cArraySize; i++) //æ•°é‡å¾ˆå°ï¼Œç›´æ¥ç”¨æ’å…¥æ’åº
+        {
+            double dTemp = dVeercVaildArrays[i];
+            int j = i;
+            for (; j > 0 && dVeercVaildArrays[j - 1] > dTemp; j--)
+                dVeercVaildArrays[j] = dVeercVaildArrays[j - 1];
+            dVeercVaildArrays[j] = dTemp;
+        }
+    }
 
-	if (cArraySize > 1)	//Èç¹ûÊı×éÓĞĞ§Öµ´óÓÚ1£¬ÕÒµ½Êı×éµÄ×îĞ¡Öµ
-	{
-		for (int i = 1; i < cArraySize; i++)	//ÊıÁ¿ºÜĞ¡£¬Ö±½ÓÓÃ²åÈëÅÅĞò
-		{
-			double dTemp = dVeercVaildArrays[i];
-			int j = i;
-			for ( ; j > 0 && dVeercVaildArrays[j - 1]> dTemp; j--)
-				dVeercVaildArrays[j] = dVeercVaildArrays[j - 1];
-			dVeercVaildArrays[j] = dTemp;
-		}
-	}
-	
-	dVeerMin = (cArraySize >= 1)? dVeercVaildArrays[0] : 0;
-	
-	pPreTraj->dVeer = dVeerMin;
+    dVeerMin = (cArraySize >= 1) ? dVeercVaildArrays[0] : 0;
 
-	return TRUE;
+    pPreTraj->dVeer = dVeerMin;
+
+    return TRUE;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºcalcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
-//  º¯Êı¹¦ÄÜ  µ¥Öá·´ÏòÊ±VEER¼ÆËã
-//  ÊäÈë²ÎÊı£ºpPreTraj:  ÏÎ½ÓµãÇ°¶Î¹ì¼£Ö¸Õë
-//		   dES_Vector_MultiArray £º ÏòÁ¿·ÖÁ¿Ïà³ËÊı×éÖ¸Õë
-//		   dES_Vector_SubArray£º    ÏòÁ¿·ÖÁ¿Ïà¼õÊı×éÖ¸Õë
-//		   const uint8* ucMapArray £º     µ±Ç°Í¨µÀÖáÓ³ÉäÊı×éÖ¸Õë
-//		    ucChannelNum        Í¨µÀºÅ
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£ºTRUE £º´«ÈëÖ¸Õë²»Îª¿Õ
-//			FALSE:´«ÈëÖ¸ÕëÎª¿Õ£¬²»¼ÆËã
-//  ±¸    ×¢£º¶àÍ¨µÀÇé¿öÏÂ£¬ÔİÊ±Ç°Õ°Èı¸öÖá
+//  å‡½æ•°åç§°ï¼šcalcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
+//  å‡½æ•°åŠŸèƒ½  å•è½´åå‘æ—¶VEERè®¡ç®—
+//  è¾“å…¥å‚æ•°ï¼špPreTraj:  è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹æŒ‡é’ˆ
+//		   dES_Vector_MultiArray ï¼š å‘é‡åˆ†é‡ç›¸ä¹˜æ•°ç»„æŒ‡é’ˆ
+//		   dES_Vector_SubArrayï¼š    å‘é‡åˆ†é‡ç›¸å‡æ•°ç»„æŒ‡é’ˆ
+//		   const uint8* ucMapArray ï¼š     å½“å‰é€šé“è½´æ˜ å°„æ•°ç»„æŒ‡é’ˆ
+//		    ucChannelNum        é€šé“å·
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼šTRUE ï¼šä¼ å…¥æŒ‡é’ˆä¸ä¸ºç©º
+//			FALSE:ä¼ å…¥æŒ‡é’ˆä¸ºç©ºï¼Œä¸è®¡ç®—
+//  å¤‡    æ³¨ï¼šå¤šé€šé“æƒ…å†µä¸‹ï¼Œæš‚æ—¶å‰ç»ä¸‰ä¸ªè½´
 //**************************************************/
 //bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray)
 //{
@@ -2525,9 +2626,9 @@ bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum,
 //		return FALSE;
 //	}
 //
-//	//¸ù¾İ¸÷Öá·´ÏòÇé¿ö·ÖÇé¿ö¼ÆËã½Ç¶ÈÔ¼ÊøËÙ¶È
-//	//´ÓÏµÍ³²ÎÊı½á¹¹ÌåÖĞ»ñÈ¡ĞèÒªµÄ²ÎÊı    µ¥Öá×ªÏòÔÊĞí±ä»¯µÄ×î´óËÙ¶È mm/s 
-//	//AXIS_X  AXIS_Z ÔÚcommon.hÖĞºê¶¨Òå
+//	//æ ¹æ®å„è½´åå‘æƒ…å†µåˆ†æƒ…å†µè®¡ç®—è§’åº¦çº¦æŸé€Ÿåº¦
+//	//ä»ç³»ç»Ÿå‚æ•°ç»“æ„ä½“ä¸­è·å–éœ€è¦çš„å‚æ•°    å•è½´è½¬å‘å…è®¸å˜åŒ–çš„æœ€å¤§é€Ÿåº¦ mm/s
+//	//AXIS_X  AXIS_Z åœ¨common.hä¸­å®å®šä¹‰
 //
 //	double dN1VeerDeltaVMax = g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[0]]].dVeerDeltaVMax;
 //	double dN2VeerDeltaVMax = g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[1]]].dVeerDeltaVMax;
@@ -2539,68 +2640,68 @@ bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum,
 //	double dN2AxisAcc = getSingleAxisAcc(g_ucLookAheadAxisArray[1], g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[1]]].ucAccVelPlanType, ucMapArray);;
 //	double dN3AxisAcc = getSingleAxisAcc(g_ucLookAheadAxisArray[2], g_SSystemPara.SAxisPara[ucMapArray[g_ucLookAheadAxisArray[2]]].ucAccVelPlanType, ucMapArray);;
 //
-//	double dN1Veer;//1ÖáÔ¼ÊøËÙ¶È
-//	double dN2Veer;//2ÖáÔ¼ÊøËÙ¶È
-//	double dN3Veer;//3ÖáÔ¼ÊøËÙ¶È
+//	double dN1Veer;//1è½´çº¦æŸé€Ÿåº¦
+//	double dN2Veer;//2è½´çº¦æŸé€Ÿåº¦
+//	double dN3Veer;//3è½´çº¦æŸé€Ÿåº¦
 //
 //	double dCoefOfFeedrate;
 //
-//	//ÔÚ½ø¸øËÙ¶ÈÓëÆäËûËÙ¶È¶Ô±ÈÖ®Ç°Òª¶ÔG99½øĞĞÅĞ¶Ï
-//	//ÒòÎªG99Ä£Ê½ÏÂ½ø¸øËÙ¶È²¢·ÇÒÔmm/msÎªµ¥Î»£¬¶øÊÇÒÔmm/rÎªµ¥Î»£¬
-//	//Òò´ËÒªÖªµÀÖ÷Öá×ªËÙ´óĞ¡,Í¨Spindle.cÖĞº¯ÊıgetG97AbsSpindleSpeed()¿ÉµÃµ½ÀíÂÛÖ÷Öá×ªËÙ
-//	//¼ÆËãdFeedrate±ä»»µ½mm/msÏµÊı
+//	//åœ¨è¿›ç»™é€Ÿåº¦ä¸å…¶ä»–é€Ÿåº¦å¯¹æ¯”ä¹‹å‰è¦å¯¹G99è¿›è¡Œåˆ¤æ–­
+//	//å› ä¸ºG99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å¹¶éä»¥mm/msä¸ºå•ä½ï¼Œè€Œæ˜¯ä»¥mm/rä¸ºå•ä½ï¼Œ
+//	//å› æ­¤è¦çŸ¥é“ä¸»è½´è½¬é€Ÿå¤§å°,é€šSpindle.cä¸­å‡½æ•°getG97AbsSpindleSpeed()å¯å¾—åˆ°ç†è®ºä¸»è½´è½¬é€Ÿ
+//	//è®¡ç®—dFeedrateå˜æ¢åˆ°mm/msç³»æ•°
 //	dCoefOfFeedrate = calcCoefOfFeedrate(pPreTraj, ucChannelNum);
 //
-//	//¸ù¾İ¸÷Öá·´ÏòÇé¿ö·ÖÀà¼ÆËã(Èı¸öÖáµÄ·´ÏòÒ»¹²7ÖĞÇé¿ö)
+//	//æ ¹æ®å„è½´åå‘æƒ…å†µåˆ†ç±»è®¡ç®—(ä¸‰ä¸ªè½´çš„åå‘ä¸€å…±7ä¸­æƒ…å†µ)
 //	if (dES_Vector_MultiArray[VECTOR_N1] < 0)
 //	{
 //		dN1Veer = fabs(dN1VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N1]);
 //		if (dES_Vector_MultiArray[VECTOR_N2] < 0)
 //		{
 //			dN2Veer = fabs(dN2VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N2]);
-//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//1£ºX·´ Y·´ Z·´
+//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//1ï¼šXå Yå Zå
 //			{
 //				dN3Veer = fabs(dN3VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N3]);
 //			}
-//			else//2£ºX·´ Y·´ ZÍ¬
+//			else//2ï¼šXå Yå ZåŒ
 //			{
 //				dN3Veer = isZero(dES_Vector_SubArray[VECTOR_N3]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN3AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N3]);
 //			}
 //		}
 //		else
 //		{
-//			//¶şºÅÖá
+//			//äºŒå·è½´
 //			dN2Veer = isZero(dES_Vector_SubArray[VECTOR_N2]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN2AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N2]);
 //
-//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//3£ºX·´ YÍ¬ Z·´
+//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//3ï¼šXå YåŒ Zå
 //			{
 //				dN3Veer = fabs(dN3VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N3]);
 //			}
-//			else//4£ºX·´ YÍ¬ ZÍ¬
+//			else//4ï¼šXå YåŒ ZåŒ
 //			{
 //				dN3Veer = isZero(dES_Vector_SubArray[VECTOR_N3]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN3AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N3]);
 //			}
 //		}
 //	}
-//	else//XÖá²»·´Ïò
+//	else//Xè½´ä¸åå‘
 //	{
-//		//1ºÅÖáÔ¼Êø
+//		//1å·è½´çº¦æŸ
 //		dN1Veer = isZero(dES_Vector_SubArray[VECTOR_N1]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN1AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N1]);
 //
 //		if (dES_Vector_MultiArray[VECTOR_N2] < 0)
 //		{
 //			dN2Veer = fabs(dN2VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N2]);
 //
-//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//5: XÍ¬ Y·´ Z·´
+//			if (dES_Vector_MultiArray[VECTOR_N3] < 0)//5: XåŒ Yå Zå
 //			{
 //				dN3Veer = fabs(dN3VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N3]);
 //			}
-//			else//6: XÍ¬ Y·´ ZÍ¬
+//			else//6: XåŒ Yå ZåŒ
 //			{
 //				dN3Veer = isZero(dES_Vector_SubArray[VECTOR_N3]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN3AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N3]);
 //			}
 //		}
-//		else//´ËÊ±Ö»ÓĞÒ»ÖÖ¿ÉÄÜ£º 7: XÍ¬ YÍ¬ Z·´
+//		else//æ­¤æ—¶åªæœ‰ä¸€ç§å¯èƒ½ï¼š 7: XåŒ YåŒ Zå
 //		{
 //			dN2Veer = isZero(dES_Vector_SubArray[VECTOR_N2]) == TRUE ? (pPreTraj->dFeedrate * dCoefOfFeedrate) : fabs(dN2AxisAcc * dTc / dES_Vector_SubArray[VECTOR_N2]);
 //			dN3Veer = fabs(dN3VeerDeltaVMax / dES_Vector_SubArray[VECTOR_N3]);

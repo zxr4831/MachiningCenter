@@ -1,39 +1,33 @@
 #ifndef __GCODE_G94_H
 #define __GCODE_G94_H
 
-
 typedef struct _SG94Para
 {
-	int8 cStep;                  //ÇĞÆ¬¸¨Öú±êÖ¾
-	double dR;					//RÖµ
-	double dRRaw;              // ĞÂÊäÈëµÄ R Ô­Ê¼Öµ£¬µ¥Î»Ëæ±à³Ìµ¥Î»¡£
-	bool bRNeedsConvert;      // ĞÂ R ´ı´¦Àí±êÖ¾£¬±¾ĞĞµ¥Î»ÉúĞ§ºó´¦ÀíÒ»´Î¡£
+    int8 cStep;          //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    double dR;           //Rå€¼
+    double dRRaw;        // æ–°è¾“å…¥çš„ R åŸå§‹å€¼ï¼Œå•ä½éšç¼–ç¨‹å•ä½ã€‚
+    bool bRNeedsConvert; // æ–° R å¾…å¤„ç†æ ‡å¿—ï¼Œæœ¬è¡Œå•ä½ç”Ÿæ•ˆåå¤„ç†ä¸€æ¬¡ã€‚
 
-	SCoord SCoordInfo;			//³ÌĞò¶Î×ø±êĞÅÏ¢
-	SPointDouble SPointA;		//Aµã×ø±ê£¨»úĞµ×ø±ê£©
-	SPointDouble SPointC;		//Cµã×ø±ê£¨»úĞµ×ø±ê£©
+    SCoord SCoordInfo;    //ç¨‹åºæ®µåæ ‡ä¿¡æ¯
+    SPointDouble SPointA; //Aç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SPointC; //Cç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
-}SG94Para;
-
+} SG94Para;
 
 void addG94RegulationAPI();
 
-
-//¿ª±ÙG94²ÎÊı½á¹¹Ìå
+//å¼€è¾ŸG94å‚æ•°ç»“æ„ä½“
 int8 mallocG94ParaStruct(uint8 ucMode, uint8 ucChannelNum);
-//ÊÍ·ÅG94²ÎÊı½á¹¹Ìå
+//é‡Šæ”¾G94å‚æ•°ç»“æ„ä½“
 int8 freeG94ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 
-//»ñÈ¡G94²ÎÊı
+//è·å–G94å‚æ•°
 int8 getG94Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* SGCodeCurrSysState);
 
-//¼ì²éG94
+//æ£€æŸ¥G94
 int8 CheckG94(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
-//¸³ÖµG94
+//èµ‹å€¼G94
 int8 AssignG94(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
-
 
 #endif

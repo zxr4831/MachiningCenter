@@ -12,35 +12,35 @@
 #include "ErrorCompensation.h"
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalculateHandwheelArcGeometry
-  º¯Êı¹¦ÄÜ£º±£ÁôÓĞĞ§Ô²ĞÄ¶¨ÒåµÄÕûÔ²£¬ÆäÓàÔ²»¡ÑØÓÃÔ­°ë¾¶Çó½â
-  ÊäÈë²ÎÊı£ºpArc - ÒÑ¼ÓÔØµÄ G2/G3 ¼¸ºÎ
-  Êä³ö²ÎÊı£ºpArc - Ô²ĞÄ¼°É¨½Ç£¬±£Áô R ·ûºÅÓÃÓÚÔİÍ£ºóÖØ½¨ÓÅÁÓ»¡
-  ·µ »Ø Öµ£º1 - ÓĞĞ§£»-1 - ¼¸ºÎ²»Ã÷È·
-  ±¸    ×¢£º½ö¾àÀëÄ£Äâµ÷ÓÃ£¬Ê×Î²Í¬µã±ØĞëÓĞÆ¥Åä°ë¾¶µÄÓĞĞ§Ô²ĞÄ
+  å‡½æ•°åç§°ï¼šcalculateHandwheelArcGeometry
+  å‡½æ•°åŠŸèƒ½ï¼šä¿ç•™æœ‰æ•ˆåœ†å¿ƒå®šä¹‰çš„æ•´åœ†ï¼Œå…¶ä½™åœ†å¼§æ²¿ç”¨åŸåŠå¾„æ±‚è§£
+  è¾“å…¥å‚æ•°ï¼špArc - å·²åŠ è½½çš„ G2/G3 å‡ ä½•
+  è¾“å‡ºå‚æ•°ï¼špArc - åœ†å¿ƒåŠæ‰«è§’ï¼Œä¿ç•™ R ç¬¦å·ç”¨äºæš‚åœåé‡å»ºä¼˜åŠ£å¼§
+  è¿” å› å€¼ï¼š1 - æœ‰æ•ˆï¼›-1 - å‡ ä½•ä¸æ˜ç¡®
+  å¤‡    æ³¨ï¼šä»…è·ç¦»æ¨¡æ‹Ÿè°ƒç”¨ï¼Œé¦–å°¾åŒç‚¹å¿…é¡»æœ‰åŒ¹é…åŠå¾„çš„æœ‰æ•ˆåœ†å¿ƒ
 ****************************************/
 static int8 calculateHandwheelArcGeometry(struct SG2* pArc)
 {
     uint8 ucHorizontal = pArc->ucAxis[0], ucVertical = pArc->ucAxis[1];
     double dRadius = fabs(pArc->dRadius);
-    if (ucHorizontal >= AXIS_NUM_MAX || ucVertical >= AXIS_NUM_MAX
-        || !isfinite(dRadius) || dRadius <= HWSIM_DISTANCE_EPS)
+    if (ucHorizontal >= AXIS_NUM_MAX || ucVertical >= AXIS_NUM_MAX || !isfinite(dRadius) ||
+        dRadius <= HWSIM_DISTANCE_EPS)
     {
         return -1;
     }
-    if (pArc->SStartPoint.dArray[ucHorizontal] == pArc->SEndPoint.dArray[ucHorizontal]
-        && pArc->SStartPoint.dArray[ucVertical] == pArc->SEndPoint.dArray[ucVertical])
+    if (pArc->SStartPoint.dArray[ucHorizontal] == pArc->SEndPoint.dArray[ucHorizontal] &&
+        pArc->SStartPoint.dArray[ucVertical] == pArc->SEndPoint.dArray[ucVertical])
     {
         double dActualRadius = hypot(pArc->SStartPoint.dArray[ucHorizontal] - pArc->SCenterPoint.dArray[ucHorizontal],
-            pArc->SStartPoint.dArray[ucVertical] - pArc->SCenterPoint.dArray[ucVertical]);
+                                     pArc->SStartPoint.dArray[ucVertical] - pArc->SCenterPoint.dArray[ucVertical]);
         if (!isfinite(dActualRadius) || fabs(dActualRadius - dRadius) > HWSIM_DISTANCE_EPS * fmax(1.0, dRadius))
         {
             return -1;
         }
         pArc->dRad = 2.0 * PI;
     }
-    else if (radCalculateR(pArc->SStartPoint.dArray, pArc->SEndPoint.dArray,
-        pArc->dRadius, pArc->SCenterPoint.dArray, pArc->cArcDir, &pArc->dRad, ucHorizontal, ucVertical) != TRUE)
+    else if (radCalculateR(pArc->SStartPoint.dArray, pArc->SEndPoint.dArray, pArc->dRadius, pArc->SCenterPoint.dArray,
+                           pArc->cArcDir, &pArc->dRad, ucHorizontal, ucVertical) != TRUE)
     {
         return -1;
     }
@@ -48,1085 +48,1157 @@ static int8 calculateHandwheelArcGeometry(struct SG2* pArc)
 }
 #endif
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºSG2LoadSysPara(struct SG2* pSG2)
-  º¯Êı¹¦ÄÜ  SG2³õÊ¼»¯º¯Êı
-  ÊäÈë²ÎÊı£ºpSG2		SG2Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ´«Èë¿ÕÖ¸Õë
-			1  ´¦ÀíÍê³É
-  ±¸    ×¢£º±ØĞëÔÚÍ¨µÀ³õÊ¼»¯Ö®ºóÖ´ĞĞ
+  å‡½æ•°åç§°ï¼šSG2LoadSysPara(struct SG2* pSG2)
+  å‡½æ•°åŠŸèƒ½  SG2åˆå§‹åŒ–å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼špSG2		SG2æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ä¼ å…¥ç©ºæŒ‡é’ˆ
+			1  å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼šå¿…é¡»åœ¨é€šé“åˆå§‹åŒ–ä¹‹åæ‰§è¡Œ
 **************************************************/
 int8 SG2LoadSysPara(struct SG2* pSG2)
 {
-	int i;
-	const uint8* ucMapArray;//Ó³Éä
-	if (pSG2 == NULL)
-	{
-		return -1;
-	}
+    int i;
+    const uint8* ucMapArray; //æ˜ å°„
+    if (pSG2 == NULL)
+    {
+        return -1;
+    }
 
-	//Ó³Éä
-	ucMapArray = pSG2->pSChannel->pMapAxisArray;
+    //æ˜ å°„
+    ucMapArray = pSG2->pSChannel->pMapAxisArray;
 
-	//G1Âö³åµ±Á¿³õÊ¼»¯
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX) continue;//¿ÕÖá Ìø¹ı
-		pSG2->dPulseToMm[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dPulseToMm;
-	}
-	//²å²¹ÖÜÆÚ
-	pSG2->SPlanData.dTc = g_SSystemPara.dInterpolationTime;
-	//½ø¸ø±¶ÂÊ
-	pSG2->dFeedRatio = 1.0;
+    //G1è„‰å†²å½“é‡åˆå§‹åŒ–
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX)
+            continue; //ç©ºè½´ è·³è¿‡
+        pSG2->dPulseToMm[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dPulseToMm;
+    }
+    //æ’è¡¥å‘¨æœŸ
+    pSG2->SPlanData.dTc = g_SSystemPara.dInterpolationTime;
+    //è¿›ç»™å€ç‡
+    pSG2->dFeedRatio = 1.0;
 }
 
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalArcVectorAndDistance(struct SG02* pSG2Pointer)
-  º¯Êı¹¦ÄÜ  ¼ÆËã³¤ÖáºÍ¾àÀë·ÖÁ¿  £¨ Ô²»¡ ²å²¹Ê¹ÓÃ  £©  Ô²»¡µÄ¾àÀë·ÖÁ¿ ´æ´¢ÔÚºáÖáÖáºÅ¶ÔÓ¦µÄÊı×éÔªËØÖĞ
-  ÊäÈë²ÎÊı£ºpSG2Pointer		G02µÄ²å²¹½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			1  ´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalArcVectorAndDistance(struct SG02* pSG2Pointer)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—é•¿è½´å’Œè·ç¦»åˆ†é‡  ï¼ˆ åœ†å¼§ æ’è¡¥ä½¿ç”¨  ï¼‰  åœ†å¼§çš„è·ç¦»åˆ†é‡ å­˜å‚¨åœ¨æ¨ªè½´è½´å·å¯¹åº”çš„æ•°ç»„å…ƒç´ ä¸­
+  è¾“å…¥å‚æ•°ï¼špSG2Pointer		G02çš„æ’è¡¥ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			1  å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 calArcVectorAndDistance(struct SG2* pSG2Pointer)
 {
-	int i = 0;
-	uint8 ucHorizontalAxis = pSG2Pointer->ucAxis[0];// ºáÖá
-	uint8 ucVerticalAxis = pSG2Pointer->ucAxis[1]; //×İÖá
-	double dMaxDistance = 0;	//×î´óÎ»ÒÆÁ¿
-	double distance = 0;		//¾àÀëÁÙÊ±±äÁ¿
-	uint8 *pMapAxisArray = pSG2Pointer -> pSChannel ->pMapAxisArray; // »ñÈ¡Ó³Éä
+    int i = 0;
+    uint8 ucHorizontalAxis = pSG2Pointer->ucAxis[0];              // æ¨ªè½´
+    uint8 ucVerticalAxis = pSG2Pointer->ucAxis[1];                //çºµè½´
+    double dMaxDistance = 0;                                      //æœ€å¤§ä½ç§»é‡
+    double distance = 0;                                          //è·ç¦»ä¸´æ—¶å˜é‡
+    uint8* pMapAxisArray = pSG2Pointer->pSChannel->pMapAxisArray; // è·å–æ˜ å°„
 
-	if (pSG2Pointer == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
+    if (pSG2Pointer == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
 
-	//¼ÆËãÔ²»¡¾àÀë
-	distance = fabs(pSG2Pointer->dRad * pSG2Pointer->dRadius);
-	dMaxDistance = max(dMaxDistance, distance);
+    //è®¡ç®—åœ†å¼§è·ç¦»
+    distance = fabs(pSG2Pointer->dRad * pSG2Pointer->dRadius);
+    dMaxDistance = max(dMaxDistance, distance);
 
-	//Ñ°ÕÒ×î³¤Öá  £¨¾ø¶ÔÖµ£©
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (VAL_VALID != getbit(pSG2Pointer->ucValStatus, i))  continue;// ÎŞĞ§Öá£¬Ìø¹ı
-		if (i == ucHorizontalAxis || i == ucVerticalAxis)//Ìø¹ıÔ²»¡µÄºáÖá »ò×İÖá
-		{
-			continue;
-		}
-		//¼ÆËã¾àÀë fabs(ÖÕµã-Æğµã)
-		distance = fabs(pSG2Pointer->SEndPoint.dArray[i] - pSG2Pointer->SStartPoint.dArray[i]);
-		dMaxDistance = max(dMaxDistance, distance);
-	}
+    //å¯»æ‰¾æœ€é•¿è½´  ï¼ˆç»å¯¹å€¼ï¼‰
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (VAL_VALID != getbit(pSG2Pointer->ucValStatus, i))
+            continue;                                     // æ— æ•ˆè½´ï¼Œè·³è¿‡
+        if (i == ucHorizontalAxis || i == ucVerticalAxis) //è·³è¿‡åœ†å¼§çš„æ¨ªè½´ æˆ–çºµè½´
+        {
+            continue;
+        }
+        //è®¡ç®—è·ç¦» fabs(ç»ˆç‚¹-èµ·ç‚¹)
+        distance = fabs(pSG2Pointer->SEndPoint.dArray[i] - pSG2Pointer->SStartPoint.dArray[i]);
+        dMaxDistance = max(dMaxDistance, distance);
+    }
 
-	if(isZero(dMaxDistance))
-	{
-		parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM132,9999);
-		return -1;
-	}
+    if (isZero(dMaxDistance))
+    {
+        parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM132, 9999);
+        return -1;
+    }
 
-	//¼ÆËãÔ²»¡¾àÀë·ÖÁ¿
-	//Ô²»¡µÄ¾àÀë·ÖÁ¿´æ´¢ÔÚºáÖáµÄ¾àÀë·ÖÁ¿
-	pSG2Pointer->SStartVector.dArray[ucHorizontalAxis] = pSG2Pointer->dRad * pSG2Pointer->dRadius / dMaxDistance;
-	//×İÖáµÄ¾àÀë·ÖÁ¿Îª0
-	pSG2Pointer->SStartVector.dArray[ucVerticalAxis] = 0;
+    //è®¡ç®—åœ†å¼§è·ç¦»åˆ†é‡
+    //åœ†å¼§çš„è·ç¦»åˆ†é‡å­˜å‚¨åœ¨æ¨ªè½´çš„è·ç¦»åˆ†é‡
+    pSG2Pointer->SStartVector.dArray[ucHorizontalAxis] = pSG2Pointer->dRad * pSG2Pointer->dRadius / dMaxDistance;
+    //çºµè½´çš„è·ç¦»åˆ†é‡ä¸º0
+    pSG2Pointer->SStartVector.dArray[ucVerticalAxis] = 0;
 
-	//¼ÆËã¾àÀë·ÖÁ¿
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (i == ucHorizontalAxis || i == ucVerticalAxis)//Ìø¹ıÔ²»¡µÄºáÖá »ò×İÖá
-		{
-			continue;
-		}
-		//ÆäËûÖ±Ïß¼ÆËã
-		distance = pSG2Pointer->SEndPoint.dArray[i] - pSG2Pointer->SStartPoint.dArray[i];
-		//¾àÀë·ÖÁ¿ = µ±Ç°ÖáÎ»ÒÆ / ×î³¤ÖáÎ»ÒÆ
-		pSG2Pointer->SStartVector.dArray[i] = distance / dMaxDistance;
-	}
+    //è®¡ç®—è·ç¦»åˆ†é‡
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (i == ucHorizontalAxis || i == ucVerticalAxis) //è·³è¿‡åœ†å¼§çš„æ¨ªè½´ æˆ–çºµè½´
+        {
+            continue;
+        }
+        //å…¶ä»–ç›´çº¿è®¡ç®—
+        distance = pSG2Pointer->SEndPoint.dArray[i] - pSG2Pointer->SStartPoint.dArray[i];
+        //è·ç¦»åˆ†é‡ = å½“å‰è½´ä½ç§» / æœ€é•¿è½´ä½ç§»
+        pSG2Pointer->SStartVector.dArray[i] = distance / dMaxDistance;
+    }
 
-	//×î³¤ÖáÓÃÓÚËÙ¶È¹æ»®
-	pSG2Pointer->SPlanData.dDistance = pSG2Pointer->SPlanData.dTargetDist = dMaxDistance;
-	return 1;
+    //æœ€é•¿è½´ç”¨äºé€Ÿåº¦è§„åˆ’
+    pSG2Pointer->SPlanData.dDistance = pSG2Pointer->SPlanData.dTargetDist = dMaxDistance;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalculateArcInterpolationPoint(double dDeltaL, struct SG2* pSG2Pointer, double* pdTargetPoint)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÔ²»¡×ø±êµãº¯Êı
-  ÊäÈë²ÎÊı£ºdDeltaL			Ïà¶ÔÆğµãµÄ¾àÀë
-			pSG2Pointer		G02µÄ²å²¹½á¹¹Ìå
-  Êä³ö²ÎÊı£ºpdTargetPoint	Êä³ö×ø±êµã
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			1  ´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalculateArcInterpolationPoint(double dDeltaL, struct SG2* pSG2Pointer, double* pdTargetPoint)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—åœ†å¼§åæ ‡ç‚¹å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šdDeltaL			ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
+			pSG2Pointer		G02çš„æ’è¡¥ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼špdTargetPoint	è¾“å‡ºåæ ‡ç‚¹
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			1  å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 calculateArcInterpolationPoint(double dDeltaL, struct SG2* pSG2Pointer, double* pdTargetPoint)
 {
-	int i = 0;
-	//¼ÆËã¾àÀë·ÖÁ¿
-	uint8 ucHorizontalAxis = pSG2Pointer->ucAxis[0];// ºáÖá
-	uint8 ucVerticalAxis = pSG2Pointer->ucAxis[1]; //×İÖá
-	SPointDouble SStartPoint = pSG2Pointer->SStartPoint; //Æğµã×ø±ê
-	SPointDouble SCenterPoint = pSG2Pointer->SCenterPoint; //Ô²ĞÄ×ø±ê
-	SPointDouble SRelaCenterPoint;//Ô²ĞÄ×ø±ê£¨Ïà¶ÔÆğµã£©
-	SVector SStartVector = pSG2Pointer->SStartVector;    //¾àÀë·ÖÁ¿
-	int8 cArcDir = pSG2Pointer->cArcDir; //Ô²»¡·½Ïò
-	double dDeltaRad;//Ô²ĞÄ½ÇÔöÁ¿ £¨Ïà¶ÔÆğµã£©
+    int i = 0;
+    //è®¡ç®—è·ç¦»åˆ†é‡
+    uint8 ucHorizontalAxis = pSG2Pointer->ucAxis[0];       // æ¨ªè½´
+    uint8 ucVerticalAxis = pSG2Pointer->ucAxis[1];         //çºµè½´
+    SPointDouble SStartPoint = pSG2Pointer->SStartPoint;   //èµ·ç‚¹åæ ‡
+    SPointDouble SCenterPoint = pSG2Pointer->SCenterPoint; //åœ†å¿ƒåæ ‡
+    SPointDouble SRelaCenterPoint;                         //åœ†å¿ƒåæ ‡ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+    SVector SStartVector = pSG2Pointer->SStartVector;      //è·ç¦»åˆ†é‡
+    int8 cArcDir = pSG2Pointer->cArcDir;                   //åœ†å¼§æ–¹å‘
+    double dDeltaRad;                                      //åœ†å¿ƒè§’å¢é‡ ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
 
-	if (isZero(pSG2Pointer->dRadius))
-	{
-		parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return -1;
-	}	
+    if (isZero(pSG2Pointer->dRadius))
+    {
+        parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return -1;
+    }
 
-	//¼ÆËãÔ²ĞÄÏà¶Ô×ø±ê
-	subtractPoint((double*)&SCenterPoint, (double*)&SStartPoint, (double*)&SRelaCenterPoint, AXIS_NUM_MAX, NULL);
+    //è®¡ç®—åœ†å¿ƒç›¸å¯¹åæ ‡
+    subtractPoint((double*)&SCenterPoint, (double*)&SStartPoint, (double*)&SRelaCenterPoint, AXIS_NUM_MAX, NULL);
 
-	//ÏÈ¼ÆËãÔ²»¡¶ÔÓ¦Á½¸öÖáµÄ×ø±ê
-	//¼ÆËãÔ²ĞÄ½ÇÔöÁ¿
-	dDeltaRad = (-1) * cArcDir * dDeltaL * pSG2Pointer->SStartVector.dArray[ucHorizontalAxis] / pSG2Pointer->dRadius;
+    //å…ˆè®¡ç®—åœ†å¼§å¯¹åº”ä¸¤ä¸ªè½´çš„åæ ‡
+    //è®¡ç®—åœ†å¿ƒè§’å¢é‡
+    dDeltaRad = (-1) * cArcDir * dDeltaL * pSG2Pointer->SStartVector.dArray[ucHorizontalAxis] / pSG2Pointer->dRadius;
 
-	//¼ÆËã¾ø¶Ô×ø±ê  £¨=Ô²ĞÄ×ø±ê+Ïà¶Ô×ø±ê£©
-	//¼ÆËã×ø±ê£¨ºáÖá
-	pdTargetPoint[ucHorizontalAxis] = SCenterPoint.dArray[ucHorizontalAxis] - SRelaCenterPoint.dArray[ucHorizontalAxis] * cos(dDeltaRad) + SRelaCenterPoint.dArray[ucVerticalAxis] * sin(dDeltaRad);
-	//¼ÆËã×ø±ê(×İÖá
-	pdTargetPoint[ucVerticalAxis] = SCenterPoint.dArray[ucVerticalAxis] - SRelaCenterPoint.dArray[ucVerticalAxis] * cos(dDeltaRad) - SRelaCenterPoint.dArray[ucHorizontalAxis] * sin(dDeltaRad);
+    //è®¡ç®—ç»å¯¹åæ ‡  ï¼ˆ=åœ†å¿ƒåæ ‡+ç›¸å¯¹åæ ‡ï¼‰
+    //è®¡ç®—åæ ‡ï¼ˆæ¨ªè½´
+    pdTargetPoint[ucHorizontalAxis] = SCenterPoint.dArray[ucHorizontalAxis] -
+                                      SRelaCenterPoint.dArray[ucHorizontalAxis] * cos(dDeltaRad) +
+                                      SRelaCenterPoint.dArray[ucVerticalAxis] * sin(dDeltaRad);
+    //è®¡ç®—åæ ‡(çºµè½´
+    pdTargetPoint[ucVerticalAxis] = SCenterPoint.dArray[ucVerticalAxis] -
+                                    SRelaCenterPoint.dArray[ucVerticalAxis] * cos(dDeltaRad) -
+                                    SRelaCenterPoint.dArray[ucHorizontalAxis] * sin(dDeltaRad);
 
-	//ÔÙ¼ÆËãÆäËûÖáµÄ×ø±ê
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (i == ucHorizontalAxis || i == ucVerticalAxis)//ºáÖá ×İÖá ÒÑ¼ÆËã  Ìø¹ı
-		{
-			continue;
-		}
+    //å†è®¡ç®—å…¶ä»–è½´çš„åæ ‡
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (i == ucHorizontalAxis || i == ucVerticalAxis) //æ¨ªè½´ çºµè½´ å·²è®¡ç®—  è·³è¿‡
+        {
+            continue;
+        }
 
-		pdTargetPoint[i] = SStartPoint.dArray[i] + SStartVector.dArray[i] * dDeltaL;
-	}
+        pdTargetPoint[i] = SStartPoint.dArray[i] + SStartVector.dArray[i] * dDeltaL;
+    }
 
-	return 1;
+    return 1;
 }
 
-
-int8 commonArc2Ellipse(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
-{//Ô²»¡×ø±ê×ª»»³ÉÍÖÔ²×ø±ê
-	double dTempPoint[2];
-	double dTempCenterPoint[2];
-	if (dPoint == NULL || dCenterPoint == NULL || dOutputPoint == NULL
-		|| ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
-	{
-		return -1;
-	}
-	dTempPoint[AXIS_HORIZONTAL] = dPoint[ucHorizontalAxis];
-	dTempPoint[AXIS_VERTICAL] = dPoint[ucVerticalAxis];
-	dTempCenterPoint[AXIS_HORIZONTAL] = dCenterPoint[ucHorizontalAxis];
-	dTempCenterPoint[AXIS_VERTICAL] = dCenterPoint[ucVerticalAxis];
-	//ÏÈ½øĞĞ×ø±êĞı×ª
-	//rotatingCoordinate(dTempPoint, 2, dTempPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	//È»ºó¼ÆËãÏà¶ÔÔ²ĞÄµÄ×ø±ê
-	//dTempPoint[AXIS_HORIZONTAL] -= dTempCenterPoint[AXIS_HORIZONTAL];
-	//dTempPoint[AXIS_VERTICAL] -= dTempCenterPoint[AXIS_VERTICAL];
-	//Ñ¹Ëõ
-	if (dA > dB)
-	{  //Ñ¹Ëõ×İÖá
-		dTempPoint[AXIS_VERTICAL] = dTempPoint[AXIS_VERTICAL] * dB / dA;
-	}
-	else
-	{  //Ñ¹ËõºáÖá
-		dTempPoint[AXIS_HORIZONTAL] = dTempPoint[AXIS_HORIZONTAL] * dB / dA;
-	}
-	//¼ÓÉÏÔ²ĞÄ×ø±ê
-	dTempPoint[AXIS_HORIZONTAL] += dTempCenterPoint[AXIS_HORIZONTAL];
-	dTempPoint[AXIS_VERTICAL] += dTempCenterPoint[AXIS_VERTICAL];
-	//×ø±êĞı×ª
-	rotatingCoordinate(dTempPoint, 2, dTempPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	dOutputPoint[ucHorizontalAxis] = dTempPoint[AXIS_HORIZONTAL];
-	dOutputPoint[ucVerticalAxis] = dTempPoint[AXIS_VERTICAL];
-	return 1;
+int8 commonArc2Ellipse(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB,
+                       double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+{ //åœ†å¼§åæ ‡è½¬æ¢æˆæ¤­åœ†åæ ‡
+    double dTempPoint[2];
+    double dTempCenterPoint[2];
+    if (dPoint == NULL || dCenterPoint == NULL || dOutputPoint == NULL || ucHorizontalAxis >= nArraySize ||
+        ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
+    dTempPoint[AXIS_HORIZONTAL] = dPoint[ucHorizontalAxis];
+    dTempPoint[AXIS_VERTICAL] = dPoint[ucVerticalAxis];
+    dTempCenterPoint[AXIS_HORIZONTAL] = dCenterPoint[ucHorizontalAxis];
+    dTempCenterPoint[AXIS_VERTICAL] = dCenterPoint[ucVerticalAxis];
+    //å…ˆè¿›è¡Œåæ ‡æ—‹è½¬
+    //rotatingCoordinate(dTempPoint, 2, dTempPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    //ç„¶åè®¡ç®—ç›¸å¯¹åœ†å¿ƒçš„åæ ‡
+    //dTempPoint[AXIS_HORIZONTAL] -= dTempCenterPoint[AXIS_HORIZONTAL];
+    //dTempPoint[AXIS_VERTICAL] -= dTempCenterPoint[AXIS_VERTICAL];
+    //å‹ç¼©
+    if (dA > dB)
+    { //å‹ç¼©çºµè½´
+        dTempPoint[AXIS_VERTICAL] = dTempPoint[AXIS_VERTICAL] * dB / dA;
+    }
+    else
+    { //å‹ç¼©æ¨ªè½´
+        dTempPoint[AXIS_HORIZONTAL] = dTempPoint[AXIS_HORIZONTAL] * dB / dA;
+    }
+    //åŠ ä¸Šåœ†å¿ƒåæ ‡
+    dTempPoint[AXIS_HORIZONTAL] += dTempCenterPoint[AXIS_HORIZONTAL];
+    dTempPoint[AXIS_VERTICAL] += dTempCenterPoint[AXIS_VERTICAL];
+    //åæ ‡æ—‹è½¬
+    rotatingCoordinate(dTempPoint, 2, dTempPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    dOutputPoint[ucHorizontalAxis] = dTempPoint[AXIS_HORIZONTAL];
+    dOutputPoint[ucVerticalAxis] = dTempPoint[AXIS_VERTICAL];
+    return 1;
 }
 
-
-//ÍÖÔ²×ª»¯ÎªÆÕÍ¨Ô²
-int8 ellipse2CommonArc(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+//æ¤­åœ†è½¬åŒ–ä¸ºæ™®é€šåœ†
+int8 ellipse2CommonArc(double* dPoint, double* dCenterPoint, double* dOutputPoint, int nArraySize, double dA, double dB,
+                       double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
 {
-	double dTempPoint[2];
-	double dTempCenterPoint[2];
-	if (dPoint == NULL || dCenterPoint == NULL || dOutputPoint == NULL
-		|| ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
-	{
-		return -1;
-	}
-	dTempPoint[AXIS_HORIZONTAL] = dPoint[ucHorizontalAxis];
-	dTempPoint[AXIS_VERTICAL] = dPoint[ucVerticalAxis];
-	dTempCenterPoint[AXIS_HORIZONTAL] = dCenterPoint[ucHorizontalAxis];
-	dTempCenterPoint[AXIS_VERTICAL] = dCenterPoint[ucVerticalAxis];
-	//ÏÈ½øĞĞ×ø±êĞı×ª
-	rotatingCoordinate(dTempPoint, 2, dTempPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	//È»ºó¼ÆËãÏà¶ÔÔ²ĞÄµÄ×ø±ê
-	dTempPoint[AXIS_HORIZONTAL] -= dTempCenterPoint[AXIS_HORIZONTAL];
-	dTempPoint[AXIS_VERTICAL] -= dTempCenterPoint[AXIS_VERTICAL];
-	//À­Éì
-	if (dA > dB)
-	{  //À­Éì×İÖá
-		dTempPoint[AXIS_VERTICAL] = dTempPoint[AXIS_VERTICAL] * dA / dB;
-	}
-	else
-	{  //À­ÉìºáÖá
-		dTempPoint[AXIS_HORIZONTAL] = dTempPoint[AXIS_HORIZONTAL] * dA / dB;
-	}
-	//¼ÓÉÏÔ²ĞÄ×ø±ê
-	//dTempPoint[AXIS_HORIZONTAL] += dTempCenterPoint[AXIS_HORIZONTAL];
-	//dTempPoint[AXIS_VERTICAL] += dTempCenterPoint[AXIS_VERTICAL];
-	//×ø±êĞı×ª
-	//rotatingCoordinate(dTempPoint, 2, dTempPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	dOutputPoint[ucHorizontalAxis] = dTempPoint[AXIS_HORIZONTAL];
-	dOutputPoint[ucVerticalAxis] = dTempPoint[AXIS_VERTICAL];
-	return 1;
+    double dTempPoint[2];
+    double dTempCenterPoint[2];
+    if (dPoint == NULL || dCenterPoint == NULL || dOutputPoint == NULL || ucHorizontalAxis >= nArraySize ||
+        ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
+    dTempPoint[AXIS_HORIZONTAL] = dPoint[ucHorizontalAxis];
+    dTempPoint[AXIS_VERTICAL] = dPoint[ucVerticalAxis];
+    dTempCenterPoint[AXIS_HORIZONTAL] = dCenterPoint[ucHorizontalAxis];
+    dTempCenterPoint[AXIS_VERTICAL] = dCenterPoint[ucVerticalAxis];
+    //å…ˆè¿›è¡Œåæ ‡æ—‹è½¬
+    rotatingCoordinate(dTempPoint, 2, dTempPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    //ç„¶åè®¡ç®—ç›¸å¯¹åœ†å¿ƒçš„åæ ‡
+    dTempPoint[AXIS_HORIZONTAL] -= dTempCenterPoint[AXIS_HORIZONTAL];
+    dTempPoint[AXIS_VERTICAL] -= dTempCenterPoint[AXIS_VERTICAL];
+    //æ‹‰ä¼¸
+    if (dA > dB)
+    { //æ‹‰ä¼¸çºµè½´
+        dTempPoint[AXIS_VERTICAL] = dTempPoint[AXIS_VERTICAL] * dA / dB;
+    }
+    else
+    { //æ‹‰ä¼¸æ¨ªè½´
+        dTempPoint[AXIS_HORIZONTAL] = dTempPoint[AXIS_HORIZONTAL] * dA / dB;
+    }
+    //åŠ ä¸Šåœ†å¿ƒåæ ‡
+    //dTempPoint[AXIS_HORIZONTAL] += dTempCenterPoint[AXIS_HORIZONTAL];
+    //dTempPoint[AXIS_VERTICAL] += dTempCenterPoint[AXIS_VERTICAL];
+    //åæ ‡æ—‹è½¬
+    //rotatingCoordinate(dTempPoint, 2, dTempPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    dOutputPoint[ucHorizontalAxis] = dTempPoint[AXIS_HORIZONTAL];
+    dOutputPoint[ucVerticalAxis] = dTempPoint[AXIS_VERTICAL];
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºprepareToPauseG2(struct SG2* pSG2Pointer, double dVmin, double dDec, bool bWriteBackFlag)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ²å²¹Ô¤´¦Àí½á¹¹Ìå ÒÔ¼õËÙÄ£ĞÍÀ´³õÊ¼»¯ Ô­²å²¹Ô¤´¦Àí½á¹¹Ìå£¬È·¶¨¾àÀëºÍÖÕµãËÙ¶È£¬·½±ã½øĞĞËÙ¶È¹æ»®
-  ÊäÈë²ÎÊı£ºpSG2Pointer			SG02 ½á¹¹ÌåÖ¸Õë£¬µ±Ç°²å²¹µÄ½á¹¹Ìå
-			dVmin				¼õËÙÍ£µÄÄ¿±êËÙ¶È
-			dDec				¼õËÙ¶È
-			bWriteBackFlag		boolÀàĞÍ	ÊÇ·ñÖ´ĞĞ»ØĞ´²Ù×÷
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÊäÈë´íÎó
-			1 ³õÊ¼»¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šprepareToPauseG2(struct SG2* pSG2Pointer, double dVmin, double dDec, bool bWriteBackFlag)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æ’è¡¥é¢„å¤„ç†ç»“æ„ä½“ ä»¥å‡é€Ÿæ¨¡å‹æ¥åˆå§‹åŒ– åŸæ’è¡¥é¢„å¤„ç†ç»“æ„ä½“ï¼Œç¡®å®šè·ç¦»å’Œç»ˆç‚¹é€Ÿåº¦ï¼Œæ–¹ä¾¿è¿›è¡Œé€Ÿåº¦è§„åˆ’
+  è¾“å…¥å‚æ•°ï¼špSG2Pointer			SG02 ç»“æ„ä½“æŒ‡é’ˆï¼Œå½“å‰æ’è¡¥çš„ç»“æ„ä½“
+			dVmin				å‡é€Ÿåœçš„ç›®æ ‡é€Ÿåº¦
+			dDec				å‡é€Ÿåº¦
+			bWriteBackFlag		boolç±»å‹	æ˜¯å¦æ‰§è¡Œå›å†™æ“ä½œ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 è¾“å…¥é”™è¯¯
+			1 åˆå§‹åŒ–å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 prepareToPauseG2(struct SG2* pSG2Pointer, double dVmin, double dDec, bool bWriteBackFlag)
 {
-	double dVs;   //ÆğÊ¼ËÙ¶È £¨×î´óËÙ¶È  ´¿¼õËÙ£©
-	double dLeftDist;//Ê£Óà¾àÀë
-	double dSde;	//´Ó×î´óËÙ¶È¼õËÙµ½ÆğÌøËÙ¶ÈËùĞè¾àÀë
-	double dVe;		//×îÖÕËÙ¶È
-	SPointDouble SEndPoint; //²å²¹ÖÕµã
-	struct SToolCompensation* pSToolCompPointer = NULL; //µ¶²¹Ö¸Õë
-	struct SInterpolationPre* pPreProcessPointer;  //Ô¤´¦ÀíÖ¸Õë
-	double dWriteBackDist = 0;//»ØĞ´µÄÒÑ×ß¾àÀë
-	bool bIsSlowingDown = FALSE; //ÊÇ·ñÕıÔÚ¼õËÙ
-	bool bStoppable = FALSE;
-	double dDecFactor; //¼õËÙ¹«Ê½ÏµÊı
-	int8 cRes;
-	if (pSG2Pointer == NULL || dDec <= 0)   //¿ÕÖ¸Õë²»ÔËĞĞ
-	{
-		return -1;
-	}
+    double dVs;                                         //èµ·å§‹é€Ÿåº¦ ï¼ˆæœ€å¤§é€Ÿåº¦  çº¯å‡é€Ÿï¼‰
+    double dLeftDist;                                   //å‰©ä½™è·ç¦»
+    double dSde;                                        //ä»æœ€å¤§é€Ÿåº¦å‡é€Ÿåˆ°èµ·è·³é€Ÿåº¦æ‰€éœ€è·ç¦»
+    double dVe;                                         //æœ€ç»ˆé€Ÿåº¦
+    SPointDouble SEndPoint;                             //æ’è¡¥ç»ˆç‚¹
+    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥æŒ‡é’ˆ
+    struct SInterpolationPre* pPreProcessPointer;       //é¢„å¤„ç†æŒ‡é’ˆ
+    double dWriteBackDist = 0;                          //å›å†™çš„å·²èµ°è·ç¦»
+    bool bIsSlowingDown = FALSE;                        //æ˜¯å¦æ­£åœ¨å‡é€Ÿ
+    bool bStoppable = FALSE;
+    double dDecFactor; //å‡é€Ÿå…¬å¼ç³»æ•°
+    int8 cRes;
+    if (pSG2Pointer == NULL || dDec <= 0) //ç©ºæŒ‡é’ˆä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	SEndPoint = pSG2Pointer->SEndPoint; //ÖÕµãĞÅÏ¢
-	dLeftDist = pSG2Pointer->SPlanData.dCurLeftDist;  //Ê£Óà¾àÀë
-	pPreProcessPointer = &pSG2Pointer->pSChannel->SPreProcess;//Ô¤´¦Àí½á¹¹Ìå
-	dDecFactor = getFactor(pSG2Pointer->SPlanData.ucDecVelPlanType);//¸ù¾İ¼õËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
+    SEndPoint = pSG2Pointer->SEndPoint;                              //ç»ˆç‚¹ä¿¡æ¯
+    dLeftDist = pSG2Pointer->SPlanData.dCurLeftDist;                 //å‰©ä½™è·ç¦»
+    pPreProcessPointer = &pSG2Pointer->pSChannel->SPreProcess;       //é¢„å¤„ç†ç»“æ„ä½“
+    dDecFactor = getFactor(pSG2Pointer->SPlanData.ucDecVelPlanType); //æ ¹æ®å‡é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
 
-	if (pSG2Pointer->SPlanData.unCurrentT < pSG2Pointer->SPlanData.unT5 && pSG2Pointer->SPlanData.unCurrentT >pSG2Pointer->SPlanData.unT3)//µ±Ç°ÔÚ¼õËÙ
-	{
-		bIsSlowingDown = TRUE;
-		dSde = dLeftDist;
-	}
-	else //µ±Ç°²»ÔÚ¼õËÙ  ¼ÆËã¼õËÙ¾àÀë ºÍÖÕµãÎ»ÖÃ
-	{
-		//ÆğÊ¼ËÙ¶È
-		dVs = pSG2Pointer->dCurrentSpeed;
+    if (pSG2Pointer->SPlanData.unCurrentT < pSG2Pointer->SPlanData.unT5 &&
+        pSG2Pointer->SPlanData.unCurrentT > pSG2Pointer->SPlanData.unT3) //å½“å‰åœ¨å‡é€Ÿ
+    {
+        bIsSlowingDown = TRUE;
+        dSde = dLeftDist;
+    }
+    else //å½“å‰ä¸åœ¨å‡é€Ÿ  è®¡ç®—å‡é€Ÿè·ç¦» å’Œç»ˆç‚¹ä½ç½®
+    {
+        //èµ·å§‹é€Ÿåº¦
+        dVs = pSG2Pointer->dCurrentSpeed;
 
-		if (dVs <= dVmin)//µ±Ç°ËÙ¶ÈĞ¡ÓÚ×îĞ¡ËÙ¶È ¿ÉÒÔÖ±½ÓÍ£
-		{
-			dSde = 0;//S4ĞÍ
-		}
-		else//²»¿ÉÒÔÖ±½ÓÍ£
-		{
-			//¼ÆËã¼õËÙ¾àÀë
-			//dSde = fabs(3 * (dVs * dVs - dVmin * dVmin) / (4 * dDec));//S4ĞÍ
-			dSde = fabs(dDecFactor * (dVs * dVs - dVmin * dVmin) / dDec);//¼õËÙ¹«Ê½
-		}
+        if (dVs <= dVmin) //å½“å‰é€Ÿåº¦å°äºæœ€å°é€Ÿåº¦ å¯ä»¥ç›´æ¥åœ
+        {
+            dSde = 0; //S4å‹
+        }
+        else //ä¸å¯ä»¥ç›´æ¥åœ
+        {
+            //è®¡ç®—å‡é€Ÿè·ç¦»
+            //dSde = fabs(3 * (dVs * dVs - dVmin * dVmin) / (4 * dDec));//S4å‹
+            dSde = fabs(dDecFactor * (dVs * dVs - dVmin * dVmin) / dDec); //å‡é€Ÿå…¬å¼
+        }
 
-		if (pSG2Pointer->SPlanData.cInterpDir != INP_GO_BACK) //ÕıÏò
-		{
-			//¼ÆËãÖÕµãÎ»ÖÃ
-			if (dSde < dLeftDist || isZero(dSde - dLeftDist))//¾àÀë×ã¹»¼õËÙ
-			{
-				dVe = dVmin;//ËÙ¶È¹æ»®Ä©ËÙ¶È µÈÓÚ ÏµÍ³ÆğÌøËÙ¶È
+        if (pSG2Pointer->SPlanData.cInterpDir != INP_GO_BACK) //æ­£å‘
+        {
+            //è®¡ç®—ç»ˆç‚¹ä½ç½®
+            if (dSde < dLeftDist || isZero(dSde - dLeftDist)) //è·ç¦»è¶³å¤Ÿå‡é€Ÿ
+            {
+                dVe = dVmin; //é€Ÿåº¦è§„åˆ’æœ«é€Ÿåº¦ ç­‰äº ç³»ç»Ÿèµ·è·³é€Ÿåº¦
 
-				//¼ÆËãÖÕµãÎ»ÖÃ //2025/01/02ºé¹ÚÅô pSG2Pointer->SPlanData.dDistance - dLeftDist + dSde -> pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde
-				cRes = calculateArcInterpolationPoint(pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde, pSG2Pointer, (double*)&SEndPoint);
-				if (cRes < 0) return cRes;
-				dWriteBackDist = pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde;
-				pSG2Pointer->SPlanData.dCurLeftDist = dSde;
-				pSG2Pointer->SPlanData.dTargetDist -= dLeftDist - dSde;
-				pSG2Pointer->SEndPoint = SEndPoint;//ÖÕµã¸Ä±ä
-				bStoppable = TRUE;
-			}
-			else//µ±Ç°¶Î²»ÄÜÍ£ÏÂ
-			{
-				//×îÖÕËÙ¶È²»ÄÜ¼õµ½ÆğÌøËÙ¶È  ÖØËãÊµ¼Ê×îÖÕËÙ¶È
-				//dVe = sqrt(dVs * dVs - 4 * dDec * dLeftDist / 3);
-				dVe = sqrt(dVs * dVs - dDec * dLeftDist / dDecFactor);  //×îÖÕËÙ¶È²»ÄÜ¼õµ½ÆğÌøËÙ¶È  ÖØËãÊµ¼Ê×îÖÕËÙ¶È
-				dSde = dLeftDist;	//¼õËÙ¾àÀëµÈÓÚÊ£Óà¾àÀë
-				SEndPoint = pSG2Pointer->SEndPoint; //ÖÕµãµÈÓÚÔ­À´µÄÖÕµã
-			}
-		}
-		else
-		{
-			SPointDouble SNewStartPoint;
-			dWriteBackDist = pSG2Pointer->SPlanData.dTargetDist - dLeftDist - dSde;
+                //è®¡ç®—ç»ˆç‚¹ä½ç½® //2025/01/02æ´ªå† é¹ pSG2Pointer->SPlanData.dDistance - dLeftDist + dSde -> pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde
+                cRes = calculateArcInterpolationPoint(pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde,
+                                                      pSG2Pointer, (double*)&SEndPoint);
+                if (cRes < 0)
+                    return cRes;
+                dWriteBackDist = pSG2Pointer->SPlanData.dTargetDist - dLeftDist + dSde;
+                pSG2Pointer->SPlanData.dCurLeftDist = dSde;
+                pSG2Pointer->SPlanData.dTargetDist -= dLeftDist - dSde;
+                pSG2Pointer->SEndPoint = SEndPoint; //ç»ˆç‚¹æ”¹å˜
+                bStoppable = TRUE;
+            }
+            else //å½“å‰æ®µä¸èƒ½åœä¸‹
+            {
+                //æœ€ç»ˆé€Ÿåº¦ä¸èƒ½å‡åˆ°èµ·è·³é€Ÿåº¦  é‡ç®—å®é™…æœ€ç»ˆé€Ÿåº¦
+                //dVe = sqrt(dVs * dVs - 4 * dDec * dLeftDist / 3);
+                dVe = sqrt(dVs * dVs - dDec * dLeftDist / dDecFactor); //æœ€ç»ˆé€Ÿåº¦ä¸èƒ½å‡åˆ°èµ·è·³é€Ÿåº¦  é‡ç®—å®é™…æœ€ç»ˆé€Ÿåº¦
+                dSde = dLeftDist;                                      //å‡é€Ÿè·ç¦»ç­‰äºå‰©ä½™è·ç¦»
+                SEndPoint = pSG2Pointer->SEndPoint;                    //ç»ˆç‚¹ç­‰äºåŸæ¥çš„ç»ˆç‚¹
+            }
+        }
+        else
+        {
+            SPointDouble SNewStartPoint;
+            dWriteBackDist = pSG2Pointer->SPlanData.dTargetDist - dLeftDist - dSde;
 
-			if (isEqualOrGreaterThanZero(dWriteBackDist))//µ±Ç°¶ÎÄÜ¹»Í£ÏÂ
-			{
-				dVe = dVmin;
-				//¼ÆËãĞÂµÄÆğµãÎ»ÖÃ
-				cRes = calculateArcInterpolationPoint(dWriteBackDist, pSG2Pointer, (double*)&SNewStartPoint);
-				if (cRes < 0) return cRes;
-				pSG2Pointer->SPlanData.dTargetDist -= dWriteBackDist;//Ä¿±ê¾àÀë
-				pSG2Pointer->SPlanData.dPreDist -= dWriteBackDist;
-				pSG2Pointer->SPlanData.dDistance -= dWriteBackDist;
-				pSG2Pointer->SStartPoint = SNewStartPoint;
-				bStoppable = TRUE;
-			}
-			else // µ±Ç°¶Î²»ÄÜÍ£ÏÂ
-			{
-				//dVe = sqrt(dVs * dVs - 4 * dDec * (dWriteBackDist + dSde) / 3);  //×îÖÕËÙ¶È²»ÄÜ¼õµ½ÆğÌøËÙ¶È  ÖØËãÊµ¼Ê×îÖÕËÙ¶È
-				dVe = sqrt(dVs * dVs - dDec * (dWriteBackDist + dSde) / dDecFactor);  //×îÖÕËÙ¶È²»ÄÜ¼õµ½ÆğÌøËÙ¶È  ÖØËãÊµ¼Ê×îÖÕËÙ¶È
-			}
+            if (isEqualOrGreaterThanZero(dWriteBackDist)) //å½“å‰æ®µèƒ½å¤Ÿåœä¸‹
+            {
+                dVe = dVmin;
+                //è®¡ç®—æ–°çš„èµ·ç‚¹ä½ç½®
+                cRes = calculateArcInterpolationPoint(dWriteBackDist, pSG2Pointer, (double*)&SNewStartPoint);
+                if (cRes < 0)
+                    return cRes;
+                pSG2Pointer->SPlanData.dTargetDist -= dWriteBackDist; //ç›®æ ‡è·ç¦»
+                pSG2Pointer->SPlanData.dPreDist -= dWriteBackDist;
+                pSG2Pointer->SPlanData.dDistance -= dWriteBackDist;
+                pSG2Pointer->SStartPoint = SNewStartPoint;
+                bStoppable = TRUE;
+            }
+            else // å½“å‰æ®µä¸èƒ½åœä¸‹
+            {
+                //dVe = sqrt(dVs * dVs - 4 * dDec * (dWriteBackDist + dSde) / 3);  //æœ€ç»ˆé€Ÿåº¦ä¸èƒ½å‡åˆ°èµ·è·³é€Ÿåº¦  é‡ç®—å®é™…æœ€ç»ˆé€Ÿåº¦
+                dVe = sqrt(dVs * dVs -
+                           dDec * (dWriteBackDist + dSde) / dDecFactor); //æœ€ç»ˆé€Ÿåº¦ä¸èƒ½å‡åˆ°èµ·è·³é€Ÿåº¦  é‡ç®—å®é™…æœ€ç»ˆé€Ÿåº¦
+            }
+        }
+    }
 
-		}
+    if (bWriteBackFlag == TRUE &&
+        (bIsSlowingDown == FALSE || pPreProcessPointer->sChannelCommand.ucType != UNASSIGNED_VALUE) &&
+        bStoppable == TRUE) //æ¡ä»¶:é€šé“æŒ‡ä»¤æˆ–æ’è¡¥æ‰§è¡Œä¸å®Œ
+    {
+        //å†™å›åˆ€è¡¥ç¼“å†²åŒº
+        // moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_BACK, pSG2Pointer->pSChannel->ucChannelNum);  //ç§»å›å‰ç»æŒ‡é’ˆ //æ³¨é‡Šä¸éœ€è¦
+        if (moveSToolCompBufPointer(INTERPOLATION_READ, BUF_BACK, pSG2Pointer->pSChannel->ucChannelNum) ==
+            FALSE) //ç§»å›è§„åˆ’æŒ‡é’ˆ
+        {
+            return -1;
+        }
+        pSToolCompPointer =
+            getSToolCompPointerByType(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum); //è·å–æ’è¡¥è¯»æŒ‡é’ˆ
 
-	}
+        ////å†™å›æ•°æ®
+        //å›å†™çš„èµ·ç‚¹ç­‰äºå½“å‰æ®µçš„ç»ˆç‚¹
+        //pSToolCompPointer->SStartPoint = SEndPoint;
+        ////å›å†™çš„ç»ˆç‚¹ç­‰äºG1çš„ç»ˆç‚¹ï¼ˆå·²ç»è¿‡ä¿®æ­£ï¼‰
+        //pSToolCompPointer->SEndPoint = pSG2Pointer->SEndPoint;
+        ////ç›¸å¯¹åæ ‡æ ‡è®°ç½®0
+        //pSToolCompPointer->ucRelaVal = 0x0;
 
+        pSToolCompPointer->dPreDist = dWriteBackDist;                           //å†™å›è·ç¦»
+        pSToolCompPointer->dFeedrate = pSToolCompPointer->dUncorrectedFeedrate; //è¦†ç›–é€Ÿåº¦
+        pSToolCompPointer->bHasVeerFlag = FALSE;
+        pSToolCompPointer->bLookAheadVParaCalcOverFlag = FALSE;
+        pSG2Pointer->pSChannel->bLookAheadNewBeginFlag = TRUE;
+        initLookAheadDealed(pSG2Pointer->pSChannel->ucChannelNum); //åˆå§‹åŒ–å‰ç»æŒ‡é’ˆ
 
+        //if (bStoppable == TRUE)//æŒ‡ä»¤å°†è¦æ‰§è¡Œå®Œ å°†æ‰§è¡Œåä½œç”¨IO  //æœ±ç¨³ä¸­ 2023.6.15
+        if (pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD &&
+            isZero(pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dTargetDist))
+        {
+            //åˆ é™¤ç¼“å†²åŒºçš„æ‰€æœ‰IO
+            clearIOCommand(pSToolCompPointer->ucIOCommandArray, IO_ALL_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
+        }
+        else
+        {
+            //åˆ é™¤å½“å‰æ®µçš„åä½œç”¨IO
+            clearIOCommand(pPreProcessPointer->ucIOCommandArray, IO_POST_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
 
+            //åˆ é™¤ç¼“å­˜åŒºçš„å‰ä½œç”¨IO
+            clearIOCommand(pSToolCompPointer->ucIOCommandArray, IO_PRE_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
+        }
 
-	if (bWriteBackFlag == TRUE && (bIsSlowingDown == FALSE || pPreProcessPointer->sChannelCommand.ucType != UNASSIGNED_VALUE) && bStoppable == TRUE)//Ìõ¼ş:Í¨µÀÖ¸Áî»ò²å²¹Ö´ĞĞ²»Íê
-	{
-		//Ğ´»Øµ¶²¹»º³åÇø
-		// moveSToolCompBufPointer(LOOKAHEAD_READWRITE, BUF_BACK, pSG2Pointer->pSChannel->ucChannelNum);  //ÒÆ»ØÇ°Õ°Ö¸Õë //×¢ÊÍ²»ĞèÒª
-		if(moveSToolCompBufPointer(INTERPOLATION_READ, BUF_BACK, pSG2Pointer->pSChannel->ucChannelNum) == FALSE)  //ÒÆ»Ø¹æ»®Ö¸Õë
-		{
-			return -1;
-		}
-		pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum);//»ñÈ¡²å²¹¶ÁÖ¸Õë
+        //å†™å›é€šé“æŒ‡ä»¤
+        pSToolCompPointer->sChannelCommand = pPreProcessPointer->sChannelCommand;
+        pPreProcessPointer->sChannelCommand.ucType = UNASSIGNED_VALUE;
 
-		////Ğ´»ØÊı¾İ
-		//»ØĞ´µÄÆğµãµÈÓÚµ±Ç°¶ÎµÄÖÕµã
-		//pSToolCompPointer->SStartPoint = SEndPoint;
-		////»ØĞ´µÄÖÕµãµÈÓÚG1µÄÖÕµã£¨ÒÑ¾­¹ıĞŞÕı£©
-		//pSToolCompPointer->SEndPoint = pSG2Pointer->SEndPoint;
-		////Ïà¶Ô×ø±ê±ê¼ÇÖÃ0
-		//pSToolCompPointer->ucRelaVal = 0x0;
+        //é˜²æ­¢å½“å‰æ®µçš„M30/M02ï¼Œå¯¼è‡´ç¨‹åºæå‰åœæ­¢  (å›å†™æ®µæœ‰M30/M02ï¼Œå½“å‰æ®µçš„M30/M02éœ€è¦åˆ é™¤)
+        setBits(pPreProcessPointer->unCommandType, CMD_PROGRAM_CONTINUE, CMD_PROGRAM_ADDR);
+    }
+    if (bIsSlowingDown == FALSE) //å½“å‰æ®µæ²¡æœ‰åœ¨å‡é€Ÿ é‡æ–°è§„åˆ’
+    {
+        //æ–°çš„å‰©ä½™è·ç¦»= å‡é€Ÿæ‰€éœ€çš„é•¿åº¦
+        //pSG2Pointer->SPlanData.dCurLeftDist = dSde;
+        //å½“å‰çº¿æ®µé•¿åº¦ï¼š å‡å»æš‚åœåå‰©ä¸‹çš„è·ç¦»
+        /*pSG2Pointer->SPlanData.dDistance -= dLeftDist - dSde;*/
+        //ç›®æ ‡è·ç¦»
+        //pSG2Pointer->SPlanData.dTargetDist -= dLeftDist - dSde;
 
-		pSToolCompPointer->dPreDist = dWriteBackDist;//Ğ´»Ø¾àÀë
-		pSToolCompPointer->dFeedrate = pSToolCompPointer->dUncorrectedFeedrate;//¸²¸ÇËÙ¶È
-		pSToolCompPointer->bHasVeerFlag = FALSE;
-		pSToolCompPointer->bLookAheadVParaCalcOverFlag = FALSE;
-		pSG2Pointer->pSChannel->bLookAheadNewBeginFlag = TRUE;
-		initLookAheadDealed(pSG2Pointer->pSChannel->ucChannelNum);//³õÊ¼»¯Ç°Õ°Ö¸Õë
+        //æš‚åœæ’è¡¥é¢„å¤„ç†ç»“æ„ä½“èµ‹å€¼
+        pSG2Pointer->SPlanData.dVs = pSG2Pointer->SPlanData.dVmax = dVs; //èµ·å§‹é€Ÿåº¦ ï¼ˆæœ€å¤§é€Ÿåº¦ï¼‰
+        pSG2Pointer->SPlanData.dVe = dVe;                                //æœ€ç»ˆé€Ÿåº¦
+        pSG2Pointer->SPlanData.dDec = dDec;                              //å‡é€Ÿåº¦
 
-		//if (bStoppable == TRUE)//Ö¸Áî½«ÒªÖ´ĞĞÍê ½«Ö´ĞĞºó×÷ÓÃIO  //ÖìÎÈÖĞ 2023.6.15
-		if (pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD && isZero(pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dTargetDist))
-		{
-			//É¾³ı»º³åÇøµÄËùÓĞIO
-			clearIOCommand(pSToolCompPointer->ucIOCommandArray, IO_ALL_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
-		}
-		else
-		{
-			//É¾³ıµ±Ç°¶ÎµÄºó×÷ÓÃIO
-			clearIOCommand(pPreProcessPointer->ucIOCommandArray, IO_POST_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
+        //æ›²çº¿ç±»å‹ 1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+        pSG2Pointer->SPlanData.ucAccVelPlanType = VEL_PLAN_S4_CURVE;
+        pSG2Pointer->SPlanData.ucDecVelPlanType = VEL_PLAN_S4_CURVE;
+        //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
+        pSG2Pointer->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;
 
-			//É¾³ı»º´æÇøµÄÇ°×÷ÓÃIO
-			clearIOCommand(pSToolCompPointer->ucIOCommandArray, IO_PRE_ACTION, IO_MAXGROUP_IN_SINGLE_LINE);
-		}
+        pSG2Pointer->SPlanData.unCurrentT = 0;                      //æ—¶é—´
+        preparePlanningAndDistReAvg(&pSG2Pointer->SPlanData, TRUE); //é€Ÿåº¦è§„åˆ’+å¹³æ‘Š
+    }
 
-		//Ğ´»ØÍ¨µÀÖ¸Áî
-		pSToolCompPointer->sChannelCommand = pPreProcessPointer->sChannelCommand;
-		pPreProcessPointer->sChannelCommand.ucType = UNASSIGNED_VALUE;
-
-		//·ÀÖ¹µ±Ç°¶ÎµÄM30/M02£¬µ¼ÖÂ³ÌĞòÌáÇ°Í£Ö¹  (»ØĞ´¶ÎÓĞM30/M02£¬µ±Ç°¶ÎµÄM30/M02ĞèÒªÉ¾³ı)
-		setBits(pPreProcessPointer->unCommandType, CMD_PROGRAM_CONTINUE, CMD_PROGRAM_ADDR);
-	}
-	if (bIsSlowingDown == FALSE)//µ±Ç°¶ÎÃ»ÓĞÔÚ¼õËÙ ÖØĞÂ¹æ»®
-	{
-		//ĞÂµÄÊ£Óà¾àÀë= ¼õËÙËùĞèµÄ³¤¶È
-		//pSG2Pointer->SPlanData.dCurLeftDist = dSde;
-		//µ±Ç°Ïß¶Î³¤¶È£º ¼õÈ¥ÔİÍ£ºóÊ£ÏÂµÄ¾àÀë
-		/*pSG2Pointer->SPlanData.dDistance -= dLeftDist - dSde;*/
-		//Ä¿±ê¾àÀë
-		//pSG2Pointer->SPlanData.dTargetDist -= dLeftDist - dSde;
-
-		//ÔİÍ£²å²¹Ô¤´¦Àí½á¹¹Ìå¸³Öµ
-		pSG2Pointer->SPlanData.dVs = pSG2Pointer->SPlanData.dVmax = dVs;  //ÆğÊ¼ËÙ¶È £¨×î´óËÙ¶È£©
-		pSG2Pointer->SPlanData.dVe = dVe;			//×îÖÕËÙ¶È
-		pSG2Pointer->SPlanData.dDec = dDec;			//¼õËÙ¶È
-
-		//ÇúÏßÀàĞÍ 1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-		pSG2Pointer->SPlanData.ucAccVelPlanType = VEL_PLAN_S4_CURVE;
-		pSG2Pointer->SPlanData.ucDecVelPlanType = VEL_PLAN_S4_CURVE;
-		//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
-		pSG2Pointer->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;
-
-		pSG2Pointer->SPlanData.unCurrentT = 0;  //Ê±¼ä
-		preparePlanningAndDistReAvg(&pSG2Pointer->SPlanData, TRUE);//ËÙ¶È¹æ»®+Æ½Ì¯
-	}
-
-	return 1;   //Ô¤´¦ÀíÍê³É ·µ»Ø1
-
+    return 1; //é¢„å¤„ç†å®Œæˆ è¿”å›1
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºloadSG2DataFromInput(struct SG02* pSG2Pointer, struct SInput* pSInput)
-  º¯Êı¹¦ÄÜ  ´ÓInput²ÎÊı¸³Öµµ½G2½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºpSG2Pointer	½á¹¹ÌåSG2Ö¸Õë
-			pSInput		SInput½á¹¹ÌåÖ¸Õë
-			bReCalculate	¸ù¾İµ±Ç°ÆğµãÖØËãÔ²ĞÄµÈĞÅÏ¢
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	Ö¸ÕëÎª¿Õ
-			1	´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šloadSG2DataFromInput(struct SG02* pSG2Pointer, struct SInput* pSInput)
+  å‡½æ•°åŠŸèƒ½  ä»Inputå‚æ•°èµ‹å€¼åˆ°G2ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼špSG2Pointer	ç»“æ„ä½“SG2æŒ‡é’ˆ
+			pSInput		SInputç»“æ„ä½“æŒ‡é’ˆ
+			bReCalculate	æ ¹æ®å½“å‰èµ·ç‚¹é‡ç®—åœ†å¿ƒç­‰ä¿¡æ¯
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	æŒ‡é’ˆä¸ºç©º
+			1	å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 loadSG2DataFromInput(struct SG2* pSG2Pointer, struct SInput* pSInput)
 {
-	double dRad;
-	SPointDouble SEndPoint;
-	SPointDouble SStartPoint;
-	int8 cRes;
-	if (pSG2Pointer == NULL || pSInput == NULL) return -1; // Ö¸ÕëÎª¿Õ
+    double dRad;
+    SPointDouble SEndPoint;
+    SPointDouble SStartPoint;
+    int8 cRes;
+    if (pSG2Pointer == NULL || pSInput == NULL)
+        return -1; // æŒ‡é’ˆä¸ºç©º
 
-	pSG2Pointer->ucValStatus = pSInput->ucValStatus;			//ÓĞĞ§Öá
-	pSG2Pointer->SPlanData.cInterpDir = pSInput->cInterpDir;	//²å²¹·½Ïò
-	pSG2Pointer->SPlanData.dAcc = pSG2Pointer->dAcc = pSInput->dAcc;	//¼ÓËÙ¶È
-	pSG2Pointer->SPlanData.dCurLeftDist = pSInput->dCurLeftDist;//Ê£Óà¾àÀë
-	pSG2Pointer->SPlanData.dDec = pSG2Pointer->dDec = pSInput->dDec;	//¼õËÙ¶È
-	pSG2Pointer->SPlanData.dPrimalVe = pSInput->dPrimalVe;		//Ä©ËÙ¶È
-	pSG2Pointer->SPlanData.dTargetDist = pSInput->dTargetDist;	//Ä¿±ê¾àÀë
-	pSG2Pointer->SPlanData.dVs = pSInput->dVs;					//³õËÙ¶È
-	pSG2Pointer->SPlanData.ucAccVelPlanType = pSInput->ucAccVelPlanType;	//¼ÓËÙÀàĞÍ
-	pSG2Pointer->SPlanData.ucDecVelPlanType = pSInput->ucDecVelPlanType;	//¼õËÙÀàĞÍ
-	pSG2Pointer->SPlanData.ucDistReAverageType = pSInput->ucDistReAverageType;	//Æ½Ì¯ÀàĞÍ
-	pSG2Pointer->SPlanData.ucTconstForTrapezoid = pSInput->ucTconstForTrapezoid;//Èı½ÇĞÎĞŞµ÷ºóÔÈËÙÊ±¼äÕ¼×ÜÖÜÆÚµÄ°Ù·Ö±È £¨ % £© ºé¹ÚÅô 2024/3/22
+    pSG2Pointer->ucValStatus = pSInput->ucValStatus;                           //æœ‰æ•ˆè½´
+    pSG2Pointer->SPlanData.cInterpDir = pSInput->cInterpDir;                   //æ’è¡¥æ–¹å‘
+    pSG2Pointer->SPlanData.dAcc = pSG2Pointer->dAcc = pSInput->dAcc;           //åŠ é€Ÿåº¦
+    pSG2Pointer->SPlanData.dCurLeftDist = pSInput->dCurLeftDist;               //å‰©ä½™è·ç¦»
+    pSG2Pointer->SPlanData.dDec = pSG2Pointer->dDec = pSInput->dDec;           //å‡é€Ÿåº¦
+    pSG2Pointer->SPlanData.dPrimalVe = pSInput->dPrimalVe;                     //æœ«é€Ÿåº¦
+    pSG2Pointer->SPlanData.dTargetDist = pSInput->dTargetDist;                 //ç›®æ ‡è·ç¦»
+    pSG2Pointer->SPlanData.dVs = pSInput->dVs;                                 //åˆé€Ÿåº¦
+    pSG2Pointer->SPlanData.ucAccVelPlanType = pSInput->ucAccVelPlanType;       //åŠ é€Ÿç±»å‹
+    pSG2Pointer->SPlanData.ucDecVelPlanType = pSInput->ucDecVelPlanType;       //å‡é€Ÿç±»å‹
+    pSG2Pointer->SPlanData.ucDistReAverageType = pSInput->ucDistReAverageType; //å¹³æ‘Šç±»å‹
+    pSG2Pointer->SPlanData.ucTconstForTrapezoid =
+        pSInput->ucTconstForTrapezoid; //ä¸‰è§’å½¢ä¿®è°ƒååŒ€é€Ÿæ—¶é—´å æ€»å‘¨æœŸçš„ç™¾åˆ†æ¯” ï¼ˆ % ï¼‰ æ´ªå† é¹ 2024/3/22
 
-	pSG2Pointer->SPlanData.dDistance = pSInput->dDistance;		//×Ü¾àÀë
-	pSG2Pointer->SPlanData.dPreDist = pSInput->dPreDist;		//ÒÑ×ß¾àÀë
+    pSG2Pointer->SPlanData.dDistance = pSInput->dDistance; //æ€»è·ç¦»
+    pSG2Pointer->SPlanData.dPreDist = pSInput->dPreDist;   //å·²èµ°è·ç¦»
 
-	pSG2Pointer->dFeedrate = pSInput->dFeedrate;		//½ø¸øËÙ¶È
-	pSG2Pointer->dFeedRatio = pSInput->dFeedRatio;		//½ø¸ø±¶ÂÊ
-	//±¶ÂÊÎª¸º»òÕß0  Ê¹ÓÃSRunµÄ±¶ÂÊ
-	pSG2Pointer->bUseSRunFeedRatio = (pSG2Pointer->dFeedRatio < 0 || isZero(pSG2Pointer->dFeedRatio)) ? TRUE : FALSE;
+    pSG2Pointer->dFeedrate = pSInput->dFeedrate;   //è¿›ç»™é€Ÿåº¦
+    pSG2Pointer->dFeedRatio = pSInput->dFeedRatio; //è¿›ç»™å€ç‡
+    //å€ç‡ä¸ºè´Ÿæˆ–è€…0  ä½¿ç”¨SRunçš„å€ç‡
+    pSG2Pointer->bUseSRunFeedRatio = (pSG2Pointer->dFeedRatio < 0 || isZero(pSG2Pointer->dFeedRatio)) ? TRUE : FALSE;
 
-	pSG2Pointer->SStartPoint = pSInput->SStartPoint;	//Æğµã
-	pSG2Pointer->SStartVector = pSInput->SStartVector;	//ÆğµãÏòÁ¿
-	pSG2Pointer->SEndPoint = pSInput->SEndPoint;		//ÖÕµã
+    pSG2Pointer->SStartPoint = pSInput->SStartPoint;   //èµ·ç‚¹
+    pSG2Pointer->SStartVector = pSInput->SStartVector; //èµ·ç‚¹å‘é‡
+    pSG2Pointer->SEndPoint = pSInput->SEndPoint;       //ç»ˆç‚¹
 
-	pSG2Pointer->cArcDir = pSInput->cArcDir;			//Ô²»¡·½Ïò
-	pSG2Pointer->dRadius = pSInput->dRadius;			//Ô²»¡°ë¾¶
-	pSG2Pointer->SCenterPoint = pSInput->SCenterPoint;	//Ô²ĞÄ
-	pSG2Pointer->dA = pSInput->dEllipseFactorA;//ÍÖÔ²²ÎÊıA
-	pSG2Pointer->dB = pSInput->dEllipseFactorB;//ÍÖÔ²²ÎÊıB
-	pSG2Pointer->dCoordRotation = pSInput->dCoordRotation;// ×ø±êÏµĞı×ª»¡¶È  rad
-	pSG2Pointer->fCylinderRadius = pSInput->fCylinderRadius;// Ô²Öù°ë¾¶
-	for (int i = 0; i < AXIS_NUM_MAX; i++)//¼ÆËã×îÖµ ºé¹ÚÅô 2024/4/12
-	{
-		if (i == pSG2Pointer->ucAxis[0])//²å²¹ºáÖá
-		{
-			pSG2Pointer->SMaxVal.dArray[i] = pSInput->dHorMax;
-			pSG2Pointer->SMinVal.dArray[i] = pSInput->dHorMin;
-		}
-		else if (i == pSG2Pointer->ucAxis[1])//²å²¹×İÖá
-		{
-			pSG2Pointer->SMaxVal.dArray[i] = pSInput->dVerMax;
-			pSG2Pointer->SMinVal.dArray[i] = pSInput->dVerMin;
-		}
-		else //ÆäËûÖáµÄ×îÖµÈ¡ÖÕµã
-		{
-			pSG2Pointer->SMaxVal.dArray[i] = pSInput->SEndPoint.dArray[i];
-			pSG2Pointer->SMinVal.dArray[i] = pSInput->SEndPoint.dArray[i];
-		}
-	}
-	switch (pSInput->cDealType)//¸ù¾İ´¦Àí·½Ê½¼ÆËã
-	{
-	default:
-	case DEALTYPE_RECAL: //ÖØËã ²»»ØĞ´(ÓÃ»§ÊäÈë)
-	case DEALTYPE_RECAL_WRITEBACK://ÖØËã »ØĞ´
+    pSG2Pointer->cArcDir = pSInput->cArcDir;                 //åœ†å¼§æ–¹å‘
+    pSG2Pointer->dRadius = pSInput->dRadius;                 //åœ†å¼§åŠå¾„
+    pSG2Pointer->SCenterPoint = pSInput->SCenterPoint;       //åœ†å¿ƒ
+    pSG2Pointer->dA = pSInput->dEllipseFactorA;              //æ¤­åœ†å‚æ•°A
+    pSG2Pointer->dB = pSInput->dEllipseFactorB;              //æ¤­åœ†å‚æ•°B
+    pSG2Pointer->dCoordRotation = pSInput->dCoordRotation;   // åæ ‡ç³»æ—‹è½¬å¼§åº¦  rad
+    pSG2Pointer->fCylinderRadius = pSInput->fCylinderRadius; // åœ†æŸ±åŠå¾„
+    for (int i = 0; i < AXIS_NUM_MAX; i++)                   //è®¡ç®—æœ€å€¼ æ´ªå† é¹ 2024/4/12
+    {
+        if (i == pSG2Pointer->ucAxis[0]) //æ’è¡¥æ¨ªè½´
+        {
+            pSG2Pointer->SMaxVal.dArray[i] = pSInput->dHorMax;
+            pSG2Pointer->SMinVal.dArray[i] = pSInput->dHorMin;
+        }
+        else if (i == pSG2Pointer->ucAxis[1]) //æ’è¡¥çºµè½´
+        {
+            pSG2Pointer->SMaxVal.dArray[i] = pSInput->dVerMax;
+            pSG2Pointer->SMinVal.dArray[i] = pSInput->dVerMin;
+        }
+        else //å…¶ä»–è½´çš„æœ€å€¼å–ç»ˆç‚¹
+        {
+            pSG2Pointer->SMaxVal.dArray[i] = pSInput->SEndPoint.dArray[i];
+            pSG2Pointer->SMinVal.dArray[i] = pSInput->SEndPoint.dArray[i];
+        }
+    }
+    switch (pSInput->cDealType) //æ ¹æ®å¤„ç†æ–¹å¼è®¡ç®—
+    {
+    default:
+    case DEALTYPE_RECAL:           //é‡ç®— ä¸å›å†™(ç”¨æˆ·è¾“å…¥)
+    case DEALTYPE_RECAL_WRITEBACK: //é‡ç®— å›å†™
 
-		//ÅĞ¶ÏÏà¶Ô×ø±ê  ĞŞÕıÖÕµã
-		if (pSInput->ucRelaVal != VAL_ABS_POINT)//²»ÍêÈ«ÊÇ¾ø¶Ô×ø±ê
-		{
-			modifyRelaEndPoint((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, pSG2Pointer->pSChannel->pMapAxisArray, AXIS_NUM_MAX, &pSInput->ucRelaVal);
-		}
+        //åˆ¤æ–­ç›¸å¯¹åæ ‡  ä¿®æ­£ç»ˆç‚¹
+        if (pSInput->ucRelaVal != VAL_ABS_POINT) //ä¸å®Œå…¨æ˜¯ç»å¯¹åæ ‡
+        {
+            modifyRelaEndPoint((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint,
+                               pSG2Pointer->pSChannel->pMapAxisArray, AXIS_NUM_MAX, &pSInput->ucRelaVal);
+        }
 
-		if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
-		{
-			pSG2Pointer->ucAxis[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
-			pSG2Pointer->ucAxis[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
-		}
-		else if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-		{//Ô²Öù²å²¹
+        if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
+        {
+            pSG2Pointer->ucAxis[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
+            pSG2Pointer->ucAxis[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
+        }
+        else if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
+        { //åœ†æŸ±æ’è¡¥
+        }
+        else
+        {
+            //ä¿®æ­£æ—‹è½¬è½´åæ ‡
+            modifyRotationAxisPoint(
+                (double*)&pSInput->SStartPoint, (double*)&pSG2Pointer->SEndPoint, (double*)&pSG2Pointer->SStartVector,
+                AXIS_NUM_MAX, pSG2Pointer->pSChannel->pMapAxisArray, &pSG2Pointer->ucValStatus, pSInput->ucRelaVal);
 
-		}
-		else
-		{
-			//ĞŞÕıĞı×ªÖá×ø±ê
-			modifyRotationAxisPoint((double*)&pSInput->SStartPoint, (double*)&pSG2Pointer->SEndPoint, (double*)&pSG2Pointer->SStartVector, AXIS_NUM_MAX, pSG2Pointer->pSChannel->pMapAxisArray, &pSG2Pointer->ucValStatus, pSInput->ucRelaVal);
-
-			//»ñÈ¡µ±Ç°×ø±ê
-			getRealTimePoint((double*)&pSG2Pointer->SStartPoint, AXIS_NUM_MAX, pSG2Pointer->pSChannel->pMapAxisArray, &pSG2Pointer->ucValStatus);
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-			if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
-			{
-				//ÆğµãÎªÇãĞ±×ø±êÏµ£¨X1-Y1-Z1£©ÎïÀíÖáµÄÊµÊ±µã£¬ÖÕµãÎªÖ±½Ç×ø±êÏµ(X-Y-Z)»º³åÇøµÄÖµ£¬Òò´ËÒª½«Æğµã»»ËãÖÁÖ±½Ç×ø±êÏµ¡£
-			//if (VAL_VALID == (getbit(pSG2Pointer->ucValStatus, AXIS_Y)))//YÖá·½ÏòÒªÔË¶¯
-			//{
-			//getSingleAxisRealTimePoint(&pSG2Pointer->SStartPoint.dArray[AXIS_X], AXIS_X, pSG2Pointer->pSChannel->pMapAxisArray);//µ±Ç°X1ÖáµÄÎ»ÖÃ
-			//getSingleAxisRealTimePoint(&pSG2Pointer->SStartPoint.dArray[AXIS_Y], AXIS_Y, pSG2Pointer->pSChannel->pMapAxisArray);//µ±Ç°Y1ÖáµÄÎ»ÖÃ
-				pSG2Pointer->SStartPoint.dArray[AXIS_X] -= 1.0 * pSG2Pointer->SStartPoint.dArray[AXIS_Y] * pSG2Pointer->pSChannel->dSINAngleYY1;//½«ÇãĞ±×ø±êÏµµÄµã×ª»¯ÎªÖ±½Ç×ø±êÏµµÄµãµÄ
-				pSG2Pointer->SStartPoint.dArray[AXIS_Y] = pSG2Pointer->SStartPoint.dArray[AXIS_Y] * pSG2Pointer->pSChannel->dCOSAngleYY1;
-				//}
-			}
+            //è·å–å½“å‰åæ ‡
+            getRealTimePoint((double*)&pSG2Pointer->SStartPoint, AXIS_NUM_MAX, pSG2Pointer->pSChannel->pMapAxisArray,
+                             &pSG2Pointer->ucValStatus);
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+            if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
+            {
+                //èµ·ç‚¹ä¸ºå€¾æ–œåæ ‡ç³»ï¼ˆX1-Y1-Z1ï¼‰ç‰©ç†è½´çš„å®æ—¶ç‚¹ï¼Œç»ˆç‚¹ä¸ºç›´è§’åæ ‡ç³»(X-Y-Z)ç¼“å†²åŒºçš„å€¼ï¼Œå› æ­¤è¦å°†èµ·ç‚¹æ¢ç®—è‡³ç›´è§’åæ ‡ç³»ã€‚
+                //if (VAL_VALID == (getbit(pSG2Pointer->ucValStatus, AXIS_Y)))//Yè½´æ–¹å‘è¦è¿åŠ¨
+                //{
+                //getSingleAxisRealTimePoint(&pSG2Pointer->SStartPoint.dArray[AXIS_X], AXIS_X, pSG2Pointer->pSChannel->pMapAxisArray);//å½“å‰X1è½´çš„ä½ç½®
+                //getSingleAxisRealTimePoint(&pSG2Pointer->SStartPoint.dArray[AXIS_Y], AXIS_Y, pSG2Pointer->pSChannel->pMapAxisArray);//å½“å‰Y1è½´çš„ä½ç½®
+                pSG2Pointer->SStartPoint.dArray[AXIS_X] -=
+                    1.0 * pSG2Pointer->SStartPoint.dArray[AXIS_Y] *
+                    pSG2Pointer->pSChannel->dSINAngleYY1; //å°†å€¾æ–œåæ ‡ç³»çš„ç‚¹è½¬åŒ–ä¸ºç›´è§’åæ ‡ç³»çš„ç‚¹çš„
+                pSG2Pointer->SStartPoint.dArray[AXIS_Y] =
+                    pSG2Pointer->SStartPoint.dArray[AXIS_Y] * pSG2Pointer->pSChannel->dCOSAngleYY1;
+                //}
+            }
 #endif
-		}
+        }
 
-#if EllipseTEST  //ÖìÎÈÖĞ 2023.3.29
-		if (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC
-			|| getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ANTI_ARC)
-		{
-			pSG2Pointer->cArcDir = (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC) ? 1 : -1;
-			pSG2Pointer->ucValStatus = (0x01 << pSG2Pointer->ucAxis[0]) | (0x01 << pSG2Pointer->ucAxis[1]);
-			//ÖØĞÂ¼ÆËãÔ²ĞÄ
-			SStartPoint = pSG2Pointer->SStartPoint;
-			SEndPoint = pSG2Pointer->SEndPoint;
-			ellipseCenterCalculate((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-			rotatingCoordinate((double*)&pSG2Pointer->SCenterPoint, AXIS_NUM_MAX, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-			ellipse2CommonArc((double*)&SStartPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SStartPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-			ellipse2CommonArc((double*)&SEndPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SEndPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-			pSG2Pointer->SEllipseSCenterPoint = pSG2Pointer->SCenterPoint;
-			pSG2Pointer->dRadius = max(pSG2Pointer->dA, pSG2Pointer->dB);
-			radCalculateR((double*)&SStartPoint, (double*)&SEndPoint, pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		}
-		else {
-			radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-			SStartPoint = pSG2Pointer->SStartPoint;
-			SEndPoint = pSG2Pointer->SEndPoint;
-		}
+#if EllipseTEST //æœ±ç¨³ä¸­ 2023.3.29
+        if (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC ||
+            getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ANTI_ARC)
+        {
+            pSG2Pointer->cArcDir =
+                (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC) ? 1 : -1;
+            pSG2Pointer->ucValStatus = (0x01 << pSG2Pointer->ucAxis[0]) | (0x01 << pSG2Pointer->ucAxis[1]);
+            //é‡æ–°è®¡ç®—åœ†å¿ƒ
+            SStartPoint = pSG2Pointer->SStartPoint;
+            SEndPoint = pSG2Pointer->SEndPoint;
+            ellipseCenterCalculate((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX,
+                                   pSG2Pointer->dA, pSG2Pointer->dB, (double*)&pSG2Pointer->SCenterPoint,
+                                   pSG2Pointer->cArcDir, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0],
+                                   pSG2Pointer->ucAxis[1]);
+            rotatingCoordinate((double*)&pSG2Pointer->SCenterPoint, AXIS_NUM_MAX, (double*)&pSG2Pointer->SCenterPoint,
+                               pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+            ellipse2CommonArc((double*)&SStartPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SStartPoint,
+                              AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation,
+                              pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+            ellipse2CommonArc((double*)&SEndPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SEndPoint,
+                              AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation,
+                              pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+            pSG2Pointer->SEllipseSCenterPoint = pSG2Pointer->SCenterPoint;
+            pSG2Pointer->dRadius = max(pSG2Pointer->dA, pSG2Pointer->dB);
+            radCalculateR((double*)&SStartPoint, (double*)&SEndPoint, pSG2Pointer->dRadius,
+                          (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad,
+                          pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        }
+        else
+        {
+            radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, pSG2Pointer->dRadius,
+                          (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad,
+                          pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+            SStartPoint = pSG2Pointer->SStartPoint;
+            SEndPoint = pSG2Pointer->SEndPoint;
+        }
 #else
-		//¼ÆËãÔ²ĞÄºÍ»¡¶È
+        //è®¡ç®—åœ†å¿ƒå’Œå¼§åº¦
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-		if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
-		{
-			cRes = calculateHandwheelArcGeometry(pSG2Pointer);
-		}
-		else
+        if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
+        {
+            cRes = calculateHandwheelArcGeometry(pSG2Pointer);
+        }
+        else
 #endif
-		cRes = radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		if (cRes != 1)//Ô²»¡¼ÆËãÊ§°Ü
-		{
-			parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-			return -1;
-		}
+            cRes = radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint,
+                                 pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir,
+                                 &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        if (cRes != 1) //åœ†å¼§è®¡ç®—å¤±è´¥
+        {
+            parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+            return -1;
+        }
 #endif // EllipseTEST
 
+        //æ ¹æ®å¼§åº¦å’ŒåŠå¾„è®¡ç®—è·ç¦»
+        //pSG2Pointer->SPlanData.dDistance = pSG2Pointer->dRad * pSG2Pointer->dRadius;
 
-		//¸ù¾İ»¡¶ÈºÍ°ë¾¶¼ÆËã¾àÀë
-		//pSG2Pointer->SPlanData.dDistance = pSG2Pointer->dRad * pSG2Pointer->dRadius;
+        //å°†ç»å¯¹åæ ‡å›å†™å…¥ç¼“å†²åŒº  å¹¶æŠŠç›¸å¯¹åæ ‡æ ‡è®°ç½®0
+        if (pSInput->cDealType == DEALTYPE_RECAL_WRITEBACK) //å›å†™
+        {
+            int8 cIndex = 0;
+            struct SToolCompensation* pWriteBackBuff;
 
-		//½«¾ø¶Ô×ø±ê»ØĞ´Èë»º³åÇø  ²¢°ÑÏà¶Ô×ø±ê±ê¼ÇÖÃ0
-		if (pSInput->cDealType == DEALTYPE_RECAL_WRITEBACK)//»ØĞ´
-		{
-			int8 cIndex = 0;
-			struct SToolCompensation* pWriteBackBuff;
-
-			cIndex = getSToolCompPointerIndex(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum);//»ñÈ¡Ë÷Òı
-			pWriteBackBuff = getSToolCompPointerByIndex(cIndex - 1, pSG2Pointer->pSChannel->ucChannelNum);//¸ù¾İË÷ÒıµÄÇ°Ò»¸ö½øĞĞ»ØĞ´
-			pWriteBackBuff->SEndPoint = pSG2Pointer->SEndPoint;		//¾ø¶Ô×ø±êÖÕµã
-			pWriteBackBuff->SStartPoint = pSG2Pointer->SStartPoint;	//¾ø¶Ô×ø±ê Æğµã
-			pWriteBackBuff->SCenterPoint = pSG2Pointer->SCenterPoint; //Ô²ĞÄ
-			pWriteBackBuff->dRadius = pSG2Pointer->dRadius; // °ë¾¶
-			pWriteBackBuff->ucRelaVal = 0x0; // Ïà¶Ô×ø±ê±ê¼ÇÖÃÎª0
-			pWriteBackBuff->dPreDist = 0; //½«»º³åÇøµÄÒÑ×ßµÄ¾àÀëÖÃÎª0
-		}
+            cIndex = getSToolCompPointerIndex(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum); //è·å–ç´¢å¼•
+            pWriteBackBuff =
+                getSToolCompPointerByIndex(cIndex - 1, pSG2Pointer->pSChannel->ucChannelNum); //æ ¹æ®ç´¢å¼•çš„å‰ä¸€ä¸ªè¿›è¡Œå›å†™
+            pWriteBackBuff->SEndPoint = pSG2Pointer->SEndPoint;                               //ç»å¯¹åæ ‡ç»ˆç‚¹
+            pWriteBackBuff->SStartPoint = pSG2Pointer->SStartPoint;                           //ç»å¯¹åæ ‡ èµ·ç‚¹
+            pWriteBackBuff->SCenterPoint = pSG2Pointer->SCenterPoint;                         //åœ†å¿ƒ
+            pWriteBackBuff->dRadius = pSG2Pointer->dRadius;                                   // åŠå¾„
+            pWriteBackBuff->ucRelaVal = 0x0;                                                  // ç›¸å¯¹åæ ‡æ ‡è®°ç½®ä¸º0
+            pWriteBackBuff->dPreDist = 0; //å°†ç¼“å†²åŒºçš„å·²èµ°çš„è·ç¦»ç½®ä¸º0
+        }
 #if EllipseTEST
-		pSG2Pointer->SStartPoint = SStartPoint;
-		pSG2Pointer->SEndPoint = SEndPoint;
+        pSG2Pointer->SStartPoint = SStartPoint;
+        pSG2Pointer->SEndPoint = SEndPoint;
 #endif // EllipseTEST
 
-		if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
-		{	//¼«×ø±ê¼ÆËã
-			pSG2Pointer->ucValStatus |= 0x01 << g_SSystemPara.ucPolarInterpolationAxis[0];
-			//subtractPoint((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->pSChannel->SRun.SCurrentOffset.dArray, (double*)&pSG2Pointer->SStartPoint, AXIS_NUM_MAX, &pSG2Pointer->ucValStatus);
-			//subtractPoint((double*)&pSG2Pointer->SEndPoint, (double*)&pSG2Pointer->pSChannel->SRun.SCurrentOffset.dArray, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX, &pSG2Pointer->ucValStatus);
-			pSG2Pointer->ucValStatus |= 0x01 << g_SSystemPara.ucPolarInterpolationAxis[1];
-		}
-		//¼ÆËã³¤ÖáºÍÎ»ÒÆ·ÖÁ¿£¨Ô²»¡£©
-		cRes = calArcVectorAndDistance(pSG2Pointer);
-		if(cRes != 1){return cRes;}
+        if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
+        { //æåæ ‡è®¡ç®—
+            pSG2Pointer->ucValStatus |= 0x01 << g_SSystemPara.ucPolarInterpolationAxis[0];
+            //subtractPoint((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->pSChannel->SRun.SCurrentOffset.dArray, (double*)&pSG2Pointer->SStartPoint, AXIS_NUM_MAX, &pSG2Pointer->ucValStatus);
+            //subtractPoint((double*)&pSG2Pointer->SEndPoint, (double*)&pSG2Pointer->pSChannel->SRun.SCurrentOffset.dArray, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX, &pSG2Pointer->ucValStatus);
+            pSG2Pointer->ucValStatus |= 0x01 << g_SSystemPara.ucPolarInterpolationAxis[1];
+        }
+        //è®¡ç®—é•¿è½´å’Œä½ç§»åˆ†é‡ï¼ˆåœ†å¼§ï¼‰
+        cRes = calArcVectorAndDistance(pSG2Pointer);
+        if (cRes != 1)
+        {
+            return cRes;
+        }
 
-		pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dDistance;
-		pSG2Pointer->SPlanData.dPreDist = 0;
+        pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dDistance;
+        pSG2Pointer->SPlanData.dPreDist = 0;
 
-		break;
-	case DEALTYPE_NO_PROCESS://²»½øĞĞ´¦Àí
+        break;
+    case DEALTYPE_NO_PROCESS: //ä¸è¿›è¡Œå¤„ç†
 
-		if (!isZero(pSG2Pointer->SPlanData.dPreDist) && pSInput->cInterpDir == INP_GO_AHEAD)//ÒÑ¾­×ß¾àÀë²»Îª0
-		{
-			int8 cIndex = 0;
-			struct SToolCompensation* pWriteBackBuff;
+        if (!isZero(pSG2Pointer->SPlanData.dPreDist) && pSInput->cInterpDir == INP_GO_AHEAD) //å·²ç»èµ°è·ç¦»ä¸ä¸º0
+        {
+            int8 cIndex = 0;
+            struct SToolCompensation* pWriteBackBuff;
 
-			cIndex = getSToolCompPointerIndex(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum);//»ñÈ¡Ë÷Òı
-			pWriteBackBuff = getSToolCompPointerByIndex(cIndex - 1, pSG2Pointer->pSChannel->ucChannelNum);//¸ù¾İË÷ÒıµÄÇ°Ò»¸ö½øĞĞ»ØĞ´
-			pWriteBackBuff->dPreDist = 0; //½«»º³åÇøµÄÒÑ×ßµÄ¾àÀëÖÃÎª0
-		}
+            cIndex = getSToolCompPointerIndex(INTERPOLATION_READ, pSG2Pointer->pSChannel->ucChannelNum); //è·å–ç´¢å¼•
+            pWriteBackBuff =
+                getSToolCompPointerByIndex(cIndex - 1, pSG2Pointer->pSChannel->ucChannelNum); //æ ¹æ®ç´¢å¼•çš„å‰ä¸€ä¸ªè¿›è¡Œå›å†™
+            pWriteBackBuff->dPreDist = 0; //å°†ç¼“å†²åŒºçš„å·²èµ°çš„è·ç¦»ç½®ä¸º0
+        }
 
-		//ÍÖÔ²´¦Àí
+        //æ¤­åœ†å¤„ç†
 #if EllipseTEST
-		SStartPoint = pSG2Pointer->SStartPoint;
-		SEndPoint = pSG2Pointer->SEndPoint;
-		ellipseCenterCalculate((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		ellipse2CommonArc((double*)&SStartPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SStartPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		ellipse2CommonArc((double*)&SEndPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SEndPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		pSG2Pointer->SStartPoint = SStartPoint;
-		pSG2Pointer->SEndPoint = SEndPoint;
-		pSG2Pointer->dRadius = max(pSG2Pointer->dA, pSG2Pointer->dB);
+        SStartPoint = pSG2Pointer->SStartPoint;
+        SEndPoint = pSG2Pointer->SEndPoint;
+        ellipseCenterCalculate((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, AXIS_NUM_MAX,
+                               pSG2Pointer->dA, pSG2Pointer->dB, (double*)&pSG2Pointer->SCenterPoint,
+                               pSG2Pointer->cArcDir, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0],
+                               pSG2Pointer->ucAxis[1]);
+        ellipse2CommonArc((double*)&SStartPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SStartPoint,
+                          AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation,
+                          pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        ellipse2CommonArc((double*)&SEndPoint, (double*)&pSG2Pointer->SCenterPoint, (double*)&SEndPoint, AXIS_NUM_MAX,
+                          pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0],
+                          pSG2Pointer->ucAxis[1]);
+        pSG2Pointer->SStartPoint = SStartPoint;
+        pSG2Pointer->SEndPoint = SEndPoint;
+        pSG2Pointer->dRadius = max(pSG2Pointer->dA, pSG2Pointer->dB);
 #endif // EllipseTEST
 
-		//¼ÆËãÔ²ĞÄºÍ»¡¶È
+        //è®¡ç®—åœ†å¿ƒå’Œå¼§åº¦
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-		if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
-		{
-			cRes = calculateHandwheelArcGeometry(pSG2Pointer);
-		}
-		else
+        if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
+        {
+            cRes = calculateHandwheelArcGeometry(pSG2Pointer);
+        }
+        else
 #endif
-		cRes = radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint, pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir, &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		if (cRes != 1)//Ô²»¡¼ÆËãÊ§°Ü
-		{
-			parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-			return -1;
-		}
-		//¼ÆËã³¤ÖáºÍÎ»ÒÆ·ÖÁ¿£¨Ô²»¡£©
-		cRes = calArcVectorAndDistance(pSG2Pointer);
-		if(cRes != 1){return cRes;}
+            cRes = radCalculateR((double*)&pSG2Pointer->SStartPoint, (double*)&pSG2Pointer->SEndPoint,
+                                 pSG2Pointer->dRadius, (double*)&pSG2Pointer->SCenterPoint, pSG2Pointer->cArcDir,
+                                 &pSG2Pointer->dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        if (cRes != 1) //åœ†å¼§è®¡ç®—å¤±è´¥
+        {
+            parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+            return -1;
+        }
+        //è®¡ç®—é•¿è½´å’Œä½ç§»åˆ†é‡ï¼ˆåœ†å¼§ï¼‰
+        cRes = calArcVectorAndDistance(pSG2Pointer);
+        if (cRes != 1)
+        {
+            return cRes;
+        }
 
-		pSG2Pointer->SPlanData.dCurLeftDist = (!isZero(pSG2Pointer->SPlanData.dPreDist) || !(pSInput->cInterpDir == INP_GO_BACK)) ? //2022.12.8  cInterpDir == INP_GO_AHEAD --> !(cInterpDir == INP_GO_BACK)
-			pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dPreDist : 0;//¼ÆËãÊ£Óà¾àÀë  Õı×ß£ºÊ£Óà¾àÀë= ×Ü¾àÀë-ÒÑ×ß¾àÀë  ·´×ß£º Ê£Óà¾àÀëÎªÁã
-		break;
-	}
+        pSG2Pointer->SPlanData.dCurLeftDist =
+            (!isZero(pSG2Pointer->SPlanData.dPreDist) || !(pSInput->cInterpDir == INP_GO_BACK))
+                ? //2022.12.8  cInterpDir == INP_GO_AHEAD --> !(cInterpDir == INP_GO_BACK)
+                pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dPreDist
+                : 0; //è®¡ç®—å‰©ä½™è·ç¦»  æ­£èµ°ï¼šå‰©ä½™è·ç¦»= æ€»è·ç¦»-å·²èµ°è·ç¦»  åèµ°ï¼š å‰©ä½™è·ç¦»ä¸ºé›¶
+        break;
+    }
 
-	if (isZero(pSG2Pointer->SPlanData.dTargetDist))// ¶Ô0¾àÀëÅĞ¶Ï  2023.3.24 ÖìÎÈÖĞ
-	{
-		return 0;
-	}
+    if (isZero(pSG2Pointer->SPlanData.dTargetDist)) // å¯¹0è·ç¦»åˆ¤æ–­  2023.3.24 æœ±ç¨³ä¸­
+    {
+        return 0;
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalculateArcLimitDistance
-  º¯Êı¹¦ÄÜ£º¼ÆËãÑØÔ­Ô²»¡Ê×´Îµ½´ïÖ¸¶¨ÖáÏŞÎ»µÄºÏ³É¹æ»®¾àÀë
-  ÊäÈë²ÎÊı£ºpArc - ÒÑ¼ÓÔØ¼¸ºÎ¼°¾àÀë·ÖÁ¿µÄÔ²»¡£¬·Ç¿Õ
-            ucAxis - ÏŞÎ»Âß¼­ÖáºÅ£»dLimit - ÓëÆğµãÍ¬×ø±êÏµµÄÏŞÎ»Öµ
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£º·Ç¸ºÖµ - ´ÓÔ­ÆğµãÀÛ¼ÆµÄ¹æ»®¾àÀë£»-1 - ¼¸ºÎ»ò±ÈÀıÎŞĞ§
-  ±¸    ×¢£ºÖ»¶ÁÔ²»¡£»Æ½Ãæ»¡³¤°´Ô­±ÈÀı»»Ëã£¬ÆğµãÒÑÔÚ±ß½çÊ±±£ÊØ·µ»ØÁã
-****************************************/
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºmotionArc(struct SG02* pSG2Pointer, bool bPauseOn, bool bRatioOn)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÔ¤´¦Àí½á¹¹ÌåÄÚµÄÊı¾İ£¬¸ù¾İ½ø¸øËÙ¶ÈºÍ±¶ÂÊÖ´ĞĞËÙ¶È¹æ»®ºÍÆ½Ì¯£¬¼ÆËãÊ±¼ä½ÚµãcurrentTµÄ¾ø¶Ô×ø±êÒÔ¼°Âö³åÔöÁ¿Öµ
-  ÊäÈë²ÎÊı£ºpSG2Pointer	½á¹¹ÌåSG2Ö¸Õë
-			bPauseOn	¿ªÆôÔİÍ£
-			bRatioOn	¿ªÆô±¶ÂÊ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	¿ÕÖ¸Õë
-			0	²å²¹Íê³É
-			1	²å²¹ÖĞ
-  ±¸    ×¢£º»»ÏòËø½ö¶³½áÊÖÂÖ±¶ÂÊÏìÓ¦£»Í£ÎÈºó²ÉÄÉ×îĞÂ±¶ÂÊ£¬ÔİÍ£ºÍÏŞÎ»ÈÔ×ßÔ­Á÷³Ì¡£
+  å‡½æ•°åç§°ï¼šmotionArc(struct SG02* pSG2Pointer, bool bPauseOn, bool bRatioOn)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®é¢„å¤„ç†ç»“æ„ä½“å†…çš„æ•°æ®ï¼Œæ ¹æ®è¿›ç»™é€Ÿåº¦å’Œå€ç‡æ‰§è¡Œé€Ÿåº¦è§„åˆ’å’Œå¹³æ‘Šï¼Œè®¡ç®—æ—¶é—´èŠ‚ç‚¹currentTçš„ç»å¯¹åæ ‡ä»¥åŠè„‰å†²å¢é‡å€¼
+  è¾“å…¥å‚æ•°ï¼špSG2Pointer	ç»“æ„ä½“SG2æŒ‡é’ˆ
+			bPauseOn	å¼€å¯æš‚åœ
+			bRatioOn	å¼€å¯å€ç‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	ç©ºæŒ‡é’ˆ
+			0	æ’è¡¥å®Œæˆ
+			1	æ’è¡¥ä¸­
+  å¤‡    æ³¨ï¼šæ¢å‘é”ä»…å†»ç»“æ‰‹è½®å€ç‡å“åº”ï¼›åœç¨³åé‡‡çº³æœ€æ–°å€ç‡ï¼Œæš‚åœå’Œé™ä½ä»èµ°åŸæµç¨‹ã€‚
 **************************************************/
 int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
 {
-	int8 res;// µ÷ÓÃº¯Êı·µ»Ø
-	double dDeltaL; //Ïà¶ÔÆğµãµÄ¾àÀë (»ò»¡³¤)
-	SPointDouble STargetPoint;   //µ±Ç°µãµÄÀíÂÛ¾ø¶Ô×ø±ê
-	struct SInterpolationPre* pSPreprocess;//Ô¤´¦ÀíÖ¸Õë
-	const uint8* ucMapArray;//Ó³Éä
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	struct SInput* pSUserData;//Êı¾İÀ´Ô´
-	//¾Ö²¿±äÁ¿±£´æ²ÎÊı ·ÀÖ¹¹æ»®Ê§°Ü
-	double dVmax, dVs, dVe, dAcc, dDec;
-	double dTargetSpeed;
-	double dSpeedPercentage;
-	double dCurrentSpeed;
-	VAL_STRUCT_TYPE ucValStatus; // ÓĞĞ§Öá
-	
-	//ÈíÏŞÎ»²ÎÊı 2024/4/11 ºé¹ÚÅô
-	double dRad1 = 0;
+    int8 res;                               // è°ƒç”¨å‡½æ•°è¿”å›
+    double dDeltaL;                         //ç›¸å¯¹èµ·ç‚¹çš„è·ç¦» (æˆ–å¼§é•¿)
+    SPointDouble STargetPoint;              //å½“å‰ç‚¹çš„ç†è®ºç»å¯¹åæ ‡
+    struct SInterpolationPre* pSPreprocess; //é¢„å¤„ç†æŒ‡é’ˆ
+    const uint8* ucMapArray;                //æ˜ å°„
+    struct _SRun* pSRun;                    //è¿è¡Œç»“æ„ä½“
+    struct SInput* pSUserData;              //æ•°æ®æ¥æº
+    //å±€éƒ¨å˜é‡ä¿å­˜å‚æ•° é˜²æ­¢è§„åˆ’å¤±è´¥
+    double dVmax, dVs, dVe, dAcc, dDec;
+    double dTargetSpeed;
+    double dSpeedPercentage;
+    double dCurrentSpeed;
+    VAL_STRUCT_TYPE ucValStatus; // æœ‰æ•ˆè½´
+
+    //è½¯é™ä½å‚æ•° 2024/4/11 æ´ªå† é¹
+    double dRad1 = 0;
     double dRad2 = 0;
-	double dNewEndPoint = 0;
-	double dSingleAxisLeftDist;//Ê£ÓàÎ´×ßµ¥ÖáÔË¶¯¾àÀë
-	double dResultantLeftDist;//Ê£ÓàÎ´×ßµ¥ÖáÔË¶¯¾àÀë
-	double dMinTDec;		  //×îĞ¡µÄTĞÍ¼õËÙ¶È£¨ÏµÍ³²ÎÊı£©
+    double dNewEndPoint = 0;
+    double dSingleAxisLeftDist; //å‰©ä½™æœªèµ°å•è½´è¿åŠ¨è·ç¦»
+    double dResultantLeftDist;  //å‰©ä½™æœªèµ°å•è½´è¿åŠ¨è·ç¦»
+    double dMinTDec;            //æœ€å°çš„Tå‹å‡é€Ÿåº¦ï¼ˆç³»ç»Ÿå‚æ•°ï¼‰
 
-	double dVmaxToLimitiedPoint;//¼õËÙµ½ÈíÏŞÎ»µã·´ËãµÄ×î´óËÙ¶È
-	if (pSG2Pointer == NULL) //¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    double dVmaxToLimitiedPoint; //å‡é€Ÿåˆ°è½¯é™ä½ç‚¹åç®—çš„æœ€å¤§é€Ÿåº¦
+    if (pSG2Pointer == NULL)     //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	if (pSG2Pointer->ucInpStatus == INP_FINISHED)//Èç¹û²å²¹½á¹¹ÌåÎªÍê³É×´Ì¬£¬·µ»Ø
-	{
-		return 0;
-	}
+    if (pSG2Pointer->ucInpStatus == INP_FINISHED) //å¦‚æœæ’è¡¥ç»“æ„ä½“ä¸ºå®ŒæˆçŠ¶æ€ï¼Œè¿”å›
+    {
+        return 0;
+    }
 
-	pSPreprocess = &pSG2Pointer->pSChannel->SPreProcess;//Ô¤´¦ÀíÖ¸Õë
-	ucMapArray = pSG2Pointer->pSChannel->pMapAxisArray;//Ó³Éä
-	pSRun = &pSG2Pointer->pSChannel->SRun;//ÔËĞĞ½á¹¹Ìå
-	pSUserData = pSG2Pointer->bIsUserData ? &pSG2Pointer->SUserData : &pSPreprocess->SUserData;//Êı¾İÀ´Ô´
+    pSPreprocess = &pSG2Pointer->pSChannel->SPreProcess;                                        //é¢„å¤„ç†æŒ‡é’ˆ
+    ucMapArray = pSG2Pointer->pSChannel->pMapAxisArray;                                         //æ˜ å°„
+    pSRun = &pSG2Pointer->pSChannel->SRun;                                                      //è¿è¡Œç»“æ„ä½“
+    pSUserData = pSG2Pointer->bIsUserData ? &pSG2Pointer->SUserData : &pSPreprocess->SUserData; //æ•°æ®æ¥æº
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-	/* [HWSIM] G2 Óë G3 ¹²ÓÃ motionArc() ºÍ±¾Èë¿Ú£¬Ã»ÓĞÁíÒ»¸ö G3 ¾àÀëÖ´ĞĞÆ÷¡£
-	 * Ê×´ÎÏÈÕ¼Öá¡¢Ñ¡ÔñÆ½Ãæ¡¢×°ÔØÔ²»¡¼¸ºÎ£¬µ½ INP_ASSIGNMENT_START ÔÙ°ó¶¨£»
-	 * ºóĞøÖÜÆÚ´ÓÏÂÃæÖ±½Ó½øÈë executeHandwheelPathStep(TRUE)£¬²»ÖØ¸´¼ÆËãÔ²ĞÄºÍÉ¨½Ç¡£
-	 * ±àÂëÆ÷²ÉÑùÒÑ¾­ÔÚÍâ²ã interruptFuncAPI() Íê³É¡£
+    /* [HWSIM] G2 ä¸ G3 å…±ç”¨ motionArc() å’Œæœ¬å…¥å£ï¼Œæ²¡æœ‰å¦ä¸€ä¸ª G3 è·ç¦»æ‰§è¡Œå™¨ã€‚
+	 * é¦–æ¬¡å…ˆå è½´ã€é€‰æ‹©å¹³é¢ã€è£…è½½åœ†å¼§å‡ ä½•ï¼Œåˆ° INP_ASSIGNMENT_START å†ç»‘å®šï¼›
+	 * åç»­å‘¨æœŸä»ä¸‹é¢ç›´æ¥è¿›å…¥ executeHandwheelPathStep(TRUE)ï¼Œä¸é‡å¤è®¡ç®—åœ†å¿ƒå’Œæ‰«è§’ã€‚
+	 * ç¼–ç å™¨é‡‡æ ·å·²ç»åœ¨å¤–å±‚ interruptFuncAPI() å®Œæˆã€‚
 	 */
-	if (!pSG2Pointer->bIsUserData && prepareHandwheelAutomaticMove(pSG2Pointer->pSChannel) < 0)
-	{
-		return -1;
-	}
-	/* [HWSIM] ×Ô¶¯ÅÔÂ·¼ÌĞø¾ÉËã·¨£»µ±Ç°¾àÀëÂ·¾¶ÒÑ°ó¶¨Ê±ÈÔ½øÈëÍ³Ò»Èë¿Ú×ö¼ì²é£¬
-	 * ·ÀÖ¹Ä£Ê½±ä»¯Ê¹Í¬Ò»ÌõÔ²»¡ÖĞÍ¾ÓÉÁíÒ»Ì×Ê±¼ä¹æ»®Æ÷½Ó¹Ü¡£
-	 * ÓÃ»§Êı¾İÔË¶¯ºÍ³õÊ¼Õ¼Öá/¼ÓÔØ½×¶Î²»ÔÚ´Ë´¦ÌáÇ°·µ»Ø¡£
+    if (!pSG2Pointer->bIsUserData && prepareHandwheelAutomaticMove(pSG2Pointer->pSChannel) < 0)
+    {
+        return -1;
+    }
+    /* [HWSIM] è‡ªåŠ¨æ—è·¯ç»§ç»­æ—§ç®—æ³•ï¼›å½“å‰è·ç¦»è·¯å¾„å·²ç»‘å®šæ—¶ä»è¿›å…¥ç»Ÿä¸€å…¥å£åšæ£€æŸ¥ï¼Œ
+	 * é˜²æ­¢æ¨¡å¼å˜åŒ–ä½¿åŒä¸€æ¡åœ†å¼§ä¸­é€”ç”±å¦ä¸€å¥—æ—¶é—´è§„åˆ’å™¨æ¥ç®¡ã€‚
+	 * ç”¨æˆ·æ•°æ®è¿åŠ¨å’Œåˆå§‹å è½´/åŠ è½½é˜¶æ®µä¸åœ¨æ­¤å¤„æå‰è¿”å›ã€‚
 	 */
-	if (!pSG2Pointer->bIsUserData && (isHandwheelDistanceControlActive(pSG2Pointer->pSChannel)
-		|| pSG2Pointer->pSChannel->SHandwheelSim.SPath.bBound)
-		&& pSG2Pointer->ucInpStatus != INP_OCCUPATION && pSG2Pointer->ucInpStatus != INP_INITIATION)
-	{
-		/* [HWSIM] TRUE Ñ¡Ôñ SG02 Ô²»¡ÊÓÍ¼¡£Ã¿ÅÄÏÈÔ¤ÀÀÒ»·İºÏ³ÉÂ·¾¶½ø¶È£¬
-		 * ÔÙÓÉ calculateHandwheelPathPoint() µ÷ calculateArcInterpolationPoint() Çó¸÷Öáµã£¬
-		 * È«ÖáÊä³ö³É¹¦ºó²ÅÌá½»¡£·´Ò¡¼õĞ¡½ø¶È£¬²»ĞŞ¸Ä cArcDir »ò°Ñ G2 ¸Ä³É G3¡£
+    if (!pSG2Pointer->bIsUserData &&
+        (isHandwheelDistanceControlActive(pSG2Pointer->pSChannel) ||
+         pSG2Pointer->pSChannel->SHandwheelSim.SPath.bBound) &&
+        pSG2Pointer->ucInpStatus != INP_OCCUPATION && pSG2Pointer->ucInpStatus != INP_INITIATION)
+    {
+        /* [HWSIM] TRUE é€‰æ‹© SG02 åœ†å¼§è§†å›¾ã€‚æ¯æ‹å…ˆé¢„è§ˆä¸€ä»½åˆæˆè·¯å¾„è¿›åº¦ï¼Œ
+		 * å†ç”± calculateHandwheelPathPoint() è°ƒ calculateArcInterpolationPoint() æ±‚å„è½´ç‚¹ï¼Œ
+		 * å…¨è½´è¾“å‡ºæˆåŠŸåæ‰æäº¤ã€‚åæ‘‡å‡å°è¿›åº¦ï¼Œä¸ä¿®æ”¹ cArcDir æˆ–æŠŠ G2 æ”¹æˆ G3ã€‚
 		 */
-		return executeHandwheelPathStep(pSG2Pointer->pSChannel, TRUE);
-	}
+        return executeHandwheelPathStep(pSG2Pointer->pSChannel, TRUE);
+    }
 #endif
 
-	if (bRatioOn && pSG2Pointer->bUseSRunFeedRatio == TRUE)//±¶ÂÊ¿ªÆô
-	{
-		//²å²¹ÕıÔÚ½øĞĞµÄ×´Ì¬ ÇÒµ±Ç°±¶ÂÊ²»µÈÓÚÄ¿±ê±¶ÂÊ
-		if (pSG2Pointer->ucInpStatus == INP_RUNNING && pSG2Pointer->dFeedRatio != pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio)
-		{
-			if (pSG2Pointer->SPlanData.unCurrentT < pSG2Pointer->SPlanData.unT3 || pSG2Pointer->SPlanData.unCurrentT > pSG2Pointer->SPlanData.unT5)	//³ÂÃô´Ï	2023/7/11
-			{
-				pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //½øÈë¸³Öµ
-			}
-		}
-	}
+    if (bRatioOn && pSG2Pointer->bUseSRunFeedRatio == TRUE) //å€ç‡å¼€å¯
+    {
+        //æ’è¡¥æ­£åœ¨è¿›è¡Œçš„çŠ¶æ€ ä¸”å½“å‰å€ç‡ä¸ç­‰äºç›®æ ‡å€ç‡
+        if (pSG2Pointer->ucInpStatus == INP_RUNNING &&
+            pSG2Pointer->dFeedRatio != pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio)
+        {
+            if (pSG2Pointer->SPlanData.unCurrentT < pSG2Pointer->SPlanData.unT3 ||
+                pSG2Pointer->SPlanData.unCurrentT > pSG2Pointer->SPlanData.unT5) //é™ˆæ•èª	2023/7/11
+            {
+                pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //è¿›å…¥èµ‹å€¼
+            }
+        }
+    }
 
-	if (getBits(pSG2Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_R && pSG2Pointer->ucInpStatus == INP_RUNNING)//G99 Ã¿×ª½ø¸ø
-	{
-		dTargetSpeed = fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG2Pointer->dFeedrate * pSG2Pointer->dFeedRatio;
-		dCurrentSpeed = pSRun->dCurrentFeedRate;
+    if (getBits(pSG2Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_R &&
+        pSG2Pointer->ucInpStatus == INP_RUNNING) //G99 æ¯è½¬è¿›ç»™
+    {
+        dTargetSpeed = fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG2Pointer->dFeedrate *
+                       pSG2Pointer->dFeedRatio;
+        dCurrentSpeed = pSRun->dCurrentFeedRate;
 
-		if (isZero(dTargetSpeed))// Ä¿±ê×ªËÙÎª0   £¨·ÖÄ¸Îª0)
-		{
-			if (isZero(dCurrentSpeed) || isZero(g_SSystemPara.fG99SpindleSpeedDeviation - 1.0))//±àÂëÆ÷Ïà¶ÔÖµÎª0  »òÕßÔÊĞíÎó²îÎª100%
-			{
-				dSpeedPercentage = 1.0;//ÈÏÎªËÙ¶È´ïµ½Ä¿±êÖµµÄ100%
-			}
-		}
-		else
-		{
-			dSpeedPercentage = dCurrentSpeed / dTargetSpeed;
-		}
+        if (isZero(dTargetSpeed)) // ç›®æ ‡è½¬é€Ÿä¸º0   ï¼ˆåˆ†æ¯ä¸º0)
+        {
+            if (isZero(dCurrentSpeed) ||
+                isZero(g_SSystemPara.fG99SpindleSpeedDeviation - 1.0)) //ç¼–ç å™¨ç›¸å¯¹å€¼ä¸º0  æˆ–è€…å…è®¸è¯¯å·®ä¸º100%
+            {
+                dSpeedPercentage = 1.0; //è®¤ä¸ºé€Ÿåº¦è¾¾åˆ°ç›®æ ‡å€¼çš„100%
+            }
+        }
+        else
+        {
+            dSpeedPercentage = dCurrentSpeed / dTargetSpeed;
+        }
 
-		if ((fabs(dSpeedPercentage - 1.0 * SGN(dSpeedPercentage)) > g_SSystemPara.fG99SpindleSpeedDeviation))//¼ÆËãµÃµ½µÄ½ø¸øËÙ¶È·¢Éú¸Ä±ä
-		{
-			pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //½øÈë¸³Öµ
-		}
+        if ((fabs(dSpeedPercentage - 1.0 * SGN(dSpeedPercentage)) >
+             g_SSystemPara.fG99SpindleSpeedDeviation)) //è®¡ç®—å¾—åˆ°çš„è¿›ç»™é€Ÿåº¦å‘ç”Ÿæ”¹å˜
+        {
+            pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //è¿›å…¥èµ‹å€¼
+        }
 
-		////¼ÆËãµÃµ½µÄ½ø¸øËÙ¶È·¢Éú¸Ä±ä
-		//if (!isZero(pSRun->dCurrentFeedRate - fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG2Pointer->dFeedrate * 60 * 1000 * pSG2Pointer->dFeedRatio))
-		//{
-		//	pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //½øÈë¸³Öµ
-		//}
+        ////è®¡ç®—å¾—åˆ°çš„è¿›ç»™é€Ÿåº¦å‘ç”Ÿæ”¹å˜
+        //if (!isZero(pSRun->dCurrentFeedRate - fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG2Pointer->dFeedrate * 60 * 1000 * pSG2Pointer->dFeedRatio))
+        //{
+        //	pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START; //è¿›å…¥èµ‹å€¼
+        //}
+    }
 
-	}
+    switch (pSG2Pointer->ucInpStatus)
+    {
+    case INP_FINISHED: //å·²ç»å®Œæˆ
+        break;
 
-
-
-	switch (pSG2Pointer->ucInpStatus)
-	{
-	case INP_FINISHED://ÒÑ¾­Íê³É
-		break;
-
-	case INP_OCCUPATION:
-		//ÊÍ·Å¾ÉµÄÓĞĞ§Öá
-		releaseLastCommandAxis(pSPreprocess);
-		ucValStatus = pSG2Pointer->bIsUserData ? pSG2Pointer->SUserData.ucValStatus : pSPreprocess->SUserData.ucValStatus;
-#if(TURRET_AXIS_TEST == 1)
-		//ÅĞ¶ÏÖáÕ¼ÓÃ(¸ù¾İ½á¹¹ÌåÖá+Ó³Éä)   Ä¿±ê½á¹¹ÌåÖá¼õÈ¥µ¶ËşÖá
-		if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucOccupideTurretAxis), pSG2Pointer->pSChannel->ucChannelNum, &pSPreprocess->ucOccupideValStatus) == 1)
-		{	//Õ¼ÓÃ³É¹¦
-			//G2ÓĞĞ§Öá£¨²»ÄÜ³ıÈ¥µ¶²¹£©
-			pSG2Pointer->ucValStatus = ucValStatus;//ÔÚG2²å²¹½á¹¹ÌåÖĞ¼ÇÂ¼Õ¼ÓÃ³É¹¦µÄ½á¹¹ÌåÖá
-			pSG2Pointer->ucInpStatus = INP_INITIATION;
-		}
-		else
-		{	//Õ¼ÓÃÊ§°Ü
-			break;
-		}
+    case INP_OCCUPATION:
+        //é‡Šæ”¾æ—§çš„æœ‰æ•ˆè½´
+        releaseLastCommandAxis(pSPreprocess);
+        ucValStatus =
+            pSG2Pointer->bIsUserData ? pSG2Pointer->SUserData.ucValStatus : pSPreprocess->SUserData.ucValStatus;
+#if (TURRET_AXIS_TEST == 1)
+        //åˆ¤æ–­è½´å ç”¨(æ ¹æ®ç»“æ„ä½“è½´+æ˜ å°„)   ç›®æ ‡ç»“æ„ä½“è½´å‡å»åˆ€å¡”è½´
+        if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucOccupideTurretAxis),
+                                       pSG2Pointer->pSChannel->ucChannelNum, &pSPreprocess->ucOccupideValStatus) == 1)
+        { //å ç”¨æˆåŠŸ
+            //G2æœ‰æ•ˆè½´ï¼ˆä¸èƒ½é™¤å»åˆ€è¡¥ï¼‰
+            pSG2Pointer->ucValStatus = ucValStatus; //åœ¨G2æ’è¡¥ç»“æ„ä½“ä¸­è®°å½•å ç”¨æˆåŠŸçš„ç»“æ„ä½“è½´
+            pSG2Pointer->ucInpStatus = INP_INITIATION;
+        }
+        else
+        { //å ç”¨å¤±è´¥
+            break;
+        }
 
 #else
-		//ÅĞ¶ÏÖáÕ¼ÓÃ(¸ù¾İÓĞĞ§Öá+Ó³Éä)   ÓĞĞ§Öá¼õÈ¥µ¶²¹Öá
-		if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucToolAxis), pSG2Pointer->pSChannel->ucChannelNum, NULL) == 1)
-		{	//Õ¼ÓÃ³É¹¦
-			//ÉÏÒ»ÌõÖ¸ÁîµÄÕ¼ÓÃ£¨³ıÈ¥µ¶²¹£©
-			pSPreprocess->ucLastValStatus = ucValStatus & (~pSPreprocess->ucToolAxis);
-			//G2ÓĞĞ§Öá£¨²»ÄÜ³ıÈ¥µ¶²¹£©
-			pSG2Pointer->ucValStatus = ucValStatus;
-			pSG2Pointer->ucInpStatus = INP_INITIATION;
-		}
-		else
-		{	//Õ¼ÓÃÊ§°Ü
-			break;
-		}
+        //åˆ¤æ–­è½´å ç”¨(æ ¹æ®æœ‰æ•ˆè½´+æ˜ å°„)   æœ‰æ•ˆè½´å‡å»åˆ€è¡¥è½´
+        if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucToolAxis), pSG2Pointer->pSChannel->ucChannelNum,
+                                       NULL) == 1)
+        { //å ç”¨æˆåŠŸ
+            //ä¸Šä¸€æ¡æŒ‡ä»¤çš„å ç”¨ï¼ˆé™¤å»åˆ€è¡¥ï¼‰
+            pSPreprocess->ucLastValStatus = ucValStatus & (~pSPreprocess->ucToolAxis);
+            //G2æœ‰æ•ˆè½´ï¼ˆä¸èƒ½é™¤å»åˆ€è¡¥ï¼‰
+            pSG2Pointer->ucValStatus = ucValStatus;
+            pSG2Pointer->ucInpStatus = INP_INITIATION;
+        }
+        else
+        { //å ç”¨å¤±è´¥
+            break;
+        }
 #endif
 
-	case INP_INITIATION://³õÊ¼»¯
-		//Ñ¡Ôñ²å²¹Æ½Ãæ
-		chooseInterpPlane(pSG2Pointer->ucAxis, pSG2Pointer->unCommandType);
+    case INP_INITIATION: //åˆå§‹åŒ–
+        //é€‰æ‹©æ’è¡¥å¹³é¢
+        chooseInterpPlane(pSG2Pointer->ucAxis, pSG2Pointer->unCommandType);
 
-		if (pSG2Pointer->bIsUserData)//¸ù¾İ±êÖ¾Î»¶ÁÈ¡Êı¾İ 2022.12.6
-		{	//¶ÁÈ¡ÊäÈë²ÎÊı£¨ÓÃ»§²ÎÊı£©
-			res = loadSG2DataFromInput(pSG2Pointer, &pSG2Pointer->SUserData);
-		}
-		else
-		{
-			//¶ÁÈ¡Ô¤´¦Àí²ÎÊı
-			res = loadSG2DataFromInput(pSG2Pointer, &pSPreprocess->SUserData);
-		}
-		if(res == -1)return -1;	
+        if (pSG2Pointer->bIsUserData) //æ ¹æ®æ ‡å¿—ä½è¯»å–æ•°æ® 2022.12.6
+        {                             //è¯»å–è¾“å…¥å‚æ•°ï¼ˆç”¨æˆ·å‚æ•°ï¼‰
+            res = loadSG2DataFromInput(pSG2Pointer, &pSG2Pointer->SUserData);
+        }
+        else
+        {
+            //è¯»å–é¢„å¤„ç†å‚æ•°
+            res = loadSG2DataFromInput(pSG2Pointer, &pSPreprocess->SUserData);
+        }
+        if (res == -1)
+            return -1;
 
-		if (isZero(pSG2Pointer->SPlanData.dAcc) || isZero(pSG2Pointer->SPlanData.dDec))//²ÎÊı¼ì²â£¬±ÜÃâÒ»Ğ©²ÎÊı³öÏÖÎª0µÄÇé¿ö
-		{
-			parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
-			return -1;	
-		}
-		if (res == 0) //¾àÀëÎª0
-		{
-			pSG2Pointer->ucInpStatus = INP_FINISHED;
-			pSPreprocess->ucInpStatus = INP_FINISHED;
-			break;
-		}
-		pSG2Pointer->dCurrentSpeed = pSRun->dCurrentSpeed;
-		//¼ÆËã³¤ÖáºÍ·ÖÁ¿
-		pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START;
+        if (isZero(pSG2Pointer->SPlanData.dAcc) ||
+            isZero(pSG2Pointer->SPlanData.dDec)) //å‚æ•°æ£€æµ‹ï¼Œé¿å…ä¸€äº›å‚æ•°å‡ºç°ä¸º0çš„æƒ…å†µ
+        {
+            parseRunningError(pSG2Pointer->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+            return -1;
+        }
+        if (res == 0) //è·ç¦»ä¸º0
+        {
+            pSG2Pointer->ucInpStatus = INP_FINISHED;
+            pSPreprocess->ucInpStatus = INP_FINISHED;
+            break;
+        }
+        pSG2Pointer->dCurrentSpeed = pSRun->dCurrentSpeed;
+        //è®¡ç®—é•¿è½´å’Œåˆ†é‡
+        pSG2Pointer->ucInpStatus = INP_ASSIGNMENT_START;
 
-	case INP_ASSIGNMENT_START://¸³Öµ
+    case INP_ASSIGNMENT_START: //èµ‹å€¼
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-		/* [HWSIM] Ê×´ÎÔ²»¡¾àÀëÈë¿Ú£ºÔ­¼¸ºÎÒÑ¾­ÓĞĞ§£¬´ËÊ±´´½¨/¶ÁÈ¡Â·¾¶£»
-		 * ÏÂÒ»´Î/ºóĞøÏÔÊ¾ÑÓ³ÙÖ»ËãÒ»´Î£¬
-		 * »Ö¸´¼Ó¹¤ºóÖ±½Ó·µ»Ø£¬Ö´ĞĞÂ·¾¶×Ô¶¯ÔËĞĞÊ±ÇúÏß¹æ»®¡£
+        /* [HWSIM] é¦–æ¬¡åœ†å¼§è·ç¦»å…¥å£ï¼šåŸå‡ ä½•å·²ç»æœ‰æ•ˆï¼Œæ­¤æ—¶åˆ›å»º/è¯»å–è·¯å¾„ï¼›
+		 * ä¸‹ä¸€æ¬¡/åç»­æ˜¾ç¤ºå»¶è¿Ÿåªç®—ä¸€æ¬¡ï¼Œ
+		 * æ¢å¤åŠ å·¥åç›´æ¥è¿”å›ï¼Œæ‰§è¡Œè·¯å¾„è‡ªåŠ¨è¿è¡Œæ—¶æ›²çº¿è§„åˆ’ã€‚
 		 */
-		if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
-		{
-			return executeHandwheelPathStep(pSG2Pointer->pSChannel, TRUE);
-		}
+        if (!pSG2Pointer->bIsUserData && isHandwheelDistanceControlActive(pSG2Pointer->pSChannel))
+        {
+            return executeHandwheelPathStep(pSG2Pointer->pSChannel, TRUE);
+        }
 #endif
-		//¾Ö²¿±äÁ¿±£´æ²ÎÊı ·ÀÖ¹¹æ»®Ê§°Ü
-		dVmax = pSG2Pointer->SPlanData.dVmax;
-		dVs = pSG2Pointer->SPlanData.dVs;
-		dVe = pSG2Pointer->SPlanData.dVe;
-		dAcc = pSG2Pointer->SPlanData.dAcc;
-		dDec = pSG2Pointer->SPlanData.dDec;
-		pSG2Pointer->SPlanData.dAcc = pSG2Pointer->dAcc;
-		pSG2Pointer->SPlanData.dDec = pSG2Pointer->dDec;
+        //å±€éƒ¨å˜é‡ä¿å­˜å‚æ•° é˜²æ­¢è§„åˆ’å¤±è´¥
+        dVmax = pSG2Pointer->SPlanData.dVmax;
+        dVs = pSG2Pointer->SPlanData.dVs;
+        dVe = pSG2Pointer->SPlanData.dVe;
+        dAcc = pSG2Pointer->SPlanData.dAcc;
+        dDec = pSG2Pointer->SPlanData.dDec;
+        pSG2Pointer->SPlanData.dAcc = pSG2Pointer->dAcc;
+        pSG2Pointer->SPlanData.dDec = pSG2Pointer->dDec;
 
+        if (bRatioOn)
+        {
+            double dSpeedMax =
+                (getBits(pSG2Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN)
+                    ?                      //æŒ‡ä»¤ç±»å‹ä¸ºæ¯åˆ†é’Ÿè¿›ç»™ï¼Ÿ
+                    pSG2Pointer->dFeedrate //æ¯åˆ†é’Ÿè¿›ç»™ æœ€å¤§é€Ÿåº¦ä¸ºè¿›ç»™é€Ÿåº¦
+                    : fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) *
+                          pSG2Pointer->dFeedrate; //æ¯è½¬è¿›ç»™  æœ€å¤§é€Ÿåº¦æ ¹æ®ä¸»è½´è½¬é€Ÿå’Œè¿›ç»™é€Ÿåº¦(mm/r)è®¡ç®— 2023.3.14
 
-		if (bRatioOn)
-		{
-			double dSpeedMax = (getBits(pSG2Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN) ?  //Ö¸ÁîÀàĞÍÎªÃ¿·ÖÖÓ½ø¸ø£¿
-				pSG2Pointer->dFeedrate //Ã¿·ÖÖÓ½ø¸ø ×î´óËÙ¶ÈÎª½ø¸øËÙ¶È
-				: fabs(pSG2Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG2Pointer->dFeedrate;//Ã¿×ª½ø¸ø  ×î´óËÙ¶È¸ù¾İÖ÷Öá×ªËÙºÍ½ø¸øËÙ¶È(mm/r)¼ÆËã 2023.3.14
+            //ç»§æ‰¿è¿›ç»™é€Ÿç‡
+            pSG2Pointer->dFeedRatio = (pSG2Pointer->bUseSRunFeedRatio)
+                                          ? pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio
+                                          : pSG2Pointer->dFeedRatio;
 
-			//¼Ì³Ğ½ø¸øËÙÂÊ
-			pSG2Pointer->dFeedRatio = (pSG2Pointer->bUseSRunFeedRatio) ? pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio : pSG2Pointer->dFeedRatio;
-
-			if (pSG2Pointer->SPlanData.cInterpDir * pSG2Pointer->dFeedRatio > 0) //²å²¹·½ÏòºÍ±¶ÂÊÍ¬Ïò
-			{
-				//¸ù¾İ±¶ÂÊºÍÖ÷Öá×ªËÙ¼ÆËã×î´óËÙ¶È£¨µ±Ç°½ø¸øËÙ¶È±£´æµ½g_SRun£©
-				pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate
-					= dSpeedMax * fabs(pSG2Pointer->dFeedRatio);
-			}
-			else  //<=0    ²å²¹·½ÏòºÍ±¶ÂÊ·´Ïò
-			{
-				//¿ÉÄÜµÄÇé¿ö ¢Ù±¶ÂÊÎª0 ¢Úµ±Ç°ËÙ¶ÈÎª0 ¢Û ¶¼²»Îª0
-				if (isZero(pSG2Pointer->dCurrentSpeed))//µ±Ç°ËÙ¶ÈÎª0
-				{
-					pSG2Pointer->SPlanData.cInterpDir = (pSG2Pointer->dFeedRatio < 0) ? INP_GO_BACK : INP_GO_AHEAD;//¸³Öµ·½Ïò
-					pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate  //¸³Öµ×î´óËÙ¶È
-						= dSpeedMax * fabs(pSG2Pointer->dFeedRatio);
-				}
-				else//µ±Ç°ËÙ¶È²»Îª0  ÏÈ¼õËÙµ½0
-				{
-					pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate = 0;
-				}
-			}
-		}
-		else
-		{
-			//×î´óËÙ¶È¸³Öµ£¬²»¿ªÆô±¶ÂÊÊ±¸³½ø¸øËÙ¶È
-			pSG2Pointer->SPlanData.dVmax = pSG2Pointer->dFeedrate;
-
-		}
-		if (pSG2Pointer->pSChannel->cHandWheelSimulaStatus != HANWHEELSIMULA_OFF && (g_RunMode == AUTOMATIC_MODE || g_RunMode == MDI_MODE)
+            if (pSG2Pointer->SPlanData.cInterpDir * pSG2Pointer->dFeedRatio > 0) //æ’è¡¥æ–¹å‘å’Œå€ç‡åŒå‘
+            {
+                //æ ¹æ®å€ç‡å’Œä¸»è½´è½¬é€Ÿè®¡ç®—æœ€å¤§é€Ÿåº¦ï¼ˆå½“å‰è¿›ç»™é€Ÿåº¦ä¿å­˜åˆ°g_SRunï¼‰
+                pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate = dSpeedMax * fabs(pSG2Pointer->dFeedRatio);
+            }
+            else //<=0    æ’è¡¥æ–¹å‘å’Œå€ç‡åå‘
+            {
+                //å¯èƒ½çš„æƒ…å†µ â‘ å€ç‡ä¸º0 â‘¡å½“å‰é€Ÿåº¦ä¸º0 â‘¢ éƒ½ä¸ä¸º0
+                if (isZero(pSG2Pointer->dCurrentSpeed)) //å½“å‰é€Ÿåº¦ä¸º0
+                {
+                    pSG2Pointer->SPlanData.cInterpDir =
+                        (pSG2Pointer->dFeedRatio < 0) ? INP_GO_BACK : INP_GO_AHEAD; //èµ‹å€¼æ–¹å‘
+                    pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate          //èµ‹å€¼æœ€å¤§é€Ÿåº¦
+                        = dSpeedMax * fabs(pSG2Pointer->dFeedRatio);
+                }
+                else //å½“å‰é€Ÿåº¦ä¸ä¸º0  å…ˆå‡é€Ÿåˆ°0
+                {
+                    pSG2Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate = 0;
+                }
+            }
+        }
+        else
+        {
+            //æœ€å¤§é€Ÿåº¦èµ‹å€¼ï¼Œä¸å¼€å¯å€ç‡æ—¶èµ‹è¿›ç»™é€Ÿåº¦
+            pSG2Pointer->SPlanData.dVmax = pSG2Pointer->dFeedrate;
+        }
+        if (pSG2Pointer->pSChannel->cHandWheelSimulaStatus != HANWHEELSIMULA_OFF &&
+            (g_RunMode == AUTOMATIC_MODE || g_RunMode == MDI_MODE)
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-			&& !isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel)
+            && !isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel)
 #endif
-			)
-		{//ÊÖÂÖÄ£Äâ ×î´óËÙ¶ÈÏŞÖÆ
-		
-			pSG2Pointer->SPlanData.dVmax = min(pSG2Pointer->SPlanData.dVmax, g_SSystemPara.dSimulaVmax* fabs(pSG2Pointer->dFeedRatio));//2025.5.5ĞÜ¿¥
-			if (pSG2Pointer->pSChannel->cHandWheelSimulaStatus == HANWHEELSIMULA_ON)	//³ÂÃô´Ï	2023/12/14
-			{
-				pSG2Pointer->SPlanData.dAcc = min(pSG2Pointer->SPlanData.dAcc, g_SSystemPara.dSimulaMaxAcc);
-				pSG2Pointer->SPlanData.dDec = min(pSG2Pointer->SPlanData.dDec, g_SSystemPara.dSimulaMaxDec);//2025.4.19ĞÜ¿¥
-			}
-		}
+        )
+        { //æ‰‹è½®æ¨¡æ‹Ÿ æœ€å¤§é€Ÿåº¦é™åˆ¶
 
-		if (g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE && !pSG2Pointer->bIsUserData)
-		{	//Ê¹ÓÃ»º³åÇøÊı¾İ ¶øÇÒÎª ×ÔÊÊÓ¦²å²¹Ä£Ê½ »ò ¹Ì¶¨²ÎÊı²å²¹Ä£Ê½
-			pSG2Pointer->SPlanData.dVmax = min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dArcMaxNormalAccVmax);//·¨Ïò¼ÓËÙ¶ÈÔ¼Êø
-			pSG2Pointer->SPlanData.dVmax = min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dArcMaxChordErrorVmax);//¹­¸ßÎó²îÔ¼Êø
+            pSG2Pointer->SPlanData.dVmax = min(
+                pSG2Pointer->SPlanData.dVmax, g_SSystemPara.dSimulaVmax * fabs(pSG2Pointer->dFeedRatio)); //2025.5.5ç†Šéª
+            if (pSG2Pointer->pSChannel->cHandWheelSimulaStatus == HANWHEELSIMULA_ON) //é™ˆæ•èª	2023/12/14
+            {
+                pSG2Pointer->SPlanData.dAcc = min(pSG2Pointer->SPlanData.dAcc, g_SSystemPara.dSimulaMaxAcc);
+                pSG2Pointer->SPlanData.dDec =
+                    min(pSG2Pointer->SPlanData.dDec, g_SSystemPara.dSimulaMaxDec); //2025.4.19ç†Šéª
+            }
+        }
 
-			//·ÀÖ¹³¬¹ı×î´óËÙ¶È
-			if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)
-			{ // ×ÔÊÊÓ¦²ÎÊı²å²¹
-				pSG2Pointer->SPlanData.dVmax = min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dCommonVMaxFromSingleAxis);
-			}
-		}
-		else
-		{ //Ê¹ÓÃÓÃ»§Êı¾İ »òÕßÎª ³¤Öá²å²¹Ä£Ê½
-			pSG2Pointer->SPlanData.dVmax = min(pSG2Pointer->SPlanData.dVmax, g_SSystemPara.dSysMaxVel);//·ÀÖ¹×î´óËÙ¶È³¬ÏŞ
-		}
+        if (g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE && !pSG2Pointer->bIsUserData)
+        { //ä½¿ç”¨ç¼“å†²åŒºæ•°æ® è€Œä¸”ä¸º è‡ªé€‚åº”æ’è¡¥æ¨¡å¼ æˆ– å›ºå®šå‚æ•°æ’è¡¥æ¨¡å¼
+            pSG2Pointer->SPlanData.dVmax =
+                min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dArcMaxNormalAccVmax); //æ³•å‘åŠ é€Ÿåº¦çº¦æŸ
+            pSG2Pointer->SPlanData.dVmax =
+                min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dArcMaxChordErrorVmax); //å¼“é«˜è¯¯å·®çº¦æŸ
 
+            //é˜²æ­¢è¶…è¿‡æœ€å¤§é€Ÿåº¦
+            if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE)
+            { // è‡ªé€‚åº”å‚æ•°æ’è¡¥
+                pSG2Pointer->SPlanData.dVmax =
+                    min(pSG2Pointer->SPlanData.dVmax, pSPreprocess->SUserData.dCommonVMaxFromSingleAxis);
+            }
+        }
+        else
+        { //ä½¿ç”¨ç”¨æˆ·æ•°æ® æˆ–è€…ä¸º é•¿è½´æ’è¡¥æ¨¡å¼
+            pSG2Pointer->SPlanData.dVmax =
+                min(pSG2Pointer->SPlanData.dVmax, g_SSystemPara.dSysMaxVel); //é˜²æ­¢æœ€å¤§é€Ÿåº¦è¶…é™
+        }
 
-		
-		//¼ÆËã³õËÙ¶È ·ÖÁ½ÖÖÇé¿ö £ºG02¸Õ¿ªÊ¼(µ±Ç°ËÙ¶ÈÎª0)  Ö´ĞĞ¹ı³ÌÖĞ½ø¸øËÙ¶È¸Ä±ä(µ±Ç°ËÙ¶È²»Îª0)
-		//¢Ù¸Õ¿ªÊ¼£º³õËÙ¶ÈºÍ×î´óËÙ¶ÈÈ¡×îĞ¡Öµ¡£³õËÙ¶È±È×î´óËÙ¶È´óµÄÇé¿öÏÂ£¬Ö±½ÓÒÔ×î´óËÙ¶ÈÔË¶¯
-		//¢Ú·Ç¸Õ¿ªÊ¼£ºÒ»ÂÉ¼Ì³Ğµ±Ç°ËÙ¶È
-		pSG2Pointer->SPlanData.dVs = (pSG2Pointer->bIsUserData) ? pSG2Pointer->SUserData.dVs : pSPreprocess->SUserData.dMinVs; //»ñÈ¡³õËÙ¶È
-		pSG2Pointer->SPlanData.dVs = (isZero(pSG2Pointer->dCurrentSpeed)) ? min(pSG2Pointer->SPlanData.dVs, pSG2Pointer->SPlanData.dVmax) : pSG2Pointer->dCurrentSpeed;
-		
-		if (pSRun->cSoftLimitedOn == 3) //µ±Ç°Ïß¶ÎÖ®Ç°ÒÑ´¥·¢ÈíÏŞÎ»,ÖØÉèËÙ¶È¹æ»®²ÎÊıºó½øÈë£¨¼õËÙ£©ËÙ¶È¹æ»®
-		{
-			for (int i = 0; i < AXIS_NUM_MAX; i++)//Ñ­»·¸÷ÖáÕÒ³ö£¨ÓÅÏÈ£©´¥·¢ÈíÏŞÎ»µÄÖá£¬ÖØĞÂÉè¶¨ÔË¶¯²ÎÊı
-			{
-				if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i)) continue;  //ÎŞĞ§Öá Ìø¹ı
-				if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)//´¥·¢ÕıÏŞÎ»
-				{
-					dSingleAxisLeftDist = g_SSystemPara.MOTOR_WARN[i].pos_soft - pSG2Pointer->SMaxVal.dArray[i];//1.¼ÆËãµ¥ÖáÏŞÎ»µãµ½×îÖµµãµÄ¾àÀë
-				}
-				else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)//´¥·¢¸ºÏŞÎ»
-				{
-					dSingleAxisLeftDist = pSG2Pointer->SMinVal.dArray[i] - g_SSystemPara.MOTOR_WARN[i].neg_soft;//1.¼ÆËãµ¥ÖáÏŞÎ»µãµ½×îÖµµãµÄ¾àÀë
-				}
-				else//Î´´¥·¢ÏŞÎ»µÄÖá£ºÌø¹ı
-				{
-					continue;
-				}
-				//ÖØÉèÇúÏßÀàĞÍ£¨ÓëÇ°¶Î¹ì¼£±£³ÖÏàÍ¬µÄTĞÍÇúÏß£©
-				pSG2Pointer->SPlanData.dVmax = pSG2Pointer->SPlanData.dVs;//×î´óËÙ¶È = ³õËÙ¶È = µ±Ç°ËÙ¶È
-				pSG2Pointer->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;	//¼ÓËÙÀàĞÍ
-				pSG2Pointer->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;	//¼õËÙÀàĞÍ
-				pSG2Pointer->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;//Æ½Ì¯ÀàĞÍ
-				pSG2Pointer->SPlanData.dAcc = min(getSysAcc(pSG2Pointer->SPlanData.ucAccVelPlanType), g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxAcc / fabs(pSG2Pointer->SStartVector.dArray[i]));//¼ÓËÙ¶È
-				pSG2Pointer->SPlanData.dDec = min(getSysDec(pSG2Pointer->SPlanData.ucDecVelPlanType), g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec / fabs(pSG2Pointer->SStartVector.dArray[i]));//¼õËÙ¶È
+        //è®¡ç®—åˆé€Ÿåº¦ åˆ†ä¸¤ç§æƒ…å†µ ï¼šG02åˆšå¼€å§‹(å½“å‰é€Ÿåº¦ä¸º0)  æ‰§è¡Œè¿‡ç¨‹ä¸­è¿›ç»™é€Ÿåº¦æ”¹å˜(å½“å‰é€Ÿåº¦ä¸ä¸º0)
+        //â‘ åˆšå¼€å§‹ï¼šåˆé€Ÿåº¦å’Œæœ€å¤§é€Ÿåº¦å–æœ€å°å€¼ã€‚åˆé€Ÿåº¦æ¯”æœ€å¤§é€Ÿåº¦å¤§çš„æƒ…å†µä¸‹ï¼Œç›´æ¥ä»¥æœ€å¤§é€Ÿåº¦è¿åŠ¨
+        //â‘¡éåˆšå¼€å§‹ï¼šä¸€å¾‹ç»§æ‰¿å½“å‰é€Ÿåº¦
+        pSG2Pointer->SPlanData.dVs =
+            (pSG2Pointer->bIsUserData) ? pSG2Pointer->SUserData.dVs : pSPreprocess->SUserData.dMinVs; //è·å–åˆé€Ÿåº¦
+        pSG2Pointer->SPlanData.dVs = (isZero(pSG2Pointer->dCurrentSpeed))
+                                         ? min(pSG2Pointer->SPlanData.dVs, pSG2Pointer->SPlanData.dVmax)
+                                         : pSG2Pointer->dCurrentSpeed;
 
-				if (dSingleAxisLeftDist >= EPSINON)//ÏŞÎ»µãÔÚµ±Ç°Ïß¶ÎÍâ£º1.ÖØËãÄ©ËÙ¶È-> Ö´ĞĞTĞÍ¼õËÙµÄËÙ¶È¹æ»®
-				{
-					//È¡ ÏµÍ³TĞÍºÏ³É¼õËÙ¶È Óë ÏµÍ³TĞÍµ¥Öá¼õËÙ¶È µÄ×îĞ¡Öµ×÷ÎªºÏ³ÉÔË¶¯µÄTĞÍ¼õËÙ¶È
-					dMinTDec = min(g_SSystemPara.dSysPlanTMaxDec, g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec);
-					//1.ÖØËãÄ©ËÙ¶È£ºÒÔTĞÍ¼õËÙ¶ÈÖØËãµ±Ç°Ïß¶ÎµÄÄ©ËÙ¶È£¨Èôµ±Ç°Ïß¶ÎÊÇ×îºóÒ»¶Î£¬ÔòÖ±½ÓÉè¶¨ÎªÏµÍ³²ÎÊıµÄ×îĞ¡ËÙ¶È½øĞĞ¼õËÙÍ£Ö¹£©
-					pSG2Pointer->SPlanData.dVe = isZero(pSG2Pointer->SPlanData.dPrimalVe - g_SSystemPara.dSysMinVel) ? g_SSystemPara.dSysMinVel : sqrt(pSG2Pointer->SPlanData.dVs * pSG2Pointer->SPlanData.dVs - 2 * g_SSystemPara.dSysPlanTMaxDec * pSG2Pointer->SPlanData.dCurLeftDist);
-				}
-				else//ÏŞÎ»µãÔÚµ±Ç°Ïß¶ÎÄÚ£º1.ÖØËãÄ©ËÙ¶È£»£»2.ÖØËã¼õËÙ¶È£»3.ÖØÖÃ¿ª¹Ø±äÁ¿¡£ -> Ö´ĞĞTĞÍ¼õËÙµÄËÙ¶È¹æ»®ÊµÊ±ÅĞ¶Ï¼õËÙÍ£
-				{
-					pSG2Pointer->SPlanData.dVe = g_SSystemPara.dSysMinVel;//1.ÖØËãÄ©ËÙ¶È = ÖÕÖ¹ËÙ¶È
-					pSG2Pointer->SPlanData.dDec = (pow(pSG2Pointer->SPlanData.dVs, 2) - pow(pSG2Pointer->SPlanData.dVe, 2)) / (2.0 * pSG2Pointer->SPlanData.dCurLeftDist);//2.ÖØËã¼õËÙ¶È(TĞÍ)
-					pSRun->cSoftLimitedOn = 1;//3.ÖØÖÃÈíÏŞÎ»¿ª¹Ø±äÁ¿
-				}
-			}
-		}
-		else
-		{
-			//»»»ØÈ¥Ç°Õ°µÄÄ©ËÙ¶È
-			pSG2Pointer->SPlanData.dVe = pSG2Pointer->SPlanData.dPrimalVe;
+        if (pSRun->cSoftLimitedOn == 3) //å½“å‰çº¿æ®µä¹‹å‰å·²è§¦å‘è½¯é™ä½,é‡è®¾é€Ÿåº¦è§„åˆ’å‚æ•°åè¿›å…¥ï¼ˆå‡é€Ÿï¼‰é€Ÿåº¦è§„åˆ’
+        {
+            for (int i = 0; i < AXIS_NUM_MAX; i++) //å¾ªç¯å„è½´æ‰¾å‡ºï¼ˆä¼˜å…ˆï¼‰è§¦å‘è½¯é™ä½çš„è½´ï¼Œé‡æ–°è®¾å®šè¿åŠ¨å‚æ•°
+            {
+                if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i))
+                    continue;                                                                      //æ— æ•ˆè½´ è·³è¿‡
+                if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS) //è§¦å‘æ­£é™ä½
+                {
+                    dSingleAxisLeftDist = g_SSystemPara.MOTOR_WARN[i].pos_soft -
+                                          pSG2Pointer->SMaxVal.dArray[i]; //1.è®¡ç®—å•è½´é™ä½ç‚¹åˆ°æœ€å€¼ç‚¹çš„è·ç¦»
+                }
+                else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG) //è§¦å‘è´Ÿé™ä½
+                {
+                    dSingleAxisLeftDist = pSG2Pointer->SMinVal.dArray[i] -
+                                          g_SSystemPara.MOTOR_WARN[i].neg_soft; //1.è®¡ç®—å•è½´é™ä½ç‚¹åˆ°æœ€å€¼ç‚¹çš„è·ç¦»
+                }
+                else //æœªè§¦å‘é™ä½çš„è½´ï¼šè·³è¿‡
+                {
+                    continue;
+                }
+                //é‡è®¾æ›²çº¿ç±»å‹ï¼ˆä¸å‰æ®µè½¨è¿¹ä¿æŒç›¸åŒçš„Tå‹æ›²çº¿ï¼‰
+                pSG2Pointer->SPlanData.dVmax = pSG2Pointer->SPlanData.dVs;       //æœ€å¤§é€Ÿåº¦ = åˆé€Ÿåº¦ = å½“å‰é€Ÿåº¦
+                pSG2Pointer->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;      //åŠ é€Ÿç±»å‹
+                pSG2Pointer->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;      //å‡é€Ÿç±»å‹
+                pSG2Pointer->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE; //å¹³æ‘Šç±»å‹
+                pSG2Pointer->SPlanData.dAcc = min(getSysAcc(pSG2Pointer->SPlanData.ucAccVelPlanType),
+                                                  g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxAcc /
+                                                      fabs(pSG2Pointer->SStartVector.dArray[i])); //åŠ é€Ÿåº¦
+                pSG2Pointer->SPlanData.dDec = min(getSysDec(pSG2Pointer->SPlanData.ucDecVelPlanType),
+                                                  g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec /
+                                                      fabs(pSG2Pointer->SStartVector.dArray[i])); //å‡é€Ÿåº¦
+
+                if (dSingleAxisLeftDist >= EPSINON) //é™ä½ç‚¹åœ¨å½“å‰çº¿æ®µå¤–ï¼š1.é‡ç®—æœ«é€Ÿåº¦-> æ‰§è¡ŒTå‹å‡é€Ÿçš„é€Ÿåº¦è§„åˆ’
+                {
+                    //å– ç³»ç»ŸTå‹åˆæˆå‡é€Ÿåº¦ ä¸ ç³»ç»ŸTå‹å•è½´å‡é€Ÿåº¦ çš„æœ€å°å€¼ä½œä¸ºåˆæˆè¿åŠ¨çš„Tå‹å‡é€Ÿåº¦
+                    dMinTDec =
+                        min(g_SSystemPara.dSysPlanTMaxDec, g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec);
+                    //1.é‡ç®—æœ«é€Ÿåº¦ï¼šä»¥Tå‹å‡é€Ÿåº¦é‡ç®—å½“å‰çº¿æ®µçš„æœ«é€Ÿåº¦ï¼ˆè‹¥å½“å‰çº¿æ®µæ˜¯æœ€åä¸€æ®µï¼Œåˆ™ç›´æ¥è®¾å®šä¸ºç³»ç»Ÿå‚æ•°çš„æœ€å°é€Ÿåº¦è¿›è¡Œå‡é€Ÿåœæ­¢ï¼‰
+                    pSG2Pointer->SPlanData.dVe =
+                        isZero(pSG2Pointer->SPlanData.dPrimalVe - g_SSystemPara.dSysMinVel)
+                            ? g_SSystemPara.dSysMinVel
+                            : sqrt(pSG2Pointer->SPlanData.dVs * pSG2Pointer->SPlanData.dVs -
+                                   2 * g_SSystemPara.dSysPlanTMaxDec * pSG2Pointer->SPlanData.dCurLeftDist);
+                }
+                else //é™ä½ç‚¹åœ¨å½“å‰çº¿æ®µå†…ï¼š1.é‡ç®—æœ«é€Ÿåº¦ï¼›ï¼›2.é‡ç®—å‡é€Ÿåº¦ï¼›3.é‡ç½®å¼€å…³å˜é‡ã€‚ -> æ‰§è¡ŒTå‹å‡é€Ÿçš„é€Ÿåº¦è§„åˆ’å®æ—¶åˆ¤æ–­å‡é€Ÿåœ
+                {
+                    pSG2Pointer->SPlanData.dVe = g_SSystemPara.dSysMinVel; //1.é‡ç®—æœ«é€Ÿåº¦ = ç»ˆæ­¢é€Ÿåº¦
+                    pSG2Pointer->SPlanData.dDec =
+                        (pow(pSG2Pointer->SPlanData.dVs, 2) - pow(pSG2Pointer->SPlanData.dVe, 2)) /
+                        (2.0 * pSG2Pointer->SPlanData.dCurLeftDist); //2.é‡ç®—å‡é€Ÿåº¦(Tå‹)
+                    pSRun->cSoftLimitedOn = 1;                       //3.é‡ç½®è½¯é™ä½å¼€å…³å˜é‡
+                }
+            }
+        }
+        else
+        {
+            //æ¢å›å»å‰ç»çš„æœ«é€Ÿåº¦
+            pSG2Pointer->SPlanData.dVe = pSG2Pointer->SPlanData.dPrimalVe;
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-			if (!pSG2Pointer->bIsUserData && isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel))
-			{
-				pSG2Pointer->SPlanData.dVe = pSG2Pointer->SPlanData.dPrimalVe = 0.0;
-			}
+            if (!pSG2Pointer->bIsUserData && isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel))
+            {
+                pSG2Pointer->SPlanData.dVe = pSG2Pointer->SPlanData.dPrimalVe = 0.0;
+            }
 #endif
-		}
+        }
 
-		if (preparePlanningAndDistReAvg(&pSG2Pointer->SPlanData, TRUE) == -2)  //ËÙ¶È¹æ»®+Æ½Ì¯
-		{//¹æ»®Ê§°Ü  »»»ØÔ­À´µÄ²ÎÊı
-			pSG2Pointer->SPlanData.dVmax = dVmax;
-			pSG2Pointer->SPlanData.dVs = dVs;
-			pSG2Pointer->SPlanData.dVe = dVe;
-			pSG2Pointer->SPlanData.dAcc = dAcc;
-			pSG2Pointer->SPlanData.dDec = dDec;
-		}
-		else
-		{//¹æ»®³É¹¦  Ê±¼äÖÃ0
-			pSG2Pointer->SPlanData.unCurrentT = 0;
-		}
-		//ÈíÏŞÎ»µÄÅĞ¶Ï
-		pSRun->cSoftLimitedOn = softLimit(pSG2Pointer->pSChannel, pSG2Pointer->SStartPoint, pSG2Pointer->SEndPoint, pSG2Pointer->SMaxVal, pSG2Pointer->SMinVal, AXIS_NULL);
-		//ÅĞ¶ÏºóµÄ´¦Àí
-		switch (pSRun->cSoftLimitedOn)
-		{
-		case 1://´¥·¢ÈíÏŞÎ»£ºÏŞÎ»µãÔÚµ±Ç°Ïß¶ÎÄÚ,µ±Ç°¶ÎÄÜÍ£ÏÂ -> 1.ÖØÉèÄ¿±ê¾àÀë;2.ÖØÉèÄ©ËÙ¶È;3.ÉèÖÃ²å²¹ÔËĞĞ×´Ì¬¡£
-			for (int i = 0; i < AXIS_NUM_MAX; i++)//Ñ­»·¸÷ÖáÕÒ³ö£¨ÓÅÏÈ£©´¥·¢ÈíÏŞÎ»µÄÖá£¬ÖØĞÂÉè¶¨ÔË¶¯²ÎÊı
-			{
-				if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i)) continue;  //ÎŞĞ§Öá Ìø¹ı
-				if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)//´¥·¢ÕıÏŞÎ»
-				{
-					dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].pos_soft;//ĞÂÖÕµãÉèÎªÏŞÎ»µã
-				}
-				else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)//´¥·¢¸ºÏŞÎ»
-				{
-					dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].neg_soft;//ĞÂÖÕµãÉèÎªÏŞÎ»µã
-				}
-				else//Î´´¥·¢ÏŞÎ»µÄÖá£ºÌø¹ı
-				{
-					continue;
-				}
-				/* Ñ¡½çºÍ½ØÍ£¹²ÓÃÓĞÏò¾àÀë£¬±£Áô³¤»¡ÏóÏŞ¼°ÆäËûÁª¶¯ÖáµÄ¾àÀë±ÈÀı¡£ */
+        if (preparePlanningAndDistReAvg(&pSG2Pointer->SPlanData, TRUE) == -2) //é€Ÿåº¦è§„åˆ’+å¹³æ‘Š
+        {                                                                     //è§„åˆ’å¤±è´¥  æ¢å›åŸæ¥çš„å‚æ•°
+            pSG2Pointer->SPlanData.dVmax = dVmax;
+            pSG2Pointer->SPlanData.dVs = dVs;
+            pSG2Pointer->SPlanData.dVe = dVe;
+            pSG2Pointer->SPlanData.dAcc = dAcc;
+            pSG2Pointer->SPlanData.dDec = dDec;
+        }
+        else
+        { //è§„åˆ’æˆåŠŸ  æ—¶é—´ç½®0
+            pSG2Pointer->SPlanData.unCurrentT = 0;
+        }
+        //è½¯é™ä½çš„åˆ¤æ–­
+        pSRun->cSoftLimitedOn = softLimit(pSG2Pointer->pSChannel, pSG2Pointer->SStartPoint, pSG2Pointer->SEndPoint,
+                                          pSG2Pointer->SMaxVal, pSG2Pointer->SMinVal, AXIS_NULL);
+        //åˆ¤æ–­åçš„å¤„ç†
+        switch (pSRun->cSoftLimitedOn)
+        {
+        case 1: //è§¦å‘è½¯é™ä½ï¼šé™ä½ç‚¹åœ¨å½“å‰çº¿æ®µå†…,å½“å‰æ®µèƒ½åœä¸‹ -> 1.é‡è®¾ç›®æ ‡è·ç¦»;2.é‡è®¾æœ«é€Ÿåº¦;3.è®¾ç½®æ’è¡¥è¿è¡ŒçŠ¶æ€ã€‚
+            for (int i = 0; i < AXIS_NUM_MAX; i++) //å¾ªç¯å„è½´æ‰¾å‡ºï¼ˆä¼˜å…ˆï¼‰è§¦å‘è½¯é™ä½çš„è½´ï¼Œé‡æ–°è®¾å®šè¿åŠ¨å‚æ•°
+            {
+                if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i))
+                    continue;                                                                      //æ— æ•ˆè½´ è·³è¿‡
+                if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS) //è§¦å‘æ­£é™ä½
+                {
+                    dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].pos_soft; //æ–°ç»ˆç‚¹è®¾ä¸ºé™ä½ç‚¹
+                }
+                else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG) //è§¦å‘è´Ÿé™ä½
+                {
+                    dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].neg_soft; //æ–°ç»ˆç‚¹è®¾ä¸ºé™ä½ç‚¹
+                }
+                else //æœªè§¦å‘é™ä½çš„è½´ï¼šè·³è¿‡
+                {
+                    continue;
+                }
                 if (!isZero(dNewEndPoint -
                             pSG2Pointer->SEndPoint
-                                .dArray[i])) //´¥·¢ÈíÏŞÎ»ºóÖÕµã·¢Éú¸Ä±ä£¬Ä¿±ê¾àÀë£¨»¡³¤£©Ò²ÒòÖÕµãµÄ¸Ä±ä·¢Éú±ä»¯
-				{
-                    if (i == pSG2Pointer->ucAxis[0]) //´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄºáÖá
+                                .dArray[i])) //è§¦å‘è½¯é™ä½åç»ˆç‚¹å‘ç”Ÿæ”¹å˜ï¼Œç›®æ ‡è·ç¦»ï¼ˆå¼§é•¿ï¼‰ä¹Ÿå› ç»ˆç‚¹çš„æ”¹å˜å‘ç”Ÿå˜åŒ–
+                {
+                    //1.é‡ç®—ç›®æ ‡è·ç¦»ã€‚æ ¹æ®èµ·ç»ˆç‚¹çš„å¤¹è§’é‡ç®—è¿åŠ¨çš„å¼§åº¦å¹¶åˆ©ç”¨å¼§é•¿å…¬å¼è®¡ç®—ã€‚
+                    if (i == pSG2Pointer->ucAxis[0]) //è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„æ¨ªè½´
                     {
                         dRad1 = acos(fabs((pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) /
-                                          pSG2Pointer->dRadius)); //ÆğµãÏà¶ÔÓÚºáÖáµÄ¼Ğ½Ç1£¬µ¥Î»£ºrad
+                                          pSG2Pointer->dRadius)); //èµ·ç‚¹ç›¸å¯¹äºæ¨ªè½´çš„å¤¹è§’1ï¼Œå•ä½ï¼šrad
                         dRad2 = acos(fabs((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) /
-                                          pSG2Pointer->dRadius)); //ĞÂÖÕµãÏà¶ÔÓÚºáÖáµÄ¼Ğ½Ç2£¬µ¥Î»£ºrad
+                                          pSG2Pointer->dRadius)); //æ–°ç»ˆç‚¹ç›¸å¯¹äºæ¨ªè½´çš„å¤¹è§’2ï¼Œå•ä½ï¼šrad
 
-                        //ÆğµãÓëĞÂÖÕµãÔÚÔ²ĞÄÁ½²à£¬ÔòÔË¶¯µÄ»¡¶ÈÎªPI-¼Ğ½Ç1-¼Ğ½Ç2£»ÆğµãÓëĞÂÖÕµãÔÚÔ²ĞÄÍ¬²à£¬ÔòÔË¶¯µÄ»¡¶ÈÎª|¼Ğ½Ç1-¼Ğ½Ç2|
+                        //èµ·ç‚¹ä¸æ–°ç»ˆç‚¹åœ¨åœ†å¿ƒä¸¤ä¾§ï¼Œåˆ™è¿åŠ¨çš„å¼§åº¦ä¸ºPI-å¤¹è§’1-å¤¹è§’2ï¼›èµ·ç‚¹ä¸æ–°ç»ˆç‚¹åœ¨åœ†å¿ƒåŒä¾§ï¼Œåˆ™è¿åŠ¨çš„å¼§åº¦ä¸º|å¤¹è§’1-å¤¹è§’2|
                         if ((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) *
                                     (pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) >
                                 0 ||
                             isZero(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) ||
                             isZero(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]))
-				{
+                        {
                             pSG2Pointer->SPlanData.dTargetDist = fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);
-				pSG2Pointer->SPlanData.dCurLeftDist =
+                            pSG2Pointer->SPlanData.dCurLeftDist =
                                 fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
-				}
+                        }
                         else
                         {
                             pSG2Pointer->SPlanData.dTargetDist = fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius);
@@ -1136,15 +1208,15 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
                         //pSG2Pointer->SPlanData.dTargetDist = pSG2Pointer->SPlanData.dCurLeftDist = (sgn(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) != sgn(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i])) ?
                         //	fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius) : fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);
                     }
-                    else if (i == pSG2Pointer->ucAxis[1]) //´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄ×İÖá
+                    else if (i == pSG2Pointer->ucAxis[1]) //è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„çºµè½´
                     {
                         dRad1 = asin(fabs((pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) /
-                                          pSG2Pointer->dRadius)); //ÆğµãÏà¶ÔÓÚºáÖáµÄ¼Ğ½Ç1£¬µ¥Î»£ºrad
+                                          pSG2Pointer->dRadius)); //èµ·ç‚¹ç›¸å¯¹äºæ¨ªè½´çš„å¤¹è§’1ï¼Œå•ä½ï¼šrad
                         dRad2 = asin(fabs((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) /
-                                          pSG2Pointer->dRadius)); //ĞÂÖÕµãÏà¶ÔÓÚºáÖáµÄ¼Ğ½Ç2£¬µ¥Î»£ºrad
+                                          pSG2Pointer->dRadius)); //æ–°ç»ˆç‚¹ç›¸å¯¹äºæ¨ªè½´çš„å¤¹è§’2ï¼Œå•ä½ï¼šrad
 
-                        //ÆğµãÓëĞÂÖÕµãÔÚÔ²ĞÄÁ½²à£¬ÔòÔË¶¯µÄ»¡¶ÈÎªPI-¼Ğ½Ç1-¼Ğ½Ç2£»ÆğµãÓëĞÂÖÕµãÔÚÔ²ĞÄÍ¬²à£¬ÔòÔË¶¯µÄ»¡¶ÈÎª|¼Ğ½Ç1-¼Ğ½Ç2|
-                        // ĞŞ¸Ä2025.9.29 £¬Ôö¼ÓÅĞ¶ÏÁ½¸¡µãÊıÏà¼õÊÇ·ñÏàµÈ£¬Èô²»ÅĞ¶ÏÔòÖµ¿ÉÄÜÓĞÕıÓĞ¸º£¬µ¼ÖÂÔË¶¯¼Ğ½Ç¼ÆËã´íÎó
+                        //èµ·ç‚¹ä¸æ–°ç»ˆç‚¹åœ¨åœ†å¿ƒä¸¤ä¾§ï¼Œåˆ™è¿åŠ¨çš„å¼§åº¦ä¸ºPI-å¤¹è§’1-å¤¹è§’2ï¼›èµ·ç‚¹ä¸æ–°ç»ˆç‚¹åœ¨åœ†å¿ƒåŒä¾§ï¼Œåˆ™è¿åŠ¨çš„å¼§åº¦ä¸º|å¤¹è§’1-å¤¹è§’2|
+                        // ä¿®æ”¹2025.9.29 ï¼Œå¢åŠ åˆ¤æ–­ä¸¤æµ®ç‚¹æ•°ç›¸å‡æ˜¯å¦ç›¸ç­‰ï¼Œè‹¥ä¸åˆ¤æ–­åˆ™å€¼å¯èƒ½æœ‰æ­£æœ‰è´Ÿï¼Œå¯¼è‡´è¿åŠ¨å¤¹è§’è®¡ç®—é”™è¯¯
                         if ((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) *
                                     (pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) >
                                 0 ||
@@ -1162,9 +1234,9 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
                                 fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
                         }
                         //pSG2Pointer->SPlanData.dTargetDist = pSG2Pointer->SPlanData.dCurLeftDist = (sgn(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) != sgn(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i])) ?
-                        //	fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius) : fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);//»¡³¤ÒòÖÕµãµÄ±ä»¯·¢Éú¸Ä±ä£¬Ô­¹ì¼£²»±ä
+                        //	fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius) : fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);//å¼§é•¿å› ç»ˆç‚¹çš„å˜åŒ–å‘ç”Ÿæ”¹å˜ï¼ŒåŸè½¨è¿¹ä¸å˜
                     }
-                    else //¶ÔÓÚ·ÇÆ½ÃæÔ²»¡´¥·¢µÄÈíÏŞÎ»£¬Ôò¸ù¾İÎ»ÒÆ·ÖÁ¿ÖØËãÄ¿±ê¾àÀë¡£
+                    else //å¯¹äºéå¹³é¢åœ†å¼§è§¦å‘çš„è½¯é™ä½ï¼Œåˆ™æ ¹æ®ä½ç§»åˆ†é‡é‡ç®—ç›®æ ‡è·ç¦»ã€‚
                     {
                         pSG2Pointer->SPlanData.dTargetDist = fabs((dNewEndPoint - pSG2Pointer->SStartPoint.dArray[i]) /
                                                                   pSG2Pointer->SStartVector.dArray[i]);
@@ -1172,524 +1244,572 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
                             fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
                     }
                 }
-				//2.ÖØËãÄ©ËÙ¶È = ÖÕÖ¹ËÙ¶È
-				pSG2Pointer->dReCalculateVe = g_SSystemPara.dSysMinVel;
-				//3.²å²¹×´Ì¬£ºÔËĞĞ
-				pSG2Pointer->ucInpStatus = INP_RUNNING;
-				break;
-			}
-			break;
-		case 2://´¥·¢ÈíÏŞÎ»£ºÏŞÎ»µãÔÚµ±Ç°Ïß¶ÎÍâ£¬µ±Ç°Ïß¶Î²»Í£ -> 1.ÖØËãÄ©ËÙ¶È;2.ÉèÖÃ²å²¹ÔËĞĞ×´Ì¬¡£
-			for (int i = 0; i < AXIS_NUM_MAX; i++)//Ñ­»·¸÷ÖáÕÒ³ö£¨ÓÅÏÈ£©´¥·¢ÈíÏŞÎ»µÄÖá£¬ÖØĞÂÉè¶¨ÔË¶¯²ÎÊı
-			{
-				if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i)) continue;  //ÎŞĞ§Öá Ìø¹ı
-				if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)//´¥·¢ÕıÏŞÎ»
-				{
-					dSingleAxisLeftDist = g_SSystemPara.MOTOR_WARN[i].pos_soft - pSG2Pointer->SEndPoint.dArray[i];//1.¼ÆËãµ¥ÖáÏŞÎ»µãµ½ÖÕµãµÄÊ£ÓàÎ´×ßµÄµ¥ÖáÔË¶¯¾àÀë
-				}
-				else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)//´¥·¢¸ºÏŞÎ»
-				{
-					dSingleAxisLeftDist = pSG2Pointer->SEndPoint.dArray[i] - g_SSystemPara.MOTOR_WARN[i].neg_soft;//1.¼ÆËãµ¥ÖáÏŞÎ»µãµ½ÖÕµãµÄÊ£ÓàÎ´×ßµÄµ¥ÖáÔË¶¯¾àÀë
-				}
-				else//Î´´¥·¢ÏŞÎ»µÄÖá£ºÌø¹ı
-				{
-					continue;
-				}
-				if (i == pSG2Pointer->ucAxis[0])//´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄºáÖá
-				{
-					dResultantLeftDist = dSingleAxisLeftDist / cos(pSG2Pointer->dCurEndPointAngle);
-				}
-				else if (i == pSG2Pointer->ucAxis[1])//´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄ×İÖá
-				{
-					dResultantLeftDist = dSingleAxisLeftDist / sin(pSG2Pointer->dCurEndPointAngle);
-				}
-				else
-				{
-					dResultantLeftDist = dSingleAxisLeftDist / fabs(pSG2Pointer->SStartVector.dArray[i]);
-				}
-				//È¡ ÏµÍ³TĞÍºÏ³É¼õËÙ¶È Óë ÏµÍ³TĞÍµ¥Öá¼õËÙ¶È·´ËãµÄºÏ³É¼õËÙ¶È µÄ×îĞ¡Öµ×÷ÎªºÏ³ÉÔË¶¯µÄTĞÍ¼õËÙ¶È(·ÀÖ¹ÓÃ»§ÊäÈë¹ı´óµÄºÏ³É¼õËÙ¶È²ÎÊı)
-				dMinTDec = min(g_SSystemPara.dSysPlanTMaxDec, g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec / fabs(pSG2Pointer->SStartVector.dArray[i]));
-				//1.ÖØËãÄ©ËÙ¶È:ÒÔTĞÍ¼õËÙ¶ÈÖØËãµ±Ç°Ïß¶ÎµÄÄ©ËÙ¶È
-				pSG2Pointer->dReCalculateVe = sqrt(pow(g_SSystemPara.dSysMinVel, 2) + 2.0 * dMinTDec * fabs(dResultantLeftDist));
-				//2.²å²¹×´Ì¬£ºÔËĞĞ
-				pSG2Pointer->ucInpStatus = INP_RUNNING;
-				break;
-			}
-			break;
-		default://Î´´¥·¢ÈíÏŞÎ»
-			pSG2Pointer->ucInpStatus = INP_RUNNING;//²å²¹×´Ì¬£ºÔËĞĞ
-			break;
-		}
-
-	case INP_RUNNING://Ö´ĞĞÔË¶¯
-
-		if (bPauseOn) //¿ªÆôÔİÍ£´¦Àí
-		{
-			//ÏµÍ³TO_PAUSE×´Ì¬ ²å²¹½á¹¹ÌåµÄ×´Ì¬²»´¦ÓÚPAUSING
-			if (pSG2Pointer->pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE && pSG2Pointer->ucInpStatus != INP_PAUSING)
-			{
-				res = prepareToPauseG2(pSG2Pointer, pSUserData->dMinVe, pSUserData->dDec, TRUE);//²å²¹½á¹¹Ìå³õÊ¼»¯ Îª¼õËÙÄ£ĞÍ
-				if (res < 0)
-				{
-					parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum,GCODE_ERROR_NUM300,9999);
-					return res;
-				}
-				pSG2Pointer->ucInpStatus = INP_PAUSING;  //¸Ä±ä×´Ì¬ÎªÕıÔÚÔİÍ£
-			}
-		}
-
-	case INP_PAUSING://ÔİÍ£
-		//ÔËĞĞÊ±¼äÔö¼Ó
-		pSG2Pointer->SPlanData.unCurrentT += 1;
-
-		//»ñÈ¡µ½³¤Öá×ßµÄ¾àÀë
-		dDeltaL = nextstepPlanningAndDistReAvg(pSG2Pointer->SPlanData.unCurrentT, &pSG2Pointer->SPlanData);
-
-		//¼ÆËãÀíÂÛ×ø±êµã
-		res =calculateArcInterpolationPoint(dDeltaL, pSG2Pointer, (double*)&STargetPoint);
-		if (res < 0) return res;
-
-		//¼«×ø±ê´¦Àí
-		if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
-		{
-			double dCPoint;
-			int8 cDir = 1;
-			if (getBits(pSG2Pointer->unCommandType, CMD_POLAR_DIR_ADDR) == CMD_POLAR_DIR_NEGATIVE)
-			{
-				cDir = -1;
-			}
-			getSingleAxisRealTimePoint(&dCPoint, AXIS_C, ucMapArray);
-			//¼«×ø±ê×ª»¯Îª¾ø¶Ô×ø±ê
-			polarCoord2CommonCoord((double*)&STargetPoint, AXIS_NUM_MAX, g_SSystemPara.ucPolarInterpolationAxis[0], g_SSystemPara.ucPolarInterpolationAxis[1], cDir);
-			//¾ø¶Ô×ø±ê×ª»¯Îª»úĞµ×ø±ê
-			absPoint2RealTimePoint(pSG2Pointer->pSChannel->ucChannelNum, (double*)&STargetPoint, AXIS_NUM_MAX, pSG2Pointer->ucValStatus ^ (0x01 << AXIS_C));
-
-			//Ğı×ªÖáºÏ·¨ĞÔÅĞ¶Ï µ±Ç°µãºÍÄ¿±êµã¾àÀë¹ı´ó
-			STargetPoint.dArray[AXIS_C] = STargetPoint.dArray[AXIS_C] < 0 ? 360.0 + STargetPoint.dArray[AXIS_C] : STargetPoint.dArray[AXIS_C];
-			STargetPoint.dArray[AXIS_C] = (int)(dCPoint / 360) * 360 + STargetPoint.dArray[AXIS_C];
-			if (fabs(STargetPoint.dArray[AXIS_C] - dCPoint) >= 180)
-			{
-				STargetPoint.dArray[AXIS_C] = round(dCPoint / 360) * 360 - (int)(dCPoint / 360) * 360 + STargetPoint.dArray[AXIS_C];
-			}
-			if (fabs(STargetPoint.dArray[AXIS_C] - dCPoint) >= 180)
-			{
-				STargetPoint.dArray[AXIS_C] -= sgn(STargetPoint.dArray[AXIS_C] - dCPoint) * 360;
-			}
-		}
-		else if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-		{
-			STargetPoint.dArray[AXIS_C] = cylinderCoord2Common(STargetPoint.dArray[AXIS_C], pSG2Pointer->fCylinderRadius);
-		}
-		//ÍÖÔ² 2023.3.29
-#if	EllipseTEST
-		if (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC
-			|| getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ANTI_ARC)
-		{
-			//Ô²»¡×ø±ê×ª»»³ÉÍÖÔ²×ø±ê
-			commonArc2Ellipse((double*)&STargetPoint, (double*)&pSG2Pointer->SEllipseSCenterPoint, (double*)&STargetPoint, AXIS_NUM_MAX,
-				pSG2Pointer->dA, pSG2Pointer->dB, pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		}
-#endif
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-		if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
-		{
-			if ((getbit(pSG2Pointer->ucValStatus, AXIS_Y)) == TRUE)//YÖá·½ÏòÒªÔË¶¯
-			{
-				STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pSG2Pointer->pSChannel->dTANAngleYY1;//½«Ö±½Ç×ø±êÏµÏÂµÄ×ø±êµã×ª»¯ÎªÇãĞ±×ø±êÏµÏÂµÄµã
-				STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pSG2Pointer->pSChannel->dCOSAngleYY1;
-		}
-		}
-#endif
-#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //µ¥±íÂİ¾à²¹³¥+ ·´Ïò¼äÏ¶²¹³¥
-		//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //Ë«±íÂİ¾à²¹³¥
-		outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#else
-		//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#endif
-
-		//¼ÆËãµ±Ç°ËÙ¶È
-		pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = fabs(pSG2Pointer->SPlanData.dCurLeftDist - (pSG2Pointer->SPlanData.dTargetDist - dDeltaL)) / pSG2Pointer->SPlanData.dTc;
-
-		//¼ÆËã   !ÀíÂÛ! Î´×ß¾àÀë
-		pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dTargetDist - dDeltaL;
-
-		//ÅĞ¶ÏÈíÏŞÎ»¿ªÊ¼¼õËÙµÄÊ±»ú£º¼à²âµ±Ç°ËÙ¶È >= ÊµÊ±·´ËãµÄ×î´óËÙ¶È£¨TĞÍÏµÍ³²ÎÊı£©
-		if ((pSRun->cSoftLimitedOn == 1 || pSRun->cSoftLimitedOn == 2) && pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE)
-		{
-			dVmaxToLimitiedPoint = sqrt(pSG2Pointer->dReCalculateVe * pSG2Pointer->dReCalculateVe + 2 * g_SSystemPara.dSysPlanTMaxDec * pSG2Pointer->SPlanData.dCurLeftDist);//¸ù¾İÄ©ËÙ¶È¡¢TĞÍ¼ÓËÙ¶È¡¢Ê£Óà¾àÀëÊµÊ±·´ËãTĞÍÇúÏßÏÂµÄ×î´óËÙ¶È
-			if (pSG2Pointer->dCurrentSpeed >= dVmaxToLimitiedPoint)
-			{
-				pSG2Pointer->ucInpStatus = INP_DECELERATE;//²å²¹×´Ì¬£º¼õËÙÍ£
-				if (pSRun->cSoftLimitedOn == 2)//ÏŞÎ»µãÔÚµ±Ç°Ïß¶ÎÍâ
-				{
-					pSRun->cSoftLimitedOn = 3;//ÈíÏŞÎ»¿ª¹Ø±äÁ¿ÖÃÎª3,ĞèÒªºóĞøÏß¶Î²ÎÓë¼õËÙ
-				}
-				if (!isZero(pSG2Pointer->SPlanData.dCurLeftDist))//µ±Ç°¶ÎÊ£Óà¾àÀë»¹Î´×ßÍê£º½øÈë¼õËÙÍ£
-				{
-					pSG2Pointer->SPlanData.dDec = (pow(pSG2Pointer->dCurrentSpeed, 2) - pow(pSG2Pointer->dReCalculateVe, 2)) / (2.0 * pSG2Pointer->SPlanData.dCurLeftDist);//ÖØËãTĞÍ¼õËÙ¶È
-				}
-				else//µ±Ç°¶ÎÊ£Óà¾àÀëÒÑ×ßÍê£º½øÈë¼õËÙÍ£±¨¾¯
-				{
-					pSG2Pointer->SPlanData.dDec = 0;
-					break;
-				}
-			}
-		}
-#if HANDWHEEL_SIM_DISTANCE_ENABLE
-		if (
-			(pSG2Pointer->bIsUserData || !isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel)
-				|| pSG2Pointer->SPlanData.unCurrentT >= pSG2Pointer->SPlanData.unT5) &&
-			((pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD)
-			|| (pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_BACK)))
-#else
-		if ((pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD)
-			|| (pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_BACK))
-#endif
-		{
-			pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed;
-#if HANDWHEEL_SIM_DISTANCE_ENABLE
-			if (!pSG2Pointer->bIsUserData && isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel)
-				&& pSG2Pointer->SPlanData.dVe == 0.0)
-			{
-				pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = 0.0;
-			}
-#endif
-			pSG2Pointer->ucInpStatus = INP_FINISHED;
-			pSPreprocess->cInterpDir = pSG2Pointer->SPlanData.cInterpDir;
-			pSPreprocess->ucInpStatus = isZero(pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dTargetDist) ? INP_FINISHED : INP_PAUSING;
-			return 0;
-		}
-
-		break;
-
-	case INP_DECELERATE://Ö¸Áî¼õËÙ (ÌİĞÎ¼õËÙ.ÎŞĞè¹æ»®(ÀûÓÃ¼ÓËÙ¶ÈºÍµ±Ç°ËÙ¶È¼ÆËã))
-		if (pSRun->cSoftLimitedOn == 0)//Î´´¥·¢ÈíÏŞÎ»µÄ¼õËÙÔË¶¯[ËÙ¶ÈÄ£Ê½]
-		{
-			if (pSG2Pointer->dCurrentSpeed <= g_SSystemPara.dSysMinVel)// ËÙ¶È´ïµ½Ä©ËÙ¶È·¶Î§ÄÚ  Á¢¼´Í£
-			{
-				pSG2Pointer->dCurrentSpeed = 0;//ÔË¶¯½áÊø µ±Ç°ËÙ¶ÈÖÃÎª0
-				pSG2Pointer->ucInpStatus = INP_FINISHED;
-				pSPreprocess->ucInpStatus = INP_FINISHED;
-				break;
-			}
-			pSG2Pointer->SPlanData.dDec = g_SSystemPara.dSysPlanTMaxDec;//»ñÈ¡ÏµÍ³²ÎÊıÉèÖÃµÄTĞÍ¼õËÙ¶È
-		}
-
-		if (pSG2Pointer->dCurrentSpeed >= pSG2Pointer->SPlanData.dDec * pSG2Pointer->SPlanData.dTc)
-		{
-			//¼ÆËã³¤ÖáÏà¶ÔÆğµãµÄ¾àÀë ÀûÓÃ¼ÓËÙ¶È¼ÆËã//2024/12/17 ×¢ÊÍ£º¼õËÙ¾àÀë¹«Ê½´íÎó£¬ÔÈ¼õËÙÃ¿¸öÖÜÆÚµÄÎ»ÒÆÔöÁ¿ÎªVcur * 1 - 0.5 * Dec * 1 * 1¡£
-			//dDeltaL = pSG2Pointer->SPlanData.dPreDist + pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist + pSG2Pointer->dCurrentSpeed - pSG2Pointer->SPlanData.dDec;
-			dDeltaL = pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist + pSG2Pointer->dCurrentSpeed - 0.5 * pSG2Pointer->SPlanData.dDec;
-		}
-		else
-		{
-			if (pSRun->cSoftLimitedOn == 0)//Î´´¥·¢ÈíÏŞÎ»µÄ¼õËÙÔË¶¯[ËÙ¶ÈÄ£Ê½]£º×îºóÒ»¸öÖÜÆÚÒªÇóËÙ¶ÈÍ£ÏÂ£¬Î»ÖÃÎŞÒªÇó
-			{
-				dDeltaL = pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist;
-			}
-			else//´¥·¢ÈíÏŞÎ»µÄ¼õËÙÔË¶¯[Î»ÖÃÄ£Ê½]£º×îºóÒ»¸öÖÜÆÚÒªÇóÍ£µ½ÖÕµãÎ»ÖÃ
-			{
-				dDeltaL = pSG2Pointer->SPlanData.dTargetDist;
-				pSG2Pointer->SPlanData.dCurLeftDist = 0;
-			}
-		}
-
-		//ÅĞ¶ÏÊÇ·ñ»á³¬¹ıÖÕµã
-		if (dDeltaL > pSG2Pointer->SPlanData.dTargetDist)
-		{
-			dDeltaL = pSG2Pointer->SPlanData.dTargetDist;
-		}
-
-		//¼ÆËãÀíÂÛ×ø±êµã
-		res = calculateArcInterpolationPoint(dDeltaL, pSG2Pointer, (double*)&STargetPoint);
-		if (res < 0) return res;
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-		if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
-		{
-			if ((getbit(pSG2Pointer->ucValStatus, AXIS_Y)) == TRUE)//YÖá·½ÏòÒªÔË¶¯
-			{
-				STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pSG2Pointer->pSChannel->dTANAngleYY1;//½«Ö±½Ç×ø±êÏµÏÂµÄ×ø±êµã×ª»¯ÎªÇãĞ±×ø±êÏµÏÂµÄµã
-				STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pSG2Pointer->pSChannel->dCOSAngleYY1;
-			}
-		}
-#endif
-#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //µ¥±íÂİ¾à²¹³¥+ ·´Ïò¼äÏ¶²¹³¥
-		//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //Ë«±íÂİ¾à²¹³¥
-		outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#else
-		//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
-#endif
-
-		//¼ÆËãµ±Ç°ËÙ¶È //2024/12/12 ×¢ÊÍ£º¸Ã¹«Ê½¼ÆËãµÄÊÇ²å²¹ÖÜÆÚ1msµÄÆ½¾ùËÙ¶È£¨ÒÆ¶¯Á¿/1ms£©£¬¶øÔÚ¼õËÙ¹ı³Ì¼ÆËãÏà¶ÔÆğµãµÄ¹«Ê½¼ÆËãÊ¹ÓÃµÄÊÇÒÆ¶¯ºóµÄË²Ê±ËÙ¶È
-		//pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = fabs(pSG2Pointer->SPlanData.dCurLeftDist - (pSG2Pointer->SPlanData.dTargetDist - dDeltaL)) / pSG2Pointer->SPlanData.dTc;
-		pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = pSG2Pointer->dCurrentSpeed - pSG2Pointer->SPlanData.dDec * pSG2Pointer->SPlanData.dTc;
-		//¼ÆËã   !ÀíÂÛ! Î´×ß¾àÀë
-		pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dTargetDist - dDeltaL;
-
-		if (pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON)//ÔËĞĞ½áÊøÌõ¼ş
-		{
-			if (pSRun->cSoftLimitedOn == 1 && pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE)//µ±Ç°Ïß¶ÎÄÜ¹»Í£ÏÂ
-			{
-				for (int i = 0; i < AXIS_NUM_MAX; i++)//Ñ°ÕÒ³ö´¥·¢ÈíÏŞÎ»µÄÖá²¢±¨¾¯
-				{
-					/* Ö»Ïû·Ñ±¾¶ÎÓĞĞ§ÖáµÄÏŞÎ»±ê¼Ç£¬ÆäËûÔË¶¯ÁôÏÂµÄ±ê¼Ç²»ÔÚ´Ë±¨¾¯»òÇå³ı¡£ */
-					if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)
-					{
-						parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM41 + i, 9999);
-						pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode = SINGLEAXIS_MODE; //ÏŞÎ»Ä£Ê½ ÇĞ»»Îªµ¥ÖáÄ£Ê½
-//						setErrorWriteFlag(FALSE);//Çå³ı±¨¾¯Ğ´Èë±êÖ¾Î»£¬·ÀÖ¹½øÈë±¨¾¯ÖáÍ£º¯Êı //×¢ÊÍ2025.12.11 ÔÚÈíÏŞÎ»±¨¾¯ºóĞèÒªÖ÷ÖáÍ£
-						break;
-					}
-					if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)
-					{
-						parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM47 + i, 9999);
-						pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode = SINGLEAXIS_MODE; //ÏŞÎ»Ä£Ê½ ÇĞ»»Îªµ¥ÖáÄ£Ê½
-//						setErrorWriteFlag(FALSE);//Çå³ı±¨¾¯Ğ´Èë±êÖ¾Î»£¬·ÀÖ¹½øÈë±¨¾¯ÖáÍ£º¯Êı //×¢ÊÍ2025.12.11 ÔÚÈíÏŞÎ»±¨¾¯ºóĞèÒªÖ÷ÖáÍ£
-						break;
-					}
-				}
-				pSG2Pointer->dCurrentSpeed = 0;//ÔË¶¯½áÊø µ±Ç°ËÙ¶ÈÖÃÎª0
-				pSRun->cSoftLimitedOn = 0;//ÈíÏŞÎ»¿ª¹Ø¹Ø±Õ£º¿ª¹Ø±äÁ¿ÖÃ0
-				pSG2Pointer->pSChannel->ucChannelStatus = SYS_IDLE;//Í£ÏÂºóÏµÍ³×´Ì¬ÖÃÎª¿ÕÏĞ
-			}
-			else if (pSRun->cSoftLimitedOn == 3 && pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE)//ÈíÏŞÎ»µã²»ÔÚµ±Ç°Ïß¶Î£¬ÈÔĞè¼õËÙ
-			{
-				pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed;//µ±Ç°ËÙ¶È±£´æÔÚÔËĞĞ½á¹¹ÌåÀï
-			}
-			else
-			{
-				pSG2Pointer->dCurrentSpeed = 0;//ÔË¶¯½áÊø µ±Ç°ËÙ¶ÈÖÃÎª0
-			}
-			pSG2Pointer->ucInpStatus = INP_FINISHED; //×´Ì¬¸Ä±äÎªFINISHED
-			pSPreprocess->ucInpStatus = INP_FINISHED;
-			return 0;
-		}
-		break;
-
-	case INP_STOP://Ö¸ÁîÁ¢¼´Í£
-
-		pSG2Pointer->dCurrentSpeed = 0;//ÔË¶¯½áÊø µ±Ç°ËÙ¶ÈÖÃÎª0
-		pSG2Pointer->ucInpStatus = INP_FINISHED; //×´Ì¬¸Ä±äÎªFINISHED
-		pSPreprocess->ucInpStatus = INP_FINISHED;
-		break;
-	}
-	return 1;
-}
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºdouble calcArcAngle(double *dCenterPoint, double *dStartPoint, double *dEndPoint, uint8 ucInpDir)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÔ²»¡ÉÏÁ½µãÖ®¼äµÄÑØ²å²¹·½ÏòµÄÔ²ĞÄ½Ç£¨0-360¶È£©
-  ÊäÈë²ÎÊı£ºpCenterPoint-Ö¸ÏòÔ²ĞÄ×ø±êÊı×é£¬pStartPoint-Ö¸ÏòÆğµã×ø±êÊı×é¡¢pEndPoint-Ö¸ÏòÖÕµã×ø±êÊı×é£¬²å²¹·½ÏòucInpDir£¨0=G02£¬1=G03£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÆğÊ¼ÏòÁ¿ÓëÖÕµãÏòÁ¿µÄ¼Ğ½Ç£¨0-360¶È£©
-  ±¸    ×¢£º
-**************************************************/
-double calcArcAngle(double *pCenterPoint, double *pStartPoint, double *pEndPoint, uint8 ucInpDir) // 2025.9.27
-{
-	// ²½Öè1£º¼ÆËãÏòÁ¿OA¡¢OB£¨A¡¢BÏà¶ÔÓÚÔ²ĞÄµÄÏòÁ¿£©
-	double dStartVector[2];								// ÆğÊ¼ÏòÁ¿
-	double dEndVector[2];								// ½áÊøÏòÁ¿
-	dStartVector[0] = pStartPoint[0] - pCenterPoint[0]; // ÆğÊ¼ÏòÁ¿µÄºáÖá
-	dStartVector[1] = pStartPoint[1] - pCenterPoint[1]; // ÆğÊ¼ÏòÁ¿µÄ×İÖá
-	dEndVector[0] = pEndPoint[0] - pCenterPoint[0];		// ½áÊøÏòÁ¿µÄºáÖá
-	dEndVector[1] = pEndPoint[1] - pCenterPoint[1];		// ½áÊøÏòÁ¿µÄ×İÖá
-
-	// ²½Öè2£º¼ÆËãÏòÁ¿µÄµã»ıºÍÄ££¨Çó¼Ğ½ÇµÄÓàÏÒÖµ£©
-	double dDot = dStartVector[0] * dEndVector[0] + dStartVector[1] * dEndVector[1];				// ÏòÁ¿µÄµã»ı
-	double dStartLen = sqrt(dStartVector[0] * dStartVector[0] + dStartVector[1] * dStartVector[1]); // ÆğÊ¼ÏòÁ¿µÄÄ£
-	double dEndlen = sqrt(dEndVector[0] * dEndVector[0] + dEndVector[1] * dEndVector[1]);			// ½áÊøÏòÁ¿µÄÄ£
-
-	// ²½Öè3£º¼ÆËã¡°×îĞ¡Ô²ĞÄ½Ç¡±£¨0~¦Ğ£©
-	double dCosValue = dDot / (dStartLen * dEndlen);
-	// ÏŞÖÆdCosValueÔÚ[-1,1]ÄÚ£¨±ÜÃâ¸¡µãÎó²îµ¼ÖÂacos·µ»ØNaN£©
-	dCosValue = (dCosValue > 1.0) ? 1.0 : (dCosValue < -1.0) ? -1.0
-															 : dCosValue;
-	double dAngle = acos(dCosValue);
-
-	// ²½Öè4£º¸ù¾İucInpDir·½Ïò£¬È·¶¨¡°Êµ¼ÊÂ·¾¶µÄÔ²ĞÄ½Ç¡±£¨0~2¦Ğ£©
-	double dCrossDir = (dStartVector[0] * dEndVector[1]) - (dStartVector[1] * dEndVector[0]); // ÆğµãÏòÁ¿ ¡Á ÖÕµãÏòÁ¿£¨²æ³ËÅĞ¶Ï·½Ïò£©
-	if (ucInpDir == 1)																		  // G03£¨ÄæÊ±Õë£©£ºÈô²æ»ıÎª¸º£¬Ğè×ß2¦Ğ - dAngle£¨³¤»¡£©
-	{
-		return (dCrossDir >= 0) ? dAngle : (2 * PI - dAngle);
-	}
-	else // G02£¨Ë³Ê±Õë£©£ºÈô²æ»ıÎªÕı£¬Ğè×ß2¦Ğ - dAngle£¨³¤»¡£©
-	{
-		return (dCrossDir <= 0) ? dAngle : (2 * PI - dAngle);
-	}
-}
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºcheckG2FirstAxisSoftLimit
-  º¯Êı¹¦ÄÜ£º±È½ÏÓĞĞ§Ö±ÏßÖáµÄÕı¸ºÈíÏŞÎ»£¬±ê¼ÇÑØÔ²»¡×îÏÈµ½´ïµÄ±ß½ç
-  ÊäÈë²ÎÊı£ºpSChannel - ÒÑ¼ÓÔØ SG02 µÄÍ¨µÀ£»SStartPoint - µ±Ç°Ô²»¡Æğµã
-            SMaxVal¡¢SMinVal - µ±Ç°Ô²»¡¸÷Öá×îÖµ£¬ÓëÏŞÎ»Ê¹ÓÃÍ¬Ò»×ø±êÏµ
-  Êä³ö²ÎÊı£ºÖØ½¨±¾¶ÎÓĞĞ§ÖáµÄÏŞÎ»±ê¼Ç£»ÎŞĞ§¼¸ºÎÊ±±ê¼Ç¸ÃÖá½»ÓÉ motionArc ±¨¾¯
-  ·µ »Ø Öµ£º1 - ÓĞ´ı´¦ÀíÏŞÎ»£»-1 - ÎŞÏŞÎ»»òÍ¨µÀ²ÎÊıÎŞĞ§
-  ±¸    ×¢£ºÖ»¶ÁÏµÍ³ÖáÓ³Éä¡¢ÖáÀàĞÍºÍÏŞÎ»ÅäÖÃ£»²»Ìá½»Âö³å£¬²»Ìø¹ıÍ¬ÖáÁíÒ»²à
-****************************************/
-int8 checkG2FirstAxisSoftLimit(struct SChannel *pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal, SPointDouble SMinVal)
-{
-    double dNearestPosLimited = 9999.9; // ÓÃÓÚÅĞ¶Ï×îÏÈ´¥·¢ÕıÈíÏŞÎ»ÖáµÄ¼Ğ½Ç±äÁ¿
-    double dNearestNegLimited = 9999.9; // ÓÃÓÚÅĞ¶Ï×îÏÈ´¥·¢¸ºÈíÏŞÎ»ÖáµÄ¼Ğ½Ç±äÁ¿
-    int8 cPosLimitedAXIS = -1;          // ×îÏÈ´¥·¢ÕıÈíÏŞÎ»µÄÖáºÅ
-    int8 cNegLimitedAXIS = -1;          // ×îÏÈ´¥·¢¸ºÈíÏŞÎ»µÄÖáºÅ
-    double dRad1 = 0;                   // Ô²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç1
-    double dRad2 = 0;                   // Ô²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç2
-    double dPosMinRad = 10000;          // ÕıÈíÏŞÎ»µã×îĞ¡ÔË¶¯¼Ğ½Ç
-    double dNegMinRad = 10000;          // ¸ºÈíÏŞÎ»µã×îĞ¡ÔË¶¯¼Ğ½Ç
-    double dCenterPoint[2];             // 0-Ô²ĞÄºáÖá×ø±ê,1-Ô²ĞÄ×İÖá×ø±ê
-    double dStartPoint[2];              // 0-ÆğµãºáÖá×ø±ê,1-Æğµã×İÖá×ø±ê
-
-    uint8* pMapAxisArray = pSChannel->pMapAxisArray; // »ñÈ¡Ó³Éä
-    struct SG2* pSG2Pointer = &pSChannel->SG02;      // »ñÈ¡G2½á¹¹ÌåÖ¸Õë
-
-    // Ô²»¡²ÎÊı
-    uint8 ucInpDir =
-        (getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC) ? 1 : 0; // ²å²¹·½Ïò
-    dCenterPoint[0] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[0]];                          // Ô²ĞÄºáÖá×ø±ê
-    dCenterPoint[1] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[1]];                          // Ô²ĞÄ×İÖá×ø±ê
-    dStartPoint[0] = SStartPoint.dArray[pSG2Pointer->ucAxis[0]];                                         // ÆğµãºáÖá×ø±ê
-    dStartPoint[1] = SStartPoint.dArray[pSG2Pointer->ucAxis[1]];                                         // Æğµã×İÖá×ø±ê
-    double dRadius = pSG2Pointer->dRadius;                                                               // Ô²»¡°ë¾¶
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		/* ÑØÓÃÓĞĞ§Öá¼°Ğı×ªÖáÅÅ³ı¹æÔò£¬Ó³ÉäÔ½½ç²»·ÃÎÊÎïÀíÖá²ÎÊı¡£ */
-		if (g_SSystemPara.ucAxisMapArray[pSChannel->ucChannelNum][i] == AXIS_NULL
-			||
-            g_SSystemPara.SAxisPara[pMapAxisArray[i]].ucAxisType == ROTATION_AXIS) // ÖáÓ³ÉäÎª¿Õ»òĞı×ªÖá£¬Ìø¹ı
-            continue;
-
-        if (VAL_VALID != getbit(pSChannel->SPreProcess.SUserData.ucValStatus, i)) // ÎŞĞ§Öá£¬Ìø¹ı
-            continue;
-
-        // ÕıÏŞÎ»¼ì²é
-        if (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_pos == 1) // ¿ªÆôÕıÏŞÎ»¼ì²â
-		{
-            if (SMaxVal.dArray[i] > g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft) // ×îÖµµã > ÕıÏŞÎ»µã
+                //2.é‡ç®—æœ«é€Ÿåº¦ = ç»ˆæ­¢é€Ÿåº¦
+                pSG2Pointer->dReCalculateVe = g_SSystemPara.dSysMinVel;
+                //3.æ’è¡¥çŠ¶æ€ï¼šè¿è¡Œ
+                pSG2Pointer->ucInpStatus = INP_RUNNING;
+                break;
+            }
+            break;
+        case 2: //è§¦å‘è½¯é™ä½ï¼šé™ä½ç‚¹åœ¨å½“å‰çº¿æ®µå¤–ï¼Œå½“å‰çº¿æ®µä¸åœ -> 1.é‡ç®—æœ«é€Ÿåº¦;2.è®¾ç½®æ’è¡¥è¿è¡ŒçŠ¶æ€ã€‚
+            for (int i = 0; i < AXIS_NUM_MAX; i++) //å¾ªç¯å„è½´æ‰¾å‡ºï¼ˆä¼˜å…ˆï¼‰è§¦å‘è½¯é™ä½çš„è½´ï¼Œé‡æ–°è®¾å®šè¿åŠ¨å‚æ•°
             {
-                if (i == pSG2Pointer->ucAxis[0]) // ´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄºáÖá
+                if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i))
+                    continue;                                                                      //æ— æ•ˆè½´ è·³è¿‡
+                if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS) //è§¦å‘æ­£é™ä½
                 {
-                    // ¼ÆËã½»µã
-                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft -
-                                                                     pSG2Pointer->SCenterPoint.dArray[i],
-                                                                 2));
-                    double dCrossPoint1 = dValue + dCenterPoint[1];  // ¼ÆËãºáÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µã×İÖá×ø±ê½Ï´óÖµ
-                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // ¼ÆËãºáÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µã×İÖá×ø±ê½ÏĞ¡Öµ
-                    double dEndPoint1[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
-                                            dCrossPoint1}; // Ô²»¡1µÄÖÕµã
-                    double dEndPoint2[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
-                                            dCrossPoint2}; // Ô²»¡2µÄÖÕµã
-                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
-                                         ucInpDir); // ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç1
-                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
-                                         ucInpDir); // ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç2
-                    dPosMinRad = min(dRad1, dRad2); // È¡×îĞ¡Öµ£¬ÉèÖÃ×îÏÈ´¥·¢ÏŞÎ»µÄ¼Ğ½Ç
+                    dSingleAxisLeftDist =
+                        g_SSystemPara.MOTOR_WARN[i].pos_soft -
+                        pSG2Pointer->SEndPoint.dArray[i]; //1.è®¡ç®—å•è½´é™ä½ç‚¹åˆ°ç»ˆç‚¹çš„å‰©ä½™æœªèµ°çš„å•è½´è¿åŠ¨è·ç¦»
                 }
-                else if (i == pSG2Pointer->ucAxis[1]) // ´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄ×İÖá
+                else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG) //è§¦å‘è´Ÿé™ä½
                 {
-                    // ¼ÆËã½»µã
+                    dSingleAxisLeftDist =
+                        pSG2Pointer->SEndPoint.dArray[i] -
+                        g_SSystemPara.MOTOR_WARN[i].neg_soft; //1.è®¡ç®—å•è½´é™ä½ç‚¹åˆ°ç»ˆç‚¹çš„å‰©ä½™æœªèµ°çš„å•è½´è¿åŠ¨è·ç¦»
+                }
+                else //æœªè§¦å‘é™ä½çš„è½´ï¼šè·³è¿‡
+                {
+                    continue;
+                }
+                if (i == pSG2Pointer->ucAxis[0]) //è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„æ¨ªè½´
+                {
+                    dResultantLeftDist = dSingleAxisLeftDist / cos(pSG2Pointer->dCurEndPointAngle);
+                }
+                else if (i == pSG2Pointer->ucAxis[1]) //è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„çºµè½´
+                {
+                    dResultantLeftDist = dSingleAxisLeftDist / sin(pSG2Pointer->dCurEndPointAngle);
+                }
+                else
+                {
+                    dResultantLeftDist = dSingleAxisLeftDist / fabs(pSG2Pointer->SStartVector.dArray[i]);
+                }
+                //å– ç³»ç»ŸTå‹åˆæˆå‡é€Ÿåº¦ ä¸ ç³»ç»ŸTå‹å•è½´å‡é€Ÿåº¦åç®—çš„åˆæˆå‡é€Ÿåº¦ çš„æœ€å°å€¼ä½œä¸ºåˆæˆè¿åŠ¨çš„Tå‹å‡é€Ÿåº¦(é˜²æ­¢ç”¨æˆ·è¾“å…¥è¿‡å¤§çš„åˆæˆå‡é€Ÿåº¦å‚æ•°)
+                dMinTDec = min(g_SSystemPara.dSysPlanTMaxDec, g_SSystemPara.SAxisPara[ucMapArray[i]].dSysPlanTMaxDec /
+                                                                  fabs(pSG2Pointer->SStartVector.dArray[i]));
+                //1.é‡ç®—æœ«é€Ÿåº¦:ä»¥Tå‹å‡é€Ÿåº¦é‡ç®—å½“å‰çº¿æ®µçš„æœ«é€Ÿåº¦
+                pSG2Pointer->dReCalculateVe =
+                    sqrt(pow(g_SSystemPara.dSysMinVel, 2) + 2.0 * dMinTDec * fabs(dResultantLeftDist));
+                //2.æ’è¡¥çŠ¶æ€ï¼šè¿è¡Œ
+                pSG2Pointer->ucInpStatus = INP_RUNNING;
+                break;
+            }
+            break;
+        default:                                    //æœªè§¦å‘è½¯é™ä½
+            pSG2Pointer->ucInpStatus = INP_RUNNING; //æ’è¡¥çŠ¶æ€ï¼šè¿è¡Œ
+            break;
+        }
+
+    case INP_RUNNING: //æ‰§è¡Œè¿åŠ¨
+
+        if (bPauseOn) //å¼€å¯æš‚åœå¤„ç†
+        {
+            //ç³»ç»ŸTO_PAUSEçŠ¶æ€ æ’è¡¥ç»“æ„ä½“çš„çŠ¶æ€ä¸å¤„äºPAUSING
+            if (pSG2Pointer->pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE && pSG2Pointer->ucInpStatus != INP_PAUSING)
+            {
+                res = prepareToPauseG2(pSG2Pointer, pSUserData->dMinVe, pSUserData->dDec,
+                                       TRUE); //æ’è¡¥ç»“æ„ä½“åˆå§‹åŒ– ä¸ºå‡é€Ÿæ¨¡å‹
+                if (res < 0)
+                {
+                    parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM300, 9999);
+                    return res;
+                }
+                pSG2Pointer->ucInpStatus = INP_PAUSING; //æ”¹å˜çŠ¶æ€ä¸ºæ­£åœ¨æš‚åœ
+            }
+        }
+
+    case INP_PAUSING: //æš‚åœ
+        //è¿è¡Œæ—¶é—´å¢åŠ 
+        pSG2Pointer->SPlanData.unCurrentT += 1;
+
+        //è·å–åˆ°é•¿è½´èµ°çš„è·ç¦»
+        dDeltaL = nextstepPlanningAndDistReAvg(pSG2Pointer->SPlanData.unCurrentT, &pSG2Pointer->SPlanData);
+
+        //è®¡ç®—ç†è®ºåæ ‡ç‚¹
+        res = calculateArcInterpolationPoint(dDeltaL, pSG2Pointer, (double*)&STargetPoint);
+        if (res < 0)
+            return res;
+
+        //æåæ ‡å¤„ç†
+        if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
+        {
+            double dCPoint;
+            int8 cDir = 1;
+            if (getBits(pSG2Pointer->unCommandType, CMD_POLAR_DIR_ADDR) == CMD_POLAR_DIR_NEGATIVE)
+            {
+                cDir = -1;
+            }
+            getSingleAxisRealTimePoint(&dCPoint, AXIS_C, ucMapArray);
+            //æåæ ‡è½¬åŒ–ä¸ºç»å¯¹åæ ‡
+            polarCoord2CommonCoord((double*)&STargetPoint, AXIS_NUM_MAX, g_SSystemPara.ucPolarInterpolationAxis[0],
+                                   g_SSystemPara.ucPolarInterpolationAxis[1], cDir);
+            //ç»å¯¹åæ ‡è½¬åŒ–ä¸ºæœºæ¢°åæ ‡
+            absPoint2RealTimePoint(pSG2Pointer->pSChannel->ucChannelNum, (double*)&STargetPoint, AXIS_NUM_MAX,
+                                   pSG2Pointer->ucValStatus ^ (0x01 << AXIS_C));
+
+            //æ—‹è½¬è½´åˆæ³•æ€§åˆ¤æ–­ å½“å‰ç‚¹å’Œç›®æ ‡ç‚¹è·ç¦»è¿‡å¤§
+            STargetPoint.dArray[AXIS_C] =
+                STargetPoint.dArray[AXIS_C] < 0 ? 360.0 + STargetPoint.dArray[AXIS_C] : STargetPoint.dArray[AXIS_C];
+            STargetPoint.dArray[AXIS_C] = (int)(dCPoint / 360) * 360 + STargetPoint.dArray[AXIS_C];
+            if (fabs(STargetPoint.dArray[AXIS_C] - dCPoint) >= 180)
+            {
+                STargetPoint.dArray[AXIS_C] =
+                    round(dCPoint / 360) * 360 - (int)(dCPoint / 360) * 360 + STargetPoint.dArray[AXIS_C];
+            }
+            if (fabs(STargetPoint.dArray[AXIS_C] - dCPoint) >= 180)
+            {
+                STargetPoint.dArray[AXIS_C] -= sgn(STargetPoint.dArray[AXIS_C] - dCPoint) * 360;
+            }
+        }
+        else if (getBits(pSG2Pointer->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
+        {
+            STargetPoint.dArray[AXIS_C] =
+                cylinderCoord2Common(STargetPoint.dArray[AXIS_C], pSG2Pointer->fCylinderRadius);
+        }
+        //æ¤­åœ† 2023.3.29
+#if EllipseTEST
+        if (getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ARC ||
+            getBits(pSG2Pointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ELLIPSE_ANTI_ARC)
+        {
+            //åœ†å¼§åæ ‡è½¬æ¢æˆæ¤­åœ†åæ ‡
+            commonArc2Ellipse((double*)&STargetPoint, (double*)&pSG2Pointer->SEllipseSCenterPoint,
+                              (double*)&STargetPoint, AXIS_NUM_MAX, pSG2Pointer->dA, pSG2Pointer->dB,
+                              pSG2Pointer->dCoordRotation, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        }
+#endif
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+        if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
+        {
+            if ((getbit(pSG2Pointer->ucValStatus, AXIS_Y)) == TRUE) //Yè½´æ–¹å‘è¦è¿åŠ¨
+            {
+                STargetPoint.dArray[AXIS_X] +=
+                    1.0 * STargetPoint.dArray[AXIS_Y] *
+                    pSG2Pointer->pSChannel->dTANAngleYY1; //å°†ç›´è§’åæ ‡ç³»ä¸‹çš„åæ ‡ç‚¹è½¬åŒ–ä¸ºå€¾æ–œåæ ‡ç³»ä¸‹çš„ç‚¹
+                STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pSG2Pointer->pSChannel->dCOSAngleYY1;
+            }
+        }
+#endif
+#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //å•è¡¨èºè·è¡¥å¿+ åå‘é—´éš™è¡¥å¿
+        //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm,
+                                    &pSG2Pointer->ucValStatus);
+#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //åŒè¡¨èºè·è¡¥å¿
+        outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray,
+                                             pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
+#else
+        //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm,
+                       &pSG2Pointer->ucValStatus);
+#endif
+
+        //è®¡ç®—å½“å‰é€Ÿåº¦
+        pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed =
+            fabs(pSG2Pointer->SPlanData.dCurLeftDist - (pSG2Pointer->SPlanData.dTargetDist - dDeltaL)) /
+            pSG2Pointer->SPlanData.dTc;
+
+        //è®¡ç®—   !ç†è®º! æœªèµ°è·ç¦»
+        pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dTargetDist - dDeltaL;
+
+        //åˆ¤æ–­è½¯é™ä½å¼€å§‹å‡é€Ÿçš„æ—¶æœºï¼šç›‘æµ‹å½“å‰é€Ÿåº¦ >= å®æ—¶åç®—çš„æœ€å¤§é€Ÿåº¦ï¼ˆTå‹ç³»ç»Ÿå‚æ•°ï¼‰
+        if ((pSRun->cSoftLimitedOn == 1 || pSRun->cSoftLimitedOn == 2) &&
+            pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE)
+        {
+            dVmaxToLimitiedPoint = sqrt(
+                pSG2Pointer->dReCalculateVe * pSG2Pointer->dReCalculateVe +
+                2 * g_SSystemPara.dSysPlanTMaxDec *
+                    pSG2Pointer->SPlanData.dCurLeftDist); //æ ¹æ®æœ«é€Ÿåº¦ã€Tå‹åŠ é€Ÿåº¦ã€å‰©ä½™è·ç¦»å®æ—¶åç®—Tå‹æ›²çº¿ä¸‹çš„æœ€å¤§é€Ÿåº¦
+            if (pSG2Pointer->dCurrentSpeed >= dVmaxToLimitiedPoint)
+            {
+                pSG2Pointer->ucInpStatus = INP_DECELERATE; //æ’è¡¥çŠ¶æ€ï¼šå‡é€Ÿåœ
+                if (pSRun->cSoftLimitedOn == 2)            //é™ä½ç‚¹åœ¨å½“å‰çº¿æ®µå¤–
+                {
+                    pSRun->cSoftLimitedOn = 3; //è½¯é™ä½å¼€å…³å˜é‡ç½®ä¸º3,éœ€è¦åç»­çº¿æ®µå‚ä¸å‡é€Ÿ
+                }
+                if (!isZero(pSG2Pointer->SPlanData.dCurLeftDist)) //å½“å‰æ®µå‰©ä½™è·ç¦»è¿˜æœªèµ°å®Œï¼šè¿›å…¥å‡é€Ÿåœ
+                {
+                    pSG2Pointer->SPlanData.dDec =
+                        (pow(pSG2Pointer->dCurrentSpeed, 2) - pow(pSG2Pointer->dReCalculateVe, 2)) /
+                        (2.0 * pSG2Pointer->SPlanData.dCurLeftDist); //é‡ç®—Tå‹å‡é€Ÿåº¦
+                }
+                else //å½“å‰æ®µå‰©ä½™è·ç¦»å·²èµ°å®Œï¼šè¿›å…¥å‡é€ŸåœæŠ¥è­¦
+                {
+                    pSG2Pointer->SPlanData.dDec = 0;
+                    break;
+                }
+            }
+        }
+#if HANDWHEEL_SIM_DISTANCE_ENABLE
+        if ((pSG2Pointer->bIsUserData || !isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel) ||
+             pSG2Pointer->SPlanData.unCurrentT >= pSG2Pointer->SPlanData.unT5) &&
+            ((pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD) ||
+             (pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON &&
+              pSG2Pointer->SPlanData.cInterpDir == INP_GO_BACK)))
+#else
+        if ((pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG2Pointer->SPlanData.cInterpDir == INP_GO_AHEAD) ||
+            (pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON &&
+             pSG2Pointer->SPlanData.cInterpDir == INP_GO_BACK))
+#endif
+        {
+            pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed;
+#if HANDWHEEL_SIM_DISTANCE_ENABLE
+            if (!pSG2Pointer->bIsUserData && isHandwheelAutomaticMoveRequired(pSG2Pointer->pSChannel) &&
+                pSG2Pointer->SPlanData.dVe == 0.0)
+            {
+                pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = 0.0;
+            }
+#endif
+            pSG2Pointer->ucInpStatus = INP_FINISHED;
+            pSPreprocess->cInterpDir = pSG2Pointer->SPlanData.cInterpDir;
+            pSPreprocess->ucInpStatus = isZero(pSG2Pointer->SPlanData.dDistance - pSG2Pointer->SPlanData.dTargetDist)
+                                            ? INP_FINISHED
+                                            : INP_PAUSING;
+            return 0;
+        }
+
+        break;
+
+    case INP_DECELERATE:                //æŒ‡ä»¤å‡é€Ÿ (æ¢¯å½¢å‡é€Ÿ.æ— éœ€è§„åˆ’(åˆ©ç”¨åŠ é€Ÿåº¦å’Œå½“å‰é€Ÿåº¦è®¡ç®—))
+        if (pSRun->cSoftLimitedOn == 0) //æœªè§¦å‘è½¯é™ä½çš„å‡é€Ÿè¿åŠ¨[é€Ÿåº¦æ¨¡å¼]
+        {
+            if (pSG2Pointer->dCurrentSpeed <= g_SSystemPara.dSysMinVel) // é€Ÿåº¦è¾¾åˆ°æœ«é€Ÿåº¦èŒƒå›´å†…  ç«‹å³åœ
+            {
+                pSG2Pointer->dCurrentSpeed = 0; //è¿åŠ¨ç»“æŸ å½“å‰é€Ÿåº¦ç½®ä¸º0
+                pSG2Pointer->ucInpStatus = INP_FINISHED;
+                pSPreprocess->ucInpStatus = INP_FINISHED;
+                break;
+            }
+            pSG2Pointer->SPlanData.dDec = g_SSystemPara.dSysPlanTMaxDec; //è·å–ç³»ç»Ÿå‚æ•°è®¾ç½®çš„Tå‹å‡é€Ÿåº¦
+        }
+
+        if (pSG2Pointer->dCurrentSpeed >= pSG2Pointer->SPlanData.dDec * pSG2Pointer->SPlanData.dTc)
+        {
+            //è®¡ç®—é•¿è½´ç›¸å¯¹èµ·ç‚¹çš„è·ç¦» åˆ©ç”¨åŠ é€Ÿåº¦è®¡ç®—//2024/12/17 æ³¨é‡Šï¼šå‡é€Ÿè·ç¦»å…¬å¼é”™è¯¯ï¼ŒåŒ€å‡é€Ÿæ¯ä¸ªå‘¨æœŸçš„ä½ç§»å¢é‡ä¸ºVcur * 1 - 0.5 * Dec * 1 * 1ã€‚
+            //dDeltaL = pSG2Pointer->SPlanData.dPreDist + pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist + pSG2Pointer->dCurrentSpeed - pSG2Pointer->SPlanData.dDec;
+            dDeltaL = pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist +
+                      pSG2Pointer->dCurrentSpeed - 0.5 * pSG2Pointer->SPlanData.dDec;
+        }
+        else
+        {
+            if (pSRun->cSoftLimitedOn == 0) //æœªè§¦å‘è½¯é™ä½çš„å‡é€Ÿè¿åŠ¨[é€Ÿåº¦æ¨¡å¼]ï¼šæœ€åä¸€ä¸ªå‘¨æœŸè¦æ±‚é€Ÿåº¦åœä¸‹ï¼Œä½ç½®æ— è¦æ±‚
+            {
+                dDeltaL = pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dCurLeftDist;
+            }
+            else //è§¦å‘è½¯é™ä½çš„å‡é€Ÿè¿åŠ¨[ä½ç½®æ¨¡å¼]ï¼šæœ€åä¸€ä¸ªå‘¨æœŸè¦æ±‚åœåˆ°ç»ˆç‚¹ä½ç½®
+            {
+                dDeltaL = pSG2Pointer->SPlanData.dTargetDist;
+                pSG2Pointer->SPlanData.dCurLeftDist = 0;
+            }
+        }
+
+        //åˆ¤æ–­æ˜¯å¦ä¼šè¶…è¿‡ç»ˆç‚¹
+        if (dDeltaL > pSG2Pointer->SPlanData.dTargetDist)
+        {
+            dDeltaL = pSG2Pointer->SPlanData.dTargetDist;
+        }
+
+        //è®¡ç®—ç†è®ºåæ ‡ç‚¹
+        res = calculateArcInterpolationPoint(dDeltaL, pSG2Pointer, (double*)&STargetPoint);
+        if (res < 0)
+            return res;
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+        if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
+        {
+            if ((getbit(pSG2Pointer->ucValStatus, AXIS_Y)) == TRUE) //Yè½´æ–¹å‘è¦è¿åŠ¨
+            {
+                STargetPoint.dArray[AXIS_X] +=
+                    1.0 * STargetPoint.dArray[AXIS_Y] *
+                    pSG2Pointer->pSChannel->dTANAngleYY1; //å°†ç›´è§’åæ ‡ç³»ä¸‹çš„åæ ‡ç‚¹è½¬åŒ–ä¸ºå€¾æ–œåæ ‡ç³»ä¸‹çš„ç‚¹
+                STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pSG2Pointer->pSChannel->dCOSAngleYY1;
+            }
+        }
+#endif
+#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //å•è¡¨èºè·è¡¥å¿+ åå‘é—´éš™è¡¥å¿
+        //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm,
+                                    &pSG2Pointer->ucValStatus);
+#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //åŒè¡¨èºè·è¡¥å¿
+        outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray,
+                                             pSG2Pointer->dPulseToMm, &pSG2Pointer->ucValStatus);
+#else
+        //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG2Pointer->dPulseToMm,
+                       &pSG2Pointer->ucValStatus);
+#endif
+
+        //è®¡ç®—å½“å‰é€Ÿåº¦ //2024/12/12 æ³¨é‡Šï¼šè¯¥å…¬å¼è®¡ç®—çš„æ˜¯æ’è¡¥å‘¨æœŸ1msçš„å¹³å‡é€Ÿåº¦ï¼ˆç§»åŠ¨é‡/1msï¼‰ï¼Œè€Œåœ¨å‡é€Ÿè¿‡ç¨‹è®¡ç®—ç›¸å¯¹èµ·ç‚¹çš„å…¬å¼è®¡ç®—ä½¿ç”¨çš„æ˜¯ç§»åŠ¨åçš„ç¬æ—¶é€Ÿåº¦
+        //pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed = fabs(pSG2Pointer->SPlanData.dCurLeftDist - (pSG2Pointer->SPlanData.dTargetDist - dDeltaL)) / pSG2Pointer->SPlanData.dTc;
+        pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed =
+            pSG2Pointer->dCurrentSpeed - pSG2Pointer->SPlanData.dDec * pSG2Pointer->SPlanData.dTc;
+        //è®¡ç®—   !ç†è®º! æœªèµ°è·ç¦»
+        pSG2Pointer->SPlanData.dCurLeftDist = pSG2Pointer->SPlanData.dTargetDist - dDeltaL;
+
+        if (pSG2Pointer->SPlanData.dCurLeftDist <= EPSINON) //è¿è¡Œç»“æŸæ¡ä»¶
+        {
+            if (pSRun->cSoftLimitedOn == 1 &&
+                pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE) //å½“å‰çº¿æ®µèƒ½å¤Ÿåœä¸‹
+            {
+                for (int i = 0; i < AXIS_NUM_MAX; i++) //å¯»æ‰¾å‡ºè§¦å‘è½¯é™ä½çš„è½´å¹¶æŠ¥è­¦
+                {
+                    if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)
+                    {
+                        parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM41 + i,
+                                          9999);
+                        pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode =
+                            SINGLEAXIS_MODE; //é™ä½æ¨¡å¼ åˆ‡æ¢ä¸ºå•è½´æ¨¡å¼
+                        //						setErrorWriteFlag(FALSE);//æ¸…é™¤æŠ¥è­¦å†™å…¥æ ‡å¿—ä½ï¼Œé˜²æ­¢è¿›å…¥æŠ¥è­¦è½´åœå‡½æ•° //æ³¨é‡Š2025.12.11 åœ¨è½¯é™ä½æŠ¥è­¦åéœ€è¦ä¸»è½´åœ
+                        break;
+                    }
+                    if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)
+                    {
+                        parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM47 + i,
+                                          9999);
+                        pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode =
+                            SINGLEAXIS_MODE; //é™ä½æ¨¡å¼ åˆ‡æ¢ä¸ºå•è½´æ¨¡å¼
+                        //						setErrorWriteFlag(FALSE);//æ¸…é™¤æŠ¥è­¦å†™å…¥æ ‡å¿—ä½ï¼Œé˜²æ­¢è¿›å…¥æŠ¥è­¦è½´åœå‡½æ•° //æ³¨é‡Š2025.12.11 åœ¨è½¯é™ä½æŠ¥è­¦åéœ€è¦ä¸»è½´åœ
+                        break;
+                    }
+                }
+                pSG2Pointer->dCurrentSpeed = 0;                     //è¿åŠ¨ç»“æŸ å½“å‰é€Ÿåº¦ç½®ä¸º0
+                pSRun->cSoftLimitedOn = 0;                          //è½¯é™ä½å¼€å…³å…³é—­ï¼šå¼€å…³å˜é‡ç½®0
+                pSG2Pointer->pSChannel->ucChannelStatus = SYS_IDLE; //åœä¸‹åç³»ç»ŸçŠ¶æ€ç½®ä¸ºç©ºé—²
+            }
+            else if (pSRun->cSoftLimitedOn == 3 &&
+                     pSG2Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE) //è½¯é™ä½ç‚¹ä¸åœ¨å½“å‰çº¿æ®µï¼Œä»éœ€å‡é€Ÿ
+            {
+                pSRun->dCurrentSpeed = pSG2Pointer->dCurrentSpeed; //å½“å‰é€Ÿåº¦ä¿å­˜åœ¨è¿è¡Œç»“æ„ä½“é‡Œ
+            }
+            else
+            {
+                pSG2Pointer->dCurrentSpeed = 0; //è¿åŠ¨ç»“æŸ å½“å‰é€Ÿåº¦ç½®ä¸º0
+            }
+            pSG2Pointer->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+            pSPreprocess->ucInpStatus = INP_FINISHED;
+            return 0;
+        }
+        break;
+
+    case INP_STOP: //æŒ‡ä»¤ç«‹å³åœ
+
+        pSG2Pointer->dCurrentSpeed = 0;          //è¿åŠ¨ç»“æŸ å½“å‰é€Ÿåº¦ç½®ä¸º0
+        pSG2Pointer->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+        pSPreprocess->ucInpStatus = INP_FINISHED;
+        break;
+    }
+    return 1;
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šdouble calcArcAngle(double *dCenterPoint, double *dStartPoint, double *dEndPoint, uint8 ucInpDir)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åœ†å¼§ä¸Šä¸¤ç‚¹ä¹‹é—´çš„æ²¿æ’è¡¥æ–¹å‘çš„åœ†å¿ƒè§’ï¼ˆ0-360åº¦ï¼‰
+  è¾“å…¥å‚æ•°ï¼špCenterPoint-æŒ‡å‘åœ†å¿ƒåæ ‡æ•°ç»„ï¼ŒpStartPoint-æŒ‡å‘èµ·ç‚¹åæ ‡æ•°ç»„ã€pEndPoint-æŒ‡å‘ç»ˆç‚¹åæ ‡æ•°ç»„ï¼Œæ’è¡¥æ–¹å‘ucInpDirï¼ˆ0=G02ï¼Œ1=G03ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šèµ·å§‹å‘é‡ä¸ç»ˆç‚¹å‘é‡çš„å¤¹è§’ï¼ˆ0-360åº¦ï¼‰
+  å¤‡    æ³¨ï¼š
+**************************************************/
+double calcArcAngle(double* pCenterPoint, double* pStartPoint, double* pEndPoint, uint8 ucInpDir) // 2025.9.27
+{
+    // æ­¥éª¤1ï¼šè®¡ç®—å‘é‡OAã€OBï¼ˆAã€Bç›¸å¯¹äºåœ†å¿ƒçš„å‘é‡ï¼‰
+    double dStartVector[2];                             // èµ·å§‹å‘é‡
+    double dEndVector[2];                               // ç»“æŸå‘é‡
+    dStartVector[0] = pStartPoint[0] - pCenterPoint[0]; // èµ·å§‹å‘é‡çš„æ¨ªè½´
+    dStartVector[1] = pStartPoint[1] - pCenterPoint[1]; // èµ·å§‹å‘é‡çš„çºµè½´
+    dEndVector[0] = pEndPoint[0] - pCenterPoint[0];     // ç»“æŸå‘é‡çš„æ¨ªè½´
+    dEndVector[1] = pEndPoint[1] - pCenterPoint[1];     // ç»“æŸå‘é‡çš„çºµè½´
+
+    // æ­¥éª¤2ï¼šè®¡ç®—å‘é‡çš„ç‚¹ç§¯å’Œæ¨¡ï¼ˆæ±‚å¤¹è§’çš„ä½™å¼¦å€¼ï¼‰
+    double dDot = dStartVector[0] * dEndVector[0] + dStartVector[1] * dEndVector[1];                // å‘é‡çš„ç‚¹ç§¯
+    double dStartLen = sqrt(dStartVector[0] * dStartVector[0] + dStartVector[1] * dStartVector[1]); // èµ·å§‹å‘é‡çš„æ¨¡
+    double dEndlen = sqrt(dEndVector[0] * dEndVector[0] + dEndVector[1] * dEndVector[1]);           // ç»“æŸå‘é‡çš„æ¨¡
+
+    // æ­¥éª¤3ï¼šè®¡ç®—â€œæœ€å°åœ†å¿ƒè§’â€ï¼ˆ0~Ï€ï¼‰
+    double dCosValue = dDot / (dStartLen * dEndlen);
+    // é™åˆ¶dCosValueåœ¨[-1,1]å†…ï¼ˆé¿å…æµ®ç‚¹è¯¯å·®å¯¼è‡´acosè¿”å›NaNï¼‰
+    dCosValue = (dCosValue > 1.0) ? 1.0 : (dCosValue < -1.0) ? -1.0 : dCosValue;
+    double dAngle = acos(dCosValue);
+
+    // æ­¥éª¤4ï¼šæ ¹æ®ucInpDiræ–¹å‘ï¼Œç¡®å®šâ€œå®é™…è·¯å¾„çš„åœ†å¿ƒè§’â€ï¼ˆ0~2Ï€ï¼‰
+    double dCrossDir =
+        (dStartVector[0] * dEndVector[1]) - (dStartVector[1] * dEndVector[0]); // èµ·ç‚¹å‘é‡ Ã— ç»ˆç‚¹å‘é‡ï¼ˆå‰ä¹˜åˆ¤æ–­æ–¹å‘ï¼‰
+    if (ucInpDir == 1) // G03ï¼ˆé€†æ—¶é’ˆï¼‰ï¼šè‹¥å‰ç§¯ä¸ºè´Ÿï¼Œéœ€èµ°2Ï€ - dAngleï¼ˆé•¿å¼§ï¼‰
+    {
+        return (dCrossDir >= 0) ? dAngle : (2 * PI - dAngle);
+    }
+    else // G02ï¼ˆé¡ºæ—¶é’ˆï¼‰ï¼šè‹¥å‰ç§¯ä¸ºæ­£ï¼Œéœ€èµ°2Ï€ - dAngleï¼ˆé•¿å¼§ï¼‰
+    {
+        return (dCrossDir <= 0) ? dAngle : (2 * PI - dAngle);
+    }
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šcheckG2FirstAxisSoftLimit()
+  å‡½æ•°åŠŸèƒ½ï¼šéå†å„è½´ï¼Œæ£€æŸ¥G2å“ªæ ¹è½´æœ€å…ˆè§¦å‘è½¯é™ä½
+  è¾“å…¥å‚æ•°ï¼špSChannel - é€šé“ç»“æ„ä½“æŒ‡é’ˆ
+			SStartPoint - èµ·ç‚¹
+			SMaxVal - æœ€å¤§å€¼ç‚¹
+			SMinVal - æœ€å°å€¼ç‚¹
+  è¿” å› å€¼ï¼š-1 - æœªè§¦å‘é™ä½
+		   1 - è§¦å‘é™ä½
+  å¤‡    æ³¨ï¼š2025.10.9
+**************************************************/
+int8 checkG2FirstAxisSoftLimit(struct SChannel* pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal,
+                               SPointDouble SMinVal)
+{
+    double dNearestPosLimited = 9999.9; // ç”¨äºåˆ¤æ–­æœ€å…ˆè§¦å‘æ­£è½¯é™ä½è½´çš„å¤¹è§’å˜é‡
+    double dNearestNegLimited = 9999.9; // ç”¨äºåˆ¤æ–­æœ€å…ˆè§¦å‘è´Ÿè½¯é™ä½è½´çš„å¤¹è§’å˜é‡
+    int8 cPosLimitedAXIS = -1;          // æœ€å…ˆè§¦å‘æ­£è½¯é™ä½çš„è½´å·
+    int8 cNegLimitedAXIS = -1;          // æœ€å…ˆè§¦å‘è´Ÿè½¯é™ä½çš„è½´å·
+    double dRad1 = 0;                   // åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’1
+    double dRad2 = 0;                   // åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’2
+    double dPosMinRad = 10000;          // æ­£è½¯é™ä½ç‚¹æœ€å°è¿åŠ¨å¤¹è§’
+    double dNegMinRad = 10000;          // è´Ÿè½¯é™ä½ç‚¹æœ€å°è¿åŠ¨å¤¹è§’
+    double dCenterPoint[2];             // 0-åœ†å¿ƒæ¨ªè½´åæ ‡,1-åœ†å¿ƒçºµè½´åæ ‡
+    double dStartPoint[2];              // 0-èµ·ç‚¹æ¨ªè½´åæ ‡,1-èµ·ç‚¹çºµè½´åæ ‡
+
+    uint8* pMapAxisArray = pSChannel->pMapAxisArray; // è·å–æ˜ å°„
+    struct SG2* pSG2Pointer = &pSChannel->SG02;      // è·å–G2ç»“æ„ä½“æŒ‡é’ˆ
+
+    // åœ†å¼§å‚æ•°
+    uint8 ucInpDir =
+        (getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC) ? 1 : 0; // æ’è¡¥æ–¹å‘
+    dCenterPoint[0] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[0]];                          // åœ†å¿ƒæ¨ªè½´åæ ‡
+    dCenterPoint[1] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[1]];                          // åœ†å¿ƒçºµè½´åæ ‡
+    dStartPoint[0] = SStartPoint.dArray[pSG2Pointer->ucAxis[0]];                                         // èµ·ç‚¹æ¨ªè½´åæ ‡
+    dStartPoint[1] = SStartPoint.dArray[pSG2Pointer->ucAxis[1]];                                         // èµ·ç‚¹çºµè½´åæ ‡
+    double dRadius = pSG2Pointer->dRadius;                                                               // åœ†å¼§åŠå¾„
+
+    for (int i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (g_SSystemPara.ucAxisMapArray[pSChannel->ucChannelNum][i] == AXIS_NULL ||
+            g_SSystemPara.SAxisPara[pMapAxisArray[i]].ucAxisType == ROTATION_AXIS) // è½´æ˜ å°„ä¸ºç©ºæˆ–æ—‹è½¬è½´ï¼Œè·³è¿‡
+            continue;
+
+        if (VAL_VALID != getbit(pSChannel->SPreProcess.SUserData.ucValStatus, i)) // æ— æ•ˆè½´ï¼Œè·³è¿‡
+            continue;
+
+        // æ­£é™ä½æ£€æŸ¥
+        if (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_pos == 1) // å¼€å¯æ­£é™ä½æ£€æµ‹
+        {
+            if (SMaxVal.dArray[i] > g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft) // æœ€å€¼ç‚¹ > æ­£é™ä½ç‚¹
+            {
+                if (i == pSG2Pointer->ucAxis[0]) // è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„æ¨ªè½´
+                {
+                    // è®¡ç®—äº¤ç‚¹
                     double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft -
                                                                      pSG2Pointer->SCenterPoint.dArray[i],
                                                                  2));
-                    double dCrossPoint1 = dValue + dCenterPoint[0];  // ¼ÆËã×İÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µãºáÖá×ø±ê½Ï´óÖµ
-                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // ¼ÆËã×İÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µãºáÖá×ø±ê½ÏĞ¡Öµ
-                    double dEndPoint1[2] = {dCrossPoint1,
-                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // Ô²»¡1µÄÖÕµã
-                    double dEndPoint2[2] = {dCrossPoint2,
-                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // Ô²»¡2µÄÖÕµã
+                    double dCrossPoint1 = dValue + dCenterPoint[1];  // è®¡ç®—æ¨ªè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹çºµè½´åæ ‡è¾ƒå¤§å€¼
+                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // è®¡ç®—æ¨ªè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹çºµè½´åæ ‡è¾ƒå°å€¼
+                    double dEndPoint1[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
+                                            dCrossPoint1}; // åœ†å¼§1çš„ç»ˆç‚¹
+                    double dEndPoint2[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
+                                            dCrossPoint2}; // åœ†å¼§2çš„ç»ˆç‚¹
                     dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
-                                         ucInpDir); // ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç1
+                                         ucInpDir); // è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’1
                     dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
-                                         ucInpDir); /// ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç2
-                    dPosMinRad = min(dRad1, dRad2); // È¡×îĞ¡Öµ£¬ÉèÖÃ×îÏÈ´¥·¢ÏŞÎ»µÄ¼Ğ½Ç
+                                         ucInpDir); // è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’2
+                    dPosMinRad = min(dRad1, dRad2); // å–æœ€å°å€¼ï¼Œè®¾ç½®æœ€å…ˆè§¦å‘é™ä½çš„å¤¹è§’
+                }
+                else if (i == pSG2Pointer->ucAxis[1]) // è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„çºµè½´
+                {
+                    // è®¡ç®—äº¤ç‚¹
+                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft -
+                                                                     pSG2Pointer->SCenterPoint.dArray[i],
+                                                                 2));
+                    double dCrossPoint1 = dValue + dCenterPoint[0];  // è®¡ç®—çºµè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹æ¨ªè½´åæ ‡è¾ƒå¤§å€¼
+                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // è®¡ç®—çºµè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹æ¨ªè½´åæ ‡è¾ƒå°å€¼
+                    double dEndPoint1[2] = {dCrossPoint1,
+                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // åœ†å¼§1çš„ç»ˆç‚¹
+                    double dEndPoint2[2] = {dCrossPoint2,
+                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // åœ†å¼§2çš„ç»ˆç‚¹
+                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
+                                         ucInpDir); // è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’1
+                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
+                                         ucInpDir); /// è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’2
+                    dPosMinRad = min(dRad1, dRad2); // å–æœ€å°å€¼ï¼Œè®¾ç½®æœ€å…ˆè§¦å‘é™ä½çš„å¤¹è§’
                 }
 
-                if (dNearestPosLimited - dPosMinRad > EPSINON) // Ñ°ÕÒ×îÏÈ´¥·¢ÏŞÎ»µÄÖá
+                if (dNearestPosLimited - dPosMinRad > EPSINON) // å¯»æ‰¾æœ€å…ˆè§¦å‘é™ä½çš„è½´
                 {
-                    cPosLimitedAXIS = i; // ±£´æÖáºÅ
+                    cPosLimitedAXIS = i; // ä¿å­˜è½´å·
                     dNearestPosLimited = dPosMinRad;
-			continue;
-			}
-		}
-	}
-	/* È·ÓĞ±ß½çºòÑ¡²Å·¢²¼ÏŞÎ»Ä£Ê½£¬ºóĞøÈÔÓÉÔ­×´Ì¬»ú¼õËÙºÍ±¨¾¯¡£ */
+                    continue;
+                }
+            }
+        }
+
+        // è´Ÿé™ä½æ£€æŸ¥
         if (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_neg == 1)
-	{
+        {
             if (SMinVal.dArray[i] < g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft)
             {
-                if (i == pSG2Pointer->ucAxis[0]) // ´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄºáÖá
+                if (i == pSG2Pointer->ucAxis[0]) // è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„æ¨ªè½´
                 {
-                    // ¼ÆËã½»µã
+                    // è®¡ç®—äº¤ç‚¹
                     double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft -
                                                                      pSG2Pointer->SCenterPoint.dArray[i],
                                                                  2));
-                    double dCrossPoint1 = dValue + dCenterPoint[1];  // ¼ÆËãºáÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µã×İÖá×ø±ê½Ï´óÖµ
-                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // ¼ÆËãºáÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µã×İÖá×ø±ê½ÏĞ¡Öµ
+                    double dCrossPoint1 = dValue + dCenterPoint[1];  // è®¡ç®—æ¨ªè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹çºµè½´åæ ‡è¾ƒå¤§å€¼
+                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // è®¡ç®—æ¨ªè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹çºµè½´åæ ‡è¾ƒå°å€¼
                     double dEndPoint1[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft, dCrossPoint1};
                     double dEndPoint2[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft, dCrossPoint2};
                     dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
-                                         ucInpDir); // ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç1
+                                         ucInpDir); // è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’1
                     dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
-                                         ucInpDir); /// ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç2
-                    dNegMinRad = min(dRad1, dRad2); // È¡×îĞ¡Öµ£¬ÉèÖÃ×îÏÈ´¥·¢ÏŞÎ»µÄ¼Ğ½Ç
+                                         ucInpDir); /// è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’2
+                    dNegMinRad = min(dRad1, dRad2); // å–æœ€å°å€¼ï¼Œè®¾ç½®æœ€å…ˆè§¦å‘é™ä½çš„å¤¹è§’
                 }
-                else if (i == pSG2Pointer->ucAxis[1]) // ´¥·¢ÏŞÎ»µÄÖáÎª²å²¹Æ½ÃæµÄ×İÖá
+                else if (i == pSG2Pointer->ucAxis[1]) // è§¦å‘é™ä½çš„è½´ä¸ºæ’è¡¥å¹³é¢çš„çºµè½´
                 {
-                    // ¼ÆËã½»µã
+                    // è®¡ç®—äº¤ç‚¹
                     double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft -
                                                                      pSG2Pointer->SCenterPoint.dArray[i],
                                                                  2));
-                    double dCrossPoint1 = dValue + dCenterPoint[0];  // ¼ÆËã×İÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µãºáÖá×ø±ê½Ï´óÖµ
-                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // ¼ÆËã×İÖáÈíÏŞÎ»ÓëÔ²»¡µÄ½»µãºáÖá×ø±ê½ÏĞ¡Öµ
+                    double dCrossPoint1 = dValue + dCenterPoint[0];  // è®¡ç®—çºµè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹æ¨ªè½´åæ ‡è¾ƒå¤§å€¼
+                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // è®¡ç®—çºµè½´è½¯é™ä½ä¸åœ†å¼§çš„äº¤ç‚¹æ¨ªè½´åæ ‡è¾ƒå°å€¼
                     double dEndPoint1[2] = {dCrossPoint1, g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft};
                     double dEndPoint2[2] = {dCrossPoint2, g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft};
                     dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
-                                         ucInpDir); // ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç1
+                                         ucInpDir); // è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’1
                     dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
-                                         ucInpDir); /// ¼ÆËãÔ²»¡ÓëÈíÏŞÎ»µãÖ®¼äµÄÔË¶¯¼Ğ½Ç2
-                    dNegMinRad = min(dRad1, dRad2); // È¡×îĞ¡Öµ£¬ÉèÖÃ×îÏÈ´¥·¢ÏŞÎ»µÄ¼Ğ½Ç
+                                         ucInpDir); /// è®¡ç®—åœ†å¼§ä¸è½¯é™ä½ç‚¹ä¹‹é—´çš„è¿åŠ¨å¤¹è§’2
+                    dNegMinRad = min(dRad1, dRad2); // å–æœ€å°å€¼ï¼Œè®¾ç½®æœ€å…ˆè§¦å‘é™ä½çš„å¤¹è§’
                 }
-                if (dNearestNegLimited - dNegMinRad > EPSINON) // Ñ°ÕÒ×îÏÈ´¥·¢ÏŞÎ»µÄÖá
+                if (dNearestNegLimited - dNegMinRad > EPSINON) // å¯»æ‰¾æœ€å…ˆè§¦å‘é™ä½çš„è½´
                 {
-                    cNegLimitedAXIS = i; // ±£´æÖáºÅ
+                    cNegLimitedAXIS = i; // ä¿å­˜è½´å·
                     dNearestNegLimited = dNegMinRad;
                     continue;
-			}
+                }
             }
         }
     }
 
-    if (cPosLimitedAXIS != -1 || cNegLimitedAXIS != -1) // ÅĞ¶ÏÊÇ·ñÓĞ´¥·¢ÈíÏŞÎ»µÄÖá£¬²¢ÉèÖÃÄ£Ê½ÎªÏŞÎ»Ä£Ê½
+    if (cPosLimitedAXIS != -1 || cNegLimitedAXIS != -1) // åˆ¤æ–­æ˜¯å¦æœ‰è§¦å‘è½¯é™ä½çš„è½´ï¼Œå¹¶è®¾ç½®æ¨¡å¼ä¸ºé™ä½æ¨¡å¼
     {
         if (cPosLimitedAXIS != -1 &&
-            cNegLimitedAXIS != -1) // ±È½ÏÕıÈíÏŞÎ»ºÍ¸ºÈíÏŞÎ»µÄ×îĞ¡¾àÀë±ÈÖµ£¬ÔòÎªÓÅÏÈ´¥·¢ÖáÏŞÎ»£¬²¢ÉèÖÃÄ£Ê½ÎªÏŞÎ»Ä£Ê½
+            cNegLimitedAXIS != -1) // æ¯”è¾ƒæ­£è½¯é™ä½å’Œè´Ÿè½¯é™ä½çš„æœ€å°è·ç¦»æ¯”å€¼ï¼Œåˆ™ä¸ºä¼˜å…ˆè§¦å‘è½´é™ä½ï¼Œå¹¶è®¾ç½®æ¨¡å¼ä¸ºé™ä½æ¨¡å¼
         {
             if (dNearestPosLimited > dNearestNegLimited)
-			{
-				pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode =
-                    SINGLEAXIS_LIMIT_NEG; // µ¥ÖáÔËĞĞÄ£Ê½ÉèÖÃÎª¸ºÏŞÎ»
+            {
+                pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode =
+                    SINGLEAXIS_LIMIT_NEG; // å•è½´è¿è¡Œæ¨¡å¼è®¾ç½®ä¸ºè´Ÿé™ä½
             }
             else
             {
                 pSChannel->SSingleAxisArray[cPosLimitedAXIS].ucRunMode =
-                    SINGLEAXIS_LIMIT_POS; // µ¥ÖáÔËĞĞÄ£Ê½ÉèÖÃÎªÕıÏŞÎ»
+                    SINGLEAXIS_LIMIT_POS; // å•è½´è¿è¡Œæ¨¡å¼è®¾ç½®ä¸ºæ­£é™ä½
             }
         }
         else if (cPosLimitedAXIS != -1)
-	{
-		pSChannel->SSingleAxisArray[cPosLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_POS; // µ¥ÖáÔËĞĞÄ£Ê½ÉèÖÃÎªÕıÏŞÎ»
+        {
+            pSChannel->SSingleAxisArray[cPosLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_POS; // å•è½´è¿è¡Œæ¨¡å¼è®¾ç½®ä¸ºæ­£é™ä½
         }
         else // cNegLimitedAXIS != -1
         {
-            pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_NEG; // µ¥ÖáÔËĞĞÄ£Ê½ÉèÖÃÎª¸ºÏŞÎ»
+            pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_NEG; // å•è½´è¿è¡Œæ¨¡å¼è®¾ç½®ä¸ºè´Ÿé™ä½
         }
-		return 1;
-	}
-	return -1;
+        return 1;
+    }
+
+    return -1;
 }

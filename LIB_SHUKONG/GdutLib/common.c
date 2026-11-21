@@ -4,573 +4,558 @@
 #include "GeneralFunctions.h"
 #include "Channel.h"
 #include "Config.h"
-/***********************SGCodeParseBufÑ­»·»º³åÇø-±äÁ¿º¯Êı*********************************/
+/***********************SGCodeParseBufå¾ªç¯ç¼“å†²åŒº-å˜é‡å‡½æ•°*********************************/
 
-//struct SInterpolationPre g_SInterpolation;  //²å²¹Ô¤´¦Àí½á¹¹Ìå
+//struct SInterpolationPre g_SInterpolation;  //æ’è¡¥é¢„å¤„ç†ç»“æ„ä½“
 
+volatile union SSystemUnion g_SSystemParaUnion; //ç³»ç»Ÿå‚æ•°ç»“æ„ä½“
 
+uint16 g_usReloadValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„é¢„è£…è½½å€¼
 
-volatile union  SSystemUnion g_SSystemParaUnion;  //ÏµÍ³²ÎÊı½á¹¹Ìå
+uint16 g_usCompareValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„æ¯”è¾ƒå€¼
 
-uint16 g_usReloadValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄÔ¤×°ÔØÖµ
+uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„è®¡æ•°å™¨å€¼ //å¢åŠ 2026.2.7
 
-uint16 g_usCompareValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄ±È½ÏÖµ
+int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€çš„è„‰å†²æ•°
 
-uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄ¼ÆÊıÆ÷Öµ //Ôö¼Ó2026.2.7
+int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´çš„è¿è¡Œæ–¹å‘ //å¢åŠ 2026.2.7
 
-int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍµÄÂö³åÊı
+struct SEncoder g_SEncoder[ENCODER_NUM_MAX]; //ç¼–ç å™¨ç»“æ„ä½“
 
-int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖáµÄÔËĞĞ·½Ïò //Ôö¼Ó2026.2.7
+enum RUNMODE g_RunMode; //è¿è¡Œæ¨¡å¼
 
-struct SEncoder g_SEncoder[ENCODER_NUM_MAX];  //±àÂëÆ÷½á¹¹Ìå
+volatile VAL_PHYSICIAL_TYPE
+    g_ucAxisOccupation; //è½´å ç”¨å˜é‡  æ•°æ®ç±»å‹éœ€è¦æ ¹æ®ç‰©ç†è½´æ•°é‡è¿›è¡Œæ”¹å˜  å½“å‰ç‰©ç†è½´ä¸ªæ•°ä¸º6   ä½¿ç”¨å˜é‡uint8   2022.12.6 ä»uint8ç±»å‹ä¿®æ”¹ä¸ºVAL_PHYSICIAL_TYPE
 
-enum RUNMODE g_RunMode;//ÔËĞĞÄ£Ê½
+volatile VAL_PHYSICIAL_TYPE g_ucAxisExactEnable; // ç‰©ç†è½´çš„ä½¿èƒ½çŠ¶æ€
 
-volatile VAL_PHYSICIAL_TYPE g_ucAxisOccupation;//ÖáÕ¼ÓÃ±äÁ¿  Êı¾İÀàĞÍĞèÒª¸ù¾İÎïÀíÖáÊıÁ¿½øĞĞ¸Ä±ä  µ±Ç°ÎïÀíÖá¸öÊıÎª6   Ê¹ÓÃ±äÁ¿uint8   2022.12.6 ´Óuint8ÀàĞÍĞŞ¸ÄÎªVAL_PHYSICIAL_TYPE
-
-volatile VAL_PHYSICIAL_TYPE g_ucAxisExactEnable;// ÎïÀíÖáµÄÊ¹ÄÜ×´Ì¬
-
-#if(TURRET_AXIS_TEST == 1)
-volatile VAL_TURRET_TYPE	g_ucTurretOccupation;//µ¶ËşÕ¼ÓÃ±äÁ¿  Êı¾İÀàĞÍĞèÒª¸ù¾İµ¶ËşÊıÁ¿½øĞĞ¸Ä±ä  µ±Ç°µ¶Ëş¸öÊıÎª1   Ê¹ÓÃ±äÁ¿uint8   0000 0101 ±íÊ¾µ¶Ëş1ºÍµ¶Ëş3±»Õ¼ÓÃ
+#if (TURRET_AXIS_TEST == 1)
+volatile VAL_TURRET_TYPE
+    g_ucTurretOccupation; //åˆ€å¡”å ç”¨å˜é‡  æ•°æ®ç±»å‹éœ€è¦æ ¹æ®åˆ€å¡”æ•°é‡è¿›è¡Œæ”¹å˜  å½“å‰åˆ€å¡”ä¸ªæ•°ä¸º1   ä½¿ç”¨å˜é‡uint8   0000 0101 è¡¨ç¤ºåˆ€å¡”1å’Œåˆ€å¡”3è¢«å ç”¨
 #endif
 
 extern uint32 timeji;
 #if CotrexF4 == 1
-volatile unsigned long *pAxisEnable[AXIS_PHYSICS_NUM_MAX];// ÎïÀíÖá¶ÔÓ¦µÄÊ¹ÄÜIO
+volatile unsigned long* pAxisEnable[AXIS_PHYSICS_NUM_MAX]; // ç‰©ç†è½´å¯¹åº”çš„ä½¿èƒ½IO
 #else
 
 #endif // 0
-//uint8 g_dAxisExactEnable[AXIS_PHYSICS_NUM_MAX];// ÎïÀíÖáÈ·ÇĞµÄÊ¹ÄÜ×´Ì¬
+//uint8 g_dAxisExactEnable[AXIS_PHYSICS_NUM_MAX];// ç‰©ç†è½´ç¡®åˆ‡çš„ä½¿èƒ½çŠ¶æ€
 
-struct SdPiece g_sdtime; //ÆóÒµ¶¨ÒåµÄ±äÁ¿
+struct SdPiece g_sdtime; //ä¼ä¸šå®šä¹‰çš„å˜é‡
 
-// zxr: ±£´æÍ¨µÀ0±¾´ÎÈÎÎñµÄ¼Æ¼ş×Ê¸ñ£¬ÔİÍ£¼°Ä£Ê½ÇĞ»»²»¸Ä±äÈÎÎñÀ´Ô´
+// zxr: ä¿å­˜é€šé“0æœ¬æ¬¡ä»»åŠ¡çš„è®¡ä»¶èµ„æ ¼ï¼Œæš‚åœåŠæ¨¡å¼åˆ‡æ¢ä¸æ”¹å˜ä»»åŠ¡æ¥æº
 static volatile bool bWorkpieceCountEnabled = FALSE;
 
-
-
-/****************************************Ó³ÉäÏà¹Ø****************************************/
-
-
+/****************************************æ˜ å°„ç›¸å…³****************************************/
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsearch(char array[], int n, char x)
-  º¯Êı¹¦ÄÜ  ²éÕÒÊı×éÔªËØ¶ÔÓ¦µÄÎ»ÖÃ
-  ÊäÈë²ÎÊı£ºcArray          Êı×éÖ¸Õë  ÀàĞÍ char
-			nArraySize      Êı×é³¤¶È
-			cTarget         Ä¿±êÔªËØ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-			-1 Ä¿±êÔªËØ²»´æÔÚ£¨Òª¶ÔÕâ¸ö½øĞĞÅĞ¶Ï£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsearch(char array[], int n, char x)
+  å‡½æ•°åŠŸèƒ½  æŸ¥æ‰¾æ•°ç»„å…ƒç´ å¯¹åº”çš„ä½ç½®
+  è¾“å…¥å‚æ•°ï¼šcArray          æ•°ç»„æŒ‡é’ˆ  ç±»å‹ char
+			nArraySize      æ•°ç»„é•¿åº¦
+			cTarget         ç›®æ ‡å…ƒç´ 
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+			-1 ç›®æ ‡å…ƒç´ ä¸å­˜åœ¨ï¼ˆè¦å¯¹è¿™ä¸ªè¿›è¡Œåˆ¤æ–­ï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int search(uint8 cArray[], int nArraySize, uint8 cTarget)
 {
-	int i = 0;
-	if (nArraySize == 0)  // Êı×é´óĞ¡Îª0  ·µ»Ø-1
-	{
-		return -1;
-	}
+    int i = 0;
+    if (nArraySize == 0) // æ•°ç»„å¤§å°ä¸º0  è¿”å›-1
+    {
+        return -1;
+    }
 
-	for (i = 0; i < nArraySize; ++i)  //Ñ­»· nArraySize ´Î
-	{
-		if (cArray[i] == cTarget) //ÕÒµ½Ä¿±ê
-		{
-			return i;
-		}
-	}
+    for (i = 0; i < nArraySize; ++i) //å¾ªç¯ nArraySize æ¬¡
+    {
+        if (cArray[i] == cTarget) //æ‰¾åˆ°ç›®æ ‡
+        {
+            return i;
+        }
+    }
 
-	return -1;//Î´ÕÒµ½Ä¿±ê ·µ»Ø-1
-
+    return -1; //æœªæ‰¾åˆ°ç›®æ ‡ è¿”å›-1
 }
 
+/****************************************å®æ—¶åæ ‡****************************************/
 
-/****************************************ÊµÊ±×ø±ê****************************************/
-
-double g_dRealTimePointArray[AXIS_PHYSICS_NUM_MAX];//ÊµÊ±×ø±ê  ¶ÔÓ¦ÎïÀíÖáºÅ
-
+double g_dRealTimePointArray[AXIS_PHYSICS_NUM_MAX]; //å®æ—¶åæ ‡  å¯¹åº”ç‰©ç†è½´å·
 
 int8 clearRealTimePoint()
 {
-	int i = 0;
-	for (i = 0; i < AXIS_PHYSICS_NUM_MAX; i++)
-	{
-		g_dRealTimePointArray[i] = 0;
-	}
+    int i = 0;
+    for (i = 0; i < AXIS_PHYSICS_NUM_MAX; i++)
+    {
+        g_dRealTimePointArray[i] = 0;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetRealTimePoint(double *cArray, int nArraySize, const uint8* ucAxisMap)
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÊµÊ±µã×ø±ê£¬Í¨¹ıÓ³Éä»ñÈ¡ÎïÀíÖá¶ÔÓ¦µÄ×ø±ê
-  ÊäÈë²ÎÊı£ºnArraySize      Êı×é³¤¶È
-			ucAxisMap       Ó³Éä¹ØÏµÊı×é
-			ucValStatus		Öá£¨Öµ£©ÓĞĞ§±êÖ¾
-  Êä³ö²ÎÊı£ºcArray			ÊµÊ±×ø±ê£¨Óë½á¹¹ÌåÏà¶ÔÓ¦£©
-  ·µ »Ø Öµ£º
-			-1 Êı×é³¤¶ÈÎª0
-			-2 ¿ÕÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetRealTimePoint(double *cArray, int nArraySize, const uint8* ucAxisMap)
+  å‡½æ•°åŠŸèƒ½  è·å–å®æ—¶ç‚¹åæ ‡ï¼Œé€šè¿‡æ˜ å°„è·å–ç‰©ç†è½´å¯¹åº”çš„åæ ‡
+  è¾“å…¥å‚æ•°ï¼šnArraySize      æ•°ç»„é•¿åº¦
+			ucAxisMap       æ˜ å°„å…³ç³»æ•°ç»„
+			ucValStatus		è½´ï¼ˆå€¼ï¼‰æœ‰æ•ˆæ ‡å¿—
+  è¾“å‡ºå‚æ•°ï¼šcArray			å®æ—¶åæ ‡ï¼ˆä¸ç»“æ„ä½“ç›¸å¯¹åº”ï¼‰
+  è¿” å› å€¼ï¼š
+			-1 æ•°ç»„é•¿åº¦ä¸º0
+			-2 ç©ºæŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getRealTimePoint(double* cArray, int nArraySize, const uint8* ucAxisMap, const VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
+    int i = 0;
 
-	if (nArraySize == 0) return -1;
-	if (cArray == NULL || ucAxisMap == NULL) return -2;
+    if (nArraySize == 0)
+        return -1;
+    if (cArray == NULL || ucAxisMap == NULL)
+        return -2;
 
-	if (ucValStatus != NULL)
-	{ //ucValStatus²»Îª¿Õ  ¸ù¾İucValStatus¶ÁÈ¡¸ö±ğÊı¾İ
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX && VAL_VALID != getbit(*ucValStatus, i)) // ÎŞĞ§ÖµÊ±²»¶ÁÈ¡ ·ÀÖ¹Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ºÍ ·ÀÖ¹Ô½½ç
-			{
-				continue;
-			}
-			else if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX && VAL_VALID == getbit(*ucValStatus, i)) //ÓĞĞ§ÖáÇÒÓ³ÉäÎª¿ÕÊ±
-			{
-				parseRunningError(9999,GCODE_ERROR_NUM150,9999);
-				return -2;
-			}
-			cArray[i] = g_dRealTimePointArray[ucAxisMap[i]];//´ÓÊµÊ±×ø±ê»ñÈ¡Öµ
-		}
-	}
-	else
-	{ //ucValStatusÎª¿ÕÖ¸Õë  È«²¿¶ÁÈ¡
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX) continue; //·ÀÖ¹Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ºÍ ·ÀÖ¹Ô½½ç
+    if (ucValStatus != NULL)
+    { //ucValStatusä¸ä¸ºç©º  æ ¹æ®ucValStatusè¯»å–ä¸ªåˆ«æ•°æ®
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX &&
+                VAL_VALID != getbit(*ucValStatus, i)) // æ— æ•ˆå€¼æ—¶ä¸è¯»å– é˜²æ­¢æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  å’Œ é˜²æ­¢è¶Šç•Œ
+            {
+                continue;
+            }
+            else if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX && VAL_VALID == getbit(*ucValStatus, i)) //æœ‰æ•ˆè½´ä¸”æ˜ å°„ä¸ºç©ºæ—¶
+            {
+                parseRunningError(9999, GCODE_ERROR_NUM150, 9999);
+                return -2;
+            }
+            cArray[i] = g_dRealTimePointArray[ucAxisMap[i]]; //ä»å®æ—¶åæ ‡è·å–å€¼
+        }
+    }
+    else
+    { //ucValStatusä¸ºç©ºæŒ‡é’ˆ  å…¨éƒ¨è¯»å–
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX)
+                continue; //é˜²æ­¢æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  å’Œ é˜²æ­¢è¶Šç•Œ
 
-			cArray[i] = g_dRealTimePointArray[ucAxisMap[i]];//´ÓÊµÊ±×ø±ê»ñÈ¡Öµ
-		}
-	}
+            cArray[i] = g_dRealTimePointArray[ucAxisMap[i]]; //ä»å®æ—¶åæ ‡è·å–å€¼
+        }
+    }
 
-
-	return 1;
-
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSingleAxisRealTimePoint(double* dOutPut, uint8 ucAxis, const uint8* ucAxisMap)
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÊµÊ±µã×ø±ê£¬Í¨¹ıÓ³Éä»ñÈ¡ÎïÀíÖá¶ÔÓ¦µÄ×ø±ê
-  ÊäÈë²ÎÊı£ºucAxis			ÖáºÅ
-			ucAxisMap       Ó³Éä¹ØÏµÊı×é
-  Êä³ö²ÎÊı£ºdOutPut			Êä³ö×ø±ê
-  ·µ »Ø Öµ£º
-			-1 ÖáºÅ´íÎó
-			-2 ¿ÕÖ¸Õë
-			-3 ÎŞÓ³Éä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSingleAxisRealTimePoint(double* dOutPut, uint8 ucAxis, const uint8* ucAxisMap)
+  å‡½æ•°åŠŸèƒ½  è·å–å®æ—¶ç‚¹åæ ‡ï¼Œé€šè¿‡æ˜ å°„è·å–ç‰©ç†è½´å¯¹åº”çš„åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucAxis			è½´å·
+			ucAxisMap       æ˜ å°„å…³ç³»æ•°ç»„
+  è¾“å‡ºå‚æ•°ï¼šdOutPut			è¾“å‡ºåæ ‡
+  è¿” å› å€¼ï¼š
+			-1 è½´å·é”™è¯¯
+			-2 ç©ºæŒ‡é’ˆ
+			-3 æ— æ˜ å°„
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getSingleAxisRealTimePoint(double* dOutPut, uint8 ucAxis, const uint8* ucAxisMap)
 {
-	if (ucAxis >= AXIS_NUM_MAX) return -1;
-	if (ucAxisMap == NULL) return -2;
-	if (ucAxisMap[ucAxis] >= AXIS_PHYSICS_NUM_MAX) return -3;
-	*dOutPut = g_dRealTimePointArray[ucAxisMap[ucAxis]];
-	return 1;
+    if (ucAxis >= AXIS_NUM_MAX)
+        return -1;
+    if (ucAxisMap == NULL)
+        return -2;
+    if (ucAxisMap[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+        return -3;
+    *dOutPut = g_dRealTimePointArray[ucAxisMap[ucAxis]];
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºupdateRealTimePoint(double *cArray, int nArraySize, const uint8* ucAxisMap)
-  º¯Êı¹¦ÄÜ  ¸üĞÂÊµÊ±µã×ø±ê£¬Í¨¹ıÓ³Éä½«´«ÈëµÄ×ø±ê¸³Öµµ½ÎïÀíÖá¶ÔÓ¦µÄ×ø±ê
-  ÊäÈë²ÎÊı£ºcArray			ÊµÊ±×ø±ê£¨Óë½á¹¹ÌåÏà¶ÔÓ¦£©
-			nArraySize      Êı×é³¤¶È
-			ucAxisMap       Ó³Éä¹ØÏµÊı×é
-			ucValStatus		Öá£¨Öµ£©ÓĞĞ§±êÖ¾
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-			-1 Êı×é³¤¶ÈÎª0
-			-2 ¿ÕÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šupdateRealTimePoint(double *cArray, int nArraySize, const uint8* ucAxisMap)
+  å‡½æ•°åŠŸèƒ½  æ›´æ–°å®æ—¶ç‚¹åæ ‡ï¼Œé€šè¿‡æ˜ å°„å°†ä¼ å…¥çš„åæ ‡èµ‹å€¼åˆ°ç‰©ç†è½´å¯¹åº”çš„åæ ‡
+  è¾“å…¥å‚æ•°ï¼šcArray			å®æ—¶åæ ‡ï¼ˆä¸ç»“æ„ä½“ç›¸å¯¹åº”ï¼‰
+			nArraySize      æ•°ç»„é•¿åº¦
+			ucAxisMap       æ˜ å°„å…³ç³»æ•°ç»„
+			ucValStatus		è½´ï¼ˆå€¼ï¼‰æœ‰æ•ˆæ ‡å¿—
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+			-1 æ•°ç»„é•¿åº¦ä¸º0
+			-2 ç©ºæŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 updateRealTimePoint(double* cArray, int nArraySize, const uint8* ucAxisMap, const VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
-	if (nArraySize == 0) return -1;   //Êı×é´óĞ¡Îª0 ·µ»Ø-1
-	if (cArray == NULL || ucAxisMap == NULL) return -2;//¿ÕÖ¸Õë  ·µ»Ø-2
+    int i = 0;
+    if (nArraySize == 0)
+        return -1; //æ•°ç»„å¤§å°ä¸º0 è¿”å›-1
+    if (cArray == NULL || ucAxisMap == NULL)
+        return -2; //ç©ºæŒ‡é’ˆ  è¿”å›-2
 
-	if (ucValStatus != NULL)
-	{ //ucValStatus²»Îª¿Õ  ¸ù¾İucValStatus¶ÁÈ¡¸ö±ğÊı¾İ
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX || VAL_VALID != getbit(*ucValStatus, i)) continue; // ÖáÎŞĞ§Ê±²»Ğ´Èë  ·ÀÖ¹Ó³ÉäÎª¿ÕµÄÎïÀíÖá ºÍ  ·ÀÖ¹Ô½½ç
+    if (ucValStatus != NULL)
+    { //ucValStatusä¸ä¸ºç©º  æ ¹æ®ucValStatusè¯»å–ä¸ªåˆ«æ•°æ®
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX || VAL_VALID != getbit(*ucValStatus, i))
+                continue; // è½´æ— æ•ˆæ—¶ä¸å†™å…¥  é˜²æ­¢æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´ å’Œ  é˜²æ­¢è¶Šç•Œ
 
-			g_dRealTimePointArray[ucAxisMap[i]] = cArray[i];  //¸³Öµµ½ÊµÊ±×ø±ê
-		}
-	}
-	else
-	{//ucValStatusÎª¿ÕÖ¸Õë  È«²¿Ğ´Èë
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX) continue; //·ÀÖ¹Ó³ÉäÎª¿ÕµÄÎïÀíÖá ºÍ  ·ÀÖ¹Ô½½ç
+            g_dRealTimePointArray[ucAxisMap[i]] = cArray[i]; //èµ‹å€¼åˆ°å®æ—¶åæ ‡
+        }
+    }
+    else
+    { //ucValStatusä¸ºç©ºæŒ‡é’ˆ  å…¨éƒ¨å†™å…¥
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (ucAxisMap[i] >= AXIS_PHYSICS_NUM_MAX)
+                continue; //é˜²æ­¢æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´ å’Œ  é˜²æ­¢è¶Šç•Œ
 
-			g_dRealTimePointArray[ucAxisMap[i]] = cArray[i];  //¸³Öµµ½ÊµÊ±×ø±ê
-		}
-	}
+            g_dRealTimePointArray[ucAxisMap[i]] = cArray[i]; //èµ‹å€¼åˆ°å®æ—¶åæ ‡
+        }
+    }
 
-
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºupdateSingleAxisRealTimePoint(double* dInPut, uint8 ucAxis, const uint8* ucAxisMap)
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÊµÊ±µã×ø±ê£¬Í¨¹ıÓ³Éä»ñÈ¡ÎïÀíÖá¶ÔÓ¦µÄ×ø±ê
-  ÊäÈë²ÎÊı£ºucAxis			ÖáºÅ
-			ucAxisMap       Ó³Éä¹ØÏµÊı×é
-  Êä³ö²ÎÊı£ºdOutPut			Êä³ö×ø±ê
-  ·µ »Ø Öµ£º
-			-1 ÖáºÅ´íÎó
-			-2 ¿ÕÖ¸Õë
-			-3 ÎŞÓ³Éä
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šupdateSingleAxisRealTimePoint(double* dInPut, uint8 ucAxis, const uint8* ucAxisMap)
+  å‡½æ•°åŠŸèƒ½  è·å–å®æ—¶ç‚¹åæ ‡ï¼Œé€šè¿‡æ˜ å°„è·å–ç‰©ç†è½´å¯¹åº”çš„åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucAxis			è½´å·
+			ucAxisMap       æ˜ å°„å…³ç³»æ•°ç»„
+  è¾“å‡ºå‚æ•°ï¼šdOutPut			è¾“å‡ºåæ ‡
+  è¿” å› å€¼ï¼š
+			-1 è½´å·é”™è¯¯
+			-2 ç©ºæŒ‡é’ˆ
+			-3 æ— æ˜ å°„
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 updateSingleAxisRealTimePoint(double* dInPut, uint8 ucAxis, const uint8* ucAxisMap)
 {
-	if (ucAxis >= AXIS_NUM_MAX) return -1;
-	if (ucAxisMap == NULL) return -2;
-	if (ucAxisMap[ucAxis] >= AXIS_PHYSICS_NUM_MAX) return -3;
-	g_dRealTimePointArray[ucAxisMap[ucAxis]] = *dInPut;
-	return 1;
+    if (ucAxis >= AXIS_NUM_MAX)
+        return -1;
+    if (ucAxisMap == NULL)
+        return -2;
+    if (ucAxisMap[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+        return -3;
+    g_dRealTimePointArray[ucAxisMap[ucAxis]] = *dInPut;
+    return 1;
 }
 
-
-/////////¸ù¾İÍ¨µÀºÅ»ñÈ¡×ø±ê
-// 
+/////////æ ¹æ®é€šé“å·è·å–åæ ‡
+//
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetRealTimePointByChannel(uint8 ucChannelNum, double* cArray)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ä³Í¨µÀµÄÊµÊ±µã×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-  Êä³ö²ÎÊı£ºcArray			ÊµÊ±×ø±ê£¨Óë½á¹¹ÌåÏà¶ÔÓ¦£©
-  ·µ »Ø Öµ£º
-			-1 Êı×é³¤¶ÈÎª0
-			-2 ¿ÕÖ¸Õë
-			-3 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
-**************************************************///	
+  å‡½æ•°åç§°ï¼šgetRealTimePointByChannel(uint8 ucChannelNum, double* cArray)
+  å‡½æ•°åŠŸèƒ½  è·å–æŸé€šé“çš„å®æ—¶ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼šcArray			å®æ—¶åæ ‡ï¼ˆä¸ç»“æ„ä½“ç›¸å¯¹åº”ï¼‰
+  è¿” å› å€¼ï¼š
+			-1 æ•°ç»„é•¿åº¦ä¸º0
+			-2 ç©ºæŒ‡é’ˆ
+			-3 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
+**************************************************///
 int8 getRealTimePointByChannel(uint8 ucChannelNum, double* cArray)
 {
-	const uint8* ucMapArray;			//Ó³Éä
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
-	return getRealTimePoint(cArray, AXIS_NUM_MAX, ucMapArray, NULL);
+    const uint8* ucMapArray; //æ˜ å°„
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
+    return getRealTimePoint(cArray, AXIS_NUM_MAX, ucMapArray, NULL);
 }
 
-
-
-//	»ñÈ¡µ¥ÖáÊµÊ±µã×ø±ê
+//	è·å–å•è½´å®æ—¶ç‚¹åæ ‡
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSingleAxisRealTimePointByChannel(uint8 ucChannelNum, double* dOutPut, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ä³Í¨µÀµÄµ¥ÖáÊµÊ±µã×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ
-  Êä³ö²ÎÊı£ºdOutPut			Êä³ö×ø±ê
-  ·µ »Ø Öµ£º
-			-1 ÖáºÅ´íÎó
-			-2 ¿ÕÖ¸Õë
-			-3 ÎŞÓ³Éä
-			-4 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSingleAxisRealTimePointByChannel(uint8 ucChannelNum, double* dOutPut, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–æŸé€šé“çš„å•è½´å®æ—¶ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucAxis			è½´å·
+  è¾“å‡ºå‚æ•°ï¼šdOutPut			è¾“å‡ºåæ ‡
+  è¿” å› å€¼ï¼š
+			-1 è½´å·é”™è¯¯
+			-2 ç©ºæŒ‡é’ˆ
+			-3 æ— æ˜ å°„
+			-4 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getSingleAxisRealTimePointByChannel(uint8 ucChannelNum, double* dOutPut, uint8 ucAxis)
 {
-	const uint8* ucMapArray;			//Ó³Éä
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -4;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
-	return getSingleAxisRealTimePoint(dOutPut, ucAxis, ucMapArray);
+    const uint8* ucMapArray; //æ˜ å°„
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -4;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
+    return getSingleAxisRealTimePoint(dOutPut, ucAxis, ucMapArray);
 }
 
-
-
-
-/****************************************************Öá»¥³âº¯Êı*************************************************************/
+/****************************************************è½´äº’æ–¥å‡½æ•°*************************************************************/
 
 int initAxisEnableStatus()
 {
-	g_ucAxisExactEnable = PHYSICIAL_TYPE_MAX_VAL;
+    g_ucAxisExactEnable = PHYSICIAL_TYPE_MAX_VAL;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetAxisEnableStatus(uint8 ucPhysicalAxis,uint8 ucStatus)
-  º¯Êı¹¦ÄÜ  ĞŞ¸ÄÖáµÄÊ¹ÄÜ×´Ì¬
-  ÊäÈë²ÎÊı£ºucPhysicalAxis		ÎïÀíÖáºÅ
-			ucStatus			×´Ì¬   1ÎªÊ¹ÄÜ  0Îª²»Ê¹ÄÜ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetAxisEnableStatus(uint8 ucPhysicalAxis,uint8 ucStatus)
+  å‡½æ•°åŠŸèƒ½  ä¿®æ”¹è½´çš„ä½¿èƒ½çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis		ç‰©ç†è½´å·
+			ucStatus			çŠ¶æ€   1ä¸ºä½¿èƒ½  0ä¸ºä¸ä½¿èƒ½
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 setAxisEnableStatus(uint8 ucPhysicalAxis,uint8 ucStatus)
+int8 setAxisEnableStatus(uint8 ucPhysicalAxis, uint8 ucStatus)
 {
-	if (ucPhysicalAxis>= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (ucStatus == 0)
-	{
-		clrbit(g_ucAxisExactEnable, ucPhysicalAxis);
-	}
-	else
-	{
-		setbit(g_ucAxisExactEnable, ucPhysicalAxis);
-	}
-	
-	return 1;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (ucStatus == 0)
+    {
+        clrbit(g_ucAxisExactEnable, ucPhysicalAxis);
+    }
+    else
+    {
+        setbit(g_ucAxisExactEnable, ucPhysicalAxis);
+    }
+
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºstructToPhysical(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_PHYSICIAL_TYPE* ucOutput)
-  º¯Êı¹¦ÄÜ  ´Ó½á¹¹Ìå ×ª»»µ½ ÎïÀíÖá
-  ÊäÈë²ÎÊı£ºucSign		½á¹¹ÌåµÄÓĞĞ§Öá£¨Î»±íÊ¾×ª»»ÄÄĞ©Î»£©
-			ucAxisMap	Ó³Éä
-			nSize		Êı×é´óĞ¡
-  Êä³ö²ÎÊı£ºucOutput	ÎïÀíÖá£¨Î»±íÊ¾£©
-  ·µ »Ø Öµ£º¶ÔÓ¦ÎïÀíÖáµÄÓĞĞ§Öá
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstructToPhysical(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_PHYSICIAL_TYPE* ucOutput)
+  å‡½æ•°åŠŸèƒ½  ä»ç»“æ„ä½“ è½¬æ¢åˆ° ç‰©ç†è½´
+  è¾“å…¥å‚æ•°ï¼šucSign		ç»“æ„ä½“çš„æœ‰æ•ˆè½´ï¼ˆä½è¡¨ç¤ºè½¬æ¢å“ªäº›ä½ï¼‰
+			ucAxisMap	æ˜ å°„
+			nSize		æ•°ç»„å¤§å°
+  è¾“å‡ºå‚æ•°ï¼šucOutput	ç‰©ç†è½´ï¼ˆä½è¡¨ç¤ºï¼‰
+  è¿” å› å€¼ï¼šå¯¹åº”ç‰©ç†è½´çš„æœ‰æ•ˆè½´
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 structToPhysical(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_PHYSICIAL_TYPE* ucOutput)
 {
-	int	i = 0;
-	*ucOutput = 0;
-	if (ucAxisMap == NULL)//´«ÈëµÄÓ³ÉäÊı×éÎª¿Õ
-	{
-		return -1;
-	}
-	for (i = 0; i < nSize; i++)
-	{
-		if ((ucSign & 0x01) == 0x01)//Î»Îª1 Ñ°ÕÒ¶ÔÓ¦ÎïÀíÖá
-		{
-			if (ucAxisMap[i] < AXIS_PHYSICS_NUM_MAX)
-			{	//ÖÃ¶ÔÓ¦µÄÎïÀíÖá
-				setbit(*ucOutput, ucAxisMap[i]);
-			}
-			else //ÓĞĞ§Öáµ«Ó³ÉäÎª¿ÕµÄÖá 2026.4.23
-			{
-				parseRunningError(9999,GCODE_ERROR_NUM150,9999);
-				return -2;
-			}
-		}
-		ucSign = ucSign >> 1;//ÒÆÎ»
-	}
-	return 1;
+    int i = 0;
+    *ucOutput = 0;
+    if (ucAxisMap == NULL) //ä¼ å…¥çš„æ˜ å°„æ•°ç»„ä¸ºç©º
+    {
+        return -1;
+    }
+    for (i = 0; i < nSize; i++)
+    {
+        if ((ucSign & 0x01) == 0x01) //ä½ä¸º1 å¯»æ‰¾å¯¹åº”ç‰©ç†è½´
+        {
+            if (ucAxisMap[i] < AXIS_PHYSICS_NUM_MAX)
+            { //ç½®å¯¹åº”çš„ç‰©ç†è½´
+                setbit(*ucOutput, ucAxisMap[i]);
+            }
+            else //æœ‰æ•ˆè½´ä½†æ˜ å°„ä¸ºç©ºçš„è½´ 2026.4.23
+            {
+                parseRunningError(9999, GCODE_ERROR_NUM150, 9999);
+                return -2;
+            }
+        }
+        ucSign = ucSign >> 1; //ç§»ä½
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerCheck(VAL_PHYSICIAL_TYPE ucSign)
-  º¯Êı¹¦ÄÜ  Öá²éÑ¯º¯Êı  ²éÑ¯¶ÔÓ¦Î»µÄÖáÊÇ·ñ¿ÕÏĞ ¿ÕÏĞ·µ»ØTRUE  ²»¿ÕÏĞ·µ»ØFALSE
-  ÊäÈë²ÎÊı£ºsign	ÎïÀíÖá ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	¶ÔÓ¦Öá¿ÕÏĞ
-			FALSE	¶ÔÓ¦Öá±»Õ¼ÓÃ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerCheck(VAL_PHYSICIAL_TYPE ucSign)
+  å‡½æ•°åŠŸèƒ½  è½´æŸ¥è¯¢å‡½æ•°  æŸ¥è¯¢å¯¹åº”ä½çš„è½´æ˜¯å¦ç©ºé—² ç©ºé—²è¿”å›TRUE  ä¸ç©ºé—²è¿”å›FALSE
+  è¾“å…¥å‚æ•°ï¼šsign	ç‰©ç†è½´ æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	å¯¹åº”è½´ç©ºé—²
+			FALSE	å¯¹åº”è½´è¢«å ç”¨
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool axisManagerCheck(VAL_PHYSICIAL_TYPE ucSign)
 {
-	if ((~(g_ucAxisOccupation|~g_ucAxisExactEnable) & ucSign) == ucSign)   // ÖìÎÈÖĞ 2023.3.30  Ôö¼ÓÖáÕ¼ÓÃÊ± Öá×´Ì¬µÄÅĞ¶Ï g_ucAxisExactEnable
-		return TRUE;
-	else
-		return FALSE;
+    if ((~(g_ucAxisOccupation | ~g_ucAxisExactEnable) & ucSign) ==
+        ucSign) // æœ±ç¨³ä¸­ 2023.3.30  å¢åŠ è½´å ç”¨æ—¶ è½´çŠ¶æ€çš„åˆ¤æ–­ g_ucAxisExactEnable
+        return TRUE;
+    else
+        return FALSE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign)
-  º¯Êı¹¦ÄÜ  ÏÈ²éÑ¯ÖáÊÇ·ñ¿ÕÏĞ  Ä¿±êËùÓĞÖá¶¼¿ÕÏĞÊ±Õ¼ÓÃÄ¿±êÖá   ²»¿ÕÏĞÊ±Õ¼ÓÃÊ§°Ü ·µ»ØFASLE
-  ÊäÈë²ÎÊı£ºsign	ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	Õ¼ÓÃ³É¹¦
-			FALSE	Õ¼ÓÃÊ§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign)
+  å‡½æ•°åŠŸèƒ½  å…ˆæŸ¥è¯¢è½´æ˜¯å¦ç©ºé—²  ç›®æ ‡æ‰€æœ‰è½´éƒ½ç©ºé—²æ—¶å ç”¨ç›®æ ‡è½´   ä¸ç©ºé—²æ—¶å ç”¨å¤±è´¥ è¿”å›FASLE
+  è¾“å…¥å‚æ•°ï¼šsign	æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	å ç”¨æˆåŠŸ
+			FALSE	å ç”¨å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool axisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign)
 {
-	if ((~(g_ucAxisOccupation | ~g_ucAxisExactEnable) & ucSign) == ucSign)
-	{//¶ÔÓ¦µÄÖá¿ÕÏĞ  ¿ÉÒÔÕ¼ÓÃ
-		g_ucAxisOccupation |= ucSign; // ¸Ä±äÖá×´Ì¬
-		return TRUE;
-	}
-	else
-	{	// Õ¼ÓÃÊ§°Ü
-		return FALSE;
-	}
+    if ((~(g_ucAxisOccupation | ~g_ucAxisExactEnable) & ucSign) == ucSign)
+    {                                 //å¯¹åº”çš„è½´ç©ºé—²  å¯ä»¥å ç”¨
+        g_ucAxisOccupation |= ucSign; // æ”¹å˜è½´çŠ¶æ€
+        return TRUE;
+    }
+    else
+    { // å ç”¨å¤±è´¥
+        return FALSE;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerRelease(VAL_PHYSICIAL_TYPE ucSign)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÄ¿±êÖáÊÍ·Å£¨Î»ÖÃÎª0£©¶ÔÓ¦µÄÖá
-  ÊäÈë²ÎÊı£ºsign	ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	ÊÍ·Å³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerRelease(VAL_PHYSICIAL_TYPE ucSign)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®ç›®æ ‡è½´é‡Šæ”¾ï¼ˆä½ç½®ä¸º0ï¼‰å¯¹åº”çš„è½´
+  è¾“å…¥å‚æ•°ï¼šsign	æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	é‡Šæ”¾æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool axisManagerRelease(VAL_PHYSICIAL_TYPE ucSign)
 {
-	g_ucAxisOccupation &= (~ucSign);
-	return TRUE;
+    g_ucAxisOccupation &= (~ucSign);
+    return TRUE;
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerCheckByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
-  º¯Êı¹¦ÄÜ  Öá²éÑ¯º¯Êı  ½«½á¹¹ÌåµÄÖáÓ³ÉäÎªÎïÀíÖá  ²éÑ¯¶ÔÓ¦µÄÎïÀíÖáÊÇ·ñ¿ÕÏĞ ¿ÕÏĞ·µ»Ø1  ²»¿ÕÏĞ·µ»Ø0
-  ÊäÈë²ÎÊı£ºucSign		ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-			ucAxisMap	ÎïÀíÖáÓ³ÉäÊı×é
-			nSize		Êı×é³¤¶È£¨Ò²ÊÇÓĞĞ§ÖáµÄÓĞĞ§Î»¸öÊı£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	¿ÕÖ¸Õë
-			-2	³¤¶È´íÎó
-			 0	¶ÔÓ¦Öá±»Õ¼ÓÃ
-			 1	¶ÔÓ¦Öá¿ÕÏĞ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerCheckByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
+  å‡½æ•°åŠŸèƒ½  è½´æŸ¥è¯¢å‡½æ•°  å°†ç»“æ„ä½“çš„è½´æ˜ å°„ä¸ºç‰©ç†è½´  æŸ¥è¯¢å¯¹åº”çš„ç‰©ç†è½´æ˜¯å¦ç©ºé—² ç©ºé—²è¿”å›1  ä¸ç©ºé—²è¿”å›0
+  è¾“å…¥å‚æ•°ï¼šucSign		æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+			ucAxisMap	ç‰©ç†è½´æ˜ å°„æ•°ç»„
+			nSize		æ•°ç»„é•¿åº¦ï¼ˆä¹Ÿæ˜¯æœ‰æ•ˆè½´çš„æœ‰æ•ˆä½ä¸ªæ•°ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	ç©ºæŒ‡é’ˆ
+			-2	é•¿åº¦é”™è¯¯
+			 0	å¯¹åº”è½´è¢«å ç”¨
+			 1	å¯¹åº”è½´ç©ºé—²
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 axisManagerCheckByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize)
 {
-	VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
 
-	if (ucAxisMap == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	if (nSize <= 0)//³¤¶ÈÅĞ¶Ï
-	{
-		return -2;
-	}
-	structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign);//½á¹¹ÌåÖá¸ù¾İÓ³Éä×ª»»ÎªÎïÀíÖá
+    if (ucAxisMap == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    if (nSize <= 0) //é•¿åº¦åˆ¤æ–­
+    {
+        return -2;
+    }
+    structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign); //ç»“æ„ä½“è½´æ ¹æ®æ˜ å°„è½¬æ¢ä¸ºç‰©ç†è½´
 
-	if (axisManagerCheck(ucPhysicalSign) == TRUE)//²éÑ¯ÎïÀíÖáÊÇ·ñ¿ÕÏĞ
-	{//¿ÕÏĞ
-		return 1;
-	}
-	else
-	{//Õ¼ÓÃ
-		return 0;
-	}
-
+    if (axisManagerCheck(ucPhysicalSign) == TRUE) //æŸ¥è¯¢ç‰©ç†è½´æ˜¯å¦ç©ºé—²
+    {                                             //ç©ºé—²
+        return 1;
+    }
+    else
+    { //å ç”¨
+        return 0;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerOccupyByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
-  º¯Êı¹¦ÄÜ  ÖáÕ¼ÓÃº¯Êı  ½«½á¹¹ÌåµÄÖáÓ³ÉäÎªÎïÀíÖá  ²éÑ¯¶ÔÓ¦µÄÎïÀíÖáÊÇ·ñ¿ÕÏĞ ¿ÕÏĞÊ±Õ¼ÓÃÇÒ·µ»Ø1  ·Ç¿ÕÏĞÊ±·µ»Ø0
-  ÊäÈë²ÎÊı£ºucSign		ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-			ucAxisMap	ÎïÀíÖáÓ³ÉäÊı×é
-			nSize		Êı×é³¤¶È£¨Ò²ÊÇÓĞĞ§ÖáµÄÓĞĞ§Î»¸öÊı£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	¿ÕÖ¸Õë
-			-2	³¤¶È´íÎó
-			 0	¶ÔÓ¦Öá±»Õ¼ÓÃ
-			 1	Õ¼ÓÃÖá³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerOccupyByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
+  å‡½æ•°åŠŸèƒ½  è½´å ç”¨å‡½æ•°  å°†ç»“æ„ä½“çš„è½´æ˜ å°„ä¸ºç‰©ç†è½´  æŸ¥è¯¢å¯¹åº”çš„ç‰©ç†è½´æ˜¯å¦ç©ºé—² ç©ºé—²æ—¶å ç”¨ä¸”è¿”å›1  éç©ºé—²æ—¶è¿”å›0
+  è¾“å…¥å‚æ•°ï¼šucSign		æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+			ucAxisMap	ç‰©ç†è½´æ˜ å°„æ•°ç»„
+			nSize		æ•°ç»„é•¿åº¦ï¼ˆä¹Ÿæ˜¯æœ‰æ•ˆè½´çš„æœ‰æ•ˆä½ä¸ªæ•°ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	ç©ºæŒ‡é’ˆ
+			-2	é•¿åº¦é”™è¯¯
+			 0	å¯¹åº”è½´è¢«å ç”¨
+			 1	å ç”¨è½´æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 axisManagerOccupyByStruct(VAL_STRUCT_TYPE ucSign, const  uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE *pSaveVal)
+int8 axisManagerOccupyByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE* pSaveVal)
 {
-	VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
 
-	if (ucAxisMap == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	if (nSize <= 0)//³¤¶ÈÅĞ¶Ï
-	{
-		return -2;
-	}
-	if (pSaveVal != NULL)
-	{
-		ucSign &= ~(*pSaveVal);
-		if (ucSign == 0)
-		{
-			return 1;
-		}
-	}
-	structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign);//½á¹¹ÌåÖá¸ù¾İÓ³Éä×ª»»ÎªÎïÀíÖá
+    if (ucAxisMap == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    if (nSize <= 0) //é•¿åº¦åˆ¤æ–­
+    {
+        return -2;
+    }
+    if (pSaveVal != NULL)
+    {
+        ucSign &= ~(*pSaveVal);
+        if (ucSign == 0)
+        {
+            return 1;
+        }
+    }
+    structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign); //ç»“æ„ä½“è½´æ ¹æ®æ˜ å°„è½¬æ¢ä¸ºç‰©ç†è½´
 
-	if (axisManagerOccupy(ucPhysicalSign) == TRUE)//³¢ÊÔÕ¼ÓÃÖá
-	{
-		if (pSaveVal != NULL)
-		{
-			*pSaveVal |= ucSign;
-		}
-		return 1;
-	}
-	else
-	{
-		////ÅĞ¶Ï¶ÔÓ¦µÄÖáÊÇ·ñÊ¹ÄÜ  Èç¹ûÎ´Ê¹ÄÜÔòÊ¹ÄÜ
-		//if (g_ucAxisExactEnable & ucPhysicalSign != ucPhysicalSign)
-		//{
-		//	channelAxisEnable()
-		//}
-		return 0;
-	}
+    if (axisManagerOccupy(ucPhysicalSign) == TRUE) //å°è¯•å ç”¨è½´
+    {
+        if (pSaveVal != NULL)
+        {
+            *pSaveVal |= ucSign;
+        }
+        return 1;
+    }
+    else
+    {
+        ////åˆ¤æ–­å¯¹åº”çš„è½´æ˜¯å¦ä½¿èƒ½  å¦‚æœæœªä½¿èƒ½åˆ™ä½¿èƒ½
+        //if (g_ucAxisExactEnable & ucPhysicalSign != ucPhysicalSign)
+        //{
+        //	channelAxisEnable()
+        //}
+        return 0;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerReleaseByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
-  º¯Êı¹¦ÄÜ  ÖáÊÍ·Åº¯Êı  ½«½á¹¹ÌåµÄÖáÓ³ÉäÎªÎïÀíÖá  ÊÍ·Å¶ÔÓ¦µÄÎïÀíÖá
-  ÊäÈë²ÎÊı£ºucSign		ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-			ucAxisMap	ÎïÀíÖáÓ³ÉäÊı×é
-			nSize		Êı×é³¤¶È£¨Ò²ÊÇÓĞĞ§ÖáµÄÓĞĞ§Î»¸öÊı£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	¿ÕÖ¸Õë
-			-2	³¤¶È´íÎó
-			 1	ÊÍ·ÅÖá³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerReleaseByStruct(uint8 ucSign, uint8* ucAxisMap, int nSize)
+  å‡½æ•°åŠŸèƒ½  è½´é‡Šæ”¾å‡½æ•°  å°†ç»“æ„ä½“çš„è½´æ˜ å°„ä¸ºç‰©ç†è½´  é‡Šæ”¾å¯¹åº”çš„ç‰©ç†è½´
+  è¾“å…¥å‚æ•°ï¼šucSign		æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+			ucAxisMap	ç‰©ç†è½´æ˜ å°„æ•°ç»„
+			nSize		æ•°ç»„é•¿åº¦ï¼ˆä¹Ÿæ˜¯æœ‰æ•ˆè½´çš„æœ‰æ•ˆä½ä¸ªæ•°ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	ç©ºæŒ‡é’ˆ
+			-2	é•¿åº¦é”™è¯¯
+			 1	é‡Šæ”¾è½´æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 axisManagerReleaseByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE* pSaveVal)
 {
-	VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
 
-	if (ucAxisMap == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	if (nSize <= 0)//³¤¶ÈÅĞ¶Ï
-	{
-		return -2;
-	}
-	structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign);//½á¹¹ÌåÖá¸ù¾İÓ³Éä×ª»»ÎªÎïÀíÖá
+    if (ucAxisMap == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    if (nSize <= 0) //é•¿åº¦åˆ¤æ–­
+    {
+        return -2;
+    }
+    structToPhysical(ucSign, ucAxisMap, nSize, &ucPhysicalSign); //ç»“æ„ä½“è½´æ ¹æ®æ˜ å°„è½¬æ¢ä¸ºç‰©ç†è½´
 
-	//ÊÍ·ÅÖá
-	axisManagerRelease(ucPhysicalSign);
-	if (pSaveVal != NULL)
-	{
-		*pSaveVal &= (~ucSign);
-	}
-	return 1;
+    //é‡Šæ”¾è½´
+    axisManagerRelease(ucPhysicalSign);
+    if (pSaveVal != NULL)
+    {
+        *pSaveVal &= (~ucSign);
+    }
+    return 1;
 }
 
-/* ËÕÏò±ê 2026-10-14£º¶ÀÁ¢ÍÆ½øÖ÷ÖáÍ£Ö¹£¬±ÜÃâÍ£Ö¹ÒÀÀµÆô¶¯Ê¹ÄÜÍê³É¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šç‹¬ç«‹æ¨è¿›ä¸»è½´åœæ­¢ï¼Œé¿å…åœæ­¢ä¾èµ–å¯åŠ¨ä½¿èƒ½å®Œæˆã€‚ */
 /*************************************************
-  º¯ÊıÃû³Æ£ºreserveAxisControl
-  º¯Êı¹¦ÄÜ£º½öÓÉÔË¶¯ÖÜÆÚ±£ÁôÖá¿ØÖÆÈ¨£¬²»ÇëÇóÊ¹ÄÜ£¬²»¹ØÖĞ¶Ï
-  ÊäÈë²ÎÊı£ºucSign - Âß¼­ÖáÑÚÂë£»pMapArray - ÎïÀíÖáÓ³Éä£»pOccupation - µ±Ç°Á÷³ÌµÄ×ÊÔ´¼ÇÂ¼
-  Êä³ö²ÎÊı£º¸üĞÂ×ÊÔ´Õ¼ÓÃ¼ÇÂ¼
-  ·µ »Ø Öµ£º1 - Íê³É£»0 - µÈ´ı£»¸ºÖµ - Òì³£
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14
+  å‡½æ•°åç§°ï¼šreserveAxisControl
+  å‡½æ•°åŠŸèƒ½ï¼šä»…ç”±è¿åŠ¨å‘¨æœŸä¿ç•™è½´æ§åˆ¶æƒï¼Œä¸è¯·æ±‚ä½¿èƒ½ï¼Œä¸å…³ä¸­æ–­
+  è¾“å…¥å‚æ•°ï¼šucSign - é€»è¾‘è½´æ©ç ï¼›pMapArray - ç‰©ç†è½´æ˜ å°„ï¼›pOccupation - å½“å‰æµç¨‹çš„èµ„æºè®°å½•
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°èµ„æºå ç”¨è®°å½•
+  è¿” å› å€¼ï¼š1 - å®Œæˆï¼›0 - ç­‰å¾…ï¼›è´Ÿå€¼ - å¼‚å¸¸
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14
 ****************************************/
 
 int8 reserveAxisControl(VAL_STRUCT_TYPE ucSign, const uint8* pMapArray, VAL_STRUCT_TYPE* pOccupation)
 {
-    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0; /**< ´ı±£ÁôµÄÎïÀíÖá¡£ */
-    int8 cResult; /**< Ó³Éä»ò×ÊÔ´ÉêÇë½á¹û¡£ */
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0; /**< å¾…ä¿ç•™çš„ç‰©ç†è½´ã€‚ */
+    int8 cResult;                          /**< æ˜ å°„æˆ–èµ„æºç”³è¯·ç»“æœã€‚ */
     if (pMapArray == NULL || pOccupation == NULL)
     {
         return -1;
     }
-    /* g_ucAxisOccupationÎª¹²ÏíÎïÀíÖáÎ»Í¼£»½öÖÜÆÚ¼ì²é²¢µÇ¼Ç±¾´ÎĞÂÈ¡µÃµÄÕ¼ÓÃ¡£ */
+    /* g_ucAxisOccupationä¸ºå…±äº«ç‰©ç†è½´ä½å›¾ï¼›ä»…å‘¨æœŸæ£€æŸ¥å¹¶ç™»è®°æœ¬æ¬¡æ–°å–å¾—çš„å ç”¨ã€‚ */
     ucSign &= ~(*pOccupation);
     cResult = structToPhysical(ucSign, pMapArray, AXIS_NUM_MAX, &ucPhysicalSign);
     if (cResult == 1 && (g_ucAxisOccupation & ucPhysicalSign) == 0)
@@ -585,186 +570,186 @@ int8 reserveAxisControl(VAL_STRUCT_TYPE ucSign, const uint8* pMapArray, VAL_STRU
     return cResult;
 }
 
-//	ÖáÕ¼ÓÃº¯Êı£¨Í¨¹ıÍ¨µÀ£© ÖáÎ´Ê¹ÄÜÊ±£¬»á×Ô¶¯Ê¹ÄÜ
+//	è½´å ç”¨å‡½æ•°ï¼ˆé€šè¿‡é€šé“ï¼‰ è½´æœªä½¿èƒ½æ—¶ï¼Œä¼šè‡ªåŠ¨ä½¿èƒ½
 int8 axisManagerOccupyByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveVal)
 {
-	VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
-	const uint8* ucAxisMap;
-	int8 nRes;
-	if (ucChannelNum >=CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	ucAxisMap = g_SChannel[ucChannelNum].pMapAxisArray;
-	if (ucAxisMap == NULL)//¿ÕÖ¸Õë
-	{
-		return -2;
-	}
-	if (pSaveVal != NULL)
-	{
-		ucSign &= ~(*pSaveVal);
-		if (ucSign == 0)
-		{
-			return 1;
-		}
-	}
-	nRes = structToPhysical(ucSign, ucAxisMap, AXIS_NUM_MAX, &ucPhysicalSign);//½á¹¹ÌåÖá¸ù¾İÓ³Éä×ª»»ÎªÎïÀíÖá
-	if (nRes != 1)return nRes;
-	
-	if (axisManagerOccupy(ucPhysicalSign) == TRUE)//³¢ÊÔÕ¼ÓÃÖá
-	{
-		if (pSaveVal != NULL)
-		{
-			*pSaveVal |= ucSign;
-		}
-		return 1;
-	}
-	else
-	{
-		//ÅĞ¶Ï¶ÔÓ¦µÄÖáÊÇ·ñÊ¹ÄÜ  Èç¹ûÎ´Ê¹ÄÜÔòÊ¹ÄÜ
-		if ((g_ucAxisExactEnable & ucPhysicalSign) != ucPhysicalSign)
-		{
-			channelAxisEnable(ucChannelNum);
-		}
-		return 0;
-	}
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
+    const uint8* ucAxisMap;
+    int8 nRes;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    ucAxisMap = g_SChannel[ucChannelNum].pMapAxisArray;
+    if (ucAxisMap == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return -2;
+    }
+    if (pSaveVal != NULL)
+    {
+        ucSign &= ~(*pSaveVal);
+        if (ucSign == 0)
+        {
+            return 1;
+        }
+    }
+    nRes = structToPhysical(ucSign, ucAxisMap, AXIS_NUM_MAX, &ucPhysicalSign); //ç»“æ„ä½“è½´æ ¹æ®æ˜ å°„è½¬æ¢ä¸ºç‰©ç†è½´
+    if (nRes != 1)
+        return nRes;
 
+    if (axisManagerOccupy(ucPhysicalSign) == TRUE) //å°è¯•å ç”¨è½´
+    {
+        if (pSaveVal != NULL)
+        {
+            *pSaveVal |= ucSign;
+        }
+        return 1;
+    }
+    else
+    {
+        //åˆ¤æ–­å¯¹åº”çš„è½´æ˜¯å¦ä½¿èƒ½  å¦‚æœæœªä½¿èƒ½åˆ™ä½¿èƒ½
+        if ((g_ucAxisExactEnable & ucPhysicalSign) != ucPhysicalSign)
+        {
+            channelAxisEnable(ucChannelNum);
+        }
+        return 0;
+    }
 }
 
-//	ÖáÊÍ·Åº¯Êı£¨Í¨¹ıÍ¨µÀ£©
+//	è½´é‡Šæ”¾å‡½æ•°ï¼ˆé€šè¿‡é€šé“ï¼‰
 int8 axisManagerReleaseByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveVal)
 {
-	if (ucChannelNum>= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	return axisManagerReleaseByStruct(ucSign, g_SChannel[ucChannelNum].pMapAxisArray, AXIS_NUM_MAX, pSaveVal);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    return axisManagerReleaseByStruct(ucSign, g_SChannel[ucChannelNum].pMapAxisArray, AXIS_NUM_MAX, pSaveVal);
 }
 
-
-
-
-//µİ¹é´òÓ¡Î»
+//é€’å½’æ‰“å°ä½
 void __printfBits(int nSign, int nSize)
 {
-	if (nSize <= 0) return; //É±ËÀÄÇ¸öµİ¹é
-	__printfBits(nSign >> 1, nSize - 1);//µİ¹éµİ¹é
-	printf("%1d", (nSign & 0x01));  //´òÓ¡µÚ1Î»µÄbit
-	if (nSize % 4 == 0) printf(" ");//Óö4²»¾ö  ´ò¸ö¿Õ¸ñ
+    if (nSize <= 0)
+        return;                          //æ€æ­»é‚£ä¸ªé€’å½’
+    __printfBits(nSign >> 1, nSize - 1); //é€’å½’é€’å½’
+    printf("%1d", (nSign & 0x01));       //æ‰“å°ç¬¬1ä½çš„bit
+    if (nSize % 4 == 0)
+        printf(" "); //é‡4ä¸å†³  æ‰“ä¸ªç©ºæ ¼
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerCheck(uint8 sign)
-  º¯Êı¹¦ÄÜ  µİ¹é´òÓ¡Ä¿±ê±äÁ¿µÄ¸÷¸öÎ»
-  ÊäÈë²ÎÊı£ºsign	Ä¿±ê±äÁ¿
-			nSize	Ä¿±ê±äÁ¿³¤¶È£¨Î»£©   = sizeof() * 8
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1	´òÓ¡³É¹¦
-			-1	Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerCheck(uint8 sign)
+  å‡½æ•°åŠŸèƒ½  é€’å½’æ‰“å°ç›®æ ‡å˜é‡çš„å„ä¸ªä½
+  è¾“å…¥å‚æ•°ï¼šsign	ç›®æ ‡å˜é‡
+			nSize	ç›®æ ‡å˜é‡é•¿åº¦ï¼ˆä½ï¼‰   = sizeof() * 8
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1	æ‰“å°æˆåŠŸ
+			-1	å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 printfBits(int nSign, int nSize)
 {
-	if (nSize <= 0)return -1; // <=0 ÔõÃ´´òÓ¡£¿
-	__printfBits(nSign, nSize);//´òÓ¡nSignµÄ nSizeÎ»
-	printf("\n");//×îºó»»¸öĞĞ
-	return 1;
+    if (nSize <= 0)
+        return -1;              // <=0 æ€ä¹ˆæ‰“å°ï¼Ÿ
+    __printfBits(nSign, nSize); //æ‰“å°nSignçš„ nSizeä½
+    printf("\n");               //æœ€åæ¢ä¸ªè¡Œ
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºmachineTimerStart(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ¿ªÆô¼Ó¹¤¼ÆÊ±
-  ÊäÈë²ÎÊı£ºucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1	³É¹¦
-			-1	Ê§°Ü
-			-2  ÒÑÆô¶¯
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmachineTimerStart(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å¼€å¯åŠ å·¥è®¡æ—¶
+  è¾“å…¥å‚æ•°ï¼šucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1	æˆåŠŸ
+			-1	å¤±è´¥
+			-2  å·²å¯åŠ¨
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 machineTimerStart(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬¹ıÍ¨µÀºÅ
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined == TRUE)
-	{
-		return -2;
-	}
-	g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined = TRUE;// ±ê¼ÇÎªÆô¶¯
-	g_SChannel[ucChannelNum].SMachineTimer.unStartTime = timeji;//¼ÇÂ¼µ±Ç°¹¤¼şÆô¶¯Ê±¼ä
-	
-	return 1;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…è¿‡é€šé“å·
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined == TRUE)
+    {
+        return -2;
+    }
+    g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined = TRUE; // æ ‡è®°ä¸ºå¯åŠ¨
+    g_SChannel[ucChannelNum].SMachineTimer.unStartTime = timeji;  //è®°å½•å½“å‰å·¥ä»¶å¯åŠ¨æ—¶é—´
+
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmachineTimerMark(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  µ¥¼ş¼Ó¹¤Íê³É±ê¼Ç
-  ÊäÈë²ÎÊı£ºucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1	³É¹¦
-			-1	Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmachineTimerMark(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å•ä»¶åŠ å·¥å®Œæˆæ ‡è®°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1	æˆåŠŸ
+			-1	å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 machineTimerMark(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX )//³¬¹ıÍ¨µÀºÅ
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…è¿‡é€šé“å·
+    {
+        return -1;
+    }
 
-	if (timeji > g_SChannel[ucChannelNum].SMachineTimer.unStartTime) //ÅĞ¶ÏÊÇ·ñÒç³ö
-	{ //¼ÆËãstartTimeµ½timjiµÄÊ±¼ä
-		g_SChannel[ucChannelNum].SMachineTimer.unCurProcessTime = timeji - g_SChannel[ucChannelNum].SMachineTimer.unStartTime;
-	}
-	else
-	{
-		g_SChannel[ucChannelNum].SMachineTimer.unCurProcessTime = 0xFFFFFFFF - g_SChannel[ucChannelNum].SMachineTimer.unStartTime + timeji;
-	}
+    if (timeji > g_SChannel[ucChannelNum].SMachineTimer.unStartTime) //åˆ¤æ–­æ˜¯å¦æº¢å‡º
+    {                                                                //è®¡ç®—startTimeåˆ°timjiçš„æ—¶é—´
+        g_SChannel[ucChannelNum].SMachineTimer.unCurProcessTime =
+            timeji - g_SChannel[ucChannelNum].SMachineTimer.unStartTime;
+    }
+    else
+    {
+        g_SChannel[ucChannelNum].SMachineTimer.unCurProcessTime =
+            0xFFFFFFFF - g_SChannel[ucChannelNum].SMachineTimer.unStartTime + timeji;
+    }
 #if STM32_MODE
-	volatile int32 value = atomic_read(&timeji);//Ô­×Ó²Ù×÷ĞÔµØ´ÓtimejiÖĞ»ñÈ¡Öµ
-	atomic_write(&g_SChannel[ucChannelNum].SMachineTimer.unStartTime, value);
+    volatile int32 value = atomic_read(&timeji); //åŸå­æ“ä½œæ€§åœ°ä»timejiä¸­è·å–å€¼
+    atomic_write(&g_SChannel[ucChannelNum].SMachineTimer.unStartTime, value);
 #else
-	g_SChannel[ucChannelNum].SMachineTimer.unStartTime = timeji;//¼ÇÂ¼µ±Ç°Ê±¼äÎª¿ªÊ¼Ê±¼ä
+    g_SChannel[ucChannelNum].SMachineTimer.unStartTime = timeji; //è®°å½•å½“å‰æ—¶é—´ä¸ºå¼€å§‹æ—¶é—´
 #endif
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmachineTimerInterp(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ×Ü¼Ó¹¤Ê±¼ä¼ÆÊ±
-  ÊäÈë²ÎÊı£ºucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1	³É¹¦
-			-1	Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmachineTimerInterp(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  æ€»åŠ å·¥æ—¶é—´è®¡æ—¶
+  è¾“å…¥å‚æ•°ï¼šucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1	æˆåŠŸ
+			-1	å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 machineTimerInterp(uint8 ucChannelNum)
 {
-	if (ucChannelNum > 0)//¼ÆÊ±Ö»¼ÆËãÍ¨µÀ0
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined == TRUE)
-	{
-		g_sdtime.ucProcessTimeTotal += 1;//×Ü¼Ó¹¤Ê±¼ä×ÔÔö
-	}
-	return 1;
+    if (ucChannelNum > 0) //è®¡æ—¶åªè®¡ç®—é€šé“0
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].SMachineTimer.isTimerBegined == TRUE)
+    {
+        g_sdtime.ucProcessTimeTotal += 1; //æ€»åŠ å·¥æ—¶é—´è‡ªå¢
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalWorkpieceNum(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ¹¤¼ş¼ÆÊı¹¦ÄÜ
-  ÊäÈë²ÎÊı£ºucChannelNum Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1	ÒÑ´ïµ½ĞèÇó¼şÊı
-             0  Î´´ïµ½ĞèÇó¼şÊı
-            -1	·Ç¼Æ¼şÍ¨µÀ
-            -2  ±¾´Î²»¼Æ¼ş»òÎ´ÉèÖÃĞèÇó¼şÊı
-  ±¸    ×¢£º
+  zxr: æŒ‰ä»»åŠ¡å¯åŠ¨æ—¶çš„è®¡ä»¶èµ„æ ¼ç»Ÿè®¡ï¼Œè¿”å›å€¼å…¼å®¹åŸç»“æŸæµç¨‹
+  å‡½æ•°åç§°ï¼šcalWorkpieceNum(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å·¥ä»¶è®¡æ•°åŠŸèƒ½
+  è¾“å…¥å‚æ•°ï¼šucChannelNum é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1	å·²è¾¾åˆ°éœ€æ±‚ä»¶æ•°
+             0  æœªè¾¾åˆ°éœ€æ±‚ä»¶æ•°
+            -1	éè®¡ä»¶é€šé“
+            -2  æœ¬æ¬¡ä¸è®¡ä»¶æˆ–æœªè®¾ç½®éœ€æ±‚ä»¶æ•°
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 calWorkpieceNum(uint8 ucChannelNum)
 {
@@ -772,17 +757,17 @@ int8 calWorkpieceNum(uint8 ucChannelNum)
     {
         return -1;
     }
-    // zxr: Î¬»¤ÈÎÎñ²»¸üĞÂ¹¤¼şÊı£¬Ò²²»·µ»ØĞèÇó¼şÊıÒÑ´ï±ê
+    // zxr: ç»´æŠ¤ä»»åŠ¡ä¸æ›´æ–°å·¥ä»¶æ•°ï¼Œä¹Ÿä¸è¿”å›éœ€æ±‚ä»¶æ•°å·²è¾¾æ ‡
     if (!bWorkpieceCountEnabled)
     {
         return -2;
     }
     g_sdtime.unWorkPieceTotal += 1;
-    g_sdtime.unCurWorkPieceNum += 1;//µ±Ç°¹¤¼şÊı+1
-    // ¼Æ¼ş
-    if (g_SSystemPara.unNeededWorkPieceNum != 0)//ĞèÇó¹¤¼şÊı²»Îª0
+    g_sdtime.unCurWorkPieceNum += 1; //å½“å‰å·¥ä»¶æ•°+1
+    // è®¡ä»¶
+    if (g_SSystemPara.unNeededWorkPieceNum != 0) //éœ€æ±‚å·¥ä»¶æ•°ä¸ä¸º0
     {
-        if (g_SSystemPara.unNeededWorkPieceNum <= g_sdtime.unCurWorkPieceNum)//¹¤¼şÊı´ï±ê
+        if (g_SSystemPara.unNeededWorkPieceNum <= g_sdtime.unCurWorkPieceNum) //å·¥ä»¶æ•°è¾¾æ ‡
         {
             return 1;
         }
@@ -791,30 +776,31 @@ int8 calWorkpieceNum(uint8 ucChannelNum)
     return -2;
 }
 
-//³õÊ¼»¯¹¤¼şÊı µ±Ç°Êı´óÓÚµÈÓÚÄ¿±ê¹¤¼şÊıÊ±£¬ÇåÁã£¬ÆäËûÇé¿ö²»ÇåÁã
+//åˆå§‹åŒ–å·¥ä»¶æ•° å½“å‰æ•°å¤§äºç­‰äºç›®æ ‡å·¥ä»¶æ•°æ—¶ï¼Œæ¸…é›¶ï¼Œå…¶ä»–æƒ…å†µä¸æ¸…é›¶
 int8 initWorkpieceNum(uint8 ucChannelNum)
 {
     if (ucChannelNum > 0)
     {
         return -1;
     }
-    // zxr: ĞÂÈÎÎñ°´Æô¶¯Ä£Ê½Ë¢ĞÂ¼Æ¼ş×Ê¸ñ£¬Î¬»¤ÈÎÎñ²»Çå³ıÒÑ´ï±êµÄµ±Ç°¼şÊı
+    // zxr: æ–°ä»»åŠ¡æŒ‰å¯åŠ¨æ¨¡å¼åˆ·æ–°è®¡ä»¶èµ„æ ¼ï¼Œç»´æŠ¤ä»»åŠ¡ä¸æ¸…é™¤å·²è¾¾æ ‡çš„å½“å‰ä»¶æ•°
     bWorkpieceCountEnabled = (g_RunMode == AUTOMATIC_MODE);
     if (!bWorkpieceCountEnabled)
     {
         return -2;
     }
-    if (g_SSystemPara.unNeededWorkPieceNum != 0 &&g_SSystemPara.unNeededWorkPieceNum <= g_sdtime.unCurWorkPieceNum)//¹¤¼şÊı´ï±ê
+    if (g_SSystemPara.unNeededWorkPieceNum != 0 &&
+        g_SSystemPara.unNeededWorkPieceNum <= g_sdtime.unCurWorkPieceNum) //å·¥ä»¶æ•°è¾¾æ ‡
     {
         g_sdtime.unCurWorkPieceNum = 0;
     }
     return 1;
 }
 
-//¼Ó¹¤Ê±¼äÇåÁã
+//åŠ å·¥æ—¶é—´æ¸…é›¶
 int8 machineTimerClear(uint8 ucChannelNum)
 {
-    if (ucChannelNum >= CHANNEL_NUM_MAX)//ÅĞ¶ÏÍ¨µÀºÅ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //åˆ¤æ–­é€šé“å·
     {
         return -1;
     }
@@ -824,63 +810,63 @@ int8 machineTimerClear(uint8 ucChannelNum)
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint32 atomic_read(volatile int32 * ptr)
-  º¯Êı¹¦ÄÜ  STM32Ä£Ê½ÏÂÔ­×Ó²Ù×÷ĞÔµØ»ñÈ¡È«¾Ö±äÁ¿µÄÖµ
-  ÊäÈë²ÎÊı£ºvolatile int32 * ptr  È«¾Ö±äÁ¿µØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º È«¾Ö±äÁ¿µÄÖµ
+  å‡½æ•°åç§°ï¼šint32 atomic_read(volatile int32 * ptr)
+  å‡½æ•°åŠŸèƒ½  STM32æ¨¡å¼ä¸‹åŸå­æ“ä½œæ€§åœ°è·å–å…¨å±€å˜é‡çš„å€¼
+  è¾“å…¥å‚æ•°ï¼švolatile int32 * ptr  å…¨å±€å˜é‡åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š å…¨å±€å˜é‡çš„å€¼
 			
 			
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 
 //int32 atomic_read(volatile int32 * ptr)
 //{
-//	int32 value=0;//È¡Öµ
+//	int32 value=0;//å–å€¼
 //#if STM32_MODE
 //
 //	do
 //	{
-//		value = __LDREXW(ptr);//¶Ô¸Ã¶ÎÄÚ´æ×öÁË¶ÀÕ¼±ê¼Ç
-//	} while (__STREXW(value, ptr));//³¢ÊÔ¸üĞÂ¸Ã¶ÎÄÚ´æµÄÖµ
+//		value = __LDREXW(ptr);//å¯¹è¯¥æ®µå†…å­˜åšäº†ç‹¬å æ ‡è®°
+//	} while (__STREXW(value, ptr));//å°è¯•æ›´æ–°è¯¥æ®µå†…å­˜çš„å€¼
 //#endif // STM32_MODE
 //	return value;
 //
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid atomic_write(volatile int32* ptr, volatile int32 value)
-  º¯Êı¹¦ÄÜ  STM32Ä£Ê½ÏÂÔ­×Ó²Ù×÷ĞÔµØ¸øÈ¡È«¾Ö±äÁ¿¸³Öµ
-  ÊäÈë²ÎÊı£ºvolatile int32 * ptr  È«¾Ö±äÁ¿µØÖ·
-            volatile int32 value ¸³¸øÈ«¾Ö±äÁ¿µÄÖµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid atomic_write(volatile int32* ptr, volatile int32 value)
+  å‡½æ•°åŠŸèƒ½  STM32æ¨¡å¼ä¸‹åŸå­æ“ä½œæ€§åœ°ç»™å–å…¨å±€å˜é‡èµ‹å€¼
+  è¾“å…¥å‚æ•°ï¼švolatile int32 * ptr  å…¨å±€å˜é‡åœ°å€
+            volatile int32 value èµ‹ç»™å…¨å±€å˜é‡çš„å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 //void atomic_write(volatile int32* ptr, volatile int32 value)
 //{
-//  volatile int32 temp = 0;//È¡Öµ
+//  volatile int32 temp = 0;//å–å€¼
 //#if STM32_MODE
 //	do
 //	{
-//		temp = __LDREXW(ptr);//¶Ô¸Ã¶ÎÄÚ´æ×öÁË¶ÀÕ¼±ê¼Ç
-//		temp = value;//¸üĞÂ¾Ö²¿±äÁ¿µÄÖµ
-//	} while (__STREXW(temp,ptr));//³¢ÊÔ¸üĞÂ¸Ã¶ÎÄÚ´æµÄÖµ
+//		temp = __LDREXW(ptr);//å¯¹è¯¥æ®µå†…å­˜åšäº†ç‹¬å æ ‡è®°
+//		temp = value;//æ›´æ–°å±€éƒ¨å˜é‡çš„å€¼
+//	} while (__STREXW(temp,ptr));//å°è¯•æ›´æ–°è¯¥æ®µå†…å­˜çš„å€¼
 //#endif // STM32_MODE
 //	return ;
 //
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid atomic_write(volatile int32* ptr, volatile int32 value)
-  º¯Êı¹¦ÄÜ  Ô­×Ó²Ù×÷ĞÔµØ¶Ô ptrÖ¸ÏòµÄÄÚ´æÖĞÖµ½øĞĞ¼Ó·¨ÔËËã
-  ÊäÈë²ÎÊı£ºvolatile int32 * ptr  È«¾Ö±äÁ¿µØÖ·
-			volatile int32 value ¸³¸øÈ«¾Ö±äÁ¿µÄÖµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid atomic_write(volatile int32* ptr, volatile int32 value)
+  å‡½æ•°åŠŸèƒ½  åŸå­æ“ä½œæ€§åœ°å¯¹ ptræŒ‡å‘çš„å†…å­˜ä¸­å€¼è¿›è¡ŒåŠ æ³•è¿ç®—
+  è¾“å…¥å‚æ•°ï¼švolatile int32 * ptr  å…¨å±€å˜é‡åœ°å€
+			volatile int32 value èµ‹ç»™å…¨å±€å˜é‡çš„å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 
 //int32 atomic_add(volatile uint32* ptr, int32 value)
@@ -889,319 +875,321 @@ int8 machineTimerClear(uint8 ucChannelNum)
 //#if STM32_MODE
 //	do
 //	{
-//		temp = __LDREXW(ptr);//¶Ô¸Ã¶ÎÄÚ´æ×öÁË¶ÀÕ¼±ê¼Ç
-//		temp = value+temp;//¸üĞÂ¾Ö²¿±äÁ¿µÄÖµ
-//	} while (__STREXW(temp, ptr));//³¢ÊÔ¸üĞÂ¸Ã¶ÎÄÚ´æµÄÖµ
+//		temp = __LDREXW(ptr);//å¯¹è¯¥æ®µå†…å­˜åšäº†ç‹¬å æ ‡è®°
+//		temp = value+temp;//æ›´æ–°å±€éƒ¨å˜é‡çš„å€¼
+//	} while (__STREXW(temp, ptr));//å°è¯•æ›´æ–°è¯¥æ®µå†…å­˜çš„å€¼
 //#endif // STM32_MODE
 //	return temp;
 //}
 
-#if(TURRET_AXIS_TEST == 1)
-
+#if (TURRET_AXIS_TEST == 1)
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 turretAxisManagerOccupyByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveValAxis, VAL_TURRET_TYPE * pSaveValTurret)
-  º¯Êı¹¦ÄÜ   Õ¼ÓÃµ¶ËşÖáºÍµ¶Ëş£¬²¢·µ»Ø¶ÔÓ¦µÄµ¶Ëş½á¹¹ÌåÖá£¬µ¶Ëş
-  ÊäÈë²ÎÊı£º VAL_STRUCT_TYPE ucValAxis  Ä¿±ê½á¹¹ÌåÖá£¨°üº¬ÁËµ¶ËşÖáºÍ·Çµ¶ËşÖá£©
-			  uint8 ucChannelNum  Í¨µÀºÅ
-			  VAL_STRUCT_TYPE* pOccupideAxis  ÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖá£¨°üº¬ÁËµ¶ËşÖáºÍ·Çµ¶ËşÖá£©
-			  VAL_STRUCT_TYPE* pOccupideTurretAxis  ÒÑ¾­Õ¼ÓÃµÄµ¶ËşÖá
-			  VAL_TURRET_TYPE*pOccupideTurret  ÒÑ¾­Õ¼ÓÃµÄµ¶Ëş
-  Êä³ö²ÎÊı£º    VAL_STRUCT_TYPE* pOccupideAxis  ÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖá£¨°üº¬ÁËµ¶ËşÖáºÍ·Çµ¶ËşÖá£©
-			  VAL_STRUCT_TYPE* pOccupideTurretAxis  ÒÑ¾­Õ¼ÓÃµÄµ¶ËşÖá
-			  VAL_TURRET_TYPE*pOccupideTurret  ÒÑ¾­Õ¼ÓÃµÄµ¶Ëş
-  ·µ »Ø Öµ£º    1£ºÕ¼ÓÃµ¶ËşÓëµ¶ËşÖá³É¹¦
-				0£ºÕ¼ÓÃÊ§°ÜµÄÔ­ÒòÊÇµ¶ËşÎïÀíÖáÎ´Ê¹ÄÜ  £¬¿ÉÒÔ¼ÌĞøµ÷ÓÃ¸Ãº¯Êı½øĞĞÕ¼ÓÃ
-			   -1£ºÕ¼ÓÃÊ§°ÜµÄÔ­ÒòÊÇÍ¨µÀÓëµ¶ËşµÄÓ³ÉäÉèÖÃ´íÎó »ò µ¶ËşÓë½á¹¹ÌåÖáµÄÓ³Éä´íÎó  £¬²»¿ÉÒÔ¼ÌĞøµ÷ÓÃ¸Ãº¯Êı½øĞĞÕ¼ÓÃ£¬ ¶øÊÇ¼ì²éÓ³ÉäÓĞÃ»ÓĞ´íÎó»ò±¨´í
-			   -2£º´«Èë¿ÕÖ¸Õë   ±¨´í
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 turretAxisManagerOccupyByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveValAxis, VAL_TURRET_TYPE * pSaveValTurret)
+  å‡½æ•°åŠŸèƒ½   å ç”¨åˆ€å¡”è½´å’Œåˆ€å¡”ï¼Œå¹¶è¿”å›å¯¹åº”çš„åˆ€å¡”ç»“æ„ä½“è½´ï¼Œåˆ€å¡”
+  è¾“å…¥å‚æ•°ï¼š VAL_STRUCT_TYPE ucValAxis  ç›®æ ‡ç»“æ„ä½“è½´ï¼ˆåŒ…å«äº†åˆ€å¡”è½´å’Œéåˆ€å¡”è½´ï¼‰
+			  uint8 ucChannelNum  é€šé“å·
+			  VAL_STRUCT_TYPE* pOccupideAxis  å·²ç»å ç”¨çš„ç»“æ„ä½“è½´ï¼ˆåŒ…å«äº†åˆ€å¡”è½´å’Œéåˆ€å¡”è½´ï¼‰
+			  VAL_STRUCT_TYPE* pOccupideTurretAxis  å·²ç»å ç”¨çš„åˆ€å¡”è½´
+			  VAL_TURRET_TYPE*pOccupideTurret  å·²ç»å ç”¨çš„åˆ€å¡”
+  è¾“å‡ºå‚æ•°ï¼š    VAL_STRUCT_TYPE* pOccupideAxis  å·²ç»å ç”¨çš„ç»“æ„ä½“è½´ï¼ˆåŒ…å«äº†åˆ€å¡”è½´å’Œéåˆ€å¡”è½´ï¼‰
+			  VAL_STRUCT_TYPE* pOccupideTurretAxis  å·²ç»å ç”¨çš„åˆ€å¡”è½´
+			  VAL_TURRET_TYPE*pOccupideTurret  å·²ç»å ç”¨çš„åˆ€å¡”
+  è¿” å› å€¼ï¼š    1ï¼šå ç”¨åˆ€å¡”ä¸åˆ€å¡”è½´æˆåŠŸ
+				0ï¼šå ç”¨å¤±è´¥çš„åŸå› æ˜¯åˆ€å¡”ç‰©ç†è½´æœªä½¿èƒ½  ï¼Œå¯ä»¥ç»§ç»­è°ƒç”¨è¯¥å‡½æ•°è¿›è¡Œå ç”¨
+			   -1ï¼šå ç”¨å¤±è´¥çš„åŸå› æ˜¯é€šé“ä¸åˆ€å¡”çš„æ˜ å°„è®¾ç½®é”™è¯¯ æˆ– åˆ€å¡”ä¸ç»“æ„ä½“è½´çš„æ˜ å°„é”™è¯¯  ï¼Œä¸å¯ä»¥ç»§ç»­è°ƒç”¨è¯¥å‡½æ•°è¿›è¡Œå ç”¨ï¼Œ è€Œæ˜¯æ£€æŸ¥æ˜ å°„æœ‰æ²¡æœ‰é”™è¯¯æˆ–æŠ¥é”™
+			   -2ï¼šä¼ å…¥ç©ºæŒ‡é’ˆ   æŠ¥é”™
+  å¤‡    æ³¨ï¼š
 **************************************************/
 
-int8 turretAxisAndTurretOccupyByChannel(VAL_STRUCT_TYPE* ucValAxis, uint8 ucChannelNum, VAL_STRUCT_TYPE* pOccupideAxis, VAL_STRUCT_TYPE* pOccupideTurretAxis, VAL_TURRET_TYPE* pOccupideTurret)
+int8 turretAxisAndTurretOccupyByChannel(VAL_STRUCT_TYPE* ucValAxis, uint8 ucChannelNum, VAL_STRUCT_TYPE* pOccupideAxis,
+                                        VAL_STRUCT_TYPE* pOccupideTurretAxis, VAL_TURRET_TYPE* pOccupideTurret)
 {
-	VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
-	VAL_TURRET_TYPE ucTargetTurret = 0x0;//Ä¿±êµ¶Ëş
-	VAL_STRUCT_TYPE ucTurretAxis = 0x0;//µ¶Ëş½á¹¹ÌåÖá
+    VAL_PHYSICIAL_TYPE ucPhysicalSign = 0x0;
+    VAL_TURRET_TYPE ucTargetTurret = 0x0; //ç›®æ ‡åˆ€å¡”
+    VAL_STRUCT_TYPE ucTurretAxis = 0x0;   //åˆ€å¡”ç»“æ„ä½“è½´
 
-	const uint8* ucAxisMap;
-	const uint8* ucTurretmap;
-	uint8 temp = 0;
-	uint8 tempTurretAxis = 0;
+    const uint8* ucAxisMap;
+    const uint8* ucTurretmap;
+    uint8 temp = 0;
+    uint8 tempTurretAxis = 0;
 
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    ucAxisMap = g_SChannel[ucChannelNum].pMapAxisArray;         //é€šé“çš„ç»“æ„ä½“è½´ä¸ç‰©ç†è½´çš„æ˜ å°„
+    ucTurretmap = g_SChannel[ucChannelNum].pChannelToTurretmap; //é€šé“å¯¹åˆ€å¡”çš„æ˜ å°„
+    if (ucAxisMap == NULL || ucTurretmap == NULL)               //ç©ºæŒ‡é’ˆ
+    {
+        return -2;
+    }
+    if (pOccupideAxis != NULL)
+    {
+        //å‰”é™¤æ‰å·²ç»å ç”¨çš„ç»“æ„ä½“è½´
+        *ucValAxis &= ~(*pOccupideAxis);
+        //å·²ç»å ç”¨çš„ç»“æ„ä½“è½´ä¸­åŒ…å«äº†å³å°†è¦å ç”¨çš„ç»“æ„ä½“è½´,å ç”¨æˆåŠŸ
+        if (*ucValAxis == 0)
+        {
+            if (pOccupideAxis != NULL)
+            {
+                *ucValAxis = *pOccupideAxis;
+            }
+            return 1;
+        }
+    }
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	ucAxisMap = g_SChannel[ucChannelNum].pMapAxisArray;//Í¨µÀµÄ½á¹¹ÌåÖáÓëÎïÀíÖáµÄÓ³Éä
-	ucTurretmap = g_SChannel[ucChannelNum].pChannelToTurretmap;//Í¨µÀ¶Ôµ¶ËşµÄÓ³Éä
-	if (ucAxisMap == NULL || ucTurretmap == NULL)//¿ÕÖ¸Õë
-	{
-		return -2;
-	}
-	if (pOccupideAxis != NULL)
-	{
-		//ÌŞ³ıµôÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖá
-		*ucValAxis &= ~(*pOccupideAxis);
-		//ÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖáÖĞ°üº¬ÁË¼´½«ÒªÕ¼ÓÃµÄ½á¹¹ÌåÖá,Õ¼ÓÃ³É¹¦
-		if (*ucValAxis == 0)
-		{
-			if (pOccupideAxis != NULL)
-			{
-				*ucValAxis = *pOccupideAxis;
-			}
-			return 1;
-		}
-	}
+    //éå†è¯¥é€šé“æ˜ å°„çš„åˆ€å¡”ï¼ŒæŸ¥çœ‹å“ªäº›åˆ€å¡”æœ‰è¿™æ ¹ç»“æ„ä½“è½´
+    for (; temp < TURRET_MAX_NUM; temp++)
+    {
+        //å¦‚æœé€šé“ä¸è¯¥åˆ€å¡”ä¸å­˜åœ¨æ˜ å°„ï¼Œè·³è¿‡
+        if (ucTurretmap[temp] == TURRET_NULL)
+        {
+            continue;
+        }
+        else
+        {
 
-	//±éÀú¸ÃÍ¨µÀÓ³ÉäµÄµ¶Ëş£¬²é¿´ÄÄĞ©µ¶ËşÓĞÕâ¸ù½á¹¹ÌåÖá
-	for (; temp < TURRET_MAX_NUM; temp++)
-	{
-		//Èç¹ûÍ¨µÀÓë¸Ãµ¶Ëş²»´æÔÚÓ³Éä£¬Ìø¹ı
-		if (ucTurretmap[temp] == TURRET_NULL)
-		{
-			continue;
-		}
-		else
-		{
+            tempTurretAxis = (*ucValAxis & g_SSystemPara.ucTurretToAxisMap[ucTurretmap[temp] - 1]);
+            //å¦‚æœå³å°†è¦å ç”¨ç»“æ„ä½“è½´ä¸­æœ‰å±äºæœ¬æ¬¡éå†çš„åˆ€å¡”çš„
+            if (tempTurretAxis != 0)
+            {
+                //ç”¨å±€éƒ¨å˜é‡è®°å½•è¯¥ç›®æ ‡åˆ€å¡”  ï¼ˆéå†ç»“æŸåï¼Œè¯¥å±€éƒ¨å˜é‡è®°å½•äº†æ‰€æœ‰ç›®æ ‡åˆ€å¡”ï¼‰
+                setbit(ucTargetTurret, (ucTurretmap[temp] - 1));
+                //ç”¨å±€éƒ¨å˜é‡è®°å½•åˆ€å¡”ç»“æ„ä½“è½´  ï¼ˆéå†ç»“æŸåï¼Œè¯¥å±€éƒ¨å˜é‡è®°å½•äº†æ‰€æœ‰ç›®æ ‡åˆ€å¡”çš„åˆ€å¡”ç»“æ„ä½“è½´ï¼‰
+                ucTurretAxis |= g_SSystemPara.ucTurretToAxisMap[ucTurretmap[temp] - 1];
+            }
+        }
+    }
+    //å ç”¨åˆ€å¡”
+    if (pOccupideTurret != NULL)
+    {
+        //å‰”é™¤æ‰å·²ç»å ç”¨çš„åˆ€å¡”
+        ucTargetTurret &= ~(*pOccupideTurret);
+    }
+    //å¦‚æœè¿˜æœ‰åˆ€å¡”éœ€è¦å ç”¨
+    if (ucTargetTurret != 0)
+    {
+        //å°è¯•å ç”¨åˆ€å¡”
+        if (turretManagerOccupy(ucTargetTurret) == TRUE)
+        {
+            //è®°å½•å ç”¨æˆåŠŸçš„åˆ€å¡”
+            if (pOccupideTurret != NULL)
+            {
+                *pOccupideTurret |= ucTargetTurret;
+            }
+        }
+        else
+        {
+            //å ç”¨åˆ€å¡”å¤±è´¥ï¼Œé€€å‡º
+            return 0;
+        }
+    }
+    //å¦‚æœucTargetTurret == 0ï¼Œå³å·²ç»å ç”¨çš„åˆ€å¡”ä¸­åŒ…å«äº†å³å°†è¦å ç”¨çš„åˆ€å¡”, å¹¶ä¸ä»£è¡¨åˆ€å¡”è½´ä¹Ÿå·²ç»å ç”¨æˆåŠŸï¼Œå› ä¸ºæ¢åˆ€æ—¶åªå ç”¨åˆ€å¡”æ²¡å ç”¨åˆ€å¡”è½´
 
-			tempTurretAxis = (*ucValAxis & g_SSystemPara.ucTurretToAxisMap[ucTurretmap[temp] - 1]);
-			//Èç¹û¼´½«ÒªÕ¼ÓÃ½á¹¹ÌåÖáÖĞÓĞÊôÓÚ±¾´Î±éÀúµÄµ¶ËşµÄ
-			if (tempTurretAxis != 0)
-			{
-				//ÓÃ¾Ö²¿±äÁ¿¼ÇÂ¼¸ÃÄ¿±êµ¶Ëş  £¨±éÀú½áÊøºó£¬¸Ã¾Ö²¿±äÁ¿¼ÇÂ¼ÁËËùÓĞÄ¿±êµ¶Ëş£©
-				setbit(ucTargetTurret, (ucTurretmap[temp] - 1));
-				//ÓÃ¾Ö²¿±äÁ¿¼ÇÂ¼µ¶Ëş½á¹¹ÌåÖá  £¨±éÀú½áÊøºó£¬¸Ã¾Ö²¿±äÁ¿¼ÇÂ¼ÁËËùÓĞÄ¿±êµ¶ËşµÄµ¶Ëş½á¹¹ÌåÖá£©
-				ucTurretAxis |= g_SSystemPara.ucTurretToAxisMap[ucTurretmap[temp] - 1];
+    //å ç”¨åˆ€å¡”è½´
+    //å¦‚æœç›®æ ‡ç»“æ„ä½“è½´ä¸­æœ‰å±äºåˆ€å¡”ç»“æ„ä½“çš„ï¼Œå ç”¨åˆ€å¡”è½´
+    if (ucTurretAxis != 0)
+    {
+        if (pOccupideAxis != NULL)
+        {
+            //å‰”é™¤æ‰å·²ç»å ç”¨çš„ç»“æ„ä½“è½´
+            ucTurretAxis &= ~(*pOccupideAxis);
+            //å·²ç»å ç”¨çš„ç»“æ„ä½“è½´ä¸­åŒ…å«äº†å³å°†è¦å ç”¨çš„ç»“æ„ä½“è½´,å ç”¨æˆåŠŸ
+            if (ucTurretAxis == 0)
+            {
+                return 1;
+            }
+        }
+        structToPhysical(ucTurretAxis, ucAxisMap, AXIS_NUM_MAX, &ucPhysicalSign); //ç»“æ„ä½“è½´æ ¹æ®æ˜ å°„è½¬æ¢ä¸ºç‰©ç†è½´
 
+        if (axisManagerOccupy(ucPhysicalSign) == TRUE) //å°è¯•å ç”¨åˆ€å¡”è½´
+        {
 
-			}
-		}
-
-	}
-	//Õ¼ÓÃµ¶Ëş
-	if (pOccupideTurret != NULL)
-	{
-		//ÌŞ³ıµôÒÑ¾­Õ¼ÓÃµÄµ¶Ëş
-		ucTargetTurret &= ~(*pOccupideTurret);
-
-	}
-	//Èç¹û»¹ÓĞµ¶ËşĞèÒªÕ¼ÓÃ
-	if (ucTargetTurret != 0)
-	{
-		//³¢ÊÔÕ¼ÓÃµ¶Ëş
-		if (turretManagerOccupy(ucTargetTurret) == TRUE)
-		{
-			//¼ÇÂ¼Õ¼ÓÃ³É¹¦µÄµ¶Ëş
-			if (pOccupideTurret != NULL)
-			{
-				*pOccupideTurret |= ucTargetTurret;
-			}
-		}
-		else
-		{
-			//Õ¼ÓÃµ¶ËşÊ§°Ü£¬ÍË³ö
-			return 0;
-		}
-	}
-	//Èç¹ûucTargetTurret == 0£¬¼´ÒÑ¾­Õ¼ÓÃµÄµ¶ËşÖĞ°üº¬ÁË¼´½«ÒªÕ¼ÓÃµÄµ¶Ëş, ²¢²»´ú±íµ¶ËşÖáÒ²ÒÑ¾­Õ¼ÓÃ³É¹¦£¬ÒòÎª»»µ¶Ê±Ö»Õ¼ÓÃµ¶ËşÃ»Õ¼ÓÃµ¶ËşÖá
-
-
-	//Õ¼ÓÃµ¶ËşÖá
-	//Èç¹ûÄ¿±ê½á¹¹ÌåÖáÖĞÓĞÊôÓÚµ¶Ëş½á¹¹ÌåµÄ£¬Õ¼ÓÃµ¶ËşÖá
-	if (ucTurretAxis != 0)
-	{
-		if (pOccupideAxis != NULL)
-		{
-			//ÌŞ³ıµôÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖá
-			ucTurretAxis &= ~(*pOccupideAxis);
-			//ÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖáÖĞ°üº¬ÁË¼´½«ÒªÕ¼ÓÃµÄ½á¹¹ÌåÖá,Õ¼ÓÃ³É¹¦
-			if (ucTurretAxis == 0)
-			{
-				return 1;
-			}
-		}
-		structToPhysical(ucTurretAxis, ucAxisMap, AXIS_NUM_MAX, &ucPhysicalSign);//½á¹¹ÌåÖá¸ù¾İÓ³Éä×ª»»ÎªÎïÀíÖá
-
-		if (axisManagerOccupy(ucPhysicalSign) == TRUE)//³¢ÊÔÕ¼ÓÃµ¶ËşÖá
-		{
-
-			if (pOccupideAxis != NULL)
-			{
-				//ÔÚÍ¨µÀÒÑ¾­Õ¼ÓÃµÄ½á¹¹ÌåÖá±äÁ¿ÖĞ¼ÇÂ¼±¾´ÎÕ¼ÓÃµÄµ¶Ëş½á¹¹ÌåÖá
-				*pOccupideAxis |= ucTurretAxis;
-			}
-			if (pOccupideTurretAxis != NULL)
-			{
-				//ÔÚÍ¨µÀÒÑ¾­Õ¼ÓÃµÄµ¶Ëş½á¹¹ÌåÖá±äÁ¿ÖĞ¼ÇÂ¼±¾´ÎÕ¼ÓÃµÄµ¶Ëş½á¹¹ÌåÖá
-				*pOccupideTurretAxis |= ucTurretAxis;
-			}
-			if (pOccupideAxis != NULL)
-			{
-				*ucValAxis = *pOccupideAxis;
-			}
-			return 1;
-		}
-		else
-		{
-			//ÅĞ¶Ï¶ÔÓ¦µÄÖáÊÇ·ñÊ¹ÄÜ  Èç¹ûÎ´Ê¹ÄÜÔòÊ¹ÄÜ
-			if ((g_ucAxisExactEnable & ucPhysicalSign) != ucPhysicalSign)
-			{
-				channelAxisEnable(ucChannelNum);
-				return 0;
-			}
-			else
-			{
-				// Ä¿±ê½á¹¹ÌåÖáÊôÓÚµ¶ËşÖá£¬µ«ÊÇ´ÓÍ¨µÀ¶ÔÖáµÄÓ³ÉäÖĞ²éÑ¯²»µ½¸ÃÖá£¬ËµÃ÷µ¶ËşÓëµ¶Ëş½á¹¹ÌåÖáµÄÓ³Éä´íÎó
-				return -1;
-			}
-
-		}
-
-	}
-	//Ä¿±ê½á¹¹ÌåÖá²»ÊôÓÚµ¶ËşÖá£¬·µ»Ø
-	else   
-	{
-		return 1;// Ä¿±ê½á¹¹ÌåÖá²»ÊôÓÚµ¶ËşÖá
-	}
+            if (pOccupideAxis != NULL)
+            {
+                //åœ¨é€šé“å·²ç»å ç”¨çš„ç»“æ„ä½“è½´å˜é‡ä¸­è®°å½•æœ¬æ¬¡å ç”¨çš„åˆ€å¡”ç»“æ„ä½“è½´
+                *pOccupideAxis |= ucTurretAxis;
+            }
+            if (pOccupideTurretAxis != NULL)
+            {
+                //åœ¨é€šé“å·²ç»å ç”¨çš„åˆ€å¡”ç»“æ„ä½“è½´å˜é‡ä¸­è®°å½•æœ¬æ¬¡å ç”¨çš„åˆ€å¡”ç»“æ„ä½“è½´
+                *pOccupideTurretAxis |= ucTurretAxis;
+            }
+            if (pOccupideAxis != NULL)
+            {
+                *ucValAxis = *pOccupideAxis;
+            }
+            return 1;
+        }
+        else
+        {
+            //åˆ¤æ–­å¯¹åº”çš„è½´æ˜¯å¦ä½¿èƒ½  å¦‚æœæœªä½¿èƒ½åˆ™ä½¿èƒ½
+            if ((g_ucAxisExactEnable & ucPhysicalSign) != ucPhysicalSign)
+            {
+                channelAxisEnable(ucChannelNum);
+                return 0;
+            }
+            else
+            {
+                // ç›®æ ‡ç»“æ„ä½“è½´å±äºåˆ€å¡”è½´ï¼Œä½†æ˜¯ä»é€šé“å¯¹è½´çš„æ˜ å°„ä¸­æŸ¥è¯¢ä¸åˆ°è¯¥è½´ï¼Œè¯´æ˜åˆ€å¡”ä¸åˆ€å¡”ç»“æ„ä½“è½´çš„æ˜ å°„é”™è¯¯
+                return -1;
+            }
+        }
+    }
+    //ç›®æ ‡ç»“æ„ä½“è½´ä¸å±äºåˆ€å¡”è½´ï¼Œè¿”å›
+    else
+    {
+        return 1; // ç›®æ ‡ç»“æ„ä½“è½´ä¸å±äºåˆ€å¡”è½´
+    }
 }
 
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºaxisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign)
-  º¯Êı¹¦ÄÜ  ÏÈ²éÑ¯µ¶ËşÊÇ·ñ¿ÕÏĞ  Ä¿±êËùÓĞµ¶Ëş¶¼¿ÕÏĞÊ±Õ¼ÓÃÄ¿±êµ¶Ëş   ²»¿ÕÏĞÊ±Õ¼ÓÃÊ§°Ü ·µ»ØFASLE
-  ÊäÈë²ÎÊı£ºsign	ÓĞĞ§Öá£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄÖá£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	Õ¼ÓÃ³É¹¦
-			FALSE	Õ¼ÓÃÊ§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaxisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign)
+  å‡½æ•°åŠŸèƒ½  å…ˆæŸ¥è¯¢åˆ€å¡”æ˜¯å¦ç©ºé—²  ç›®æ ‡æ‰€æœ‰åˆ€å¡”éƒ½ç©ºé—²æ—¶å ç”¨ç›®æ ‡åˆ€å¡”   ä¸ç©ºé—²æ—¶å ç”¨å¤±è´¥ è¿”å›FASLE
+  è¾“å…¥å‚æ•°ï¼šsign	æœ‰æ•ˆè½´ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„è½´ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	å ç”¨æˆåŠŸ
+			FALSE	å ç”¨å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool turretManagerOccupy(VAL_TURRET_TYPE ucSign)
 {
-	if (((~g_ucTurretOccupation) & ucSign) == ucSign)
-	{//¶ÔÓ¦µÄµ¶Ëş¿ÕÏĞ  ¿ÉÒÔÕ¼ÓÃ
-		g_ucTurretOccupation |= ucSign; // ¸Ä±äµ¶Ëş×´Ì¬
-		return TRUE;
-	}
-	else
-	{	// Õ¼ÓÃÊ§°Ü
-		return FALSE;
-	}
+    if (((~g_ucTurretOccupation) & ucSign) == ucSign)
+    {                                   //å¯¹åº”çš„åˆ€å¡”ç©ºé—²  å¯ä»¥å ç”¨
+        g_ucTurretOccupation |= ucSign; // æ”¹å˜åˆ€å¡”çŠ¶æ€
+        return TRUE;
+    }
+    else
+    { // å ç”¨å¤±è´¥
+        return FALSE;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºturretManagerRelease(VAL_TURRET_TYPE ucSign)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÄ¿±êµ¶ËşÊÍ·Å¶ÔÓ¦µÄµ¶Ëş
-  ÊäÈë²ÎÊı£ºsign	Ä¿±êµ¶Ëş£¨ÓÃÎ»ÃèÊöÖ¸¶¨µÄµ¶Ëş£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	ÊÍ·Å³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šturretManagerRelease(VAL_TURRET_TYPE ucSign)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®ç›®æ ‡åˆ€å¡”é‡Šæ”¾å¯¹åº”çš„åˆ€å¡”
+  è¾“å…¥å‚æ•°ï¼šsign	ç›®æ ‡åˆ€å¡”ï¼ˆç”¨ä½æè¿°æŒ‡å®šçš„åˆ€å¡”ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	é‡Šæ”¾æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool turretManagerRelease(VAL_TURRET_TYPE ucSign)
 {
-	g_ucTurretOccupation &= (~ucSign);
-	return TRUE;
+    g_ucTurretOccupation &= (~ucSign);
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
-  º¯Êı¹¦ÄÜ  ÊÍ·Å±¾Í¨µÀËùÓĞÕ¼ÓÃµÄÖá
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÊäÈëÓĞÎó
-			1 ÊÍ·Å³É¹¦
+  å‡½æ•°åç§°ï¼šint8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
+  å‡½æ•°åŠŸèƒ½  é‡Šæ”¾æœ¬é€šé“æ‰€æœ‰å ç”¨çš„è½´
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 è¾“å…¥æœ‰è¯¯
+			1 é‡Šæ”¾æˆåŠŸ
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
 {
-	/* ÊÍ·ÅÇ°±ØĞëÈ¡µÃÓĞĞ§Í¨µÀ£¬±ÜÃâ·ÃÎÊÎ´°ó¶¨µÄÍ¬²½×´Ì¬¡£ */
     if (pSPreProcess == NULL)
-	{
-		return -1;
-	}
-	/* ÊÍ·ÅÖáËùÓĞÈ¨ºó£¬¾É¹¥Ë¿ÏàÎ»²»¿ÉÔÙ×÷ÎªÏàÁÚ¶Î²Î¿¼¡£ */
-	uint8* ucMapArray = NULL;
-	ucMapArray = pSPreProcess->pSChannel->pMapAxisArray;//»ñÈ¡Ó³Éä
-	if (ucMapArray == NULL)//¿ÕÖ¸Õë
-	{
-		return -1;
-	}
-	axisManagerReleaseByStruct(pSPreProcess->ucOccupideValStatus, ucMapArray, AXIS_NUM_MAX, NULL);//ÊÍ·ÅÕ¼ÓÃµÄËùÓĞÖá
-	pSPreProcess->ucOccupideTurretAxis = 0x0;//ÒÑÕ¼ÓÃµÄµ¶ËşÖáÖÃ0
-	pSPreProcess->ucOccupideValStatus = 0x0;//ÒÑÕ¼ÓÃµÄ½á¹¹ÌåÖáÖÃ0
-	return 1;
+    {
+        return -1;
+    }
+    uint8* ucMapArray = NULL;
+    ucMapArray = pSPreProcess->pSChannel->pMapAxisArray; //è·å–æ˜ å°„
+    if (ucMapArray == NULL)                              //ç©ºæŒ‡é’ˆ
+    {
+        return -1;
+    }
+    axisManagerReleaseByStruct(pSPreProcess->ucOccupideValStatus, ucMapArray, AXIS_NUM_MAX, NULL); //é‡Šæ”¾å ç”¨çš„æ‰€æœ‰è½´
+    pSPreProcess->ucOccupideTurretAxis = 0x0;                                                      //å·²å ç”¨çš„åˆ€å¡”è½´ç½®0
+    pSPreProcess->ucOccupideValStatus = 0x0;                                                       //å·²å ç”¨çš„ç»“æ„ä½“è½´ç½®0
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
-  º¯Êı¹¦ÄÜ  ÊÍ·Å±¾Í¨µÀËùÓĞÕ¼ÓÃµÄµ¶Ëş
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÊäÈëÓĞÎó
-			1 ÊÍ·Å³É¹¦
+  å‡½æ•°åç§°ï¼šint8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
+  å‡½æ•°åŠŸèƒ½  é‡Šæ”¾æœ¬é€šé“æ‰€æœ‰å ç”¨çš„åˆ€å¡”
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 è¾“å…¥æœ‰è¯¯
+			1 é‡Šæ”¾æˆåŠŸ
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 releaseAllOccupiedTurret(struct SInterpolationPre* pSPreProcess)
 {
-	if (pSPreProcess == NULL)
-	{
-		return -1;
-	}
-	turretManagerRelease(pSPreProcess->ucOccupideTurret);//ÊÍ·ÅÕ¼ÓÃµÄµ¶Ëş
-	pSPreProcess->ucOccupideTurret = 0x0;//ÒÑÕ¼ÓÃµÄµ¶ËşÖÃ0
-	return 1;
+    if (pSPreProcess == NULL)
+    {
+        return -1;
+    }
+    turretManagerRelease(pSPreProcess->ucOccupideTurret); //é‡Šæ”¾å ç”¨çš„åˆ€å¡”
+    pSPreProcess->ucOccupideTurret = 0x0;                 //å·²å ç”¨çš„åˆ€å¡”ç½®0
+    return 1;
 }
 
 #endif
 
-
-#if CotrexF4 == 0  //Ğ¾Æ¬Ñ¡Ôñ H7
+#if CotrexF4 == 0 //èŠ¯ç‰‡é€‰æ‹© H7
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 pAxisEnable(uint8 AXIS_PHYSICS)
-  º¯Êı¹¦ÄÜ  »ñÈ¡IOÊ¹ÄÜ×´Ì¬
-  ÊäÈë²ÎÊı£ºuint8 AXIS_PHYSICS  ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šuint8 pAxisEnable(uint8 AXIS_PHYSICS)
+  å‡½æ•°åŠŸèƒ½  è·å–IOä½¿èƒ½çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šuint8 AXIS_PHYSICS  ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 pAxisEnable(uint8 AXIS_PHYSICS)
 {
-	switch (AXIS_PHYSICS)
-	{
-	case 0: return(PHout(4));
-	case 1: return(PCout(3));
-	case 2: return(PHout(2));
-	case 3: return(PCout(2));
-	case 4: return(PCout(0));
-	case 5: return (PHout(5));
-	}
+    switch (AXIS_PHYSICS)
+    {
+    case 0:
+        return (PHout(4));
+    case 1:
+        return (PCout(3));
+    case 2:
+        return (PHout(2));
+    case 3:
+        return (PCout(2));
+    case 4:
+        return (PCout(0));
+    case 5:
+        return (PHout(5));
+    }
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 pAxisEnableSet(uint8 AXIS_PHYSICS, uint8 value)
-  º¯Êı¹¦ÄÜ  ÉèÖÃIOÊ¹ÄÜ×´Ì¬
-  ÊäÈë²ÎÊı£ºuint8 AXIS_PHYSICS  ÎïÀíÖáºÅ
-			uint8 value         Ê¹ÄÜÖµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šuint8 pAxisEnableSet(uint8 AXIS_PHYSICS, uint8 value)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®IOä½¿èƒ½çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šuint8 AXIS_PHYSICS  ç‰©ç†è½´å·
+			uint8 value         ä½¿èƒ½å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 pAxisEnableSet(uint8 AXIS_PHYSICS, uint8 value)
 {
-	switch (AXIS_PHYSICS)
-	{
-	case 0:(PHout(4)) = value; break;
-	case 1:(PCout(3)) = value; break;
-	case 2:(PHout(2)) = value; break;
-	case 3:(PCout(2)) = value; break;
-	case 4:(PCout(0)) = value; break;
-	case 5:(PHout(5)) = value; break;
-	}
+    switch (AXIS_PHYSICS)
+    {
+    case 0:
+        (PHout(4)) = value;
+        break;
+    case 1:
+        (PCout(3)) = value;
+        break;
+    case 2:
+        (PHout(2)) = value;
+        break;
+    case 3:
+        (PCout(2)) = value;
+        break;
+    case 4:
+        (PCout(0)) = value;
+        break;
+    case 5:
+        (PHout(5)) = value;
+        break;
+    }
 }
 
 #endif

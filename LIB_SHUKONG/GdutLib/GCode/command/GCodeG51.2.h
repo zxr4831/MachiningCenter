@@ -4,20 +4,13 @@
 #include "common.h"
 #include "GCodeCommon.h"
 
-
-//Ìí¼ÓG83¹æÔò½á¹¹Ìå
+//æ·»åŠ G83è§„åˆ™ç»“æž„ä½“
 void addG51_2RegulationAPI();
 
-//¼ì²éG51_2
+//æ£€æŸ¥G51_2
 int8 CheckG51_2(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
-//¸³ÖµG51_2
+//èµ‹å€¼G51_2
 int8 AssignG51_2(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
-
-
-
-
-
 
 #endif

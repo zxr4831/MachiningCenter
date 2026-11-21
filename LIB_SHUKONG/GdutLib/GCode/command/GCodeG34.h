@@ -3,42 +3,40 @@
 
 typedef struct _SG34Para
 {
-	int8 cStep;                      //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	int nG32Order;                   //G32´ÎĞò 
+    int nG32Order; //G32æ¬¡åº
 
-	SPointDouble SStartPoint;        //Ã¿Ò»¶ÎÂİÎÆµÄÆğµã×ø±ê £¨¸³ÖµÒ»¶ÎÂİÎÆÍê±ÏÊ±¸üĞÂ£©
-	SPointDouble SEndPoint;          //Ã¿Ò»¶ÎÂİÎÆµÄÖÕµã×ø±ê£¨ÔÚ»ñÈ¡²ÎÊı½×¶ÎÒÔ¼°¿çÔ½ÍËÎ²µãÊ±¸üĞÂ£©
+    SPointDouble SStartPoint; //æ¯ä¸€æ®µèºçº¹çš„èµ·ç‚¹åæ ‡ ï¼ˆèµ‹å€¼ä¸€æ®µèºçº¹å®Œæ¯•æ—¶æ›´æ–°ï¼‰
+    SPointDouble SEndPoint;   //æ¯ä¸€æ®µèºçº¹çš„ç»ˆç‚¹åæ ‡ï¼ˆåœ¨è·å–å‚æ•°é˜¶æ®µä»¥åŠè·¨è¶Šé€€å°¾ç‚¹æ—¶æ›´æ–°ï¼‰
 
-	double dR;                       //RÖµ
-	double dF;                       //ÂİÎÆµ¼³Ì
+    double dR; //Rå€¼
+    double dF; //èºçº¹å¯¼ç¨‹
 
-	uint8 ucLongAxis, ucShortAxis;   //³¤Öá£¬¶ÌÖá¡¢
-	double dLSAxisRatio;             //³¤¶ÌÖáµÄ±ÈÀı£¨´øÓĞ¶ÌÖáÏòÁ¿£©£¨ÔÚ»ñÈ¡²ÎÊı½×¶ÎÒÔ¼°¿çÔ½ÍËÎ²µãÊ±¸üĞÂ£©
-	double dLongAxisVector;          //³¤ÖáÏòÁ¿
-	bool bG34WorkFlag;                //G34Ö¸ÁîÓĞĞ§ÔËĞĞ±êÖ¾Î»  £¨³¤Öá¾àÀë²»Îª0£©
-	double dJ;						 //¶ÌÖáÍËÎ²Á¿£¨¼ÇÂ¼ÍËÎ²Á¿ºó£¬ÓÃ±ä×¶¶È¹ı¶É´úÌæÍËÎ²£©
-	double dK;						 //³¤ÖáÍËÎ²Á¿
-	double dTailIdealPos;             //ÀíÏëÍËÎ²Î»ÖÃ
-	bool bLeftTailFlag;              //ÍËÎ²Ô¤´¦Àí±êÖ¾Î»  £¨¿ªÊ¼ÍËÎ²±êÖ¾£©
-	bool bSameG32Flag;               //Í¬Ò»¸öG32±êÖ¾Î»  £¨¿çÔ½ÍËÎ²µãµÄÂİÎÆ¶Î±»²ğ·Ö³ÉÁ½¶ÎºóµÄºóÒ»¶ÎµÄ±êÖ¾£©
-	double dLongAxisTmpPos;          //¿çÔ½ÍËÎ²µãµÄÂİÎÆ¶Î±»²ğ·Ö³ÉÁ½¶ÎºóµÄºóÒ»¶ÎÔÚ³¤Öá·½ÏòµÄÖÕµãÎ»ÖÃ 
+    uint8 ucLongAxis, ucShortAxis; //é•¿è½´ï¼ŒçŸ­è½´ã€
+    double dLSAxisRatio;           //é•¿çŸ­è½´çš„æ¯”ä¾‹ï¼ˆå¸¦æœ‰çŸ­è½´å‘é‡ï¼‰ï¼ˆåœ¨è·å–å‚æ•°é˜¶æ®µä»¥åŠè·¨è¶Šé€€å°¾ç‚¹æ—¶æ›´æ–°ï¼‰
+    double dLongAxisVector;        //é•¿è½´å‘é‡
+    bool bG34WorkFlag;             //G34æŒ‡ä»¤æœ‰æ•ˆè¿è¡Œæ ‡å¿—ä½  ï¼ˆé•¿è½´è·ç¦»ä¸ä¸º0ï¼‰
+    double dJ;                     //çŸ­è½´é€€å°¾é‡ï¼ˆè®°å½•é€€å°¾é‡åï¼Œç”¨å˜é”¥åº¦è¿‡æ¸¡ä»£æ›¿é€€å°¾ï¼‰
+    double dK;                     //é•¿è½´é€€å°¾é‡
+    double dTailIdealPos;          //ç†æƒ³é€€å°¾ä½ç½®
+    bool bLeftTailFlag;            //é€€å°¾é¢„å¤„ç†æ ‡å¿—ä½  ï¼ˆå¼€å§‹é€€å°¾æ ‡å¿—ï¼‰
+    bool bSameG32Flag;             //åŒä¸€ä¸ªG32æ ‡å¿—ä½  ï¼ˆè·¨è¶Šé€€å°¾ç‚¹çš„èºçº¹æ®µè¢«æ‹†åˆ†æˆä¸¤æ®µåçš„åä¸€æ®µçš„æ ‡å¿—ï¼‰
+    double dLongAxisTmpPos;        //è·¨è¶Šé€€å°¾ç‚¹çš„èºçº¹æ®µè¢«æ‹†åˆ†æˆä¸¤æ®µåçš„åä¸€æ®µåœ¨é•¿è½´æ–¹å‘çš„ç»ˆç‚¹ä½ç½®
 
-}SG34Para;
+} SG34Para;
 
-
-//Ìí¼ÓG34¹æÔò½á¹¹Ìå
+//æ·»åŠ G34è§„åˆ™ç»“æ„ä½“
 void addG34RegulationAPI();
-//¿ª±ÙG34²ÎÊı½á¹¹Ìå£¨×Ü¿ò¼Ü£©
+//å¼€è¾ŸG34å‚æ•°ç»“æ„ä½“ï¼ˆæ€»æ¡†æ¶ï¼‰
 int8 mallocG34ParaStruct(uint8 ucMode, uint8 ucChannelNum);
-//ÊÍ·ÅG34²ÎÊı½á¹¹Ìå£¨×Ü¿ò¼Ü£©
+//é‡Šæ”¾G34å‚æ•°ç»“æ„ä½“ï¼ˆæ€»æ¡†æ¶ï¼‰
 int8 freeG34ParaStruct(uint8 ucMode, uint8 ucChannelNum);
-//»ñÈ¡G34²ÎÊı£¨×Ü¿ò¼Ü£©
+//è·å–G34å‚æ•°ï¼ˆæ€»æ¡†æ¶ï¼‰
 int8 getG34Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* SGCodeCurrSysState);
-//¼ì²éG34
+//æ£€æŸ¥G34
 int8 CheckG34(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
-//¸³ÖµG34
+//èµ‹å€¼G34
 int8 AssignG34(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif
-

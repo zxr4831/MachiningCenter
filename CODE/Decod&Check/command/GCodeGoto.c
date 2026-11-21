@@ -3,67 +3,66 @@
 
 static int8 validateGotoValue(double dGoto, uint32* pOutSeg, uint32 unLineNum);
 
-//ÃÌº”checkGOTO‘⁄ºÏ≤È◊¥Ã¨ª˙  2025.11.27
+//Ê∑ªÂä†checkGOTOÂú®Ê£ÄÊü•Áä∂ÊÄÅÊú∫  2025.11.27
 int8 checkGOTO(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	if (pSSyntaxConfig->SScanContainer.bGOTO == TRUE)
-	{
-		int8 cRet = 0;
-		uint32 unTargetSegment;
+    if (pSSyntaxConfig->SScanContainer.bGOTO == TRUE)
+    {
+        int8 cRet = 0;
+        uint32 unTargetSegment;
 
-		//1.ªÒ»°µ±«∞Ω‚Œˆµƒ≥Ã–ÚŒƒ±æ
-		SProgram* pCurrProgram = FindNodeData(getProgramList(pSSyntaxConfig->ucChannelNum), 0);		//µ±«∞≥Ã–ÚΩ·ππÃÂ
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-	  // **–¬‘ˆ£∫∑«∏∫ + ’˚ ˝ + ∑∂Œß–£—È£®‘⁄(uint32)◊™ªª«∞£©**
-		if (validateGotoValue(pSSyntaxConfig->SScanContainer.dGOTO, &unTargetSegment,
-							  pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum) < 0)
-		{
+        //1.Ëé∑ÂèñÂΩìÂâçËß£ÊûêÁöÑÁ®ãÂ∫èÊñáÊú¨
+        SProgram* pCurrProgram = FindNodeData(getProgramList(pSSyntaxConfig->ucChannelNum), 0); //ÂΩìÂâçÁ®ãÂ∫èÁªìÊûÑ‰Ωì
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        // **Êñ∞Â¢ûÔºöÈùûË¥ü + Êï¥Êï∞ + ËåÉÂõ¥Ê†°È™åÔºàÂú®(uint32)ËΩ¨Êç¢ÂâçÔºâ**
+        if (validateGotoValue(pSSyntaxConfig->SScanContainer.dGOTO, &unTargetSegment,
+                              pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum) < 0)
+        {
 
-			return -1;
-		}
-		//3.’“
-		cRet = findTargetSegment(GC_SYNTAX, pSSyntaxConfig->ucChannelNum, pCurrProgram, unTargetSegment, &pSSyntaxConfig->SGetTextStateInfo);
+            return -1;
+        }
+        //3.Êâæ
+        cRet = findTargetSegment(GC_SYNTAX, pSSyntaxConfig->ucChannelNum, pCurrProgram, unTargetSegment,
+                                 &pSSyntaxConfig->SGetTextStateInfo);
 
-		return cRet;
-	}
-	 return 0;
+        return cRet;
+    }
+    return 0;
 }
-
-
 
 int8 assignGOTO(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	if (pSAssignConfig->SScanContainer.bGOTO == TRUE)
-	{
-		int8 cRet = 0;
-		uint32 unTargetSegment;
+    if (pSAssignConfig->SScanContainer.bGOTO == TRUE)
+    {
+        int8 cRet = 0;
+        uint32 unTargetSegment;
 
-		//1.ªÒ»°µ±«∞Ω‚Œˆµƒ≥Ã–ÚŒƒ±æ
-		SProgram* pCurrProgram = FindNodeData(getProgramList(pSAssignConfig->ucChannelNum), 0);		//µ±«∞≥Ã–ÚΩ·ππÃÂ
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-	  // **–¬‘ˆ£∫∑«∏∫ + ’˚ ˝ + ∑∂Œß–£—È£®‘⁄(uint32)◊™ªª«∞£©**
-		if (validateGotoValue(pSAssignConfig->SScanContainer.dGOTO, &unTargetSegment,
-							  pSAssignConfig->SGetTextStateInfo.unCurrLineNum) < 0)
-		{
+        //1.Ëé∑ÂèñÂΩìÂâçËß£ÊûêÁöÑÁ®ãÂ∫èÊñáÊú¨
+        SProgram* pCurrProgram = FindNodeData(getProgramList(pSAssignConfig->ucChannelNum), 0); //ÂΩìÂâçÁ®ãÂ∫èÁªìÊûÑ‰Ωì
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        // **Êñ∞Â¢ûÔºöÈùûË¥ü + Êï¥Êï∞ + ËåÉÂõ¥Ê†°È™åÔºàÂú®(uint32)ËΩ¨Êç¢ÂâçÔºâ**
+        if (validateGotoValue(pSAssignConfig->SScanContainer.dGOTO, &unTargetSegment,
+                              pSAssignConfig->SGetTextStateInfo.unCurrLineNum) < 0)
+        {
 
-			return -1;
-		}
-		//3.’“
-		cRet = findTargetSegment(GC_ASSIGN, pSAssignConfig->ucChannelNum, pCurrProgram, unTargetSegment, &pSAssignConfig->SGetTextStateInfo);
+            return -1;
+        }
+        //3.Êâæ
+        cRet = findTargetSegment(GC_ASSIGN, pSAssignConfig->ucChannelNum, pCurrProgram, unTargetSegment,
+                                 &pSAssignConfig->SGetTextStateInfo);
 
-		return cRet;
-	}
-	 return 0;
+        return cRet;
+    }
+    return 0;
 }
-
 
 static int8 validateGotoValue(double dGoto, uint32* pOutSeg, uint32 unLineNum)
 {
@@ -73,22 +72,22 @@ static int8 validateGotoValue(double dGoto, uint32* pOutSeg, uint32 unLineNum)
         return -1;
     }
 
-    // **1) ±ÿ–Î∑«∏∫**
+    // **1) ÂøÖÈ°ªÈùûË¥ü**
     if (dGoto < 0.0)
     {
         parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
         return -1;
     }
 
-    // **2) ±ÿ–Î «’˚ ˝£∫dGoto == floor(dGoto)**
-    // ’‚—˘ƒ‹¿π◊° 1.2°¢3.0(‘ –Ì)°¢12.999 µ»
+    // **2) ÂøÖÈ°ªÊòØÊï¥Êï∞ÔºödGoto == floor(dGoto)**
+    // ËøôÊ†∑ËÉΩÊã¶‰Ωè 1.2„ÄÅ3.0(ÂÖÅËÆ∏)„ÄÅ12.999 Á≠â
     if (dGoto != floor(dGoto))
     {
         parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
         return -1;
     }
 
-    // **3) ±ÿ–Î‘⁄ uint32 ∑∂Œßƒ⁄**
+    // **3) ÂøÖÈ°ªÂú® uint32 ËåÉÂõ¥ÂÜÖ**
     if (dGoto > (double)0xffffffff)
     {
         parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);

@@ -2,31 +2,29 @@
 #define __GCODEMACRO_H
 
 #include "common.h"
-//#define MACRO_IF 0        //ºêB IF
-//#define MACRO_WHILE 1     //ºêB WHILE
-//#define MACRO_OK 0     //Âú×ãÖ´ĞĞ
-//#define MACRO_NOT_OK 1 //²»Âú×ãÖ´ĞĞ
-//#define MACRO_FORBID 2 //½ûÖ¹Ö´ĞĞ
-
-
+//#define MACRO_IF 0        //å®B IF
+//#define MACRO_WHILE 1     //å®B WHILE
+//#define MACRO_OK 0     //æ»¡è¶³æ‰§è¡Œ
+//#define MACRO_NOT_OK 1 //ä¸æ»¡è¶³æ‰§è¡Œ
+//#define MACRO_FORBID 2 //ç¦æ­¢æ‰§è¡Œ
 
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
-//¿ÉÖ´ĞĞ½á¹¹Ìå
+//å¯æ‰§è¡Œç»“æ„ä½“
 typedef struct _SMacroExecutable
 {
-	uint8 ucType;           //¿ØÖÆÓï¾äµÄÀàĞÍ  IF:0  WHILE:1
+    uint8 ucType; //æ§åˆ¶è¯­å¥çš„ç±»å‹  IF:0  WHILE:1
 
-	uint8 ucExecuteSign;    //¿ØÖÆÓï¾äÖ´ĞĞ±ê¼Ç   0:Âú×ãÖ´ĞĞÌõ¼ş 1:²»Âú×ãÖ´ĞĞÌõ¼ş  2:½ûÖ¹Ö´ĞĞ
-	
-	uint32 unLineNum;       //¸Ã¿ØÖÆÓï¾äËùÔÚĞĞĞĞºÅ		Ä¿Ç°Ö»ÓĞWHILEÓÃµ½
+    uint8 ucExecuteSign; //æ§åˆ¶è¯­å¥æ‰§è¡Œæ ‡è®°   0:æ»¡è¶³æ‰§è¡Œæ¡ä»¶ 1:ä¸æ»¡è¶³æ‰§è¡Œæ¡ä»¶  2:ç¦æ­¢æ‰§è¡Œ
 
-	uint32 unEndLineNum;    //¸Ã¿ØÖÆÓï¾ä¶ÔÓ¦ENDĞĞºÅ   Ä¿Ç°Ö»ÓĞWHILE»áÓÃµ½
+    uint32 unLineNum; //è¯¥æ§åˆ¶è¯­å¥æ‰€åœ¨è¡Œè¡Œå·		ç›®å‰åªæœ‰WHILEç”¨åˆ°
 
-	uint8 ucMainNum;        //¿ØÖÆÓï¾äµÄÖ÷±àºÅ    ///lxwÎ´ÓÃµ½
-	//uint8 ucSubNum;         //¿ØÖÆÓï¾äµÄ´Î±àºÅ///lxwÎ´ÓÃµ½
-}SMacroExecutable;
+    uint32 unEndLineNum; //è¯¥æ§åˆ¶è¯­å¥å¯¹åº”ENDè¡Œå·   ç›®å‰åªæœ‰WHILEä¼šç”¨åˆ°
+
+    uint8 ucMainNum; //æ§åˆ¶è¯­å¥çš„ä¸»ç¼–å·    ///lxwæœªç”¨åˆ°
+                     //uint8 ucSubNum;         //æ§åˆ¶è¯­å¥çš„æ¬¡ç¼–å·///lxwæœªç”¨åˆ°
+} SMacroExecutable;
 
 int8 checkGOTO(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 assignGOTO(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);

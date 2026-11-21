@@ -2,159 +2,152 @@
 #include "tree.h"
 #include "ErrorFunction.h"
 
-
-#include"GCode.h"
+#include "GCode.h"
 #include "GCodeRegulation.h"
 #include "GCodeCommon.h"
 
 #if STM32_MODE
-#include"dy_link.h"
+#include "dy_link.h"
 #endif
 #include "Gcode.h"
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
+  å‡½æ•°åç§°ï¼šint8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
 				MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
 				CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
 
-  º¯Êı¹¦ÄÜ: Ìí¼ÓG´úÂëÖ¸Áî×Ö¼°Æä¹æÔòµ½ÏàÓ¦µÄ¹æÔò½á¹¹ÌåÊı×éÎ»ÖÃ
-  ÊäÈë²ÎÊı£ºdCommandVal				Ö¸ÁîÖµ
-			cGroup					Ö¸ÁîÖµËùÊô×é±ğ
-			cSegmentNum				Ö¸Áî×ÖÕ¼ÓÃ³ÌĞò¶ÎÊı
-			pMallocParaStructAPI	¿ª±Ù²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pFreeParaStructAPI		ÊÍ·Å²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pGetParaAPI				»ñÈ¡Ö¸Áî×Ö²ÎÊıAPI
-			pCheckCommandAPI		¼ì²éÖ¸Áî×ÖAPI
-			pAssignCommandAPI		¸³ÖµÖ¸Áî×ÖAPI
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1Ê§°Ü  1³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åŠŸèƒ½: æ·»åŠ Gä»£ç æŒ‡ä»¤å­—åŠå…¶è§„åˆ™åˆ°ç›¸åº”çš„è§„åˆ™ç»“æ„ä½“æ•°ç»„ä½ç½®
+  è¾“å…¥å‚æ•°ï¼šdCommandVal				æŒ‡ä»¤å€¼
+			cGroup					æŒ‡ä»¤å€¼æ‰€å±ç»„åˆ«
+			cSegmentNum				æŒ‡ä»¤å­—å ç”¨ç¨‹åºæ®µæ•°
+			pMallocParaStructAPI	å¼€è¾Ÿå‚æ•°ç»“æ„ä½“å†…å­˜API
+			pFreeParaStructAPI		é‡Šæ”¾å‚æ•°ç»“æ„ä½“å†…å­˜API
+			pGetParaAPI				è·å–æŒ‡ä»¤å­—å‚æ•°API
+			pCheckCommandAPI		æ£€æŸ¥æŒ‡ä»¤å­—API
+			pAssignCommandAPI		èµ‹å€¼æŒ‡ä»¤å­—API
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1å¤±è´¥  1æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
-	MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
-	CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
+int8 addGCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum, MallocParaStruct pMallocParaStructAPI,
+                          FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI, CheckCommand pCheckCommandAPI,
+                          AssignCommand pAssignCommandAPI)
 {
-	int8 cErrorSign = 0;
+    int8 cErrorSign = 0;
 
-	SGCommandRegulation* pSGCommandRegulation;//¹æÔò½á¹¹ÌåÖ¸Õë
+    SGCommandRegulation* pSGCommandRegulation; //è§„åˆ™ç»“æ„ä½“æŒ‡é’ˆ
 
-	pSGCommandRegulation = mallocGCode(sizeof(SGCommandRegulation), ORAM_NUM326);//¿ª±Ù¹æÔò½á¹¹Ìå
-	if (pSGCommandRegulation == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	int a = sizeof(SGCommandRegulation);
-	memset(pSGCommandRegulation, 0, sizeof(SGCommandRegulation));
+    pSGCommandRegulation = mallocGCode(sizeof(SGCommandRegulation), ORAM_NUM326); //å¼€è¾Ÿè§„åˆ™ç»“æ„ä½“
+    if (pSGCommandRegulation == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    int a = sizeof(SGCommandRegulation);
+    memset(pSGCommandRegulation, 0, sizeof(SGCommandRegulation));
 
-	pSGCommandRegulation->nCommandVal = round(dCommandVal * pow(10, GCOMMAND_DECIMAL_PLACE));//Ğ´Èëµ±Ç°¹æÔò½á¹¹ÌåµÄÖ¸Áî×ÖÖµ
-	pSGCommandRegulation->cGroup = cGroup;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ×é±ğ
-	pSGCommandRegulation->cSegmentNum = cSegmentNum;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ³ÌĞò¶ÎÊı
+    pSGCommandRegulation->nCommandVal =
+        round(dCommandVal * pow(10, GCOMMAND_DECIMAL_PLACE)); //å†™å…¥å½“å‰è§„åˆ™ç»“æ„ä½“çš„æŒ‡ä»¤å­—å€¼
+    pSGCommandRegulation->cGroup = cGroup;                    //è§„å®šè¯¥æŒ‡ä»¤å­—çš„ç»„åˆ«
+    pSGCommandRegulation->cSegmentNum = cSegmentNum;          //è§„å®šè¯¥æŒ‡ä»¤å­—çš„ç¨‹åºæ®µæ•°
 
-	pSGCommandRegulation->pMallocParaStructAPI = pMallocParaStructAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı½á¹¹ÌåÄÚ´æ¿ª±Ù
-	pSGCommandRegulation->pFreeParaStructAPI = pFreeParaStructAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı½á¹¹ÌåÄÚ´æÊÍ·Å
-	pSGCommandRegulation->pGetParaAPI = pGetParaAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı»ñÈ¡
-	pSGCommandRegulation->pCheckCommandAPI = pCheckCommandAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ¼ì²é
-	pSGCommandRegulation->pAssignCommandAPI = pAssignCommandAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ¸³Öµ
+    pSGCommandRegulation->pMallocParaStructAPI = pMallocParaStructAPI; //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“å†…å­˜å¼€è¾Ÿ
+    pSGCommandRegulation->pFreeParaStructAPI = pFreeParaStructAPI;     //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“å†…å­˜é‡Šæ”¾
+    pSGCommandRegulation->pGetParaAPI = pGetParaAPI;                   //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°è·å–
+    pSGCommandRegulation->pCheckCommandAPI = pCheckCommandAPI;         //è§„å®šè¯¥æŒ‡ä»¤å­—çš„æ£€æŸ¥
+    pSGCommandRegulation->pAssignCommandAPI = pAssignCommandAPI;       //è§„å®šè¯¥æŒ‡ä»¤å­—çš„èµ‹å€¼
 
-	//½«Ö¸Áî¶ÔÓ¦µÄ¹æÔò½á¹¹Ìå²åÈëG¹æÔòÊ÷ÖĞ
-	g_pSGCommandRegulationTree->Root = insertTreeNode(g_pSGCommandRegulationTree->Root, pSGCommandRegulation, pSGCommandRegulation->nCommandVal, &cErrorSign, ORAM_NUM325);//½«¹æÔòÌí¼ÓÔÚÊ÷ÖĞ
-	if (cErrorSign == 1 || g_pSGCommandRegulationTree->Root == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-		return -1;
-	}
-	//²åÈëÍê³É
-	g_pSGCommandRegulationTree->cize++;
-	return 1;
+    //å°†æŒ‡ä»¤å¯¹åº”çš„è§„åˆ™ç»“æ„ä½“æ’å…¥Gè§„åˆ™æ ‘ä¸­
+    g_pSGCommandRegulationTree->Root =
+        insertTreeNode(g_pSGCommandRegulationTree->Root, pSGCommandRegulation, pSGCommandRegulation->nCommandVal,
+                       &cErrorSign, ORAM_NUM325); //å°†è§„åˆ™æ·»åŠ åœ¨æ ‘ä¸­
+    if (cErrorSign == 1 || g_pSGCommandRegulationTree->Root == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    //æ’å…¥å®Œæˆ
+    g_pSGCommandRegulationTree->cize++;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 addMCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
+  å‡½æ•°åç§°ï¼šint8 addMCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
 				MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
 				CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
 
-  º¯Êı¹¦ÄÜ: Ìí¼ÓM´úÂëÖ¸Áî×Ö¼°Æä¹æÔòµ½ÏàÓ¦µÄ¹æÔò½á¹¹ÌåÊı×éÎ»ÖÃ
-  ÊäÈë²ÎÊı£ºdCommandVal				Ö¸ÁîÖµ
-			cGroup					Ö¸ÁîÖµËùÊô×é±ğ
-			cSegmentNum				Ö¸Áî×ÖÕ¼ÓÃ³ÌĞò¶ÎÊı
-			pMallocParaStructAPI	¿ª±Ù²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pFreeParaStructAPI		ÊÍ·Å²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pGetParaAPI				»ñÈ¡Ö¸Áî×Ö²ÎÊıAPI
-			pCheckCommandAPI		¼ì²éÖ¸Áî×ÖAPI
-			pAssignCommandAPI		¸³ÖµÖ¸Áî×ÖAPI
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åŠŸèƒ½: æ·»åŠ Mä»£ç æŒ‡ä»¤å­—åŠå…¶è§„åˆ™åˆ°ç›¸åº”çš„è§„åˆ™ç»“æ„ä½“æ•°ç»„ä½ç½®
+  è¾“å…¥å‚æ•°ï¼šdCommandVal				æŒ‡ä»¤å€¼
+			cGroup					æŒ‡ä»¤å€¼æ‰€å±ç»„åˆ«
+			cSegmentNum				æŒ‡ä»¤å­—å ç”¨ç¨‹åºæ®µæ•°
+			pMallocParaStructAPI	å¼€è¾Ÿå‚æ•°ç»“æ„ä½“å†…å­˜API
+			pFreeParaStructAPI		é‡Šæ”¾å‚æ•°ç»“æ„ä½“å†…å­˜API
+			pGetParaAPI				è·å–æŒ‡ä»¤å­—å‚æ•°API
+			pCheckCommandAPI		æ£€æŸ¥æŒ‡ä»¤å­—API
+			pAssignCommandAPI		èµ‹å€¼æŒ‡ä»¤å­—API
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 addMCommadRegulation(double dCommandVal, int8 cType,int8 cGroup, int8 cSegmentNum,
-	MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
-	CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
+int8 addMCommadRegulation(double dCommandVal, int8 cType, int8 cGroup, int8 cSegmentNum,
+                          MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
+                          CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
 {
-	int8 cErrorSign = 0;
+    int8 cErrorSign = 0;
 
-	SMCommandRegulation* pSMCommandRegulation;//MÂë¹æÔò½á¹¹ÌåÖ¸Õë
-	pSMCommandRegulation = mallocGCode(sizeof(SMCommandRegulation), ORAM_NUM329);//¿ª±Ù¹æÔò½á¹¹Ìå
-	if (pSMCommandRegulation == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    SMCommandRegulation* pSMCommandRegulation;                                    //Mç è§„åˆ™ç»“æ„ä½“æŒ‡é’ˆ
+    pSMCommandRegulation = mallocGCode(sizeof(SMCommandRegulation), ORAM_NUM329); //å¼€è¾Ÿè§„åˆ™ç»“æ„ä½“
+    if (pSMCommandRegulation == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	pSMCommandRegulation->nCommandVal = (int32)dCommandVal * pow(10, MCOMMAND_DECIMAL_PLACE);//Ğ´Èëµ±Ç°¹æÔò½á¹¹ÌåµÄÖ¸Áî×ÖÖµ
-	pSMCommandRegulation->cType = cType;//¹æ¶¨¸ÃÖ¸ÁîµÄÇ°ºó×÷ÓÃÀàĞÍ
-	pSMCommandRegulation->cGroup = cGroup;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ×é±ğ
-	pSMCommandRegulation->cSegmentNum = cSegmentNum;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ³ÌĞò¶ÎÊı
+    pSMCommandRegulation->nCommandVal =
+        (int32)dCommandVal * pow(10, MCOMMAND_DECIMAL_PLACE); //å†™å…¥å½“å‰è§„åˆ™ç»“æ„ä½“çš„æŒ‡ä»¤å­—å€¼
+    pSMCommandRegulation->cType = cType;                      //è§„å®šè¯¥æŒ‡ä»¤çš„å‰åä½œç”¨ç±»å‹
+    pSMCommandRegulation->cGroup = cGroup;                    //è§„å®šè¯¥æŒ‡ä»¤å­—çš„ç»„åˆ«
+    pSMCommandRegulation->cSegmentNum = cSegmentNum;          //è§„å®šè¯¥æŒ‡ä»¤å­—çš„ç¨‹åºæ®µæ•°
 
-	pSMCommandRegulation->pMallocParaStructAPI = pMallocParaStructAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı½á¹¹ÌåÄÚ´æ¿ª±Ù
-	pSMCommandRegulation->pFreeParaStructAPI = pFreeParaStructAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı½á¹¹ÌåÄÚ´æÊÍ·Å
-	pSMCommandRegulation->pGetParaAPI = pGetParaAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ²ÎÊı»ñÈ¡
-	pSMCommandRegulation->pCheckCommandAPI = pCheckCommandAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ¼ì²é
-	pSMCommandRegulation->pAssignCommandAPI = pAssignCommandAPI;//¹æ¶¨¸ÃÖ¸Áî×ÖµÄ¸³Öµ
+    pSMCommandRegulation->pMallocParaStructAPI = pMallocParaStructAPI; //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“å†…å­˜å¼€è¾Ÿ
+    pSMCommandRegulation->pFreeParaStructAPI = pFreeParaStructAPI;     //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“å†…å­˜é‡Šæ”¾
+    pSMCommandRegulation->pGetParaAPI = pGetParaAPI;                   //è§„å®šè¯¥æŒ‡ä»¤å­—çš„å‚æ•°è·å–
+    pSMCommandRegulation->pCheckCommandAPI = pCheckCommandAPI;         //è§„å®šè¯¥æŒ‡ä»¤å­—çš„æ£€æŸ¥
+    pSMCommandRegulation->pAssignCommandAPI = pAssignCommandAPI;       //è§„å®šè¯¥æŒ‡ä»¤å­—çš„èµ‹å€¼
 
-	//½«Ö¸Áî¶ÔÓ¦µÄ¹æÔò½á¹¹Ìå²åÈëM¹æÔòÊ÷ÖĞ
-	g_pSMCommandRegulationTree->Root = insertTreeNode(g_pSMCommandRegulationTree->Root, pSMCommandRegulation, pSMCommandRegulation->nCommandVal, &cErrorSign, ORAM_NUM328);//½«¹æÔòÌí¼ÓÔÚÊ÷ÖĞ
-	if (cErrorSign == 1 || g_pSMCommandRegulationTree->Root == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-		return -1;
-	}
-	//²åÈëÍê³É
-	g_pSMCommandRegulationTree->cize++;
-	return 1;
+    //å°†æŒ‡ä»¤å¯¹åº”çš„è§„åˆ™ç»“æ„ä½“æ’å…¥Mè§„åˆ™æ ‘ä¸­
+    g_pSMCommandRegulationTree->Root =
+        insertTreeNode(g_pSMCommandRegulationTree->Root, pSMCommandRegulation, pSMCommandRegulation->nCommandVal,
+                       &cErrorSign, ORAM_NUM328); //å°†è§„åˆ™æ·»åŠ åœ¨æ ‘ä¸­
+    if (cErrorSign == 1 || g_pSMCommandRegulationTree->Root == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    //æ’å…¥å®Œæˆ
+    g_pSMCommandRegulationTree->cize++;
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 addMCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
+  å‡½æ•°åç§°ï¼šint8 addMCommadRegulation(double dCommandVal, int8 cGroup, int8 cSegmentNum,
 				MallocParaStruct pMallocParaStructAPI, FreeParaStruct pFreeParaStructAPI, GetPara pGetParaAPI,
 				CheckCommand pCheckCommandAPI, AssignCommand pAssignCommandAPI)
 
-  º¯Êı¹¦ÄÜ: Ìí¼ÓM´úÂëÖ¸Áî×Ö¼°Æä¹æÔòµ½ÏàÓ¦µÄ¹æÔò½á¹¹ÌåÊı×éÎ»ÖÃ
-  ÊäÈë²ÎÊı£ºdCommandVal				Ö¸ÁîÖµ
-			cGroup					Ö¸ÁîÖµËùÊô×é±ğ
-			cSegmentNum				Ö¸Áî×ÖÕ¼ÓÃ³ÌĞò¶ÎÊı
-			pMallocParaStructAPI	¿ª±Ù²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pFreeParaStructAPI		ÊÍ·Å²ÎÊı½á¹¹ÌåÄÚ´æAPI
-			pGetParaAPI				»ñÈ¡Ö¸Áî×Ö²ÎÊıAPI
-			pCheckCommandAPI		¼ì²éÖ¸Áî×ÖAPI
-			pAssignCommandAPI		¸³ÖµÖ¸Áî×ÖAPI
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÊÍ·ÅËùÓĞÖ¸ÁîµÄ²ÎÊı½á¹¹Ìå
+  å‡½æ•°åŠŸèƒ½: æ·»åŠ Mä»£ç æŒ‡ä»¤å­—åŠå…¶è§„åˆ™åˆ°ç›¸åº”çš„è§„åˆ™ç»“æ„ä½“æ•°ç»„ä½ç½®
+  è¾“å…¥å‚æ•°ï¼šdCommandVal				æŒ‡ä»¤å€¼
+			cGroup					æŒ‡ä»¤å€¼æ‰€å±ç»„åˆ«
+			cSegmentNum				æŒ‡ä»¤å­—å ç”¨ç¨‹åºæ®µæ•°
+			pMallocParaStructAPI	å¼€è¾Ÿå‚æ•°ç»“æ„ä½“å†…å­˜API
+			pFreeParaStructAPI		é‡Šæ”¾å‚æ•°ç»“æ„ä½“å†…å­˜API
+			pGetParaAPI				è·å–æŒ‡ä»¤å­—å‚æ•°API
+			pCheckCommandAPI		æ£€æŸ¥æŒ‡ä»¤å­—API
+			pAssignCommandAPI		èµ‹å€¼æŒ‡ä»¤å­—API
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šé‡Šæ”¾æ‰€æœ‰æŒ‡ä»¤çš„å‚æ•°ç»“æ„ä½“
 **************************************************/
 void freeAllParaStruct()
 {
-	//±éÀú¹æÔò½á¹¹ÌåÊı£¬Èô¹æÔò½á¹¹ÌåÖĞÊÍ·Åº¯Êı²»ÎªNULL£¬Ôòµ÷ÓÃÊÍ·Å²ÎÊı½á¹¹Ìåº¯Êı
-
+    //éå†è§„åˆ™ç»“æ„ä½“æ•°ï¼Œè‹¥è§„åˆ™ç»“æ„ä½“ä¸­é‡Šæ”¾å‡½æ•°ä¸ä¸ºNULLï¼Œåˆ™è°ƒç”¨é‡Šæ”¾å‚æ•°ç»“æ„ä½“å‡½æ•°
 }
-
-
-
-
-
-

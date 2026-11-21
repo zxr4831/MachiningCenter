@@ -1,118 +1,113 @@
 #ifndef __GCODECHECK_H
 #define __GCODECHECK_H
 
-
 #include "common.h"
 #include "list.h"
 
-//lxw:Í·ÎÄ¼ş°üº¬¹ØÏµ
+//lxw:å¤´æ–‡ä»¶åŒ…å«å…³ç³»
 //#include "GCodeCommon.h"
 //#include "GCodeCheckAndAssign.h"
 //#include "GCodeCalcExpression.h"
 
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
-//¼ì²é½á¹¹Ìå
+//æ£€æŸ¥ç»“æ„ä½“
 typedef struct _SSyntaxConfiguration
-{	
-	uint8 ucChannelNum;			//Í¨µÀºÅ
-	uint8  ucStatus;			//¼ì²é×´Ì¬»ú
+{
+    uint8 ucChannelNum; //é€šé“å·
+    uint8 ucStatus;     //æ£€æŸ¥çŠ¶æ€æœº
 
-	int8 cPart;					//¼ì²éÇĞÆ¬
-	int8 cTargetStatus;
+    int8 cPart; //æ£€æŸ¥åˆ‡ç‰‡
+    int8 cTargetStatus;
 
-	uint16 usMainProStartLine;  //Ö÷³ÌĞòÆğÊ¼µ¥½Ú(ĞĞ£©
+    uint16 usMainProStartLine; //ä¸»ç¨‹åºèµ·å§‹å•èŠ‚(è¡Œï¼‰
 
-	//int16 sBeginLineNum;         //G´úÂë¿ªÊ¼µÄĞĞºÅ£¬µÚÒ»¸ö%ºÅĞĞ	//ÊÇ·ñ·ÅÈë³ÌĞò½á¹¹ÌåÖĞ    (ÒÆ¶¯µ½³ÌĞò½á¹¹Ìå)
-	//int32 nEndLineNum;			//G´úÂë×îºóÒ»ĞĞµÄĞĞºÅ£¬µÚ¶ş¸ö%ºÅĞĞ	//ÊÇ·ñ·ÅÈë³ÌĞò½á¹¹ÌåÖĞ
+    //int16 sBeginLineNum;         //Gä»£ç å¼€å§‹çš„è¡Œå·ï¼Œç¬¬ä¸€ä¸ª%å·è¡Œ	//æ˜¯å¦æ”¾å…¥ç¨‹åºç»“æ„ä½“ä¸­    (ç§»åŠ¨åˆ°ç¨‹åºç»“æ„ä½“)
+    //int32 nEndLineNum;			//Gä»£ç æœ€åä¸€è¡Œçš„è¡Œå·ï¼Œç¬¬äºŒä¸ª%å·è¡Œ	//æ˜¯å¦æ”¾å…¥ç¨‹åºç»“æ„ä½“ä¸­
 
-	int8 cCommandSegmentCnt;						//Ö¸ÁîµÄ³ÌĞò¶ÎÊµÊ±¼ÆÊı	//¼Æ»®·ÅÈëSGetTextStateInfoÖĞ£¬ÒòÎªG71Ğ¡Ñ­»·ĞèÒªÓÃµ½´Ë±äÁ¿
+    int8 cCommandSegmentCnt; //æŒ‡ä»¤çš„ç¨‹åºæ®µå®æ—¶è®¡æ•°	//è®¡åˆ’æ”¾å…¥SGetTextStateInfoä¸­ï¼Œå› ä¸ºG71å°å¾ªç¯éœ€è¦ç”¨åˆ°æ­¤å˜é‡
 
-	uint32 unTotalCommandCnt;
-	uint32 unLineCnt;                                 //ÒÑÔËĞĞĞĞÊı£¬Ö»ÔÚÇĞ»»³ÌĞòÊ±Çå0  ÓÃÓÚÅĞ¶Ï¼ì²é¸³ÖµËÙ¶È
+    uint32 unTotalCommandCnt;
+    uint32 unLineCnt; //å·²è¿è¡Œè¡Œæ•°ï¼Œåªåœ¨åˆ‡æ¢ç¨‹åºæ—¶æ¸…0  ç”¨äºåˆ¤æ–­æ£€æŸ¥èµ‹å€¼é€Ÿåº¦
 
-	SGetTextStateInfo SGetTextStateInfo;			//»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢£¨½á¹¹ÌåÄÚ²»Ğè¿ª±Ù¶¯Ì¬ÄÚ´æ£©
+    SGetTextStateInfo SGetTextStateInfo; //è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯ï¼ˆç»“æ„ä½“å†…ä¸éœ€å¼€è¾ŸåŠ¨æ€å†…å­˜ï¼‰
 
-	//int8* pCurrPtr;                             //µ±Ç°×Ö·ûµÄÖ¸Õë£¬ÓÃÓÚÒÆ¶¯£¬£¨lxwÒÆ¶¯µ½ÎÄ±¾½á¹¹Ìå£©
-	//int8* pStartPtr;                            //Ö¸Ïò×Ö·û´®¿ªÍ·£¬ÓÃÓÚ±ê¼Ç
-	//int8* pEndPtr;                              //Ö¸Ïò×Ö·û´®ºóÒ»Î»£¬ÓÃÓÚ±ê¼Ç
+    //int8* pCurrPtr;                             //å½“å‰å­—ç¬¦çš„æŒ‡é’ˆï¼Œç”¨äºç§»åŠ¨ï¼Œï¼ˆlxwç§»åŠ¨åˆ°æ–‡æœ¬ç»“æ„ä½“ï¼‰
+    //int8* pStartPtr;                            //æŒ‡å‘å­—ç¬¦ä¸²å¼€å¤´ï¼Œç”¨äºæ ‡è®°
+    //int8* pEndPtr;                              //æŒ‡å‘å­—ç¬¦ä¸²åä¸€ä½ï¼Œç”¨äºæ ‡è®°
 
+    //struct SGCodeModalInfo SModalInfo;			//æ¨¡æ€ç»“æ„ä½“ï¼ˆç»“æ„ä½“å†…ä¸éœ€å¼€è¾ŸåŠ¨æ€å†…å­˜ï¼‰ï¼ˆlxwç§»åŠ¨åˆ°æ‰«æç»“æ„ä½“ï¼‰
+    SScan SScanContainer; //æ‰«æç»“æ„ä½“
 
-	//struct SGCodeModalInfo SModalInfo;			//Ä£Ì¬½á¹¹Ìå£¨½á¹¹ÌåÄÚ²»Ğè¿ª±Ù¶¯Ì¬ÄÚ´æ£©£¨lxwÒÆ¶¯µ½É¨Ãè½á¹¹Ìå£©
-	SScan SScanContainer;//É¨Ãè½á¹¹Ìå
+    bool bCheckFinished; ////20250122ï¼šä¸èƒ½å¤Ÿé€šè¿‡æ£€æŸ¥ç»“æ„ä½“çŸ¥é“æ£€æŸ¥æ˜¯å¦å®Œæˆï¼Œlxwæ–°å¢æ­¤æ ‡è®°
 
+    //SGroupViolation SGroupViolator;                  //æ¨¡æ€å†²çªç»“æ„ä½“
+    uint8 ucMLetterCnt;  //MåŠŸèƒ½å‡ºç°æ¬¡æ•°
+    int8 cCounterNoMove; //Cåˆ€è¡¥æ²¡ç§»åŠ¨ä»£ç è®¡æ•°å™¨
 
-	bool bCheckFinished;////20250122£º²»ÄÜ¹»Í¨¹ı¼ì²é½á¹¹ÌåÖªµÀ¼ì²éÊÇ·ñÍê³É£¬lxwĞÂÔö´Ë±ê¼Ç
+    int16 sCurrCommandVal; //åˆ¤æ–­å¤šç¨‹åºæ®µæŒ‡ä»¤ï¼Œæ¯ä¸€æ®µæ˜¯å¦ç›¸åŒ
 
+    SGCommandRegulation*
+        pSCurrCommandRegulation; //å½“å‰ç¨‹åºæ®µéœ€è¦æ‰§è¡Œçš„cGaã€cGzæŒ‡ä»¤çš„è§„åˆ™ç»“æ„ä½“åœ°å€ã€‚æµç¨‹ä¸­éœ€è¦å¤šæ¬¡ç”¨åˆ°cGaï¼ŒcGzçš„è§„åˆ™ç»“æ„ä½“
 
-	//SGroupViolation SGroupViolator;                  //Ä£Ì¬³åÍ»½á¹¹Ìå	
-	uint8 ucMLetterCnt;                              //M¹¦ÄÜ³öÏÖ´ÎÊı
-	int8 cCounterNoMove;                             //Cµ¶²¹Ã»ÒÆ¶¯´úÂë¼ÆÊıÆ÷  
+    struct _SGCodeSysState SGCodeCurrSysState; //å½“å‰é€šé“çŠ¶æ€ç»“æ„ä½“     èµ‹å€¼å‰ä½¿ç”¨å‡½æ•°è¿›è¡Œåˆå§‹åŒ–ä¸€æ¬¡
+    struct SGCodeParse SCurrRecord;            //åˆ›å»ºä¸€ä¸ªç»“æ„ä½“ï¼Œè®°å½•æœ¬è¡Œçš„ä¿¡æ¯ï¼Œç±»ä¼¼Gä»£ç ç¼“å†²åŒº
 
-	int16 sCurrCommandVal;//ÅĞ¶Ï¶à³ÌĞò¶ÎÖ¸Áî£¬Ã¿Ò»¶ÎÊÇ·ñÏàÍ¬
+    //SPointDouble SWorkPieceOffsetByG50;             //å› G50å¼•èµ·çš„å·¥ä»¶åæ ‡åç§»é‡(ä¸è§£ææ¡†æ¶æ— å…³ï¼Œåˆ é™¤???)
 
-	SGCommandRegulation* pSCurrCommandRegulation;//µ±Ç°³ÌĞò¶ÎĞèÒªÖ´ĞĞµÄcGa¡¢cGzÖ¸ÁîµÄ¹æÔò½á¹¹ÌåµØÖ·¡£Á÷³ÌÖĞĞèÒª¶à´ÎÓÃµ½cGa£¬cGzµÄ¹æÔò½á¹¹Ìå
+    //SPointDouble STotalOffset;                        //æ€»çš„åç§»é‡ æ³¨æ„:æ€»åç§»çš„Xæ˜¯åŠå¾„å€¼ï¼ˆå¯è¿›è¡Œè®°å½•ï¼Œé˜²æ­¢åç½®å€¼ä¸å˜æ—¶ï¼Œæ¯ä¸ªç¨‹åºæ®µéƒ½éœ€è¦é‡æ–°è®¡ç®—åç½®ï¼‰
 
-	struct _SGCodeSysState SGCodeCurrSysState;         //µ±Ç°Í¨µÀ×´Ì¬½á¹¹Ìå     ¸³ÖµÇ°Ê¹ÓÃº¯Êı½øĞĞ³õÊ¼»¯Ò»´Î
-	struct SGCodeParse SCurrRecord;                  //´´½¨Ò»¸ö½á¹¹Ìå£¬¼ÇÂ¼±¾ĞĞµÄĞÅÏ¢£¬ÀàËÆG´úÂë»º³åÇø
+    bool bErrorFlag; //è¾…åŠ©æ ‡å¿—ä½ï¼Œä½œç”¨:å¦‚æœä¸ºTRUEï¼Œä¸ä»¤G71è¿›å…¥ns~nfçš„æ£€æŸ¥
 
-	//SPointDouble SWorkPieceOffsetByG50;             //ÒòG50ÒıÆğµÄ¹¤¼ş×ø±êÆ«ÒÆÁ¿(Óë½âÎö¿ò¼ÜÎŞ¹Ø£¬É¾³ı???)
+    //ç­‰å¾…æŒ‡ä»¤ç›¸å…³
 
-	//SPointDouble STotalOffset;                        //×ÜµÄÆ«ÒÆÁ¿ ×¢Òâ:×ÜÆ«ÒÆµÄXÊÇ°ë¾¶Öµ£¨¿É½øĞĞ¼ÇÂ¼£¬·ÀÖ¹Æ«ÖÃÖµ²»±äÊ±£¬Ã¿¸ö³ÌĞò¶Î¶¼ĞèÒªÖØĞÂ¼ÆËãÆ«ÖÃ£©
+    uint8 ucRelevantChannel; //ç­‰å¾…æ ‡è®°ç›¸å…³çš„é€šé“  è¯´æ˜:ä¾‹å¦‚WAITM(4,1,3,5),æ­¤æ—¶sWaitMark=4ï¼ŒucRelevantChannel=0001 0101
 
-	bool bErrorFlag;           //¸¨Öú±êÖ¾Î»£¬×÷ÓÃ:Èç¹ûÎªTRUE£¬²»ÁîG71½øÈëns~nfµÄ¼ì²é
+    int8 cSpindleStatus;       //1:æ­£è½¬ 0:åœæ­¢ -1:åè½¬ 2:å¤¹ç´§ï¼ˆåªæ›´æ–°ï¼Œä¸ç»§æ‰¿ï¼‰
+    int8 cSSecondpindleStatus; //1:æ­£è½¬ 0:åœæ­¢ -1:åè½¬ï¼ˆåªæ›´æ–°ï¼Œä¸ç»§æ‰¿ï¼‰
 
-	//µÈ´ıÖ¸ÁîÏà¹Ø
+    int8
+        cSpindleSpeedAssignFlag; //lxw:ä¸ºäº†åŒºåˆ†ç¨‹åºæ®µå•ç‹¬å‡ºç°Sï¼ŒSå€¼è¯¥èµ‹ç»™ä¸»è½´é€Ÿåº¦orç¬¬äºŒä¸»è½´é€Ÿåº¦ï¼Œè‹¥æ ‡å¿—ä¸º0ï¼ŒSèµ‹ç»™ä¸»è½´ï¼›è‹¥æ ‡å¿—ä¸º1ï¼ŒSèµ‹ç»™ç¬¬äºŒä¸»è½´ã€‚
+                                 //è¯¥æ ‡å¿—åœ¨ä¸»è½´/ç¬¬äºŒä¸»è½´æ§åˆ¶æŒ‡ä»¤èµ‹å€¼æ¥å£ä¸­å†™å…¥ï¼ˆM3M4/M51M52ï¼‰
 
-	uint8 ucRelevantChannel;     //µÈ´ı±ê¼ÇÏà¹ØµÄÍ¨µÀ  ËµÃ÷:ÀıÈçWAITM(4,1,3,5),´ËÊ±sWaitMark=4£¬ucRelevantChannel=0001 0101
+    //	uint8 ucG66MarkAssign;
 
-	int8 cSpindleStatus;	//1:Õı×ª 0:Í£Ö¹ -1:·´×ª 2:¼Ğ½ô£¨Ö»¸üĞÂ£¬²»¼Ì³Ğ£©
-	int8 cSSecondpindleStatus;	//1:Õı×ª 0:Í£Ö¹ -1:·´×ª£¨Ö»¸üĞÂ£¬²»¼Ì³Ğ£©
+    //    int8 *cOriginalStr; //å½“å‰è¡Œå­—ç¬¦ä¸²
+    //    uint8 ucOriStrIndex;  //å½“å‰è¡Œå­—ç¬¦ä¸²çš„ç´¢å¼•
+    //    uint8 ucInsertIndex;//æ’å…¥ç´¢å¼•
+    //    bool bIgnored;  //å¿½ç•¥æ‹¬å·ä¸­å†…å®¹ï¼ŒTRUE:æ‹¬å·å†…  FALSE:éæ‹¬å·å†…
 
-	int8 cSpindleSpeedAssignFlag;//lxw:ÎªÁËÇø·Ö³ÌĞò¶Îµ¥¶À³öÏÖS£¬SÖµ¸Ã¸³¸øÖ÷ÖáËÙ¶ÈorµÚ¶şÖ÷ÖáËÙ¶È£¬Èô±êÖ¾Îª0£¬S¸³¸øÖ÷Öá£»Èô±êÖ¾Îª1£¬S¸³¸øµÚ¶şÖ÷Öá¡£
-//¸Ã±êÖ¾ÔÚÖ÷Öá/µÚ¶şÖ÷Öá¿ØÖÆÖ¸Áî¸³Öµ½Ó¿ÚÖĞĞ´Èë£¨M3M4/M51M52£©
+    //*************************************åŒä¸»è½´æœºç›¸å…³********************************************
+    bool bToolCmpBuild;               //åˆ€è¡¥å»ºç«‹æ ‡å¿—ä½	ï¼ˆæ”¾å…¥G41æ–‡ä»¶ä¸­ï¼Ÿï¼Ÿï¼Ÿï¼‰
+    bool bToolCmpPreCancel;           //åˆ€è¡¥é¢„å–æ¶ˆæ ‡å¿—ä½ï¼ˆæ”¾å…¥G41æ–‡ä»¶ä¸­ï¼Ÿï¼Ÿï¼Ÿï¼‰
+    bool bG40Appear;                  //G40å‡ºç°æ ‡å¿—ä½ï¼ˆæ”¾å…¥G41æ–‡ä»¶ä¸­ï¼Ÿï¼Ÿï¼Ÿï¼‰
+    VAL_STRUCT_TYPE ToolAxic;         //åˆ€è¡¥å ç”¨è½´
+    bool bToolChange;                 //é€šé“æ¢åˆ€æ ‡å¿—ä½ï¼Œç”¨äºé€šé“é—´æ¢åˆ€çš„åˆ¤æ–­
+    bool bWorkPieceOffsetNumChange;   //å·¥ä»¶åæ ‡å·æ”¹å˜æ ‡å¿—ä½
+    bool bWorkPieceOffsetByG50Change; //G50æ”¹å˜æ ‡å¿—ä½
+    bool bG92IsWorkingByGcode;        //æµ‹è¯•ç”¨
 
-//	uint8 ucG66MarkAssign;  
-
-
-//    int8 *cOriginalStr; //µ±Ç°ĞĞ×Ö·û´®
-//    uint8 ucOriStrIndex;  //µ±Ç°ĞĞ×Ö·û´®µÄË÷Òı
-//    uint8 ucInsertIndex;//²åÈëË÷Òı
-//    bool bIgnored;  //ºöÂÔÀ¨ºÅÖĞÄÚÈİ£¬TRUE:À¨ºÅÄÚ  FALSE:·ÇÀ¨ºÅÄÚ
-
-
-	//*************************************Ë«Ö÷Öá»úÏà¹Ø********************************************
-	bool bToolCmpBuild;//µ¶²¹½¨Á¢±êÖ¾Î»	£¨·ÅÈëG41ÎÄ¼şÖĞ£¿£¿£¿£©
-	bool bToolCmpPreCancel;//µ¶²¹Ô¤È¡Ïû±êÖ¾Î»£¨·ÅÈëG41ÎÄ¼şÖĞ£¿£¿£¿£©
-	bool bG40Appear;//G40³öÏÖ±êÖ¾Î»£¨·ÅÈëG41ÎÄ¼şÖĞ£¿£¿£¿£©
-	VAL_STRUCT_TYPE ToolAxic;//µ¶²¹Õ¼ÓÃÖá
-	bool bToolChange;                            //Í¨µÀ»»µ¶±êÖ¾Î»£¬ÓÃÓÚÍ¨µÀ¼ä»»µ¶µÄÅĞ¶Ï
-	bool bWorkPieceOffsetNumChange;//¹¤¼ş×ø±êºÅ¸Ä±ä±êÖ¾Î»
-	bool bWorkPieceOffsetByG50Change;//G50¸Ä±ä±êÖ¾Î»
-	bool bG92IsWorkingByGcode;//²âÊÔÓÃ
-
-}SSyntaxConfiguration;
-
+} SSyntaxConfiguration;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//»ñÈ¡¼ì²é½á¹¹Ìå
+//è·å–æ£€æŸ¥ç»“æ„ä½“
 SSyntaxConfiguration* getSyntaxConfig(uint8 ucChannelNum);
 
-//³õÊ¼»¯¼ì²é½á¹¹Ìå
+//åˆå§‹åŒ–æ£€æŸ¥ç»“æ„ä½“
 void initSyntaxConfig(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum);
 
-//¼ì²é×´Ì¬»ú
+//æ£€æŸ¥çŠ¶æ€æœº
 void syntaxStatusMachine(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum);
 
-//¼ì²é³ÌĞò¶Î×Ü½Ó¿Ú
+//æ£€æŸ¥ç¨‹åºæ®µæ€»æ¥å£
 void checkSegments(struct _SSyntaxConfiguration* pSSyntaxConfig, uint8 ucChannelNum);
 
-//¼ì²écGa¡¢cGzÒÔÍâµÄGÖ¸Áî(part4)
+//æ£€æŸ¥cGaã€cGzä»¥å¤–çš„GæŒ‡ä»¤(part4)
 void checkGbCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 void checkGcCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 void checkGdCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
@@ -123,17 +118,17 @@ void checkGjCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeP
 void checkGhCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 void checkGxCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-//¼ì²éFSTÖ¸Áî(part4)
+//æ£€æŸ¥FSTæŒ‡ä»¤(part4)
 void checkFCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 void checkSCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 void checkTCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-//¼ì²éÌØÊâÖ¸Áî
+//æ£€æŸ¥ç‰¹æ®ŠæŒ‡ä»¤
 int8 checkSpecialCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
-//¼ì²éÕÒµ½´íÎó
+//æ£€æŸ¥æ‰¾åˆ°é”™è¯¯
 void findErrorStart(struct _SSyntaxConfiguration* pSSyntaxConfig, uint16 ErrorType, int8 character);
-//¼ì²éÕÒµ½´íÎó
+//æ£€æŸ¥æ‰¾åˆ°é”™è¯¯
 void findError(const int8* pStartPtr, const uint32 unLineNum);
 
 #endif

@@ -1,44 +1,41 @@
-#ifndef   GCODE_Mj_H
-#define   GCODE_Mj_H
-
+#ifndef GCODE_Mj_H
+#define GCODE_Mj_H
 
 //****************************************M20***********************************
-//Ìí¼ÓM20¹æÔò
+//æ·»åŠ M20è§„åˆ™
 void addM20RegulationAPI();
 
-//¸³ÖµM20
+//èµ‹å€¼M20
 int8 AssignM20(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 //***************************************M21**************************************
 
-//Ìí¼ÓM21¹æÔò
+//æ·»åŠ M21è§„åˆ™
 void addM21RegulationAPI();
 
-//¸³ÖµM21
+//èµ‹å€¼M21
 int8 AssignM21(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 //***************************************M22**************************************
 
-//Ìí¼ÓM22
+//æ·»åŠ M22
 void addM22RegulationAPI();
 
-//¸³ÖµM22
+//èµ‹å€¼M22
 int8 AssignM22(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //***************************************M35**************************************
-//Ìí¼ÓM35
+//æ·»åŠ M35
 void addM35RegulationAPI();
 
-//¸³ÖµM35
+//èµ‹å€¼M35
 int8 AssignM35(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //***************************************M36**************************************
-//Ìí¼ÓM36
+//æ·»åŠ M36
 void addM36RegulationAPI();
 
-//¸³ÖµM36
+//èµ‹å€¼M36
 int8 AssignM36(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif // !  GCODE_M20_H

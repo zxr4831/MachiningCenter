@@ -7,22 +7,19 @@
 #include "ErrorFunction.h"
 
 #if STM32_MODE
-#include"dy_link.h"
+#include "dy_link.h"
 #include "dir.h"
 #include "app_num.h"
 #include "menu_app.h"
 #endif
 
-
-
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºvoid initSProgram(SProgram* pSProgram)
-  º¯Êý¹¦ÄÜ: ³õÊ¼»¯³ÌÐò½á¹¹Ìå
-  ÊäÈë²ÎÊý£º*pSProgram   ³ÌÐò½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid initSProgram(SProgram* pSProgram)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–ç¨‹åºç»“æž„ä½“
+  è¾“å…¥å‚æ•°ï¼š*pSProgram   ç¨‹åºç»“æž„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initProgramData(SProgram* pSProgram)
 {
@@ -32,40 +29,40 @@ int8 initProgramData(SProgram* pSProgram)
         return -1;
     }
 
-    //1.ÊÍ·Å³ÌÐò½á¹¹ÌåÖÐ¿ª±ÙµÄÄÚ´æ
+    //1.é‡Šæ”¾ç¨‹åºç»“æž„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
     freeProgramData(pSProgram);
 
-    //2.³ÌÐò½á¹¹ÌåÖÃ0
+    //2.ç¨‹åºç»“æž„ä½“ç½®0
     memset(pSProgram, 0, sizeof(SProgram));
 
-    //3.1³õÊ¼»¯Ê£Óàµ÷ÓÃ´ÎÊý
+    //3.1åˆå§‹åŒ–å‰©ä½™è°ƒç”¨æ¬¡æ•°
     pSProgram->sRemainingCalls = UNASSIGNED_VALUE;
 
-    //3.2³õÊ¼»¯¸¸³ÌÐò·µ»ØÐÐºÅ
+    //3.2åˆå§‹åŒ–çˆ¶ç¨‹åºè¿”å›žè¡Œå·
     pSProgram->unFatherLineNum = UNASSIGNED_VALUE;
 
-    //3.3³õÊ¼»¯ºê×´Ì¬
+    //3.3åˆå§‹åŒ–å®çŠ¶æ€
     pSProgram->cMacroStatus = GC_MODE_NORMAL;
 
-    //3.4³õÊ¼»¯ÆðÊ¼½áÊøÐÐºÅ
+    //3.4åˆå§‹åŒ–èµ·å§‹ç»“æŸè¡Œå·
     pSProgram->usBeginLineNumMarco = UNASSIGNED_VALUE;
     pSProgram->sBeginLineNum = UNASSIGNED_VALUE;
     pSProgram->nEndLineNum = UNASSIGNED_VALUE;
 
-    //3.5.1³õÊ¼»¯ºê½á¹¹Ìå
-    if(initMacroStruct(&pSProgram->SMacro) != 1)
+    //3.5.1åˆå§‹åŒ–å®ç»“æž„ä½“
+    if (initMacroStruct(&pSProgram->SMacro) != 1)
         return -1;
 
     return 1;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºinitMacroStruct(SMacro* pSMacro)
-  º¯Êý¹¦ÄÜ: ³õÊ¼»¯ºê½á¹¹Ìå
-  ÊäÈë²ÎÊý£ºpSMacro   ºê½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitMacroStruct(SMacro* pSMacro)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–å®ç»“æž„ä½“
+  è¾“å…¥å‚æ•°ï¼špSMacro   å®ç»“æž„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initMacroStruct(SMacro* pSMacro)
 {
@@ -75,25 +72,25 @@ int8 initMacroStruct(SMacro* pSMacro)
         return -1;
     }
 
-    //1.ÊÍ·Åºê½á¹¹ÌåÖÐ¿ª±ÙµÄÄÚ´æ
+    //1.é‡Šæ”¾å®ç»“æž„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
     freeMacroData(pSMacro);
 
-    //2.ºê½á¹¹ÌåÖÃ0
+    //2.å®ç»“æž„ä½“ç½®0
     memset(pSMacro, 0, sizeof(SMacro));
 
-    //3.1³õÊ¼»¯×Ô¶¨ÒåºêÁ´±í
-    pSMacro->pDefineList = initList(ORAM_NUM319, ORAM_NUM320);   //³õÊ¼»¯×Ô¶¨ÒåºêÁ´±í
+    //3.1åˆå§‹åŒ–è‡ªå®šä¹‰å®é“¾è¡¨
+    pSMacro->pDefineList = initList(ORAM_NUM319, ORAM_NUM320); //åˆå§‹åŒ–è‡ªå®šä¹‰å®é“¾è¡¨
     if (pSMacro->pDefineList == NULL)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM406);
         return -1;
     }
 
-    //3.2³õÊ¼»¯¼ì²é¾Ö²¿ºê±äÁ¿½á¹¹Ìå
+    //3.2åˆå§‹åŒ–æ£€æŸ¥å±€éƒ¨å®å˜é‡ç»“æž„ä½“
     initLocalVar(&pSMacro->SLocalVarSyntax);
     initLocalVar(&pSMacro->SLocalVarAssign);
 
-    //3.3³õÊ¼»¯¼ì²é¿ÉÖ´ÐÐÕ»
+    //3.3åˆå§‹åŒ–æ£€æŸ¥å¯æ‰§è¡Œæ ˆ
     pSMacro->pEnableStackSyntax = initList(ORAM_NUM304, ORAM_NUM305);
     if (pSMacro->pEnableStackSyntax == NULL)
     {
@@ -102,8 +99,8 @@ int8 initMacroStruct(SMacro* pSMacro)
         return -1;
     }
 
-    //3.4³õÊ¼»¯¸³Öµ¿ÉÖ´ÐÐÕ»
-    pSMacro->pEnableStackAssign = initList(ORAM_NUM307, ORAM_NUM308);   //³õÊ¼»¯¿ÉÖ´ÐÐÕ» ¸³Öµ
+    //3.4åˆå§‹åŒ–èµ‹å€¼å¯æ‰§è¡Œæ ˆ
+    pSMacro->pEnableStackAssign = initList(ORAM_NUM307, ORAM_NUM308); //åˆå§‹åŒ–å¯æ‰§è¡Œæ ˆ èµ‹å€¼
     if (pSMacro->pEnableStackAssign == NULL)
     {
         freeList_2(&(pSMacro->pDefineList), freeDefineData);
@@ -112,87 +109,90 @@ int8 initMacroStruct(SMacro* pSMacro)
         return -1;
     }
 
-    ///if (pChannelConfig->ucMainMacroTablePos == 0) //Èç¹ûÕâÊÇµÚÒ»´Î³öÏÖºê³ÌÐò
+    ///if (pChannelConfig->ucMainMacroTablePos == 0) //å¦‚æžœè¿™æ˜¯ç¬¬ä¸€æ¬¡å‡ºçŽ°å®ç¨‹åº
     //{
-    //	pChannelConfig->ucMainMacroTablePos = getListSize(pChannelConfig->pProgramList);  //¼ÇÂ¼Î»ÖÃ
+    //	pChannelConfig->ucMainMacroTablePos = getListSize(pChannelConfig->pProgramList);  //è®°å½•ä½ç½®
     //}
     return 1;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºvoid initLocalVar(SLocalMacroVar* pSLocalMacroVar)
-  º¯Êý¹¦ÄÜ: ³õÊ¼»¯¾Ö²¿±äÁ¿
-  ÊäÈë²ÎÊý£ºpSMacro   ºê½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid initLocalVar(SLocalMacroVar* pSLocalMacroVar)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–å±€éƒ¨å˜é‡
+  è¾“å…¥å‚æ•°ï¼špSMacro   å®ç»“æž„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void initLocalVar(SLocalMacroVar* pSLocalMacroVar)
 {
     memset(pSLocalMacroVar, 0, sizeof(SLocalMacroVar));
-    pSLocalMacroVar->ulIsNull = 0xFFFFFFFFFFFFFFFF;    //64Î»È«ÖÃ1
+    pSLocalMacroVar->ulIsNull = 0xFFFFFFFFFFFFFFFF; //64ä½å…¨ç½®1
 }
 
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºvoid freeProgramData(SProgram *pData)
-  º¯Êý¹¦ÄÜ: ÊÍ·Å³ÌÐò½á¹¹ÌåÖÐ¿ª±ÙµÄÄÚ´æ
-  ÊäÈë²ÎÊý£ºpSProgram    ³ÌÐò½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid freeProgramData(SProgram *pData)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾ç¨‹åºç»“æž„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+  è¾“å…¥å‚æ•°ï¼špSProgram    ç¨‹åºç»“æž„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
 
-  ±¸    ×¢£º½öÊÍ·Å³ÌÐò½á¹¹ÌåÄÚ²¿¿ª±ÙµÄ¶¯Ì¬ÄÚ´æ
+  å¤‡    æ³¨ï¼šä»…é‡Šæ”¾ç¨‹åºç»“æž„ä½“å†…éƒ¨å¼€è¾Ÿçš„åŠ¨æ€å†…å­˜
 **************************************************/
 void freeProgramData(SProgram* pSProgram)
 {
-    //pSProgramÔÊÐíÎª¿Õ
-    if (pSProgram == NULL)    //²»ÐèÒªÊÍ·Å
+    //pSProgramå…è®¸ä¸ºç©º
+    if (pSProgram == NULL) //ä¸éœ€è¦é‡Šæ”¾
     {
         return;
     }
 
-    //ÊÍ·Åºê½á¹¹ÌåÖÐ¿ª±ÙµÄÄÚ´æ
+    //é‡Šæ”¾å®ç»“æž„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
     freeMacroData(&pSProgram->SMacro);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºvoid freeProgramData(SProgram *pData)
-  º¯Êý¹¦ÄÜ: ÊÍ·Åºê½á¹¹ÌåÖÐ¿ª±ÙµÄÄÚ´æ
-  ÊäÈë²ÎÊý£ºpSMacro  ºê½á¹¹ÌåµØÖ·
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ººê½á¹¹Ìå×ÔÉíÄÚ´æ²»ÊÍ·Å
+  å‡½æ•°åç§°ï¼švoid freeProgramData(SProgram *pData)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾å®ç»“æž„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+  è¾“å…¥å‚æ•°ï¼špSMacro  å®ç»“æž„ä½“åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼šå®ç»“æž„ä½“è‡ªèº«å†…å­˜ä¸é‡Šæ”¾
 **************************************************/
 void freeMacroData(SMacro* pSMacro)
 {
-    //pSMacro²»ÔÊÐíÎª¿Õ
-    if (pSMacro == NULL)    //²»ÐèÒªÊÍ·Å
+    //pSMacroä¸å…è®¸ä¸ºç©º
+    if (pSMacro == NULL) //ä¸éœ€è¦é‡Šæ”¾
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM300);
         return;
     }
 
-    //ÊÍ·Å×Ô¶¨ÒåºêÁ´±í
+    //é‡Šæ”¾è‡ªå®šä¹‰å®é“¾è¡¨
     freeList_2(&pSMacro->pDefineList, freeDefineData);
 
-    //ÊÍ·Å¼ì²éµÄ¿ÉÖ´ÐÐÕ»
-    freeList(&pSMacro->pEnableStackSyntax);//ÂÞÏéçâ241006£º¼ÆËã½á¹¹ÌåÖÐµÄpListµÄÊý¾Ý½ÚµãÖÐÎ´¿ª±ÙÄÚ´æ£¬²»ÐèÒªÓÃfreeList_2()½øÐÐÊÍ·Å
+    //é‡Šæ”¾æ£€æŸ¥çš„å¯æ‰§è¡Œæ ˆ
+    freeList(
+        &pSMacro
+             ->pEnableStackSyntax); //ç½—ç¥¥çŽ®241006ï¼šè®¡ç®—ç»“æž„ä½“ä¸­çš„pListçš„æ•°æ®èŠ‚ç‚¹ä¸­æœªå¼€è¾Ÿå†…å­˜ï¼Œä¸éœ€è¦ç”¨freeList_2()è¿›è¡Œé‡Šæ”¾
     //freeList_2(&pSMacro->pEnableStackSyntax, freeExecutableData);
 
-    //ÊÍ·Å¸³ÖµµÄ¿ÉÖ´ÐÐÕ»
-    freeList(&pSMacro->pEnableStackAssign);//ÂÞÏéçâ241006£º¼ÆËã½á¹¹ÌåÖÐµÄpListµÄÊý¾Ý½ÚµãÖÐÎ´¿ª±ÙÄÚ´æ£¬²»ÐèÒªÓÃfreeList_2()½øÐÐÊÍ·Å
+    //é‡Šæ”¾èµ‹å€¼çš„å¯æ‰§è¡Œæ ˆ
+    freeList(
+        &pSMacro
+             ->pEnableStackAssign); //ç½—ç¥¥çŽ®241006ï¼šè®¡ç®—ç»“æž„ä½“ä¸­çš„pListçš„æ•°æ®èŠ‚ç‚¹ä¸­æœªå¼€è¾Ÿå†…å­˜ï¼Œä¸éœ€è¦ç”¨freeList_2()è¿›è¡Œé‡Šæ”¾
     //freeList_2(&pSMacro->pEnableStackAssign, freeExecutableData);
 }
 
 #if STM32_MODE
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic char* getExecuteFileName()
-  º¯Êý¹¦ÄÜ£ºSTM32Ä£Ê½£¬»ñÈ¡ÒªÔËÐÐµÄÎÄ¼þÃû
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šstatic char* getExecuteFileName()
+  å‡½æ•°åŠŸèƒ½ï¼šSTM32æ¨¡å¼ï¼ŒèŽ·å–è¦è¿è¡Œçš„æ–‡ä»¶å
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 extern u8 page_num;
 static char* getExecuteFileName(uint8 ucChannelNum)
@@ -213,16 +213,14 @@ static char* getExecuteFileName(uint8 ucChannelNum)
 }
 #endif
 
-
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºSList* getProgramList(uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ: »ñÈ¡Ä³¸öÍ¨µÀµÄ³ÌÐò±í
-  ÊäÈë²ÎÊý£ºucChannelNumÍ¨µÀºÅ
+  å‡½æ•°åç§°ï¼šSList* getProgramList(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: èŽ·å–æŸä¸ªé€šé“çš„ç¨‹åºè¡¨
+  è¾“å…¥å‚æ•°ï¼šucChannelNumé€šé“å·
 
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º³ÌÐò±íµØÖ·
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼šç¨‹åºè¡¨åœ°å€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SList* getProgramList(uint8 ucChannelNum)
 {
@@ -235,16 +233,16 @@ SList* getProgramList(uint8 ucChannelNum)
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºSProgram* getCurrentProgram(uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ: »ñÈ¡Ä³¸öÍ¨µÀµ±Ç°³ÌÐò½á¹¹Ìå
-  ÊäÈë²ÎÊý£ºucChannelNumÍ¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º³ÌÐò½á¹¹ÌåµØÖ·
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šSProgram* getCurrentProgram(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: èŽ·å–æŸä¸ªé€šé“å½“å‰ç¨‹åºç»“æž„ä½“
+  è¾“å…¥å‚æ•°ï¼šucChannelNumé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼šç¨‹åºç»“æž„ä½“åœ°å€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SProgram* getCurrentProgram(uint8 ucChannelNum)
 {
-    SProgram* pCurrProgram = NULL;   //µ±Ç°³ÌÐò½á¹¹Ìå
+    SProgram* pCurrProgram = NULL; //å½“å‰ç¨‹åºç»“æž„ä½“
 
     if (ucChannelNum >= CHANNEL_NUM_MAX)
     {
@@ -252,135 +250,40 @@ SProgram* getCurrentProgram(uint8 ucChannelNum)
         return NULL;
     }
 
-    pCurrProgram = FindNodeData(s_pSChannelConfig[ucChannelNum]->pProgramList, 0);  //»ñÈ¡µ±Ç°³ÌÐò½á¹¹Ìå
+    pCurrProgram = FindNodeData(s_pSChannelConfig[ucChannelNum]->pProgramList, 0); //èŽ·å–å½“å‰ç¨‹åºç»“æž„ä½“
     if (pCurrProgram == NULL)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM300);
         return NULL;
     }
     return pCurrProgram;
-
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºSList* initProgramList(uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ£ºÌí¼ÓÖ÷³ÌÐò½Úµã
-  ÊäÈë²ÎÊý£ºpSProgramList    ³ÌÐòÁ´±í
-            cFileName        ÎÄ¼þÃû
-            ucChannelNum     Í¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.½örunButtonAPI()ÖÐµ÷ÓÃ
-            2.ËùÓÐÍ¨µÀ¶¼ÒªÌí¼ÓÖ÷³ÌÐò???
+  å‡½æ•°åç§°ï¼šSList* initProgramList(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ·»åŠ ä¸»ç¨‹åºèŠ‚ç‚¹
+  è¾“å…¥å‚æ•°ï¼špSProgramList    ç¨‹åºé“¾è¡¨
+            cFileName        æ–‡ä»¶å
+            ucChannelNum     é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.ä»…runButtonAPI()ä¸­è°ƒç”¨
+            2.æ‰€æœ‰é€šé“éƒ½è¦æ·»åŠ ä¸»ç¨‹åº???
 
-            È¡Ïû¸Ãº¯ÊýÄÚ²¿¶ÔÍ¨µÀµÄÑ­»·
+            å–æ¶ˆè¯¥å‡½æ•°å†…éƒ¨å¯¹é€šé“çš„å¾ªçŽ¯
 **************************************************/
 int8 addMainProgramNode(uint8 ucChannelNum)
 {
 
     SChannelConfiguration* pSChannelConfig = NULL;
     SList* pSProgramList = NULL;
-    SProgram* pMainProgramNode = NULL;             //Ö÷³ÌÐò½á¹¹ÌåÖ¸Õë
+    SProgram* pMainProgramNode = NULL; //ä¸»ç¨‹åºç»“æž„ä½“æŒ‡é’ˆ
     int8 cRet;
 
-    //1.»ñÈ¡µÚiÍ¨µÀµÄÍ¨µÀ½á¹¹ÌåµØÖ·
+    //1.èŽ·å–ç¬¬ié€šé“çš„é€šé“ç»“æž„ä½“åœ°å€
     pSChannelConfig = getChannelConfig(ucChannelNum);
 
-    //2.»ñÈ¡µÚiÍ¨µÀµÄ³ÌÐòÁ´±íµØÖ·
-    pSProgramList = pSChannelConfig->pProgramList;
-    if (pSProgramList ==NULL )
-    {
-         pSProgramList = initList(ORAM_NUM301, ORAM_NUM302);
-         pSChannelConfig->pProgramList = pSProgramList;
-        if (pSProgramList == NULL)
-        {
-            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-            return -1;
-        }
-    }
-
-    //3.1¿ª±ÙÖ÷³ÌÐò½ÚµãÄÚ´æ
-    pMainProgramNode = mallocGCode(sizeof(SProgram), ORAM_NUM303);
-    if (pMainProgramNode == NULL)
-    {
-        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-        //freeList(&pSProgramList);
-        return -1;
-    }
-    memset(pMainProgramNode, 0, sizeof(SProgram));//¶Ô¿ª±ÙÄÚ´æ½øÐÐ³õÊ¼»¯Ç°£¬ÄÚ´æÒªÖÃ0
-
-    //3.2³õÊ¼»¯³ÌÐò½Úµã
-    if(initProgramData(pMainProgramNode)!=1)
-    {
-        freeProgramData(pMainProgramNode);
-        freeGCode(pMainProgramNode);
-    	parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-        return -1;
-    }
-    //3.3½«³ÌÐò½ÚµãÍ·²åÈëÁ´±í
-    cRet = insertList(pSProgramList, 0, pMainProgramNode, ORAM_NUM302);
-    //²åÈëÁ´±íÊ§°Ü£¬Á¢¼´ÊÍ·ÅÁ´±í
-    if (cRet == FALSE)
-    {
-        freeProgramData(pMainProgramNode);
-        freeGCode(pMainProgramNode);
-        //freeList(&pSProgramList);
-        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-        return -1;
-    }
-
-    //3.4Ð´Èë³ÌÐò½ÚµãµÄÎÄ¼þÃû
-#if STM32_MODE
-    strncpy(pMainProgramNode->cFileName, getExecuteFileName(ucChannelNum),FILENAME_LENGTH_LIMIT);
-    pMainProgramNode->cFileName[FILENAME_LENGTH_LIMIT-1] =0;
-    ///Ô¤Áô½Ó¿Ú
-#else
-    if (MDI_MODE == getRunMode())
-    {
-        strcpy(pMainProgramNode->cFileName, "MDIMUTI");
-    }
-    else
-    {
-        if (ucChannelNum == 0)
-        {
-            g_cName_C0[19] = 0;   //·ÀÖ¹strcpyÔ½½ç
-            strcpy(pMainProgramNode->cFileName, g_cName_C0);
-        }
-        else if (ucChannelNum == 1)
-        {
-            g_cName_C1[19] = 0;
-            strcpy(pMainProgramNode->cFileName, g_cName_C1);
-        }
-    }
-#endif
-    return 1;
-
-}
-
-
-
-/*************************************************
-  º¯ÊýÃû³Æ£ºSList* initProgramList(uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ£ºÌí¼Ó³ÌÐò½Úµã
-  ÊäÈë²ÎÊý£ºpSProgramList    ³ÌÐòÁ´±í
-            cFileName        ÎÄ¼þÃû
-            ucChannelNum     Í¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.ÔÚ´Ë²»¶ÔÐÐºÅÐÅÏ¢£¬¼°±ê¼Ç½øÐÐ¸³Öµ£¨ÔÚ½âÎöÊ±²Å½øÐÐ¸³Öµ£©
-**************************************************/
- int8 addProgramNode( int32 cFileNameVal, uint8 ucChannelNum)
- {
-     SChannelConfiguration* pSChannelConfig = NULL;//G´úÂëÍ¨µÀ½á¹¹ÌåÖ¸Õë
-     SList* pSProgramList = NULL;                    //³ÌÐòÁ´±íÖ¸Õë
-    SProgram* pProgramNode = NULL;             //³ÌÐò½á¹¹ÌåÖ¸Õë
-    int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = { 0 };   //ÎÄ¼þÃû
-    int8 cRet;
-
-    //1.»ñÈ¡µÚiÍ¨µÀµÄÍ¨µÀ½á¹¹ÌåµØÖ·
-    pSChannelConfig = getChannelConfig(ucChannelNum);
-
-    //2.»ñÈ¡µÚiÍ¨µÀµÄ³ÌÐòÁ´±íµØÖ·
+    //2.èŽ·å–ç¬¬ié€šé“çš„ç¨‹åºé“¾è¡¨åœ°å€
     pSProgramList = pSChannelConfig->pProgramList;
     if (pSProgramList == NULL)
     {
@@ -393,16 +296,107 @@ int8 addMainProgramNode(uint8 ucChannelNum)
         }
     }
 
-    //3.¿ª±Ù³ÌÐò½ÚµãÄÚ´æ
+    //3.1å¼€è¾Ÿä¸»ç¨‹åºèŠ‚ç‚¹å†…å­˜
+    pMainProgramNode = mallocGCode(sizeof(SProgram), ORAM_NUM303);
+    if (pMainProgramNode == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        //freeList(&pSProgramList);
+        return -1;
+    }
+    memset(pMainProgramNode, 0, sizeof(SProgram)); //å¯¹å¼€è¾Ÿå†…å­˜è¿›è¡Œåˆå§‹åŒ–å‰ï¼Œå†…å­˜è¦ç½®0
+
+    //3.2åˆå§‹åŒ–ç¨‹åºèŠ‚ç‚¹
+    if (initProgramData(pMainProgramNode) != 1)
+    {
+        freeProgramData(pMainProgramNode);
+        freeGCode(pMainProgramNode);
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        return -1;
+    }
+    //3.3å°†ç¨‹åºèŠ‚ç‚¹å¤´æ’å…¥é“¾è¡¨
+    cRet = insertList(pSProgramList, 0, pMainProgramNode, ORAM_NUM302);
+    //æ’å…¥é“¾è¡¨å¤±è´¥ï¼Œç«‹å³é‡Šæ”¾é“¾è¡¨
+    if (cRet == FALSE)
+    {
+        freeProgramData(pMainProgramNode);
+        freeGCode(pMainProgramNode);
+        //freeList(&pSProgramList);
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        return -1;
+    }
+
+    //3.4å†™å…¥ç¨‹åºèŠ‚ç‚¹çš„æ–‡ä»¶å
+#if STM32_MODE
+    strncpy(pMainProgramNode->cFileName, getExecuteFileName(ucChannelNum), FILENAME_LENGTH_LIMIT);
+    pMainProgramNode->cFileName[FILENAME_LENGTH_LIMIT - 1] = 0;
+    ///é¢„ç•™æŽ¥å£
+#else
+    if (MDI_MODE == getRunMode())
+    {
+        strcpy(pMainProgramNode->cFileName, "MDIMUTI");
+    }
+    else
+    {
+        if (ucChannelNum == 0)
+        {
+            g_cName_C0[19] = 0; //é˜²æ­¢strcpyè¶Šç•Œ
+            strcpy(pMainProgramNode->cFileName, g_cName_C0);
+        }
+        else if (ucChannelNum == 1)
+        {
+            g_cName_C1[19] = 0;
+            strcpy(pMainProgramNode->cFileName, g_cName_C1);
+        }
+    }
+#endif
+    return 1;
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šSList* initProgramList(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ·»åŠ ç¨‹åºèŠ‚ç‚¹
+  è¾“å…¥å‚æ•°ï¼špSProgramList    ç¨‹åºé“¾è¡¨
+            cFileName        æ–‡ä»¶å
+            ucChannelNum     é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.åœ¨æ­¤ä¸å¯¹è¡Œå·ä¿¡æ¯ï¼ŒåŠæ ‡è®°è¿›è¡Œèµ‹å€¼ï¼ˆåœ¨è§£æžæ—¶æ‰è¿›è¡Œèµ‹å€¼ï¼‰
+**************************************************/
+int8 addProgramNode(int32 cFileNameVal, uint8 ucChannelNum)
+{
+    SChannelConfiguration* pSChannelConfig = NULL; //Gä»£ç é€šé“ç»“æž„ä½“æŒ‡é’ˆ
+    SList* pSProgramList = NULL;                   //ç¨‹åºé“¾è¡¨æŒ‡é’ˆ
+    SProgram* pProgramNode = NULL;                 //ç¨‹åºç»“æž„ä½“æŒ‡é’ˆ
+    int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = {0}; //æ–‡ä»¶å
+    int8 cRet;
+
+    //1.èŽ·å–ç¬¬ié€šé“çš„é€šé“ç»“æž„ä½“åœ°å€
+    pSChannelConfig = getChannelConfig(ucChannelNum);
+
+    //2.èŽ·å–ç¬¬ié€šé“çš„ç¨‹åºé“¾è¡¨åœ°å€
+    pSProgramList = pSChannelConfig->pProgramList;
+    if (pSProgramList == NULL)
+    {
+        pSProgramList = initList(ORAM_NUM301, ORAM_NUM302);
+        pSChannelConfig->pProgramList = pSProgramList;
+        if (pSProgramList == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return -1;
+        }
+    }
+
+    //3.å¼€è¾Ÿç¨‹åºèŠ‚ç‚¹å†…å­˜
     pProgramNode = mallocGCode(sizeof(SProgram), ORAM_NUM303);
     if (pProgramNode == NULL)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM406);
         return -1;
     }
-    memset(pProgramNode, 0, sizeof(SProgram));//¶Ô¿ª±ÙÄÚ´æ½øÐÐ³õÊ¼»¯Ç°£¬ÄÚ´æÒªÖÃ0
+    memset(pProgramNode, 0, sizeof(SProgram)); //å¯¹å¼€è¾Ÿå†…å­˜è¿›è¡Œåˆå§‹åŒ–å‰ï¼Œå†…å­˜è¦ç½®0
 
-    //4.³õÊ¼»¯³ÌÐò½Úµã
+    //4.åˆå§‹åŒ–ç¨‹åºèŠ‚ç‚¹
     if (initProgramData(pProgramNode) != 1)
     {
         freeProgramData(pProgramNode);
@@ -411,9 +405,9 @@ int8 addMainProgramNode(uint8 ucChannelNum)
         return -1;
     }
 
-    //5.½«³ÌÐò½ÚµãÍ·²åÈëÁ´±í
+    //5.å°†ç¨‹åºèŠ‚ç‚¹å¤´æ’å…¥é“¾è¡¨
     cRet = insertList(pSProgramList, 0, pProgramNode, ORAM_NUM302);
-    //Èô²åÈëÁ´±íÊ§°Ü
+    //è‹¥æ’å…¥é“¾è¡¨å¤±è´¥
     if (cRet == FALSE)
     {
 
@@ -423,22 +417,20 @@ int8 addMainProgramNode(uint8 ucChannelNum)
         return -1;
     }
 
-    //6.½«ÎÄ¼þÃûµÄÊýÖµ×ªÎª×Ö·û´®
-    convertProgramName(cFileNameVal, cTempArr);   //ÊýÖµ×ª×Ö·û´® »ñÈ¡ÎÄ¼þÃû
+    //6.å°†æ–‡ä»¶åçš„æ•°å€¼è½¬ä¸ºå­—ç¬¦ä¸²
+    convertProgramName(cFileNameVal, cTempArr); //æ•°å€¼è½¬å­—ç¬¦ä¸² èŽ·å–æ–‡ä»¶å
 
-
-    //7.Ð´Èë³ÌÐò½ÚµãµÄÎÄ¼þÃû
-    strncpy(pProgramNode->cFileName, cTempArr,FILENAME_LENGTH_LIMIT);    //¸Ä±äµ÷ÓÃµÄÖ÷³ÌÐò
-    pProgramNode->cFileName[FILENAME_LENGTH_LIMIT-1] =0;
+    //7.å†™å…¥ç¨‹åºèŠ‚ç‚¹çš„æ–‡ä»¶å
+    strncpy(pProgramNode->cFileName, cTempArr, FILENAME_LENGTH_LIMIT); //æ”¹å˜è°ƒç”¨çš„ä¸»ç¨‹åº
+    pProgramNode->cFileName[FILENAME_LENGTH_LIMIT - 1] = 0;
     return 1;
-        
 }
 
 SProgram* createAProgramStruct()
 {
     SProgram* pSProgram = NULL;
 
-    pSProgram = mallocGCode(sizeof(SProgram), ORAM_NUM303);  //·ÖÅäÄÚ´æ
+    pSProgram = mallocGCode(sizeof(SProgram), ORAM_NUM303); //åˆ†é…å†…å­˜
     if (pSProgram == NULL)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM406);
@@ -446,80 +438,80 @@ SProgram* createAProgramStruct()
     }
     memset(pSProgram, 0, sizeof(SProgram));
 
-    if(initProgramData(pSProgram) != 1)
+    if (initProgramData(pSProgram) != 1)
     {
-    	freeProgramData(pSProgram);
-		freeGCode(pSProgram);
-    	return NULL;
+        freeProgramData(pSProgram);
+        freeGCode(pSProgram);
+        return NULL;
     }
 
     return pSProgram;
 }
 
-//»ñÈ¡µ±Ç°³ÌÐò½á¹¹Ìå
+//èŽ·å–å½“å‰ç¨‹åºç»“æž„ä½“
 SProgram* getCurrProgramStruct(uint8 ucChannelNum)
 {
-	if(ucChannelNum >= CHANNEL_NUM_MAX)
-	return NULL;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+        return NULL;
     SChannelConfiguration* pSGCodeChannelConfig = getChannelConfig(ucChannelNum);
-    if(pSGCodeChannelConfig == NULL)
-    return NULL;
+    if (pSGCodeChannelConfig == NULL)
+        return NULL;
     SProgram* pCurrProgram = FindNodeData(pSGCodeChannelConfig->pProgramList, 0);
-    if(pCurrProgram == NULL)
-    return NULL;
+    if (pCurrProgram == NULL)
+        return NULL;
     return pCurrProgram;
 }
 
-
-//µ±Ç°³ÌÐòÊÇ·ñÎªÖ÷³ÌÐò
+//å½“å‰ç¨‹åºæ˜¯å¦ä¸ºä¸»ç¨‹åº
 int8 isMainProgram(uint8 ucChannelNum)
 {
     SList* pSProgramList = NULL;
     SProgram* pSCurrProgram = NULL;
     pSProgramList = getProgramList(ucChannelNum);
 
-    //×Ó³ÌÐò
-    if (pSProgramList->cSize>1)
+    //å­ç¨‹åº
+    if (pSProgramList->cSize > 1)
     {
         return FALSE;
     }
-    //Ö÷³ÌÐò
+    //ä¸»ç¨‹åº
     else
     {
         return TRUE;
     }
-} 
+}
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºvoid convertProgramName(int32 nVal, int8 cArr[FILENAME_MAX_LENGTH])
-  º¯Êý¹¦ÄÜ: ´«ÈëÊýÖµ£¬·µ»ØÎÄ¼þÃû ÀýÈçÊäÈë1  ·µ»Ø"0001"µÄ×Ö·û´®
-  ÊäÈë²ÎÊý£º
+  å‡½æ•°åç§°ï¼švoid convertProgramName(int32 nVal, int8 cArr[FILENAME_MAX_LENGTH])
+  å‡½æ•°åŠŸèƒ½: ä¼ å…¥æ•°å€¼ï¼Œè¿”å›žæ–‡ä»¶å ä¾‹å¦‚è¾“å…¥1  è¿”å›ž"0001"çš„å­—ç¬¦ä¸²
+  è¾“å…¥å‚æ•°ï¼š
 
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void convertProgramName(int32 nVal, int8 cArr[TEMP_FILENAME_MAX_LENGTH])
 {
-    int8 cTempArray[TEMP_FILENAME_MAX_LENGTH] = { 0 };
-    int8 cStrLen = 0;        //×Ö·û´®³¤¶È
+    int8 cTempArray[TEMP_FILENAME_MAX_LENGTH] = {0};
+    int8 cStrLen = 0; //å­—ç¬¦ä¸²é•¿åº¦
     int8 cIdx;
-    int8 MaxIndex = 4 - 1;	//Ä¿Ç°ÎÄ¼þÃû×î´óÎªËÄ¸ö×Ö·û,Òò´Ë×î´óÊý×éÏÂ±êÎªËÄ¼õÒ»
-    itoaNC(nVal, cTempArray, 10);  //ÕûÐÍ×ª×Ö·û´®
+    int8 MaxIndex = 4 - 1;        //ç›®å‰æ–‡ä»¶åæœ€å¤§ä¸ºå››ä¸ªå­—ç¬¦,å› æ­¤æœ€å¤§æ•°ç»„ä¸‹æ ‡ä¸ºå››å‡ä¸€
+    itoaNC(nVal, cTempArray, 10); //æ•´åž‹è½¬å­—ç¬¦ä¸²
 
     cStrLen = (int8)strlen(cTempArray) - 1;
 
-    for (cIdx = MaxIndex; cStrLen >= 0 && cIdx >= 0; cStrLen--, cIdx--)	//½«ÁÙÊ±Êý×éµÄ×Ö·û´®ÒÆ¸øÄ¿±ê×Ö·û´®	//ÐÞÕý²¿·ÖÎÄ¼þÃû×ª»»Îª×Ö·û´®´íÎóµÄBUG	//³ÂÃô´Ï	2023/9/3
+    for (cIdx = MaxIndex; cStrLen >= 0 && cIdx >= 0; cStrLen--,
+        cIdx--) //å°†ä¸´æ—¶æ•°ç»„çš„å­—ç¬¦ä¸²ç§»ç»™ç›®æ ‡å­—ç¬¦ä¸²	//ä¿®æ­£éƒ¨åˆ†æ–‡ä»¶åè½¬æ¢ä¸ºå­—ç¬¦ä¸²é”™è¯¯çš„BUG	//é™ˆæ•èª	2023/9/3
     {
         cArr[cIdx] = cTempArray[cStrLen];
     }
-    cIdx = 0;	//Ë÷Òý¸´Î»
-    cStrLen = (int8)strlen(cTempArray) - 1;	//×î´óË÷Òý¸´Î»
-    while (cIdx < MaxIndex - cStrLen)	//Ä¿±ê×Ö·û´®Ç°Ãæ²¹Áã
+    cIdx = 0;                               //ç´¢å¼•å¤ä½
+    cStrLen = (int8)strlen(cTempArray) - 1; //æœ€å¤§ç´¢å¼•å¤ä½
+    while (cIdx < MaxIndex - cStrLen)       //ç›®æ ‡å­—ç¬¦ä¸²å‰é¢è¡¥é›¶
     {
         cArr[cIdx++] = '0';
     }
-#if STM32_MODE	//STM32Ä£Ê½ÏÂ£¬×Ö·û´®Í·¼ÓO,×Ö·û´®Î²¼Ó.TXT	//³ÂÃô´Ï	2023/9/3
+#if STM32_MODE //STM32æ¨¡å¼ä¸‹ï¼Œå­—ç¬¦ä¸²å¤´åŠ O,å­—ç¬¦ä¸²å°¾åŠ .TXT	//é™ˆæ•èª	2023/9/3
     cIdx = MaxIndex;
     while (cIdx >= 0)
     {
@@ -533,5 +525,5 @@ void convertProgramName(int32 nVal, int8 cArr[TEMP_FILENAME_MAX_LENGTH])
     cArr[++cIdx] = 'X';
     cArr[++cIdx] = 'T';
 #endif
-    cArr[TEMP_FILENAME_MAX_LENGTH - 1] = '\0';	//½«Ä©Î²ÐÞÕýÎª'/0'½áÊø·û	//³ÂÃô´Ï	2023/9/3
+    cArr[TEMP_FILENAME_MAX_LENGTH - 1] = '\0'; //å°†æœ«å°¾ä¿®æ­£ä¸º'/0'ç»“æŸç¬¦	//é™ˆæ•èª	2023/9/3
 }

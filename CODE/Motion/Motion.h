@@ -7,111 +7,109 @@
 #include "Config.h"
 #include "G1.h"
 
-
-
 #if !STM32_MODE
 
-#define HANDWHEEL_DIR	1
-#define HANDWHEEL_DELTA	50
+#define HANDWHEEL_DIR 1
+#define HANDWHEEL_DELTA 50
 
 #endif // HANDWHEEL_SIMULATION
 
-#define HANWHEELSIMULA_OFF		0		//ÊÖÂÖÄ£Äâ¹Ø
-#define HANWHEELSIMULA_BUILDING	1		//ÊÖÂÖÄ£ÄâÕıÔÚ½¨Á¢
-#define HANWHEELSIMULA_ON		2		//ÊÖÂÖÄ£Äâ¿ª
-
+#define HANWHEELSIMULA_OFF 0      //æ‰‹è½®æ¨¡æ‹Ÿå…³
+#define HANWHEELSIMULA_BUILDING 1 //æ‰‹è½®æ¨¡æ‹Ÿæ­£åœ¨å»ºç«‹
+#define HANWHEELSIMULA_ON 2       //æ‰‹è½®æ¨¡æ‹Ÿå¼€
 
 //extern struct SInterpolationPre g_SPreProcess;
 
-//²å²¹³õÊ¼»¯
+//æ’è¡¥åˆå§‹åŒ–
 bool interpolationInit(struct SInterpolationPre* pSPreProcess);
 
-//²å²¹³õÊ¼»¯£¨¼ÓÔØÏµÍ³²ÎÊıÖ®ºó£©  
+//æ’è¡¥åˆå§‹åŒ–ï¼ˆåŠ è½½ç³»ç»Ÿå‚æ•°ä¹‹åï¼‰
 int8 interpolationInitAfterLoad(struct _SRun* pSRun, struct SInterpolationPre* pSPreProcess);
 
-//ÈíÏŞÎ»º¯Êı£¨Íâ¹Ò£©
+//è½¯é™ä½å‡½æ•°ï¼ˆå¤–æŒ‚ï¼‰
 int8 softLimitForHandWheel(uint8 ucChannelNum);
 
-//ÈíÏŞÎ»º¯Êı£¨ÄÚÇ¶£©
+//è½¯é™ä½å‡½æ•°ï¼ˆå†…åµŒï¼‰
 //int8 softLimit(struct SChannel* pSChannel, SPointDouble SStartPoint, SPointDouble SEndPoint, SPointDouble SMaxVal, SPointDouble SMinVal);
-int8 softLimit(struct SChannel *pSChannel, SPointDouble SStartPoint, SPointDouble SEndPoint, SPointDouble SMaxVal, SPointDouble SMinVal, uint8 ucAxis);
+int8 softLimit(struct SChannel* pSChannel, SPointDouble SStartPoint, SPointDouble SEndPoint, SPointDouble SMaxVal,
+               SPointDouble SMinVal, uint8 ucAxis);
 #if ENCODER_MODE
-//Çå³ıÓëÊÖÂÖÏà¹ØµÄ²ÎÊı
+//æ¸…é™¤ä¸æ‰‹è½®ç›¸å…³çš„å‚æ•°
 void clearHandWheelPara(struct SChannel* pSChannel);
 #endif
 
-//ÊÍ·ÅÉÏÒ»¸öÖ¸ÁîµÄÖáÕ¼ÓÃ
+//é‡Šæ”¾ä¸Šä¸€ä¸ªæŒ‡ä»¤çš„è½´å ç”¨
 int8 releaseLastCommandAxis(struct SInterpolationPre* pSPreprocess);
 
-//Çå¿ÕÂö³åÔöÁ¿»º´æÇø
+//æ¸…ç©ºè„‰å†²å¢é‡ç¼“å­˜åŒº
 void initSRunPulseBuf(struct _SRun* pSRun, int8 cArrayNumMap);
 
-////»ñÈ¡Ïà¶Ô×ø±ê
+////è·å–ç›¸å¯¹åæ ‡
 //SPointDouble getRelaPoint();
 
-//ÀíÂÛ¾ø¶Ô×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-bool outPutAbsPoint(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus);
+//ç†è®ºç»å¯¹åæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+bool outPutAbsPoint(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap,
+                    double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus);
 
-//¼ÆËãÖØ×°ÔØÖµ ºÍ ±È½ÏÖµ ±£´æµ½Êı×éÖĞ
+//è®¡ç®—é‡è£…è½½å€¼ å’Œ æ¯”è¾ƒå€¼ ä¿å­˜åˆ°æ•°ç»„ä¸­
 void calculatePWMValue(struct _SRun* pSRun, const uint8* ucAxisMap, const uint8* ucPWMAxisMap, bool isCompFlag);
 
-//¼ÆËãÂö³åÊı²¢¼ì²é·¶Î§
+//è®¡ç®—è„‰å†²æ•°å¹¶æ£€æŸ¥èŒƒå›´
 int16 calcPulseWithCheck(double dSpeed, double dPulseToMm, int16* pSpindlePulse);
 
-//ÅĞ¶ÏÍ¨µÀÖĞÊÇ·ñÊÇÖá·½Ïò¸Ä±ä
+//åˆ¤æ–­é€šé“ä¸­æ˜¯å¦æ˜¯è½´æ–¹å‘æ”¹å˜
 bool isMotionChangeDirection(uint8 ucChannelNum);
 
-//¶ÁÈ¡ÊÖÂÖµÄ·½Ïò  ×ªËÙ
-int8 handWheelSpeedTest(struct SChannel *pSChannel);
+//è¯»å–æ‰‹è½®çš„æ–¹å‘  è½¬é€Ÿ
+int8 handWheelSpeedTest(struct SChannel* pSChannel);
 
-//³õÊ¼»¯²å²¹Ô¤´¦Àí½á¹¹Ìå  (´Óµ¶²¹)
+//åˆå§‹åŒ–æ’è¡¥é¢„å¤„ç†ç»“æ„ä½“  (ä»åˆ€è¡¥)
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 int8 judgeCanMoveBack(struct SToolCompensation* pSToolCompPointer);
 #endif
-int8 initInterpStructByTool(struct SToolCompensation* pSToolCompPointer, struct SInterpolationPre* pSPrePointer, int8 cInterpDir);
+int8 initInterpStructByTool(struct SToolCompensation* pSToolCompPointer, struct SInterpolationPre* pSPrePointer,
+                            int8 cInterpDir);
 
-//²å²¹Ô¤´¦Àí
+//æ’è¡¥é¢„å¤„ç†
 int8 interpolationPre(struct SInterpolationPre* pSPreProcess);
 
-//»Ö¸´¼Ó¹¤º¯Êı
+//æ¢å¤åŠ å·¥å‡½æ•°
 void recoveryToRun(struct SG1* pSG1Pointer);
 
-//µ¥Öá¼õËÙÍ£³õÊ¼»¯
-int8 singleAxisSlowDown(struct SSingleAxis* pSSingleAxisPointer, struct _SRun* pSRun, uint8* ucMapArray, G0_SIGN_TYPE* currentSign);
+//å•è½´å‡é€Ÿåœåˆå§‹åŒ–
+int8 singleAxisSlowDown(struct SSingleAxis* pSSingleAxisPointer, struct _SRun* pSRun, uint8* ucMapArray,
+                        G0_SIGN_TYPE* currentSign);
 
-//µ¥Öá¼õËÙµ½ÈíÏŞÎ»³õÊ¼»¯
-int8 singleAxisToLimit(struct SSingleAxis* pSSingleAxisPointer, struct _SRun* pSRun, uint8* ucMapArray, G0_SIGN_TYPE* currentSign);
+//å•è½´å‡é€Ÿåˆ°è½¯é™ä½åˆå§‹åŒ–
+int8 singleAxisToLimit(struct SSingleAxis* pSSingleAxisPointer, struct _SRun* pSRun, uint8* ucMapArray,
+                       G0_SIGN_TYPE* currentSign);
 
-//µ¥Öá¼õËÙÍ£Ñ­»·³õÊ¼»¯
+//å•è½´å‡é€Ÿåœå¾ªç¯åˆå§‹åŒ–
 int8 singleAxisSlowDownLoop(struct SG0* pSG0Pointer, int nAxisNum);
 
-//Í£Ö¹ÔËĞĞÇĞ»»µ½IDLE
+//åœæ­¢è¿è¡Œåˆ‡æ¢åˆ°IDLE
 //int8 channelStopToIDLE(struct SChannel* pSChannel, bool bStopSpindle);
 int8 channelStopToIDLE(struct SChannel* pSChannel);
 
-//¸´Î»ÔË¶¯
+//å¤ä½è¿åŠ¨
 void resetProgram(struct SChannel* pSChannel);
 
-//±¨¾¯ºóÖáÍ£º¯Êı
+//æŠ¥è­¦åè½´åœå‡½æ•°
 void stopAxisAfterError(struct SChannel* pSChannel);
 
-//±£´æÔİÍ£µã
+//ä¿å­˜æš‚åœç‚¹
 int8 savePausePoint(struct SInterpolationPre* pSPreProcess);
 
-//¶ÏĞ¼¹¦ÄÜ
+//æ–­å±‘åŠŸèƒ½
 int8 ChipBreak(struct SChannel* pSChannel);
 
-/* Óà³Ì»ØĞ´ºóµ÷ÓÃ£ºÖ÷ÖáÈÔÔÚÍ£Ö¹Ê±ÑÓºó·¢²¼ÔİÍ££¬ÊÕÎ²ºó±£´æÔİÍ£µã¡£ */
+//å¤„ç†ç³»ç»Ÿæš‚åœ
 void handleSystemPause(struct SChannel* pSChannel);
 
-//ÖĞ¶Ï·şÎñº¯Êı
-void IRQHandler(struct SChannel* pSChannel);//ÖĞ¶Ï·şÎñº¯Êı
+//ä¸­æ–­æœåŠ¡å‡½æ•°
+void IRQHandler(struct SChannel* pSChannel); //ä¸­æ–­æœåŠ¡å‡½æ•°
 
-//±¨¾¯ºó½ø¸øÖá¼°Ö÷ÖáÍ£Ö¹
+//æŠ¥è­¦åè¿›ç»™è½´åŠä¸»è½´åœæ­¢
 void AxisStopAfterError(struct SChannel* pSChannel);
 
-
-
-
-
-#endif 
+#endif

@@ -2,174 +2,167 @@
 #define __ERROR_COMPENSATION_H
 #include "common.h"
 
-//VS Âİ¾à²¹³¥²âÊÔ,Ä£Äâ¼ÓÔØFLASH
+//VS èºè·è¡¥å¿æµ‹è¯•,æ¨¡æ‹ŸåŠ è½½FLASH
 #define SCREWCOMPTESTCODE 0
-//Âö³å´òÓ¡
+//è„‰å†²æ‰“å°
 #define PULSESUM_PRINT 0
-//²¹³¥¾ø¶ÔÖµ´òÓ¡
+//è¡¥å¿ç»å¯¹å€¼æ‰“å°
 #define ABSCOMPVAL_PRINT 0
 
+#define NO_SCREW_COMP 0          //æ²¡æœ‰è¡¥å¿
+#define SCREW_AND_REVCLEARANCE 1 //èºè·è¯¯å·®è¡¥å¿+ åå‘é—´éš™è¡¥å¿
+#define TWOWAY_SCREW_COMP 2      //åŒå‘èºè·è¯¯å·®è¡¥å¿
+//èºè·è¡¥å¿åŠŸèƒ½é€‰æ‹©
+#define ERROR_COMP_TYPE NO_SCREW_COMP //è¡¥å¿ç±»å‹ 0ï¼šæ²¡æœ‰è¡¥å¿  1ï¼š èºè·è¯¯å·®è¡¥å¿+ åå‘é—´éš™è¡¥å¿  2ï¼šåŒå‘èºè·è¯¯å·®è¡¥å¿
 
-#define NO_SCREW_COMP			0	//Ã»ÓĞ²¹³¥
-#define SCREW_AND_REVCLEARANCE	1	//Âİ¾àÎó²î²¹³¥+ ·´Ïò¼äÏ¶²¹³¥
-#define TWOWAY_SCREW_COMP		2	//Ë«ÏòÂİ¾àÎó²î²¹³¥
-//Âİ¾à²¹³¥¹¦ÄÜÑ¡Ôñ
-#define ERROR_COMP_TYPE NO_SCREW_COMP //²¹³¥ÀàĞÍ 0£ºÃ»ÓĞ²¹³¥  1£º Âİ¾àÎó²î²¹³¥+ ·´Ïò¼äÏ¶²¹³¥  2£ºË«ÏòÂİ¾àÎó²î²¹³¥
+//çŠ¶æ€å®å®šä¹‰
+#define ERROR_COMPENSATION_INIT 0   //åˆå§‹é˜¶æ®µ éœ€è¦ç»™å®šæ–¹å‘
+#define ERROR_COMPENSATION_OFF 1    //åå‘è¯¯å·®è¡¥å¿å…³é—­
+#define ERROR_COMPENSATION_ON 2     //åå‘è¯¯å·®è¡¥å¿å¼€å¯
+#define ERROR_COMPENSATION_MODIFY 3 //é‡æ–°è®¾ç½®åå‘è¯¯å·®æˆ–é€Ÿåº¦å‚æ•°å å¾…currentTå›åˆ°0æ—¶ï¼Œæ‰èƒ½é‡æ–°è§„åˆ’ ä½¿ç”¨æ–°çš„è¡¥å¿è·ç¦»
 
-
-
-//×´Ì¬ºê¶¨Òå
-#define ERROR_COMPENSATION_INIT     0 //³õÊ¼½×¶Î ĞèÒª¸ø¶¨·½Ïò
-#define ERROR_COMPENSATION_OFF		1 //·´ÏòÎó²î²¹³¥¹Ø±Õ
-#define ERROR_COMPENSATION_ON		2 //·´ÏòÎó²î²¹³¥¿ªÆô
-#define ERROR_COMPENSATION_MODIFY	3 //ÖØĞÂÉèÖÃ·´ÏòÎó²î»òËÙ¶È²ÎÊıºó ´ıcurrentT»Øµ½0Ê±£¬²ÅÄÜÖØĞÂ¹æ»® Ê¹ÓÃĞÂµÄ²¹³¥¾àÀë
-
-
-typedef struct    // ·´Ïò¼äÏ¶Îó²î²¹³¥½á¹¹Ìå
+typedef struct // åå‘é—´éš™è¯¯å·®è¡¥å¿ç»“æ„ä½“
 {
-	uint8 ucStatus;// ×´Ì¬   
-	int8 cCurrentDir; // µ±Ç°·½Ïò  Ê¹ÓÃÉÏ¸öÖÜÆÚµÄpulseÖµ²»ÄÜ×¼È·µÄÖªµÀ·½Ïò  ĞèÒª¼ÇÂ¼
-	int8 cDir;        // ·´Ïò¼äÏ¶·½Ïò   Óë»ØÁã·½ÏòÓĞ¹Ø
-	double dCurDist; //µ±Ç°ÒÑ²¹³¥Öµ
-	struct SPlan SPlanData;//ËÙ¶È¹æ»®½á¹¹Ìå
-}SRevClearanceComp;
+    uint8 ucStatus;         // çŠ¶æ€
+    int8 cCurrentDir;       // å½“å‰æ–¹å‘  ä½¿ç”¨ä¸Šä¸ªå‘¨æœŸçš„pulseå€¼ä¸èƒ½å‡†ç¡®çš„çŸ¥é“æ–¹å‘  éœ€è¦è®°å½•
+    int8 cDir;              // åå‘é—´éš™æ–¹å‘   ä¸å›é›¶æ–¹å‘æœ‰å…³
+    double dCurDist;        //å½“å‰å·²è¡¥å¿å€¼
+    struct SPlan SPlanData; //é€Ÿåº¦è§„åˆ’ç»“æ„ä½“
+} SRevClearanceComp;
 
-
-
-
-//³õÊ¼»¯µ¥Öá¹Ì¶¨²ÎÊı
+//åˆå§‹åŒ–å•è½´å›ºå®šå‚æ•°
 int8 initAxisRevData(SRevClearanceComp* pSRevClearanceComp);
 
-//¸üĞÂµ¥Öá·´Ïò¼äÏ¶²¹³¥µÄËÙ¶È¹æ»®£¨ÓÃÏµÍ³²ÎÊı£©
+//æ›´æ–°å•è½´åå‘é—´éš™è¡¥å¿çš„é€Ÿåº¦è§„åˆ’ï¼ˆç”¨ç³»ç»Ÿå‚æ•°ï¼‰
 int8 updateSingleAxisRevPlan(uint8 ucPhysicalAxis);
 
-//³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥  Ê×´Î³õÊ¼»¯µÄ·½Ïò£ºÓë»ØÁã·½ÏòÓĞ¹Ø
+//åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿  é¦–æ¬¡åˆå§‹åŒ–çš„æ–¹å‘ï¼šä¸å›é›¶æ–¹å‘æœ‰å…³
 int8 initSingleAxisRev(uint8 ucPhysicalAxis, int8 cDir);
 
-//Ê¹ÄÜ·´Ïò¼äÏ¶²¹³¥
+//ä½¿èƒ½åå‘é—´éš™è¡¥å¿
 int8 revCompEnabled(uint8 ucPhysicalAxis, bool bEnable);
-/*******************************·´Ïò¼äÏ¶APIº¯Êı*************************************/
+/*******************************åå‘é—´éš™APIå‡½æ•°*************************************/
 
-//³õÊ¼»¯·´ÏòÎó²î²¹³¥ 
+//åˆå§‹åŒ–åå‘è¯¯å·®è¡¥å¿
 int8 initAxisRevDataAPI();
 
-//Ê¹ÄÜ·´Ïò¼äÏ¶²¹³¥
-int8 revCompEnabledAPI(uint8 ucChannelNum, uint8 ucAxis, bool bEnable);//»ØÁãÇ°±ØĞë¹Ø±ÕÊ¹ÄÜ
+//ä½¿èƒ½åå‘é—´éš™è¡¥å¿
+int8 revCompEnabledAPI(uint8 ucChannelNum, uint8 ucAxis, bool bEnable); //å›é›¶å‰å¿…é¡»å…³é—­ä½¿èƒ½
 
-//»ØÁãºó  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥½Ó¿Úº¯Êı
+//å›é›¶å  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿æ¥å£å‡½æ•°
 int8 initRevCompAfterHomeAPI(uint8 ucChannelNum, uint8 ucAxis);
 
-//¾àÀë²ÎÊı±à¼­ºó  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥½Ó¿Úº¯Êı
+//è·ç¦»å‚æ•°ç¼–è¾‘å  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿æ¥å£å‡½æ•°
 int8 initRevCompAfterDistEditedAPI(uint8 ucPhysicalAxis);
 
-//³õÊ¼»¯£¨ËùÓĞ£©ÎïÀíÖá·´ÏòÎó²îÑ­»·½Ó¿Ú
+//åˆå§‹åŒ–ï¼ˆæ‰€æœ‰ï¼‰ç‰©ç†è½´åå‘è¯¯å·®å¾ªç¯æ¥å£
 int8 initSingleAxisRevLoopAPI();
 
-// zxr: Í£Ö¹Ê±±£³Ö²¹³¥½ø¶È£¬µÈ´ıĞÂµÄÔË¶¯·½Ïò
+// zxr: åœæ­¢æ—¶ä¿æŒè¡¥å¿è¿›åº¦ï¼Œç­‰å¾…æ–°çš„è¿åŠ¨æ–¹å‘
 void holdRevCompensationAPI(uint8 ucPhysicalAxis);
 
-//»ñÈ¡ÎïÀíÖá²¹³¥Öµ
+//è·å–ç‰©ç†è½´è¡¥å¿å€¼
 int16 getCompensationPulseAPI(uint8 ucPhysicalAxis, int8 cDir);
 
-//Ö»¶Á¼ì²éÎïÀíÖá·´Ïò¼äÏ¶²¹³¥¹æ»®ÊÇ·ñÍê³É
+//åªè¯»æ£€æŸ¥ç‰©ç†è½´åå‘é—´éš™è¡¥å¿è§„åˆ’æ˜¯å¦å®Œæˆ
 bool isRevCompFinishedAPI(uint8 ucPhysicalAxis);
 
-
-
-/*******************************Âİ¾à²¹³¥*************************************/
+/*******************************èºè·è¡¥å¿*************************************/
 
 typedef struct
 {
-	bool bEnabled;		//µ±Ç°×´Ì¬   
-	int16 sCurSeg;		//µ±Ç°Çø¼äºÅÂë
-	int8 cCurError;		//µ±Ç°Çø¼äÂİ¾àÎó²î (um) 
-	double dDeltaError;	//ÒÆ¶¯1mmĞèÒª²¹³¥µÄÖµ£¨um)  Âİ¾àÎó²î/Âİ¾àÇø¼ä³¤¶È
-	double dRecorder;	//¼ÇÂ¼Æ÷ ¼ÇÂ¼µ±Ç°Î´Êä³ö»ò¶àÊä³öµÄÂö³å
-}SScrewComp;
+    bool bEnabled;      //å½“å‰çŠ¶æ€
+    int16 sCurSeg;      //å½“å‰åŒºé—´å·ç 
+    int8 cCurError;     //å½“å‰åŒºé—´èºè·è¯¯å·® (um)
+    double dDeltaError; //ç§»åŠ¨1mméœ€è¦è¡¥å¿çš„å€¼ï¼ˆum)  èºè·è¯¯å·®/èºè·åŒºé—´é•¿åº¦
+    double dRecorder;   //è®°å½•å™¨ è®°å½•å½“å‰æœªè¾“å‡ºæˆ–å¤šè¾“å‡ºçš„è„‰å†²
+} SScrewComp;
 
-int8 screwCompDisableAPI(uint8 ucChannelNum,uint8 ucAxis);//È¡Ïûµ¥±íÂİ¾àÎó²î²¹³¥   2023.3.24 ÖìÎÈÖĞ
+int8 screwCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis); //å–æ¶ˆå•è¡¨èºè·è¯¯å·®è¡¥å¿   2023.3.24 æœ±ç¨³ä¸­
 
-int8 initScrewComp(uint8 ucPhysicalAxis); // ³õÊ¼»¯£¬²¢¿ªÊ¼Âİ¾à²¹³¥
+int8 initScrewComp(uint8 ucPhysicalAxis); // åˆå§‹åŒ–ï¼Œå¹¶å¼€å§‹èºè·è¡¥å¿
 
-int8 outPutAbsPointWithScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus);
+int8 outPutAbsPointWithScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap,
+                                 double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus);
 
-double outPutAbsPointWithScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap, double dPulseToMm);
+double outPutAbsPointWithScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap,
+                                        double dPulseToMm);
 
-
-/*******************************Âİ¾à²¹³¥*************************************/
-#if 0  // ÏµÍ³²ÎÊı
-bool bBilateralScrewEnable[AXIS_PHYSICS_NUM_MAX];	//Ë«ÏòÂİ¾àÎó²îÊ¹ÄÜÎ»
-uint8 ucBilateralScrewGap[AXIS_PHYSICS_NUM_MAX];		//Âİ¾à²¹³¥¼ä¸ô  mm
-int8 cAheadScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //ÕıÏò²¹³¥Öµ  um   ×ßÒ»¸ö¼ä¸ôĞèÒª²¹³¥µÄÁ¿  ×ß10mm ²âµÃ9.98mm  ÔòÌîÈë20um
-int8 cBackScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //·´Ïò²¹³¥Öµ  um   ×ßÒ»¸ö¼ä¸ôĞèÒª²¹³¥µÄÁ¿  ×ß10mm ²âµÃ9.98mm  ÔòÌîÈë20um
-int16 sScrewReferenceNum[AXIS_PHYSICS_NUM_MAX]; // ²Î¿¼µãÎ»ÖÃºÅ
-float fScrewReferencePoint[AXIS_PHYSICS_NUM_MAX]; // ²Î¿¼µã×ø±ê
+/*******************************èºè·è¡¥å¿*************************************/
+#if 0  // ç³»ç»Ÿå‚æ•°
+bool bBilateralScrewEnable[AXIS_PHYSICS_NUM_MAX];	//åŒå‘èºè·è¯¯å·®ä½¿èƒ½ä½
+uint8 ucBilateralScrewGap[AXIS_PHYSICS_NUM_MAX];		//èºè·è¡¥å¿é—´éš”  mm
+int8 cAheadScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //æ­£å‘è¡¥å¿å€¼  um   èµ°ä¸€ä¸ªé—´éš”éœ€è¦è¡¥å¿çš„é‡  èµ°10mm æµ‹å¾—9.98mm  åˆ™å¡«å…¥20um
+int8 cBackScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //åå‘è¡¥å¿å€¼  um   èµ°ä¸€ä¸ªé—´éš”éœ€è¦è¡¥å¿çš„é‡  èµ°10mm æµ‹å¾—9.98mm  åˆ™å¡«å…¥20um
+int16 sScrewReferenceNum[AXIS_PHYSICS_NUM_MAX]; // å‚è€ƒç‚¹ä½ç½®å·
+float fScrewReferencePoint[AXIS_PHYSICS_NUM_MAX]; // å‚è€ƒç‚¹åæ ‡
 #endif // 0
 
-#define SCREWCOMP_AHEAD		1
-#define SCREWCOMP_BACK		0
+#define SCREWCOMP_AHEAD 1
+#define SCREWCOMP_BACK 0
 
-//Ë«ÏòÂİ¾à²¹³¥×´Ì¬
-#define BILATERAL_SCREW_OFF		0
-#define BILATERAL_SCREW_ON		1	//¿ªÆô×´Ì¬
-#define BILATERAL_SCREW_ACTIVE	2	//²¹³¥»îÔ¾×´Ì¬
+//åŒå‘èºè·è¡¥å¿çŠ¶æ€
+#define BILATERAL_SCREW_OFF 0
+#define BILATERAL_SCREW_ON 1     //å¼€å¯çŠ¶æ€
+#define BILATERAL_SCREW_ACTIVE 2 //è¡¥å¿æ´»è·ƒçŠ¶æ€
 
 typedef struct
 {
-	//bool bEnabled;		//µ±Ç°×´Ì¬   
-	//int16 sCurSeg;		//µ±Ç°Çø¼äºÅÂë
-	//int8 cCurError;		//µ±Ç°Çø¼äÂİ¾àÎó²î (um) 
-	//double dDeltaError;	//ÒÆ¶¯1mmĞèÒª²¹³¥µÄÖµ£¨um)  Âİ¾àÎó²î/Âİ¾àÇø¼ä³¤¶È
-	//double dRecorder;	//¼ÇÂ¼Æ÷ ¼ÇÂ¼µ±Ç°Î´Êä³ö»ò¶àÊä³öµÄÂö³å
+    //bool bEnabled;		//å½“å‰çŠ¶æ€
+    //int16 sCurSeg;		//å½“å‰åŒºé—´å·ç 
+    //int8 cCurError;		//å½“å‰åŒºé—´èºè·è¯¯å·® (um)
+    //double dDeltaError;	//ç§»åŠ¨1mméœ€è¦è¡¥å¿çš„å€¼ï¼ˆum)  èºè·è¯¯å·®/èºè·åŒºé—´é•¿åº¦
+    //double dRecorder;	//è®°å½•å™¨ è®°å½•å½“å‰æœªè¾“å‡ºæˆ–å¤šè¾“å‡ºçš„è„‰å†²
 
-	uint8 ucStatus;		//µ±Ç°×´Ì¬   
-	int8 cMoveDir;			//µ±Ç°²¹³¥·½Ïò
-	int16 sCurSeg;		//µ±Ç°Çø¼äºÅÂë
+    uint8 ucStatus; //å½“å‰çŠ¶æ€
+    int8 cMoveDir;  //å½“å‰è¡¥å¿æ–¹å‘
+    int16 sCurSeg;  //å½“å‰åŒºé—´å·ç 
 
-	int16 sAbsCompVal[2];	//Õı·´Ïò²¹³¥Öµ £¨¾ø¶ÔÖµ£©
+    int16 sAbsCompVal[2]; //æ­£åå‘è¡¥å¿å€¼ ï¼ˆç»å¯¹å€¼ï¼‰
 
-	double dCurAbsCompVal;	//µ±Ç°²¹³¥¾ø¶ÔÖµ
+    double dCurAbsCompVal; //å½“å‰è¡¥å¿ç»å¯¹å€¼
 
-	double dRecorder;	//¼ÇÂ¼Æ÷ ¼ÇÂ¼µ±Ç°Î´Êä³ö»ò¶àÊä³öµÄÂö³å
+    double dRecorder; //è®°å½•å™¨ è®°å½•å½“å‰æœªè¾“å‡ºæˆ–å¤šè¾“å‡ºçš„è„‰å†²
 
-	double dDeltaComp[2];	//Õı·´ÏòÒÆ¶¯1mmĞèÒª²¹³¥µÄÖµ£¨um)  Âİ¾àÎó²î/Âİ¾àÇø¼ä³¤¶È
+    double dDeltaComp[2]; //æ­£åå‘ç§»åŠ¨1mméœ€è¦è¡¥å¿çš„å€¼ï¼ˆum)  èºè·è¯¯å·®/èºè·åŒºé—´é•¿åº¦
 
-	double dDivisionPoint;//µ±Ç°µÄ·Ö¸îµã
+    double dDivisionPoint; //å½“å‰çš„åˆ†å‰²ç‚¹
 
-	//ËÙ¶È¿ØÖÆ
-	int8 cDir;	//·½Ïò
-	float fVel; //ËÙ¶È
-	float fAcc; //¼ÓËÙ¶È
-	double dLimitVmax;	//×î´óËÙ¶È	//2023/2/28	³ÂÃô´Ï
+    //é€Ÿåº¦æ§åˆ¶
+    int8 cDir;         //æ–¹å‘
+    float fVel;        //é€Ÿåº¦
+    float fAcc;        //åŠ é€Ÿåº¦
+    double dLimitVmax; //æœ€å¤§é€Ÿåº¦	//2023/2/28	é™ˆæ•èª
 
-}SBilateralScrewComp;
+} SBilateralScrewComp;
 
-
-
-//³õÊ¼»¯Ë«ÏòÂİ¾à   Ğè¸³·½Ïò
+//åˆå§‹åŒ–åŒå‘èºè·   éœ€èµ‹æ–¹å‘
 int8 initSBilateralScrewComp(uint8 ucPhysicalAxis, int8 cDir);
 
-//¸ù¾İ×ø±ê»ñÈ¡Çø¼äºÅÂë
+//æ ¹æ®åæ ‡è·å–åŒºé—´å·ç 
 int16 getSegNum(double curPoint, uint8 ucPhysicalAxis);
 
-//»ñÈ¡Çø¼ä¾ø¶ÔÖµ
+//è·å–åŒºé—´ç»å¯¹å€¼
 int8 getCompVal(int16 sSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp);
 
-//ÒÆ¶¯Çø¼ä
+//ç§»åŠ¨åŒºé—´
 int8 moveScrewSeg(int16 sTargetSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp);
 
-//Ë«±íÂİ¾à²¹³¥ËÙ¶ÈÏŞÖÆ
-double screwVelLimit(double  dTargetComp, SBilateralScrewComp* pSScrewComp);
+//åŒè¡¨èºè·è¡¥å¿é€Ÿåº¦é™åˆ¶
+double screwVelLimit(double dTargetComp, SBilateralScrewComp* pSScrewComp);
 
-// Êä³ö
-int8 outPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus);
+// è¾“å‡º
+int8 outPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize,
+                                          const uint8* ucAxisMap, double* dPulseToMmArray,
+                                          VAL_STRUCT_TYPE* ucValStatus);
 
-double outPutAbsPointWithBilateralScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap, double dPulseToMm);
+double outPutAbsPointWithBilateralScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis,
+                                                 const uint8* ucAxisMap, double dPulseToMm);
 
 int8 BilateralScrewComp(struct _SRun* pSRun, int nArraySize, const uint8* ucAxisMap);
 
-/*******************************Ë«±íAPIº¯Êı*************************************/
-int8 initSBilateralScrewCompAfterHomeAPI(uint8 ucChannelNum, uint8 ucAxis, int8 cDir);//»ØÁãºóË«±í³õÊ¼»¯
+/*******************************åŒè¡¨APIå‡½æ•°*************************************/
+int8 initSBilateralScrewCompAfterHomeAPI(uint8 ucChannelNum, uint8 ucAxis, int8 cDir); //å›é›¶ååŒè¡¨åˆå§‹åŒ–
 
-int8 bilateralScrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis);//È¡ÏûË«±íÂİ¾àÎó²î²¹³¥ 2023.3.24 ÖìÎÈÖĞ
+int8 bilateralScrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis); //å–æ¶ˆåŒè¡¨èºè·è¯¯å·®è¡¥å¿ 2023.3.24 æœ±ç¨³ä¸­
 #endif

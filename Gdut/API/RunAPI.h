@@ -1,122 +1,116 @@
 #ifndef __RUNAPI_H
 #define __RUNAPI_H
 
-
 #include "common.h"
 
+/****************************è¿è¡Œç›¸å…³******************************/
 
-/****************************ÔËĞĞÏà¹Ø******************************/
-
-//ÔİÍ£°´¼ü½Ó¿Úº¯Êı
+//æš‚åœæŒ‰é”®æ¥å£å‡½æ•°
 int8 pauseButtonAPI(uint8 ucChannelNum);
 
-//¸´Î»°´¼ü½Ó¿Úº¯Êı
+//å¤ä½æŒ‰é”®æ¥å£å‡½æ•°
 int8 resetButtonAPI(uint8 ucChannelNum);
 
-//ÔËĞĞ°´¼ü½Ó¿Úº¯Êı£º¾àÀëÊÖÂÖ½»½ÓÎ´Íê³ÉÊ±·µ»Ø 0£¬µ÷ÓÃ·½µÈ´ıºóÖØÊÔ
+//è¿è¡ŒæŒ‰é”®æ¥å£å‡½æ•°
 int8 runButtonAPI(uint8 ucChannelNum, uint8 ucIsGetBeforeProgram);
 
-//Ä£ÄâÔËĞĞ°´Å¥½Ó¿Úº¯Êı
+//æ¨¡æ‹Ÿè¿è¡ŒæŒ‰é’®æ¥å£å‡½æ•°
 int8 simulaButtonAPI(uint8 ucChannelNum);
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-/* ´®ĞĞÌá½»Ã÷È·¿ª¹Ø£»-1 Í¨µÀÎŞĞ§£¬0 ÒÑ¹Ø±Õ/¾Ü¾ø£¬1 ÒÑÑ¡ÖĞ»ò´ı½»½Ó¡£
- * Ô­ÔË¶¯ÖÜÆÚÍê³É½»½Ó£¬ÕæÊµÔİÍ£¼°Ä£Ê½ÍË³öÈ¡ÏûĞøĞĞ£¬¸´Î»/¼±Í£µÈ´ıÔ­Í£³µ¡£ */
+/* ä¸²è¡Œæäº¤æ˜ç¡®å¼€å…³ï¼›-1 é€šé“æ— æ•ˆï¼Œ0 å·²å…³é—­/æ‹’ç»ï¼Œ1 å·²é€‰ä¸­æˆ–å¾…äº¤æ¥ã€‚
+ * åŸè¿åŠ¨å‘¨æœŸå®Œæˆäº¤æ¥ï¼ŒçœŸå®æš‚åœåŠæ¨¡å¼é€€å‡ºå–æ¶ˆç»­è¡Œï¼Œå¤ä½/æ€¥åœç­‰å¾…åŸåœè½¦ã€‚ */
 int8 setHandwheelSimEnabledAPI(uint8 ucChannelNum, bool bEnabled);
 
-/* Ö»¶ÁÊµ¼ÊÑ¡Ôñ»òÎ´Íê³ÉÇëÇó£¬²»´ú±íÔË¶¯ÒÑ¾­½Ó¹Ü»ò»úĞµÒÑÍ£ÎÈ¡£ */
+/* åªè¯»å®é™…é€‰æ‹©æˆ–æœªå®Œæˆè¯·æ±‚ï¼Œä¸ä»£è¡¨è¿åŠ¨å·²ç»æ¥ç®¡æˆ–æœºæ¢°å·²åœç¨³ã€‚ */
 bool isHandwheelSimSelectedAPI(uint8 ucChannelNum);
 
-/* TRUE ±íÊ¾½»½ÓµÈ´ı£»´ËÊ± runButtonAPI ·µ»Ø 0£¬µ÷ÓÃ·½Ğë±£ÁôÆô¶¯²½ÖèµÈ´ı¡£ */
+/* TRUE è¡¨ç¤ºäº¤æ¥ç­‰å¾…ï¼›æ­¤æ—¶ runButtonAPI è¿”å› 0ï¼Œè°ƒç”¨æ–¹é¡»ä¿ç•™å¯åŠ¨æ­¥éª¤ç­‰å¾…ã€‚ */
 bool isHandwheelSimSwitchPendingAPI(uint8 ucChannelNum);
 #endif
 
-
-//µ¥½ÚÖ´ĞĞ ½Ó¿Úº¯Êı
+//å•èŠ‚æ‰§è¡Œ æ¥å£å‡½æ•°
 int8 singleLineButtonAPI(uint8 ucChannelNum);
 
-//Ñ¡ÔñÍ£Ö¹½Ó¿Úº¯Êı 
+//é€‰æ‹©åœæ­¢æ¥å£å‡½æ•°
 int8 selectableStopAPI(uint8 ucChannelNum);
 
-//¼±Í£ ½Ó¿Úº¯Êı 
+//æ€¥åœ æ¥å£å‡½æ•°
 int8 emergencyStopAPI(uint8 ucChannelNum);
 
-//ÏµÍ³×¼±¸×´Ì¬
+//ç³»ç»Ÿå‡†å¤‡çŠ¶æ€
 int8 sysPrepare(uint8 ucChannelNum);
 
-//G´úÂëÔËĞĞ½Ó¿Ú
+//Gä»£ç è¿è¡Œæ¥å£
 int8 GCodeRunAPI(uint8 ucChannelNum);
 
-//G´úÂëÑ­»·ÔËĞĞ½Ó¿Ú£¨¸ù¾İÍ¨µÀÊı£©
+//Gä»£ç å¾ªç¯è¿è¡Œæ¥å£ï¼ˆæ ¹æ®é€šé“æ•°ï¼‰
 void GCodeRunLoopAPI();
 
-//ÖĞ¶Ïº¯Êı½Ó¿Ú
+//ä¸­æ–­å‡½æ•°æ¥å£
 void interruptFuncAPI(uint8 ucChannelNum);
 
-//ÖĞ¶Ïº¯ÊıÑ­»·½Ó¿Ú
+//ä¸­æ–­å‡½æ•°å¾ªç¯æ¥å£
 void interruptFuncLoopAPI();
 
-//ÊÖ¶¯»»µ¶
+//æ‰‹åŠ¨æ¢åˆ€
 int8 manualChangeToolAPI(uint8 ucChannelNum, uint8 ucToolNum);
 
-//¸Ä±ä±¶ÂÊ
+//æ”¹å˜å€ç‡
 void changeFeedRatioAPI(uint8 ucChannelNum, float fNewRatio, bool bIsDelta, uint8 ucType);
 
-//ÉèÖÃÊÖÂÖÄ£Ê½µÄÖá ¡¢±¶ÂÊ
+//è®¾ç½®æ‰‹è½®æ¨¡å¼çš„è½´ ã€å€ç‡
 int8 setHandwheelMode(uint8 ucChannelNum, uint8 ucAxis, uint8 ucWheelMultiple);
 
-//ÉèÖÃÔËĞĞÄ£Ê½£ºµ÷ÓÃ·½ĞëÏÈÔİÍ£²¢µÈ¸÷Í¨µÀÍ£ÎÈ£¬ÔÙÇĞ»»Ä£Ê½£»²»ÄÜ´øËÙÖ±½Ó¸³Ä£Ê½
+//è®¾ç½®è¿è¡Œæ¨¡å¼
 int8 setSysRunMode(enum SYSTEMSTATUS runMode);
 
-
-//¿ªÊ¼»­Í¼½Ó¿Ú
+//å¼€å§‹ç”»å›¾æ¥å£
 int8 drawBtnAPI(uint8 ucChannelNum);
 
-
 void drawInitAPI(uint8 ucChannelNum);
-//»æÍ¼Ñ­»·(ÆúÓÃ)
+//ç»˜å›¾å¾ªç¯(å¼ƒç”¨)
 //void gCodeDrawLoop();
 
-
-//µ÷ÊÔAPI
-// 
-//²å²¹Ô¤´¦Àí×´Ì¬  0:Fin 1 : INIT 2 : ASS 3 : BLO 4 : RUN 5 : PAU 6 : DEC 7 : STOP 8 : OCCU
+//è°ƒè¯•API
+//
+//æ’è¡¥é¢„å¤„ç†çŠ¶æ€  0:Fin 1 : INIT 2 : ASS 3 : BLO 4 : RUN 5 : PAU 6 : DEC 7 : STOP 8 : OCCU
 int8 getSInterPreStatus(uint8 ucChannelNum);
 
-//×èÈûËø
+//é˜»å¡é”
 uint8 getIOBlockedCounter(uint8 ucChannelNum);
 
-//ÔË¶¯×´Ì¬  0:Fin 1 : INIT 2 : ASS 3 : BLO 4 : RUN 5 : PAU 6 : DEC 7 : STOP 8 : OCCU
+//è¿åŠ¨çŠ¶æ€  0:Fin 1 : INIT 2 : ASS 3 : BLO 4 : RUN 5 : PAU 6 : DEC 7 : STOP 8 : OCCU
 int8 getMotionTESTStatus(uint8 ucChannelNum);
 
-//µ±Ç°ËÙ¶È  mm/min
+//å½“å‰é€Ÿåº¦  mm/min
 int getCurrentSpeed(uint8 ucChannelNum);
 
-//Ö÷Öá×ªËÙÎó²î°Ù·Ö±È  %
+//ä¸»è½´è½¬é€Ÿè¯¯å·®ç™¾åˆ†æ¯”  %
 double getSpindleSpeedErrorRatio(uint8 ucChannelNum);
 
-//µ±Ç°Ö¸Áî¼ÓËÙ¶È  m/s2
+//å½“å‰æŒ‡ä»¤åŠ é€Ÿåº¦  m/s2
 double getMotionAcc(uint8 ucChannelNum);
 
-//µ±Ç°Ö¸Áî¼õËÙ¶È  m/s2
+//å½“å‰æŒ‡ä»¤å‡é€Ÿåº¦  m/s2
 double getMotionDec(uint8 ucChannelNum);
 
-//µ±Ç°Ö¸ÁîËÙ¶È¹æ»®µÄunT5
+//å½“å‰æŒ‡ä»¤é€Ÿåº¦è§„åˆ’çš„unT5
 uint32 getUINT5(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°ĞĞ»º³åÇøµÄ¼ÓËÙ¶È m/s2
+//è·å–å½“å‰è¡Œç¼“å†²åŒºçš„åŠ é€Ÿåº¦ m/s2
 double getCurrentBuffAcc(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°ĞĞ»º³åÇøµÄ¼õËÙ¶È m/s2
+//è·å–å½“å‰è¡Œç¼“å†²åŒºçš„å‡é€Ÿåº¦ m/s2
 double getCurrentBuffDec(uint8 ucChannelNum);
 
-//»ñÈ¡Ç°Õ°µ±Ç°ĞĞºÅ
+//è·å–å‰ç»å½“å‰è¡Œå·
 int getLookAheadCurrentLine(uint8 ucChannelNum);
 
-//»ñÈ¡²å²¹µ±Ç°ĞĞºÅ
+//è·å–æ’è¡¥å½“å‰è¡Œå·
 int getInterpLine(uint8 ucChannelNum);
 
-//ÅĞ¶Ïµ±Ç°Í¨µÀ»·¾³ÄÜ·ñÔËĞĞ
+//åˆ¤æ–­å½“å‰é€šé“ç¯å¢ƒèƒ½å¦è¿è¡Œ
 bool judgeRunCondition(uint8 ucChannelNum);
 
 #endif // !__RUNAPI_H

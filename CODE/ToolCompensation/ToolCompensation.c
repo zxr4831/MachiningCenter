@@ -1,4 +1,4 @@
-#include"ToolCompensation.h"
+#include "ToolCompensation.h"
 #include "ringbuff.h"
 #include "Config.h"
 #include "Gcode.h"
@@ -8,2647 +8,2805 @@
 #endif
 
 SSToolRunPoint SToolRunPoint;
-//SSToolCompensationRecord SToolCompensationRecord//×¢ÊÍÔ­Òò£ºÆóÒµÒªÒÔ¶¯Ì¬ÄÚ´æµÄĞÎÊ½¹ÜÀí
+//SSToolCompensationRecord SToolCompensationRecord//æ³¨é‡ŠåŸå› ï¼šä¼ä¸šè¦ä»¥åŠ¨æ€å†…å­˜çš„å½¢å¼ç®¡ç†
 
-SSToolCompensationRecord *SToolCompensationRecord=NULL;//´æ·Åµ¶²¹¹ı³ÌµÄÖĞ¼äµãÒÔ¼°µ¶²¹µÄÒ»Ğ©×´Ì¬µÄ½á¹¹ÌåÖ¸Õë
+SSToolCompensationRecord* SToolCompensationRecord = NULL; //å­˜æ”¾åˆ€è¡¥è¿‡ç¨‹çš„ä¸­é—´ç‚¹ä»¥åŠåˆ€è¡¥çš„ä¸€äº›çŠ¶æ€çš„ç»“æ„ä½“æŒ‡é’ˆ
 static FILE *channelFile1, *channelFile2;
-static uint32  lineNum1, lineNum2;
+static uint32 lineNum1, lineNum2;
 
-//½×Ô¾º¯Êı
+//é˜¶è·ƒå‡½æ•°
 double Sgn(double dRadius)
 {
-	if (dRadius > 0)
-		return 1;
+    if (dRadius > 0)
+        return 1;
 
-	else if (dRadius < 0)
-		return -1;
+    else if (dRadius < 0)
+        return -1;
 
-	return 0;
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstruct SChannel* initSChannel()
-  º¯Êı¹¦ÄÜ: ÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±Ù´æ·Åµ¶²¹¹ı³ÌµÄÖĞ¼äµãÒÔ¼°µ¶²¹µÄ×´Ì¬µÄ½á¹¹Ìå
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstruct SChannel* initSChannel()
+  å‡½æ•°åŠŸèƒ½: åœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾Ÿå­˜æ”¾åˆ€è¡¥è¿‡ç¨‹çš„ä¸­é—´ç‚¹ä»¥åŠåˆ€è¡¥çš„çŠ¶æ€çš„ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SSToolCompensationRecord* initSToolCompensationRecord()
 {
-	SSToolCompensationRecord* pToolCompensationRecord = (SSToolCompensationRecord*)mallocGCode(sizeof(SSToolCompensationRecord) , ORAM_NUM340);
-	if (pToolCompensationRecord == NULL)
-	{
-		parseGCodeErrorB(9999, GCODE_ERROR_NUM406);
-		return NULL;
-	}
-	return  pToolCompensationRecord;
+    SSToolCompensationRecord* pToolCompensationRecord =
+        (SSToolCompensationRecord*)mallocGCode(sizeof(SSToolCompensationRecord), ORAM_NUM340);
+    if (pToolCompensationRecord == NULL)
+    {
+        parseGCodeErrorB(9999, GCODE_ERROR_NUM406);
+        return NULL;
+    }
+    return pToolCompensationRecord;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetLineVector(SPointDouble &SP1, SPointDouble &SP2, SVector &LineVec)
-  º¯Êı¹¦ÄÜ  ÀûÓÃÆğµãºÍÖÕµã×ø±êÀ´ÇóÖ±ÏßÊ¸Á¿
-  ÊäÈë²ÎÊı£ºSP1	Æğµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			SP2	ÖÕµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			LineVec ÒªÇóµÄÖ±ÏßÊ¸Á¿
+  å‡½æ•°åç§°ï¼šgetLineVector(SPointDouble &SP1, SPointDouble &SP2, SVector &LineVec)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨èµ·ç‚¹å’Œç»ˆç‚¹åæ ‡æ¥æ±‚ç›´çº¿çŸ¢é‡
+  è¾“å…¥å‚æ•°ï¼šSP1	èµ·ç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			SP2	ç»ˆç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			LineVec è¦æ±‚çš„ç›´çº¿çŸ¢é‡
 
-  Êä³ö²ÎÊı£ºLineVec		Ö±ÏßµÄ·½ÏòÊ¸Á¿
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šLineVec		ç›´çº¿çš„æ–¹å‘çŸ¢é‡
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//ÇóÖ±ÏßµÄ·½ÏòÊ¸Á¿
+//æ±‚ç›´çº¿çš„æ–¹å‘çŸ¢é‡
 void getLineVector(SPointDouble SPoint1, SPointDouble SPoint2, SVector* LineVec, uint8* ucAxisNum)
 {
-	if (LineVec == NULL)
-	{
-		return;
-	}
-	double denominator = sqrt(pow((SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]), 2) + pow((SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]), 2));
-	double denominator2 = sqrt(pow((SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]), 2) + pow((SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]), 2));
-	if (isZero(denominator) == TRUE || isZero(denominator2) == TRUE)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM132);
-		return;
-	}
+    if (LineVec == NULL)
+    {
+        return;
+    }
+    double denominator = sqrt(pow((SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]), 2) +
+                              pow((SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]), 2));
+    double denominator2 = sqrt(pow((SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]), 2) +
+                               pow((SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]), 2));
+    if (isZero(denominator) == TRUE || isZero(denominator2) == TRUE)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM132);
+        return;
+    }
 
-	LineVec->dArray[ucAxisNum[0]] = (SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]) / denominator;
-	LineVec->dArray[ucAxisNum[1]] = (SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]) / denominator2;
-
+    LineVec->dArray[ucAxisNum[0]] = (SPoint2.dArray[ucAxisNum[0]] - SPoint1.dArray[ucAxisNum[0]]) / denominator;
+    LineVec->dArray[ucAxisNum[1]] = (SPoint2.dArray[ucAxisNum[1]] - SPoint1.dArray[ucAxisNum[1]]) / denominator2;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetArcVectorAtStart(double dI, double dJ, SVector &ArcVec, int iArcDir)
-  º¯Êı¹¦ÄÜ  ÀûÓÃÖ¸¶¨µÄIK£¬Ô²»¡·½ÏòÇóÔ²»¡ÆğµãµÄ·½ÏòÊ¸Á¿
-  ÊäÈë²ÎÊı£ºdI          Ô²ĞÄÏà¶ÔÓÚÆğµãÔÚx·½ÏòÉÏµÄ¾àÀë
-			dJ          Ô²ĞÄÏà¶ÔÓÚÆğµãÔÚy·½ÏòÉÏµÄ¾àÀë
-			dK          Ô²ĞÄÏà¶ÔÓÚÆğµãÔÚZ·½ÏòÉÏµÄ¾àÀë
-			ArcVec      ÒªÇóµÄÔ²»¡Ê¸Á¿
-			iArcDir     Ô²»¡·½Ïò
+  å‡½æ•°åç§°ï¼šgetArcVectorAtStart(double dI, double dJ, SVector &ArcVec, int iArcDir)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨æŒ‡å®šçš„IKï¼Œåœ†å¼§æ–¹å‘æ±‚åœ†å¼§èµ·ç‚¹çš„æ–¹å‘çŸ¢é‡
+  è¾“å…¥å‚æ•°ï¼šdI          åœ†å¿ƒç›¸å¯¹äºèµ·ç‚¹åœ¨xæ–¹å‘ä¸Šçš„è·ç¦»
+			dJ          åœ†å¿ƒç›¸å¯¹äºèµ·ç‚¹åœ¨yæ–¹å‘ä¸Šçš„è·ç¦»
+			dK          åœ†å¿ƒç›¸å¯¹äºèµ·ç‚¹åœ¨Zæ–¹å‘ä¸Šçš„è·ç¦»
+			ArcVec      è¦æ±‚çš„åœ†å¼§çŸ¢é‡
+			iArcDir     åœ†å¼§æ–¹å‘
 
-  Êä³ö²ÎÊı£ºArcVec		Ô²»¡ÔÚÆğµãµÄ·½ÏòÊ¸Á¿
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šArcVec		åœ†å¼§åœ¨èµ·ç‚¹çš„æ–¹å‘çŸ¢é‡
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Çó×ª½ÓµãÔÚÔ²»¡ÆğµãµÄ·½ÏòÊ¸Á¿
+//æ±‚è½¬æ¥ç‚¹åœ¨åœ†å¼§èµ·ç‚¹çš„æ–¹å‘çŸ¢é‡
 void getArcVectorAtStart(double dK, double dI, SVector* SArcVec, int iArcDir, uint8* ucAxisNum)
 {
-	double dR = sqrt(pow(dK, 2) + pow(dI, 2));
+    double dR = sqrt(pow(dK, 2) + pow(dI, 2));
 
-	if (isZero(dR) == TRUE)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM132);
-		return;
-	}
-	if (SArcVec == NULL)
-	{
-		return;
-	}
+    if (isZero(dR) == TRUE)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM132);
+        return;
+    }
+    if (SArcVec == NULL)
+    {
+        return;
+    }
 
-	if (iArcDir == ARC_ANTI_CW) dR = -dR;//-1ÎªÄæÔ²»¡
-	SArcVec->dArray[ucAxisNum[0]] = dI / dR;
-	SArcVec->dArray[ucAxisNum[1]] = -dK / dR;
+    if (iArcDir == ARC_ANTI_CW)
+        dR = -dR; //-1ä¸ºé€†åœ†å¼§
+    SArcVec->dArray[ucAxisNum[0]] = dI / dR;
+    SArcVec->dArray[ucAxisNum[1]] = -dK / dR;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetArcVectorAtEnd(SPointDouble&SP1, SPointDouble&SP2, double dI, double dJ, SVector &ArcVec, int iArcDir)
-  º¯Êı¹¦ÄÜ  ÀûÓÃÖ¸¶¨µÄIK£¬Æğµã×ø±ê¡¢ÖÕµã×ø±êºÍÔ²»¡·½ÏòÇóÔ²»¡ÖÕµãµÄ·½ÏòÊ¸Á¿
-  ÊäÈë²ÎÊı£ºSP1	Æğµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			SP2	ÖÕµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			dI          Ô²ĞÄÏà¶ÔÓÚÆğµãÔÚx·½ÏòÉÏµÄ¾àÀë
-			dJ          Ô²ĞÄÏà¶ÔÓÚÆğµãÔÚy·½ÏòÉÏµÄ¾àÀë
-			ArcVec      ÒªÇóµÄÔ²»¡Ê¸Á¿
-			iArcDir     Ô²»¡·½Ïò
+  å‡½æ•°åç§°ï¼šgetArcVectorAtEnd(SPointDouble&SP1, SPointDouble&SP2, double dI, double dJ, SVector &ArcVec, int iArcDir)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨æŒ‡å®šçš„IKï¼Œèµ·ç‚¹åæ ‡ã€ç»ˆç‚¹åæ ‡å’Œåœ†å¼§æ–¹å‘æ±‚åœ†å¼§ç»ˆç‚¹çš„æ–¹å‘çŸ¢é‡
+  è¾“å…¥å‚æ•°ï¼šSP1	èµ·ç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			SP2	ç»ˆç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			dI          åœ†å¿ƒç›¸å¯¹äºèµ·ç‚¹åœ¨xæ–¹å‘ä¸Šçš„è·ç¦»
+			dJ          åœ†å¿ƒç›¸å¯¹äºèµ·ç‚¹åœ¨yæ–¹å‘ä¸Šçš„è·ç¦»
+			ArcVec      è¦æ±‚çš„åœ†å¼§çŸ¢é‡
+			iArcDir     åœ†å¼§æ–¹å‘
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºArcVec		Ô²»¡ÔÚÆğµãµÄ·½ÏòÊ¸Á¿
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šArcVec		åœ†å¼§åœ¨èµ·ç‚¹çš„æ–¹å‘çŸ¢é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Çó×ª½ÓµãÔÚÔ²»¡ÖÕµãµÄ·½ÏòÊ¸Á¿
-void getArcVectorAtEnd(SPointDouble SPoint1, SPointDouble SPoint2, double dK, double dI, SVector* SArcVec, int iArcDir, uint8* ucAxisNum)
+//æ±‚è½¬æ¥ç‚¹åœ¨åœ†å¼§ç»ˆç‚¹çš„æ–¹å‘çŸ¢é‡
+void getArcVectorAtEnd(SPointDouble SPoint1, SPointDouble SPoint2, double dK, double dI, SVector* SArcVec, int iArcDir,
+                       uint8* ucAxisNum)
 {
-	double dX_01, dZ_01, dR;
-	if (SArcVec == NULL)
-	{
-		return;
-	}
-	dZ_01 = SPoint1.dArray[ucAxisNum[0]] - dK - SPoint2.dArray[ucAxisNum[0]];
-	dX_01 = SPoint1.dArray[ucAxisNum[1]] - dI - SPoint2.dArray[ucAxisNum[1]];
-	dR = sqrt(pow(dK, 2) + pow(dI, 2));
-	if (isZero(dR) == TRUE)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM132);
-		return;
-	}
-	if (iArcDir == ARC_ANTI_CW) dR = -dR;//-1ÎªÄæÔ²»¡
-	SArcVec->dArray[ucAxisNum[0]] = -dX_01 / dR;
-	SArcVec->dArray[ucAxisNum[1]] = dZ_01 / dR;
-
+    double dX_01, dZ_01, dR;
+    if (SArcVec == NULL)
+    {
+        return;
+    }
+    dZ_01 = SPoint1.dArray[ucAxisNum[0]] - dK - SPoint2.dArray[ucAxisNum[0]];
+    dX_01 = SPoint1.dArray[ucAxisNum[1]] - dI - SPoint2.dArray[ucAxisNum[1]];
+    dR = sqrt(pow(dK, 2) + pow(dI, 2));
+    if (isZero(dR) == TRUE)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM132);
+        return;
+    }
+    if (iArcDir == ARC_ANTI_CW)
+        dR = -dR; //-1ä¸ºé€†åœ†å¼§
+    SArcVec->dArray[ucAxisNum[0]] = -dX_01 / dR;
+    SArcVec->dArray[ucAxisNum[1]] = dZ_01 / dR;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºJudgeAngle(double dr, SVector Vec1, SVector Vec2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İµ¶²¹°ë¾¶£¬Á½Ìõ¹ì¼£µÄ·½ÏòÊ¸Á¿ÅĞ¶Ï×ª½Ó½ÇÊôÓÚÊ²Ã´ÀàĞÍ
-  ÊäÈë²ÎÊı£ºdr          µ¶¾ß°ë¾¶
-			Vec1        µÚÒ»Ìõ¹ì¼£µÄ·½ÏòÊ¸Á¿
-			Vec2		µÚ¶şÌõ¹ì¼£µÄ·½ÏòÊ¸Á¿
+  å‡½æ•°åç§°ï¼šJudgeAngle(double dr, SVector Vec1, SVector Vec2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®åˆ€è¡¥åŠå¾„ï¼Œä¸¤æ¡è½¨è¿¹çš„æ–¹å‘çŸ¢é‡åˆ¤æ–­è½¬æ¥è§’å±äºä»€ä¹ˆç±»å‹
+  è¾“å…¥å‚æ•°ï¼šdr          åˆ€å…·åŠå¾„
+			Vec1        ç¬¬ä¸€æ¡è½¨è¿¹çš„æ–¹å‘çŸ¢é‡
+			Vec2		ç¬¬äºŒæ¡è½¨è¿¹çš„æ–¹å‘çŸ¢é‡
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint	1´ú±íËõ¶ÌĞÍ¡¢2´ú±íÉì³¤ĞÍ¡¢3´ú±í²åÈëĞÍ
-  ±¸    ×¢£º-1			·µ»Ø´ú±í³ö´í
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint	1ä»£è¡¨ç¼©çŸ­å‹ã€2ä»£è¡¨ä¼¸é•¿å‹ã€3ä»£è¡¨æ’å…¥å‹
+  å¤‡    æ³¨ï¼š-1			è¿”å›ä»£è¡¨å‡ºé”™
 **************************************************/
-//×ª½Ó½ÇÀàĞÍµÄÅĞ¶Ï
+//è½¬æ¥è§’ç±»å‹çš„åˆ¤æ–­
 int JudgeAngle(double dRadius, SVector SVec1, SVector SVec2, uint8* ucAxisNum)
 {
-	double dSin_a, dCos_a;
-	dSin_a = -Sgn(dRadius) * (SVec2.dArray[ucAxisNum[1]] * SVec1.dArray[ucAxisNum[0]] - SVec2.dArray[ucAxisNum[0]] * SVec1.dArray[ucAxisNum[1]]);
-	dCos_a = -(SVec1.dArray[ucAxisNum[0]] * SVec2.dArray[ucAxisNum[0]] + SVec1.dArray[ucAxisNum[1]] * SVec2.dArray[ucAxisNum[1]]);
-	if (dSin_a < 0 || isZero(dCos_a+1))//´óÓÚµÈÓÚ180¶ÈĞ¡ÓÚ`360ÎªËõ¶ÌĞÍ
-	{
-		return 1;
-	}
-	else if (dSin_a > 0 && (dCos_a < 0 || isZero(dCos_a)))//´óÓÚµÈÓÚ90¶ÈĞ¡ÓÚ180¶ÈÎªÉì³¤ĞÍ
-	{
-		return 2;
-	}
-	else if (dSin_a > 0 && (dCos_a > 0 || isZero(dCos_a)))//´óÓÚµÈÓÚ0Ğ¡ÓÚ90¶ÈÎª²åÈëĞÍ
-	{
-		return 3;
-	}
-	return -1;
+    double dSin_a, dCos_a;
+    dSin_a = -Sgn(dRadius) * (SVec2.dArray[ucAxisNum[1]] * SVec1.dArray[ucAxisNum[0]] -
+                              SVec2.dArray[ucAxisNum[0]] * SVec1.dArray[ucAxisNum[1]]);
+    dCos_a = -(SVec1.dArray[ucAxisNum[0]] * SVec2.dArray[ucAxisNum[0]] +
+               SVec1.dArray[ucAxisNum[1]] * SVec2.dArray[ucAxisNum[1]]);
+    if (dSin_a < 0 || isZero(dCos_a + 1)) //å¤§äºç­‰äº180åº¦å°äº`360ä¸ºç¼©çŸ­å‹
+    {
+        return 1;
+    }
+    else if (dSin_a > 0 && (dCos_a < 0 || isZero(dCos_a))) //å¤§äºç­‰äº90åº¦å°äº180åº¦ä¸ºä¼¸é•¿å‹
+    {
+        return 2;
+    }
+    else if (dSin_a > 0 && (dCos_a > 0 || isZero(dCos_a))) //å¤§äºç­‰äº0å°äº90åº¦ä¸ºæ’å…¥å‹
+    {
+        return 3;
+    }
+    return -1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºSpecialAngleJudge(double dr, SVector Vec1, SVector Vec2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İµ¶¾ß°ë¾¶¡¢Á½Ìõ¹ì¼£µÄ·½ÏòÏòÁ¿
-  ÊäÈë²ÎÊı£ºdr			µ¶¾ß°ë¾¶
-			Vec1		µÚÒ»¸ö¹ì¼£µÄÊ¸Á¿
-			Vec2		µÚÒ»¸ö¹ì¼£µÄÊ¸Á¿
+  å‡½æ•°åç§°ï¼šSpecialAngleJudge(double dr, SVector Vec1, SVector Vec2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®åˆ€å…·åŠå¾„ã€ä¸¤æ¡è½¨è¿¹çš„æ–¹å‘å‘é‡
+  è¾“å…¥å‚æ•°ï¼šdr			åˆ€å…·åŠå¾„
+			Vec1		ç¬¬ä¸€ä¸ªè½¨è¿¹çš„çŸ¢é‡
+			Vec2		ç¬¬ä¸€ä¸ªè½¨è¿¹çš„çŸ¢é‡
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0\180		ÅĞ¶Ï³öµÄÌØÊâ½Ç¶ÈÊı
-  ±¸    ×¢£º-1			·µ»Ø´ú±í³ö´í
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0\180		åˆ¤æ–­å‡ºçš„ç‰¹æ®Šè§’åº¦æ•°
+  å¤‡    æ³¨ï¼š-1			è¿”å›ä»£è¡¨å‡ºé”™
 **************************************************/
-//ÌØÊâ½Ç180»ò0¶ÈÅĞ¶Ï
+//ç‰¹æ®Šè§’180æˆ–0åº¦åˆ¤æ–­
 int SpecialAngleJudge(double dRadius, SVector SVec1, SVector SVec2, uint8* ucAxisNum)
 {
-	double dSin_a, dCos_a;
-	dSin_a = (-1) * Sgn(dRadius) * (SVec2.dArray[ucAxisNum[1]] * SVec1.dArray[ucAxisNum[0]] - SVec2.dArray[ucAxisNum[0]] * SVec1.dArray[ucAxisNum[1]]);
-	dCos_a = (-1) * (SVec1.dArray[ucAxisNum[0]] * SVec2.dArray[ucAxisNum[0]] + SVec1.dArray[ucAxisNum[1]] * SVec2.dArray[ucAxisNum[1]]);
+    double dSin_a, dCos_a;
+    dSin_a = (-1) * Sgn(dRadius) *
+             (SVec2.dArray[ucAxisNum[1]] * SVec1.dArray[ucAxisNum[0]] -
+              SVec2.dArray[ucAxisNum[0]] * SVec1.dArray[ucAxisNum[1]]);
+    dCos_a = (-1) * (SVec1.dArray[ucAxisNum[0]] * SVec2.dArray[ucAxisNum[0]] +
+                     SVec1.dArray[ucAxisNum[1]] * SVec2.dArray[ucAxisNum[1]]);
 
-	if (isZero(dCos_a + 1))
-	{
-		return 180;
-	}
+    if (isZero(dCos_a + 1))
+    {
+        return 180;
+    }
 
-	else if (isZero(dCos_a - 1))
-	{
-		return 0;
-	}
+    else if (isZero(dCos_a - 1))
+    {
+        return 0;
+    }
 
-	return -1;
+    return -1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºoffsetRadiusVector(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İµ¶¾ß°ë¾¶¡¢×ª½ÓµãÒÔ¼°·½ÏòÊ¸Á¿Çó³öÆ«ÖÃÒ»¸öµ¶¾ß°ë¾¶µÄµ¶²¹Ö®ºóµÄ²¹³¥µã
-  ÊäÈë²ÎÊı£ºdToolRadius	µ¶¾ß°ë¾¶
-			LineVec		Ö±ÏßÊ¸Á¿
-			SP1			×ª½Óµã
-			SP2			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šoffsetRadiusVector(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®åˆ€å…·åŠå¾„ã€è½¬æ¥ç‚¹ä»¥åŠæ–¹å‘çŸ¢é‡æ±‚å‡ºåç½®ä¸€ä¸ªåˆ€å…·åŠå¾„çš„åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šdToolRadius	åˆ€å…·åŠå¾„
+			LineVec		ç›´çº¿çŸ¢é‡
+			SP1			è½¬æ¥ç‚¹
+			SP2			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP2			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP2			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//ÇóÆ«ÒÆÒ»¸ö°ë¾¶Ê¸Á¿µÄ×ª½Óµãº¯Êı
+//æ±‚åç§»ä¸€ä¸ªåŠå¾„çŸ¢é‡çš„è½¬æ¥ç‚¹å‡½æ•°
 void offsetRadiusVector(double dToolRadius, SVector SLineVec, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum)
 {
-	if (SP2 == NULL)
-	{
-		return;
-	}
-	SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * SLineVec.dArray[ucAxisNum[1]];
-	SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * SLineVec.dArray[ucAxisNum[0]];
-
+    if (SP2 == NULL)
+    {
+        return;
+    }
+    SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * SLineVec.dArray[ucAxisNum[1]];
+    SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * SLineVec.dArray[ucAxisNum[0]];
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIntersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble &SP1, SPointDouble &SP2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İµ¶¾ß°ë¾¶¡¢×ª½ÓµãÒÔ¼°Á½ÌõÖ±ÏßµÄ·½ÏòÊ¸Á¿Çó³öµ¶²¹Ö®ºóµÄ²¹³¥µã
-  ÊäÈë²ÎÊı£ºdToolRadius	µ¶¾ß°ë¾¶
-			LineVec1	µÚÒ»ÌõÖ±ÏßÊ¸Á¿
-			LineVec2	µÚ¶şÌõÖ±ÏßÊ¸Á¿
-			SP1			×ª½Óµã
-			SP2			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šIntersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble &SP1, SPointDouble &SP2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®åˆ€å…·åŠå¾„ã€è½¬æ¥ç‚¹ä»¥åŠä¸¤æ¡ç›´çº¿çš„æ–¹å‘çŸ¢é‡æ±‚å‡ºåˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šdToolRadius	åˆ€å…·åŠå¾„
+			LineVec1	ç¬¬ä¸€æ¡ç›´çº¿çŸ¢é‡
+			LineVec2	ç¬¬äºŒæ¡ç›´çº¿çŸ¢é‡
+			SP1			è½¬æ¥ç‚¹
+			SP2			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP2			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP2			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//ÇóÁ½µÈ¾àÏß½»µã
-void Intersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum)
+//æ±‚ä¸¤ç­‰è·çº¿äº¤ç‚¹
+void Intersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble SP1,
+                                      SPointDouble* SP2, uint8* ucAxisNum)
 {
-	if (SP2 == NULL)
-	{
-		return;
-	}
+    if (SP2 == NULL)
+    {
+        return;
+    }
 
-	//·ÀÖ¹·ÖÄ¸Îª0£¬±¨´í²¢·µ»Ø
-	if (isZero(LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] - LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]))
-	{
-		return;
-	}
+    //é˜²æ­¢åˆ†æ¯ä¸º0ï¼ŒæŠ¥é”™å¹¶è¿”å›
+    if (isZero(LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] -
+               LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]))
+    {
+        return;
+    }
 
-	SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] + dToolRadius * (LineVec2.dArray[ucAxisNum[0]] - LineVec1.dArray[ucAxisNum[0]]) / (LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] - LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]);
-	SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * (LineVec2.dArray[ucAxisNum[1]] - LineVec1.dArray[ucAxisNum[1]]) / (LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] - LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]);
-
+    SP2->dArray[ucAxisNum[0]] =
+        SP1.dArray[ucAxisNum[0]] + dToolRadius * (LineVec2.dArray[ucAxisNum[0]] - LineVec1.dArray[ucAxisNum[0]]) /
+                                       (LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] -
+                                        LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]);
+    SP2->dArray[ucAxisNum[1]] =
+        SP1.dArray[ucAxisNum[1]] + dToolRadius * (LineVec2.dArray[ucAxisNum[1]] - LineVec1.dArray[ucAxisNum[1]]) /
+                                       (LineVec1.dArray[ucAxisNum[0]] * LineVec2.dArray[ucAxisNum[1]] -
+                                        LineVec2.dArray[ucAxisNum[0]] * LineVec1.dArray[ucAxisNum[1]]);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºoffsetRadiusVector1(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
-  º¯Êı¹¦ÄÜ  ¼ÆËã²åÈëĞÍÆ«ÖÃµã1
-  ÊäÈë²ÎÊı£ºdToolRadius	µ¶¾ß°ë¾¶
-			LineVec1	µÚÒ»ÌõÖ±ÏßÊ¸Á¿
-			SP1			×ª½Óµã
-			SP2			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šoffsetRadiusVector1(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—æ’å…¥å‹åç½®ç‚¹1
+  è¾“å…¥å‚æ•°ï¼šdToolRadius	åˆ€å…·åŠå¾„
+			LineVec1	ç¬¬ä¸€æ¡ç›´çº¿çŸ¢é‡
+			SP1			è½¬æ¥ç‚¹
+			SP2			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP2			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP2			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void offsetRadiusVector1(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum)
 {
-	if (SP2 == NULL)
-	{
-		return;
-	}
-	SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * LineVec.dArray[ucAxisNum[0]] + fabs(dToolRadius) * LineVec.dArray[ucAxisNum[1]];
-	SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * LineVec.dArray[ucAxisNum[1]] + fabs(dToolRadius) * LineVec.dArray[ucAxisNum[0]];
+    if (SP2 == NULL)
+    {
+        return;
+    }
+    SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * LineVec.dArray[ucAxisNum[0]] +
+                                fabs(dToolRadius) * LineVec.dArray[ucAxisNum[1]];
+    SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * LineVec.dArray[ucAxisNum[1]] +
+                                fabs(dToolRadius) * LineVec.dArray[ucAxisNum[0]];
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºoffsetRadiusVector2(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
-  º¯Êı¹¦ÄÜ  ¼ÆËã²åÈëĞÍÆ«ÖÃµã2
-  ÊäÈë²ÎÊı£ºdToolRadius	µ¶¾ß°ë¾¶
-			LineVec1	µÚÒ»ÌõÖ±ÏßÊ¸Á¿
-			SP1			×ª½Óµã
-			SP2			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šoffsetRadiusVector2(double dToolRadius, SVector LineVec, SPointDouble &SP1, SPointDouble &SP2)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—æ’å…¥å‹åç½®ç‚¹2
+  è¾“å…¥å‚æ•°ï¼šdToolRadius	åˆ€å…·åŠå¾„
+			LineVec1	ç¬¬ä¸€æ¡ç›´çº¿çŸ¢é‡
+			SP1			è½¬æ¥ç‚¹
+			SP2			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP2			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP2			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void offsetRadiusVector2(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum)
 {
-	if (SP2 == NULL)
-	{
-		return;
-	}
-	SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * LineVec.dArray[ucAxisNum[0]] - fabs(dToolRadius) * LineVec.dArray[ucAxisNum[1]];
-	SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * LineVec.dArray[ucAxisNum[1]] - fabs(dToolRadius) * LineVec.dArray[ucAxisNum[0]];
+    if (SP2 == NULL)
+    {
+        return;
+    }
+    SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] + dToolRadius * LineVec.dArray[ucAxisNum[0]] -
+                                fabs(dToolRadius) * LineVec.dArray[ucAxisNum[1]];
+    SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - dToolRadius * LineVec.dArray[ucAxisNum[1]] -
+                                fabs(dToolRadius) * LineVec.dArray[ucAxisNum[0]];
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIntersection_Of_Line_And_Arc(SPointDouble &SP1, SVector LineVec, double dI, double dJ, SPointDouble &SP2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ×ª½Óµã¡¢Ö±ÏßµÄ·½ÏòÊ¸Á¿¡¢Ô²»¡µÄIKÖµÇó³öµ¶²¹Ö®ºóµÄ²¹³¥µã
-  ÊäÈë²ÎÊı£ºSP1			×ª½Óµã
-			LineVec		Ö±ÏßÊ¸Á¿
-			dI			Ô²»¡Ô²ĞÄÓëÆğµãÔÚx·½ÏòµÄ¾àÀë
-			dJ			Ô²»¡Ô²ĞÄÓëÆğµãÔÚy·½ÏòµÄ¾àÀë
-			SP2			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šIntersection_Of_Line_And_Arc(SPointDouble &SP1, SVector LineVec, double dI, double dJ, SPointDouble &SP2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è½¬æ¥ç‚¹ã€ç›´çº¿çš„æ–¹å‘çŸ¢é‡ã€åœ†å¼§çš„IKå€¼æ±‚å‡ºåˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šSP1			è½¬æ¥ç‚¹
+			LineVec		ç›´çº¿çŸ¢é‡
+			dI			åœ†å¼§åœ†å¿ƒä¸èµ·ç‚¹åœ¨xæ–¹å‘çš„è·ç¦»
+			dJ			åœ†å¼§åœ†å¿ƒä¸èµ·ç‚¹åœ¨yæ–¹å‘çš„è·ç¦»
+			SP2			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP2			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP2			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Ö±ÏßÓëÔ²»¡µÈ¾àÏßµÄ½»µã
-void Intersection_Of_Line_And_Arc(double dToolRadius, SPointDouble SP1, SVector LineVec, double dK, double dI, SPointDouble* SP2, int8 cArcDirection, uint8* ucAxisNum)
+//ç›´çº¿ä¸åœ†å¼§ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Line_And_Arc(double dToolRadius, SPointDouble SP1, SVector LineVec, double dK, double dI,
+                                  SPointDouble* SP2, int8 cArcDirection, uint8* ucAxisNum)
 {
-	double dR = sqrt(pow(dK, 2) + pow(dI, 2));
-	double f = 0;
-	if (SP2 == NULL)
-	{
-		return;
-	}
+    double dR = sqrt(pow(dK, 2) + pow(dI, 2));
+    double f = 0;
+    if (SP2 == NULL)
+    {
+        return;
+    }
 
-	if (cArcDirection == ARC_CW)//Ë³Ô²»¡Ê±
-	{
-		f = sqrt(fabs(pow((dR + dToolRadius), 2) - pow((-dI * LineVec.dArray[ucAxisNum[0]] + dK * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
-	}
-	if (cArcDirection == ARC_ANTI_CW)//ÄæÔ²»¡Ê±
-	{
-		f = sqrt(fabs(pow((dR - dToolRadius), 2) - pow((-dI * LineVec.dArray[ucAxisNum[0]] + dK * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
-	}
-	SP2->dArray[ucAxisNum[0]] = SP1.dArray[ucAxisNum[0]] - LineVec.dArray[ucAxisNum[0]] * (LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) - dToolRadius * LineVec.dArray[ucAxisNum[1]] + Sgn(LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) * LineVec.dArray[ucAxisNum[0]] * f;
+    if (cArcDirection == ARC_CW) //é¡ºåœ†å¼§æ—¶
+    {
+        f = sqrt(fabs(pow((dR + dToolRadius), 2) -
+                      pow((-dI * LineVec.dArray[ucAxisNum[0]] + dK * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
+    }
+    if (cArcDirection == ARC_ANTI_CW) //é€†åœ†å¼§æ—¶
+    {
+        f = sqrt(fabs(pow((dR - dToolRadius), 2) -
+                      pow((-dI * LineVec.dArray[ucAxisNum[0]] + dK * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
+    }
+    SP2->dArray[ucAxisNum[0]] =
+        SP1.dArray[ucAxisNum[0]] -
+        LineVec.dArray[ucAxisNum[0]] * (LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) -
+        dToolRadius * LineVec.dArray[ucAxisNum[1]] +
+        Sgn(LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) * LineVec.dArray[ucAxisNum[0]] * f;
 
-	SP2->dArray[ucAxisNum[1]] = SP1.dArray[ucAxisNum[1]] - LineVec.dArray[ucAxisNum[1]] * (LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) + dToolRadius * LineVec.dArray[ucAxisNum[0]] + Sgn(LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) * LineVec.dArray[ucAxisNum[1]] * f;
-
+    SP2->dArray[ucAxisNum[1]] =
+        SP1.dArray[ucAxisNum[1]] -
+        LineVec.dArray[ucAxisNum[1]] * (LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) +
+        dToolRadius * LineVec.dArray[ucAxisNum[0]] +
+        Sgn(LineVec.dArray[ucAxisNum[0]] * dK + LineVec.dArray[ucAxisNum[1]] * dI) * LineVec.dArray[ucAxisNum[1]] * f;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIntersection_Of_Arc_And_Line(SPointDouble &SP1, SPointDouble &SP2, SPointDouble &SP3, SVector LineVec, double dI, double dJ)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÆğµã¡¢×ª½Óµã¡¢Ö±ÏßµÄ·½ÏòÊ¸Á¿¡¢Ô²»¡µÄIKÖµÇó³öµ¶²¹Ö®ºóµÄ²¹³¥µã
-  ÊäÈë²ÎÊı£ºSP1			Æğµã
-			SP2			×ª½Óµã
-			LineVec		Ö±ÏßÊ¸Á¿
-			dI			Ô²»¡Ô²ĞÄÓëÆğµãÔÚx·½ÏòµÄ¾àÀë
-			dJ			Ô²»¡Ô²ĞÄÓëÆğµãÔÚy·½ÏòµÄ¾àÀë
-			SP3			ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
+  å‡½æ•°åç§°ï¼šIntersection_Of_Arc_And_Line(SPointDouble &SP1, SPointDouble &SP2, SPointDouble &SP3, SVector LineVec, double dI, double dJ)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®èµ·ç‚¹ã€è½¬æ¥ç‚¹ã€ç›´çº¿çš„æ–¹å‘çŸ¢é‡ã€åœ†å¼§çš„IKå€¼æ±‚å‡ºåˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šSP1			èµ·ç‚¹
+			SP2			è½¬æ¥ç‚¹
+			LineVec		ç›´çº¿çŸ¢é‡
+			dI			åœ†å¼§åœ†å¿ƒä¸èµ·ç‚¹åœ¨xæ–¹å‘çš„è·ç¦»
+			dJ			åœ†å¼§åœ†å¿ƒä¸èµ·ç‚¹åœ¨yæ–¹å‘çš„è·ç¦»
+			SP3			ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
 
-  Êä³ö²ÎÊı£ºSP3			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP3			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Ô²»¡×ªÖ±ÏßµÈ¾àÏßµÄ½»µã
-void Intersection_Of_Arc_And_Line(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3, SVector LineVec, double dK, double dI, int8 cArcDirection, uint8* ucAxisNum)
+//åœ†å¼§è½¬ç›´çº¿ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Arc_And_Line(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3,
+                                  SVector LineVec, double dK, double dI, int8 cArcDirection, uint8* ucAxisNum)
 {
-	int8 cSgn = 0;
-	double f = 0;
-	double dR = sqrt(pow(dK, 2) + pow(dI, 2));
-	double dZ_01=0, dX_01=0;
-	if (SP3 == NULL)
-	{
-		return;
-	}
-	dZ_01 = -SP1.dArray[ucAxisNum[0]] + dK + SP2.dArray[ucAxisNum[0]];
-	dX_01 = -SP1.dArray[ucAxisNum[1]] + dI + SP2.dArray[ucAxisNum[1]];
+    int8 cSgn = 0;
+    double f = 0;
+    double dR = sqrt(pow(dK, 2) + pow(dI, 2));
+    double dZ_01 = 0, dX_01 = 0;
+    if (SP3 == NULL)
+    {
+        return;
+    }
+    dZ_01 = -SP1.dArray[ucAxisNum[0]] + dK + SP2.dArray[ucAxisNum[0]];
+    dX_01 = -SP1.dArray[ucAxisNum[1]] + dI + SP2.dArray[ucAxisNum[1]];
 
-	if (cArcDirection == ARC_CW)//Ë³Ô²»¡
-	{
-		f = sqrt(fabs(pow((dR + dToolRadius), 2) - pow((-dX_01 * LineVec.dArray[ucAxisNum[0]] + dZ_01 * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
-	}
-	else if (cArcDirection == ARC_ANTI_CW)//ÄæÔ²»¡
-	{
-		f = sqrt(fabs(pow((dR - dToolRadius), 2) - pow((-dX_01 * LineVec.dArray[ucAxisNum[0]] + dZ_01 * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
-	}
+    if (cArcDirection == ARC_CW) //é¡ºåœ†å¼§
+    {
+        f = sqrt(
+            fabs(pow((dR + dToolRadius), 2) -
+                 pow((-dX_01 * LineVec.dArray[ucAxisNum[0]] + dZ_01 * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
+    }
+    else if (cArcDirection == ARC_ANTI_CW) //é€†åœ†å¼§
+    {
+        f = sqrt(
+            fabs(pow((dR - dToolRadius), 2) -
+                 pow((-dX_01 * LineVec.dArray[ucAxisNum[0]] + dZ_01 * LineVec.dArray[ucAxisNum[1]] - dToolRadius), 2)));
+    }
 
-	if (isZero(Sgn(LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01)))
-	{
-		cSgn = 1;
-	}
-	else cSgn = Sgn(LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01);
+    if (isZero(Sgn(LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01)))
+    {
+        cSgn = 1;
+    }
+    else
+        cSgn = Sgn(LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01);
 
-	SP3->dArray[ucAxisNum[0]] = SP2.dArray[ucAxisNum[0]] - LineVec.dArray[ucAxisNum[0]] * (LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01) - dToolRadius * LineVec.dArray[ucAxisNum[1]] + cSgn * LineVec.dArray[ucAxisNum[0]] * f;
+    SP3->dArray[ucAxisNum[0]] =
+        SP2.dArray[ucAxisNum[0]] -
+        LineVec.dArray[ucAxisNum[0]] * (LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01) -
+        dToolRadius * LineVec.dArray[ucAxisNum[1]] + cSgn * LineVec.dArray[ucAxisNum[0]] * f;
 
-	SP3->dArray[ucAxisNum[1]] = SP2.dArray[ucAxisNum[1]] - LineVec.dArray[ucAxisNum[1]] * (LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01) + dToolRadius * LineVec.dArray[ucAxisNum[0]] + cSgn * LineVec.dArray[ucAxisNum[1]] * f;
+    SP3->dArray[ucAxisNum[1]] =
+        SP2.dArray[ucAxisNum[1]] -
+        LineVec.dArray[ucAxisNum[1]] * (LineVec.dArray[ucAxisNum[0]] * dZ_01 + LineVec.dArray[ucAxisNum[1]] * dX_01) +
+        dToolRadius * LineVec.dArray[ucAxisNum[0]] + cSgn * LineVec.dArray[ucAxisNum[1]] * f;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIntersection_Of_Arc_And_Arc(SPointDouble&SP1, SPointDouble&SP2, SPointDouble&SP3, double I1, double J1, double I2, double J2)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÆğµã¡¢×ª½Óµã¡¢Ô²»¡µÄ·½ÏòÊ¸Á¿¡¢Ô²»¡1µÄIKÖµÒÔ¼°Ô²»¡2µÄIKÖµÇó³öµ¶²¹Ö®ºóµÄ²¹³¥µã
-  ÊäÈë²ÎÊı£ºSP1			          Æğµã
-			SP2			          ×ª½Óµã
-			K1			          Ô²»¡1Ô²ĞÄÓëÆğµãÔÚZ·½ÏòµÄ¾àÀë
-			I1			          Ô²»¡1Ô²ĞÄÓëÆğµãÔÚX·½ÏòµÄ¾àÀë
-			K2			          Ô²»¡2Ô²ĞÄÓëÆğµãÔÚZ·½ÏòµÄ¾àÀë
-			I2			          Ô²»¡2Ô²ĞÄÓëÆğµãÔÚX·½ÏòµÄ¾àÀë
-			SP3			          ÓÃÓÚ¼ÇÂ¼µ¶²¹Ö®ºóµÄ²¹³¥µã
-			cArc1Direction        Ô²»¡1·½Ïò
-			cArc2Direction        Ô²»¡2·½Ïò
-			ucPosFlag             Î»ÖÃ±êÖ¾£¬1ÎªÁ½Ô²²»ÏàÇĞ£¬2ÎªÁ½Ô²ÍâÇĞ£¬3ÎªÁ½Ô²ÄÚÇĞ
+  å‡½æ•°åç§°ï¼šIntersection_Of_Arc_And_Arc(SPointDouble&SP1, SPointDouble&SP2, SPointDouble&SP3, double I1, double J1, double I2, double J2)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®èµ·ç‚¹ã€è½¬æ¥ç‚¹ã€åœ†å¼§çš„æ–¹å‘çŸ¢é‡ã€åœ†å¼§1çš„IKå€¼ä»¥åŠåœ†å¼§2çš„IKå€¼æ±‚å‡ºåˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šSP1			          èµ·ç‚¹
+			SP2			          è½¬æ¥ç‚¹
+			K1			          åœ†å¼§1åœ†å¿ƒä¸èµ·ç‚¹åœ¨Zæ–¹å‘çš„è·ç¦»
+			I1			          åœ†å¼§1åœ†å¿ƒä¸èµ·ç‚¹åœ¨Xæ–¹å‘çš„è·ç¦»
+			K2			          åœ†å¼§2åœ†å¿ƒä¸èµ·ç‚¹åœ¨Zæ–¹å‘çš„è·ç¦»
+			I2			          åœ†å¼§2åœ†å¿ƒä¸èµ·ç‚¹åœ¨Xæ–¹å‘çš„è·ç¦»
+			SP3			          ç”¨äºè®°å½•åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+			cArc1Direction        åœ†å¼§1æ–¹å‘
+			cArc2Direction        åœ†å¼§2æ–¹å‘
+			ucPosFlag             ä½ç½®æ ‡å¿—ï¼Œ1ä¸ºä¸¤åœ†ä¸ç›¸åˆ‡ï¼Œ2ä¸ºä¸¤åœ†å¤–åˆ‡ï¼Œ3ä¸ºä¸¤åœ†å†…åˆ‡
 
-  Êä³ö²ÎÊı£ºSP3			µ¶²¹Ö®ºóµÄ²¹³¥µã
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šSP3			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Ô²»¡×ªÔ²»¡µÈ¾àÏßµÄ½»µã
-void Intersection_Of_Arc_And_Arc(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3, double dK1, double dI1, double dK2, double dI2, int8 cArc1Direction, int8 cArc2Direction, uint8* ucAxisNum,uint8 ucPosFlag)
+//åœ†å¼§è½¬åœ†å¼§ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Arc_And_Arc(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3, double dK1,
+                                 double dI1, double dK2, double dI2, int8 cArc1Direction, int8 cArc2Direction,
+                                 uint8* ucAxisNum, uint8 ucPosFlag)
 {
 
-	double Z_01, X_01, Z_02, X_02;
-	double R1, R2, f;
-	double d, Z_L, X_L, r;
-	int8 cSgn = 0;
+    double Z_01, X_01, Z_02, X_02;
+    double R1, R2, f;
+    double d, Z_L, X_L, r;
+    int8 cSgn = 0;
 
-	if (SP3 == NULL)
-	{
-		return;
-	}
+    if (SP3 == NULL)
+    {
+        return;
+    }
 
-	Z_01 = SP1.dArray[ucAxisNum[0]] - dK1 - SP2.dArray[ucAxisNum[0]];
-	X_01 = SP1.dArray[ucAxisNum[1]] - dI1 - SP2.dArray[ucAxisNum[1]];
-	Z_02 = -dK2;
-	X_02 = -dI2;
-	R1 = sqrt(pow(dK1, 2) + pow(dI1, 2));
-	R2 = sqrt(pow(dK2, 2) + pow(dI2, 2));
-	d = sqrt(pow((X_02 - X_01), 2) + pow((Z_02 - Z_01), 2));
+    Z_01 = SP1.dArray[ucAxisNum[0]] - dK1 - SP2.dArray[ucAxisNum[0]];
+    X_01 = SP1.dArray[ucAxisNum[1]] - dI1 - SP2.dArray[ucAxisNum[1]];
+    Z_02 = -dK2;
+    X_02 = -dI2;
+    R1 = sqrt(pow(dK1, 2) + pow(dI1, 2));
+    R2 = sqrt(pow(dK2, 2) + pow(dI2, 2));
+    d = sqrt(pow((X_02 - X_01), 2) + pow((Z_02 - Z_01), 2));
 
-	//Èç¹ûÕûÔ²Ê±,Ôö¼Ó½øĞĞdÎª0ÅĞ¶Ï£¬·ÀÖ¹r²ÎÊıÎªÁã
-	if (isZero(d))
-	{
-		Z_L=0;
-		X_L=0;
-		r = 0;
-		f = R2 + dToolRadius;
-	}
+    //å¦‚æœæ•´åœ†æ—¶,å¢åŠ è¿›è¡Œdä¸º0åˆ¤æ–­ï¼Œé˜²æ­¢rå‚æ•°ä¸ºé›¶
+    if (isZero(d))
+    {
+        Z_L = 0;
+        X_L = 0;
+        r = 0;
+        f = R2 + dToolRadius;
+    }
 
-	else
-	{
-		Z_L = (X_02 - X_01) / d;
-		X_L = -(Z_02 - Z_01) / d;
+    else
+    {
+        Z_L = (X_02 - X_01) / d;
+        X_L = -(Z_02 - Z_01) / d;
 
-		if (cArc1Direction == ARC_CW && cArc2Direction == ARC_CW)//Á½Ë³Ô²»¡
-		{
-			r = (R2 - R1) * dToolRadius / d;
-			f = sqrt(fabs(pow((R2 + dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
-		}
+        if (cArc1Direction == ARC_CW && cArc2Direction == ARC_CW) //ä¸¤é¡ºåœ†å¼§
+        {
+            r = (R2 - R1) * dToolRadius / d;
+            f = sqrt(fabs(pow((R2 + dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
+        }
 
-		else if (cArc1Direction == ARC_ANTI_CW && cArc2Direction == ARC_ANTI_CW)//Á½ÄæÔ²»¡
-		{
-			r = (R1 - R2) * dToolRadius / d;
-			f = sqrt(fabs(pow((R2 - dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
-		}
+        else if (cArc1Direction == ARC_ANTI_CW && cArc2Direction == ARC_ANTI_CW) //ä¸¤é€†åœ†å¼§
+        {
+            r = (R1 - R2) * dToolRadius / d;
+            f = sqrt(fabs(pow((R2 - dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
+        }
 
-		else if (cArc1Direction == ARC_CW && cArc2Direction == ARC_ANTI_CW)//µÚÒ»ÌõÔ²»¡Ë³£¬µÚ¶şÌõÔ²»¡Äæ
-		{
-			r = -(R1 + R2) * dToolRadius / d;
-			f = sqrt(fabs(pow((R2 - dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
-		}
+        else if (cArc1Direction == ARC_CW && cArc2Direction == ARC_ANTI_CW) //ç¬¬ä¸€æ¡åœ†å¼§é¡ºï¼Œç¬¬äºŒæ¡åœ†å¼§é€†
+        {
+            r = -(R1 + R2) * dToolRadius / d;
+            f = sqrt(fabs(pow((R2 - dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
+        }
 
-		else if (cArc1Direction == ARC_ANTI_CW && cArc2Direction == ARC_CW)//µÚÒ»ÌõÔ²»¡Äæ£¬µÚ¶şÌõÔ²»¡Ë³
-		{
-			r = (R1 + R2) * dToolRadius / d;
-			f = sqrt(fabs(pow((R2 + dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
-		}
-	}
+        else if (cArc1Direction == ARC_ANTI_CW && cArc2Direction == ARC_CW) //ç¬¬ä¸€æ¡åœ†å¼§é€†ï¼Œç¬¬äºŒæ¡åœ†å¼§é¡º
+        {
+            r = (R1 + R2) * dToolRadius / d;
+            f = sqrt(fabs(pow((R2 + dToolRadius), 2) - pow((-X_02 * Z_L + Z_02 * X_L - r), 2)));
+        }
+    }
 
-	//µ±Á½Ô²ÏàÇĞÊ±¸ù¾İÍâÇĞ»òÄÚÇĞ½øĞĞ¶îÍâµÄ´¦Àí
-	if (isZero(Sgn(X_02 * X_L + Z_02 * Z_L)))
-	{
-		//Èç¹ûÎª×óµ¶²¹
-		if ((dToolRadius > 0 && ucPosFlag==2) || (dToolRadius<0 && ucPosFlag==3))
-		{
-			cSgn = 1;
-		}
+    //å½“ä¸¤åœ†ç›¸åˆ‡æ—¶æ ¹æ®å¤–åˆ‡æˆ–å†…åˆ‡è¿›è¡Œé¢å¤–çš„å¤„ç†
+    if (isZero(Sgn(X_02 * X_L + Z_02 * Z_L)))
+    {
+        //å¦‚æœä¸ºå·¦åˆ€è¡¥
+        if ((dToolRadius > 0 && ucPosFlag == 2) || (dToolRadius < 0 && ucPosFlag == 3))
+        {
+            cSgn = 1;
+        }
 
-		//Èç¹ûÎªÓÒµ¶²¹
-		else if ((dToolRadius < 0 && ucPosFlag==2 )|| (dToolRadius > 0 && ucPosFlag == 3))
-		{
-			cSgn = -1;
-		}
+        //å¦‚æœä¸ºå³åˆ€è¡¥
+        else if ((dToolRadius < 0 && ucPosFlag == 2) || (dToolRadius > 0 && ucPosFlag == 3))
+        {
+            cSgn = -1;
+        }
 
-		else cSgn = 0;
-	}
+        else
+            cSgn = 0;
+    }
 
-	//²»ÏàÇĞÊ±Ö±½ÓÈ¡Ô­À´µÄ·ûºÅ
-	else cSgn = Sgn(X_02 * X_L + Z_02 * Z_L);
+    //ä¸ç›¸åˆ‡æ—¶ç›´æ¥å–åŸæ¥çš„ç¬¦å·
+    else
+        cSgn = Sgn(X_02 * X_L + Z_02 * Z_L);
 
-	SP3->dArray[ucAxisNum[0]] = SP2.dArray[ucAxisNum[0]] + Z_L * (X_02 * X_L + Z_02 * Z_L) + r * X_L - cSgn * f * Z_L;
-	SP3->dArray[ucAxisNum[1]] = SP2.dArray[ucAxisNum[1]] + X_L * (X_02 * X_L + Z_02 * Z_L) - r * Z_L - cSgn * f * X_L;
+    SP3->dArray[ucAxisNum[0]] = SP2.dArray[ucAxisNum[0]] + Z_L * (X_02 * X_L + Z_02 * Z_L) + r * X_L - cSgn * f * Z_L;
+    SP3->dArray[ucAxisNum[1]] = SP2.dArray[ucAxisNum[1]] + X_L * (X_02 * X_L + Z_02 * Z_L) - r * Z_L - cSgn * f * X_L;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºSaveCommonParameter(SGCodeParse *Gcode, SToolCompensation &Toolcode,SPointDouble TcodePrevPoint,SPointDouble TcodeEndPoint)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯²¢¼Ì³Ğµ¶²¹»º³åÇøµÄ¹«¹²²ÎÊı
-  ÊäÈë²ÎÊı£ºGcode	           G´úÂë½âÎöºóµÄ½á¹¹ÌåÖ¸Õë
-			Toolcode	       µ¶²¹ºóµÄ½á¹¹Ìå
-			TcodePrevPoint     Ç°Ò»¸öµ¶²¹³¥µã
-			TcodeEndPoint      ĞÂ¼ÆËãµÄµ¶²¹³¥µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º¸Ä±äµ¶²¹½á¹¹ÌåµÄ¸÷³ÉÔ±Öµ
+  å‡½æ•°åç§°ï¼šSaveCommonParameter(SGCodeParse *Gcode, SToolCompensation &Toolcode,SPointDouble TcodePrevPoint,SPointDouble TcodeEndPoint)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å¹¶ç»§æ‰¿åˆ€è¡¥ç¼“å†²åŒºçš„å…¬å…±å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šGcode	           Gä»£ç è§£æåçš„ç»“æ„ä½“æŒ‡é’ˆ
+			Toolcode	       åˆ€è¡¥åçš„ç»“æ„ä½“
+			TcodePrevPoint     å‰ä¸€ä¸ªåˆ€è¡¥å¿ç‚¹
+			TcodeEndPoint      æ–°è®¡ç®—çš„åˆ€è¡¥å¿ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šæ”¹å˜åˆ€è¡¥ç»“æ„ä½“çš„å„æˆå‘˜å€¼
 **************************************************/
-void SaveCommonParameter(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, uint8* ucAxisNum, uint8 ucChannelNum)
+void SaveCommonParameter(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint,
+                         uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	uint8 ucCounter;
-	struct SToolCompensation* pToolcode;
-	pToolcode = getSToolCompPointerByType(STOOL_WRITE, ucChannelNum); // »ñÈ¡µ¶²¹µÄĞ´Ö¸Õë
+    uint8 ucCounter;
+    struct SToolCompensation* pToolcode;
+    pToolcode = getSToolCompPointerByType(STOOL_WRITE, ucChannelNum); // è·å–åˆ€è¡¥çš„å†™æŒ‡é’ˆ
 
-	memset(pToolcode, 0, sizeof(struct SToolCompensation));
+    memset(pToolcode, 0, sizeof(struct SToolCompensation));
 
-	pToolcode->bHasVeerFlag = FALSE;
-	pToolcode->bLookAheadVParaCalcOverFlag = FALSE;//¹ùÇ¿2022/11/28
-	pToolcode->ucAxisNumOfNeedLookAhead = AXIS_NULL;//ºé¹ÚÅô 2024/5/27 ĞèÒªÇ°Õ°µÄµ¥ÖáÖáºÅ³õÊ¼»¯Îª¿Õ
-	pToolcode->cAxisDirOfNeedLookAhead = INP_GO_AHEAD;//ºé¹ÚÅô 2024/5/27 ĞèÒªÇ°Õ°µÄµ¥Öá·½Ïò³õÊ¼»¯ÎªÕı·½Ïò
+    pToolcode->bHasVeerFlag = FALSE;
+    pToolcode->bLookAheadVParaCalcOverFlag = FALSE;    //éƒ­å¼º2022/11/28
+    pToolcode->ucAxisNumOfNeedLookAhead = AXIS_NULL;   //æ´ªå† é¹ 2024/5/27 éœ€è¦å‰ç»çš„å•è½´è½´å·åˆå§‹åŒ–ä¸ºç©º
+    pToolcode->cAxisDirOfNeedLookAhead = INP_GO_AHEAD; //æ´ªå† é¹ 2024/5/27 éœ€è¦å‰ç»çš„å•è½´æ–¹å‘åˆå§‹åŒ–ä¸ºæ­£æ–¹å‘
     strncpy(pToolcode->cFilename, pGcode->cFilename, FILENAME_LENGTH_LIMIT);
-	pToolcode->unGCodeLineNum = pGcode->unGCodeLineNum;
-	pToolcode->bLastLineMark = pGcode->bLastLineMark;
-	pToolcode->SToolPara.ucToolID = pGcode->ucToolID;
-	pToolcode->ucToolCompNum = pGcode->ucToolCompNum;
-	pToolcode->uG10ToolID = pGcode->uG10ToolID;
-    pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;//fyh 2023.4.6
-	pToolcode->dSpindleSpeed = pGcode->dSpindleSpeed;
-	pToolcode->dSecondSpindleSpeed = pGcode->dSecondSpindleSpeed;
-	pToolcode->sChannelCommand = pGcode->sChannelCommand;
+    pToolcode->unGCodeLineNum = pGcode->unGCodeLineNum;
+    pToolcode->bLastLineMark = pGcode->bLastLineMark;
+    pToolcode->SToolPara.ucToolID = pGcode->ucToolID;
+    pToolcode->ucToolCompNum = pGcode->ucToolCompNum;
+    pToolcode->uG10ToolID = pGcode->uG10ToolID;
+    pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed; //fyh 2023.4.6
+    pToolcode->dSpindleSpeed = pGcode->dSpindleSpeed;
+    pToolcode->dSecondSpindleSpeed = pGcode->dSecondSpindleSpeed;
+    pToolcode->sChannelCommand = pGcode->sChannelCommand;
 
-	pToolcode->cToolAxisMod = pGcode->cToolAxisMod;//µ¶¾ßÖáÄ£Ê½
-	pToolcode->dToolAxisFollowRatio = pGcode->dToolAxisFollowRatio;//Ö¸Áî×ªËÙ±È
-	pToolcode->dToolAxisPhase = pGcode->dToolAxisPhase;//Ö¸ÁîÏàÎ»½Ç
-	pToolcode->cTwistCommand = pGcode->cTwistCommand;//µ¶¾ßÖáÅ¤×ªÖ¸Áî£¨G0,G1,G2£©
-	pToolcode->dTwistAngle= pGcode->dTwistAngle;//µ¶¾ßÖáÅ¤×ª½Ç
+    pToolcode->cToolAxisMod = pGcode->cToolAxisMod;                 //åˆ€å…·è½´æ¨¡å¼
+    pToolcode->dToolAxisFollowRatio = pGcode->dToolAxisFollowRatio; //æŒ‡ä»¤è½¬é€Ÿæ¯”
+    pToolcode->dToolAxisPhase = pGcode->dToolAxisPhase;             //æŒ‡ä»¤ç›¸ä½è§’
+    pToolcode->cTwistCommand = pGcode->cTwistCommand;               //åˆ€å…·è½´æ‰­è½¬æŒ‡ä»¤ï¼ˆG0,G1,G2ï¼‰
+    pToolcode->dTwistAngle = pGcode->dTwistAngle;                   //åˆ€å…·è½´æ‰­è½¬è§’
 
+    pToolcode->dFeedrate = pToolcode->dUncorrectedFeedrate =
+        pGcode->dFeedrate; //éƒ­å¼ºå¢åŠ dUncorrectedFeedrateæˆå‘˜ 2022/11/25(ç”¨äºå›å†™æ—¶)
+    pToolcode->ulDelayTime = pGcode->unDelayTime;
+    pToolcode->unCommandType = pGcode->unCommandType;
+    pToolcode->dQ = pGcode->dQ;
+    pToolcode->bValidQ = pGcode->bValidQ;
+    pToolcode->SIOContrlInfo = pGcode->SIOContrlInfo;   //é™ˆæ•èª	7/10
+    pToolcode->bChipBreakFlag = pGcode->bChipBreakFlag; //æ–­å±‘æŒ‡ä»¤G4.9
+    pToolcode->unChipBreakDelayTime = pGcode->unChipBreakDelayTime;
+    pToolcode->dChipBreakLength = pGcode->dChipBreakLength;
 
+    pToolcode->bG31Flag = pGcode->bG31Flag;
 
-	pToolcode->dFeedrate = pToolcode->dUncorrectedFeedrate = pGcode->dFeedrate;//¹ùÇ¿Ôö¼ÓdUncorrectedFeedrate³ÉÔ± 2022/11/25(ÓÃÓÚ»ØĞ´Ê±)
-	pToolcode->ulDelayTime = pGcode->unDelayTime;
-	pToolcode->unCommandType = pGcode->unCommandType;
-	pToolcode->dQ = pGcode->dQ;
-	pToolcode->bValidQ = pGcode->bValidQ;
-	pToolcode->SIOContrlInfo = pGcode->SIOContrlInfo;	//³ÂÃô´Ï	7/10
-	pToolcode->bChipBreakFlag = pGcode->bChipBreakFlag; //¶ÏĞ¼Ö¸ÁîG4.9
-	pToolcode->unChipBreakDelayTime = pGcode->unChipBreakDelayTime;
-	pToolcode->dChipBreakLength = pGcode->dChipBreakLength;
+    //å…ˆç»§æ‰¿Gä»£ç ç¼“å­˜åŒºçš„èµ·ç‚¹ç»ˆç‚¹ï¼Œä»¥è·å–æ‰€æœ‰éåˆ€è¡¥å¹³é¢åæ ‡è½´çš„å€¼
+    pToolcode->SStartPoint = pGcode->SStartPoint;
+    pToolcode->SEndPoint = pGcode->SEndPoint;
+    pToolcode->dEllipseFactorA = pGcode->dEllipseFactorA;
+    pToolcode->dEllipseFactorB = pGcode->dEllipseFactorB;
+    pToolcode->fCylinderRadius = pGcode->fCylinderRadius;
+    pToolcode->dHorMax = pGcode->dHorMax; //è·å–åœ†å¼§è½¨è¿¹ä¸Šæ¨ªè½´æ–¹å‘çš„æœ€å¤§å€¼  æ´ªå† é¹ 2024/4/19
+    pToolcode->dHorMin = pGcode->dHorMin; //è·å–åœ†å¼§è½¨è¿¹ä¸Šæ¨ªè½´æ–¹å‘çš„æœ€å°å€¼
+    pToolcode->dVerMax = pGcode->dVerMax; //è·å–åœ†å¼§è½¨è¿¹ä¸Šçºµè½´æ–¹å‘çš„æœ€å¤§å€¼
+    pToolcode->dVerMin = pGcode->dVerMin; //è·å–åœ†å¼§è½¨è¿¹ä¸Šçºµè½´æ–¹å‘çš„æœ€å°å€¼
 
-	pToolcode->bG31Flag = pGcode->bG31Flag;
+    //å°†åˆ€è¡¥å¹³é¢è®¡ç®—åçš„åæ ‡èµ‹ç»™åˆ€è¡¥ç¼“å­˜åŒºä¸­
+    pToolcode->SStartPoint.dArray[ucAxisNum[0]] = STcodePrevPoint.dArray[ucAxisNum[0]];
+    pToolcode->SStartPoint.dArray[ucAxisNum[1]] = STcodePrevPoint.dArray[ucAxisNum[1]];
+    pToolcode->SEndPoint.dArray[ucAxisNum[0]] = STcodeEndPoint.dArray[ucAxisNum[0]];
+    pToolcode->SEndPoint.dArray[ucAxisNum[1]] = STcodeEndPoint.dArray[ucAxisNum[1]];
+    pToolcode->cQuickHandleType = pGcode->cQuickHandleType;
+    pToolcode->cMergedCounter = pGcode->cMergedCounter;
+    pToolcode->cWorkpieceCoordNum = pGcode->SModalInfo.sGb; //å·¥ä»¶åæ ‡å·
+    //pToolcode->pSG50Offset = pGcode->pSG50Offset;
 
-	//ÏÈ¼Ì³ĞG´úÂë»º´æÇøµÄÆğµãÖÕµã£¬ÒÔ»ñÈ¡ËùÓĞ·Çµ¶²¹Æ½Ãæ×ø±êÖáµÄÖµ
-	pToolcode->SStartPoint = pGcode->SStartPoint;
-	pToolcode->SEndPoint = pGcode->SEndPoint;
-	pToolcode->dEllipseFactorA = pGcode->dEllipseFactorA;
-	pToolcode->dEllipseFactorB = pGcode->dEllipseFactorB;
-	pToolcode->fCylinderRadius = pGcode->fCylinderRadius;
-	pToolcode->dHorMax = pGcode->dHorMax;//»ñÈ¡Ô²»¡¹ì¼£ÉÏºáÖá·½ÏòµÄ×î´óÖµ  ºé¹ÚÅô 2024/4/19
-	pToolcode->dHorMin = pGcode->dHorMin;//»ñÈ¡Ô²»¡¹ì¼£ÉÏºáÖá·½ÏòµÄ×îĞ¡Öµ
-	pToolcode->dVerMax = pGcode->dVerMax;//»ñÈ¡Ô²»¡¹ì¼£ÉÏ×İÖá·½ÏòµÄ×î´óÖµ
-	pToolcode->dVerMin = pGcode->dVerMin;//»ñÈ¡Ô²»¡¹ì¼£ÉÏ×İÖá·½ÏòµÄ×îĞ¡Öµ
+    pToolcode->cPointType = pGcode->cPointType;
+    pToolcode->uG10ToolID = pGcode->uG10ToolID;
+    pToolcode->SPointInfo = pGcode->SPointInfo;
 
-	//½«µ¶²¹Æ½Ãæ¼ÆËãºóµÄ×ø±ê¸³¸øµ¶²¹»º´æÇøÖĞ
-	pToolcode->SStartPoint.dArray[ucAxisNum[0]] = STcodePrevPoint.dArray[ucAxisNum[0]];
-	pToolcode->SStartPoint.dArray[ucAxisNum[1]] = STcodePrevPoint.dArray[ucAxisNum[1]];
-	pToolcode->SEndPoint.dArray[ucAxisNum[0]] = STcodeEndPoint.dArray[ucAxisNum[0]];
-	pToolcode->SEndPoint.dArray[ucAxisNum[1]] = STcodeEndPoint.dArray[ucAxisNum[1]];
-	pToolcode->cQuickHandleType = pGcode->cQuickHandleType;
-	pToolcode->cMergedCounter = pGcode->cMergedCounter;
-	pToolcode->cWorkpieceCoordNum = pGcode->SModalInfo.sGb;//¹¤¼ş×ø±êºÅ
-	//pToolcode->pSG50Offset = pGcode->pSG50Offset;
-
-	pToolcode->cPointType = pGcode->cPointType;
-	pToolcode->uG10ToolID = pGcode->uG10ToolID;
-	pToolcode->SPointInfo = pGcode->SPointInfo;
-
-	//Ìí¼ÓG84ËùĞèÒª²ÎÊı2025 11 15
-	pToolcode->dG84Ratio = pGcode->dG84Ratio;
+    //æ·»åŠ G84æ‰€éœ€è¦å‚æ•°2025 11 15
+    pToolcode->dG84Ratio = pGcode->dG84Ratio;
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-	pToolcode->bHandwheelAuto = pGcode->bHandwheelAuto
-		|| pGcode->cToolAxisMod != 0 || pGcode->cTwistCommand != 0;
+    pToolcode->bHandwheelAuto = pGcode->bHandwheelAuto || pGcode->cToolAxisMod != 0 || pGcode->cTwistCommand != 0;
 #endif
 
-//	pToolcode->bG50Appear = pGcode->bG50Appear;//´«ÈëG50ÁÙÊ±×ø±ê±êÖ¾Î» 2023-08-3ºé¹ÚÅô
-	pToolcode->bG65SystemMacroWait = pGcode->bG65SystemMacroWait;
-	pGcode->bG65SystemMacroWait = FALSE;//¸´Î»±êÖ¾Î» 2023.11.23 ³ÂÓıéª
-	for (ucCounter = 0; ucCounter < IO_MAXGROUP_IN_SINGLE_LINE; ucCounter++) //IOÀàĞÍ M´úÂë¸³Öµ
-	{
-		pToolcode->ucIOCommandArray[ucCounter] = pGcode->ucIOCommandArray[ucCounter];
-	}
-
+    //	pToolcode->bG50Appear = pGcode->bG50Appear;//ä¼ å…¥G50ä¸´æ—¶åæ ‡æ ‡å¿—ä½ 2023-08-3æ´ªå† é¹
+    pToolcode->bG65SystemMacroWait = pGcode->bG65SystemMacroWait;
+    pGcode->bG65SystemMacroWait = FALSE;                                     //å¤ä½æ ‡å¿—ä½ 2023.11.23 é™ˆè‚²æ¥ 
+    for (ucCounter = 0; ucCounter < IO_MAXGROUP_IN_SINGLE_LINE; ucCounter++) //IOç±»å‹ Mä»£ç èµ‹å€¼
+    {
+        pToolcode->ucIOCommandArray[ucCounter] = pGcode->ucIOCommandArray[ucCounter];
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcG0VectorAndDistance(struct SToolCompensation* pToolcode)
-  º¯Êı¹¦ÄÜ  ¿ìËÙÔË¶¯¸´ºÏÎ»ÒÆ³¤¶È¼°·½ÏòÏòÁ¿£¨¸÷Öá±ÈÀı£©¼ÆËã
-  ÊäÈë²ÎÊı£º SStartPoint                     Æğµã×ø±ê
-			SEndPoint                       ÖĞµã×ø±ê
-			nArraySize                      Êı×é³¤¶È
-			uint8* ucMapArray               Ó³Éä
-			VAL_STRUCT_TYPE* ucValStatus    ÓĞĞ§Öá
-			VAL_STRUCT_TYPE	ucRelaVal       Ïà¶ÔÖµ
+  å‡½æ•°åç§°ï¼šcalcG0VectorAndDistance(struct SToolCompensation* pToolcode)
+  å‡½æ•°åŠŸèƒ½  å¿«é€Ÿè¿åŠ¨å¤åˆä½ç§»é•¿åº¦åŠæ–¹å‘å‘é‡ï¼ˆå„è½´æ¯”ä¾‹ï¼‰è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼š SStartPoint                     èµ·ç‚¹åæ ‡
+			SEndPoint                       ä¸­ç‚¹åæ ‡
+			nArraySize                      æ•°ç»„é•¿åº¦
+			uint8* ucMapArray               æ˜ å°„
+			VAL_STRUCT_TYPE* ucValStatus    æœ‰æ•ˆè½´
+			VAL_STRUCT_TYPE	ucRelaVal       ç›¸å¯¹å€¼
 
-  Êä³ö²ÎÊı£º SStartVector                     ÆğµãÏòÁ¿Ö¸Õë
-			SEndVector	                    ÖÕµãÏòÁ¿Ö¸Õë
-			dLength                         ³¤¶ÈÖ¸Õë
+  è¾“å‡ºå‚æ•°ï¼š SStartVector                     èµ·ç‚¹å‘é‡æŒ‡é’ˆ
+			SEndVector	                    ç»ˆç‚¹å‘é‡æŒ‡é’ˆ
+			dLength                         é•¿åº¦æŒ‡é’ˆ
 
-  ·µ »Ø Öµ£º-1Ö¸ÕëÎª¿Õ
-			1Ö¸Õë²»Îª¿Õ
-  ±¸    ×¢£º
+  è¿” å› å€¼ï¼š-1æŒ‡é’ˆä¸ºç©º
+			1æŒ‡é’ˆä¸ä¸ºç©º
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 calcG0VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* pSStartVector, SVector* pSEndVector, double* pdLength, int nArraySize, uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE	ucRelaVal)
+int8 calcG0VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* pSStartVector,
+                             SVector* pSEndVector, double* pdLength, int nArraySize, uint8* ucMapArray,
+                             VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal)
 {
-	//1.´´½¨¸÷ÖáÎ»ÒÆ·ÖÁ¿Êı×é£¨Ò²¿ÉÖ±½ÓÓÃ·½ÏòÏòÁ¿Êı×é±£´æ£©
-	int i = 0;
-	double dLength2 = 0;
-	if (pSStartVector == NULL || pSEndVector == NULL || pdLength == NULL)
-	{
-		//¿ÕÖ¸Õë
-		return -1;
-	}
-	//2.ÒÀ´Î±éÀúËùÓĞÖá£¬ucValStatusÖĞÎŞĞ§Öá·ÖÁ¿Îª0£¬ÓĞĞ§Öá½øĞĞ¼ÆËã£¬È·¶¨¸÷Öá·ÖÁ¿
-		//2.1ÎŞĞ§Öá
-		//2.2ÓĞĞ§Öá£¨Ö±ÏßÖá£©
+    //1.åˆ›å»ºå„è½´ä½ç§»åˆ†é‡æ•°ç»„ï¼ˆä¹Ÿå¯ç›´æ¥ç”¨æ–¹å‘å‘é‡æ•°ç»„ä¿å­˜ï¼‰
+    int i = 0;
+    double dLength2 = 0;
+    if (pSStartVector == NULL || pSEndVector == NULL || pdLength == NULL)
+    {
+        //ç©ºæŒ‡é’ˆ
+        return -1;
+    }
+    //2.ä¾æ¬¡éå†æ‰€æœ‰è½´ï¼ŒucValStatusä¸­æ— æ•ˆè½´åˆ†é‡ä¸º0ï¼Œæœ‰æ•ˆè½´è¿›è¡Œè®¡ç®—ï¼Œç¡®å®šå„è½´åˆ†é‡
+    //2.1æ— æ•ˆè½´
+    //2.2æœ‰æ•ˆè½´ï¼ˆç›´çº¿è½´ï¼‰
 
-	for (i = 0; i < nArraySize; i++)
-	{
-		if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i)))//Ó³ÉäÎª¿Õ  »ò²»ÊÇÓĞĞ§Öá Ìø¹ı
-		{
-			//¶ÔÓ¦ÖáÎ»ÒÆ·ÖÁ¿Îª0£¬Ôİ´æÔÚÆğµãÏòÁ¿ÖĞ
-			pSStartVector->dArray[i] = 0;
-			continue;
-		}
+    for (i = 0; i < nArraySize; i++)
+    {
+        if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX ||
+            (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) //æ˜ å°„ä¸ºç©º  æˆ–ä¸æ˜¯æœ‰æ•ˆè½´ è·³è¿‡
+        {
+            //å¯¹åº”è½´ä½ç§»åˆ†é‡ä¸º0ï¼Œæš‚å­˜åœ¨èµ·ç‚¹å‘é‡ä¸­
+            pSStartVector->dArray[i] = 0;
+            continue;
+        }
 
-		if (g_SSystemPara.SAxisPara[ucMapArray[i]].ucAxisType == LINEAR_AXIS)// ÅĞ¶ÏÎªÖ±ÏßÖá
-		{
-			//ÏßĞÔÖáÎ»ÒÆ·ÖÁ¿Ö±½ÓÖÕµã¼õÆğµã
-			pSStartVector->dArray[i] = SEndPoint.dArray[i] - SStartPoint.dArray[i];
-		}
-		else//Ğı×ªÖá
-		{
-			//»ñÈ¡Ğı×ªÖáÆğµã×ø±êÖ±½ÓÈ¡ÓàÈ¡Õı
-			double dRotationStartPoint = surplusDoubleToPositive(SStartPoint.dArray[i], 360);//È¡ÓàÈ¡Õı;
+        if (g_SSystemPara.SAxisPara[ucMapArray[i]].ucAxisType == LINEAR_AXIS) // åˆ¤æ–­ä¸ºç›´çº¿è½´
+        {
+            //çº¿æ€§è½´ä½ç§»åˆ†é‡ç›´æ¥ç»ˆç‚¹å‡èµ·ç‚¹
+            pSStartVector->dArray[i] = SEndPoint.dArray[i] - SStartPoint.dArray[i];
+        }
+        else //æ—‹è½¬è½´
+        {
+            //è·å–æ—‹è½¬è½´èµ·ç‚¹åæ ‡ç›´æ¥å–ä½™å–æ­£
+            double dRotationStartPoint = surplusDoubleToPositive(SStartPoint.dArray[i], 360); //å–ä½™å–æ­£;
 
-			double dForwardDist = 0.0;
+            double dForwardDist = 0.0;
 
-			double dBackwardDist = 0.0;
+            double dBackwardDist = 0.0;
 
-			double dCoefOfAngleToLength = 0.0;
+            double dCoefOfAngleToLength = 0.0;
 
-			//¶ÔĞı×ªÖá½Ç¶ÈÎ»ÒÆ×ª»»ÏµÊı½øĞĞ0ÅĞ¶Ï£¬Îª0Ê±È¡1.0£¬·ÀÖ¹ÓÃ»§²ÎÊıÉèÖÃ´íÎó  ¹ùÇ¿ 2023.5.26
-			if (isZero(g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength))
-			{
-				dCoefOfAngleToLength = 1.0;
-			}
-			else
-			{
-				dCoefOfAngleToLength = g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength;
-			}
+            //å¯¹æ—‹è½¬è½´è§’åº¦ä½ç§»è½¬æ¢ç³»æ•°è¿›è¡Œ0åˆ¤æ–­ï¼Œä¸º0æ—¶å–1.0ï¼Œé˜²æ­¢ç”¨æˆ·å‚æ•°è®¾ç½®é”™è¯¯  éƒ­å¼º 2023.5.26
+            if (isZero(g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength))
+            {
+                dCoefOfAngleToLength = 1.0;
+            }
+            else
+            {
+                dCoefOfAngleToLength = g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength;
+            }
 
-			//CÖáÎªÏà¶Ô×ø±ê //¹ùÇ¿ 2023.5.19
-			if (getbit(ucRelaVal, i) == 1)// Ïà¶Ô×ø±ê
-			{
-				//¸ù¾İÏà¶Ô×ø±ê¼ÆËã
-				SEndPoint.dArray[i] = dRotationStartPoint + SEndPoint.dArray[i] - SStartPoint.dArray[i];
+            //Cè½´ä¸ºç›¸å¯¹åæ ‡ //éƒ­å¼º 2023.5.19
+            if (getbit(ucRelaVal, i) == 1) // ç›¸å¯¹åæ ‡
+            {
+                //æ ¹æ®ç›¸å¯¹åæ ‡è®¡ç®—
+                SEndPoint.dArray[i] = dRotationStartPoint + SEndPoint.dArray[i] - SStartPoint.dArray[i];
 
-				pSStartVector->dArray[i] = (SEndPoint.dArray[i] - dRotationStartPoint) * dCoefOfAngleToLength;  //ÏÈ½«Ğı×ªÖáÎ»ÒÆ·ÖÁ¿¼ÇÂ¼ÔÚÏòÁ¿·ÖÁ¿ÖĞ
+                pSStartVector->dArray[i] = (SEndPoint.dArray[i] - dRotationStartPoint) *
+                                           dCoefOfAngleToLength; //å…ˆå°†æ—‹è½¬è½´ä½ç§»åˆ†é‡è®°å½•åœ¨å‘é‡åˆ†é‡ä¸­
 
-				continue;
-			}
+                continue;
+            }
 
-			//¼ÆËãË³Ê±ÕëºÍÄæÊ±ÕëµÄÎ»ÒÆ£¨ÎŞ·ûºÅ£©±¸ÓÃ
-			dForwardDist = surplusDoubleToPositive(SEndPoint.dArray[i] - dRotationStartPoint, 360);//Ë³Ê±ÕëµÄ¾àÀë(ÖÕµã×ø±ê²»ÓÃÏÈÈ¡Óà)
-			dBackwardDist = surplusDoubleToPositive(dRotationStartPoint - SEndPoint.dArray[i], 360);//ÄæÊ±ÕëµÄ¾àÀë
+            //è®¡ç®—é¡ºæ—¶é’ˆå’Œé€†æ—¶é’ˆçš„ä½ç§»ï¼ˆæ— ç¬¦å·ï¼‰å¤‡ç”¨
+            dForwardDist = surplusDoubleToPositive(SEndPoint.dArray[i] - dRotationStartPoint,
+                                                   360); //é¡ºæ—¶é’ˆçš„è·ç¦»(ç»ˆç‚¹åæ ‡ä¸ç”¨å…ˆå–ä½™)
+            dBackwardDist = surplusDoubleToPositive(dRotationStartPoint - SEndPoint.dArray[i], 360); //é€†æ—¶é’ˆçš„è·ç¦»
 
-			//°´Ğı×ªÖáÔË¶¯·½Ê½·ÖÇé¿öÈ·¶¨·½ÏòºÍÎ»ÒÆÔöÁ¿£¨Ğı×ªÖáÒª¼ÓÉÏ½Ç¶ÈÎ»ÒÆ×ª»¯ÏµÊıËãÔöÁ¿£©¹ùÇ¿ 2023.5.19
-			if (g_SSystemPara.ucRotationAxisInterpolationMode == ROTATION_INTERPOLATION_SHORT_DISTANCE)//¸ù¾İ¾àÀë×î¶ÌÈ·¶¨·½Ïò
-			{
-				if (dForwardDist < dBackwardDist)//Ë³Ê±Õë¾àÀë½Ï¶Ì
-				{
-					pSStartVector->dArray[i] = dForwardDist * dCoefOfAngleToLength;//·ûºÅÎªÕı
-				}
-				else//ÄæÊ±Õë¾àÀë½Ï¶Ì
-				{
-					pSStartVector->dArray[i] = -1.0 * dBackwardDist * dCoefOfAngleToLength;//·ûºÅÎª¸º
-				}
-			}
-			else//¸ù¾İ·ûºÅÈ·¶¨·½Ïò
-			{
-				pSStartVector->dArray[i] = sgn(SEndPoint.dArray[i]) < 0 ?
-					-1.0 * dBackwardDist * dCoefOfAngleToLength : dForwardDist * dCoefOfAngleToLength;
-			}
-		}
-	}
+            //æŒ‰æ—‹è½¬è½´è¿åŠ¨æ–¹å¼åˆ†æƒ…å†µç¡®å®šæ–¹å‘å’Œä½ç§»å¢é‡ï¼ˆæ—‹è½¬è½´è¦åŠ ä¸Šè§’åº¦ä½ç§»è½¬åŒ–ç³»æ•°ç®—å¢é‡ï¼‰éƒ­å¼º 2023.5.19
+            if (g_SSystemPara.ucRotationAxisInterpolationMode ==
+                ROTATION_INTERPOLATION_SHORT_DISTANCE) //æ ¹æ®è·ç¦»æœ€çŸ­ç¡®å®šæ–¹å‘
+            {
+                if (dForwardDist < dBackwardDist) //é¡ºæ—¶é’ˆè·ç¦»è¾ƒçŸ­
+                {
+                    pSStartVector->dArray[i] = dForwardDist * dCoefOfAngleToLength; //ç¬¦å·ä¸ºæ­£
+                }
+                else //é€†æ—¶é’ˆè·ç¦»è¾ƒçŸ­
+                {
+                    pSStartVector->dArray[i] = -1.0 * dBackwardDist * dCoefOfAngleToLength; //ç¬¦å·ä¸ºè´Ÿ
+                }
+            }
+            else //æ ¹æ®ç¬¦å·ç¡®å®šæ–¹å‘
+            {
+                pSStartVector->dArray[i] = sgn(SEndPoint.dArray[i]) < 0 ? -1.0 * dBackwardDist * dCoefOfAngleToLength
+                                                                        : dForwardDist * dCoefOfAngleToLength;
+            }
+        }
+    }
 
-	//3.¼ÆËãµ±Á¿ºÏ³ÉÎ»ÒÆ
-	//3.1¼ÆËãµ±Á¿Î»ÒÆÆ½·½
-	for (i = 0; i < nArraySize; i++)
-	{
-		dLength2 += pow(pSStartVector->dArray[i], 2);
-	}
+    //3.è®¡ç®—å½“é‡åˆæˆä½ç§»
+    //3.1è®¡ç®—å½“é‡ä½ç§»å¹³æ–¹
+    for (i = 0; i < nArraySize; i++)
+    {
+        dLength2 += pow(pSStartVector->dArray[i], 2);
+    }
 
-	//3.2¿ª·½
-	*pdLength = sqrt(dLength2);
+    //3.2å¼€æ–¹
+    *pdLength = sqrt(dLength2);
 
-	//4.¼ÆËã¸÷Öá±ÈÀıÏµÊı±£´æÔÚ·½ÏòÏòÁ¿ÖĞ
-	for (i = 0; i < nArraySize; i++)
-	{
-		//×¢£º³¤¶ÈÎªÁãÓ¦ÔÚDOTÀàĞÍÅĞ¶ÏÊ±¹ıÂË£¬´Ëº¯Êı¼ÆËãÊ±³¤¶È²»ÎªÁã
-		pSStartVector->dArray[i] = isZero(*pdLength) ? 0: pSStartVector->dArray[i] / *pdLength;
+    //4.è®¡ç®—å„è½´æ¯”ä¾‹ç³»æ•°ä¿å­˜åœ¨æ–¹å‘å‘é‡ä¸­
+    for (i = 0; i < nArraySize; i++)
+    {
+        //æ³¨ï¼šé•¿åº¦ä¸ºé›¶åº”åœ¨DOTç±»å‹åˆ¤æ–­æ—¶è¿‡æ»¤ï¼Œæ­¤å‡½æ•°è®¡ç®—æ—¶é•¿åº¦ä¸ä¸ºé›¶
+        pSStartVector->dArray[i] = isZero(*pdLength) ? 0 : pSStartVector->dArray[i] / *pdLength;
 
-		//5.ÖÕµãÏòÁ¿µÈÓÚÆğµãÏòÁ¿£¨G1£©
-		pSEndVector->dArray[i] = pSStartVector->dArray[i];
-	}
+        //5.ç»ˆç‚¹å‘é‡ç­‰äºèµ·ç‚¹å‘é‡ï¼ˆG1ï¼‰
+        pSEndVector->dArray[i] = pSStartVector->dArray[i];
+    }
 
-	return 1;
+    return 1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalcG1VectorAndDistance(struct SToolCompensation* pToolcode)
-  º¯Êı¹¦ÄÜ  ¶àÖá²å²¹¸´ºÏÎ»ÒÆ³¤¶È¼°·½ÏòÏòÁ¿£¨¸÷Öá±ÈÀı£©¼ÆËã
-  ÊäÈë²ÎÊı£º SStartPoint                     Æğµã×ø±ê
-			SEndPoint                       ÖĞµã×ø±ê
-			nArraySize                      Êı×é³¤¶È
-			uint8* ucMapArray               Ó³Éä
-			VAL_STRUCT_TYPE* ucValStatus    ÓĞĞ§Öá
-			VAL_STRUCT_TYPE	ucRelaVal       Ïà¶ÔÖµ
+  å‡½æ•°åç§°ï¼šcalcG1VectorAndDistance(struct SToolCompensation* pToolcode)
+  å‡½æ•°åŠŸèƒ½  å¤šè½´æ’è¡¥å¤åˆä½ç§»é•¿åº¦åŠæ–¹å‘å‘é‡ï¼ˆå„è½´æ¯”ä¾‹ï¼‰è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼š SStartPoint                     èµ·ç‚¹åæ ‡
+			SEndPoint                       ä¸­ç‚¹åæ ‡
+			nArraySize                      æ•°ç»„é•¿åº¦
+			uint8* ucMapArray               æ˜ å°„
+			VAL_STRUCT_TYPE* ucValStatus    æœ‰æ•ˆè½´
+			VAL_STRUCT_TYPE	ucRelaVal       ç›¸å¯¹å€¼
 
-  Êä³ö²ÎÊı£º SStartVector                     ÆğµãÏòÁ¿Ö¸Õë
-			SEndVector	                    ÖÕµãÏòÁ¿Ö¸Õë
-			dLength                         ³¤¶ÈÖ¸Õë
+  è¾“å‡ºå‚æ•°ï¼š SStartVector                     èµ·ç‚¹å‘é‡æŒ‡é’ˆ
+			SEndVector	                    ç»ˆç‚¹å‘é‡æŒ‡é’ˆ
+			dLength                         é•¿åº¦æŒ‡é’ˆ
 
-  ·µ »Ø Öµ£º-1Ö¸ÕëÎª¿Õ
-			1Ö¸Õë²»Îª¿Õ
-  ±¸    ×¢£º ´ËÊ±µ¶²¹µ¥ÔªÖĞÒÑ¾­´æ¼Ì³ĞÁËG´úÂë½âÎöµÄÆğµãÖÕµã×ø±ê£¬
-			 ĞèÒª¸ù¾İµÚ¶ş²ãÓ³ÉäÅĞ¶ÏÖáÊÇ·ñÎªĞı×ªÖá
-			 ¸ù¾İĞı×ªÖáÔË¶¯Ä£Ê½È·¶¨Ğı×ªÖáµÄÔË¶¯·½ÏòºÍ¸´ºÏÎ»ÒÆ£¨¸÷Öá±ÈÀı±£´æÔÚ·½ÏòÏòÁ¿ÖĞ£©ÌîÈë´Ëµ¶²¹µ¥Ôª
+  è¿” å› å€¼ï¼š-1æŒ‡é’ˆä¸ºç©º
+			1æŒ‡é’ˆä¸ä¸ºç©º
+  å¤‡    æ³¨ï¼š æ­¤æ—¶åˆ€è¡¥å•å…ƒä¸­å·²ç»å­˜ç»§æ‰¿äº†Gä»£ç è§£æçš„èµ·ç‚¹ç»ˆç‚¹åæ ‡ï¼Œ
+			 éœ€è¦æ ¹æ®ç¬¬äºŒå±‚æ˜ å°„åˆ¤æ–­è½´æ˜¯å¦ä¸ºæ—‹è½¬è½´
+			 æ ¹æ®æ—‹è½¬è½´è¿åŠ¨æ¨¡å¼ç¡®å®šæ—‹è½¬è½´çš„è¿åŠ¨æ–¹å‘å’Œå¤åˆä½ç§»ï¼ˆå„è½´æ¯”ä¾‹ä¿å­˜åœ¨æ–¹å‘å‘é‡ä¸­ï¼‰å¡«å…¥æ­¤åˆ€è¡¥å•å…ƒ
 **************************************************/
-int8 calcG1VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* pSStartVector, SVector* pSEndVector, double* pdLength, int nArraySize, uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE	ucRelaVal)
+int8 calcG1VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* pSStartVector,
+                             SVector* pSEndVector, double* pdLength, int nArraySize, uint8* ucMapArray,
+                             VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal)
 {
-	//1.´´½¨¸÷ÖáÎ»ÒÆ·ÖÁ¿Êı×é£¨Ò²¿ÉÖ±½ÓÓÃ·½ÏòÏòÁ¿Êı×é±£´æ£©
-	int i = 0;
-	double dLength2 = 0;
-	if (pSStartVector == NULL || pSEndVector == NULL || pdLength == NULL)
-	{
-		//¿ÕÖ¸Õë
-		return -1;
-	}
-	//2.ÒÀ´Î±éÀúËùÓĞÖá£¬ucValStatusÖĞÎŞĞ§Öá·ÖÁ¿Îª0£¬ÓĞĞ§Öá½øĞĞ¼ÆËã£¬È·¶¨¸÷Öá·ÖÁ¿
-		//2.1ÎŞĞ§Öá
-		//2.2ÓĞĞ§Öá
-			//2.2.1Ö±ÏßÖá
-			//2.2.2Ğı×ªÖá
-				//2.2.2.1°´·ûºÅ
-				//2.2.2.2°´×î¶Ì³¤¶È
+    //1.åˆ›å»ºå„è½´ä½ç§»åˆ†é‡æ•°ç»„ï¼ˆä¹Ÿå¯ç›´æ¥ç”¨æ–¹å‘å‘é‡æ•°ç»„ä¿å­˜ï¼‰
+    int i = 0;
+    double dLength2 = 0;
+    if (pSStartVector == NULL || pSEndVector == NULL || pdLength == NULL)
+    {
+        //ç©ºæŒ‡é’ˆ
+        return -1;
+    }
+    //2.ä¾æ¬¡éå†æ‰€æœ‰è½´ï¼ŒucValStatusä¸­æ— æ•ˆè½´åˆ†é‡ä¸º0ï¼Œæœ‰æ•ˆè½´è¿›è¡Œè®¡ç®—ï¼Œç¡®å®šå„è½´åˆ†é‡
+    //2.1æ— æ•ˆè½´
+    //2.2æœ‰æ•ˆè½´
+    //2.2.1ç›´çº¿è½´
+    //2.2.2æ—‹è½¬è½´
+    //2.2.2.1æŒ‰ç¬¦å·
+    //2.2.2.2æŒ‰æœ€çŸ­é•¿åº¦
 
-	for (i = 0; i < nArraySize; i++)
-	{
-		if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i)))//Ó³ÉäÎª¿Õ  »ò²»ÊÇÓĞĞ§Öá Ìø¹ı
-		{
-			//¶ÔÓ¦ÖáÎ»ÒÆ·ÖÁ¿Îª0£¬Ôİ´æÔÚÆğµãÏòÁ¿ÖĞ
-			pSStartVector->dArray[i] = 0;
-			continue;
-		}
+    for (i = 0; i < nArraySize; i++)
+    {
+        if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX ||
+            (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) //æ˜ å°„ä¸ºç©º  æˆ–ä¸æ˜¯æœ‰æ•ˆè½´ è·³è¿‡
+        {
+            //å¯¹åº”è½´ä½ç§»åˆ†é‡ä¸º0ï¼Œæš‚å­˜åœ¨èµ·ç‚¹å‘é‡ä¸­
+            pSStartVector->dArray[i] = 0;
+            continue;
+        }
 
-		if (g_SSystemPara.SAxisPara[ucMapArray[i]].ucAxisType == LINEAR_AXIS)// ÅĞ¶ÏÎªÖ±ÏßÖá
-		{
-			//ÏßĞÔÖáÎ»ÒÆ·ÖÁ¿Ö±½ÓÖÕµã¼õÆğµã
-			pSStartVector->dArray[i] = SEndPoint.dArray[i] - SStartPoint.dArray[i];
-		}
-		else//Ğı×ªÖá
-		{
-			//»ñÈ¡Ğı×ªÖáÆğµã×ø±êÖ±½ÓÈ¡ÓàÈ¡Õı
-			double dRotationStartPoint = surplusDoubleToPositive(SStartPoint.dArray[i], 360);//È¡ÓàÈ¡Õı;
+        if (g_SSystemPara.SAxisPara[ucMapArray[i]].ucAxisType == LINEAR_AXIS) // åˆ¤æ–­ä¸ºç›´çº¿è½´
+        {
+            //çº¿æ€§è½´ä½ç§»åˆ†é‡ç›´æ¥ç»ˆç‚¹å‡èµ·ç‚¹
+            pSStartVector->dArray[i] = SEndPoint.dArray[i] - SStartPoint.dArray[i];
+        }
+        else //æ—‹è½¬è½´
+        {
+            //è·å–æ—‹è½¬è½´èµ·ç‚¹åæ ‡ç›´æ¥å–ä½™å–æ­£
+            double dRotationStartPoint = surplusDoubleToPositive(SStartPoint.dArray[i], 360); //å–ä½™å–æ­£;
 
-			double dForwardDist = 0.0;
+            double dForwardDist = 0.0;
 
-			double dBackwardDist = 0.0;
+            double dBackwardDist = 0.0;
 
-			double dCoefOfAngleToLength = 0.0;
+            double dCoefOfAngleToLength = 0.0;
 
-			//¶ÔĞı×ªÖá½Ç¶ÈÎ»ÒÆ×ª»»ÏµÊı½øĞĞ0ÅĞ¶Ï£¬Îª0Ê±È¡1.0£¬·ÀÖ¹ÓÃ»§²ÎÊıÉèÖÃ´íÎó  ¹ùÇ¿ 2023.5.26
-			if (isZero(g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength))
-			{
-				dCoefOfAngleToLength = 1.0;
-			}
-			else
-			{
-				dCoefOfAngleToLength = g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength;
-			}
+            //å¯¹æ—‹è½¬è½´è§’åº¦ä½ç§»è½¬æ¢ç³»æ•°è¿›è¡Œ0åˆ¤æ–­ï¼Œä¸º0æ—¶å–1.0ï¼Œé˜²æ­¢ç”¨æˆ·å‚æ•°è®¾ç½®é”™è¯¯  éƒ­å¼º 2023.5.26
+            if (isZero(g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength))
+            {
+                dCoefOfAngleToLength = 1.0;
+            }
+            else
+            {
+                dCoefOfAngleToLength = g_SSystemPara.SAxisPara[ucMapArray[i]].dCoefOfAngleToLength;
+            }
 
-			//CÖáÎªÏà¶Ô×ø±ê //¹ùÇ¿ 2023.5.19
-			if (getbit(ucRelaVal, i) == 1)// Ïà¶Ô×ø±ê
-			{
-				//¸ù¾İÏà¶Ô×ø±ê¼ÆËã
-				SEndPoint.dArray[i] = dRotationStartPoint + SEndPoint.dArray[i] - SStartPoint.dArray[i];
+            //Cè½´ä¸ºç›¸å¯¹åæ ‡ //éƒ­å¼º 2023.5.19
+            if (getbit(ucRelaVal, i) == 1) // ç›¸å¯¹åæ ‡
+            {
+                //æ ¹æ®ç›¸å¯¹åæ ‡è®¡ç®—
+                SEndPoint.dArray[i] = dRotationStartPoint + SEndPoint.dArray[i] - SStartPoint.dArray[i];
 
-				pSStartVector->dArray[i] = (SEndPoint.dArray[i] - dRotationStartPoint) * dCoefOfAngleToLength;  //ÏÈ½«Ğı×ªÖáÎ»ÒÆ·ÖÁ¿¼ÇÂ¼ÔÚÏòÁ¿·ÖÁ¿ÖĞ
+                pSStartVector->dArray[i] = (SEndPoint.dArray[i] - dRotationStartPoint) *
+                                           dCoefOfAngleToLength; //å…ˆå°†æ—‹è½¬è½´ä½ç§»åˆ†é‡è®°å½•åœ¨å‘é‡åˆ†é‡ä¸­
 
-				continue;
-			}
+                continue;
+            }
 
-			//¼ÆËãË³Ê±ÕëºÍÄæÊ±ÕëµÄÎ»ÒÆ£¨ÎŞ·ûºÅ£©±¸ÓÃ
-			dForwardDist = surplusDoubleToPositive(SEndPoint.dArray[i] - dRotationStartPoint, 360);//Ë³Ê±ÕëµÄ¾àÀë(ÖÕµã×ø±ê²»ÓÃÏÈÈ¡Óà)
-			dBackwardDist = surplusDoubleToPositive(dRotationStartPoint - SEndPoint.dArray[i], 360);//ÄæÊ±ÕëµÄ¾àÀë
+            //è®¡ç®—é¡ºæ—¶é’ˆå’Œé€†æ—¶é’ˆçš„ä½ç§»ï¼ˆæ— ç¬¦å·ï¼‰å¤‡ç”¨
+            dForwardDist = surplusDoubleToPositive(SEndPoint.dArray[i] - dRotationStartPoint,
+                                                   360); //é¡ºæ—¶é’ˆçš„è·ç¦»(ç»ˆç‚¹åæ ‡ä¸ç”¨å…ˆå–ä½™)
+            dBackwardDist = surplusDoubleToPositive(dRotationStartPoint - SEndPoint.dArray[i], 360); //é€†æ—¶é’ˆçš„è·ç¦»
 
-			//°´Ğı×ªÖáÔË¶¯·½Ê½·ÖÇé¿öÈ·¶¨·½ÏòºÍÎ»ÒÆÔöÁ¿£¨Ğı×ªÖáÒª¼ÓÉÏ½Ç¶ÈÎ»ÒÆ×ª»¯ÏµÊıËãÔöÁ¿£©¹ùÇ¿ 2023.5.19
-			if (g_SSystemPara.ucRotationAxisInterpolationMode == ROTATION_INTERPOLATION_SHORT_DISTANCE)//¸ù¾İ¾àÀë×î¶ÌÈ·¶¨·½Ïò
-			{
-				if (dForwardDist < dBackwardDist)//Ë³Ê±Õë¾àÀë½Ï¶Ì
-				{
-					pSStartVector->dArray[i] = dForwardDist * dCoefOfAngleToLength;//·ûºÅÎªÕı
-				}
-				else//ÄæÊ±Õë¾àÀë½Ï¶Ì
-				{
-					pSStartVector->dArray[i] = -1.0 * dBackwardDist * dCoefOfAngleToLength;//·ûºÅÎª¸º
-				}
-			}
-			else//¸ù¾İ·ûºÅÈ·¶¨·½Ïò
-			{
-				pSStartVector->dArray[i] = sgn(SEndPoint.dArray[i]) < 0 ?
-					-1.0 * dBackwardDist * dCoefOfAngleToLength : dForwardDist * dCoefOfAngleToLength;
-			}
-		}
-	}
+            //æŒ‰æ—‹è½¬è½´è¿åŠ¨æ–¹å¼åˆ†æƒ…å†µç¡®å®šæ–¹å‘å’Œä½ç§»å¢é‡ï¼ˆæ—‹è½¬è½´è¦åŠ ä¸Šè§’åº¦ä½ç§»è½¬åŒ–ç³»æ•°ç®—å¢é‡ï¼‰éƒ­å¼º 2023.5.19
+            if (g_SSystemPara.ucRotationAxisInterpolationMode ==
+                ROTATION_INTERPOLATION_SHORT_DISTANCE) //æ ¹æ®è·ç¦»æœ€çŸ­ç¡®å®šæ–¹å‘
+            {
+                if (dForwardDist < dBackwardDist) //é¡ºæ—¶é’ˆè·ç¦»è¾ƒçŸ­
+                {
+                    pSStartVector->dArray[i] = dForwardDist * dCoefOfAngleToLength; //ç¬¦å·ä¸ºæ­£
+                }
+                else //é€†æ—¶é’ˆè·ç¦»è¾ƒçŸ­
+                {
+                    pSStartVector->dArray[i] = -1.0 * dBackwardDist * dCoefOfAngleToLength; //ç¬¦å·ä¸ºè´Ÿ
+                }
+            }
+            else //æ ¹æ®ç¬¦å·ç¡®å®šæ–¹å‘
+            {
+                pSStartVector->dArray[i] = sgn(SEndPoint.dArray[i]) < 0 ? -1.0 * dBackwardDist * dCoefOfAngleToLength
+                                                                        : dForwardDist * dCoefOfAngleToLength;
+            }
+        }
+    }
 
-	//3.¼ÆËãµ±Á¿ºÏ³ÉÎ»ÒÆ
-	//3.1¼ÆËãµ±Á¿Î»ÒÆÆ½·½
-	for (i = 0; i < nArraySize; i++)
-	{
-		dLength2 += pow(pSStartVector->dArray[i], 2);
-	}
+    //3.è®¡ç®—å½“é‡åˆæˆä½ç§»
+    //3.1è®¡ç®—å½“é‡ä½ç§»å¹³æ–¹
+    for (i = 0; i < nArraySize; i++)
+    {
+        dLength2 += pow(pSStartVector->dArray[i], 2);
+    }
 
-	//3.2¿ª·½
-	*pdLength = sqrt(dLength2);
+    //3.2å¼€æ–¹
+    *pdLength = sqrt(dLength2);
 
-	//4.¼ÆËã¸÷Öá±ÈÀıÏµÊı±£´æÔÚ·½ÏòÏòÁ¿ÖĞ
-	for (i = 0; i < nArraySize; i++)
-	{
-		//×¢£º³¤¶ÈÎªÁãÓ¦ÔÚDOTÀàĞÍÅĞ¶ÏÊ±¹ıÂË£¬´Ëº¯Êı¼ÆËãÊ±³¤¶È²»ÎªÁã
-		pSStartVector->dArray[i] = isZero(*pdLength) ? 0 :pSStartVector->dArray[i] / *pdLength;
+    //4.è®¡ç®—å„è½´æ¯”ä¾‹ç³»æ•°ä¿å­˜åœ¨æ–¹å‘å‘é‡ä¸­
+    for (i = 0; i < nArraySize; i++)
+    {
+        //æ³¨ï¼šé•¿åº¦ä¸ºé›¶åº”åœ¨DOTç±»å‹åˆ¤æ–­æ—¶è¿‡æ»¤ï¼Œæ­¤å‡½æ•°è®¡ç®—æ—¶é•¿åº¦ä¸ä¸ºé›¶
+        pSStartVector->dArray[i] = isZero(*pdLength) ? 0 : pSStartVector->dArray[i] / *pdLength;
 
-		//5.ÖÕµãÏòÁ¿µÈÓÚÆğµãÏòÁ¿£¨G1£©
-		pSEndVector->dArray[i] = pSStartVector->dArray[i];
-	}
+        //5.ç»ˆç‚¹å‘é‡ç­‰äºèµ·ç‚¹å‘é‡ï¼ˆG1ï¼‰
+        pSEndVector->dArray[i] = pSStartVector->dArray[i];
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºGcodeToTCode(SGCodeParse *Gcode, SToolCompensation &Toolcode,SPointDouble TcodePrevPoint,SPointDouble TcodeEndPoint)
-  º¯Êı¹¦ÄÜ  ¸üĞÂµ¶²¹ºóµÄ½á¹¹Ìå£¬²¢Ã¿´Î¸üĞÂÇ°Ò»¸öµ¶²¹³¥µã
-  ÊäÈë²ÎÊı£ºGcode	           G´úÂë½âÎöºóµÄ½á¹¹ÌåÖ¸Õë
-			Toolcode	       µ¶²¹ºóµÄ½á¹¹Ìå
-			TcodePrevPoint     Ç°Ò»¸öµ¶²¹³¥µã
-			TcodeEndPoint      ĞÂ¼ÆËãµÄµ¶²¹³¥µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÍ¨¹ıÒıÓÃ¸Ä±äµ¶²¹½á¹¹ÌåµÄ¸÷³ÉÔ±Öµ
+  å‡½æ•°åç§°ï¼šGcodeToTCode(SGCodeParse *Gcode, SToolCompensation &Toolcode,SPointDouble TcodePrevPoint,SPointDouble TcodeEndPoint)
+  å‡½æ•°åŠŸèƒ½  æ›´æ–°åˆ€è¡¥åçš„ç»“æ„ä½“ï¼Œå¹¶æ¯æ¬¡æ›´æ–°å‰ä¸€ä¸ªåˆ€è¡¥å¿ç‚¹
+  è¾“å…¥å‚æ•°ï¼šGcode	           Gä»£ç è§£æåçš„ç»“æ„ä½“æŒ‡é’ˆ
+			Toolcode	       åˆ€è¡¥åçš„ç»“æ„ä½“
+			TcodePrevPoint     å‰ä¸€ä¸ªåˆ€è¡¥å¿ç‚¹
+			TcodeEndPoint      æ–°è®¡ç®—çš„åˆ€è¡¥å¿ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šé€šè¿‡å¼•ç”¨æ”¹å˜åˆ€è¡¥ç»“æ„ä½“çš„å„æˆå‘˜å€¼
 **************************************************/
-void GcodeToTCode(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, bool bPFlag, uint8* ucAxisNum, uint8 ucChannelNum)
+void GcodeToTCode(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, bool bPFlag,
+                  uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	struct SToolCompensation* pToolcode;
-	double Rad;
-	uint8 ucCounter=0;
-	bool bIsNoMoveFlag = TRUE;
-	SPointDouble SCenterPoint;
-	if (pGcode == NULL)
-	{
-		return;
-	}
+    struct SToolCompensation* pToolcode;
+    double Rad;
+    uint8 ucCounter = 0;
+    bool bIsNoMoveFlag = TRUE;
+    SPointDouble SCenterPoint;
+    if (pGcode == NULL)
+    {
+        return;
+    }
 
-	pToolcode = getSToolCompPointerByType(STOOL_WRITE, ucChannelNum); // »ñÈ¡µ¶²¹µÄĞ´Ö¸Õë
-	
-	//ÕâÀï±£´æµ½µ¶²¹½á¹¹ÌåµÄ½ø¸øËÙ¶ÈÊÇG´úÂëÖĞµÄËÙ¶ÈdFeedrate£¬
-	//´ËËÙ¶È°´ÕÕÆóÒµÒªÇóÓ¦¸Ã´ú±í³¤ÖáËÙ¶È£¬³¤ÖáÄ£Ê½ÏÂ´ËËÙ¶È²»ĞèÒªĞŞÕı£¬ÒòÎª³¤ÖáÄ£Ê½ÊÇ¶Ô³¤ÖáÎ»ÒÆ¹æ»®£¬ÏòÁ¿ÔÚG1³ÌĞòÖĞ´ú±íµÄÊÇ¶ÔÓ¦ÖáÎ»ÒÆ¶Ô³¤ÖáÎ»ÒÆµÄ±¶ÂÊ
-	//µ«ÊÇµ±ÓĞÇ°Õ°µÄ¶àÖáÄ£Ê½Ê±ÊÇ¶Ô¸´ºÏÎ»ÒÆ¹æ»®£¬ËùÒÔºó±ßÔÚÏòÁ¿¼ÆËãºóÒª¶Ô´ËÖµ½øĞĞĞŞÕı  2022.11.21¹ùÇ¿×¢ÊÍ
-	SaveCommonParameter(pGcode, STcodePrevPoint, STcodeEndPoint, ucAxisNum,ucChannelNum);
+    pToolcode = getSToolCompPointerByType(STOOL_WRITE, ucChannelNum); // è·å–åˆ€è¡¥çš„å†™æŒ‡é’ˆ
 
-	//±éÀúËùÓĞÖá£¬²é¿´ÊÇ·ñÆğµãÖÕµãÏàÍ¬
-	for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)//2023.3.24ÈÕ08:58ÙşºÆ»ù
-	{
-		if (!isZero(pGcode->SStartPoint.dArray[ucCounter] - pGcode->SEndPoint.dArray[ucCounter]))
-		{
-			bIsNoMoveFlag = FALSE;
-			break;
-		}
-	}
+    //è¿™é‡Œä¿å­˜åˆ°åˆ€è¡¥ç»“æ„ä½“çš„è¿›ç»™é€Ÿåº¦æ˜¯Gä»£ç ä¸­çš„é€Ÿåº¦dFeedrateï¼Œ
+    //æ­¤é€Ÿåº¦æŒ‰ç…§ä¼ä¸šè¦æ±‚åº”è¯¥ä»£è¡¨é•¿è½´é€Ÿåº¦ï¼Œé•¿è½´æ¨¡å¼ä¸‹æ­¤é€Ÿåº¦ä¸éœ€è¦ä¿®æ­£ï¼Œå› ä¸ºé•¿è½´æ¨¡å¼æ˜¯å¯¹é•¿è½´ä½ç§»è§„åˆ’ï¼Œå‘é‡åœ¨G1ç¨‹åºä¸­ä»£è¡¨çš„æ˜¯å¯¹åº”è½´ä½ç§»å¯¹é•¿è½´ä½ç§»çš„å€ç‡
+    //ä½†æ˜¯å½“æœ‰å‰ç»çš„å¤šè½´æ¨¡å¼æ—¶æ˜¯å¯¹å¤åˆä½ç§»è§„åˆ’ï¼Œæ‰€ä»¥åè¾¹åœ¨å‘é‡è®¡ç®—åè¦å¯¹æ­¤å€¼è¿›è¡Œä¿®æ­£  2022.11.21éƒ­å¼ºæ³¨é‡Š
+    SaveCommonParameter(pGcode, STcodePrevPoint, STcodeEndPoint, ucAxisNum, ucChannelNum);
 
-	//Èç¹ûÆğµãÖÕµã±êÖ¾Î»ÎªtrueÊ±
-	if (bIsNoMoveFlag)
-	{
-		pToolcode->EntityType = DOT;
-		pToolcode->unCommandType = pGcode->unCommandType;
-		pToolcode->SEndVector = pToolcode->SStartVector;
-		pToolcode->ucValStatus = pGcode->ucValStatus;
-		pToolcode->ucRelaVal = pGcode->ucRelaVal;
-		pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-		pToolcode->sChannelCommand = pGcode->sChannelCommand;
-		pToolcode->dQ = pGcode->dQ;
-		pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+    //éå†æ‰€æœ‰è½´ï¼ŒæŸ¥çœ‹æ˜¯å¦èµ·ç‚¹ç»ˆç‚¹ç›¸åŒ
+    for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++) //2023.3.24æ—¥08:58å†¼æµ©åŸº
+    {
+        if (!isZero(pGcode->SStartPoint.dArray[ucCounter] - pGcode->SEndPoint.dArray[ucCounter]))
+        {
+            bIsNoMoveFlag = FALSE;
+            break;
+        }
+    }
 
-		switch (pGcode->SModalInfo.sGa)	//³ÂÃô´Ï 2023/6/15Ôö
-		{
-			case 32:
-			{
-				pToolcode->ucG32SubMode = pGcode->ucG32SubMode;
-			}
-		}
-	}
+    //å¦‚æœèµ·ç‚¹ç»ˆç‚¹æ ‡å¿—ä½ä¸ºtrueæ—¶
+    if (bIsNoMoveFlag)
+    {
+        pToolcode->EntityType = DOT;
+        pToolcode->unCommandType = pGcode->unCommandType;
+        pToolcode->SEndVector = pToolcode->SStartVector;
+        pToolcode->ucValStatus = pGcode->ucValStatus;
+        pToolcode->ucRelaVal = pGcode->ucRelaVal;
+        pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+        pToolcode->sChannelCommand = pGcode->sChannelCommand;
+        pToolcode->dQ = pGcode->dQ;
+        pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
 
-	else
-	{
-		if (!bPFlag)//Î´´æ´¢µÚÒ»¸ö²¹³¥µã
-		{
-			switch (pGcode->SModalInfo.sGa)
-			{
-			case 0://ÀàĞÍÎªG00
-				//¼Ì³ĞÔ­pGcodeÃ»ÓĞ¸Ä±äµÄĞÅÏ¢£¬Ôö¼Óµ¶²¹¼ÆËãÖ®ºóµÄ¹ı¶Éµã¡¢³¤¶È¡¢·½ÏòÏòÁ¿......
-				pToolcode->unCommandType = pGcode->unCommandType;
-				pToolcode->EntityType = OTHERTYPE;
-				pToolcode->dLength = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
-				pToolcode->SStartVector.dArray[ucAxisNum[1]] = (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
-				pToolcode->SStartVector.dArray[ucAxisNum[0]] = (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
-				pToolcode->SEndVector = pToolcode->SStartVector;
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				//¸ù¾İ²å²¹Ä£Ê½Ñ¡Ôñ²»Í¬µÄ³¤¶ÈÏòÁ¿¼ÆËã·½Ê½
-				if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE)//³¤Öá²å²¹Ä£Ê½
-				{
-					//´ËÊ±µ¶²¹¸ù¾İ²å²¹Æ½ÃæÖ»¼ÆËã²å²¹Æ½ÃæÁ½¸öÖáµÄºÏ³É³¤¶ÈºÍÏòÁ¿
-					pToolcode->dLength = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
-					pToolcode->SStartVector.dArray[ucAxisNum[1]] = (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
-					pToolcode->SStartVector.dArray[ucAxisNum[0]] = (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
-					pToolcode->SEndVector = pToolcode->SStartVector;
-				}
-				else//¹Ì¶¨²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹ ¡¢×ÔÊÊÓ¦²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹
-				{
-					//1.´ËÊ±Ö±½Ó¿¼ÂÇÁËËùÓĞÓĞĞ§ÖáµÄÏòÁ¿·ÖÁ¿,±ØĞëÔÚÇ°Õ°Ö®Ç°´¦ÀíºÃ£¬Ç°Õ°ÒªÓÃµ½Òò´ËºÍ³¤ÖáÄ£Ê½²»Í¬
-					calcG0VectorAndDistance(pToolcode->SStartPoint, pToolcode->SEndPoint, &pToolcode->SStartVector, &pToolcode->SEndVector, &pToolcode->dLength, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray, &pToolcode->ucValStatus, pToolcode->ucRelaVal);
-				}
-				//ÅĞ¶ÏÊÇ·ñÎªµ¥¸öÖáµÄÔË¶¯£¬ÈôÊÇ£¬Ôò±£´æÔË¶¯ÖáµÄÖáºÅ  ºé¹ÚÅô 2024/5/27
-				for (int i = 0; i < AXIS_NUM_MAX; i++)
-				{
-					if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) < EPSINON)//Î»ÒÆ·ÖÁ¿µÈÓÚ1£¬ËµÃ÷µ±Ç°Ö»ÓĞÒ»¸öÖá²ÎÓëÔË¶¯
-					{
-						pToolcode->ucAxisNumOfNeedLookAhead = i;//±£´æÖáºÅ
-						pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]);//±£´æ²å²¹·½Ïò
-						break;
-					}
-				}
-				break;
+        switch (pGcode->SModalInfo.sGa) //é™ˆæ•èª 2023/6/15å¢
+        {
+        case 32:
+        {
+            pToolcode->ucG32SubMode = pGcode->ucG32SubMode;
+        }
+        }
+    }
 
-			case 1://ÀàĞÍÎªG01
-				pToolcode->unCommandType = pGcode->unCommandType;
-				pToolcode->EntityType = L1NE;
+    else
+    {
+        if (!bPFlag) //æœªå­˜å‚¨ç¬¬ä¸€ä¸ªè¡¥å¿ç‚¹
+        {
+            switch (pGcode->SModalInfo.sGa)
+            {
+            case 0: //ç±»å‹ä¸ºG00
+                //ç»§æ‰¿åŸpGcodeæ²¡æœ‰æ”¹å˜çš„ä¿¡æ¯ï¼Œå¢åŠ åˆ€è¡¥è®¡ç®—ä¹‹åçš„è¿‡æ¸¡ç‚¹ã€é•¿åº¦ã€æ–¹å‘å‘é‡......
+                pToolcode->unCommandType = pGcode->unCommandType;
+                pToolcode->EntityType = OTHERTYPE;
+                pToolcode->dLength =
+                    sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) +
+                         pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
+                pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
+                pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
+                pToolcode->SEndVector = pToolcode->SStartVector;
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                //æ ¹æ®æ’è¡¥æ¨¡å¼é€‰æ‹©ä¸åŒçš„é•¿åº¦å‘é‡è®¡ç®—æ–¹å¼
+                if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE) //é•¿è½´æ’è¡¥æ¨¡å¼
+                {
+                    //æ­¤æ—¶åˆ€è¡¥æ ¹æ®æ’è¡¥å¹³é¢åªè®¡ç®—æ’è¡¥å¹³é¢ä¸¤ä¸ªè½´çš„åˆæˆé•¿åº¦å’Œå‘é‡
+                    pToolcode->dLength =
+                        sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) +
+                             pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
+                    pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                        (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) /
+                        pToolcode->dLength;
+                    pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                        (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) /
+                        pToolcode->dLength;
+                    pToolcode->SEndVector = pToolcode->SStartVector;
+                }
+                else //å›ºå®šå‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥ ã€è‡ªé€‚åº”å‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥
+                {
+                    //1.æ­¤æ—¶ç›´æ¥è€ƒè™‘äº†æ‰€æœ‰æœ‰æ•ˆè½´çš„å‘é‡åˆ†é‡,å¿…é¡»åœ¨å‰ç»ä¹‹å‰å¤„ç†å¥½ï¼Œå‰ç»è¦ç”¨åˆ°å› æ­¤å’Œé•¿è½´æ¨¡å¼ä¸åŒ
+                    calcG0VectorAndDistance(pToolcode->SStartPoint, pToolcode->SEndPoint, &pToolcode->SStartVector,
+                                            &pToolcode->SEndVector, &pToolcode->dLength, AXIS_NUM_MAX,
+                                            g_SChannel[ucChannelNum].pMapAxisArray, &pToolcode->ucValStatus,
+                                            pToolcode->ucRelaVal);
+                }
+                //åˆ¤æ–­æ˜¯å¦ä¸ºå•ä¸ªè½´çš„è¿åŠ¨ï¼Œè‹¥æ˜¯ï¼Œåˆ™ä¿å­˜è¿åŠ¨è½´çš„è½´å·  æ´ªå† é¹ 2024/5/27
+                for (int i = 0; i < AXIS_NUM_MAX; i++)
+                {
+                    if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) <
+                        EPSINON) //ä½ç§»åˆ†é‡ç­‰äº1ï¼Œè¯´æ˜å½“å‰åªæœ‰ä¸€ä¸ªè½´å‚ä¸è¿åŠ¨
+                    {
+                        pToolcode->ucAxisNumOfNeedLookAhead = i;                                     //ä¿å­˜è½´å·
+                        pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]); //ä¿å­˜æ’è¡¥æ–¹å‘
+                        break;
+                    }
+                }
+                break;
 
-				//2022/1/10ÒÔÏÂËÄ¸ö±äÁ¿µ÷Õûµ½´Ë´¦  ¹ùÇ¿
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				//¸ù¾İ²å²¹Ä£Ê½Ñ¡Ôñ²»Í¬µÄ³¤¶ÈÏòÁ¿¼ÆËã·½Ê½      2022.11.21¹ùÇ¿
-				if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE)//³¤Öá²å²¹Ä£Ê½
-				{	
-					//´ËÊ±µ¶²¹¸ù¾İ²å²¹Æ½ÃæÖ»¼ÆËã²å²¹Æ½ÃæÁ½¸öÖáµÄºÏ³É³¤¶ÈºÍÏòÁ¿
-					pToolcode->dLength = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
-					pToolcode->SStartVector.dArray[ucAxisNum[1]] = (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
-					pToolcode->SStartVector.dArray[ucAxisNum[0]] = (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
-					pToolcode->SEndVector = pToolcode->SStartVector;
-				}
-				else//¹Ì¶¨²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹ ¡¢×ÔÊÊÓ¦²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹     2022.11.21¹ùÇ¿
-				{
-					//1.´ËÊ±Ö±½Ó¿¼ÂÇÁËËùÓĞÓĞĞ§Öá(°üÀ¨Ğı×ªÖá)µÄºÏ³ÉÎ»ÒÆºÍÏòÁ¿,±ØĞëÔÚÇ°Õ°Ö®Ç°´¦ÀíºÃ£¬Ç°Õ°ÒªÓÃµ½Òò´ËºÍ³¤ÖáÄ£Ê½²»Í¬
-					calcG1VectorAndDistance(pToolcode->SStartPoint, pToolcode->SEndPoint, &pToolcode->SStartVector, &pToolcode->SEndVector, &pToolcode->dLength, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray, &pToolcode->ucValStatus, pToolcode->ucRelaVal);
-				}
-				//ÅĞ¶ÏÊÇ·ñÎªµ¥¸öÖáµÄÔË¶¯£¬ÈôÊÇ£¬Ôò±£´æÔË¶¯ÖáµÄÖáºÅ  ºé¹ÚÅô 2024/5/27
-				for (int i = 0; i < AXIS_NUM_MAX; i++)
-				{
-					if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) < EPSINON)//Î»ÒÆ·ÖÁ¿µÈÓÚ1£¬ËµÃ÷µ±Ç°Ö»ÓĞÒ»¸öÖá²ÎÓëÔË¶¯
-					{
-						pToolcode->ucAxisNumOfNeedLookAhead = i;//±£´æÖáºÅ
-						pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]);//±£´æ²å²¹·½Ïò
-						break;
-					}
-				}
-				break;
+            case 1: //ç±»å‹ä¸ºG01
+                pToolcode->unCommandType = pGcode->unCommandType;
+                pToolcode->EntityType = L1NE;
 
-			case 2://ÀàĞÍÎªG02
-				SCenterPoint = pGcode->SCenterPoint;
-				pToolcode->unCommandType = pGcode->unCommandType;
-				if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)//¼«×ø±ê²å²¹ ºá×İÖáÓÉÏµÍ³²ÎÊı¸ø¶¨
-				{
-					ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
-					ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
-				}
-				else if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-				{
-					chooseInterpPlane(ucAxisNum, pToolcode->unCommandType);
-				}
-				radCalculateIK(STcodePrevPoint.dArray, STcodeEndPoint.dArray, (double*)&SCenterPoint, ARC_CW, &Rad, ucAxisNum[0], ucAxisNum[1]);
-				
-				pToolcode->EntityType = ARC;
-				pToolcode->SCenterPoint = pGcode->SCenterPoint;
-				pToolcode->cArcDir = ARC_CW;
+                //2022/1/10ä»¥ä¸‹å››ä¸ªå˜é‡è°ƒæ•´åˆ°æ­¤å¤„  éƒ­å¼º
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                //æ ¹æ®æ’è¡¥æ¨¡å¼é€‰æ‹©ä¸åŒçš„é•¿åº¦å‘é‡è®¡ç®—æ–¹å¼      2022.11.21éƒ­å¼º
+                if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE) //é•¿è½´æ’è¡¥æ¨¡å¼
+                {
+                    //æ­¤æ—¶åˆ€è¡¥æ ¹æ®æ’è¡¥å¹³é¢åªè®¡ç®—æ’è¡¥å¹³é¢ä¸¤ä¸ªè½´çš„åˆæˆé•¿åº¦å’Œå‘é‡
+                    pToolcode->dLength =
+                        sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) +
+                             pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
+                    pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                        (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) /
+                        pToolcode->dLength;
+                    pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                        (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) /
+                        pToolcode->dLength;
+                    pToolcode->SEndVector = pToolcode->SStartVector;
+                }
+                else //å›ºå®šå‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥ ã€è‡ªé€‚åº”å‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥     2022.11.21éƒ­å¼º
+                {
+                    //1.æ­¤æ—¶ç›´æ¥è€ƒè™‘äº†æ‰€æœ‰æœ‰æ•ˆè½´(åŒ…æ‹¬æ—‹è½¬è½´)çš„åˆæˆä½ç§»å’Œå‘é‡,å¿…é¡»åœ¨å‰ç»ä¹‹å‰å¤„ç†å¥½ï¼Œå‰ç»è¦ç”¨åˆ°å› æ­¤å’Œé•¿è½´æ¨¡å¼ä¸åŒ
+                    calcG1VectorAndDistance(pToolcode->SStartPoint, pToolcode->SEndPoint, &pToolcode->SStartVector,
+                                            &pToolcode->SEndVector, &pToolcode->dLength, AXIS_NUM_MAX,
+                                            g_SChannel[ucChannelNum].pMapAxisArray, &pToolcode->ucValStatus,
+                                            pToolcode->ucRelaVal);
+                }
+                //åˆ¤æ–­æ˜¯å¦ä¸ºå•ä¸ªè½´çš„è¿åŠ¨ï¼Œè‹¥æ˜¯ï¼Œåˆ™ä¿å­˜è¿åŠ¨è½´çš„è½´å·  æ´ªå† é¹ 2024/5/27
+                for (int i = 0; i < AXIS_NUM_MAX; i++)
+                {
+                    if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) <
+                        EPSINON) //ä½ç§»åˆ†é‡ç­‰äº1ï¼Œè¯´æ˜å½“å‰åªæœ‰ä¸€ä¸ªè½´å‚ä¸è¿åŠ¨
+                    {
+                        pToolcode->ucAxisNumOfNeedLookAhead = i;                                     //ä¿å­˜è½´å·
+                        pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]); //ä¿å­˜æ’è¡¥æ–¹å‘
+                        break;
+                    }
+                }
+                break;
 
-				//Èç¹û»¡¶È´óÓÚ¦Ğ£¬°ë¾¶¸ø¸ºÖµ
-				if (Rad > PI)
-				{
-					pToolcode->dRadius = -sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
-				}
-				
-				//Ğ¡ÓÚ¦Ğ¸øÕıÖµ
-				else pToolcode->dRadius = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+            case 2: //ç±»å‹ä¸ºG02
+                SCenterPoint = pGcode->SCenterPoint;
+                pToolcode->unCommandType = pGcode->unCommandType;
+                if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) ==
+                    CMD_INTERPOLATION_POLAR) //æåæ ‡æ’è¡¥ æ¨ªçºµè½´ç”±ç³»ç»Ÿå‚æ•°ç»™å®š
+                {
+                    ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
+                    ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
+                }
+                else if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) ==
+                         CMD_INTERPOLATION_CYLINDRICAL)
+                {
+                    chooseInterpPlane(ucAxisNum, pToolcode->unCommandType);
+                }
+                radCalculateIK(STcodePrevPoint.dArray, STcodeEndPoint.dArray, (double*)&SCenterPoint, ARC_CW, &Rad,
+                               ucAxisNum[0], ucAxisNum[1]);
 
-				//²å²¹Æ½Ãæ³¤¶ÈºÍÏòÁ¿
-				pToolcode->dLength = Rad * fabs(pToolcode->dRadius);
-				pToolcode->SStartVector.dArray[ucAxisNum[1]] = (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SStartPoint.dArray[ucAxisNum[0]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SStartVector.dArray[ucAxisNum[0]] = (pToolcode->SStartPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SEndVector.dArray[ucAxisNum[1]] = (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SEndPoint.dArray[ucAxisNum[0]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SEndVector.dArray[ucAxisNum[0]] = (pToolcode->SEndPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				break;
+                pToolcode->EntityType = ARC;
+                pToolcode->SCenterPoint = pGcode->SCenterPoint;
+                pToolcode->cArcDir = ARC_CW;
 
-			case 3://ÀàĞÍÎªG03
-				SCenterPoint = pGcode->SCenterPoint;
-				pToolcode->unCommandType = pGcode->unCommandType;
-				if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)//¼«×ø±ê²å²¹ ºá×İÖáÓÉÏµÍ³²ÎÊı¸ø¶¨
-				{
-					ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
-					ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
-				}
-				else if(getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-				{
-					chooseInterpPlane(ucAxisNum, pToolcode->unCommandType);
-				}
-				radCalculateIK(STcodePrevPoint.dArray, STcodeEndPoint.dArray, (double*)&SCenterPoint, ARC_ANTI_CW, &Rad, ucAxisNum[0], ucAxisNum[1]);
-				
-				pToolcode->EntityType = ARC;
-				pToolcode->SCenterPoint = pGcode->SCenterPoint;
-				pToolcode->cArcDir = ARC_ANTI_CW;
-				//Èç¹û»¡¶È´óÓÚ¦Ğ£¬°ë¾¶¸ø¸ºÖµ
-				if (Rad > PI)
-				{
-					pToolcode->dRadius = -sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
-				}
+                //å¦‚æœå¼§åº¦å¤§äºÏ€ï¼ŒåŠå¾„ç»™è´Ÿå€¼
+                if (Rad > PI)
+                {
+                    pToolcode->dRadius = -sqrt(
+                        pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) +
+                        pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+                }
 
-				//Ğ¡ÓÚ¦Ğ¸øÕıÖµ
-				else pToolcode->dRadius = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+                //å°äºÏ€ç»™æ­£å€¼
+                else
+                    pToolcode->dRadius = sqrt(
+                        pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) +
+                        pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
 
-				//²å²¹Æ½Ãæ³¤¶ÈºÍÏòÁ¿
-				pToolcode->dLength = Rad * fabs(pToolcode->dRadius);
-				pToolcode->SStartVector.dArray[ucAxisNum[1]] = (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SStartPoint.dArray[ucAxisNum[0]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SStartVector.dArray[ucAxisNum[0]] = (pToolcode->SStartPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SEndVector.dArray[ucAxisNum[1]] = (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SEndPoint.dArray[ucAxisNum[0]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
-				pToolcode->SEndVector.dArray[ucAxisNum[0]] = (pToolcode->SEndPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) / fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                //æ’è¡¥å¹³é¢é•¿åº¦å’Œå‘é‡
+                pToolcode->dLength = Rad * fabs(pToolcode->dRadius);
+                pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                    (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SStartPoint.dArray[ucAxisNum[0]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                    (pToolcode->SStartPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SEndVector.dArray[ucAxisNum[1]] =
+                    (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SEndPoint.dArray[ucAxisNum[0]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SEndVector.dArray[ucAxisNum[0]] =
+                    (pToolcode->SEndPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
 
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				break;
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                break;
 
-			case 32:case 33:case 92:case 34://ÀàĞÍÎªG32
-				pToolcode->unCommandType = pGcode->unCommandType;
-				pToolcode->EntityType = L1NE;
-				pToolcode->dLength = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
+            case 3: //ç±»å‹ä¸ºG03
+                SCenterPoint = pGcode->SCenterPoint;
+                pToolcode->unCommandType = pGcode->unCommandType;
+                if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) ==
+                    CMD_INTERPOLATION_POLAR) //æåæ ‡æ’è¡¥ æ¨ªçºµè½´ç”±ç³»ç»Ÿå‚æ•°ç»™å®š
+                {
+                    ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
+                    ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
+                }
+                else if (getBits(pToolcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) ==
+                         CMD_INTERPOLATION_CYLINDRICAL)
+                {
+                    chooseInterpPlane(ucAxisNum, pToolcode->unCommandType);
+                }
+                radCalculateIK(STcodePrevPoint.dArray, STcodeEndPoint.dArray, (double*)&SCenterPoint, ARC_ANTI_CW, &Rad,
+                               ucAxisNum[0], ucAxisNum[1]);
 
-				pToolcode->SStartVector.dArray[ucAxisNum[1]] = (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
-				pToolcode->SStartVector.dArray[ucAxisNum[0]] = (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
+                pToolcode->EntityType = ARC;
+                pToolcode->SCenterPoint = pGcode->SCenterPoint;
+                pToolcode->cArcDir = ARC_ANTI_CW;
+                //å¦‚æœå¼§åº¦å¤§äºÏ€ï¼ŒåŠå¾„ç»™è´Ÿå€¼
+                if (Rad > PI)
+                {
+                    pToolcode->dRadius = -sqrt(
+                        pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) +
+                        pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+                }
 
-				pToolcode->SEndVector = pToolcode->SStartVector;
-				pToolcode->dF = pGcode->dFeedrate;   //×îÖ÷ÒªÊÇÕâÒ»¾ä
-				pToolcode->dJ = pGcode->dJ;
-				pToolcode->dK = pGcode->dK;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->ucG32SubMode = pGcode->ucG32SubMode;	//³ÂÃô´Ï 2023/6/15Ôö
+                //å°äºÏ€ç»™æ­£å€¼
+                else
+                    pToolcode->dRadius = sqrt(
+                        pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) +
+                        pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
 
-				pToolcode->SCenterPoint = pGcode->SCenterPoint;
-				pToolcode->cArcDir = pGcode->cArcDir;
-				if (pToolcode->cArcDir != 0)
-				{
-					pToolcode->dRadius = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+                //æ’è¡¥å¹³é¢é•¿åº¦å’Œå‘é‡
+                pToolcode->dLength = Rad * fabs(pToolcode->dRadius);
+                pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                    (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SStartPoint.dArray[ucAxisNum[0]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                    (pToolcode->SStartPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SEndVector.dArray[ucAxisNum[1]] =
+                    (pToolcode->SCenterPoint.dArray[ucAxisNum[0]] - pToolcode->SEndPoint.dArray[ucAxisNum[0]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
+                pToolcode->SEndVector.dArray[ucAxisNum[0]] =
+                    (pToolcode->SEndPoint.dArray[ucAxisNum[1]] - pToolcode->SCenterPoint.dArray[ucAxisNum[1]]) /
+                    fabs(pToolcode->dRadius) * pToolcode->cArcDir;
 
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                break;
 
-				}
-				else
-				{
-					pToolcode->dRadius = 0;
+            case 32:
+            case 33:
+            case 92:
+            case 34: //ç±»å‹ä¸ºG32
+                pToolcode->unCommandType = pGcode->unCommandType;
+                pToolcode->EntityType = L1NE;
+                pToolcode->dLength =
+                    sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) +
+                         pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
 
-				}
+                pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
+                pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
 
-				pToolcode->ucL = pGcode->usL;  //¹ùÇ¿11.22
-				pToolcode->bRepeatG32Flag = pGcode->bRepeatG32Flag;
-				pToolcode->bG34RunFlag = pGcode->bG34RunFlag;
-				pToolcode->bG34BackTailFlag = pGcode->bG34BackTailFlag;
+                pToolcode->SEndVector = pToolcode->SStartVector;
+                pToolcode->dF = pGcode->dFeedrate; //æœ€ä¸»è¦æ˜¯è¿™ä¸€å¥
+                pToolcode->dJ = pGcode->dJ;
+                pToolcode->dK = pGcode->dK;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->ucG32SubMode = pGcode->ucG32SubMode; //é™ˆæ•èª 2023/6/15å¢
+
+                pToolcode->SCenterPoint = pGcode->SCenterPoint;
+                pToolcode->cArcDir = pGcode->cArcDir;
+                if (pToolcode->cArcDir != 0)
+                {
+                    pToolcode->dRadius = sqrt(
+                        pow((STcodePrevPoint.dArray[ucAxisNum[1]] - pGcode->SCenterPoint.dArray[ucAxisNum[1]]), 2) +
+                        pow((STcodePrevPoint.dArray[ucAxisNum[0]] - pGcode->SCenterPoint.dArray[ucAxisNum[0]]), 2));
+                }
+                else
+                {
+                    pToolcode->dRadius = 0;
+                }
+
+                pToolcode->ucL = pGcode->usL; //éƒ­å¼º11.22
+                pToolcode->bRepeatG32Flag = pGcode->bRepeatG32Flag;
+                pToolcode->bG34RunFlag = pGcode->bG34RunFlag;
+                pToolcode->bG34BackTailFlag = pGcode->bG34BackTailFlag;
                 pToolcode->bG32LetterQ = pGcode->bG32LetterQ;
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->G33RotateAxis = pGcode->G33RotateAxis;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				break;
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->G33RotateAxis = pGcode->G33RotateAxis;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                break;
 
-			default:
-				break;
-			}
+            default:
+                break;
+            }
+        }
 
-		}
+        else if (bPFlag) //å·²ç»å­˜å‚¨äº†ç¬¬ä¸€ä¸ªè¡¥å¿ç‚¹
+        {
+            bIsNoMoveFlag = TRUE;
 
-		else if (bPFlag)//ÒÑ¾­´æ´¢ÁËµÚÒ»¸ö²¹³¥µã
-		{
-		    bIsNoMoveFlag = TRUE;
+            //åˆ€è¡¥è¿‡ç¨‹ä¸­å‡ºç°å¤šæ®µéç§»åŠ¨ä»£ç ï¼Œå¯èƒ½ä¼šå­˜åœ¨ä¿å­˜ç‚¹çš„æƒ…å†µ
+            //éå†æ‰€æœ‰è½´ï¼ŒæŸ¥çœ‹æ˜¯å¦èµ·ç‚¹ç»ˆç‚¹ç›¸åŒ
+            for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++) //2023.3.24æ—¥08:58å†¼æµ©åŸº
+            {
+                if (!isZero(STcodePrevPoint.dArray[ucCounter] - STcodeEndPoint.dArray[ucCounter]))
+                {
+                    bIsNoMoveFlag = FALSE;
+                    break;
+                }
+            }
 
-		    //µ¶²¹¹ı³ÌÖĞ³öÏÖ¶à¶Î·ÇÒÆ¶¯´úÂë£¬¿ÉÄÜ»á´æÔÚ±£´æµãµÄÇé¿ö
-			//±éÀúËùÓĞÖá£¬²é¿´ÊÇ·ñÆğµãÖÕµãÏàÍ¬
-			for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)//2023.3.24ÈÕ08:58ÙşºÆ»ù
-			{
-				if (!isZero(STcodePrevPoint.dArray[ucCounter] - STcodeEndPoint.dArray[ucCounter]))
-				{
-					bIsNoMoveFlag = FALSE;
-					break;
-				}
-			}
+            if (bIsNoMoveFlag)
+            {
+                pToolcode->EntityType = DOT;
+                pToolcode->unCommandType = pGcode->unCommandType;
+                pToolcode->SEndVector = pToolcode->SStartVector;
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+            }
 
-			if (bIsNoMoveFlag)
-			{
-				pToolcode->EntityType = DOT;
-				pToolcode->unCommandType = pGcode->unCommandType;
-				pToolcode->SEndVector = pToolcode->SStartVector;
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-			}
+            else
+            {
+                pToolcode->unCommandType = setBits(pGcode->unCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
+                pToolcode->EntityType = L1NE;
+                pToolcode->dLength =
+                    sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) +
+                         pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
 
-			else
-			{
-				pToolcode->unCommandType = setBits(pGcode->unCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
-				pToolcode->EntityType = L1NE;
-				pToolcode->dLength = sqrt(pow((STcodePrevPoint.dArray[ucAxisNum[1]] - STcodeEndPoint.dArray[ucAxisNum[1]]), 2) + pow((STcodePrevPoint.dArray[ucAxisNum[0]] - STcodeEndPoint.dArray[ucAxisNum[0]]), 2));
-
-				pToolcode->SStartVector.dArray[ucAxisNum[1]] = (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
-				pToolcode->SStartVector.dArray[ucAxisNum[0]] = (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
-				pToolcode->SEndVector = pToolcode->SStartVector;
-				pToolcode->ucValStatus = pGcode->ucValStatus;
-				pToolcode->ucRelaVal = pGcode->ucRelaVal;
-				pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
-				pToolcode->sChannelCommand = pGcode->sChannelCommand;
-				pToolcode->dQ = pGcode->dQ;
-				pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
-				//ÅĞ¶ÏÊÇ·ñÎªµ¥¸öÖáµÄÔË¶¯£¬ÈôÊÇ£¬Ôò±£´æÔË¶¯ÖáµÄÖáºÅ  ºé¹ÚÅô 2024/5/27
-				for (int i = 0; i < AXIS_NUM_MAX; i++)
-				{
-					if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) < EPSINON)//Î»ÒÆ·ÖÁ¿µÈÓÚ1£¬ËµÃ÷µ±Ç°Ö»ÓĞÒ»¸öÖá²ÎÓëÔË¶¯
-					{
-						pToolcode->ucAxisNumOfNeedLookAhead = i;//±£´æÖáºÅ
-						pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]);//±£´æ²å²¹·½Ïò
-						break;
-					}
-				}
-			}
-		}
-	}
+                pToolcode->SStartVector.dArray[ucAxisNum[1]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[1]] - STcodePrevPoint.dArray[ucAxisNum[1]]) / pToolcode->dLength;
+                pToolcode->SStartVector.dArray[ucAxisNum[0]] =
+                    (STcodeEndPoint.dArray[ucAxisNum[0]] - STcodePrevPoint.dArray[ucAxisNum[0]]) / pToolcode->dLength;
+                pToolcode->SEndVector = pToolcode->SStartVector;
+                pToolcode->ucValStatus = pGcode->ucValStatus;
+                pToolcode->ucRelaVal = pGcode->ucRelaVal;
+                pToolcode->cChannelBufNum = pGcode->cChannelBufNum;
+                pToolcode->sChannelCommand = pGcode->sChannelCommand;
+                pToolcode->dQ = pGcode->dQ;
+                pToolcode->dLimitedSpindleSpeed = pGcode->dLimitedSpindleSpeed;
+                //åˆ¤æ–­æ˜¯å¦ä¸ºå•ä¸ªè½´çš„è¿åŠ¨ï¼Œè‹¥æ˜¯ï¼Œåˆ™ä¿å­˜è¿åŠ¨è½´çš„è½´å·  æ´ªå† é¹ 2024/5/27
+                for (int i = 0; i < AXIS_NUM_MAX; i++)
+                {
+                    if ((1.0 - fabs(pToolcode->SStartVector.dArray[i])) <
+                        EPSINON) //ä½ç§»åˆ†é‡ç­‰äº1ï¼Œè¯´æ˜å½“å‰åªæœ‰ä¸€ä¸ªè½´å‚ä¸è¿åŠ¨
+                    {
+                        pToolcode->ucAxisNumOfNeedLookAhead = i;                                     //ä¿å­˜è½´å·
+                        pToolcode->cAxisDirOfNeedLookAhead = sgn(pToolcode->SStartVector.dArray[i]); //ä¿å­˜æ’è¡¥æ–¹å‘
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 #if ENABLE_TOOL_DEBUG
-	PrintDataByChannel(ucChannelNum);
-	//CloseFile(ucChannelNum);
+    PrintDataByChannel(ucChannelNum);
+    //CloseFile(ucChannelNum);
 #endif
 
-	//µ¶¾ß²¹³¥»º³åÇøÍùÏÂÒÆ¶¯,ÒÔ±ã´æ·ÅÏÂÒ»¸öÊı¾İ
-	moveSToolCompBufPointer(STOOL_WRITE, BUF_AHEAD, ucChannelNum);
-
+    //åˆ€å…·è¡¥å¿ç¼“å†²åŒºå¾€ä¸‹ç§»åŠ¨,ä»¥ä¾¿å­˜æ”¾ä¸‹ä¸€ä¸ªæ•°æ®
+    moveSToolCompBufPointer(STOOL_WRITE, BUF_AHEAD, ucChannelNum);
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºRecordLastToolPoint(int8 cPointNum)
-  º¯Êı¹¦ÄÜ  ¼ÇÂ¼µ¶²¹¼ÆËãÖ®ºó²úÉúµÄ×îºóÒ»¸ö²¹³¥µãµÄĞÅÏ¢
-  ÊäÈë²ÎÊı£ºcPointNum			×îºóÒ»¸ö²¹³¥µã
+  å‡½æ•°åç§°ï¼šRecordLastToolPoint(int8 cPointNum)
+  å‡½æ•°åŠŸèƒ½  è®°å½•åˆ€è¡¥è®¡ç®—ä¹‹åäº§ç”Ÿçš„æœ€åä¸€ä¸ªè¡¥å¿ç‚¹çš„ä¿¡æ¯
+  è¾“å…¥å‚æ•°ï¼šcPointNum			æœ€åä¸€ä¸ªè¡¥å¿ç‚¹
 
 
-  Êä³ö²ÎÊı£º¸Ä±äÈ«¾Ö±äÁ¿SToolCompensationRecord->TcodePrevPoint
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼šæ”¹å˜å…¨å±€å˜é‡SToolCompensationRecord->TcodePrevPoint
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//¸ù¾İµ¶²¹ºóµÄµãÊı¼ÇÂ¼×îºóÒ»¸öµ¶²¹µã
+//æ ¹æ®åˆ€è¡¥åçš„ç‚¹æ•°è®°å½•æœ€åä¸€ä¸ªåˆ€è¡¥ç‚¹
 void RecordLastToolPoint(int8 cPointNum, uint8 ucChannelNum)
 {
-	if (cPointNum == 1)//Ò»¸ö²¹³¥µã
-	{
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
-	}
-	else if (cPointNum == 2)//Á½¸ö²¹³¥µã
-	{
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2;
-	}
-	else if (cPointNum == 3)//Èı¸ö²¹³¥µã
-	{
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3;
-	}
-	else if (cPointNum == 4)//ËÄ¸ö²¹³¥µã
-	{
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS4;
-	}
+    if (cPointNum == 1) //ä¸€ä¸ªè¡¥å¿ç‚¹
+    {
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
+    }
+    else if (cPointNum == 2) //ä¸¤ä¸ªè¡¥å¿ç‚¹
+    {
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2;
+    }
+    else if (cPointNum == 3) //ä¸‰ä¸ªè¡¥å¿ç‚¹
+    {
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3;
+    }
+    else if (cPointNum == 4) //å››ä¸ªè¡¥å¿ç‚¹
+    {
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS4;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºLineToLine(SGCodeParse *pSGcode, SGCodeParse  *pSNextGcode, int8 StageSelect)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ´æ·ÅµÚÒ»¶Î¹ì¼£µÄSGcode½á¹¹Ìå¡¢µÚ¶ş¶Î¹ì¼£µÄSNextGcode½á¹¹Ìå£¬ÒÔ¼°µ¶²¹µÄ½×¶Î½øĞĞÖ±Ïß½ÓÖ±Ïßµ¶²¹¼ÆËã
-  ÊäÈë²ÎÊı£ºSGcode			µÚÒ»¶Î¹ì¼£
-			SNextGcode		µÚ¶ş¶Î¹ì¼£
-			StageSelect     µ¶²¹µÄ½×¶Î
+  å‡½æ•°åç§°ï¼šLineToLine(SGCodeParse *pSGcode, SGCodeParse  *pSNextGcode, int8 StageSelect)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®å­˜æ”¾ç¬¬ä¸€æ®µè½¨è¿¹çš„SGcodeç»“æ„ä½“ã€ç¬¬äºŒæ®µè½¨è¿¹çš„SNextGcodeç»“æ„ä½“ï¼Œä»¥åŠåˆ€è¡¥çš„é˜¶æ®µè¿›è¡Œç›´çº¿æ¥ç›´çº¿åˆ€è¡¥è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼šSGcode			ç¬¬ä¸€æ®µè½¨è¿¹
+			SNextGcode		ç¬¬äºŒæ®µè½¨è¿¹
+			StageSelect     åˆ€è¡¥çš„é˜¶æ®µ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºµ¶²¹µÄ²¹³¥µãÊı	cPointNum
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåˆ€è¡¥çš„è¡¥å¿ç‚¹æ•°	cPointNum
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 LineToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 cStageSelect, uint8* ucAxisNum)
+int8 LineToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 cStageSelect,
+                uint8* ucAxisNum)
 {
 
-	int16 sAngleType;//×ª½Ó½ÇÀàĞÍ
-	int8 cPointNum = 0;
-	SVector SLine1Vec, SLine2Vec;
-	if (pSGcode == NULL || pSNextGcode == NULL)
-	{
-		return -1;
-	}
-	getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SLine1Vec, ucAxisNum);
-	getLineVector(pSNextGcode->SStartPoint, pSNextGcode->SEndPoint, &SLine2Vec, ucAxisNum);
-	sAngleType = JudgeAngle(dToolRadius, SLine1Vec, SLine2Vec, ucAxisNum);//ÅĞ¶ÏÊôÓÚÊ²Ã´ÀàĞÍ
-	switch (sAngleType)
-	{
-	case 1:
-		//Ëõ¶ÌĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		case 2://µ¶²¹½øĞĞ
-			//Á½Ö±Ïß¹²ÏßÊ±Ö±½ÓÆ«ÒÆÒ»¸öµ¶¾ß°ë¾¶
-			if (isZero((pSGcode->SEndPoint.dArray[ucAxisNum[0]] - pSGcode->SStartPoint.dArray[ucAxisNum[0]]) * (pSNextGcode->SEndPoint.dArray[ucAxisNum[1]] - pSNextGcode->SStartPoint.dArray[ucAxisNum[1]]) -
-				(pSGcode->SEndPoint.dArray[ucAxisNum[1]] - pSGcode->SStartPoint.dArray[ucAxisNum[1]]) * (pSNextGcode->SEndPoint.dArray[ucAxisNum[0]] - pSNextGcode->SStartPoint.dArray[ucAxisNum[0]])))
-			{
-				offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			}
+    int16 sAngleType; //è½¬æ¥è§’ç±»å‹
+    int8 cPointNum = 0;
+    SVector SLine1Vec, SLine2Vec;
+    if (pSGcode == NULL || pSNextGcode == NULL)
+    {
+        return -1;
+    }
+    getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SLine1Vec, ucAxisNum);
+    getLineVector(pSNextGcode->SStartPoint, pSNextGcode->SEndPoint, &SLine2Vec, ucAxisNum);
+    sAngleType = JudgeAngle(dToolRadius, SLine1Vec, SLine2Vec, ucAxisNum); //åˆ¤æ–­å±äºä»€ä¹ˆç±»å‹
+    switch (sAngleType)
+    {
+    case 1:
+        //ç¼©çŸ­å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            cPointNum = 1;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
+            //ä¸¤ç›´çº¿å…±çº¿æ—¶ç›´æ¥åç§»ä¸€ä¸ªåˆ€å…·åŠå¾„
+            if (isZero(
+                    (pSGcode->SEndPoint.dArray[ucAxisNum[0]] - pSGcode->SStartPoint.dArray[ucAxisNum[0]]) *
+                        (pSNextGcode->SEndPoint.dArray[ucAxisNum[1]] - pSNextGcode->SStartPoint.dArray[ucAxisNum[1]]) -
+                    (pSGcode->SEndPoint.dArray[ucAxisNum[1]] - pSGcode->SStartPoint.dArray[ucAxisNum[1]]) *
+                        (pSNextGcode->SEndPoint.dArray[ucAxisNum[0]] - pSNextGcode->SStartPoint.dArray[ucAxisNum[0]])))
+            {
+                offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            }
 
-			//²»¹²Ïß
-			else
-			{
-				Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			}
-			cPointNum = 1;
-			break;
-		case 3://µ¶²¹³·Ïû
-			offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		}
-		break;
-	case 2:
-		//Éì³¤ĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		case 2://µ¶²¹½øĞĞ
-			Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		case 3://µ¶²¹³·Ïû
-			Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			cPointNum = 2;
-			break;
-		}
-		break;
-	case 3:
-		//²åÈëĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		case 2://µ¶²¹½øĞĞ
-			offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			cPointNum = 2;
-			break;
-		case 3://µ¶²¹³·Ïû
-			offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		}
+            //ä¸å…±çº¿
+            else
+            {
+                Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint,
+                                                 &SToolRunPoint.SS1, ucAxisNum);
+            }
+            cPointNum = 1;
+            break;
+        case 3: //åˆ€è¡¥æ’¤æ¶ˆ
+            offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            cPointNum = 1;
+            break;
+        }
+        break;
+    case 2:
+        //ä¼¸é•¿å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            cPointNum = 1;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
+            Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1,
+                                             ucAxisNum);
+            cPointNum = 1;
+            break;
+        case 3: //åˆ€è¡¥æ’¤æ¶ˆ
+            Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1,
+                                             ucAxisNum);
+            offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            cPointNum = 2;
+            break;
+        }
+        break;
+    case 3:
+        //æ’å…¥å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
+            offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            cPointNum = 2;
+            break;
+        case 3: //åˆ€è¡¥æ’¤æ¶ˆ
+            offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector(dToolRadius, SLine2Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        }
 
-		break;
-	}
+        break;
+    }
 
-	SToolRunPoint.cPointNum = cPointNum;
-	return cPointNum;
+    SToolRunPoint.cPointNum = cPointNum;
+    return cPointNum;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºLineToArc(SGCodeParse *pSGcode, SGCodeParse  *pSNextGcode, int8 StageSelect)
-  º¯Êı¹¦ÄÜ  ¸ù¾İ´æ·ÅµÚÒ»¶Î¹ì¼£µÄSGcode½á¹¹Ìå¡¢µÚ¶ş¶Î¹ì¼£µÄSNextGcode½á¹¹Ìå£¬ÒÔ¼°µ¶²¹µÄ½×¶Î½øĞĞÖ±Ïß½ÓÔ²»¡µ¶²¹¼ÆËã
-  ÊäÈë²ÎÊı£ºSGcode			µÚÒ»¶Î¹ì¼£
-			SNextGcode		µÚ¶ş¶Î¹ì¼£
-			StageSelect     µ¶²¹µÄ½×¶Î
+  å‡½æ•°åç§°ï¼šLineToArc(SGCodeParse *pSGcode, SGCodeParse  *pSNextGcode, int8 StageSelect)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®å­˜æ”¾ç¬¬ä¸€æ®µè½¨è¿¹çš„SGcodeç»“æ„ä½“ã€ç¬¬äºŒæ®µè½¨è¿¹çš„SNextGcodeç»“æ„ä½“ï¼Œä»¥åŠåˆ€è¡¥çš„é˜¶æ®µè¿›è¡Œç›´çº¿æ¥åœ†å¼§åˆ€è¡¥è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼šSGcode			ç¬¬ä¸€æ®µè½¨è¿¹
+			SNextGcode		ç¬¬äºŒæ®µè½¨è¿¹
+			StageSelect     åˆ€è¡¥çš„é˜¶æ®µ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºµ¶²¹µÄ²¹³¥µãÊı	cPointNum
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåˆ€è¡¥çš„è¡¥å¿ç‚¹æ•°	cPointNum
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 LineToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 cStageSelect, uint8* ucAxisNum)
+int8 LineToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 cStageSelect,
+               uint8* ucAxisNum)
 {
 
-	int16 sAngleType;
-	int8 cPointNum = 0;
-	int16 sSpecialAngleJudge = -1;
-	double dK = pSNextGcode->SStartPoint.dArray[ucAxisNum[0]] - pSNextGcode->SCenterPoint.dArray[ucAxisNum[0]];
-	double dI = pSNextGcode->SStartPoint.dArray[ucAxisNum[1]] - pSNextGcode->SCenterPoint.dArray[ucAxisNum[1]];
-	SVector SLine1Vec, SArcVec;
-	getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SLine1Vec, ucAxisNum);
-	getArcVectorAtStart(dK, dI, &SArcVec, pSNextGcode->cArcDir, ucAxisNum);
-	sAngleType = JudgeAngle(dToolRadius, SLine1Vec, SArcVec, ucAxisNum);
-	if (pSGcode == NULL || pSNextGcode == NULL)
-	{
-		return -1;
-	}
-	switch (sAngleType)
-	{
-	case 1:
-		//Ëõ¶ÌĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		case 2://µ¶²¹½øĞĞ
+    int16 sAngleType;
+    int8 cPointNum = 0;
+    int16 sSpecialAngleJudge = -1;
+    double dK = pSNextGcode->SStartPoint.dArray[ucAxisNum[0]] - pSNextGcode->SCenterPoint.dArray[ucAxisNum[0]];
+    double dI = pSNextGcode->SStartPoint.dArray[ucAxisNum[1]] - pSNextGcode->SCenterPoint.dArray[ucAxisNum[1]];
+    SVector SLine1Vec, SArcVec;
+    getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SLine1Vec, ucAxisNum);
+    getArcVectorAtStart(dK, dI, &SArcVec, pSNextGcode->cArcDir, ucAxisNum);
+    sAngleType = JudgeAngle(dToolRadius, SLine1Vec, SArcVec, ucAxisNum);
+    if (pSGcode == NULL || pSNextGcode == NULL)
+    {
+        return -1;
+    }
+    switch (sAngleType)
+    {
+    case 1:
+        //ç¼©çŸ­å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            cPointNum = 1;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
 
-			//ÌØÊâ½Ç¶È´¦Àí
-			sSpecialAngleJudge = SpecialAngleJudge(dToolRadius, SLine1Vec, SArcVec, ucAxisNum);
-			if (sSpecialAngleJudge == 180)//Ö±ÏßÓëÔ²»¡ÍâÇĞ¼Ğ½ÇÎª180¶È
-			{
-				offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-				cPointNum = 1;
-			}
-			else if (sSpecialAngleJudge == 0)//Ö±ÏßÓëÔ²»¡ÍâÇĞ¼Ğ½ÇÎª0¶È
-			{
-				if ((dToolRadius > 0 && pSNextGcode->cArcDir == ARC_CW) || (dToolRadius < 0 && pSNextGcode->cArcDir == ARC_ANTI_CW))//×óµ¶²¹Ë³Ô²»¡»òÓÒµ¶²¹ÄæÔ²»¡
-				{
-					Intersection_Of_Line_And_Arc(dToolRadius, pSGcode->SEndPoint, SLine1Vec, dK, dI, &SToolRunPoint.SS1, pSNextGcode->cArcDir, ucAxisNum);
-					cPointNum = 1;
-				}
+            //ç‰¹æ®Šè§’åº¦å¤„ç†
+            sSpecialAngleJudge = SpecialAngleJudge(dToolRadius, SLine1Vec, SArcVec, ucAxisNum);
+            if (sSpecialAngleJudge == 180) //ç›´çº¿ä¸åœ†å¼§å¤–åˆ‡å¤¹è§’ä¸º180åº¦
+            {
+                offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                cPointNum = 1;
+            }
+            else if (sSpecialAngleJudge == 0) //ç›´çº¿ä¸åœ†å¼§å¤–åˆ‡å¤¹è§’ä¸º0åº¦
+            {
+                if ((dToolRadius > 0 && pSNextGcode->cArcDir == ARC_CW) ||
+                    (dToolRadius < 0 && pSNextGcode->cArcDir == ARC_ANTI_CW)) //å·¦åˆ€è¡¥é¡ºåœ†å¼§æˆ–å³åˆ€è¡¥é€†åœ†å¼§
+                {
+                    Intersection_Of_Line_And_Arc(dToolRadius, pSGcode->SEndPoint, SLine1Vec, dK, dI, &SToolRunPoint.SS1,
+                                                 pSNextGcode->cArcDir, ucAxisNum);
+                    cPointNum = 1;
+                }
 
-				if ((dToolRadius > 0 && pSNextGcode->cArcDir == ARC_ANTI_CW) || (dToolRadius < 0 && pSNextGcode->cArcDir == ARC_CW))//×óµ¶²¹ÄæÔ²»¡»òÓÒµ¶²¹Ë³Ô²»¡
-				{
-					offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-					offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-					offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-					cPointNum = 3;
-				}
-			}
-			else
-			{
-				Intersection_Of_Line_And_Arc(dToolRadius, pSGcode->SEndPoint, SLine1Vec, dK, dI, &SToolRunPoint.SS1, pSNextGcode->cArcDir, ucAxisNum);
-				cPointNum = 1;
-			}
+                if ((dToolRadius > 0 && pSNextGcode->cArcDir == ARC_ANTI_CW) ||
+                    (dToolRadius < 0 && pSNextGcode->cArcDir == ARC_CW)) //å·¦åˆ€è¡¥é€†åœ†å¼§æˆ–å³åˆ€è¡¥é¡ºåœ†å¼§
+                {
+                    offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                    offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                    offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                    cPointNum = 3;
+                }
+            }
+            else
+            {
+                Intersection_Of_Line_And_Arc(dToolRadius, pSGcode->SEndPoint, SLine1Vec, dK, dI, &SToolRunPoint.SS1,
+                                             pSNextGcode->cArcDir, ucAxisNum);
+                cPointNum = 1;
+            }
 
-			break;
+            break;
+        }
+        break;
+    case 2:
+        //ä¼¸é•¿å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2,
+                                             ucAxisNum);
+            offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
 
-		}
-		break;
-	case 2:
-		//Éì³¤ĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		case 2://µ¶²¹½øĞĞ
-			
-			Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			cPointNum = 2;
-			break;
-		}
-		break;
-	case 3:
-		//²åÈëĞÍ
-		switch (cStageSelect)
-		{
-		case 1://µ¶²¹½¨Á¢
-			offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-			cPointNum = 4;
-			break;
-		case 2://µ¶²¹½øĞĞ
-			offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		}
-		break;
-	}
-	SToolRunPoint.cPointNum = cPointNum;
-	return cPointNum;
+            Intersection_Of_Quidistant_Lines(dToolRadius, SLine1Vec, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS1,
+                                             ucAxisNum);
+            offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            cPointNum = 2;
+            break;
+        }
+        break;
+    case 3:
+        //æ’å…¥å‹
+        switch (cStageSelect)
+        {
+        case 1: //åˆ€è¡¥å»ºç«‹
+            offsetRadiusVector(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+            cPointNum = 4;
+            break;
+        case 2: //åˆ€è¡¥è¿›è¡Œ
+            offsetRadiusVector1(dToolRadius, SLine1Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector(dToolRadius, SArcVec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        }
+        break;
+    }
+    SToolRunPoint.cPointNum = cPointNum;
+    return cPointNum;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºArcToLine(SGCodeParse *SGcode, SGCodeParse *SNextcode, int8 StageSelect)
-  º¯Êı¹¦ÄÜ  µ÷ÓÃSGcodeºÍSNextcodeÖĞµÄµãÊı¾İÇóÁ½Á¬½ÓÀàĞÍµÄÖ®¼äµÄµ¶²¹³¥µã£¬×ª½ÓÀàĞÍÎªÔ²»¡½ÓÖ±Ïß£¬
-			ÇóÈ¡µÄµã´æ·ÅÓÚÈ«¾Ö±äÁ¿µÄ½á¹¹ÌåSToolRunPointÖĞ
-  ÊäÈë²ÎÊı£ºSGcode			±¾¶Î½á¹¹ÌåÖ¸Õë
-			SNextcode		ÏÂ¶Î½á¹¹ÌåÖ¸Õë
-			StageSelect     µ¶²¹½×¶Î£¨1£º½øĞĞ  2£º³·Ïú£©
+  å‡½æ•°åç§°ï¼šArcToLine(SGCodeParse *SGcode, SGCodeParse *SNextcode, int8 StageSelect)
+  å‡½æ•°åŠŸèƒ½  è°ƒç”¨SGcodeå’ŒSNextcodeä¸­çš„ç‚¹æ•°æ®æ±‚ä¸¤è¿æ¥ç±»å‹çš„ä¹‹é—´çš„åˆ€è¡¥å¿ç‚¹ï¼Œè½¬æ¥ç±»å‹ä¸ºåœ†å¼§æ¥ç›´çº¿ï¼Œ
+			æ±‚å–çš„ç‚¹å­˜æ”¾äºå…¨å±€å˜é‡çš„ç»“æ„ä½“SToolRunPointä¸­
+  è¾“å…¥å‚æ•°ï¼šSGcode			æœ¬æ®µç»“æ„ä½“æŒ‡é’ˆ
+			SNextcode		ä¸‹æ®µç»“æ„ä½“æŒ‡é’ˆ
+			StageSelect     åˆ€è¡¥é˜¶æ®µï¼ˆ1ï¼šè¿›è¡Œ  2ï¼šæ’¤é”€ï¼‰
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºPointNum			µ¶²¹Ö®ºóµÄ²¹³¥µãµÄÊıÁ¿
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šPointNum			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹çš„æ•°é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Ô²»¡½ÓÖ±Ïß
-int8 ArcToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 cStageSelect, uint8* ucAxisNum)
+//åœ†å¼§æ¥ç›´çº¿
+int8 ArcToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 cStageSelect,
+               uint8* ucAxisNum)
 {
-	SVector Arc_Vec, L_Vec;
-	int16 sAngleJudge;
-	int16 cPointNum = 0;
-	double dK = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
-	double dI = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
-	getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK, dI, &Arc_Vec, pSGcode->cArcDir, ucAxisNum);
-	getLineVector(pSNextcode->SStartPoint, pSNextcode->SEndPoint, &L_Vec, ucAxisNum);
-	sAngleJudge = JudgeAngle(dToolRadius, Arc_Vec, L_Vec, ucAxisNum);
-	if (pSGcode == NULL || pSNextcode == NULL)
-	{
-		return -1;
-	}
-	switch (sAngleJudge)
-	{
-	case 1://Ëõ¶ÌĞÍ
-	{
-		switch (cStageSelect)
-		{
-		case 2://½øĞĞ
-			sAngleJudge = SpecialAngleJudge(dToolRadius, Arc_Vec, L_Vec, ucAxisNum);
-			if (sAngleJudge == 180)//Ô²»¡ÓëÖ±ÏßÍâÇĞ¼Ğ½ÇµÈÓÚ180
-			{
-				offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-				cPointNum = 1;
-			}
-			if (sAngleJudge == 0)//Ô²»¡ÓëÖ±ÏßÍâÇĞ¼Ğ½ÇµÈÓÚ0
-			{
-				if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) || (dToolRadius < 0 && pSGcode->cArcDir == ARC_ANTI_CW))//×óµ¶²¹Ë³Ô²»¡»òÓÒµ¶²¹ÄæÔ²»¡
-				{
-					Intersection_Of_Arc_And_Line(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, L_Vec, dK, dI, pSGcode->cArcDir, ucAxisNum);
-					cPointNum = 1;
-				}
-				else if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_ANTI_CW) || (dToolRadius < 0 && pSGcode->cArcDir == ARC_CW))//×óµ¶²¹ÄæÔ²»¡»òÓÒµ¶²¹Ë³Ô²»¡
-				{
-					offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-					offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-					offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-					cPointNum = 3;
-				}
-			}
-			else
-			{
-				Intersection_Of_Arc_And_Line(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, L_Vec, dK, dI, pSGcode->cArcDir, ucAxisNum);
-				cPointNum = 1;
-			}
-			break;
-		case 3://³·Ïú
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			cPointNum = 1;
-			break;
-		}
-	}
-	break;
-	case 2://Éì³¤ĞÍ
-	{
-		switch (cStageSelect)
-		{
-		case 2://½øĞĞ
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			Intersection_Of_Quidistant_Lines(dToolRadius, Arc_Vec, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			cPointNum = 2;
-			break;
-		case 3://³·Ïú
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			Intersection_Of_Quidistant_Lines(dToolRadius, Arc_Vec, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		}
-	}
-	break;
-	case 3://²åÈëĞÍ
-	{
-		switch (cStageSelect)
-		{
-		case 2://½øĞĞ
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			cPointNum = 3;
-			break;
-		case 3://³·Ïú
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-			offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-			offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-			offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-			cPointNum = 4;
-			break;
-		}
-	}
-	break;
-	}
-	SToolRunPoint.cPointNum = cPointNum;//¼ÇÂ¼ËùËãµÄµãÊı
-	return cPointNum;
+    SVector Arc_Vec, L_Vec;
+    int16 sAngleJudge;
+    int16 cPointNum = 0;
+    double dK = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
+    double dI = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
+    getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK, dI, &Arc_Vec, pSGcode->cArcDir, ucAxisNum);
+    getLineVector(pSNextcode->SStartPoint, pSNextcode->SEndPoint, &L_Vec, ucAxisNum);
+    sAngleJudge = JudgeAngle(dToolRadius, Arc_Vec, L_Vec, ucAxisNum);
+    if (pSGcode == NULL || pSNextcode == NULL)
+    {
+        return -1;
+    }
+    switch (sAngleJudge)
+    {
+    case 1: //ç¼©çŸ­å‹
+    {
+        switch (cStageSelect)
+        {
+        case 2: //è¿›è¡Œ
+            sAngleJudge = SpecialAngleJudge(dToolRadius, Arc_Vec, L_Vec, ucAxisNum);
+            if (sAngleJudge == 180) //åœ†å¼§ä¸ç›´çº¿å¤–åˆ‡å¤¹è§’ç­‰äº180
+            {
+                offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                cPointNum = 1;
+            }
+            if (sAngleJudge == 0) //åœ†å¼§ä¸ç›´çº¿å¤–åˆ‡å¤¹è§’ç­‰äº0
+            {
+                if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) ||
+                    (dToolRadius < 0 && pSGcode->cArcDir == ARC_ANTI_CW)) //å·¦åˆ€è¡¥é¡ºåœ†å¼§æˆ–å³åˆ€è¡¥é€†åœ†å¼§
+                {
+                    Intersection_Of_Arc_And_Line(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint,
+                                                 &SToolRunPoint.SS1, L_Vec, dK, dI, pSGcode->cArcDir, ucAxisNum);
+                    cPointNum = 1;
+                }
+                else if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_ANTI_CW) ||
+                         (dToolRadius < 0 && pSGcode->cArcDir == ARC_CW)) //å·¦åˆ€è¡¥é€†åœ†å¼§æˆ–å³åˆ€è¡¥é¡ºåœ†å¼§
+                {
+                    offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                    offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                    offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                    cPointNum = 3;
+                }
+            }
+            else
+            {
+                Intersection_Of_Arc_And_Line(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1,
+                                             L_Vec, dK, dI, pSGcode->cArcDir, ucAxisNum);
+                cPointNum = 1;
+            }
+            break;
+        case 3: //æ’¤é”€
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            cPointNum = 1;
+            break;
+        }
+    }
+    break;
+    case 2: //ä¼¸é•¿å‹
+    {
+        switch (cStageSelect)
+        {
+        case 2: //è¿›è¡Œ
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            Intersection_Of_Quidistant_Lines(dToolRadius, Arc_Vec, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2,
+                                             ucAxisNum);
+            cPointNum = 2;
+            break;
+        case 3: //æ’¤é”€
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            Intersection_Of_Quidistant_Lines(dToolRadius, Arc_Vec, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2,
+                                             ucAxisNum);
+            offsetRadiusVector(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        }
+    }
+    break;
+    case 3: //æ’å…¥å‹
+    {
+        switch (cStageSelect)
+        {
+        case 2: //è¿›è¡Œ
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            cPointNum = 3;
+            break;
+        case 3: //æ’¤é”€
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+            offsetRadiusVector1(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+            offsetRadiusVector2(dToolRadius, L_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+            offsetRadiusVector(dToolRadius, Arc_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+            cPointNum = 4;
+            break;
+        }
+    }
+    break;
+    }
+    SToolRunPoint.cPointNum = cPointNum; //è®°å½•æ‰€ç®—çš„ç‚¹æ•°
+    return cPointNum;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºArcToArc(SGCodeParse *SGcode, SGCodeParse *SNextcode, int8 StageSelect)
-  º¯Êı¹¦ÄÜ  µ÷ÓÃSGcodeºÍSNextcodeÖĞµÄµãÊı¾İÇóÁ½Á¬½ÓÀàĞÍµÄÖ®¼äµÄµ¶²¹³¥µã£¬×ª½ÓÀàĞÍÎªÔ²»¡½ÓÔ²»¡£¬
-			ÇóÈ¡µÄµã´æ·ÅÓÚÈ«¾Ö±äÁ¿µÄ½á¹¹ÌåSToolRunPointÖĞ
-  ÊäÈë²ÎÊı£ºSGcode			±¾¶Î½á¹¹ÌåÖ¸Õë
-			SNextcode		ÏÂ¶Î½á¹¹ÌåÖ¸Õë
-			StageSelect     µ¶²¹½×¶Î
+  å‡½æ•°åç§°ï¼šArcToArc(SGCodeParse *SGcode, SGCodeParse *SNextcode, int8 StageSelect)
+  å‡½æ•°åŠŸèƒ½  è°ƒç”¨SGcodeå’ŒSNextcodeä¸­çš„ç‚¹æ•°æ®æ±‚ä¸¤è¿æ¥ç±»å‹çš„ä¹‹é—´çš„åˆ€è¡¥å¿ç‚¹ï¼Œè½¬æ¥ç±»å‹ä¸ºåœ†å¼§æ¥åœ†å¼§ï¼Œ
+			æ±‚å–çš„ç‚¹å­˜æ”¾äºå…¨å±€å˜é‡çš„ç»“æ„ä½“SToolRunPointä¸­
+  è¾“å…¥å‚æ•°ï¼šSGcode			æœ¬æ®µç»“æ„ä½“æŒ‡é’ˆ
+			SNextcode		ä¸‹æ®µç»“æ„ä½“æŒ‡é’ˆ
+			StageSelect     åˆ€è¡¥é˜¶æ®µ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºPointNum			µ¶²¹Ö®ºóµÄ²¹³¥µãµÄÊıÁ¿
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šPointNum			åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹çš„æ•°é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//Ô²»¡½ÓÔ²»¡
-int8 ArcToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 StageSelect, uint8* ucAxisNum)
+//åœ†å¼§æ¥åœ†å¼§
+int8 ArcToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 StageSelect,
+              uint8* ucAxisNum)
 {
-	double dK1 = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
-	double dI1 = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
-	double dK2 = pSNextcode->SStartPoint.dArray[ucAxisNum[0]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[0]];
-	double dI2 = pSNextcode->SStartPoint.dArray[ucAxisNum[1]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[1]];
-	SVector Arc1_Vec, Arc2_Vec;
-	int8 cAngleJudge, cPointNum;
-	int16 sSecialAngleJudge;
-	double dDistance;
-	getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK1, dI1, &Arc1_Vec, pSGcode->cArcDir, ucAxisNum);
-	getArcVectorAtStart(dK2, dI2, &Arc2_Vec, pSNextcode->cArcDir, ucAxisNum);
-	cAngleJudge = JudgeAngle(dToolRadius, Arc1_Vec, Arc2_Vec, ucAxisNum);
-	if (pSGcode == NULL || pSNextcode == NULL)
-	{
-		return -1;
-	}
-	switch (cAngleJudge)
-	{
-	case 1://Ëõ¶ÌĞÍ
-		sSecialAngleJudge = SpecialAngleJudge(dToolRadius, Arc1_Vec, Arc2_Vec, ucAxisNum);
-		dDistance = sqrt(pow((pSGcode->SCenterPoint.dArray[ucAxisNum[0]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[0]]), 2) + pow((pSGcode->SCenterPoint.dArray[ucAxisNum[1]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[1]]), 2));
-		if (sSecialAngleJudge == 0)//Á½Ô²»¡¼Ğ½ÇÎª0
-		{
-			if (isZero(dDistance - pSGcode->dRadius - pSNextcode->dRadius))//Á½Ô²»¡ÍâÇĞ
-			{
-				if (pSGcode->cArcDir == ARC_CW && pSNextcode->cArcDir == ARC_CW)//Á½Ë³Ô²»¡
-				{
-					if (dToolRadius > 0)//×óµ¶²¹°´Ëõ¶ÌĞÍ¹«Ê½
-					{
-						Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum,2);
-						cPointNum = 1;
-					}
-					
-					else if (dToolRadius < 0)//ÓÒµ¶²¹°´²åÈëĞÍ¹«Ê½
-					{
-						offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-						offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-						offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-						offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-						cPointNum = 4;
-					}
-				}
+    double dK1 = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
+    double dI1 = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
+    double dK2 = pSNextcode->SStartPoint.dArray[ucAxisNum[0]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[0]];
+    double dI2 = pSNextcode->SStartPoint.dArray[ucAxisNum[1]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[1]];
+    SVector Arc1_Vec, Arc2_Vec;
+    int8 cAngleJudge, cPointNum;
+    int16 sSecialAngleJudge;
+    double dDistance;
+    getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK1, dI1, &Arc1_Vec, pSGcode->cArcDir, ucAxisNum);
+    getArcVectorAtStart(dK2, dI2, &Arc2_Vec, pSNextcode->cArcDir, ucAxisNum);
+    cAngleJudge = JudgeAngle(dToolRadius, Arc1_Vec, Arc2_Vec, ucAxisNum);
+    if (pSGcode == NULL || pSNextcode == NULL)
+    {
+        return -1;
+    }
+    switch (cAngleJudge)
+    {
+    case 1: //ç¼©çŸ­å‹
+        sSecialAngleJudge = SpecialAngleJudge(dToolRadius, Arc1_Vec, Arc2_Vec, ucAxisNum);
+        dDistance =
+            sqrt(pow((pSGcode->SCenterPoint.dArray[ucAxisNum[0]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[0]]), 2) +
+                 pow((pSGcode->SCenterPoint.dArray[ucAxisNum[1]] - pSNextcode->SCenterPoint.dArray[ucAxisNum[1]]), 2));
+        if (sSecialAngleJudge == 0) //ä¸¤åœ†å¼§å¤¹è§’ä¸º0
+        {
+            if (isZero(dDistance - pSGcode->dRadius - pSNextcode->dRadius)) //ä¸¤åœ†å¼§å¤–åˆ‡
+            {
+                if (pSGcode->cArcDir == ARC_CW && pSNextcode->cArcDir == ARC_CW) //ä¸¤é¡ºåœ†å¼§
+                {
+                    if (dToolRadius > 0) //å·¦åˆ€è¡¥æŒ‰ç¼©çŸ­å‹å…¬å¼
+                    {
+                        Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint,
+                                                    &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir,
+                                                    pSNextcode->cArcDir, ucAxisNum, 2);
+                        cPointNum = 1;
+                    }
 
-				else if (pSGcode->cArcDir == ARC_ANTI_CW && pSNextcode->cArcDir == ARC_ANTI_CW)//Á½ÄæÔ²»¡
-				{
-					if (dToolRadius < 0)//ÓÒµ¶²¹°´Ëõ¶ÌĞÍ¹«Ê½
-					{
-						Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum,2);
-						cPointNum = 1;
-					}
+                    else if (dToolRadius < 0) //å³åˆ€è¡¥æŒ‰æ’å…¥å‹å…¬å¼
+                    {
+                        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                        offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                        offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+                        cPointNum = 4;
+                    }
+                }
 
-					else if (dToolRadius > 0)//×óµ¶²¹°´²åÈëĞÍ¹«Ê½
-					{
-						offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-						offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-						offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-						offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-						cPointNum = 4;
-					}
-				}
+                else if (pSGcode->cArcDir == ARC_ANTI_CW && pSNextcode->cArcDir == ARC_ANTI_CW) //ä¸¤é€†åœ†å¼§
+                {
+                    if (dToolRadius < 0) //å³åˆ€è¡¥æŒ‰ç¼©çŸ­å‹å…¬å¼
+                    {
+                        Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint,
+                                                    &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir,
+                                                    pSNextcode->cArcDir, ucAxisNum, 2);
+                        cPointNum = 1;
+                    }
 
+                    else if (dToolRadius > 0) //å·¦åˆ€è¡¥æŒ‰æ’å…¥å‹å…¬å¼
+                    {
+                        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                        offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                        offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+                        cPointNum = 4;
+                    }
+                }
+            }
+            if (isZero(dDistance - fabs(pSGcode->dRadius - pSNextcode->dRadius))) //ä¸¤åœ†å¼§å†…åˆ‡
+            {
+                if (pSGcode->dRadius < pSNextcode->dRadius) //ç¬¬ä¸€æ®µåœ†å¼§åŠå¾„å°äºç¬¬äºŒæ®µåœ†å¼§åŠå¾„
+                {
+                    if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) ||
+                        (dToolRadius < 0 &&
+                         pSGcode->cArcDir == ARC_ANTI_CW)) //å·¦åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé¡ºåœ†å¼§æˆ–è€…å³åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé€†åœ†å¼§
+                    {
+                        Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint,
+                                                    &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir,
+                                                    pSNextcode->cArcDir, ucAxisNum, 3);
+                        cPointNum = 1;
+                    }
 
-			}
-			if (isZero(dDistance - fabs(pSGcode->dRadius - pSNextcode->dRadius)))//Á½Ô²»¡ÄÚÇĞ
-			{
-				if (pSGcode->dRadius < pSNextcode->dRadius)//µÚÒ»¶ÎÔ²»¡°ë¾¶Ğ¡ÓÚµÚ¶ş¶ÎÔ²»¡°ë¾¶
-				{
-					if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) || (dToolRadius < 0 && pSGcode->cArcDir == ARC_ANTI_CW))//×óµ¶²¹£¬µÚÒ»¶ÎÎªË³Ô²»¡»òÕßÓÒµ¶²¹£¬µÚÒ»¶ÎÎªÄæÔ²»¡
-					{
-						Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum,3);
-						cPointNum = 1;
-					}
+                    else if ((dToolRadius < 0 && pSGcode->cArcDir == ARC_CW) ||
+                             (dToolRadius > 0 &&
+                              pSGcode->cArcDir == ARC_ANTI_CW)) //å³åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé¡ºåœ†å¼§æˆ–è€…å·¦åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé€†åœ†å¼§
+                    {
+                        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                        offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                        offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+                        cPointNum = 4;
+                    }
+                }
 
-					else if ((dToolRadius < 0 && pSGcode->cArcDir == ARC_CW) || (dToolRadius > 0 && pSGcode->cArcDir == ARC_ANTI_CW))//ÓÒµ¶²¹£¬µÚÒ»¶ÎÎªË³Ô²»¡»òÕß×óµ¶²¹£¬µÚÒ»¶ÎÎªÄæÔ²»¡
-					{
-						offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-						offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-						offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-						offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-						cPointNum = 4;
-					}
-				}
+                else if (pSGcode->dRadius > pSNextcode->dRadius) //ç¬¬ä¸€æ®µåœ†å¼§åŠå¾„å¤§äºç¬¬äºŒæ®µåœ†å¼§åŠå¾„
+                {
+                    if ((dToolRadius < 0 && pSGcode->cArcDir == ARC_CW) ||
+                        (dToolRadius > 0 &&
+                         pSGcode->cArcDir == ARC_ANTI_CW)) //å³åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé¡ºåœ†å¼§æˆ–è€…å·¦åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé€†åœ†å¼§
+                    {
+                        Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint,
+                                                    &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir,
+                                                    pSNextcode->cArcDir, ucAxisNum, 3);
+                        cPointNum = 1;
+                    }
 
-				else if (pSGcode->dRadius > pSNextcode->dRadius)//µÚÒ»¶ÎÔ²»¡°ë¾¶´óÓÚµÚ¶ş¶ÎÔ²»¡°ë¾¶
-				{
-					if ((dToolRadius < 0 && pSGcode->cArcDir == ARC_CW) || (dToolRadius > 0 && pSGcode->cArcDir == ARC_ANTI_CW))//ÓÒµ¶²¹£¬µÚÒ»¶ÎÎªË³Ô²»¡»òÕß×óµ¶²¹£¬µÚÒ»¶ÎÎªÄæÔ²»¡
-					{
-						Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum,3);
-						cPointNum = 1;
-					}
+                    else if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) ||
+                             (dToolRadius < 0 &&
+                              pSGcode->cArcDir == ARC_ANTI_CW)) //å·¦åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé¡ºåœ†å¼§æˆ–è€…å³åˆ€è¡¥ï¼Œç¬¬ä¸€æ®µä¸ºé€†åœ†å¼§
+                    {
+                        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+                        offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+                        offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+                        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+                        cPointNum = 4;
+                    }
+                }
+            }
+        }
+        else
+        {
+            Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1,
+                                        dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum, 1);
+            cPointNum = 1;
+        }
+        break;
+    case 2: //ä¼¸é•¿å‹
+        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+        Intersection_Of_Quidistant_Lines(dToolRadius, Arc1_Vec, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2,
+                                         ucAxisNum);
+        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+        cPointNum = 3;
 
-					else if ((dToolRadius > 0 && pSGcode->cArcDir == ARC_CW) || (dToolRadius < 0 && pSGcode->cArcDir == ARC_ANTI_CW))//×óµ¶²¹£¬µÚÒ»¶ÎÎªË³Ô²»¡»òÕßÓÒµ¶²¹£¬µÚÒ»¶ÎÎªÄæÔ²»¡
-					{
-						offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-						offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-						offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-						offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-						cPointNum = 4;
-					}
-				}
-
-			}
-		}
-		else
-		{
-			Intersection_Of_Arc_And_Arc(dToolRadius, pSGcode->SStartPoint, pSGcode->SEndPoint, &SToolRunPoint.SS1, dK1, dI1, dK2, dI2, pSGcode->cArcDir, pSNextcode->cArcDir, ucAxisNum,1);
-			cPointNum = 1;
-		}
-		break;
-	case 2://Éì³¤ĞÍ
-		offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-		Intersection_Of_Quidistant_Lines(dToolRadius, Arc1_Vec, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-		offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-		cPointNum = 3;
-
-		break;
-	case 3://²åÈëĞÍ
-		offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
-		offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
-		offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
-		offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
-		cPointNum = 4;
-		break;
-	}
-	SToolRunPoint.cPointNum = cPointNum;
-	return cPointNum;
+        break;
+    case 3: //æ’å…¥å‹
+        offsetRadiusVector(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+        offsetRadiusVector1(dToolRadius, Arc1_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS2, ucAxisNum);
+        offsetRadiusVector2(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS3, ucAxisNum);
+        offsetRadiusVector(dToolRadius, Arc2_Vec, pSGcode->SEndPoint, &SToolRunPoint.SS4, ucAxisNum);
+        cPointNum = 4;
+        break;
+    }
+    SToolRunPoint.cPointNum = cPointNum;
+    return cPointNum;
 }
 
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºtoolCompensation(SGCodeParse *pSGcode, SGCodeParse *pSNextGcode)
-  º¯Êı¹¦ÄÜ  ¸ù¾İCµ¶²¹Ô­Àí£¬¼ÆËãÏàÁ¬ÔË¶¯µÄÁ½ÌõÒÆ¶¯´úÂë¶ÎµÄµ¶²¹¹ì¼£
-  ÊäÈë²ÎÊı£ºpSGcode£¬pSNextGcode·Ö±ğÊÇG´úÂë½âÊÍºóµÄ¹ì¼£½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÊÇ·ñÍê³Éµ¶²¹¼ÆËã
+  å‡½æ•°åç§°ï¼štoolCompensation(SGCodeParse *pSGcode, SGCodeParse *pSNextGcode)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®Cåˆ€è¡¥åŸç†ï¼Œè®¡ç®—ç›¸è¿è¿åŠ¨çš„ä¸¤æ¡ç§»åŠ¨ä»£ç æ®µçš„åˆ€è¡¥è½¨è¿¹
+  è¾“å…¥å‚æ•°ï¼špSGcodeï¼ŒpSNextGcodeåˆ†åˆ«æ˜¯Gä»£ç è§£é‡Šåçš„è½¨è¿¹ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ˜¯å¦å®Œæˆåˆ€è¡¥è®¡ç®—
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
-bool toolCompensation(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, uint8* ucAxisNum, uint8 ucChannelNum)
+bool toolCompensation(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, uint8* ucAxisNum,
+                      uint8 ucChannelNum)
 {
-	int8 cStageSelect = 0;//¼ÇÂ¼µ¶²¹µÄ½×¶Î£¨1.½¨Á¢ 2.½øĞĞ 3.³·Ïû£©
-	double dToolNoseWear = 0;//µ¶¼âÄ¥ËğÖµ
-	double dToolRadius = 0;//µ¶¼âÔ²»¡°ë¾¶
+    int8 cStageSelect = 0;    //è®°å½•åˆ€è¡¥çš„é˜¶æ®µï¼ˆ1.å»ºç«‹ 2.è¿›è¡Œ 3.æ’¤æ¶ˆï¼‰
+    double dToolNoseWear = 0; //åˆ€å°–ç£¨æŸå€¼
+    double dToolRadius = 0;   //åˆ€å°–åœ†å¼§åŠå¾„
 
-	//Ö¸ÕëÎª¿Õ·µ»Ø
-	if (pSGcode == NULL || pSNextGcode == NULL)
-	{
-		return FALSE;
-	}
+    //æŒ‡é’ˆä¸ºç©ºè¿”å›
+    if (pSGcode == NULL || pSNextGcode == NULL)
+    {
+        return FALSE;
+    }
 
-	//µ±µÚÒ»¶ÎÎªG40£¬±íÃ÷ÔÚÉÏÒ»´Îcµ¶²¹¼ÆËãÊ±ÒÑ¾­Íê³Éµ¶²¹³·Ïû²¹³¥µãµÄ¼ÆËã£¬Òò´ËÖ±½Ó¼ÇÂ¼G40Î»ÖÃ£¬Ö±½ÓÍËµ¶µ½G40ÉèÖÃµÄÎ»ÖÃ
-	//if (pSGcode->SModalInfo.sGd == 40 && SToolCompensationRecord->bG4142Flag[ucChannelNum])
-	//{
-	//	SToolRunPoint.SS1 = pSGcode->SEndPoint;
+    //å½“ç¬¬ä¸€æ®µä¸ºG40ï¼Œè¡¨æ˜åœ¨ä¸Šä¸€æ¬¡cåˆ€è¡¥è®¡ç®—æ—¶å·²ç»å®Œæˆåˆ€è¡¥æ’¤æ¶ˆè¡¥å¿ç‚¹çš„è®¡ç®—ï¼Œå› æ­¤ç›´æ¥è®°å½•G40ä½ç½®ï¼Œç›´æ¥é€€åˆ€åˆ°G40è®¾ç½®çš„ä½ç½®
+    //if (pSGcode->SModalInfo.sGd == 40 && SToolCompensationRecord->bG4142Flag[ucChannelNum])
+    //{
+    //	SToolRunPoint.SS1 = pSGcode->SEndPoint;
 
-	//	SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;//»Ö¸´µ¶²¹½¨Á¢Î´¿ªÊ¼µÄ±êÖ¾
+    //	SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;//æ¢å¤åˆ€è¡¥å»ºç«‹æœªå¼€å§‹çš„æ ‡å¿—
 
-	//	SToolRunPoint.cPointNum = 1;
+    //	SToolRunPoint.cPointNum = 1;
 
-	//	return TRUE;
-	//}
+    //	return TRUE;
+    //}
 
-	//µ±Ç°³ÌĞò¶ÎÎ´G41»òG42£¬µ«µ¶²¹±êÖ¾ÎªFALSE
-	if (((pSGcode->SModalInfo.sGd == 41) || (pSGcode->SModalInfo.sGd == 42)) && !SToolCompensationRecord->bG4142Flag[ucChannelNum])
-	{
-		SToolCompensationRecord->bG4142Flag[ucChannelNum] = TRUE;//±íÃ÷µ¶¾ß²¹³¥ÒÑ¾­½¨Á¢£¬±êÖ¾Î»ÖØÉèÎª1
+    //å½“å‰ç¨‹åºæ®µæœªG41æˆ–G42ï¼Œä½†åˆ€è¡¥æ ‡å¿—ä¸ºFALSE
+    if (((pSGcode->SModalInfo.sGd == 41) || (pSGcode->SModalInfo.sGd == 42)) &&
+        !SToolCompensationRecord->bG4142Flag[ucChannelNum])
+    {
+        SToolCompensationRecord->bG4142Flag[ucChannelNum] = TRUE; //è¡¨æ˜åˆ€å…·è¡¥å¿å·²ç»å»ºç«‹ï¼Œæ ‡å¿—ä½é‡è®¾ä¸º1
 
-		cStageSelect = 1;//1Îªµ¶²¹½¨Á¢½×¶Î
-	}
+        cStageSelect = 1; //1ä¸ºåˆ€è¡¥å»ºç«‹é˜¶æ®µ
+    }
 
-	//µ±¶Á½øµÄÁ½¶ÎÊı¿Ø´úÂëµÄµÚ¶ş¶ÎÎªG40£¬¼ÆËãµ¶²¹³·ÏûµÄ²¹³¥µã
-	else if (pSNextGcode->SModalInfo.sGd == 40)
-	{
-		cStageSelect = 3;//3Îªµ¶²¹³·Ïû½×¶Î
-	}
+    //å½“è¯»è¿›çš„ä¸¤æ®µæ•°æ§ä»£ç çš„ç¬¬äºŒæ®µä¸ºG40ï¼Œè®¡ç®—åˆ€è¡¥æ’¤æ¶ˆçš„è¡¥å¿ç‚¹
+    else if (pSNextGcode->SModalInfo.sGd == 40)
+    {
+        cStageSelect = 3; //3ä¸ºåˆ€è¡¥æ’¤æ¶ˆé˜¶æ®µ
+    }
 
-	else  //µ¶²¹½øĞĞ
-	{
-		cStageSelect = 2;//2Îªµ¶²¹½øĞĞ½×¶Î
-	}
+    else //åˆ€è¡¥è¿›è¡Œ
+    {
+        cStageSelect = 2; //2ä¸ºåˆ€è¡¥è¿›è¡Œé˜¶æ®µ
+    }
 
-	//»ñÈ¡µ¶¼âÄ¥ËğÖµ£¬¸Ä±äÊµ¼Ê¼ÆËãÖĞÓÃµ½µÄµ¶¾ß°ë¾¶
-	dToolNoseWear = getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum);
-	dToolRadius = getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) - dToolNoseWear;
+    //è·å–åˆ€å°–ç£¨æŸå€¼ï¼Œæ”¹å˜å®é™…è®¡ç®—ä¸­ç”¨åˆ°çš„åˆ€å…·åŠå¾„
+    dToolNoseWear = getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum);
+    dToolRadius = getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) - dToolNoseWear;
 
-	if (pSGcode->SModalInfo.sGd == 42)
-	{
-		dToolRadius = -dToolRadius;//ÓÒµ¶²¹°ë¾¶È¡¸º
-	}
+    if (pSGcode->SModalInfo.sGd == 42)
+    {
+        dToolRadius = -dToolRadius; //å³åˆ€è¡¥åŠå¾„å–è´Ÿ
+    }
 
+    //ç›´çº¿æ¥ç›´çº¿
+    if ((pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1) &&
+        (pSNextGcode->SModalInfo.sGa == 0 || pSNextGcode->SModalInfo.sGa == 1))
+    {
+        LineToLine(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
+        return TRUE;
+    }
 
-	//Ö±Ïß½ÓÖ±Ïß
-	if ((pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1) && (pSNextGcode->SModalInfo.sGa == 0 || pSNextGcode->SModalInfo.sGa == 1))
-	{
-		LineToLine(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
-		return TRUE;
-	}
+    //ç›´æ¥æ¥åœ†å¼§
+    else if ((pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1) &&
+             (pSNextGcode->SModalInfo.sGa == 2 || pSNextGcode->SModalInfo.sGa == 3))
+    {
+        LineToArc(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
+        return TRUE;
+    }
 
-	//Ö±½Ó½ÓÔ²»¡
-	else if ((pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1) && (pSNextGcode->SModalInfo.sGa == 2 || pSNextGcode->SModalInfo.sGa == 3))
-	{
-		LineToArc(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
-		return TRUE;
-	}
+    //åœ†å¼§æ¥ç›´çº¿
+    else if ((pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3) &&
+             (pSNextGcode->SModalInfo.sGa == 0 || pSNextGcode->SModalInfo.sGa == 1))
+    {
+        ArcToLine(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
+        return TRUE;
+    }
 
-	//Ô²»¡½ÓÖ±Ïß
-	else if ((pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3) && (pSNextGcode->SModalInfo.sGa == 0 || pSNextGcode->SModalInfo.sGa == 1))
-	{
-		ArcToLine(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
-		return TRUE;
-	}
+    //åœ†å¼§æ¥åœ†å¼§
+    else if ((pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3) &&
+             (pSNextGcode->SModalInfo.sGa == 2 || pSNextGcode->SModalInfo.sGa == 3))
+    {
 
-	//Ô²»¡½ÓÔ²»¡
-	else if ((pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3) && (pSNextGcode->SModalInfo.sGa == 2 || pSNextGcode->SModalInfo.sGa == 3))
-	{
+        ArcToArc(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
+        return TRUE;
+    }
+    else
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM409);
+        return FALSE;
+    }
 
-		ArcToArc(pSGcode, pSNextGcode, dToolRadius, cStageSelect, ucAxisNum);
-		return TRUE;
-	}
-	else
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM409);
-		return FALSE;
-	}
-
-	return FALSE;
+    return FALSE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsaveToolCode(struct SGCodeParse *pSGcode, int8 cPointNum)
-  º¯Êı¹¦ÄÜ  ¸ù¾İtoolCompensation()¼ÆËã³öµÄ¹ı¶Éµã±£´æµ½µ¶²¹Ö®ºóµÄ»º³åÇø
-  ÊäÈë²ÎÊı£ºSGCodeParse *pSGcode¼Ì³ĞÔ­Gcode²»±äµÄĞÅÏ¢£¬ int8 cPointNumĞèÒª±£´æµÄµãÊı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÎŞ
+  å‡½æ•°åç§°ï¼šsaveToolCode(struct SGCodeParse *pSGcode, int8 cPointNum)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®toolCompensation()è®¡ç®—å‡ºçš„è¿‡æ¸¡ç‚¹ä¿å­˜åˆ°åˆ€è¡¥ä¹‹åçš„ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼šSGCodeParse *pSGcodeç»§æ‰¿åŸGcodeä¸å˜çš„ä¿¡æ¯ï¼Œ int8 cPointNuméœ€è¦ä¿å­˜çš„ç‚¹æ•°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ— 
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void saveToolCode(struct SGCodeParse* pSGcode, uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	if (pSGcode == NULL || ucAxisNum == NULL)
-	{
-		return;
-	}
+    if (pSGcode == NULL || ucAxisNum == NULL)
+    {
+        return;
+    }
 
-	//ÔÚ±£´æ¹ı¶ÉÏß¶ÎÊ±£¬ÅĞ¶Ï¹ı¶ÉÏß¶ÎÊÇ·ñĞ¡ÓÚÒ»¸öÂö³å£¬ÈôĞ¡ÓÚÔò½øĞĞÓÅ»¯£¬·ÀÖ¹³öÏÖĞ¡Ïß¶Î(6.14 XHJ)
-	judgeNewLineLength(ucAxisNum,ucChannelNum);
+    //åœ¨ä¿å­˜è¿‡æ¸¡çº¿æ®µæ—¶ï¼Œåˆ¤æ–­è¿‡æ¸¡çº¿æ®µæ˜¯å¦å°äºä¸€ä¸ªè„‰å†²ï¼Œè‹¥å°äºåˆ™è¿›è¡Œä¼˜åŒ–ï¼Œé˜²æ­¢å‡ºç°å°çº¿æ®µ(6.14 XHJ)
+    judgeNewLineLength(ucAxisNum, ucChannelNum);
 
-	if (SToolRunPoint.cPointNum == 1)
-	{
-		//¸ù¾İĞèÒªµÄ²¹³¥µã¸öÊı£¬Ö´ĞĞGcodeToTCode´ÎÊı£¬Íùµ¶²¹²¹³¥»º³åÇø´æ·Åµ¶²¹Ö®ºóµÄ²¹³¥µã
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;//»Ö¸´±êÖ¾Î»
+    if (SToolRunPoint.cPointNum == 1)
+    {
+        //æ ¹æ®éœ€è¦çš„è¡¥å¿ç‚¹ä¸ªæ•°ï¼Œæ‰§è¡ŒGcodeToTCodeæ¬¡æ•°ï¼Œå¾€åˆ€è¡¥è¡¥å¿ç¼“å†²åŒºå­˜æ”¾åˆ€è¡¥ä¹‹åçš„è¡¥å¿ç‚¹
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE; //æ¢å¤æ ‡å¿—ä½
+    }
+    else if (SToolRunPoint.cPointNum == 2) //å­˜æ”¾2ä¸ªæ•°æ®
+    {
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;                  //å·²å­˜æ”¾ç¬¬ä¸€ä¸ªç‚¹
 
-	}
-	else if (SToolRunPoint.cPointNum == 2)  //´æ·Å2¸öÊı¾İ
-	{
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;//ÒÑ´æ·ÅµÚÒ»¸öµã
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;                 //æ¢å¤æ ‡å¿—ä½
+    }
+    else if (SToolRunPoint.cPointNum == 3) //å­˜æ”¾3ä¸ªæ•°æ®
+    {
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;                  //å·²å­˜æ”¾ç¬¬ä¸€ä¸ªç‚¹
 
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;//»Ö¸´±êÖ¾Î»
-	}
-	else if (SToolRunPoint.cPointNum == 3)  //´æ·Å3¸öÊı¾İ
-	{
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;//ÒÑ´æ·ÅµÚÒ»¸öµã
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
 
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS3,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;                 //æ¢å¤æ ‡å¿—ä½
+    }
+    else if (SToolRunPoint.cPointNum == 4) //å­˜æ”¾4ä¸ªæ•°æ®
+    {
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;                  //å·²å­˜æ”¾ç¬¬ä¸€ä¸ªç‚¹
 
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS3, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;//»Ö¸´±êÖ¾Î»
-	}
-	else if (SToolRunPoint.cPointNum == 4)   //´æ·Å4¸öÊı¾İ
-	{
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;//ÒÑ´æ·ÅµÚÒ»¸öµã
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
 
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS2, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS2;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS3,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
 
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS3, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS3;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-
-		GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS4, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-		SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS4;//¸üĞÂµ¶²¹Ç°Ò»¸ö²¹³¥µã
-		SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;//»Ö¸´±êÖ¾Î»
-	}
+        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS4,
+                     SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS4; //æ›´æ–°åˆ€è¡¥å‰ä¸€ä¸ªè¡¥å¿ç‚¹
+        SToolCompensationRecord->bPointFlag[ucChannelNum] = FALSE;                 //æ¢å¤æ ‡å¿—ä½
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºJudgeNoMoveStruct(struct SGCodeParse *pSGcode)
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏG´úÂëÖĞÊÇ·ñ³öÏÖÁËµãÃ»ÒÆ¶¯µÄÇé¿ö
-  ÊäÈë²ÎÊı£ºSGCodeParse *pSGcodeµ±Ç°G´úÂë½á¹¹ÌåµÄĞÅÏ¢
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE  or  FALSE
+  å‡½æ•°åç§°ï¼šJudgeNoMoveStruct(struct SGCodeParse *pSGcode)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­Gä»£ç ä¸­æ˜¯å¦å‡ºç°äº†ç‚¹æ²¡ç§»åŠ¨çš„æƒ…å†µ
+  è¾“å…¥å‚æ•°ï¼šSGCodeParse *pSGcodeå½“å‰Gä»£ç ç»“æ„ä½“çš„ä¿¡æ¯
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE  or  FALSE
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool JudgeNoMoveStruct(struct SGCodeParse* pSGcode)
 {
-	uint8 ucCounter;
+    uint8 ucCounter;
 
-	if (pSGcode == NULL)
-	{
-		return FALSE;
-	}
+    if (pSGcode == NULL)
+    {
+        return FALSE;
+    }
 
-	//±éÀúËùÓĞÖá£¬²é¿´ÊÇ·ñÆğµãÖÕµãÏàÍ¬
-	for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)
-	{
-		if (!isZero(pSGcode->SStartPoint.dArray[ucCounter] - pSGcode->SEndPoint.dArray[ucCounter]))
-		{
-			return FALSE;
-		}
-	}
+    //éå†æ‰€æœ‰è½´ï¼ŒæŸ¥çœ‹æ˜¯å¦èµ·ç‚¹ç»ˆç‚¹ç›¸åŒ
+    for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)
+    {
+        if (!isZero(pSGcode->SStartPoint.dArray[ucCounter] - pSGcode->SEndPoint.dArray[ucCounter]))
+        {
+            return FALSE;
+        }
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºInit_ToolCompensation_Flag()
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¶²¹µÄ±êÖ¾Î»
-  ÊäÈë²ÎÊı£ºÖ¸ÏòG´úÂë½âÎö½á¹¹ÌåµÄÖ¸ÕëµÄµØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šInit_ToolCompensation_Flag()
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–åˆ€è¡¥çš„æ ‡å¿—ä½
+  è¾“å…¥å‚æ•°ï¼šæŒ‡å‘Gä»£ç è§£æç»“æ„ä½“çš„æŒ‡é’ˆçš„åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//³õÊ¼»¯±êÖ¾Î»
+//åˆå§‹åŒ–æ ‡å¿—ä½
 void toolCompensationInit(uint8 ucChannelNum)
 {
-	//memset(&SToolCompensationRecord-> 0, sizeof(SToolCompensationRecord->);		//2023/12/7	³ÂÃô´Ï×¢ÊÍ	Ô­Òò£º»á°ÑÁíÍâÍ¨µÀµÄ±êÖ¾Î»µÈ¶¼Çå³ı
-	memset(&SToolCompensationRecord->SGcodeRecord[ucChannelNum], 0, sizeof(struct SGCodeParse));	//³ÂÃô´Ï	2023/12/7Ôö	Çå³ı±¾Í¨µÀµÄ±êÖ¾Î»µÈ
-	memset(&SToolCompensationRecord->TcodePrevPoint[ucChannelNum], 0, sizeof(SPointDouble));
-	memset(&SToolCompensationRecord->bG4142Flag[ucChannelNum], 0, sizeof(bool));
-	memset(&SToolCompensationRecord->bPointFlag[ucChannelNum], 0, sizeof(bool));
-	memset(&SToolCompensationRecord->bTurnBackFlag[ucChannelNum], 0, sizeof(bool));
-	memset(&SToolCompensationRecord->ucNoMoveCounter[ucChannelNum], 0, sizeof(uint8));
-	memset(&SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum], 0, sizeof(bool));
+    //memset(&SToolCompensationRecord-> 0, sizeof(SToolCompensationRecord->);		//2023/12/7	é™ˆæ•èªæ³¨é‡Š	åŸå› ï¼šä¼šæŠŠå¦å¤–é€šé“çš„æ ‡å¿—ä½ç­‰éƒ½æ¸…é™¤
+    memset(&SToolCompensationRecord->SGcodeRecord[ucChannelNum], 0,
+           sizeof(struct SGCodeParse)); //é™ˆæ•èª	2023/12/7å¢	æ¸…é™¤æœ¬é€šé“çš„æ ‡å¿—ä½ç­‰
+    memset(&SToolCompensationRecord->TcodePrevPoint[ucChannelNum], 0, sizeof(SPointDouble));
+    memset(&SToolCompensationRecord->bG4142Flag[ucChannelNum], 0, sizeof(bool));
+    memset(&SToolCompensationRecord->bPointFlag[ucChannelNum], 0, sizeof(bool));
+    memset(&SToolCompensationRecord->bTurnBackFlag[ucChannelNum], 0, sizeof(bool));
+    memset(&SToolCompensationRecord->ucNoMoveCounter[ucChannelNum], 0, sizeof(uint8));
+    memset(&SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum], 0, sizeof(bool));
 
-	g_SChannel[ucChannelNum].bGcodeWriteOverFlag = FALSE;//¿ª»ú¡¢ĞÂ¿ªÊ¼ĞèÒªÖÃFALSE
-	g_SChannel[ucChannelNum].bToolWriteOverFlag  = FALSE;//ÙşºÆ»ù 2023/05/20 ³õÊ¼»¯µ¶²¹Ğ´ÈëÍê±Ï±êÖ¾Î»
-		
+    g_SChannel[ucChannelNum].bGcodeWriteOverFlag = FALSE; //å¼€æœºã€æ–°å¼€å§‹éœ€è¦ç½®FALSE
+    g_SChannel[ucChannelNum].bToolWriteOverFlag = FALSE;  //å†¼æµ©åŸº 2023/05/20 åˆå§‹åŒ–åˆ€è¡¥å†™å…¥å®Œæ¯•æ ‡å¿—ä½
 }
 
-
-
-//²»Í¬Æ½Ãæ×ø±êÓ³Éä
+//ä¸åŒå¹³é¢åæ ‡æ˜ å°„
 void CoordinateMap(struct SGCodeParse* pSGcode, uint8* ucAxisNum)
 {
-	if (pSGcode == NULL || ucAxisNum==NULL)
-	{
-		return;
-	}
+    if (pSGcode == NULL || ucAxisNum == NULL)
+    {
+        return;
+    }
 
-	if (getBits(pSGcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
-	{//¼«×ø±ê²å²¹
-		ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
-		ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
-		return;
-	}
-	else if (getBits(pSGcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-	{//Ô²Öù²å²¹
-		switch (getBits(pSGcode->unCommandType, CMD_PLANE_ADDR))//¶ÁÈ¡Ö¸ÁîÀàĞÍ
-		{
-		case CMD_PLANE_G18: //G18
-		default://Ä¬ÈÏG18
-			ucAxisNum[0] = AXIS_Z;
-			ucAxisNum[1] = AXIS_C;
-			break;
-		case CMD_PLANE_G17: //G17
-			ucAxisNum[0] = AXIS_X;
-			ucAxisNum[1] = AXIS_C;
-			break;
-		case CMD_PLANE_G19: //G19
-			ucAxisNum[0] = AXIS_C;
-			ucAxisNum[1] = AXIS_Z;
-			break;
-		}
-		return;
-	}
+    if (getBits(pSGcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_POLAR)
+    { //æåæ ‡æ’è¡¥
+        ucAxisNum[0] = g_SSystemPara.ucPolarInterpolationAxis[0];
+        ucAxisNum[1] = g_SSystemPara.ucPolarInterpolationAxis[1];
+        return;
+    }
+    else if (getBits(pSGcode->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
+    {                                                            //åœ†æŸ±æ’è¡¥
+        switch (getBits(pSGcode->unCommandType, CMD_PLANE_ADDR)) //è¯»å–æŒ‡ä»¤ç±»å‹
+        {
+        case CMD_PLANE_G18: //G18
+        default:            //é»˜è®¤G18
+            ucAxisNum[0] = AXIS_Z;
+            ucAxisNum[1] = AXIS_C;
+            break;
+        case CMD_PLANE_G17: //G17
+            ucAxisNum[0] = AXIS_X;
+            ucAxisNum[1] = AXIS_C;
+            break;
+        case CMD_PLANE_G19: //G19
+            ucAxisNum[0] = AXIS_C;
+            ucAxisNum[1] = AXIS_Z;
+            break;
+        }
+        return;
+    }
 
-	//²»Í¬Æ½ÃæÓ³ÉäÏàÓ¦Öá×ø±ê
-	switch (pSGcode->SModalInfo.sGc)
-	{
-	case 17:
-		ucAxisNum[0] = AXIS_X;
-		ucAxisNum[1] = AXIS_Y;
-		break;
-	case 18:
-		ucAxisNum[0] = AXIS_Z;
-		ucAxisNum[1] = AXIS_X;
-		break;
-	case 19:
-		ucAxisNum[0] = AXIS_Y;
-		ucAxisNum[1] = AXIS_Z;
-		break;
-	default:
-		ucAxisNum[0] = AXIS_Z;
-		ucAxisNum[1] = AXIS_X;
-		break;
-	}
+    //ä¸åŒå¹³é¢æ˜ å°„ç›¸åº”è½´åæ ‡
+    switch (pSGcode->SModalInfo.sGc)
+    {
+    case 17:
+        ucAxisNum[0] = AXIS_X;
+        ucAxisNum[1] = AXIS_Y;
+        break;
+    case 18:
+        ucAxisNum[0] = AXIS_Z;
+        ucAxisNum[1] = AXIS_X;
+        break;
+    case 19:
+        ucAxisNum[0] = AXIS_Y;
+        ucAxisNum[1] = AXIS_Z;
+        break;
+    default:
+        ucAxisNum[0] = AXIS_Z;
+        ucAxisNum[1] = AXIS_X;
+        break;
+    }
 }
 
-
-
-//¸ù¾İ²»Í¬µÄ¼ÙÏóµ¶¼âºÅ¼ÆËãºáÖáÆ«ÒÆÖµ
+//æ ¹æ®ä¸åŒçš„å‡è±¡åˆ€å°–å·è®¡ç®—æ¨ªè½´åç§»å€¼
 double getHorizontalAxisOffset(uint8 ucToolNum, double dToolRadius)
 {
-	double dRetVal = 0;//·µ»ØÖµ
+    double dRetVal = 0; //è¿”å›å€¼
 
-	switch (ucToolNum)
-	{
-	case 1:case 4:case 5:
-		dRetVal = dToolRadius;
-		break;
+    switch (ucToolNum)
+    {
+    case 1:
+    case 4:
+    case 5:
+        dRetVal = dToolRadius;
+        break;
 
-	case 2:case 3:case 7:
-		dRetVal = -dToolRadius;
-		break;
+    case 2:
+    case 3:
+    case 7:
+        dRetVal = -dToolRadius;
+        break;
 
-	case 6:case 8:
-		dRetVal = 0;
-		break;
+    case 6:
+    case 8:
+        dRetVal = 0;
+        break;
 
-	default:
-		dRetVal = 0;
-		break;
-	}
-	return dRetVal;
+    default:
+        dRetVal = 0;
+        break;
+    }
+    return dRetVal;
 }
 
-
-
-//¸ù¾İ²»Í¬µÄ¼ÙÏóµ¶¼âºÅ¼ÆËã×İÖáÆ«ÒÆÖµ
+//æ ¹æ®ä¸åŒçš„å‡è±¡åˆ€å°–å·è®¡ç®—çºµè½´åç§»å€¼
 double getVerticalAxisOffset(uint8 ucToolNum, double dToolRadius)
 {
-	double dRetVal = 0;//·µ»ØÖµ
+    double dRetVal = 0; //è¿”å›å€¼
 
-	switch (ucToolNum)
-	{
-	case 1:case 2:case 6:
-		dRetVal = dToolRadius;
-		break;
+    switch (ucToolNum)
+    {
+    case 1:
+    case 2:
+    case 6:
+        dRetVal = dToolRadius;
+        break;
 
-	case 3:case 4:case 8:
-		dRetVal = -dToolRadius;
-		break;
+    case 3:
+    case 4:
+    case 8:
+        dRetVal = -dToolRadius;
+        break;
 
-	case 5:case 7:
-		dRetVal = 0;
-		break;
+    case 5:
+    case 7:
+        dRetVal = 0;
+        break;
 
-	default:
-		dRetVal = 0;
-		break;
-	}
-	return dRetVal;
+    default:
+        dRetVal = 0;
+        break;
+    }
+    return dRetVal;
 }
 
-
-//µ¶²¹Ç°¸ù¾İ¼ÙÏóµ¶¼âºÅ¸ü¸Ä×ø±ê
-int8 modifyCoorByToolNum(struct SGCodeParse* pGcode, struct SGCodeParse *SGetGode, uint8* ucAxisNum, uint8 ucChannelNum)
+//åˆ€è¡¥å‰æ ¹æ®å‡è±¡åˆ€å°–å·æ›´æ”¹åæ ‡
+int8 modifyCoorByToolNum(struct SGCodeParse* pGcode, struct SGCodeParse* SGetGode, uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	double dHorOffset = 0;//ºáÖáÆ«ÒÆÁ¿
-	double dVerOffset = 0;//×İÖáÆ«ÒÆÁ¿
+    double dHorOffset = 0; //æ¨ªè½´åç§»é‡
+    double dVerOffset = 0; //çºµè½´åç§»é‡
 
-	if (pGcode == NULL)
-	{
-		return -1;
-	}
+    if (pGcode == NULL)
+    {
+        return -1;
+    }
 
-	*SGetGode = *pGcode;//¸´ÖÆÔ­À´½á¹¹ÌåµÄÖµ
+    *SGetGode = *pGcode; //å¤åˆ¶åŸæ¥ç»“æ„ä½“çš„å€¼
 
-	//ÓĞµ¶²¹Ö¸ÁîÊ±£¬¸ù¾İ¼ÙÏóµ¶¼âºÅÆ«ÒÆ×ø±ê
-	if (pGcode->SModalInfo.sGd == 41 || pGcode->SModalInfo.sGd == 42)
-	{
-		uint8 ucToolNoseID = getToolNoseNum(ucChannelNum, pGcode->ucToolCompNum);
-		double dToolRadius = getToolRadius(ucChannelNum, pGcode->ucToolCompNum);
-		dToolRadius = fabs(dToolRadius);//×ø±ê°´µ¶¼â·½ÏòÆ«ÒÆÊ±£¬È«²¿È¡Õı£¬¸úÊäÈë°ë¾¶Õı¸ºÎŞ¹Ø(6.10)
+    //æœ‰åˆ€è¡¥æŒ‡ä»¤æ—¶ï¼Œæ ¹æ®å‡è±¡åˆ€å°–å·åç§»åæ ‡
+    if (pGcode->SModalInfo.sGd == 41 || pGcode->SModalInfo.sGd == 42)
+    {
+        uint8 ucToolNoseID = getToolNoseNum(ucChannelNum, pGcode->ucToolCompNum);
+        double dToolRadius = getToolRadius(ucChannelNum, pGcode->ucToolCompNum);
+        dToolRadius = fabs(dToolRadius); //åæ ‡æŒ‰åˆ€å°–æ–¹å‘åç§»æ—¶ï¼Œå…¨éƒ¨å–æ­£ï¼Œè·Ÿè¾“å…¥åŠå¾„æ­£è´Ÿæ— å…³(6.10)
 
-		//»ñÈ¡Æ«ÒÆÁ¿
-		dHorOffset = getHorizontalAxisOffset(ucToolNoseID, dToolRadius);
-		dVerOffset = getVerticalAxisOffset(ucToolNoseID, dToolRadius);
+        //è·å–åç§»é‡
+        dHorOffset = getHorizontalAxisOffset(ucToolNoseID, dToolRadius);
+        dVerOffset = getVerticalAxisOffset(ucToolNoseID, dToolRadius);
 
-		//Æ«ÒÆÆğµãºÍÖÕµã×ø±ê
-		SGetGode->SStartPoint.dArray[ucAxisNum[0]] = pGcode->SStartPoint.dArray[ucAxisNum[0]] + dHorOffset;
-		SGetGode->SStartPoint.dArray[ucAxisNum[1]] = pGcode->SStartPoint.dArray[ucAxisNum[1]] + dVerOffset;
+        //åç§»èµ·ç‚¹å’Œç»ˆç‚¹åæ ‡
+        SGetGode->SStartPoint.dArray[ucAxisNum[0]] = pGcode->SStartPoint.dArray[ucAxisNum[0]] + dHorOffset;
+        SGetGode->SStartPoint.dArray[ucAxisNum[1]] = pGcode->SStartPoint.dArray[ucAxisNum[1]] + dVerOffset;
 
-		SGetGode->SEndPoint.dArray[ucAxisNum[0]] = pGcode->SEndPoint.dArray[ucAxisNum[0]] + dHorOffset;
-		SGetGode->SEndPoint.dArray[ucAxisNum[1]] = pGcode->SEndPoint.dArray[ucAxisNum[1]] + dVerOffset;
+        SGetGode->SEndPoint.dArray[ucAxisNum[0]] = pGcode->SEndPoint.dArray[ucAxisNum[0]] + dHorOffset;
+        SGetGode->SEndPoint.dArray[ucAxisNum[1]] = pGcode->SEndPoint.dArray[ucAxisNum[1]] + dVerOffset;
 
-		//Èç¹ûÎªÔ²»¡ĞèÆ«ÒÆÔ²ĞÄ
-		if (pGcode->SModalInfo.sGa == 2 || pGcode->SModalInfo.sGa == 3)
-		{
-			SGetGode->SCenterPoint.dArray[ucAxisNum[0]] = pGcode->SCenterPoint.dArray[ucAxisNum[0]] + dHorOffset;
-			SGetGode->SCenterPoint.dArray[ucAxisNum[1]] = pGcode->SCenterPoint.dArray[ucAxisNum[1]] + dVerOffset;
-		}
-	}
-	return 1;
+        //å¦‚æœä¸ºåœ†å¼§éœ€åç§»åœ†å¿ƒ
+        if (pGcode->SModalInfo.sGa == 2 || pGcode->SModalInfo.sGa == 3)
+        {
+            SGetGode->SCenterPoint.dArray[ucAxisNum[0]] = pGcode->SCenterPoint.dArray[ucAxisNum[0]] + dHorOffset;
+            SGetGode->SCenterPoint.dArray[ucAxisNum[1]] = pGcode->SCenterPoint.dArray[ucAxisNum[1]] + dVerOffset;
+        }
+    }
+    return 1;
 }
-
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºjudgeNewLineLength(SPointDouble SStartPoint, SPointDouble SEndPoint)
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÔö¼ÓµÄ×ª½ÓÏß¶ÎÊÇ·ñĞ¡ÓÚÒ»¸öÂö³å
-  ÊäÈë²ÎÊı£ºSStartPoint Æğµã£¬SEndPoint ÖÕµã£¬ucAxisNum ÖáÓ³Éä²ÎÊı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šjudgeNewLineLength(SPointDouble SStartPoint, SPointDouble SEndPoint)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­å¢åŠ çš„è½¬æ¥çº¿æ®µæ˜¯å¦å°äºä¸€ä¸ªè„‰å†²
+  è¾“å…¥å‚æ•°ï¼šSStartPoint èµ·ç‚¹ï¼ŒSEndPoint ç»ˆç‚¹ï¼ŒucAxisNum è½´æ˜ å°„å‚æ•°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 judgeNewLineLength(uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	if (ucAxisNum == NULL)
-	{
-		return -1;
-	}
+    if (ucAxisNum == NULL)
+    {
+        return -1;
+    }
 
-	double dLength1 = 0;
-	double dLength2 = 0;
-	double dPulseNum = g_SSystemParaUnion.SSystemParaInfo.SAxisPara[ucChannelNum].dPulseToMm;//Âö³åµ±Á¿Öµ
+    double dLength1 = 0;
+    double dLength2 = 0;
+    double dPulseNum = g_SSystemParaUnion.SSystemParaInfo.SAxisPara[ucChannelNum].dPulseToMm; //è„‰å†²å½“é‡å€¼
 
-	//Ö»ÓĞ¹ı¶Éµã¸öÊıÎª2ºÍ3¸öµÄÇé¿öÏÂ£¬²Å»á³öÏÖ½ÓÏß¶ÎĞ¡ÓÚ1¸öÂö³åµÄÇé¿ö£¬4¸ö×ª½ÓµãÊ±ÔÚµ¶²¹½¨Á¢ÇÒÎª²åÈëĞÍÊ±²Å»áÓĞ£¬´ËÊ±²¹³¥Ïß³¤¶ÈÒ»¶¨´óÓÚ1¸öÂö³å³¤¶È
-	if (SToolRunPoint.cPointNum == 2)
-	{
-		dLength1 = sqrt(pow((SToolRunPoint.SS1.dArray[ucAxisNum[0]] - SToolRunPoint.SS2.dArray[ucAxisNum[0]]), 2) + pow((SToolRunPoint.SS1.dArray[ucAxisNum[1]] - SToolRunPoint.SS2.dArray[ucAxisNum[1]]), 2));
-		if (dLength1 < dPulseNum || isZero(dLength1 - dPulseNum))
-		{
-			SToolRunPoint.cPointNum = 1;
-		}
-	}
+    //åªæœ‰è¿‡æ¸¡ç‚¹ä¸ªæ•°ä¸º2å’Œ3ä¸ªçš„æƒ…å†µä¸‹ï¼Œæ‰ä¼šå‡ºç°æ¥çº¿æ®µå°äº1ä¸ªè„‰å†²çš„æƒ…å†µï¼Œ4ä¸ªè½¬æ¥ç‚¹æ—¶åœ¨åˆ€è¡¥å»ºç«‹ä¸”ä¸ºæ’å…¥å‹æ—¶æ‰ä¼šæœ‰ï¼Œæ­¤æ—¶è¡¥å¿çº¿é•¿åº¦ä¸€å®šå¤§äº1ä¸ªè„‰å†²é•¿åº¦
+    if (SToolRunPoint.cPointNum == 2)
+    {
+        dLength1 = sqrt(pow((SToolRunPoint.SS1.dArray[ucAxisNum[0]] - SToolRunPoint.SS2.dArray[ucAxisNum[0]]), 2) +
+                        pow((SToolRunPoint.SS1.dArray[ucAxisNum[1]] - SToolRunPoint.SS2.dArray[ucAxisNum[1]]), 2));
+        if (dLength1 < dPulseNum || isZero(dLength1 - dPulseNum))
+        {
+            SToolRunPoint.cPointNum = 1;
+        }
+    }
 
-	else if (SToolRunPoint.cPointNum == 3)
-	{
-		dLength1 = sqrt(pow((SToolRunPoint.SS1.dArray[ucAxisNum[0]] - SToolRunPoint.SS2.dArray[ucAxisNum[0]]), 2) + pow((SToolRunPoint.SS1.dArray[ucAxisNum[1]] - SToolRunPoint.SS2.dArray[ucAxisNum[1]]), 2));
-		dLength2= sqrt(pow((SToolRunPoint.SS2.dArray[ucAxisNum[0]] - SToolRunPoint.SS3.dArray[ucAxisNum[0]]), 2) + pow((SToolRunPoint.SS2.dArray[ucAxisNum[1]] - SToolRunPoint.SS3.dArray[ucAxisNum[1]]), 2));
-	
-		//µÚÒ»¶Î²åÈë³¤¶ÈĞ¡ÓÚµÈÓÚÒ»¸öÂö³å£¬µÚ¶ş¶Î³¤¶È´óÓÚÒ»¸öÂö³åÊ±£¬½«²¹³¥µã¼õÉÙÎªÁ½¸ö£¬Ö»ÓÃ¼ÆËãµÄµÚ¶ş¶Î¹ì¼£¹ı¶É
-		if ((dLength1 < dPulseNum || isZero(dPulseNum)) && dLength2 > dPulseNum)
-		{
-			SToolRunPoint.SS1 = SToolRunPoint.SS2;
-			SToolRunPoint.SS2 = SToolRunPoint.SS3;
-			SToolRunPoint.cPointNum = 2;
-		}
+    else if (SToolRunPoint.cPointNum == 3)
+    {
+        dLength1 = sqrt(pow((SToolRunPoint.SS1.dArray[ucAxisNum[0]] - SToolRunPoint.SS2.dArray[ucAxisNum[0]]), 2) +
+                        pow((SToolRunPoint.SS1.dArray[ucAxisNum[1]] - SToolRunPoint.SS2.dArray[ucAxisNum[1]]), 2));
+        dLength2 = sqrt(pow((SToolRunPoint.SS2.dArray[ucAxisNum[0]] - SToolRunPoint.SS3.dArray[ucAxisNum[0]]), 2) +
+                        pow((SToolRunPoint.SS2.dArray[ucAxisNum[1]] - SToolRunPoint.SS3.dArray[ucAxisNum[1]]), 2));
 
-		//µÚ¶ş¶Î²åÈë³¤¶ÈĞ¡ÓÚµÈÓÚÒ»¸öÂö³å£¬µÚÒ»¶Î³¤¶È´óÓÚÒ»¸öÂö³åÊ±£¬½«²¹³¥µã¼õÉÙÎªÁ½¸ö£¬Ö»ÓÃ¼ÆËãµÄµÚÒ»¶Î¹ì¼£¹ı¶É
-		else if ((dLength2 < dPulseNum || isZero(dLength2 - dPulseNum)) && dLength1 > dPulseNum)
-		{
-			SToolRunPoint.cPointNum = 2;
-		}
+        //ç¬¬ä¸€æ®µæ’å…¥é•¿åº¦å°äºç­‰äºä¸€ä¸ªè„‰å†²ï¼Œç¬¬äºŒæ®µé•¿åº¦å¤§äºä¸€ä¸ªè„‰å†²æ—¶ï¼Œå°†è¡¥å¿ç‚¹å‡å°‘ä¸ºä¸¤ä¸ªï¼Œåªç”¨è®¡ç®—çš„ç¬¬äºŒæ®µè½¨è¿¹è¿‡æ¸¡
+        if ((dLength1 < dPulseNum || isZero(dPulseNum)) && dLength2 > dPulseNum)
+        {
+            SToolRunPoint.SS1 = SToolRunPoint.SS2;
+            SToolRunPoint.SS2 = SToolRunPoint.SS3;
+            SToolRunPoint.cPointNum = 2;
+        }
 
-		//Á½¶Î¶¼Ğ¡ÓÚÒ»¸öÂö³å³¤¶È£¬²¹³¥µã¼õÉÙÎª1¸ö£¬Ö»ÓÃÖĞ¼äµã¹ı¶É
-		else if ((dLength2 < dPulseNum || isZero(dLength2 - dPulseNum)) && (dLength1 < dPulseNum || isZero(dLength1 - dPulseNum)))
-		{
-			SToolRunPoint.SS1 = SToolRunPoint.SS2;
-			SToolRunPoint.cPointNum = 1;
-		}
+        //ç¬¬äºŒæ®µæ’å…¥é•¿åº¦å°äºç­‰äºä¸€ä¸ªè„‰å†²ï¼Œç¬¬ä¸€æ®µé•¿åº¦å¤§äºä¸€ä¸ªè„‰å†²æ—¶ï¼Œå°†è¡¥å¿ç‚¹å‡å°‘ä¸ºä¸¤ä¸ªï¼Œåªç”¨è®¡ç®—çš„ç¬¬ä¸€æ®µè½¨è¿¹è¿‡æ¸¡
+        else if ((dLength2 < dPulseNum || isZero(dLength2 - dPulseNum)) && dLength1 > dPulseNum)
+        {
+            SToolRunPoint.cPointNum = 2;
+        }
 
-		//ÆäËû´óÓÚÒ»¸öÂö³åµÄÇé¿ö£¬²»×÷¶îÍâ´¦Àí£¬°´Ô­¼ÆËã¹ì¼£×ß
-	}
+        //ä¸¤æ®µéƒ½å°äºä¸€ä¸ªè„‰å†²é•¿åº¦ï¼Œè¡¥å¿ç‚¹å‡å°‘ä¸º1ä¸ªï¼Œåªç”¨ä¸­é—´ç‚¹è¿‡æ¸¡
+        else if ((dLength2 < dPulseNum || isZero(dLength2 - dPulseNum)) &&
+                 (dLength1 < dPulseNum || isZero(dLength1 - dPulseNum)))
+        {
+            SToolRunPoint.SS1 = SToolRunPoint.SS2;
+            SToolRunPoint.cPointNum = 1;
+        }
 
-	return 1;
+        //å…¶ä»–å¤§äºä¸€ä¸ªè„‰å†²çš„æƒ…å†µï¼Œä¸ä½œé¢å¤–å¤„ç†ï¼ŒæŒ‰åŸè®¡ç®—è½¨è¿¹èµ°
+    }
+
+    return 1;
 }
 
-
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid ToolCompensation_Caculate(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÏû·ÑÒÑ¶¨ĞÍµÄ G ´úÂë¹ì¼££¬Ö´ĞĞÏÖÓĞµ¶²¹Á÷³Ì²¢Êä³öµ¶²¹¶Î¡£
-  ÊäÈë²ÎÊı£ºucChannelNum ÓĞĞ§Í¨µÀºÅ¡£
-  Êä³ö²ÎÊı£ºµ¶²¹»º³å¡¢¶ÁÈ¡ºÍÔ¤¶ÁÓÎ±ê£¬ÒÔ¼°Í¨µÀµ¶²¹×´Ì¬¡£
-  ·µ »Ø Öµ£ºÎŞ£»ÎŞÊı¾İ¡¢ÎŞÈİÁ¿»ò´ı¶¨Î²¶ÎÊ±·µ»ØµÈ´ı£¬´íÎó¾­ÏÖÓĞ±¨¾¯×´Ì¬±¨¸æ¡£
-  ±¸    ×¢£º´øÎ´´¦Àí D/L µÄÎ²¶Î²»µÃÏû·Ñ»òÔ¤¶Á£»È·ÈÏ³ÌĞò½áÊøÈÔÎ´½â¾öÇëÇóÊ±±¨¾¯¡£
+  å‡½æ•°åç§°ï¼švoid ToolCompensation_Caculate(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¶ˆè´¹å·²å®šå‹çš„ G ä»£ç è½¨è¿¹ï¼Œæ‰§è¡Œç°æœ‰åˆ€è¡¥æµç¨‹å¹¶è¾“å‡ºåˆ€è¡¥æ®µã€‚
+  è¾“å…¥å‚æ•°ï¼šucChannelNum æœ‰æ•ˆé€šé“å·ã€‚
+  è¾“å‡ºå‚æ•°ï¼šåˆ€è¡¥ç¼“å†²ã€è¯»å–å’Œé¢„è¯»æ¸¸æ ‡ï¼Œä»¥åŠé€šé“åˆ€è¡¥çŠ¶æ€ã€‚
+  è¿” å› å€¼ï¼šæ— ï¼›æ— æ•°æ®ã€æ— å®¹é‡æˆ–å¾…å®šå°¾æ®µæ—¶è¿”å›ç­‰å¾…ï¼Œé”™è¯¯ç»ç°æœ‰æŠ¥è­¦çŠ¶æ€æŠ¥å‘Šã€‚
+  å¤‡    æ³¨ï¼šå¸¦æœªå¤„ç† D/L çš„å°¾æ®µä¸å¾—æ¶ˆè´¹æˆ–é¢„è¯»ï¼›ç¡®è®¤ç¨‹åºç»“æŸä»æœªè§£å†³è¯·æ±‚æ—¶æŠ¥è­¦ã€‚
 **************************************************/
 void ToolCompensation_Caculate(uint8 ucChannelNum)
 {
-    /* ÔÚÈ¡µ±Ç°²Û²¢Ó³Éä×ø±êÇ°¼ì²éÓĞĞ§Êı¾İ£¬½ûÖ¹´íÎóºó¼ÌĞø¹æ»®¡£ */
-    if (isErrorHasBeenWritten() || getSGCodeParsePointerBufRes(GCODE_READ,ucChannelNum)<=0) return;
-	bool bGetNextGcodeFlag = FALSE;//»ñÈ¡µ½ÏÂÒ»¶ÎÒÆ¶¯´úÂë¶Î±êÖ¾Î»
-	bool bAheadReadEndFlag = FALSE;//Ô¤¶ÁÖ¸ÕëÒÑÒÆ¶¯µ½G´úÂë×îºóÒ»ĞĞ±êÖ¾Î»
-	struct SGCodeParse* pSGcode=NULL;//G´úÂëµ±Ç°ĞĞÖ¸Õë
-	struct SGCodeParse* pSNextGcode=NULL;//G´úÂëÏÂÒ»ĞĞÖ¸Õë
-	struct SGCodeParse SCurGcode;//µ±Ç°G´úÂë¶ÎĞÅÏ¢
-	struct SGCodeParse SNextGcode;//ÏÂÒ»¶ÎG´úÂëĞÅÏ¢
-	uint8 ucAxisNum[2];//Á½¸öÖá ÔªËØ0ÎªºáÖá  ÔªËØ1Î»×İÖá
-	uint8 ucGCodeReadIndex = 0;//G´úÂëµ±Ç°¶ÁÖ¸ÕëË÷Òı
-	uint8 ucSToolReadAheadIndex = 0;//µ¶²¹Ô¤¶ÁÖ¸ÕëË÷Òı
+    /* åœ¨å–å½“å‰æ§½å¹¶æ˜ å°„åæ ‡å‰æ£€æŸ¥æœ‰æ•ˆæ•°æ®ï¼Œç¦æ­¢é”™è¯¯åç»§ç»­è§„åˆ’ã€‚ */
+    if (isErrorHasBeenWritten() || getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) <= 0)
+        return;
+    bool bGetNextGcodeFlag = FALSE;         //è·å–åˆ°ä¸‹ä¸€æ®µç§»åŠ¨ä»£ç æ®µæ ‡å¿—ä½
+    bool bAheadReadEndFlag = FALSE;         //é¢„è¯»æŒ‡é’ˆå·²ç§»åŠ¨åˆ°Gä»£ç æœ€åä¸€è¡Œæ ‡å¿—ä½
+    struct SGCodeParse* pSGcode = NULL;     //Gä»£ç å½“å‰è¡ŒæŒ‡é’ˆ
+    struct SGCodeParse* pSNextGcode = NULL; //Gä»£ç ä¸‹ä¸€è¡ŒæŒ‡é’ˆ
+    struct SGCodeParse SCurGcode;           //å½“å‰Gä»£ç æ®µä¿¡æ¯
+    struct SGCodeParse SNextGcode;          //ä¸‹ä¸€æ®µGä»£ç ä¿¡æ¯
+    uint8 ucAxisNum[2];                     //ä¸¤ä¸ªè½´ å…ƒç´ 0ä¸ºæ¨ªè½´  å…ƒç´ 1ä½çºµè½´
+    uint8 ucGCodeReadIndex = 0;             //Gä»£ç å½“å‰è¯»æŒ‡é’ˆç´¢å¼•
+    uint8 ucSToolReadAheadIndex = 0;        //åˆ€è¡¥é¢„è¯»æŒ‡é’ˆç´¢å¼•
 
-	struct _SQuickHandleFlag SQuickHandleFlag;	//4/18 ³ÂÃô´Ï µ¶²¹Ñ­»·´¦Àí
-	SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;
-	SQuickHandleFlag.cCycleCounter = 0;
+    struct _SQuickHandleFlag SQuickHandleFlag; //4/18 é™ˆæ•èª åˆ€è¡¥å¾ªç¯å¤„ç†
+    SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;
+    SQuickHandleFlag.cCycleCounter = 0;
 
-	//µ¶²¹»º´æÇø²»ÄÜ´æÈëÊı¾İÊ±£¬²»½øĞĞµ¶²¹´¦Àí£¬ÍË³ö
-	if (getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) <= 0)
-	{
-		return;
-	}
+    //åˆ€è¡¥ç¼“å­˜åŒºä¸èƒ½å­˜å…¥æ•°æ®æ—¶ï¼Œä¸è¿›è¡Œåˆ€è¡¥å¤„ç†ï¼Œé€€å‡º
+    if (getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) <= 0)
+    {
+        return;
+    }
 
-	pSGcode = getSGCodeParsePointerByType(GCODE_READ, ucChannelNum);//³õÊ¼»¯µÚÒ»¸öµ¶²¹Êı¾İ
-	CoordinateMap(pSGcode, ucAxisNum);//Ó³Éä²»Í¬Æ½Ãæ×ø±ê
+    pSGcode = getSGCodeParsePointerByType(GCODE_READ, ucChannelNum); //åˆå§‹åŒ–ç¬¬ä¸€ä¸ªåˆ€è¡¥æ•°æ®
+    CoordinateMap(pSGcode, ucAxisNum);                               //æ˜ å°„ä¸åŒå¹³é¢åæ ‡
 
-	//¸ù¾İ¼ÙÏóµ¶¼âºÅÆ«ÒÆ×ø±ê,´íÎó·µ»Ø
-	if (modifyCoorByToolNum(pSGcode, &SCurGcode, ucAxisNum, ucChannelNum) == -1)
-	{
-		return;
-	}
+    //æ ¹æ®å‡è±¡åˆ€å°–å·åç§»åæ ‡,é”™è¯¯è¿”å›
+    if (modifyCoorByToolNum(pSGcode, &SCurGcode, ucAxisNum, ucChannelNum) == -1)
+    {
+        return;
+    }
 
-	//µ¶²¹ÔËĞĞÊ±½«G´úÂëÆğµã¸³Öµ¸øÇ°Ò»¸öµ¶²¹µã	³ÂÃô´Ï	2023/5/27
-	if (!SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum])
-	{
-		if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) > 0)
-		{
-			SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum] = TRUE;
-			SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SStartPoint;//¼ÇÂ¼Æğµã
-		}
-	}
+    //åˆ€è¡¥è¿è¡Œæ—¶å°†Gä»£ç èµ·ç‚¹èµ‹å€¼ç»™å‰ä¸€ä¸ªåˆ€è¡¥ç‚¹	é™ˆæ•èª	2023/5/27
+    if (!SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum])
+    {
+        if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) > 0)
+        {
+            SToolCompensationRecord->bFristSavePrePointFlag[ucChannelNum] = TRUE;
+            SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SStartPoint; //è®°å½•èµ·ç‚¹
+        }
+    }
 
-	do
-	{
-		SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;	//³ÂÃô´Ï 5/12
-		if (SQuickHandleFlag.cCycleCounter != 0)
-		{
-			pSGcode = getSGCodeParsePointerByType(GCODE_READ, ucChannelNum);//³õÊ¼»¯µÚÒ»¸öµ¶²¹Êı¾İ
+    do
+    {
+        SQuickHandleFlag.cNeedQuickHandleFlag = FALSE; //é™ˆæ•èª 5/12
+        if (SQuickHandleFlag.cCycleCounter != 0)
+        {
+            pSGcode = getSGCodeParsePointerByType(GCODE_READ, ucChannelNum); //åˆå§‹åŒ–ç¬¬ä¸€ä¸ªåˆ€è¡¥æ•°æ®
 
-			CoordinateMap(pSGcode, ucAxisNum);//Ó³Éä²»Í¬Æ½Ãæ×ø±ê
+            CoordinateMap(pSGcode, ucAxisNum); //æ˜ å°„ä¸åŒå¹³é¢åæ ‡
 
-			//¸ù¾İ¼ÙÏóµ¶¼âºÅÆ«ÒÆ×ø±ê,´íÎó·µ»Ø
-			if (modifyCoorByToolNum(pSGcode, &SCurGcode, ucAxisNum, ucChannelNum) == -1)
-			{
-				return;
-			}
-		}
+            //æ ¹æ®å‡è±¡åˆ€å°–å·åç§»åæ ‡,é”™è¯¯è¿”å›
+            if (modifyCoorByToolNum(pSGcode, &SCurGcode, ucAxisNum, ucChannelNum) == -1)
+            {
+                return;
+            }
+        }
 
-		//G´úÂëÖ»ÓĞÒ»¶ÎÇÒÒÑ¾­½âÎöÍê³É
+        //Gä»£ç åªæœ‰ä¸€æ®µä¸”å·²ç»è§£æå®Œæˆ
 
-        /* Î²¶ÎËäÒÑÕ¼²Ûµ«ÖÕµãÉĞÎ´¶¨ĞÍ£»µÈ´ıºó¼Ì¶Î²Ã¼ô£¬ÕæÕı½áÊøÈÔÓĞÇëÇóÔò±¨¾¯¡£ */
-        if (pSGcode->dRoundedRadius != 0.0 || pSGcode->dChamferLen != 0.0) {
+        /* å°¾æ®µè™½å·²å æ§½ä½†ç»ˆç‚¹å°šæœªå®šå‹ï¼›ç­‰å¾…åç»§æ®µè£å‰ªï¼ŒçœŸæ­£ç»“æŸä»æœ‰è¯·æ±‚åˆ™æŠ¥è­¦ã€‚ */
+        if (pSGcode->dRoundedRadius != 0.0 || pSGcode->dChamferLen != 0.0)
+        {
             if (g_SChannel[ucChannelNum].bGcodeWriteOverFlag || pSGcode->bLastLineMark)
-                parseGCodeErrorB(pSGcode->unGCodeLineNum,283);
+                parseGCodeErrorB(pSGcode->unGCodeLineNum, 283);
             return;
         }
-		if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) == 1 && (g_SChannel[ucChannelNum].bGcodeWriteOverFlag || pSGcode->bLastLineMark))
-		{
-			//Èç¹ûµ±Ç°ÎªG41¡¢G42Ä£Ì¬£¬ÇÒ×îºóÒ»¶ÎÎª·ÇÒÆ¶¯Ö¸Áî(Èç³ÌĞòÎŞÈ¡Ïûµ¶²¹Ö¸ÁîG40£¬×îºóÒ»¶Î´úÂëÎªM30£¬µ¶²¹ÖÕµãºÍ×îÖÕG´úÂëÖÕµã²»ÏàÍ¬£¬´ËÊ±¸³µ¶²¹×îºóÖÕµã)
-			if ((pSGcode->SModalInfo.sGd == G41 || pSGcode->SModalInfo.sGd == G42) && JudgeNoMoveStruct(pSGcode))
-			{
-				GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
-			}
+        if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) == 1 &&
+            (g_SChannel[ucChannelNum].bGcodeWriteOverFlag || pSGcode->bLastLineMark))
+        {
+            //å¦‚æœå½“å‰ä¸ºG41ã€G42æ¨¡æ€ï¼Œä¸”æœ€åä¸€æ®µä¸ºéç§»åŠ¨æŒ‡ä»¤(å¦‚ç¨‹åºæ— å–æ¶ˆåˆ€è¡¥æŒ‡ä»¤G40ï¼Œæœ€åä¸€æ®µä»£ç ä¸ºM30ï¼Œåˆ€è¡¥ç»ˆç‚¹å’Œæœ€ç»ˆGä»£ç ç»ˆç‚¹ä¸ç›¸åŒï¼Œæ­¤æ—¶èµ‹åˆ€è¡¥æœ€åç»ˆç‚¹)
+            if ((pSGcode->SModalInfo.sGd == G41 || pSGcode->SModalInfo.sGd == G42) && JudgeNoMoveStruct(pSGcode))
+            {
+                GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum],
+                             SToolCompensationRecord->TcodePrevPoint[ucChannelNum],
+                             SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+            }
 
-			// ÆäËûÇé¿ö
-			else
-			{
-				// ×îºóÒ»¶ÎÊÇÎŞÒÆ¶¯ G40£ºÖ»Çå×´Ì¬£¬²»²úÉúÈ¡ÏûÔË¶¯
-				if (pSGcode->SModalInfo.sGd == G40 && JudgeNoMoveStruct(pSGcode))
-				{
-					GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+            // å…¶ä»–æƒ…å†µ
+            else
+            {
+                // æœ€åä¸€æ®µæ˜¯æ— ç§»åŠ¨ G40ï¼šåªæ¸…çŠ¶æ€ï¼Œä¸äº§ç”Ÿå–æ¶ˆè¿åŠ¨
+                if (pSGcode->SModalInfo.sGd == G40 && JudgeNoMoveStruct(pSGcode))
+                {
+                    GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum],
+                                 SToolCompensationRecord->TcodePrevPoint[ucChannelNum],
+                                 SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
 
-					SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
-				}
-				// G40 ´øÒÆ¶¯£¬»òÕßÆäËûÓĞÒÆ¶¯µÄ×îºóÒ»¶Î
-				else
-				{
-					GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint, SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
+                    SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
+                }
+                // G40 å¸¦ç§»åŠ¨ï¼Œæˆ–è€…å…¶ä»–æœ‰ç§»åŠ¨çš„æœ€åä¸€æ®µ
+                else
+                {
+                    GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint,
+                                 SToolCompensationRecord->bPointFlag[ucChannelNum], ucAxisNum, ucChannelNum);
 
-					SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
+                    SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
 
-					if (pSGcode->SModalInfo.sGd == G40)
-					{
-						SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
-					}
-				}
-			}
+                    if (pSGcode->SModalInfo.sGd == G40)
+                    {
+                        SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
+                    }
+                }
+            }
 
-			g_SChannel[ucChannelNum].bToolWriteOverFlag = TRUE;
-			moveSGCodeParsePointer(GCODE_READ, ucChannelNum);//ÒÆ¶¯G´úÂë»º³åÇø¶ÁÖ¸Õë
-			moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);//ÒÆ¶¯µ¶²¹Ô¤¶ÁÖ¸Õë
-			SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;	//½âÎöÍê³É²»ĞèÒªÑ­»·´¦Àí
-			SQuickHandleFlag.cCycleCounter += 1;
-		}
+            g_SChannel[ucChannelNum].bToolWriteOverFlag = TRUE;
+            moveSGCodeParsePointer(GCODE_READ, ucChannelNum);       //ç§»åŠ¨Gä»£ç ç¼“å†²åŒºè¯»æŒ‡é’ˆ
+            moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum); //ç§»åŠ¨åˆ€è¡¥é¢„è¯»æŒ‡é’ˆ
+            SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;          //è§£æå®Œæˆä¸éœ€è¦å¾ªç¯å¤„ç†
+            SQuickHandleFlag.cCycleCounter += 1;
+        }
 
-		//G´úÂë»º³åÇøÊı¾İ´óÓÚÁ½¸öÇÒÄÚ´æ×ã¹»´æ·ÅËã³öµÄ²¹³¥µãÊı
-		if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) >= 2 && getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) >= 4)
-		{
-			//µ±Ç°Ö¸ÕëÖ¸Ïò³ÌĞò¶ÎÎŞµ¶²¹Ö¸Áî£¬»òÕßµ±Ç°ÎªG40Ö¸Áîµ«µ¶²¹ÒÑÈ¡Ïû£¬½«Êı¾İÖ±½Ó¼Ì³Ğ²¢´æÈëµ¶²¹»º´æÇø
-			if ((pSGcode->SModalInfo.sGd != 41 && pSGcode->SModalInfo.sGd != 42 && pSGcode->SModalInfo.sGd != 40)
-				|| (pSGcode->SModalInfo.sGd==40 && !SToolCompensationRecord->bG4142Flag[ucChannelNum]))
-			{
-				//Ö±½Ó±£´æµ±Ç°¶ÎÈëµ¶²¹»º´æÇø
-				GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint, 0, ucAxisNum, ucChannelNum);
-				SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
+        //Gä»£ç ç¼“å†²åŒºæ•°æ®å¤§äºä¸¤ä¸ªä¸”å†…å­˜è¶³å¤Ÿå­˜æ”¾ç®—å‡ºçš„è¡¥å¿ç‚¹æ•°
+        if (getSGCodeParsePointerBufRes(GCODE_READ, ucChannelNum) >= 2 &&
+            getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) >= 4)
+        {
+            //å½“å‰æŒ‡é’ˆæŒ‡å‘ç¨‹åºæ®µæ— åˆ€è¡¥æŒ‡ä»¤ï¼Œæˆ–è€…å½“å‰ä¸ºG40æŒ‡ä»¤ä½†åˆ€è¡¥å·²å–æ¶ˆï¼Œå°†æ•°æ®ç›´æ¥ç»§æ‰¿å¹¶å­˜å…¥åˆ€è¡¥ç¼“å­˜åŒº
+            if ((pSGcode->SModalInfo.sGd != 41 && pSGcode->SModalInfo.sGd != 42 && pSGcode->SModalInfo.sGd != 40) ||
+                (pSGcode->SModalInfo.sGd == 40 && !SToolCompensationRecord->bG4142Flag[ucChannelNum]))
+            {
+                //ç›´æ¥ä¿å­˜å½“å‰æ®µå…¥åˆ€è¡¥ç¼“å­˜åŒº
+                GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint, 0,
+                             ucAxisNum, ucChannelNum);
+                SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
 
-				SQuickHandleFlag.cNeedQuickHandleFlag = TRUE;		//¿ÉÒÔÑ­»·´¦Àí
-				SQuickHandleFlag.cCycleCounter += 1;
+                SQuickHandleFlag.cNeedQuickHandleFlag = TRUE; //å¯ä»¥å¾ªç¯å¤„ç†
+                SQuickHandleFlag.cCycleCounter += 1;
 
-				moveSGCodeParsePointer(GCODE_READ, ucChannelNum);//ÒÆ¶¯G´úÂë»º³åÇø¶ÁÖ¸Õë
-				moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);//ÒÆ¶¯µ¶²¹Ô¤¶ÁÖ¸Õë
-			}
+                moveSGCodeParsePointer(GCODE_READ, ucChannelNum);       //ç§»åŠ¨Gä»£ç ç¼“å†²åŒºè¯»æŒ‡é’ˆ
+                moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum); //ç§»åŠ¨åˆ€è¡¥é¢„è¯»æŒ‡é’ˆ
+            }
 
-			//µ±Ç°Ö¸ÕëÖ¸Ïò³ÌĞò¶ÎÓĞµ¶²¹Ö¸Áî
-			else
-			{
-				//Ö¸ÕëÖ¸Ïò³ÌĞò¶ÎÎª·ÇÒÆ¶¯´úÂë¶Î
-				if (JudgeNoMoveStruct(pSGcode))
-				{
+            //å½“å‰æŒ‡é’ˆæŒ‡å‘ç¨‹åºæ®µæœ‰åˆ€è¡¥æŒ‡ä»¤
+            else
+            {
+                //æŒ‡é’ˆæŒ‡å‘ç¨‹åºæ®µä¸ºéç§»åŠ¨ä»£ç æ®µ
+                if (JudgeNoMoveStruct(pSGcode))
+                {
 
-					//Ö±½Ó±£´æµ±Ç°¶ÎÈëµ¶²¹»º´æÇø
-					GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolCompensationRecord->TcodePrevPoint[ucChannelNum], 0, ucAxisNum, ucChannelNum);
-					// ÔÚÎŞÒÆ¶¯¿é·ÖÖ§ÖĞ£¬Óöµ½ G40 ÇÒµ¶²¹±êÖ¾ÈÔÓĞĞ§Ê±
-					if (pSGcode->SModalInfo.sGd == G40 && SToolCompensationRecord->bG4142Flag[ucChannelNum] == TRUE)
-					{
-						SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
-					}
-					//»ñÈ¡µ±Ç°G´úÂë¶ÁÖ¸ÕëºÍµ¶²¹Ô¤¶ÁÖ¸ÕëË÷Òı
-					ucGCodeReadIndex = getSGCodeParsePointerIndex(GCODE_READ, ucChannelNum);
-					ucSToolReadAheadIndex = getSGCodeParsePointerIndex(STOOL_READ_AHEAD, ucChannelNum);
+                    //ç›´æ¥ä¿å­˜å½“å‰æ®µå…¥åˆ€è¡¥ç¼“å­˜åŒº
+                    GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum],
+                                 SToolCompensationRecord->TcodePrevPoint[ucChannelNum], 0, ucAxisNum, ucChannelNum);
+                    // åœ¨æ— ç§»åŠ¨å—åˆ†æ”¯ä¸­ï¼Œé‡åˆ° G40 ä¸”åˆ€è¡¥æ ‡å¿—ä»æœ‰æ•ˆæ—¶
+                    if (pSGcode->SModalInfo.sGd == G40 && SToolCompensationRecord->bG4142Flag[ucChannelNum] == TRUE)
+                    {
+                        SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;
+                    }
+                    //è·å–å½“å‰Gä»£ç è¯»æŒ‡é’ˆå’Œåˆ€è¡¥é¢„è¯»æŒ‡é’ˆç´¢å¼•
+                    ucGCodeReadIndex = getSGCodeParsePointerIndex(GCODE_READ, ucChannelNum);
+                    ucSToolReadAheadIndex = getSGCodeParsePointerIndex(STOOL_READ_AHEAD, ucChannelNum);
 
-					SQuickHandleFlag.cNeedQuickHandleFlag = TRUE;		//¿ÉÒÔÑ­»·´¦Àí ³ÂÃô´Ï	5/12
-					SQuickHandleFlag.cCycleCounter += 1;
+                    SQuickHandleFlag.cNeedQuickHandleFlag = TRUE; //å¯ä»¥å¾ªç¯å¤„ç† é™ˆæ•èª	5/12
+                    SQuickHandleFlag.cCycleCounter += 1;
 
-					moveSGCodeParsePointer(GCODE_READ, ucChannelNum);//ÒÆ¶¯G´úÂë»º³åÇø¶ÁÖ¸Õë
+                    moveSGCodeParsePointer(GCODE_READ, ucChannelNum); //ç§»åŠ¨Gä»£ç ç¼“å†²åŒºè¯»æŒ‡é’ˆ
 
-                    //Á½¸ö¶ÁË÷ÒıÏàµÈÊ±£¬±£´æ·ÇÒÆ¶¯´úÂëĞèÍ¬Ê±ÒÆ¶¯Ô¤¶ÁÖ¸ÕëÎ»ÖÃ
-					if (ucGCodeReadIndex == ucSToolReadAheadIndex)
-					{
-						moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);
-					}
+                    //ä¸¤ä¸ªè¯»ç´¢å¼•ç›¸ç­‰æ—¶ï¼Œä¿å­˜éç§»åŠ¨ä»£ç éœ€åŒæ—¶ç§»åŠ¨é¢„è¯»æŒ‡é’ˆä½ç½®
+                    if (ucGCodeReadIndex == ucSToolReadAheadIndex)
+                    {
+                        moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);
+                    }
 
-					//·ÇÒÆ¶¯´úÂë¼ÆÊı´óÓÚ0Ê±£¬Ïû³ı·ÇÒÆ¶¯´úÂë¼ÆÊıÖµ
-					if (SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] > 0)
-					{
-						SToolCompensationRecord->ucNoMoveCounter[ucChannelNum]--;
-					}
-				}
+                    //éç§»åŠ¨ä»£ç è®¡æ•°å¤§äº0æ—¶ï¼Œæ¶ˆé™¤éç§»åŠ¨ä»£ç è®¡æ•°å€¼
+                    if (SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] > 0)
+                    {
+                        SToolCompensationRecord->ucNoMoveCounter[ucChannelNum]--;
+                    }
+                }
 
-				//Ö¸ÕëÖ¸Ïò³ÌĞò¶ÎÎªÒÆ¶¯´úÂë¶Î
-				else
-				{
-					SQuickHandleFlag.cNeedQuickHandleFlag = FALSE;		//²»ĞèÒªÑ­»·´¦Àí ³ÂÃô´Ï	5/12
+                //æŒ‡é’ˆæŒ‡å‘ç¨‹åºæ®µä¸ºç§»åŠ¨ä»£ç æ®µ
+                else
+                {
+                    SQuickHandleFlag.cNeedQuickHandleFlag = FALSE; //ä¸éœ€è¦å¾ªç¯å¤„ç† é™ˆæ•èª	5/12
 
-					//Èç¹û»ØÍË±êÖ¾Î»ÎªTRUE£¬ËµÃ÷ÔÚµ¶²¹¹ı³ÌÖĞ³öÏÖÁËÁ¬ĞøµÄ³¬¹ı¹æ¶¨ÊıÁ¿µÄ·ÇÒÆ¶¯´úÂë¶Î
-					if (SToolCompensationRecord->bTurnBackFlag[ucChannelNum])
-					{
-						//¸ù¾İ±£´æµÄÉÏ¶ÎÒÆ¶¯¹ì¼££¬ºÍµ±Ç°¶ÎÒÆ¶¯¹ì¼£½øĞĞµ¶²¹¼ÆËã
-						if(toolCompensation(&SToolCompensationRecord->SGcodeRecord[ucChannelNum], &SCurGcode, ucAxisNum, ucChannelNum))
-						{
-							//±£´æµÚÒ»¸ö±êÖ¾ÖÃTRUE
-							SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;
+                    //å¦‚æœå›é€€æ ‡å¿—ä½ä¸ºTRUEï¼Œè¯´æ˜åœ¨åˆ€è¡¥è¿‡ç¨‹ä¸­å‡ºç°äº†è¿ç»­çš„è¶…è¿‡è§„å®šæ•°é‡çš„éç§»åŠ¨ä»£ç æ®µ
+                    if (SToolCompensationRecord->bTurnBackFlag[ucChannelNum])
+                    {
+                        //æ ¹æ®ä¿å­˜çš„ä¸Šæ®µç§»åŠ¨è½¨è¿¹ï¼Œå’Œå½“å‰æ®µç§»åŠ¨è½¨è¿¹è¿›è¡Œåˆ€è¡¥è®¡ç®—
+                        if (toolCompensation(&SToolCompensationRecord->SGcodeRecord[ucChannelNum], &SCurGcode,
+                                             ucAxisNum, ucChannelNum))
+                        {
+                            //ä¿å­˜ç¬¬ä¸€ä¸ªæ ‡å¿—ç½®TRUE
+                            SToolCompensationRecord->bPointFlag[ucChannelNum] = TRUE;
 
-							saveToolCode(&SCurGcode, ucAxisNum, ucChannelNum);
-						}
+                            saveToolCode(&SCurGcode, ucAxisNum, ucChannelNum);
+                        }
 
-						//¸´Î»±êÖ¾Î»
-						SToolCompensationRecord->bTurnBackFlag[ucChannelNum] = FALSE;
-					}
+                        //å¤ä½æ ‡å¿—ä½
+                        SToolCompensationRecord->bTurnBackFlag[ucChannelNum] = FALSE;
+                    }
 
-					//Èç¹ûµ±Ç°¶ÎÎªG40£¬ÏÂ¶Î¹ì¼£ÒÆ¶¯µ½¸Ã¶ÎÖÕµã
-					if (pSGcode->SModalInfo.sGd == 40)
-					{
-						GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint, FALSE, ucAxisNum, ucChannelNum);
-						SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
-						moveSGCodeParsePointer(GCODE_READ, ucChannelNum);//ÒÆ¶¯G´úÂë¶ÁÖ¸Õë
-						moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);//ÒÆ¶¯µ¶²¹Ô¤¶ÁÖ¸Õë
-						SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE;//»Ö¸´µ¶²¹½¨Á¢Î´¿ªÊ¼µÄ±êÖ¾
-					}
+                    //å¦‚æœå½“å‰æ®µä¸ºG40ï¼Œä¸‹æ®µè½¨è¿¹ç§»åŠ¨åˆ°è¯¥æ®µç»ˆç‚¹
+                    if (pSGcode->SModalInfo.sGd == 40)
+                    {
+                        GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], pSGcode->SEndPoint,
+                                     FALSE, ucAxisNum, ucChannelNum);
+                        SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = pSGcode->SEndPoint;
+                        moveSGCodeParsePointer(GCODE_READ, ucChannelNum);          //ç§»åŠ¨Gä»£ç è¯»æŒ‡é’ˆ
+                        moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);    //ç§»åŠ¨åˆ€è¡¥é¢„è¯»æŒ‡é’ˆ
+                        SToolCompensationRecord->bG4142Flag[ucChannelNum] = FALSE; //æ¢å¤åˆ€è¡¥å»ºç«‹æœªå¼€å§‹çš„æ ‡å¿—
+                    }
 
-					else
-					{
-						//Èç¹ûÏÂÒ»¶ÎÎªG´úÂë×îºóÒ»¶Î
-						if (getSGCodeParsePointerBufRes(STOOL_READ_AHEAD, ucChannelNum) == 1 && g_SChannel[ucChannelNum].bGcodeWriteOverFlag)
-						{
-							bAheadReadEndFlag = TRUE;//Ô¤¶ÁÖ¸ÕëÒÑÒÆ¶¯µ½G´úÂë×îºóÒ»ĞĞ±êÖ¾Î»ÖÃTRUE
-						}
+                    else
+                    {
+                        //å¦‚æœä¸‹ä¸€æ®µä¸ºGä»£ç æœ€åä¸€æ®µ
+                        if (getSGCodeParsePointerBufRes(STOOL_READ_AHEAD, ucChannelNum) == 1 &&
+                            g_SChannel[ucChannelNum].bGcodeWriteOverFlag)
+                        {
+                            bAheadReadEndFlag = TRUE; //é¢„è¯»æŒ‡é’ˆå·²ç§»åŠ¨åˆ°Gä»£ç æœ€åä¸€è¡Œæ ‡å¿—ä½ç½®TRUE
+                        }
 
-						//Èç¹û²»ÎªG´úÂë×îºóÒ»¶Î
-						else
-						{
-							//ÒÆ¶¯µ¶²¹Ô¤¶ÁÖ¸Õë£¬»ñÈ¡ÏÂÒ»¶ÎÒÆ¶¯´úÂë
-							while (getSGCodeParsePointerBufRes(STOOL_READ_AHEAD, ucChannelNum) > 1)
-							{
-                                struct SGCodeParse *candidate=getSGCodeParsePointerByIndex(
-                                    getSGCodeParsePointerIndex(STOOL_READ_AHEAD,ucChannelNum)+1,ucChannelNum);
+                        //å¦‚æœä¸ä¸ºGä»£ç æœ€åä¸€æ®µ
+                        else
+                        {
+                            //ç§»åŠ¨åˆ€è¡¥é¢„è¯»æŒ‡é’ˆï¼Œè·å–ä¸‹ä¸€æ®µç§»åŠ¨ä»£ç 
+                            while (getSGCodeParsePointerBufRes(STOOL_READ_AHEAD, ucChannelNum) > 1)
+                            {
+                                struct SGCodeParse* candidate = getSGCodeParsePointerByIndex(
+                                    getSGCodeParsePointerIndex(STOOL_READ_AHEAD, ucChannelNum) + 1, ucChannelNum);
                                 if (candidate->dRoundedRadius != 0.0 || candidate->dChamferLen != 0.0)
-                                    return; /* ÏÈ¼ì²éÔÙÒÆ¶¯Ô¤¶ÁÓÎ±ê£¬·ÀÖ¹±£´æÉĞ»á±ä»¯µÄ¼¸ºÎ¡£ */
-								moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum);//ÒÆ¶¯µ¶²¹Ô¤¶ÁÖ¸Õëµ½ÏÂÒ»¶Î
-								pSNextGcode = getSGCodeParsePointerByType(STOOL_READ_AHEAD, ucChannelNum);
+                                    return; /* å…ˆæ£€æŸ¥å†ç§»åŠ¨é¢„è¯»æ¸¸æ ‡ï¼Œé˜²æ­¢ä¿å­˜å°šä¼šå˜åŒ–çš„å‡ ä½•ã€‚ */
+                                moveSGCodeParsePointer(STOOL_READ_AHEAD, ucChannelNum); //ç§»åŠ¨åˆ€è¡¥é¢„è¯»æŒ‡é’ˆåˆ°ä¸‹ä¸€æ®µ
+                                pSNextGcode = getSGCodeParsePointerByType(STOOL_READ_AHEAD, ucChannelNum);
 
-								//²éÕÒÏÂÒ»¶Î´úÂë¶ÎÊÇ·ñÎª·ÇÒÆ¶¯´úÂë,Ìø³öÑ­»·
-								if (!JudgeNoMoveStruct(pSNextGcode))
-								{
-									bGetNextGcodeFlag = TRUE;//±êÖ¾ÖÃTRUE
-									break;
-								}
+                                //æŸ¥æ‰¾ä¸‹ä¸€æ®µä»£ç æ®µæ˜¯å¦ä¸ºéç§»åŠ¨ä»£ç ,è·³å‡ºå¾ªç¯
+                                if (!JudgeNoMoveStruct(pSNextGcode))
+                                {
+                                    bGetNextGcodeFlag = TRUE; //æ ‡å¿—ç½®TRUE
+                                    break;
+                                }
 
-								else
-								{
-									bGetNextGcodeFlag = FALSE;//»ñÈ¡µ½ÏÂÒ»¶ÎÒÆ¶¯´úÂë¶Î±êÖ¾ÖÃFALSE
-									SToolCompensationRecord->ucNoMoveCounter[ucChannelNum]++;//·ÇÒÆ¶¯´úÂë¶ÎÊı+1
-								}
+                                else
+                                {
+                                    bGetNextGcodeFlag = FALSE; //è·å–åˆ°ä¸‹ä¸€æ®µç§»åŠ¨ä»£ç æ®µæ ‡å¿—ç½®FALSE
+                                    SToolCompensationRecord->ucNoMoveCounter[ucChannelNum]++; //éç§»åŠ¨ä»£ç æ®µæ•°+1
+                                }
 
-								//Èç¹û·ÇÒÆ¶¯´úÂë¶ÎÊı³¬¹ı¹æ¶¨µÄÊıÁ¿,Ìø³öÑ­»·
-								if (SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] >= MAX_COUNTER_NO_MOVE) break;
-							}
-						}
+                                //å¦‚æœéç§»åŠ¨ä»£ç æ®µæ•°è¶…è¿‡è§„å®šçš„æ•°é‡,è·³å‡ºå¾ªç¯
+                                if (SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] >= MAX_COUNTER_NO_MOVE)
+                                    break;
+                            }
+                        }
 
-						//²éÕÒµ½ÁËÏÂÒ»¶ÎÒÆ¶¯´úÂë¶Î£¬½øĞĞµ¶²¹´¦Àí
-						if (bGetNextGcodeFlag)
-						{
-							//¸ù¾İ¼ÙÏóµ¶¼âºÅÆ«ÒÆ×ø±êÎªµ¶¼âÖĞĞÄ¹ì¼£
-							modifyCoorByToolNum(pSNextGcode, &SNextGcode, ucAxisNum, ucChannelNum);
+                        //æŸ¥æ‰¾åˆ°äº†ä¸‹ä¸€æ®µç§»åŠ¨ä»£ç æ®µï¼Œè¿›è¡Œåˆ€è¡¥å¤„ç†
+                        if (bGetNextGcodeFlag)
+                        {
+                            //æ ¹æ®å‡è±¡åˆ€å°–å·åç§»åæ ‡ä¸ºåˆ€å°–ä¸­å¿ƒè½¨è¿¹
+                            modifyCoorByToolNum(pSNextGcode, &SNextGcode, ucAxisNum, ucChannelNum);
 
-							//µ¶²¹¼ÆËã
-							if (toolCompensation(&SCurGcode, &SNextGcode, ucAxisNum, ucChannelNum))
-							{
-								//½«µ¶²¹¼ÆËã³öµÄ¹ı¶Éµã´æÓÚµ¶²¹»º³åÇø
-								saveToolCode(&SCurGcode, ucAxisNum, ucChannelNum);
+                            //åˆ€è¡¥è®¡ç®—
+                            if (toolCompensation(&SCurGcode, &SNextGcode, ucAxisNum, ucChannelNum))
+                            {
+                                //å°†åˆ€è¡¥è®¡ç®—å‡ºçš„è¿‡æ¸¡ç‚¹å­˜äºåˆ€è¡¥ç¼“å†²åŒº
+                                saveToolCode(&SCurGcode, ucAxisNum, ucChannelNum);
 
-								moveSGCodeParsePointer(GCODE_READ, ucChannelNum);//ÒÆ¶¯G´úÂë»º³åÇø¶ÁÖ¸Õë
-							}
-						}
+                                moveSGCodeParsePointer(GCODE_READ, ucChannelNum); //ç§»åŠ¨Gä»£ç ç¼“å†²åŒºè¯»æŒ‡é’ˆ
+                            }
+                        }
 
-						//²éÕÒ²»µ½ÒÆ¶¯´úÂë¶ÎÇÒ³¬¹ıÁË¹æ¶¨µÄÊıÁ¿,»òÕß²éÕÒÖ±µ½G´úÂë×îºóÒ»¶ÎÒ²ÕÒ²»µ½ÒÆ¶¯´úÂë
-						else if ((!bGetNextGcodeFlag && SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] >= MAX_COUNTER_NO_MOVE) || bAheadReadEndFlag)
-						{
-							//µ±Ç°¹ì¼£ÔÚÖÕµã´¦°´Æ«ÒÆÒ»¸ö°ë¾¶Ê¸Á¿´¦Àí
-							dealMaxCounterNoMoveTrack(&SCurGcode, ucAxisNum, ucChannelNum);
+                        //æŸ¥æ‰¾ä¸åˆ°ç§»åŠ¨ä»£ç æ®µä¸”è¶…è¿‡äº†è§„å®šçš„æ•°é‡,æˆ–è€…æŸ¥æ‰¾ç›´åˆ°Gä»£ç æœ€åä¸€æ®µä¹Ÿæ‰¾ä¸åˆ°ç§»åŠ¨ä»£ç 
+                        else if ((!bGetNextGcodeFlag &&
+                                  SToolCompensationRecord->ucNoMoveCounter[ucChannelNum] >= MAX_COUNTER_NO_MOVE) ||
+                                 bAheadReadEndFlag)
+                        {
+                            //å½“å‰è½¨è¿¹åœ¨ç»ˆç‚¹å¤„æŒ‰åç§»ä¸€ä¸ªåŠå¾„çŸ¢é‡å¤„ç†
+                            dealMaxCounterNoMoveTrack(&SCurGcode, ucAxisNum, ucChannelNum);
 
-							//Èç¹ûÊÇ²éÕÒ²»µ½ÒÆ¶¯´úÂë¶ÎÇÒ³¬¹ıÁË¹æ¶¨µÄÊıÁ¿µÄÇé¿ö
-							if (!bAheadReadEndFlag)
-							{
-								//±£´æµ±Ç°¶Î´úÂëĞÅÏ¢£¬ºóÃæ×÷»ØÍË´¦Àí
-								SToolCompensationRecord->SGcodeRecord[ucChannelNum] = SCurGcode;
+                            //å¦‚æœæ˜¯æŸ¥æ‰¾ä¸åˆ°ç§»åŠ¨ä»£ç æ®µä¸”è¶…è¿‡äº†è§„å®šçš„æ•°é‡çš„æƒ…å†µ
+                            if (!bAheadReadEndFlag)
+                            {
+                                //ä¿å­˜å½“å‰æ®µä»£ç ä¿¡æ¯ï¼Œåé¢ä½œå›é€€å¤„ç†
+                                SToolCompensationRecord->SGcodeRecord[ucChannelNum] = SCurGcode;
 
-								//»ØÍË±êÖ¾ÖÃÎªTRUE
-								SToolCompensationRecord->bTurnBackFlag[ucChannelNum] = TRUE;
-							}
-                            
-							//ÒÆ¶¯G´úÂë¶ÁÖ¸Õë
-							moveSGCodeParsePointer(GCODE_READ, ucChannelNum);
-						}
-					}
-					
-				}
-			}
-		}
-		else
-		{
-			break;
-		}
+                                //å›é€€æ ‡å¿—ç½®ä¸ºTRUE
+                                SToolCompensationRecord->bTurnBackFlag[ucChannelNum] = TRUE;
+                            }
 
-	} 
-	//G´úÂëÑ­»·´¦Àí¹¦ÄÜ¿ª ÒÔ¼° µ±Ç°G´úÂëĞĞ¿ÉÒÔÑ­»·´¦Àí
-	while (g_SSystemPara.bGcodeQuickHandleModeEnabled
-		&& (SQuickHandleFlag.cNeedQuickHandleFlag == TRUE && SQuickHandleFlag.cCycleCounter < g_SSystemPara.sToolComp_MultiLineHandleMaxNum && getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) > 0));
+                            //ç§»åŠ¨Gä»£ç è¯»æŒ‡é’ˆ
+                            moveSGCodeParsePointer(GCODE_READ, ucChannelNum);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            break;
+        }
 
+    }
+    //Gä»£ç å¾ªç¯å¤„ç†åŠŸèƒ½å¼€ ä»¥åŠ å½“å‰Gä»£ç è¡Œå¯ä»¥å¾ªç¯å¤„ç†
+    while (g_SSystemPara.bGcodeQuickHandleModeEnabled &&
+           (SQuickHandleFlag.cNeedQuickHandleFlag == TRUE &&
+            SQuickHandleFlag.cCycleCounter < g_SSystemPara.sToolComp_MultiLineHandleMaxNum &&
+            getSToolCompPointerBufRes(STOOL_WRITE, ucChannelNum) > 0));
 }
-
-
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºdealMaxCounterNoMoveTrack(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ´¦ÀíÁ¬Ğø³öÏÖµÄ³¬¹ı¹æ¶¨ÊıÁ¿·ÇÒÆ¶¯´úÂë¶Î
-  ÊäÈë²ÎÊı£ºÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·µ»Ø1 ¼ÆËãÍê³É£»·µ»Ø-1 ¼ÆËã³ö´í
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šdealMaxCounterNoMoveTrack(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å¤„ç†è¿ç»­å‡ºç°çš„è¶…è¿‡è§„å®šæ•°é‡éç§»åŠ¨ä»£ç æ®µ
+  è¾“å…¥å‚æ•°ï¼šé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¿”å›1 è®¡ç®—å®Œæˆï¼›è¿”å›-1 è®¡ç®—å‡ºé”™
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 dealMaxCounterNoMoveTrack(struct SGCodeParse *pSGcode, uint8* ucAxisNum, uint8 ucChannelNum)
+int8 dealMaxCounterNoMoveTrack(struct SGCodeParse* pSGcode, uint8* ucAxisNum, uint8 ucChannelNum)
 {
-	SVector SCurGCodeVec;//µ±Ç°¹ì¼£·½ÏòÏòÁ¿
-	double dToolRadius = 0;//µ¶¾ß°ë¾¶
-	double dK = 0;//Ô²ĞÄ×ø±êÔÚºáÖá·½ÏòÉÏÓëÆğµãµÄ²îÖµ
-	double dI = 0;//Ô²ĞÄ×ø±êÔÚ×İÖá·½ÏòÉÏÓëÆğµãµÄ²îÖµ
+    SVector SCurGCodeVec;   //å½“å‰è½¨è¿¹æ–¹å‘å‘é‡
+    double dToolRadius = 0; //åˆ€å…·åŠå¾„
+    double dK = 0;          //åœ†å¿ƒåæ ‡åœ¨æ¨ªè½´æ–¹å‘ä¸Šä¸èµ·ç‚¹çš„å·®å€¼
+    double dI = 0;          //åœ†å¿ƒåæ ‡åœ¨çºµè½´æ–¹å‘ä¸Šä¸èµ·ç‚¹çš„å·®å€¼
 
-	if (pSGcode == NULL)
-	{
-		return -1;
-	}
+    if (pSGcode == NULL)
+    {
+        return -1;
+    }
 
-	//¼ÆËã²¹³¥°ë¾¶
-	if (pSGcode->SModalInfo.sGd == 41)
-	{
-		dToolRadius = getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) - getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum);
-	}
+    //è®¡ç®—è¡¥å¿åŠå¾„
+    if (pSGcode->SModalInfo.sGd == 41)
+    {
+        dToolRadius =
+            getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) - getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum);
+    }
 
-	//G42Ê±µ¶¾ß°ë¾¶È¡¸ºÖµ
-	else if (pSGcode->SModalInfo.sGd == 42)
-	{
-		dToolRadius = -fabs(getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) - getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum));
-	}
+    //G42æ—¶åˆ€å…·åŠå¾„å–è´Ÿå€¼
+    else if (pSGcode->SModalInfo.sGd == 42)
+    {
+        dToolRadius = -fabs(getToolRadius(ucChannelNum, pSGcode->ucToolCompNum) -
+                            getToolNoseWear(ucChannelNum, pSGcode->ucToolCompNum));
+    }
 
-	//ÅĞ¶Ïµ±Ç°¶Î¹ì¼£ÀàĞÍ£¬½øĞĞÏàÓ¦´¦Àí
-	//Èç¹ûÎªÖ±Ïß
-	if (pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1)
-	{
-		//¼ÆËãÖ±ÏßµÄ·½ÏòÊ¸Á¿
-		getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SCurGCodeVec, ucAxisNum);
-	}
+    //åˆ¤æ–­å½“å‰æ®µè½¨è¿¹ç±»å‹ï¼Œè¿›è¡Œç›¸åº”å¤„ç†
+    //å¦‚æœä¸ºç›´çº¿
+    if (pSGcode->SModalInfo.sGa == 0 || pSGcode->SModalInfo.sGa == 1)
+    {
+        //è®¡ç®—ç›´çº¿çš„æ–¹å‘çŸ¢é‡
+        getLineVector(pSGcode->SStartPoint, pSGcode->SEndPoint, &SCurGCodeVec, ucAxisNum);
+    }
 
-	//Èç¹ûÎªÔ²»¡¶Î
-	else if (pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3)
-	{
-		dK = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
-		dI = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
+    //å¦‚æœä¸ºåœ†å¼§æ®µ
+    else if (pSGcode->SModalInfo.sGa == 2 || pSGcode->SModalInfo.sGa == 3)
+    {
+        dK = pSGcode->SStartPoint.dArray[ucAxisNum[0]] - pSGcode->SCenterPoint.dArray[ucAxisNum[0]];
+        dI = pSGcode->SStartPoint.dArray[ucAxisNum[1]] - pSGcode->SCenterPoint.dArray[ucAxisNum[1]];
 
-		//¼ÆËãÔ²»¡ÔÚÖÕµã´¦µÄ·½ÏòÊ¸Á¿
-		getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK, dI, &SCurGCodeVec, pSGcode->cArcDir, ucAxisNum);
-	}
-	else
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM409);
-		return -1;
-	}
+        //è®¡ç®—åœ†å¼§åœ¨ç»ˆç‚¹å¤„çš„æ–¹å‘çŸ¢é‡
+        getArcVectorAtEnd(pSGcode->SStartPoint, pSGcode->SEndPoint, dK, dI, &SCurGCodeVec, pSGcode->cArcDir, ucAxisNum);
+    }
+    else
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM409);
+        return -1;
+    }
 
-	//Æ«ÒÆÒ»¸ö°ë¾¶Ê¸Á¿
-	offsetRadiusVector(dToolRadius, SCurGCodeVec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
+    //åç§»ä¸€ä¸ªåŠå¾„çŸ¢é‡
+    offsetRadiusVector(dToolRadius, SCurGCodeVec, pSGcode->SEndPoint, &SToolRunPoint.SS1, ucAxisNum);
 
-	//±£´æµ½»º´æÇøÖĞ
-	GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, FALSE,ucAxisNum, ucChannelNum);
+    //ä¿å­˜åˆ°ç¼“å­˜åŒºä¸­
+    GcodeToTCode(pSGcode, SToolCompensationRecord->TcodePrevPoint[ucChannelNum], SToolRunPoint.SS1, FALSE, ucAxisNum,
+                 ucChannelNum);
 
-	//¼ÇÂ¼ÏÂ¶Î¹ì¼£Æğµã
-	SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
+    //è®°å½•ä¸‹æ®µè½¨è¿¹èµ·ç‚¹
+    SToolCompensationRecord->TcodePrevPoint[ucChannelNum] = SToolRunPoint.SS1;
 
-	return 1;
+    return 1;
 }
 
-
-//´ò¿ªÎÄ¼ş(²âÊÔÓÃ)
+//æ‰“å¼€æ–‡ä»¶(æµ‹è¯•ç”¨)
 void TCODE_OPEN_FILE(uint8 ucChannelNum)
 {
-	FILE* file = NULL;
-	switch (ucChannelNum)
-	{
-	case 0:
-		file = fopen("./outputFile/Cnc0.txt", "w");
-		break;
-	case 1:
-		file = fopen("./outputFile/Cnc1.txt", "w");
-		break;
-	default:
-		break;
-	}
+    FILE* file = NULL;
+    switch (ucChannelNum)
+    {
+    case 0:
+        file = fopen("./outputFile/Cnc0.txt", "w");
+        break;
+    case 1:
+        file = fopen("./outputFile/Cnc1.txt", "w");
+        break;
+    default:
+        break;
+    }
 
-	if (!file)
-	{
-		printf("´ò¿ªÎÄ¼ş´íÎó!\n");
-		exit(0);
-	}
-	fclose(file);
+    if (!file)
+    {
+        printf("æ‰“å¼€æ–‡ä»¶é”™è¯¯!\n");
+        exit(0);
+    }
+    fclose(file);
 
-	switch (ucChannelNum)
-	{
-	case 0:
-		file = fopen("./outputFile/Cnc0.txt", "a");  //×·¼Ó·½Ê½·½Ê½´ò¿ª
-		break;
-	case 1:
-		file = fopen("./outputFile/Cnc1.txt", "a");
-		break;
-	default:
-		break;
-	}
+    switch (ucChannelNum)
+    {
+    case 0:
+        file = fopen("./outputFile/Cnc0.txt", "a"); //è¿½åŠ æ–¹å¼æ–¹å¼æ‰“å¼€
+        break;
+    case 1:
+        file = fopen("./outputFile/Cnc1.txt", "a");
+        break;
+    default:
+        break;
+    }
 
-	if (!file)
-	{
-		exit(0);
-	}
+    if (!file)
+    {
+        exit(0);
+    }
 
-	switch (ucChannelNum)
-	{
-	case 0:
-		channelFile1 = file;
-		break;
-	case 1:
-		channelFile2 = file;
-		break;
-	default:
-		break;
-	}
+    switch (ucChannelNum)
+    {
+    case 0:
+        channelFile1 = file;
+        break;
+    case 1:
+        channelFile2 = file;
+        break;
+    default:
+        break;
+    }
 }
 
-
-//¹Ø±ÕÎÄ¼ş(²âÊÔÓÃ)
+//å…³é—­æ–‡ä»¶(æµ‹è¯•ç”¨)
 void CloseFile(uint8 ucChannelNum)
 {
-	FILE* file = NULL;
-	lineNum1 = 0;
-	lineNum2 = 0;
-	switch (ucChannelNum)
-	{
-	case 0:
-		file = channelFile1;
-		break;
-	case 1:
-		file = channelFile2;
-		break;
-	default:
-		break;
-	}
+    FILE* file = NULL;
+    lineNum1 = 0;
+    lineNum2 = 0;
+    switch (ucChannelNum)
+    {
+    case 0:
+        file = channelFile1;
+        break;
+    case 1:
+        file = channelFile2;
+        break;
+    default:
+        break;
+    }
 
-	if (file)
-	{
-		fclose(file);
-		file = NULL;
-	}
+    if (file)
+    {
+        fclose(file);
+        file = NULL;
+    }
 }
 
-
-//¸ù¾İÍ¨µÀ´òÓ¡Êı¾İ(²âÊÔÓÃ)
+//æ ¹æ®é€šé“æ‰“å°æ•°æ®(æµ‹è¯•ç”¨)
 void PrintDataByChannel(uint8 ucChannelNum)
 {
-//	FILE* file1 = NULL;
-//	int16 idx = (g_SRingBuff[ucChannelNum].nSToolIndex + TOOLCOMPBUF_MAX) % TOOLCOMPBUF_MAX;// (g_SRingBuff[ucChannelNum].sSToolIndex + TOOLCOMPBUF_MAX) % TOOLCOMPBUF_MAX;  //Ç°Ò»¸ö»º³åµÄË÷Òı
-//	int32 *lineNum = NULL;
-//	switch (ucChannelNum)
-//	{
-//	case 0:
-//		file1 = channelFile1;
-//		lineNum = &lineNum1;
-//		break;
-//	case 1:
-//		file1 = channelFile2;
-//		lineNum = &lineNum2;
-//		break;
-//	default:
-//		break;
-//	}
-//
-//	*lineNum += 1;
-//	//fprintf(file1, "ĞĞºÅ%d\n", g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx].unGCodeLineNum);
-//	fprintf(file1, "No%d:Æğµãxyz:%8f %8f %8f\n", *lineNum
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_X]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_Y]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_Z]);
-//
-//	fprintf(file1, "ÖÕµãxyz:%8f %8f %8f\n"
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_X]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_Y]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_Z]);
-//
-//	fprintf(file1, "Ô²ĞÄxyz:%8f %8f %8f\n"
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_X]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_Y]
-//		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_Z]);
-//
-//	fprintf(file1, "Ô²»¡·½Ïò:%d\n", g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].cArcDir);
-//	fprintf(file1, "ÊµÌåÀàĞÍ£º%d\t ,ÔË¶¯Ö¸ÁîÀàĞÍ£º%d\t,³ÌĞò×´Ì¬Ö¸ÁîÀàĞÍ£º%d\t\n", g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].EntityType,
-//		getBits(g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].unCommandType, CMD_MOTION_ADDR),
-//		getBits(g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].unCommandType, CMD_PROGRAM_ADDR) >> 8);
+    //	FILE* file1 = NULL;
+    //	int16 idx = (g_SRingBuff[ucChannelNum].nSToolIndex + TOOLCOMPBUF_MAX) % TOOLCOMPBUF_MAX;// (g_SRingBuff[ucChannelNum].sSToolIndex + TOOLCOMPBUF_MAX) % TOOLCOMPBUF_MAX;  //å‰ä¸€ä¸ªç¼“å†²çš„ç´¢å¼•
+    //	int32 *lineNum = NULL;
+    //	switch (ucChannelNum)
+    //	{
+    //	case 0:
+    //		file1 = channelFile1;
+    //		lineNum = &lineNum1;
+    //		break;
+    //	case 1:
+    //		file1 = channelFile2;
+    //		lineNum = &lineNum2;
+    //		break;
+    //	default:
+    //		break;
+    //	}
+    //
+    //	*lineNum += 1;
+    //	//fprintf(file1, "è¡Œå·%d\n", g_SRingBuff[ucChannelNum].SGCodeParseBuf[idx].unGCodeLineNum);
+    //	fprintf(file1, "No%d:èµ·ç‚¹xyz:%8f %8f %8f\n", *lineNum
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_X]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_Y]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SStartPoint.dArray[AXIS_Z]);
+    //
+    //	fprintf(file1, "ç»ˆç‚¹xyz:%8f %8f %8f\n"
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_X]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_Y]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SEndPoint.dArray[AXIS_Z]);
+    //
+    //	fprintf(file1, "åœ†å¿ƒxyz:%8f %8f %8f\n"
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_X]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_Y]
+    //		, g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].SCenterPoint.dArray[AXIS_Z]);
+    //
+    //	fprintf(file1, "åœ†å¼§æ–¹å‘:%d\n", g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].cArcDir);
+    //	fprintf(file1, "å®ä½“ç±»å‹ï¼š%d\t ,è¿åŠ¨æŒ‡ä»¤ç±»å‹ï¼š%d\t,ç¨‹åºçŠ¶æ€æŒ‡ä»¤ç±»å‹ï¼š%d\t\n", g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].EntityType,
+    //		getBits(g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].unCommandType, CMD_MOTION_ADDR),
+    //		getBits(g_SRingBuff[ucChannelNum].SToolCompensationBuf[idx].unCommandType, CMD_PROGRAM_ADDR) >> 8);
 }
-

@@ -4,369 +4,451 @@
 #include <math.h>
 #include <float.h>
 
-/* ´¿¼¸ºÎ¼ÆËã¡£G18 Æ½Ãæ°´ (Z,X) ÖáĞò±íÊ¾¡£
- * dir Îª +1 ±íÊ¾ÄæÊ±Õë£¬-1 ±íÊ¾Ë³Ê±Õë£¬0 ±íÊ¾Ö±Ïß¡£
- * ¾Ü¾øÕûÔ²¡¢²Ã¼ôºóÊ£Óà³¤¶ÈÎªÁã¼°Ô²»¡ÏàÇĞÍË»¯Çé¿ö¡£
+/* çº¯å‡ ä½•è®¡ç®—ã€‚G18 å¹³é¢æŒ‰ (Z,X) è½´åºè¡¨ç¤ºã€‚
+ * dir ä¸º +1 è¡¨ç¤ºé€†æ—¶é’ˆï¼Œ-1 è¡¨ç¤ºé¡ºæ—¶é’ˆï¼Œ0 è¡¨ç¤ºç›´çº¿ã€‚
+ * æ‹’ç»æ•´åœ†ã€è£å‰ªåå‰©ä½™é•¿åº¦ä¸ºé›¶åŠåœ†å¼§ç›¸åˆ‡é€€åŒ–æƒ…å†µã€‚
  */
 #define RG_PI 3.14159265358979323846
 #define RG_TOL 1.0e-6
 #define RG_ANGLE_TOL 1.0e-9
-/* ×´Ì¬ÖµÓë¹«¹²ÊÊÅä½Ó¿Ú¹²ÓÃ£»½ö RG_OK ×´Ì¬Ğ´ÈëÇó½â½á¹û¡£ */
-enum { RG_INVALID = -2, RG_NO_SOLUTION = -1, RG_UNCHANGED = 0, RG_OK = 1 };
-typedef struct { double x, y; } RGPoint;
-typedef struct {
+/* çŠ¶æ€å€¼ä¸å…¬å…±é€‚é…æ¥å£å…±ç”¨ï¼›ä»… RG_OK çŠ¶æ€å†™å…¥æ±‚è§£ç»“æœã€‚ */
+enum
+{
+    RG_INVALID = -2,
+    RG_NO_SOLUTION = -1,
+    RG_UNCHANGED = 0,
+    RG_OK = 1
+};
+typedef struct
+{
+    double x, y;
+} RGPoint;
+typedef struct
+{
     RGPoint start, end, center;
     double radius;
     int dir;
 } RGCurve;
-typedef struct {
+typedef struct
+{
     RGPoint first, second, center;
     double radius;
     int dir;
 } RGResult;
-typedef struct {
+typedef struct
+{
     RGPoint origin, unit;
     double radius, signedRadius;
     int circle;
 } RGLocus;
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint makeRoundPoint(double x, double y)
-  º¯Êı¹¦ÄÜ£º¹¹Ôì¾Ö²¿Æ½Ãæ×ø±êµã¡£
-  ÊäÈë²ÎÊı£ºx ¶ÔÓ¦ Z£¬y ¶ÔÓ¦ X£¬µ¥Î»ÎªÊµ¼ÊºÁÃ×¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º°üº¬ x¡¢y ·ÖÁ¿µÄ×ø±êµã¡£
-  ±¸    ×¢£º²»½øĞĞÖáÓ³Éä»òÖ±¾¶Öµ»»Ëã¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint makeRoundPoint(double x, double y)
+  å‡½æ•°åŠŸèƒ½ï¼šæ„é€ å±€éƒ¨å¹³é¢åæ ‡ç‚¹ã€‚
+  è¾“å…¥å‚æ•°ï¼šx å¯¹åº” Zï¼Œy å¯¹åº” Xï¼Œå•ä½ä¸ºå®é™…æ¯«ç±³ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šåŒ…å« xã€y åˆ†é‡çš„åæ ‡ç‚¹ã€‚
+  å¤‡    æ³¨ï¼šä¸è¿›è¡Œè½´æ˜ å°„æˆ–ç›´å¾„å€¼æ¢ç®—ã€‚
 **************************************************/
 static RGPoint makeRoundPoint(double x, double y)
 {
-    RGPoint p; p.x = x; p.y = y; return p;
+    RGPoint p;
+    p.x = x;
+    p.y = y;
+    return p;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint addRoundPoints(RGPoint a, RGPoint b)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÁ½¸öÆ½ÃæÏòÁ¿µÄºÍ¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£ºÆ½ÃæÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÏòÁ¿ºÍ a + b¡£
-  ±¸    ×¢£ºÒ²¿ÉÓÃÓÚ°´¸ø¶¨ÏòÁ¿Æ½ÒÆ×ø±êµã¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint addRoundPoints(RGPoint a, RGPoint b)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤ä¸ªå¹³é¢å‘é‡çš„å’Œã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šå¹³é¢å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šå‘é‡å’Œ a + bã€‚
+  å¤‡    æ³¨ï¼šä¹Ÿå¯ç”¨äºæŒ‰ç»™å®šå‘é‡å¹³ç§»åæ ‡ç‚¹ã€‚
 **************************************************/
-static RGPoint addRoundPoints(RGPoint a, RGPoint b) { return makeRoundPoint(a.x+b.x, a.y+b.y); }
+static RGPoint addRoundPoints(RGPoint a, RGPoint b)
+{
+    return makeRoundPoint(a.x + b.x, a.y + b.y);
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint subtractRoundPoints(RGPoint a, RGPoint b)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÁ½¸öÆ½Ãæµã»òÏòÁ¿µÄ²î¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£ºÆ½Ãæµã»òÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÏòÁ¿²î a - b¡£
-  ±¸    ×¢£ºÊäÈëÎª×ø±êµãÊ±£¬½á¹ûÎª´Ó b Ö¸Ïò a µÄÏòÁ¿¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint subtractRoundPoints(RGPoint a, RGPoint b)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤ä¸ªå¹³é¢ç‚¹æˆ–å‘é‡çš„å·®ã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šå¹³é¢ç‚¹æˆ–å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šå‘é‡å·® a - bã€‚
+  å¤‡    æ³¨ï¼šè¾“å…¥ä¸ºåæ ‡ç‚¹æ—¶ï¼Œç»“æœä¸ºä» b æŒ‡å‘ a çš„å‘é‡ã€‚
 **************************************************/
-static RGPoint subtractRoundPoints(RGPoint a, RGPoint b) { return makeRoundPoint(a.x-b.x, a.y-b.y); }
+static RGPoint subtractRoundPoints(RGPoint a, RGPoint b)
+{
+    return makeRoundPoint(a.x - b.x, a.y - b.y);
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint scaleRoundPoint(RGPoint a, double s)
-  º¯Êı¹¦ÄÜ£º°´±ÈÀıËõ·ÅÆ½ÃæÏòÁ¿¡£
-  ÊäÈë²ÎÊı£ºa£ºÆ½ÃæÏòÁ¿£»s£ºÓĞ·ûºÅËõ·ÅÏµÊı¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºËõ·ÅºóµÄÏòÁ¿ s * a¡£
-  ±¸    ×¢£º²»¶Ô½á¹û½øĞĞ¹éÒ»»¯»òÓĞĞ§ĞÔ¼ì²é¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint scaleRoundPoint(RGPoint a, double s)
+  å‡½æ•°åŠŸèƒ½ï¼šæŒ‰æ¯”ä¾‹ç¼©æ”¾å¹³é¢å‘é‡ã€‚
+  è¾“å…¥å‚æ•°ï¼šaï¼šå¹³é¢å‘é‡ï¼›sï¼šæœ‰ç¬¦å·ç¼©æ”¾ç³»æ•°ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šç¼©æ”¾åçš„å‘é‡ s * aã€‚
+  å¤‡    æ³¨ï¼šä¸å¯¹ç»“æœè¿›è¡Œå½’ä¸€åŒ–æˆ–æœ‰æ•ˆæ€§æ£€æŸ¥ã€‚
 **************************************************/
-static RGPoint scaleRoundPoint(RGPoint a, double s) { return makeRoundPoint(a.x*s, a.y*s); }
+static RGPoint scaleRoundPoint(RGPoint a, double s)
+{
+    return makeRoundPoint(a.x * s, a.y * s);
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic double calcRoundDotProduct(RGPoint a, RGPoint b)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÆ½ÃæÏòÁ¿µÄµã»ı¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£ºÆ½ÃæÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºµã»ı±êÁ¿¡£
-  ±¸    ×¢£ºÊäÈëÎªµ¥Î»ÏòÁ¿Ê±£¬½á¹ûÎªÁ½ÏòÁ¿¼Ğ½ÇµÄÓàÏÒÖµ¡£
+  å‡½æ•°åç§°ï¼šstatic double calcRoundDotProduct(RGPoint a, RGPoint b)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—å¹³é¢å‘é‡çš„ç‚¹ç§¯ã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šå¹³é¢å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šç‚¹ç§¯æ ‡é‡ã€‚
+  å¤‡    æ³¨ï¼šè¾“å…¥ä¸ºå•ä½å‘é‡æ—¶ï¼Œç»“æœä¸ºä¸¤å‘é‡å¤¹è§’çš„ä½™å¼¦å€¼ã€‚
 **************************************************/
-static double calcRoundDotProduct(RGPoint a, RGPoint b) { return a.x*b.x + a.y*b.y; }
+static double calcRoundDotProduct(RGPoint a, RGPoint b)
+{
+    return a.x * b.x + a.y * b.y;
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic double calcRoundCrossProduct(RGPoint a, RGPoint b)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÆ½ÃæÏòÁ¿µÄÓĞ·ûºÅ²æ»ı¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£º°´ (Z,X) ÖáĞò±íÊ¾µÄÆ½ÃæÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º²æ»ı±êÁ¿ a.x*b.y - a.y*b.x¡£
-  ±¸    ×¢£º½á¹ûÎªÕı±íÊ¾´Ó a ×ªÏò b Ê±×ó×ª¡£
+  å‡½æ•°åç§°ï¼šstatic double calcRoundCrossProduct(RGPoint a, RGPoint b)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—å¹³é¢å‘é‡çš„æœ‰ç¬¦å·å‰ç§¯ã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šæŒ‰ (Z,X) è½´åºè¡¨ç¤ºçš„å¹³é¢å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šå‰ç§¯æ ‡é‡ a.x*b.y - a.y*b.xã€‚
+  å¤‡    æ³¨ï¼šç»“æœä¸ºæ­£è¡¨ç¤ºä» a è½¬å‘ b æ—¶å·¦è½¬ã€‚
 **************************************************/
-static double calcRoundCrossProduct(RGPoint a, RGPoint b) { return a.x*b.y - a.y*b.x; }
+static double calcRoundCrossProduct(RGPoint a, RGPoint b)
+{
+    return a.x * b.y - a.y * b.x;
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic double calcRoundVectorLength(RGPoint a)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÏòÁ¿µÄÅ·ÊÏ³¤¶È¡£
-  ÊäÈë²ÎÊı£ºa£ºÆ½ÃæÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÊäÈëÓĞÏŞÇÒÔËËãÎ´Òç³öÊ±£¬·µ»Ø·Ç¸º³¤¶È¡£
-  ±¸    ×¢£ºµ÷ÓÃ·½ÁíĞĞ¼ì²é¼¸ºÎÊı¾İÊÇ·ñÎªÓĞÏŞÊı¡£
+  å‡½æ•°åç§°ï¼šstatic double calcRoundVectorLength(RGPoint a)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—å‘é‡çš„æ¬§æ°é•¿åº¦ã€‚
+  è¾“å…¥å‚æ•°ï¼šaï¼šå¹³é¢å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šè¾“å…¥æœ‰é™ä¸”è¿ç®—æœªæº¢å‡ºæ—¶ï¼Œè¿”å›éè´Ÿé•¿åº¦ã€‚
+  å¤‡    æ³¨ï¼šè°ƒç”¨æ–¹å¦è¡Œæ£€æŸ¥å‡ ä½•æ•°æ®æ˜¯å¦ä¸ºæœ‰é™æ•°ã€‚
 **************************************************/
-static double calcRoundVectorLength(RGPoint a) { return sqrt(calcRoundDotProduct(a,a)); }
+static double calcRoundVectorLength(RGPoint a)
+{
+    return sqrt(calcRoundDotProduct(a, a));
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint rotateRoundVectorLeft(RGPoint a)
-  º¯Êı¹¦ÄÜ£º½«Æ½ÃæÏòÁ¿ÄæÊ±ÕëĞı×ª 90 ¶È¡£
-  ÊäÈë²ÎÊı£ºa£º°´ (Z,X) ÖáĞò±íÊ¾µÄÆ½ÃæÏòÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º×ó·¨ÏòÁ¿ (-a.y,a.x)¡£
-  ±¸    ×¢£º±£³ÖÔ­ÏòÁ¿³¤¶È£¬²»½øĞĞ¹éÒ»»¯¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint rotateRoundVectorLeft(RGPoint a)
+  å‡½æ•°åŠŸèƒ½ï¼šå°†å¹³é¢å‘é‡é€†æ—¶é’ˆæ—‹è½¬ 90 åº¦ã€‚
+  è¾“å…¥å‚æ•°ï¼šaï¼šæŒ‰ (Z,X) è½´åºè¡¨ç¤ºçš„å¹³é¢å‘é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šå·¦æ³•å‘é‡ (-a.y,a.x)ã€‚
+  å¤‡    æ³¨ï¼šä¿æŒåŸå‘é‡é•¿åº¦ï¼Œä¸è¿›è¡Œå½’ä¸€åŒ–ã€‚
 **************************************************/
-static RGPoint rotateRoundVectorLeft(RGPoint a) { return makeRoundPoint(-a.y,a.x); }
+static RGPoint rotateRoundVectorLeft(RGPoint a)
+{
+    return makeRoundPoint(-a.y, a.x);
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int isRoundValueFinite(double x)
-  º¯Êı¹¦ÄÜ£º¼ì²é±êÁ¿ÊÇ·ñÎªÓĞÏŞÊı¡£
-  ÊäÈë²ÎÊı£ºx£º´ı¼ì²é±êÁ¿¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º1£ºÓĞÏŞÊı£»0£º·ÇÓĞÏŞÊı¡£
-  ±¸    ×¢£ºÅÅ³ı·ÇÊıÖµ NaN ºÍÕı¡¢¸ºÎŞÇî´ó¡£
+  å‡½æ•°åç§°ï¼šstatic int isRoundValueFinite(double x)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥æ ‡é‡æ˜¯å¦ä¸ºæœ‰é™æ•°ã€‚
+  è¾“å…¥å‚æ•°ï¼šxï¼šå¾…æ£€æŸ¥æ ‡é‡ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼š1ï¼šæœ‰é™æ•°ï¼›0ï¼šéæœ‰é™æ•°ã€‚
+  å¤‡    æ³¨ï¼šæ’é™¤éæ•°å€¼ NaN å’Œæ­£ã€è´Ÿæ— ç©·å¤§ã€‚
 **************************************************/
-static int isRoundValueFinite(double x) { return x == x && fabs(x) <= DBL_MAX; }
+static int isRoundValueFinite(double x)
+{
+    return x == x && fabs(x) <= DBL_MAX;
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int isRoundPointFinite(RGPoint p)
-  º¯Êı¹¦ÄÜ£º¼ì²é×ø±êµãµÄÁ½¸ö·ÖÁ¿ÊÇ·ñ¾ùÎªÓĞÏŞÊı¡£
-  ÊäÈë²ÎÊı£ºp£º¾Ö²¿Æ½Ãæ×ø±êµã¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º1£ºÁ½¸ö·ÖÁ¿¾ùÓĞÏŞ£»0£ºÖÁÉÙÒ»¸ö·ÖÁ¿·ÇÓĞÏŞ¡£
-  ±¸    ×¢£º²»¼ì²é×ø±êµãÊÇ·ñÎ»ÓÚÖ¸¶¨ÂÖÀªÉÏ¡£
+  å‡½æ•°åç§°ï¼šstatic int isRoundPointFinite(RGPoint p)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥åæ ‡ç‚¹çš„ä¸¤ä¸ªåˆ†é‡æ˜¯å¦å‡ä¸ºæœ‰é™æ•°ã€‚
+  è¾“å…¥å‚æ•°ï¼špï¼šå±€éƒ¨å¹³é¢åæ ‡ç‚¹ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼š1ï¼šä¸¤ä¸ªåˆ†é‡å‡æœ‰é™ï¼›0ï¼šè‡³å°‘ä¸€ä¸ªåˆ†é‡éæœ‰é™ã€‚
+  å¤‡    æ³¨ï¼šä¸æ£€æŸ¥åæ ‡ç‚¹æ˜¯å¦ä½äºæŒ‡å®šè½®å»“ä¸Šã€‚
 **************************************************/
-static int isRoundPointFinite(RGPoint p) { return isRoundValueFinite(p.x) && isRoundValueFinite(p.y); }
+static int isRoundPointFinite(RGPoint p)
+{
+    return isRoundValueFinite(p.x) && isRoundValueFinite(p.y);
+}
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic double calcRoundSweepAngle(RGPoint from, RGPoint to, int dir)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÑØÖ¸¶¨·½ÏòµÄ·Ç¸º×ª½Ç¡£
-  ÊäÈë²ÎÊı£ºfrom¡¢to£ºÆğÖ¹¾¶ÏòÏòÁ¿£»dir£º+1 ÄæÊ±Õë£¬-1 Ë³Ê±Õë¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º·¶Î§Îª [0,2*pi) µÄ×ª½Ç£¬µ¥Î»Îª»¡¶È¡£
-  ±¸    ×¢£ºÁ½¸öÏòÁ¿Í¬ÏòÊ±·µ»ØÁã£¬²»°´ÕûÔ²´¦Àí¡£
+  å‡½æ•°åç§°ï¼šstatic double calcRoundSweepAngle(RGPoint from, RGPoint to, int dir)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—æ²¿æŒ‡å®šæ–¹å‘çš„éè´Ÿè½¬è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼šfromã€toï¼šèµ·æ­¢å¾„å‘å‘é‡ï¼›dirï¼š+1 é€†æ—¶é’ˆï¼Œ-1 é¡ºæ—¶é’ˆã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šèŒƒå›´ä¸º [0,2*pi) çš„è½¬è§’ï¼Œå•ä½ä¸ºå¼§åº¦ã€‚
+  å¤‡    æ³¨ï¼šä¸¤ä¸ªå‘é‡åŒå‘æ—¶è¿”å›é›¶ï¼Œä¸æŒ‰æ•´åœ†å¤„ç†ã€‚
 **************************************************/
 static double calcRoundSweepAngle(RGPoint from, RGPoint to, int dir)
 {
-    double a = atan2(dir * calcRoundCrossProduct(from,to), calcRoundDotProduct(from,to));
-    if (a < 0.0) a += 2.0 * RG_PI;
+    double a = atan2(dir * calcRoundCrossProduct(from, to), calcRoundDotProduct(from, to));
+    if (a < 0.0)
+        a += 2.0 * RG_PI;
     return a;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int isRoundCurveValid(const RGCurve *c)
-  º¯Êı¹¦ÄÜ£º¼ì²éÔ­Ê¼ÂÖÀªÊÇ·ñÎªÓĞĞ§µÄ·ÇÁãÓĞÏŞ¼¸ºÎ¡£
-  ÊäÈë²ÎÊı£ºc£º·Ç¿ÕÂÖÀªÖ¸Õë£»dir Îª 0 ±íÊ¾Ö±Ïß£¬+1 ÄæÊ±Õë£¬-1 Ë³Ê±Õë¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£º1£ºÓĞĞ§£»0£ºÎŞĞ§¡£
-  ±¸    ×¢£º¾Ü¾øÆğÖÕµãÖØºÏ¡¢ÕûÔ²ÒÔ¼°ÆğÖÕµã°ë¾¶²»Ò»ÖÂµÄÔ²»¡¡£
+  å‡½æ•°åç§°ï¼šstatic int isRoundCurveValid(const RGCurve *c)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥åŸå§‹è½®å»“æ˜¯å¦ä¸ºæœ‰æ•ˆçš„éé›¶æœ‰é™å‡ ä½•ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šéç©ºè½®å»“æŒ‡é’ˆï¼›dir ä¸º 0 è¡¨ç¤ºç›´çº¿ï¼Œ+1 é€†æ—¶é’ˆï¼Œ-1 é¡ºæ—¶é’ˆã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼š1ï¼šæœ‰æ•ˆï¼›0ï¼šæ— æ•ˆã€‚
+  å¤‡    æ³¨ï¼šæ‹’ç»èµ·ç»ˆç‚¹é‡åˆã€æ•´åœ†ä»¥åŠèµ·ç»ˆç‚¹åŠå¾„ä¸ä¸€è‡´çš„åœ†å¼§ã€‚
 **************************************************/
-static int isRoundCurveValid(const RGCurve *c)
+static int isRoundCurveValid(const RGCurve* c)
 {
     double r1, r2;
-    if (!isRoundPointFinite(c->start) || !isRoundPointFinite(c->end)) return 0;
-    if (calcRoundVectorLength(subtractRoundPoints(c->end,c->start)) <= RG_TOL) return 0;
-    if (!c->dir) return 1;
-    if ((c->dir != 1 && c->dir != -1) || !isRoundPointFinite(c->center)
-        || !isRoundValueFinite(c->radius) || c->radius <= RG_TOL) return 0;
-    r1 = calcRoundVectorLength(subtractRoundPoints(c->start,c->center));
-    r2 = calcRoundVectorLength(subtractRoundPoints(c->end,c->center));
-    return fabs(r1-c->radius) <= RG_TOL * (1.0+c->radius)
-        && fabs(r2-c->radius) <= RG_TOL * (1.0+c->radius);
+    if (!isRoundPointFinite(c->start) || !isRoundPointFinite(c->end))
+        return 0;
+    if (calcRoundVectorLength(subtractRoundPoints(c->end, c->start)) <= RG_TOL)
+        return 0;
+    if (!c->dir)
+        return 1;
+    if ((c->dir != 1 && c->dir != -1) || !isRoundPointFinite(c->center) || !isRoundValueFinite(c->radius) ||
+        c->radius <= RG_TOL)
+        return 0;
+    r1 = calcRoundVectorLength(subtractRoundPoints(c->start, c->center));
+    r2 = calcRoundVectorLength(subtractRoundPoints(c->end, c->center));
+    return fabs(r1 - c->radius) <= RG_TOL * (1.0 + c->radius) && fabs(r2 - c->radius) <= RG_TOL * (1.0 + c->radius);
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint calcRoundUnitTangent(const RGCurve *c, RGPoint p)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÑØÔËĞĞ·½ÏòµÄµ¥Î»ÇĞÏòÁ¿¡£
-  ÊäÈë²ÎÊı£ºc£ºÓĞĞ§·ÇÁãÂÖÀª£»p£ºÎ»ÓÚ¸ÃÂÖÀªÉÏµÄÇĞµã¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÑØÔËĞĞ·½ÏòµÄµ¥Î»ÇĞÏòÁ¿¡£
-  ±¸    ×¢£ºµ÷ÓÃÇ°ĞëÑéÖ¤ c£»Ô²»¡ÇĞÏòÓÉ c->dir ¾ö¶¨¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint calcRoundUnitTangent(const RGCurve *c, RGPoint p)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—æ²¿è¿è¡Œæ–¹å‘çš„å•ä½åˆ‡å‘é‡ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šæœ‰æ•ˆéé›¶è½®å»“ï¼›pï¼šä½äºè¯¥è½®å»“ä¸Šçš„åˆ‡ç‚¹ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šæ²¿è¿è¡Œæ–¹å‘çš„å•ä½åˆ‡å‘é‡ã€‚
+  å¤‡    æ³¨ï¼šè°ƒç”¨å‰é¡»éªŒè¯ cï¼›åœ†å¼§åˆ‡å‘ç”± c->dir å†³å®šã€‚
 **************************************************/
-static RGPoint calcRoundUnitTangent(const RGCurve *c, RGPoint p)
+static RGPoint calcRoundUnitTangent(const RGCurve* c, RGPoint p)
 {
-    RGPoint d = c->dir ? scaleRoundPoint(rotateRoundVectorLeft(subtractRoundPoints(p,c->center)),c->dir)
-                      : subtractRoundPoints(c->end,c->start);
-    return scaleRoundPoint(d,1.0/calcRoundVectorLength(d));
+    RGPoint d = c->dir ? scaleRoundPoint(rotateRoundVectorLeft(subtractRoundPoints(p, c->center)), c->dir)
+                       : subtractRoundPoints(c->end, c->start);
+    return scaleRoundPoint(d, 1.0 / calcRoundVectorLength(d));
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic double calcRoundCurveLength(const RGCurve *c)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÓĞÏŞÂÖÀªÑØÔËĞĞ·½ÏòµÄ³¤¶È¡£
-  ÊäÈë²ÎÊı£ºc£ºÓĞĞ§·ÇÁãÖ±Ïß»òÓĞÏòÔ²»¡¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÂÖÀª³¤¶È£¬µ¥Î»ÎªÊµ¼ÊºÁÃ×¡£
-  ±¸    ×¢£ºÔ²»¡³¤¶ÈÓÉ°ë¾¶³ËÓĞÏòÉ¨½ÇµÃµ½£¬²»Ê¹ÓÃÏÒ³¤¡£
+  å‡½æ•°åç§°ï¼šstatic double calcRoundCurveLength(const RGCurve *c)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—æœ‰é™è½®å»“æ²¿è¿è¡Œæ–¹å‘çš„é•¿åº¦ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šæœ‰æ•ˆéé›¶ç›´çº¿æˆ–æœ‰å‘åœ†å¼§ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šè½®å»“é•¿åº¦ï¼Œå•ä½ä¸ºå®é™…æ¯«ç±³ã€‚
+  å¤‡    æ³¨ï¼šåœ†å¼§é•¿åº¦ç”±åŠå¾„ä¹˜æœ‰å‘æ‰«è§’å¾—åˆ°ï¼Œä¸ä½¿ç”¨å¼¦é•¿ã€‚
 **************************************************/
-static double calcRoundCurveLength(const RGCurve *c)
+static double calcRoundCurveLength(const RGCurve* c)
 {
-    return c->dir ? c->radius * calcRoundSweepAngle(subtractRoundPoints(c->start,c->center),
-                                       subtractRoundPoints(c->end,c->center),c->dir)
-                  : calcRoundVectorLength(subtractRoundPoints(c->end,c->start));
+    return c->dir ? c->radius * calcRoundSweepAngle(subtractRoundPoints(c->start, c->center),
+                                                    subtractRoundPoints(c->end, c->center), c->dir)
+                  : calcRoundVectorLength(subtractRoundPoints(c->end, c->start));
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int calcRoundCurvePosition(const RGCurve *c, RGPoint p, double *s)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÇĞµãÔÚÓĞÏŞÂÖÀªÉÏµÄÔËĞĞÎ»ÖÃ¡£
-  ÊäÈë²ÎÊı£ºc£ºÓĞĞ§ÂÖÀª£»p£ººòÑ¡ÇĞµã¡£
-  Êä³ö²ÎÊı£ºs£º´ÓÆğµãÑØÔËĞĞ·½Ïòµ½ÇĞµãµÄ¾àÀë£¬Ê§°ÜÊ±Ò²¿ÉÄÜ±»ĞŞ¸Ä¡£
-  ·µ »Ø Öµ£º1£ºÇĞµãÔÚÈİ²î·¶Î§ÄÚÊôÓÚÓĞÏŞÂÖÀª£»0£º²»ÊôÓÚ¡£
-  ±¸    ×¢£º½öÔÚ·µ»Ø³É¹¦ºó£¬²Å¿É½« s ÓÃ×÷ÓĞĞ§Î»ÖÃ¡£
+  å‡½æ•°åç§°ï¼šstatic int calcRoundCurvePosition(const RGCurve *c, RGPoint p, double *s)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åˆ‡ç‚¹åœ¨æœ‰é™è½®å»“ä¸Šçš„è¿è¡Œä½ç½®ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šæœ‰æ•ˆè½®å»“ï¼›pï¼šå€™é€‰åˆ‡ç‚¹ã€‚
+  è¾“å‡ºå‚æ•°ï¼šsï¼šä»èµ·ç‚¹æ²¿è¿è¡Œæ–¹å‘åˆ°åˆ‡ç‚¹çš„è·ç¦»ï¼Œå¤±è´¥æ—¶ä¹Ÿå¯èƒ½è¢«ä¿®æ”¹ã€‚
+  è¿” å› å€¼ï¼š1ï¼šåˆ‡ç‚¹åœ¨å®¹å·®èŒƒå›´å†…å±äºæœ‰é™è½®å»“ï¼›0ï¼šä¸å±äºã€‚
+  å¤‡    æ³¨ï¼šä»…åœ¨è¿”å›æˆåŠŸåï¼Œæ‰å¯å°† s ç”¨ä½œæœ‰æ•ˆä½ç½®ã€‚
 **************************************************/
-static int calcRoundCurvePosition(const RGCurve *c, RGPoint p, double *s)
+static int calcRoundCurvePosition(const RGCurve* c, RGPoint p, double* s)
 {
-    if (c->dir) {
-        if (fabs(calcRoundVectorLength(subtractRoundPoints(p,c->center))-c->radius) >
-            RG_TOL*(1.0+c->radius)) return 0;
-        *s = c->radius * calcRoundSweepAngle(subtractRoundPoints(c->start,c->center),
-                                subtractRoundPoints(p,c->center),c->dir);
-    } else {
-        RGPoint u = calcRoundUnitTangent(c,c->start), d = subtractRoundPoints(p,c->start);
-        if (fabs(calcRoundCrossProduct(u,d)) > RG_TOL) return 0;
-        *s = calcRoundDotProduct(u,d);
+    if (c->dir)
+    {
+        if (fabs(calcRoundVectorLength(subtractRoundPoints(p, c->center)) - c->radius) > RG_TOL * (1.0 + c->radius))
+            return 0;
+        *s = c->radius *
+             calcRoundSweepAngle(subtractRoundPoints(c->start, c->center), subtractRoundPoints(p, c->center), c->dir);
     }
-    return isRoundValueFinite(*s) && *s >= -RG_TOL && *s <= calcRoundCurveLength(c)+RG_TOL;
+    else
+    {
+        RGPoint u = calcRoundUnitTangent(c, c->start), d = subtractRoundPoints(p, c->start);
+        if (fabs(calcRoundCrossProduct(u, d)) > RG_TOL)
+            return 0;
+        *s = calcRoundDotProduct(u, d);
+    }
+    return isRoundValueFinite(*s) && *s >= -RG_TOL && *s <= calcRoundCurveLength(c) + RG_TOL;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int buildRoundCenterLocus(const RGCurve *c, double r, int side, RGLocus *l)
-  º¯Êı¹¦ÄÜ£º¹¹ÔìÔ²½ÇºòÑ¡Ô²ĞÄËùÔÚµÄÆ«ÖÃ¹ì¼£¡£
-  ÊäÈë²ÎÊı£ºc£ºÓĞĞ§ÂÖÀª£»r£ºÔ²½Ç°ë¾¶£»side£º+1 ×ó²à£¬-1 ÓÒ²à¡£
-  Êä³ö²ÎÊı£ºl£ºÆ«ÖÃÖ±Ïß»ò´øÓĞ·ûºÅ°ë¾¶µÄÆ«ÖÃÔ²¡£
-  ·µ »Ø Öµ£º1£ºÆ«ÖÃ¹ì¼£¿ÉÓÃ£»0£ºÆ«ÖÃÔ²ÍË»¯Îªµã¡£
-  ±¸    ×¢£º±£Áô signedRadius£¬ÓÃÓÚ»Ö¸´ÕıÈ·µÄÄÚÇĞ»òÍâÇĞÇĞµã¡£
+  å‡½æ•°åç§°ï¼šstatic int buildRoundCenterLocus(const RGCurve *c, double r, int side, RGLocus *l)
+  å‡½æ•°åŠŸèƒ½ï¼šæ„é€ åœ†è§’å€™é€‰åœ†å¿ƒæ‰€åœ¨çš„åç½®è½¨è¿¹ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šæœ‰æ•ˆè½®å»“ï¼›rï¼šåœ†è§’åŠå¾„ï¼›sideï¼š+1 å·¦ä¾§ï¼Œ-1 å³ä¾§ã€‚
+  è¾“å‡ºå‚æ•°ï¼šlï¼šåç½®ç›´çº¿æˆ–å¸¦æœ‰ç¬¦å·åŠå¾„çš„åç½®åœ†ã€‚
+  è¿” å› å€¼ï¼š1ï¼šåç½®è½¨è¿¹å¯ç”¨ï¼›0ï¼šåç½®åœ†é€€åŒ–ä¸ºç‚¹ã€‚
+  å¤‡    æ³¨ï¼šä¿ç•™ signedRadiusï¼Œç”¨äºæ¢å¤æ­£ç¡®çš„å†…åˆ‡æˆ–å¤–åˆ‡åˆ‡ç‚¹ã€‚
 **************************************************/
-static int buildRoundCenterLocus(const RGCurve *c, double r, int side, RGLocus *l)
+static int buildRoundCenterLocus(const RGCurve* c, double r, int side, RGLocus* l)
 {
     l->circle = c->dir != 0;
-    if (l->circle) {
+    if (l->circle)
+    {
         l->origin = c->center;
-        /* µ±Ô²½Ç°ë¾¶ R ´óÓÚÔ­Ô²°ë¾¶Ê±£¬ÓĞ·ûºÅ°ë¾¶ÓÃÓÚ±£ÁôÕıÈ·µÄÏàÇĞ·ÖÖ§¡£ */
-        l->signedRadius = c->radius - side*c->dir*r;
+        /* å½“åœ†è§’åŠå¾„ R å¤§äºåŸåœ†åŠå¾„æ—¶ï¼Œæœ‰ç¬¦å·åŠå¾„ç”¨äºä¿ç•™æ­£ç¡®çš„ç›¸åˆ‡åˆ†æ”¯ã€‚ */
+        l->signedRadius = c->radius - side * c->dir * r;
         l->radius = fabs(l->signedRadius);
-        l->unit = makeRoundPoint(0,0);
+        l->unit = makeRoundPoint(0, 0);
         return l->radius > RG_TOL;
     }
-    l->unit = calcRoundUnitTangent(c,c->start);
-    l->origin = addRoundPoints(c->start,scaleRoundPoint(rotateRoundVectorLeft(l->unit),side*r));
+    l->unit = calcRoundUnitTangent(c, c->start);
+    l->origin = addRoundPoints(c->start, scaleRoundPoint(rotateRoundVectorLeft(l->unit), side * r));
     l->radius = l->signedRadius = 0.0;
     return 1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int calcRoundLocusIntersections(const RGLocus *a, const RGLocus *b, RGPoint out[2])
-  º¯Êı¹¦ÄÜ£º¼ÆËãÁ½ÌõÎŞÏŞÑÓÉìµÄÔ²ĞÄÆ«ÖÃ¹ì¼£µÄ½»µã¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£ºÓĞĞ§Æ«ÖÃ¹ì¼£¡£
-  Êä³ö²ÎÊı£ºout£º×î¶àÁ½¸öºòÑ¡Ô²ĞÄ£¬½ö·µ»ØÊıÁ¿ÒÔÄÚµÄÔªËØÓĞĞ§¡£
-  ·µ »Ø Öµ£ººòÑ¡Ô²ĞÄÊıÁ¿£º0¡¢1 »ò 2¡£
-  ±¸    ×¢£º±¾º¯Êı²»¼ì²éÔ­ÂÖÀªµÄÓĞÏŞ·¶Î§£¬ÓÉ solveRoundGeometry É¸Ñ¡ºòÑ¡½â¡£
+  å‡½æ•°åç§°ï¼šstatic int calcRoundLocusIntersections(const RGLocus *a, const RGLocus *b, RGPoint out[2])
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤æ¡æ— é™å»¶ä¼¸çš„åœ†å¿ƒåç½®è½¨è¿¹çš„äº¤ç‚¹ã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šæœ‰æ•ˆåç½®è½¨è¿¹ã€‚
+  è¾“å‡ºå‚æ•°ï¼šoutï¼šæœ€å¤šä¸¤ä¸ªå€™é€‰åœ†å¿ƒï¼Œä»…è¿”å›æ•°é‡ä»¥å†…çš„å…ƒç´ æœ‰æ•ˆã€‚
+  è¿” å› å€¼ï¼šå€™é€‰åœ†å¿ƒæ•°é‡ï¼š0ã€1 æˆ– 2ã€‚
+  å¤‡    æ³¨ï¼šæœ¬å‡½æ•°ä¸æ£€æŸ¥åŸè½®å»“çš„æœ‰é™èŒƒå›´ï¼Œç”± solveRoundGeometry ç­›é€‰å€™é€‰è§£ã€‚
 **************************************************/
-static int calcRoundLocusIntersections(const RGLocus *a, const RGLocus *b, RGPoint out[2])
+static int calcRoundLocusIntersections(const RGLocus* a, const RGLocus* b, RGPoint out[2])
 {
-    RGPoint d = subtractRoundPoints(b->origin,a->origin), base, u;
+    RGPoint d = subtractRoundPoints(b->origin, a->origin), base, u;
     double den, t, h2, dist, along, tol;
-    /* Ô²ĞÄ½Ó½üÊ±ÇĞµãÈÔ¿ÉÄÜÏà¾àºÜÔ¶£¬ÒÔÏÂ½ö¾«È·ÖØ¸ùºÏ²¢¡£ */
-    if (!a->circle && !b->circle) {
-        den = calcRoundCrossProduct(a->unit,b->unit);
-        if (fabs(den) <= RG_ANGLE_TOL) return 0;
-        out[0] = addRoundPoints(a->origin,scaleRoundPoint(a->unit,calcRoundCrossProduct(d,b->unit)/den));
+    /* åœ†å¿ƒæ¥è¿‘æ—¶åˆ‡ç‚¹ä»å¯èƒ½ç›¸è·å¾ˆè¿œï¼Œä»¥ä¸‹ä»…ç²¾ç¡®é‡æ ¹åˆå¹¶ã€‚ */
+    if (!a->circle && !b->circle)
+    {
+        den = calcRoundCrossProduct(a->unit, b->unit);
+        if (fabs(den) <= RG_ANGLE_TOL)
+            return 0;
+        out[0] = addRoundPoints(a->origin, scaleRoundPoint(a->unit, calcRoundCrossProduct(d, b->unit) / den));
         return 1;
     }
-    if (a->circle && !b->circle) return calcRoundLocusIntersections(b,a,out);
-    if (!a->circle) {
-        t = calcRoundDotProduct(d,a->unit);
-        base = addRoundPoints(a->origin,scaleRoundPoint(a->unit,t));
-        h2 = b->radius*b->radius - calcRoundDotProduct(subtractRoundPoints(base,b->origin),subtractRoundPoints(base,b->origin));
-        tol = RG_TOL*(1.0+b->radius*b->radius);
-        if (h2 < -tol) return 0;
+    if (a->circle && !b->circle)
+        return calcRoundLocusIntersections(b, a, out);
+    if (!a->circle)
+    {
+        t = calcRoundDotProduct(d, a->unit);
+        base = addRoundPoints(a->origin, scaleRoundPoint(a->unit, t));
+        h2 = b->radius * b->radius -
+             calcRoundDotProduct(subtractRoundPoints(base, b->origin), subtractRoundPoints(base, b->origin));
+        tol = RG_TOL * (1.0 + b->radius * b->radius);
+        if (h2 < -tol)
+            return 0;
         h2 = sqrt(h2 > 0.0 ? h2 : 0.0);
-        out[0] = addRoundPoints(base,scaleRoundPoint(a->unit,h2));
-        out[1] = subtractRoundPoints(base,scaleRoundPoint(a->unit,h2));
+        out[0] = addRoundPoints(base, scaleRoundPoint(a->unit, h2));
+        out[1] = subtractRoundPoints(base, scaleRoundPoint(a->unit, h2));
         return h2 == 0.0 ? 1 : 2;
     }
     dist = calcRoundVectorLength(d);
-    if (dist <= RG_TOL || dist > a->radius+b->radius+RG_TOL
-        || dist < fabs(a->radius-b->radius)-RG_TOL) return 0;
-    u = scaleRoundPoint(d,1.0/dist);
-    along = (a->radius*a->radius-b->radius*b->radius+dist*dist)/(2.0*dist);
-    h2 = a->radius*a->radius-along*along;
-    tol = RG_TOL*(1.0+a->radius*a->radius);
-    if (h2 < -tol) return 0;
+    if (dist <= RG_TOL || dist > a->radius + b->radius + RG_TOL || dist < fabs(a->radius - b->radius) - RG_TOL)
+        return 0;
+    u = scaleRoundPoint(d, 1.0 / dist);
+    along = (a->radius * a->radius - b->radius * b->radius + dist * dist) / (2.0 * dist);
+    h2 = a->radius * a->radius - along * along;
+    tol = RG_TOL * (1.0 + a->radius * a->radius);
+    if (h2 < -tol)
+        return 0;
     h2 = sqrt(h2 > 0.0 ? h2 : 0.0);
-    base = addRoundPoints(a->origin,scaleRoundPoint(u,along));
-    out[0] = addRoundPoints(base,scaleRoundPoint(rotateRoundVectorLeft(u),h2));
-    out[1] = subtractRoundPoints(base,scaleRoundPoint(rotateRoundVectorLeft(u),h2));
+    base = addRoundPoints(a->origin, scaleRoundPoint(u, along));
+    out[0] = addRoundPoints(base, scaleRoundPoint(rotateRoundVectorLeft(u), h2));
+    out[1] = subtractRoundPoints(base, scaleRoundPoint(rotateRoundVectorLeft(u), h2));
     return h2 == 0.0 ? 1 : 2;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic RGPoint calcRoundContactPoint(const RGCurve *c, const RGLocus *l, RGPoint center)
-  º¯Êı¹¦ÄÜ£ºÓÉºòÑ¡Ô²ĞÄ»Ö¸´Ô­ÂÖÀªÉÏµÄÇĞµã¡£
-  ÊäÈë²ÎÊı£ºc£ºÔ­ÂÖÀª£»l£º¶ÔÓ¦µÄ·ÇÍË»¯Æ«ÖÃ¹ì¼££»center£ººòÑ¡Ô²ĞÄ¡£
-  Êä³ö²ÎÊı£ºÎŞ¡£
-  ·µ »Ø Öµ£ºÔ­Ö±Ïß»òÔ­Ô²ÉÏµÄÇĞµã¡£
-  ±¸    ×¢£ºÊ¹ÓÃÓĞ·ûºÅ°ë¾¶Çø·ÖÄÚÇĞºÍÍâÇĞ·ÖÖ§¡£
+  å‡½æ•°åç§°ï¼šstatic RGPoint calcRoundContactPoint(const RGCurve *c, const RGLocus *l, RGPoint center)
+  å‡½æ•°åŠŸèƒ½ï¼šç”±å€™é€‰åœ†å¿ƒæ¢å¤åŸè½®å»“ä¸Šçš„åˆ‡ç‚¹ã€‚
+  è¾“å…¥å‚æ•°ï¼šcï¼šåŸè½®å»“ï¼›lï¼šå¯¹åº”çš„éé€€åŒ–åç½®è½¨è¿¹ï¼›centerï¼šå€™é€‰åœ†å¿ƒã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å› å€¼ï¼šåŸç›´çº¿æˆ–åŸåœ†ä¸Šçš„åˆ‡ç‚¹ã€‚
+  å¤‡    æ³¨ï¼šä½¿ç”¨æœ‰ç¬¦å·åŠå¾„åŒºåˆ†å†…åˆ‡å’Œå¤–åˆ‡åˆ†æ”¯ã€‚
 **************************************************/
-static RGPoint calcRoundContactPoint(const RGCurve *c, const RGLocus *l, RGPoint center)
+static RGPoint calcRoundContactPoint(const RGCurve* c, const RGLocus* l, RGPoint center)
 {
     if (c->dir)
-        return addRoundPoints(c->center,scaleRoundPoint(subtractRoundPoints(center,c->center),c->radius/l->signedRadius));
-    return addRoundPoints(c->start,scaleRoundPoint(l->unit,calcRoundDotProduct(subtractRoundPoints(center,c->start),l->unit)));
+        return addRoundPoints(c->center,
+                              scaleRoundPoint(subtractRoundPoints(center, c->center), c->radius / l->signedRadius));
+    return addRoundPoints(
+        c->start, scaleRoundPoint(l->unit, calcRoundDotProduct(subtractRoundPoints(center, c->start), l->unit)));
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int solveRoundGeometry(const RGCurve *a, const RGCurve *b, double radius, RGResult *out)
-  º¯Êı¹¦ÄÜ£ºÇó½âÁ½ÌõÓĞÏŞÂÖÀªÖ®¼äÏàÇĞµÄĞ¡Ô²»¡¹ı¶É¡£
-  ÊäÈë²ÎÊı£ºa¡¢b£ºÊ×Î²ÏàÁ¬µÄÂÖÀª£»radius£ºÕıµÄÔ²½Ç°ë¾¶£¬µ¥Î»ÎªÊµ¼ÊºÁÃ×¡£
-  Êä³ö²ÎÊı£ºout£ºÇĞµã¡¢Ô²ĞÄ¡¢°ë¾¶ºÍ·½Ïò£¬½öÔÚ·µ»Ø RG_OK Ê±Ğ´Èë¡£
-  ·µ »Ø Öµ£º1£ºÇó½â³É¹¦£»0£ºÍ¬Ïò¹²ÏßÖ±Ïß²»´¦Àí£»-1£ºÎŞ½â£»-2£ºÊäÈë·Ç·¨¡£
-  ±¸    ×¢£ºÒªÇóÁ½²à±£ÁôÕı³¤¶È£»²»ĞŞ¸Ä»º³åÇø¡¢Ä£Ì¬»ò»ú´²×´Ì¬¡£
+  å‡½æ•°åç§°ï¼šstatic int solveRoundGeometry(const RGCurve *a, const RGCurve *b, double radius, RGResult *out)
+  å‡½æ•°åŠŸèƒ½ï¼šæ±‚è§£ä¸¤æ¡æœ‰é™è½®å»“ä¹‹é—´ç›¸åˆ‡çš„å°åœ†å¼§è¿‡æ¸¡ã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€bï¼šé¦–å°¾ç›¸è¿çš„è½®å»“ï¼›radiusï¼šæ­£çš„åœ†è§’åŠå¾„ï¼Œå•ä½ä¸ºå®é™…æ¯«ç±³ã€‚
+  è¾“å‡ºå‚æ•°ï¼šoutï¼šåˆ‡ç‚¹ã€åœ†å¿ƒã€åŠå¾„å’Œæ–¹å‘ï¼Œä»…åœ¨è¿”å› RG_OK æ—¶å†™å…¥ã€‚
+  è¿” å› å€¼ï¼š1ï¼šæ±‚è§£æˆåŠŸï¼›0ï¼šåŒå‘å…±çº¿ç›´çº¿ä¸å¤„ç†ï¼›-1ï¼šæ— è§£ï¼›-2ï¼šè¾“å…¥éæ³•ã€‚
+  å¤‡    æ³¨ï¼šè¦æ±‚ä¸¤ä¾§ä¿ç•™æ­£é•¿åº¦ï¼›ä¸ä¿®æ”¹ç¼“å†²åŒºã€æ¨¡æ€æˆ–æœºåºŠçŠ¶æ€ã€‚
 **************************************************/
-static int solveRoundGeometry(const RGCurve *a, const RGCurve *b, double radius, RGResult *out)
+static int solveRoundGeometry(const RGCurve* a, const RGCurve* b, double radius, RGResult* out)
 {
     RGPoint ta, tb, centers[2];
     RGLocus la, lb;
     RGResult best;
     double cross, dot, trim = 0.0, bestScore = DBL_MAX;
     int side, count, i, linePair, found = 0;
-    if (!a || !b || !out || !isRoundCurveValid(a) || !isRoundCurveValid(b)
-        || !isRoundValueFinite(radius) || radius <= RG_TOL
-        || calcRoundVectorLength(subtractRoundPoints(a->end,b->start)) > RG_TOL) return RG_INVALID;
-    ta = calcRoundUnitTangent(a,a->end); tb = calcRoundUnitTangent(b,b->start);
-    cross = calcRoundCrossProduct(ta,tb); dot = calcRoundDotProduct(ta,tb);
-    if (fabs(cross) <= RG_ANGLE_TOL) {
-        /* ½ö¶ÔÍ¬Ïò¹²ÏßµÄÁ½ÌõÖ±ÏßÃ÷È·²ÉÓÃ²»Éú³ÉÔ²½ÇµÄ´¦Àí¹æÔò¡£ */
-        if (!a->dir && !b->dir && dot > 0.0) return RG_UNCHANGED;
+    if (!a || !b || !out || !isRoundCurveValid(a) || !isRoundCurveValid(b) || !isRoundValueFinite(radius) ||
+        radius <= RG_TOL || calcRoundVectorLength(subtractRoundPoints(a->end, b->start)) > RG_TOL)
+        return RG_INVALID;
+    ta = calcRoundUnitTangent(a, a->end);
+    tb = calcRoundUnitTangent(b, b->start);
+    cross = calcRoundCrossProduct(ta, tb);
+    dot = calcRoundDotProduct(ta, tb);
+    if (fabs(cross) <= RG_ANGLE_TOL)
+    {
+        /* ä»…å¯¹åŒå‘å…±çº¿çš„ä¸¤æ¡ç›´çº¿æ˜ç¡®é‡‡ç”¨ä¸ç”Ÿæˆåœ†è§’çš„å¤„ç†è§„åˆ™ã€‚ */
+        if (!a->dir && !b->dir && dot > 0.0)
+            return RG_UNCHANGED;
         return RG_NO_SOLUTION;
     }
-    /* Ê¹ÓÃÔËĞĞÇĞÏòÅĞ¶ÏÔ²½ÇËùÔÚ²à£¬²»ÄÜÓÃÆğÖÕµãÖ®¼äµÄÏÒ·½Ïò´úÌæ¡£ */
+    /* ä½¿ç”¨è¿è¡Œåˆ‡å‘åˆ¤æ–­åœ†è§’æ‰€åœ¨ä¾§ï¼Œä¸èƒ½ç”¨èµ·ç»ˆç‚¹ä¹‹é—´çš„å¼¦æ–¹å‘ä»£æ›¿ã€‚ */
     side = cross > 0.0 ? 1 : -1;
-    if (!buildRoundCenterLocus(a,radius,side,&la) || !buildRoundCenterLocus(b,radius,side,&lb))
+    if (!buildRoundCenterLocus(a, radius, side, &la) || !buildRoundCenterLocus(b, radius, side, &lb))
         return RG_NO_SOLUTION;
-    /* ÍêÈ«¹²¶ËµãµÄÁ½Ö±ÏßÊ¹ÓÃÎÈ¶¨°ë½ÇÊ½£»Èİ²îÄÚÓĞ·ìÏ¶Ê±ÈÔ°´Ô­Ö§³ÅÏßÇó½»¡£ */
-    linePair = !a->dir && !b->dir
-        && a->end.x == b->start.x && a->end.y == b->start.y;
-    if (linePair) {
-        /* Ğ¡×ª½Ç±ÜÃâ 1-cos µÄÏû¼õ£»½üÕÛ·µ±ÜÃâ 1+cos µÄÏû¼õ¡£ */
-        trim = radius * (dot >= 0.0 ? fabs(cross)/(1.0+dot) : (1.0-dot)/fabs(cross));
-        if (!isRoundValueFinite(trim)) return RG_NO_SOLUTION;
-        centers[0] = addRoundPoints(subtractRoundPoints(a->end,scaleRoundPoint(ta,trim)),
-                                   scaleRoundPoint(rotateRoundVectorLeft(ta),side*radius));
+    /* å®Œå…¨å…±ç«¯ç‚¹çš„ä¸¤ç›´çº¿ä½¿ç”¨ç¨³å®šåŠè§’å¼ï¼›å®¹å·®å†…æœ‰ç¼éš™æ—¶ä»æŒ‰åŸæ”¯æ’‘çº¿æ±‚äº¤ã€‚ */
+    linePair = !a->dir && !b->dir && a->end.x == b->start.x && a->end.y == b->start.y;
+    if (linePair)
+    {
+        /* å°è½¬è§’é¿å… 1-cos çš„æ¶ˆå‡ï¼›è¿‘æŠ˜è¿”é¿å… 1+cos çš„æ¶ˆå‡ã€‚ */
+        trim = radius * (dot >= 0.0 ? fabs(cross) / (1.0 + dot) : (1.0 - dot) / fabs(cross));
+        if (!isRoundValueFinite(trim))
+            return RG_NO_SOLUTION;
+        centers[0] = addRoundPoints(subtractRoundPoints(a->end, scaleRoundPoint(ta, trim)),
+                                    scaleRoundPoint(rotateRoundVectorLeft(ta), side * radius));
         count = 1;
-    } else {
-        count = calcRoundLocusIntersections(&la,&lb,centers);
     }
-    /* Æ«ÖÃ¹ì¼£½»µã½öÎªºòÑ¡Ô²ĞÄ£¬ÈÔĞë¼ì²éÁ½²àÇĞµãÊÇ·ñÊôÓÚÓĞÏŞÂÖÀª¡£ */
-    for (i=0; i<count; ++i) {
-        RGPoint p = linePair ? subtractRoundPoints(a->end,scaleRoundPoint(ta,trim))
-                            : calcRoundContactPoint(a,&la,centers[i]);
-        RGPoint q = linePair ? addRoundPoints(b->start,scaleRoundPoint(tb,trim))
-                            : calcRoundContactPoint(b,&lb,centers[i]);
-        RGPoint rp = subtractRoundPoints(p,centers[i]), rq = subtractRoundPoints(q,centers[i]);
+    else
+    {
+        count = calcRoundLocusIntersections(&la, &lb, centers);
+    }
+    /* åç½®è½¨è¿¹äº¤ç‚¹ä»…ä¸ºå€™é€‰åœ†å¿ƒï¼Œä»é¡»æ£€æŸ¥ä¸¤ä¾§åˆ‡ç‚¹æ˜¯å¦å±äºæœ‰é™è½®å»“ã€‚ */
+    for (i = 0; i < count; ++i)
+    {
+        RGPoint p = linePair ? subtractRoundPoints(a->end, scaleRoundPoint(ta, trim))
+                             : calcRoundContactPoint(a, &la, centers[i]);
+        RGPoint q =
+            linePair ? addRoundPoints(b->start, scaleRoundPoint(tb, trim)) : calcRoundContactPoint(b, &lb, centers[i]);
+        RGPoint rp = subtractRoundPoints(p, centers[i]), rq = subtractRoundPoints(q, centers[i]);
         double sa, sb, score, sweep, rpLength, rqLength;
-        if (!isRoundPointFinite(p) || !isRoundPointFinite(q) || !isRoundPointFinite(centers[i])) continue;
-        rpLength = calcRoundVectorLength(rp); rqLength = calcRoundVectorLength(rq);
-        if (!isRoundValueFinite(rpLength) || !isRoundValueFinite(rqLength)
-            || rpLength <= RG_TOL || rqLength <= RG_TOL) continue;
-        if (fabs(rpLength-radius) > RG_TOL*(1.0+radius)
-            || fabs(rqLength-radius) > RG_TOL*(1.0+radius)) continue;
-        if (!calcRoundCurvePosition(a,p,&sa) || !calcRoundCurvePosition(b,q,&sb)) continue;
-        /* Á½²àÔ­ÂÖÀª¾ùĞë±£ÁôÕı³¤¶È£»Á¬Ğøµ¹Ô²Ê±Ò²±ØĞëÂú×ã´ËÌõ¼ş¡£ */
-        if (sa <= 2*RG_TOL || sa >= calcRoundCurveLength(a)-2*RG_TOL
-            || sb <= 2*RG_TOL || sb >= calcRoundCurveLength(b)-2*RG_TOL
-            || calcRoundVectorLength(subtractRoundPoints(p,q)) <= 2*RG_TOL) continue;
-        /* °ë¾¶Îó²îÒÑ¶ÀÁ¢¼ì²é£»ÇĞÏò°´Êµ¼ÊÄ£³¤¹éÒ»»¯£¬²»ÄÜ»ìÈëÇëÇó°ë¾¶Îó²î¡£ */
-        if (calcRoundDotProduct(calcRoundUnitTangent(a,p),scaleRoundPoint(rotateRoundVectorLeft(rp),side/rpLength)) < 1.0-1.0e-7
-            || calcRoundDotProduct(calcRoundUnitTangent(b,q),scaleRoundPoint(rotateRoundVectorLeft(rq),side/rqLength)) < 1.0-1.0e-7) continue;
-        sweep = calcRoundSweepAngle(rp,rq,side);
-        if (sweep <= RG_ANGLE_TOL || sweep > RG_PI+RG_ANGLE_TOL) continue;
-        /* ÓÅÏÈÑ¡ÔñÁ½²àÔ­ÂÖÀª²Ã¼ô×Ü³¤¶È×îĞ¡µÄÓĞĞ§¾Ö²¿½â¡£ */
-        score = calcRoundCurveLength(a)-sa+sb;
-        if (score < bestScore) {
-            best.first=p; best.second=q; best.center=centers[i];
-            best.radius=radius; best.dir=side;
-            bestScore=score; found=1;
+        if (!isRoundPointFinite(p) || !isRoundPointFinite(q) || !isRoundPointFinite(centers[i]))
+            continue;
+        rpLength = calcRoundVectorLength(rp);
+        rqLength = calcRoundVectorLength(rq);
+        if (!isRoundValueFinite(rpLength) || !isRoundValueFinite(rqLength) || rpLength <= RG_TOL || rqLength <= RG_TOL)
+            continue;
+        if (fabs(rpLength - radius) > RG_TOL * (1.0 + radius) || fabs(rqLength - radius) > RG_TOL * (1.0 + radius))
+            continue;
+        if (!calcRoundCurvePosition(a, p, &sa) || !calcRoundCurvePosition(b, q, &sb))
+            continue;
+        /* ä¸¤ä¾§åŸè½®å»“å‡é¡»ä¿ç•™æ­£é•¿åº¦ï¼›è¿ç»­å€’åœ†æ—¶ä¹Ÿå¿…é¡»æ»¡è¶³æ­¤æ¡ä»¶ã€‚ */
+        if (sa <= 2 * RG_TOL || sa >= calcRoundCurveLength(a) - 2 * RG_TOL || sb <= 2 * RG_TOL ||
+            sb >= calcRoundCurveLength(b) - 2 * RG_TOL ||
+            calcRoundVectorLength(subtractRoundPoints(p, q)) <= 2 * RG_TOL)
+            continue;
+        /* åŠå¾„è¯¯å·®å·²ç‹¬ç«‹æ£€æŸ¥ï¼›åˆ‡å‘æŒ‰å®é™…æ¨¡é•¿å½’ä¸€åŒ–ï¼Œä¸èƒ½æ··å…¥è¯·æ±‚åŠå¾„è¯¯å·®ã€‚ */
+        if (calcRoundDotProduct(calcRoundUnitTangent(a, p),
+                                scaleRoundPoint(rotateRoundVectorLeft(rp), side / rpLength)) < 1.0 - 1.0e-7 ||
+            calcRoundDotProduct(calcRoundUnitTangent(b, q),
+                                scaleRoundPoint(rotateRoundVectorLeft(rq), side / rqLength)) < 1.0 - 1.0e-7)
+            continue;
+        sweep = calcRoundSweepAngle(rp, rq, side);
+        if (sweep <= RG_ANGLE_TOL || sweep > RG_PI + RG_ANGLE_TOL)
+            continue;
+        /* ä¼˜å…ˆé€‰æ‹©ä¸¤ä¾§åŸè½®å»“è£å‰ªæ€»é•¿åº¦æœ€å°çš„æœ‰æ•ˆå±€éƒ¨è§£ã€‚ */
+        score = calcRoundCurveLength(a) - sa + sb;
+        if (score < bestScore)
+        {
+            best.first = p;
+            best.second = q;
+            best.center = centers[i];
+            best.radius = radius;
+            best.dir = side;
+            bestScore = score;
+            found = 1;
         }
     }
-    if (!found) return RG_NO_SOLUTION;
-    /* È«²¿¼ì²éÍ¨¹ıºó²ÅĞ´Èë½á¹û£»Ê§°Ü»òÎŞĞè´¦ÀíÊ±±£³Öµ÷ÓÃ·½Êä³ö²»±ä¡£ */
+    if (!found)
+        return RG_NO_SOLUTION;
+    /* å…¨éƒ¨æ£€æŸ¥é€šè¿‡åæ‰å†™å…¥ç»“æœï¼›å¤±è´¥æˆ–æ— éœ€å¤„ç†æ—¶ä¿æŒè°ƒç”¨æ–¹è¾“å‡ºä¸å˜ã€‚ */
     *out = best;
     return RG_OK;
 }

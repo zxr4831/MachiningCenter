@@ -2,60 +2,58 @@
 #include "common.h"
 #include "GCode.h"
 
-
-//Ó¢´ç(G20)	ºÁÃ×(G21)
+//è‹±å¯¸(G20)	æ¯«ç±³(G21)
 //1.0 inch	25.4 mm
 
-//Ìí¼ÓG20¹æÔò½á¹¹Ìå
+//æ·»åŠ G20è§„åˆ™ç»“æž„ä½“
 void addG20RegulationAPI()
 {
-	//Ö¸Áî£ºG20
-	//×é±ð£ºsGe
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(20, sGe, 1, NULL, NULL, NULL, CheckG20, AssignG20);
+    //æŒ‡ä»¤ï¼šG20
+    //ç»„åˆ«ï¼šsGe
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(20, sGe, 1, NULL, NULL, NULL, CheckG20, AssignG20);
 }
-//Ìí¼ÓG21¹æÔò½á¹¹Ìå
+//æ·»åŠ G21è§„åˆ™ç»“æž„ä½“
 void addG21RegulationAPI()
 {
-	//Ö¸Áî£ºG21
-	//×é±ð£ºsGe
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(21, sGe, 1, NULL, NULL, NULL, CheckG21, AssignG21);
+    //æŒ‡ä»¤ï¼šG21
+    //ç»„åˆ«ï¼šsGe
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(21, sGe, 1, NULL, NULL, NULL, CheckG21, AssignG21);
 }
 
-
-//¼ì²éG20
+//æ£€æŸ¥G20
 int8 CheckG20(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGe = G20 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSSyntaxConfig->SGCodeCurrSysState.bImperialProgramming = TRUE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGe = G20 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSSyntaxConfig->SGCodeCurrSysState.bImperialProgramming = TRUE;
+    return 2;
 }
-//¼ì²éG21
+//æ£€æŸ¥G21
 int8 CheckG21(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGe = G21 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSSyntaxConfig->SGCodeCurrSysState.bImperialProgramming = FALSE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGe = G21 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSSyntaxConfig->SGCodeCurrSysState.bImperialProgramming = FALSE;
+    return 2;
 }
 
-//¸³ÖµG20
+//èµ‹å€¼G20
 int8 AssignG20(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGe = G20 * pow(10, GCOMMAND_DECIMAL_PLACE); 
-	pSAssignConfig->SGCodeCurrSysState.bImperialProgramming = TRUE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGe = G20 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSAssignConfig->SGCodeCurrSysState.bImperialProgramming = TRUE;
+    return 2;
 }
-//¸³ÖµG21
+//èµ‹å€¼G21
 int8 AssignG21(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	pSGCodeParseUnit->SModalInfo.sGe = G21 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	pSAssignConfig->SGCodeCurrSysState.bImperialProgramming = FALSE;
-	return 2;
+    pSGCodeParseUnit->SModalInfo.sGe = G21 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    pSAssignConfig->SGCodeCurrSysState.bImperialProgramming = FALSE;
+    return 2;
 }

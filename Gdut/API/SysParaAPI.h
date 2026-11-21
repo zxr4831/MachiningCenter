@@ -1,22 +1,19 @@
-﻿#ifndef __SYSPARAAPI_H
+#ifndef __SYSPARAAPI_H
 #define __SYSPARAAPI_H
 
 #include "common.h"
 
+#define VEL_VS 0   //起始速度
+#define VEL_VMAX 1 //最大速度
+#define VEL_VE 2   //末速度
 
-#define VEL_VS		0//起始速度
-#define	VEL_VMAX	1//最大速度
-#define VEL_VE		2//末速度
+#define PLAN_ACC 3 //加速段
+#define PLAN_DEC 4 //减速段
 
-#define PLAN_ACC    3//加速段
-#define PLAN_DEC	4//减速段
+#define PLAN_DISTANCE 5 //插补距离
 
-#define PLAN_DISTANCE 5//插补距离
-
-#define MANUAL_QUICK 0//手动快速
-#define MANUAL_SLOW  1//手动慢速
-
-
+#define MANUAL_QUICK 0 //手动快速
+#define MANUAL_SLOW 1  //手动慢速
 
 /***********************************初始化函数*************************************/
 //映射初始化
@@ -60,7 +57,6 @@ int8 setMapValue(uint8 ucChannelNum, uint8 ucAxis, uint8 ucPhysicalAxisNum);
 //修改结构体的PWM映射值
 int8 setPWMMapValue(uint8 ucChannelNum, uint8 ucAxis, uint8 ucPhysicalAxisNum);
 
-
 //获取/设置手轮模拟速度
 int getWheelSimulaSpeed();
 int8 setWheelSimulaSpeed(int nVal);
@@ -97,7 +93,7 @@ int8 setCommonAcc(int nVal, uint8 ucAccType, uint8 ucPlanType);
 /********************************单轴参数**************************************/
 //获取/设置轴类型
 int getPhysicalAxisType(uint8 ucPhysicalAxis);
-int8 setPhysicalAxisType(uint8 ucPhysicalAxis,int nVal);
+int8 setPhysicalAxisType(uint8 ucPhysicalAxis, int nVal);
 
 //设置直径显示
 int getShowByDiameter(uint8 ucPhysicalAxis);
@@ -113,31 +109,31 @@ int8 setPulsePerMMOrCycle(uint8 ucPhysicalAxis, int nVal);
 
 //获取/设置单轴速度
 int getAxisVel(uint8 ucPhysicalAxis, uint8 ucVelType);
-int8 setAxisVel(uint8 ucPhysicalAxis, int nVal,uint8 ucVelType);
+int8 setAxisVel(uint8 ucPhysicalAxis, int nVal, uint8 ucVelType);
 
 //获取/设置主轴旋转时速度
 int getSpindleAxisVel(uint8 ucVelType);
-int8 setSpindleAxisVel(int nVal,uint8 ucVelType);
+int8 setSpindleAxisVel(int nVal, uint8 ucVelType);
 
 //获取/设置单轴加减速类型
-int getAxisPlanType(uint8 ucPhysicalAxis,uint8 ucAccType);
+int getAxisPlanType(uint8 ucPhysicalAxis, uint8 ucAccType);
 int8 setAxisPlanType(uint8 ucPhysicalAxis, int nVal, uint8 ucAccType);
 
 //获取/设置单轴加速度
-int getAxisAcc(uint8 ucPhysicalAxis, uint8 ucAccType,uint8 ucPlanType);
+int getAxisAcc(uint8 ucPhysicalAxis, uint8 ucAccType, uint8 ucPlanType);
 int8 setAxisAcc(uint8 ucPhysicalAxis, int nVal, uint8 ucAccType, uint8 ucPlanType);
 
 //获取/设置主轴加速度
 int getSpindleAxisAcc(uint8 ucPhysicalAxis);
-int8 setSpindleAxisAcc(uint8 ucPhysicalAxis,int nVal);
+int8 setSpindleAxisAcc(uint8 ucPhysicalAxis, int nVal);
 
 //获取/设置主轴减速度
 int getSpindleAxisDec(uint8 ucPhysicalAxis);
-int8 setSpindleAxisDec(uint8 ucPhysicalAxis,int nVal);
+int8 setSpindleAxisDec(uint8 ucPhysicalAxis, int nVal);
 
 //获取/设置手动速度
 int getManualSpeed(uint8 ucPhysicalAxis, uint8 ucManualType);
-int8 setManualSpeed(uint8 ucPhysicalAxis,int nVal, uint8 ucManualType);
+int8 setManualSpeed(uint8 ucPhysicalAxis, int nVal, uint8 ucManualType);
 
 //获取/设置手动加速度
 int getManualAcc(uint8 ucPhysicalAxis, uint8 ucAccType, uint8 ucManualType);
@@ -147,16 +143,16 @@ int8 setManualAcc(uint8 ucPhysicalAxis, int nVal, uint8 ucAccType, uint8 ucManua
 int getAxisVeerDeltaVMax(uint8 ucPhysicalAxis);
 int8 setAxisVeerDeltaVMax(uint8 ucPhysicalAxis, int nVal);
 
-//获取/设置单轴间隙值 
+//获取/设置单轴间隙值
 int getAxisClearance(uint8 ucPhysicalAxis);
 int8 setAxisClearance(uint8 ucPhysicalAxis, int nVal);
 
-//获取/设置单轴反向间隙值 
+//获取/设置单轴反向间隙值
 int getAxisRevClearanceCompDist(uint8 ucPhysicalAxis);
 int8 setAxisRevClearanceCompDist(uint8 ucPhysicalAxis, int nVal);
 
 //获取/设置单轴反向间隙补偿加速度
-int getAxisRevClearanceCompAcc( uint8 ucAccType);
+int getAxisRevClearanceCompAcc(uint8 ucAccType);
 int8 setAxisRevClearanceCompAcc(int nVal, uint8 ucAccType);
 
 //获取/设置单轴反向间隙补偿速度
@@ -171,17 +167,12 @@ int8 setVeerAMax(uint8 ucPhysicalAxis, int nVal);
 int getCoefOfAngleToLength(uint8 ucPhysicalAxis);
 int8 setCoefOfAngleToLength(uint8 ucPhysicalAxis, int nVal);
 
-#if(TURRET_AXIS_TEST == 1)
+#if (TURRET_AXIS_TEST == 1)
 //设置通道与刀塔的映射
 int8 setChannelToTurretMapArray(uint8 ucChannelNum, uint8 ucTurretNum, uint8 ucTargetTurretNum);
 //设置刀塔与结构体轴的映射
 int8 setTurretToAxisMap(uint8 ucTurretNum, uint8 ucTurretSign);
 #endif
-
-
-
-
-
 
 //设置机械参考点各轴的坐标值
 int8 setMachine_REFPOT(uint8 ucREFPOT_Name, uint8 ucAxis, double dOffsetVal);
@@ -189,9 +180,9 @@ int8 setMachine_REFPOT(uint8 ucREFPOT_Name, uint8 ucAxis, double dOffsetVal);
 double getMachine_REFPOT(uint8 ucREFPOT_Name, uint8 ucAxis);
 
 //设置G74 G75进刀量 G76螺纹粗车最小切削量
-int8  setFeedAndCuttingUnits(uint8  ucVal);
+int8 setFeedAndCuttingUnits(uint8 ucVal);
 //获取G74 G75进刀量 G76螺纹粗车最小切削量
-bool  getFeedAndCuttingUnits(void);
+bool getFeedAndCuttingUnits(void);
 //获取G84孔底暂停默认时间
 uint16 getG84DefaultDelayTime(void);
 //设置G84孔底暂停默认时间

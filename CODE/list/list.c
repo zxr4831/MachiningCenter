@@ -1,161 +1,157 @@
-#include<stdio.h>
-#include"list.h"
+#include <stdio.h>
+#include "list.h"
 
 //#include"Gcode.h"
 #include "common.h"
 #include "gcode.h"
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºSList *initList(void)
-  º¯Êı¹¦ÄÜ: ³õÊ¼»¯Á´±í
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1.Èç¹ûÁ´±í¿ª±Ù³É¹¦£¬Ôò·µ»ØÁ´±íµØÖ·
-            2.Èç¹ûÁ´±í¿ª±ÙÊ§°Ü£¨ÄÚ´æ²»×ãÒÔ¿ª±ÙÁ´±í»òÁ´±íÍ·½Úµã£©£¬Ôò·µ»ØNULL
+  å‡½æ•°åç§°ï¼šSList *initList(void)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1.å¦‚æœé“¾è¡¨å¼€è¾ŸæˆåŠŸï¼Œåˆ™è¿”å›é“¾è¡¨åœ°å€
+            2.å¦‚æœé“¾è¡¨å¼€è¾Ÿå¤±è´¥ï¼ˆå†…å­˜ä¸è¶³ä»¥å¼€è¾Ÿé“¾è¡¨æˆ–é“¾è¡¨å¤´èŠ‚ç‚¹ï¼‰ï¼Œåˆ™è¿”å›NULL
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SList* initList(int16 list_ORAM_NUM, int16 node_ORAM_NUM)
 {
-	//¿ª±ÙÁ´±í½á¹¹ÌåÄÚ´æ
-	SList* pList = (SList*)mallocGCode(sizeof(SList), list_ORAM_NUM);
-	//Èç¹ûÄÚ´æ²»×ãÒÔ¿ª±ÙÁ´±í½á¹¹Ìå
-	if (pList == NULL)
-	{
-		//·µ»ØNULL
-		return NULL;
-	}
-	//ÄÚ´æ×ãÒÔ¿ª±ÙÁ´±í½á¹¹ÌåÇé¿öÏÂ£º
-	//¿ª±ÙÁ´±íÍ·½Úµã
-	pList->pHead = (SNode*)mallocGCode(sizeof(SNode), node_ORAM_NUM);
-	//Èç¹ûÄÚ´æ²»×ãÒÔ¿ª±ÙÍ·½Úµã½á¹¹Ìå
-	if (pList->pHead == NULL)
-	{
-		//ÏÈÊÍ·ÅÉÏÃæ¿ª±ÙµÄÁ´±í½á¹¹Ìå
-		freeGCode(pList);
-		//ÔÙ·µ»ØNULL
-		return NULL;
-	}
-	//½«Í·½ÚµãÊı¾İÓòÖ¸ÕëÖÃÎªNULL£¨Í·½ÚµãÊı¾İÓò²»´æ·ÅÊı¾İ£©
-	pList->pHead->pData = NULL;
-	//½«Í·½ÚµãÖĞµÄÏÂÒ»¸ö½ÚµãÖ¸ÕëÖÃÎªNULL
-	pList->pHead->pNextNode = NULL;
-	//Á´±í´óĞ¡ÖÃÎª0£¨Í·½Úµã²»´æ·ÅÊı¾İ£¬¹Ê²»Ëã½øÁ´±í´óĞ¡ÀïÃæ£©
-	pList->cSize = 0;
+    //å¼€è¾Ÿé“¾è¡¨ç»“æ„ä½“å†…å­˜
+    SList* pList = (SList*)mallocGCode(sizeof(SList), list_ORAM_NUM);
+    //å¦‚æœå†…å­˜ä¸è¶³ä»¥å¼€è¾Ÿé“¾è¡¨ç»“æ„ä½“
+    if (pList == NULL)
+    {
+        //è¿”å›NULL
+        return NULL;
+    }
+    //å†…å­˜è¶³ä»¥å¼€è¾Ÿé“¾è¡¨ç»“æ„ä½“æƒ…å†µä¸‹ï¼š
+    //å¼€è¾Ÿé“¾è¡¨å¤´èŠ‚ç‚¹
+    pList->pHead = (SNode*)mallocGCode(sizeof(SNode), node_ORAM_NUM);
+    //å¦‚æœå†…å­˜ä¸è¶³ä»¥å¼€è¾Ÿå¤´èŠ‚ç‚¹ç»“æ„ä½“
+    if (pList->pHead == NULL)
+    {
+        //å…ˆé‡Šæ”¾ä¸Šé¢å¼€è¾Ÿçš„é“¾è¡¨ç»“æ„ä½“
+        freeGCode(pList);
+        //å†è¿”å›NULL
+        return NULL;
+    }
+    //å°†å¤´èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆç½®ä¸ºNULLï¼ˆå¤´èŠ‚ç‚¹æ•°æ®åŸŸä¸å­˜æ”¾æ•°æ®ï¼‰
+    pList->pHead->pData = NULL;
+    //å°†å¤´èŠ‚ç‚¹ä¸­çš„ä¸‹ä¸€ä¸ªèŠ‚ç‚¹æŒ‡é’ˆç½®ä¸ºNULL
+    pList->pHead->pNextNode = NULL;
+    //é“¾è¡¨å¤§å°ç½®ä¸º0ï¼ˆå¤´èŠ‚ç‚¹ä¸å­˜æ”¾æ•°æ®ï¼Œæ•…ä¸ç®—è¿›é“¾è¡¨å¤§å°é‡Œé¢ï¼‰
+    pList->cSize = 0;
 
-	return pList;
+    return pList;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool insertList(SList *pList, int8 cPos, void *pData)
-  º¯Êı¹¦ÄÜ: ĞÂ½¨½Úµã²¢½«´«ÈëµÄÊı¾İ¸³¸øĞÂ½Úµã£¬ÔÙ¸ù¾İ´«ÈëµÄÎ»ÖÃ½«ĞÂ½Úµã²åÈëÖ¸¶¨µÄÁ´±í  
-  ÊäÈë²ÎÊı£ºpListÁ´±íµØÖ·£¬pos²åÈëµÄÎ»ÖÃ,  *pDataÊı¾İÓòÄÚ´æµØÖ·
-  Êä³ö²ÎÊı£ºÊä³öĞÂÁ´±íµØÖ·
+  å‡½æ•°åç§°ï¼šbool insertList(SList *pList, int8 cPos, void *pData)
+  å‡½æ•°åŠŸèƒ½: æ–°å»ºèŠ‚ç‚¹å¹¶å°†ä¼ å…¥çš„æ•°æ®èµ‹ç»™æ–°èŠ‚ç‚¹ï¼Œå†æ ¹æ®ä¼ å…¥çš„ä½ç½®å°†æ–°èŠ‚ç‚¹æ’å…¥æŒ‡å®šçš„é“¾è¡¨  
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨åœ°å€ï¼Œposæ’å…¥çš„ä½ç½®,  *pDataæ•°æ®åŸŸå†…å­˜åœ°å€
+  è¾“å‡ºå‚æ•°ï¼šè¾“å‡ºæ–°é“¾è¡¨åœ°å€
 
-  ·µ »Ø Öµ£º²åÈë³É¹¦£¬·µ»ØÖµÎªTRUE
-            ²åÈëÊ§°Ü£¬·µ»ØÖµÎªFALSE
+  è¿” å› å€¼ï¼šæ’å…¥æˆåŠŸï¼Œè¿”å›å€¼ä¸ºTRUE
+            æ’å…¥å¤±è´¥ï¼Œè¿”å›å€¼ä¸ºFALSE
 
-  ±¸    ×¢£º²åÈë¹ı³ÌÖĞ£¬µÚÒ»¸ö½ÚµãµÄÎ»ÖÃÊÇ0,sizeµÄ´óĞ¡²»°üº¬Í·½áµã£¬×îºóÒ»¸ö½ÚµãµÄÎ»ÖÃÎª£¨Á´±í´óĞ¡-1£©
+  å¤‡    æ³¨ï¼šæ’å…¥è¿‡ç¨‹ä¸­ï¼Œç¬¬ä¸€ä¸ªèŠ‚ç‚¹çš„ä½ç½®æ˜¯0,sizeçš„å¤§å°ä¸åŒ…å«å¤´ç»“ç‚¹ï¼Œæœ€åä¸€ä¸ªèŠ‚ç‚¹çš„ä½ç½®ä¸ºï¼ˆé“¾è¡¨å¤§å°-1ï¼‰
 **************************************************/
 bool insertList(SList* pList, int16 cPos, void* pData, int16 node_ORAM_NUM)
 {
-	int16 i;   //¸¨Öú
-	SNode* pNewNode = NULL;  //ĞÂ½Úµã
-	SNode* pCurr = NULL;     //µ±Ç°½ÚµãÎª²åÈëĞÂ½ÚµãµÄÇ°Ò»¸ö½Úµã
+    int16 i;                //è¾…åŠ©
+    SNode* pNewNode = NULL; //æ–°èŠ‚ç‚¹
+    SNode* pCurr = NULL;    //å½“å‰èŠ‚ç‚¹ä¸ºæ’å…¥æ–°èŠ‚ç‚¹çš„å‰ä¸€ä¸ªèŠ‚ç‚¹
 
-	if (pList == NULL || pData == NULL)
-	{
-		return FALSE;
-	}
-	// ĞÂÔö£º¼ì²éÁ´±í´óĞ¡ÊÇ·ñÒÑ´ï×î´óÖµ
-	if (pList->cSize >= INT16_MAX)
-	{
-		return FALSE;  // Á´±íÒÑÂú£¬ÎŞ·¨¼ÌĞø²åÈë
-	}
-	if (cPos < 0 || cPos > pList->cSize)
-	{
-		//Î²²å
-		cPos = pList->cSize;
-	}
+    if (pList == NULL || pData == NULL)
+    {
+        return FALSE;
+    }
+    // æ–°å¢ï¼šæ£€æŸ¥é“¾è¡¨å¤§å°æ˜¯å¦å·²è¾¾æœ€å¤§å€¼
+    if (pList->cSize >= INT16_MAX)
+    {
+        return FALSE; // é“¾è¡¨å·²æ»¡ï¼Œæ— æ³•ç»§ç»­æ’å…¥
+    }
+    if (cPos < 0 || cPos > pList->cSize)
+    {
+        //å°¾æ’
+        cPos = pList->cSize;
+    }
 
+    pCurr = pList->pHead; //æŒ‡å‘å¤´ç»“ç‚¹
 
-	pCurr = pList->pHead;//Ö¸ÏòÍ·½áµã
+    for (i = 0; i < cPos; i++) //æ‰¾æ’å…¥ä½ç½®
+    {
+        pCurr = pCurr->pNextNode;
+    }
+    //æ–°å»ºèŠ‚ç‚¹
+    pNewNode = (SNode*)mallocGCode(sizeof(SNode), node_ORAM_NUM);
 
-	for (i = 0; i < cPos; i++)  //ÕÒ²åÈëÎ»ÖÃ
-	{
-		pCurr = pCurr->pNextNode;
-	}
-	//ĞÂ½¨½Úµã
-	pNewNode = (SNode*)mallocGCode(sizeof(SNode), node_ORAM_NUM);
+    if (pNewNode == NULL)
+    {
+        return FALSE;
+    }
 
-	if (pNewNode == NULL)
-	{
-		return FALSE;
-	}
+    //å°†ä¼ å…¥çš„æ•°æ®èµ‹ç»™æ–°èŠ‚ç‚¹çš„æ•°æ®åŸŸ
+    pNewNode->pData = pData;
+    //æ’å…¥æ–°èŠ‚ç‚¹
+    pNewNode->pNextNode = pCurr->pNextNode;
 
-	//½«´«ÈëµÄÊı¾İ¸³¸øĞÂ½ÚµãµÄÊı¾İÓò
-	pNewNode->pData = pData;
-	//²åÈëĞÂ½Úµã
-	pNewNode->pNextNode = pCurr->pNextNode;
+    pCurr->pNextNode = pNewNode;
+    //é“¾è¡¨å¤§å°åŠ 1
+    pList->cSize++;
 
-	pCurr->pNextNode = pNewNode;
-	//Á´±í´óĞ¡¼Ó1
-	pList->cSize++;
-
-	return TRUE;
+    return TRUE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool insertNode(SList *pList, int8 cPos,SNode *pNode)
-  º¯Êı¹¦ÄÜ: ½«´«ÈëµÄ½Úµã¸ù¾İ´«ÈëµÄÎ»ÖÃ²åÈëÁ´±í
-  ÊäÈë²ÎÊı£ºpListÁ´±í£¬posÎ»ÖÃ,pNode½Úµã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º²åÈë³É¹¦£¬·µ»ØÖµÎªTRUE
-            ²åÈëÊ§°Ü£¬·µ»ØÖµÎªFALSE
+  å‡½æ•°åç§°ï¼šbool insertNode(SList *pList, int8 cPos,SNode *pNode)
+  å‡½æ•°åŠŸèƒ½: å°†ä¼ å…¥çš„èŠ‚ç‚¹æ ¹æ®ä¼ å…¥çš„ä½ç½®æ’å…¥é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨ï¼Œposä½ç½®,pNodeèŠ‚ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ’å…¥æˆåŠŸï¼Œè¿”å›å€¼ä¸ºTRUE
+            æ’å…¥å¤±è´¥ï¼Œè¿”å›å€¼ä¸ºFALSE
 
-  ±¸    ×¢£ºµÚÒ»¸ö½ÚµãµÄÎ»ÖÃÊÇ0,sizeµÄ´óĞ¡²»°üº¬Í·½áµã   SNode* pNodeÎªÒÑÓĞµÄ½ÚµãÄÚ´æµØÖ·
+  å¤‡    æ³¨ï¼šç¬¬ä¸€ä¸ªèŠ‚ç‚¹çš„ä½ç½®æ˜¯0,sizeçš„å¤§å°ä¸åŒ…å«å¤´ç»“ç‚¹   SNode* pNodeä¸ºå·²æœ‰çš„èŠ‚ç‚¹å†…å­˜åœ°å€
 **************************************************/
 bool insertNode(SList* pList, int16 cPos, SNode* pNode)
 {
-	int16 i;   //¸¨Öú
+    int16 i; //è¾…åŠ©
 
-	SNode* pCurr;     //µ±Ç°½Úµã ÓÃÓÚÑ°ÕÒÎ»ÖÃÒÔ±ã²åÈë
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹ ç”¨äºå¯»æ‰¾ä½ç½®ä»¥ä¾¿æ’å…¥
 
-	if (pList == NULL || pNode == NULL)
-	{
-		return FALSE;
-	}
+    if (pList == NULL || pNode == NULL)
+    {
+        return FALSE;
+    }
 
-	if (cPos < 0 || cPos > pList->cSize)
-	{
-		//Î²²å
-		cPos = pList->cSize;
-	}
+    if (cPos < 0 || cPos > pList->cSize)
+    {
+        //å°¾æ’
+        cPos = pList->cSize;
+    }
 
-	//Ö¸ÏòÍ·½Úµã
-	pCurr = pList->pHead;
+    //æŒ‡å‘å¤´èŠ‚ç‚¹
+    pCurr = pList->pHead;
 
-	for (i = 0; i < cPos; i++)  //ÕÒ²åÈëÎ»ÖÃ
-	{
-		pCurr = pCurr->pNextNode;
-	}
-	//²åÈë½Úµã
-	pNode->pNextNode = pCurr->pNextNode;
+    for (i = 0; i < cPos; i++) //æ‰¾æ’å…¥ä½ç½®
+    {
+        pCurr = pCurr->pNextNode;
+    }
+    //æ’å…¥èŠ‚ç‚¹
+    pNode->pNextNode = pCurr->pNextNode;
 
-	pCurr->pNextNode = pNode;
+    pCurr->pNextNode = pNode;
 
-	pList->cSize++;
+    pList->cSize++;
 
-	return TRUE;
+    return TRUE;
 }
 
-//²éÕÒ
+//æŸ¥æ‰¾
 //bool findList(SList *pList, void *pData)
 //{
-//	SNode *pCurr;     //µ±Ç°½Úµã 
+//	SNode *pCurr;     //å½“å‰èŠ‚ç‚¹
 //
 //	if (pList == NULL || pData == NULL)
 //	{
@@ -176,404 +172,380 @@ bool insertNode(SList* pList, int16 cPos, SNode* pNode)
 //	return TRUE;
 //}
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid *FindNodeData(SList *pList, int pos)
-  º¯Êı¹¦ÄÜ:²éÕÒ²¢·µ»ØÄ³¸ö½ÚµãµÄÊı¾İÓòµØÖ·
-  ÊäÈë²ÎÊı£ºpListÁ´±í£¬posÎ»ÖÃ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid *FindNodeData(SList *pList, int pos)
+  å‡½æ•°åŠŸèƒ½:æŸ¥æ‰¾å¹¶è¿”å›æŸä¸ªèŠ‚ç‚¹çš„æ•°æ®åŸŸåœ°å€
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨ï¼Œposä½ç½®
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºposÎ»ÖÃ´Ó0¿ªÊ¼
+  å¤‡    æ³¨ï¼šposä½ç½®ä»0å¼€å§‹
 **************************************************/
 void* FindNodeData(SList* pList, int pos)
 {
-	SNode* pCurr;     //µ±Ç°½Úµã 
-	void* pData = NULL;
-	int i = 0;
-	if (pList == NULL)
-	{
-		return NULL;
-	}
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    void* pData = NULL;
+    int i = 0;
+    if (pList == NULL)
+    {
+        return NULL;
+    }
 
-	if (pos < 0 || pos >= pList->cSize)
-	{
-		return NULL;
-	}
+    if (pos < 0 || pos >= pList->cSize)
+    {
+        return NULL;
+    }
 
-	pCurr = pList->pHead->pNextNode;//Ö¸ÏòµÚÒ»¸öÊı¾İ½Úµã
-	//Ñ°ÕÒ¶ÔÓ¦Î»ÖÃµÄ½Úµã
-	while (i < pos)
-	{
-		pCurr = pCurr->pNextNode;
-		if (pCurr == NULL)
-		{
-			return NULL;
-		}
-		i++;
-	}
-	//»ñÈ¡½ÚµãÊı¾İÓòµØÖ·
-	pData = pCurr->pData;
-	//·µ»Ø½ÚµãÊı¾İÓòµØÖ·
-	return pData;
+    pCurr = pList->pHead->pNextNode; //æŒ‡å‘ç¬¬ä¸€ä¸ªæ•°æ®èŠ‚ç‚¹
+    //å¯»æ‰¾å¯¹åº”ä½ç½®çš„èŠ‚ç‚¹
+    while (i < pos)
+    {
+        pCurr = pCurr->pNextNode;
+        if (pCurr == NULL)
+        {
+            return NULL;
+        }
+        i++;
+    }
+    //è·å–èŠ‚ç‚¹æ•°æ®åŸŸåœ°å€
+    pData = pCurr->pData;
+    //è¿”å›èŠ‚ç‚¹æ•°æ®åŸŸåœ°å€
+    return pData;
 }
-
 
 int16 findNodePosByData(SList* pList, int16 cTargetVal)
 {
-	int16 cListSize = getListSize(pList);
-	for (int i = 0; i < cListSize; i++)
-	{
-		if (cTargetVal == *(int16*)FindNodeData(pList, i))
-		{
-			return i;
-		}
-	}
-	return -1;
+    int16 cListSize = getListSize(pList);
+    for (int i = 0; i < cListSize; i++)
+    {
+        if (cTargetVal == *(int16*)FindNodeData(pList, i))
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºSNode *FindNode(SList *pList, int pos)
-  º¯Êı¹¦ÄÜ:²éÕÒ²¢·µ»ØÄ³¸ö½ÚµãµØÖ·
-  ÊäÈë²ÎÊı£ºpListÁ´±í£¬posÎ»ÖÃ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šSNode *FindNode(SList *pList, int pos)
+  å‡½æ•°åŠŸèƒ½:æŸ¥æ‰¾å¹¶è¿”å›æŸä¸ªèŠ‚ç‚¹åœ°å€
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨ï¼Œposä½ç½®
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºposÎ»ÖÃ´Ó0¿ªÊ¼
+  å¤‡    æ³¨ï¼šposä½ç½®ä»0å¼€å§‹
 **************************************************/
 SNode* FindNode(SList* pList, int pos)
 {
-	SNode* pCurr;     //µ±Ç°½Úµã 
-	int i = 0;
-	if (pList == NULL)
-	{
-		return NULL;
-	}
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    int i = 0;
+    if (pList == NULL)
+    {
+        return NULL;
+    }
 
-	if (pos < 0 || pos >= pList->cSize)
-	{
-		return NULL;
-	}
-	//Ö¸ÏòµÚÒ»¸öÊı¾İ½Úµã
-	pCurr = pList->pHead->pNextNode;
-	//Ñ°ÕÒ¶ÔÓ¦Î»ÖÃµÄ½Úµã
-	while (i < pos)
-	{
-		pCurr = pCurr->pNextNode;
-		if (pCurr == NULL)
-		{
-			return NULL;
-		}
-		i++;
-	}
-	//·µ»Ø½ÚµãµØÖ·
-	return pCurr;
+    if (pos < 0 || pos >= pList->cSize)
+    {
+        return NULL;
+    }
+    //æŒ‡å‘ç¬¬ä¸€ä¸ªæ•°æ®èŠ‚ç‚¹
+    pCurr = pList->pHead->pNextNode;
+    //å¯»æ‰¾å¯¹åº”ä½ç½®çš„èŠ‚ç‚¹
+    while (i < pos)
+    {
+        pCurr = pCurr->pNextNode;
+        if (pCurr == NULL)
+        {
+            return NULL;
+        }
+        i++;
+    }
+    //è¿”å›èŠ‚ç‚¹åœ°å€
+    return pCurr;
 }
 
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getListSize(SList *pList)
-  º¯Êı¹¦ÄÜ: ·µ»ØÁ´±í´óĞ¡£¨Á´±í´óĞ¡²»°üÀ¨Í·½Úµã£©
-  ÊäÈë²ÎÊı£ºpListÁ´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šint8 getListSize(SList *pList)
+  å‡½æ•°åŠŸèƒ½: è¿”å›é“¾è¡¨å¤§å°ï¼ˆé“¾è¡¨å¤§å°ä¸åŒ…æ‹¬å¤´èŠ‚ç‚¹ï¼‰
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getListSize(SList* pList)
 {
-	if (pList == NULL)
-	{
-		return -1;
-	}
-	return pList->cSize;
+    if (pList == NULL)
+    {
+        return -1;
+    }
+    return pList->cSize;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeList(SList **pList)
-  º¯Êı¹¦ÄÜ: ÊÍ·Åµ¥²ãÁ´±í
-  ÊäÈë²ÎÊı£º*pListÁ´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid freeList(SList **pList)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾å•å±‚é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼š*pListé“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºÊÍ·Åµ¥²ãÁ´±íµÄË³Ğò£º1.´ÓÁ´±íÍ·½ÚµãÏòºóÖğ¸öÊÍ·Å   2.È«²¿½ÚµãÊÍ·ÅÍê±Ïºó£¬ÊÍ·ÅÁ´±í½á¹¹Ìå
-            Ã¿¸ö½ÚµãµÄÊÍ·Å²½Öè£º1.ÏÈÊÍ·Å½ÚµãÖĞµÄÊı¾İÓò£¨µ¥²ãÁ´±íÖĞ£¬½ÚµãÊı¾İÓòÖ¸ÕëÖ¸ÏòµÄÄÚ´æÖĞÃ»ÓĞÔÙ¿ª±ÙÄÚ´æ£©
-			                    2.ÔÙÊÍ·Å½Úµã±¾Éí
+  å¤‡    æ³¨ï¼šé‡Šæ”¾å•å±‚é“¾è¡¨çš„é¡ºåºï¼š1.ä»é“¾è¡¨å¤´èŠ‚ç‚¹å‘åé€ä¸ªé‡Šæ”¾   2.å…¨éƒ¨èŠ‚ç‚¹é‡Šæ”¾å®Œæ¯•åï¼Œé‡Šæ”¾é“¾è¡¨ç»“æ„ä½“
+            æ¯ä¸ªèŠ‚ç‚¹çš„é‡Šæ”¾æ­¥éª¤ï¼š1.å…ˆé‡Šæ”¾èŠ‚ç‚¹ä¸­çš„æ•°æ®åŸŸï¼ˆå•å±‚é“¾è¡¨ä¸­ï¼ŒèŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆæŒ‡å‘çš„å†…å­˜ä¸­æ²¡æœ‰å†å¼€è¾Ÿå†…å­˜ï¼‰
+			                    2.å†é‡Šæ”¾èŠ‚ç‚¹æœ¬èº«
 **************************************************/
 void freeList(SList** pList)
 {
-	SNode* pCurr;  //µ±Ç°½Úµã
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
 
-	if (pList == NULL || *pList == NULL)
-	{
-		return;
-	}
+    if (pList == NULL || *pList == NULL)
+    {
+        return;
+    }
 
-	//Ö¸ÏòÁ´±íÍ·½Úµã
-	pCurr = (*pList)->pHead;
+    //æŒ‡å‘é“¾è¡¨å¤´èŠ‚ç‚¹
+    pCurr = (*pList)->pHead;
 
-	while (pCurr != NULL)
-	{
-		SNode* pNext = pCurr->pNextNode;  //»ñÈ¡ÏÂÒ»¸ö½ÚµãµÄµØÖ·
+    while (pCurr != NULL)
+    {
+        SNode* pNext = pCurr->pNextNode; //è·å–ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„åœ°å€
 
-		freeGCode(pCurr->pData);   //ÊÍ·Åµ±Ç°½ÚµãµÄÊı¾İÓò
-		pCurr->pData = NULL;//µ±Ç°½ÚµãÊı¾İÓòÖ¸ÕëÖÃÎªNULL
+        freeGCode(pCurr->pData); //é‡Šæ”¾å½“å‰èŠ‚ç‚¹çš„æ•°æ®åŸŸ
+        pCurr->pData = NULL;     //å½“å‰èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆç½®ä¸ºNULL
 
-		freeGCode(pCurr);   //ÊÍ·Åµ±Ç°½Úµã
-		pCurr = NULL;
+        freeGCode(pCurr); //é‡Šæ”¾å½“å‰èŠ‚ç‚¹
+        pCurr = NULL;
 
-		pCurr = pNext;//µ±Ç°Ö¸ÕëÖ¸ÏòÏÂÒ»¸ö½ÚµãµÄµØÖ·
-	}
+        pCurr = pNext; //å½“å‰æŒ‡é’ˆæŒ‡å‘ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„åœ°å€
+    }
 
-	(*pList)->cSize = 0;//Á´±í´óĞ¡ÖÃÎª0
+    (*pList)->cSize = 0; //é“¾è¡¨å¤§å°ç½®ä¸º0
 
-	freeGCode((*pList));//ÊÍ·ÅÁ´±í½á¹¹Ìå
+    freeGCode((*pList)); //é‡Šæ”¾é“¾è¡¨ç»“æ„ä½“
 
-	(*pList) = NULL;
+    (*pList) = NULL;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeList_2(SList** pList, FreeData customFree)
-  º¯Êı¹¦ÄÜ: ÊÍ·ÅÇ¶Ì×Á´±í
-  ÊäÈë²ÎÊı£º**pList³ÌĞò±í,   customFree×Ô¶¨ÒåµÄº¯ÊıÖ¸Õë£¬¸Ãº¯Êı¶¨Òå½ÚµãÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æµÄÊÍ·Å·½·¨
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid freeList_2(SList** pList, FreeData customFree)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾åµŒå¥—é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼š**pListç¨‹åºè¡¨,   customFreeè‡ªå®šä¹‰çš„å‡½æ•°æŒ‡é’ˆï¼Œè¯¥å‡½æ•°å®šä¹‰èŠ‚ç‚¹æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜çš„é‡Šæ”¾æ–¹æ³•
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºÇ¶Ì×Á´±íÖĞµÄÃ¿¸ö½ÚµãµÄÊı¾İÖ¸ÕëÖ¸ÏòµÄÄÚ´æÖĞ»¹¿ª±ÙÁËÄÚ´æ
-            Ç¶Ì×Á´±íÊÍ·ÅË³Ğò£º1.´ÓÍ·½ÚµãÏòºóÖğ¸öÊÍ·Å  2.ÊÍ·ÅÍê½ÚµãºóÊÍ·ÅÁ´±í½á¹¹Ìå
-			Ã¿¸ö½ÚµãµÄÊÍ·Å²½Öè£º1.ÏÈÊÍ·Å½ÚµãÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æ£¬¼´½ÚµãÊı¾İÓòÖ¸ÕëÖ¸ÏòµÄÄÚ´æÖĞ»¹ÓĞÖ¸Õë£¬ÇÒ¸ÃÖ¸ÕëÖ¸ÏòµÄÒ»¿éÄÚ´æ
-			                    2.ÊÍ·Å½ÚµãÊı¾İÓòÖ¸ÕëÖ¸ÏòµÄÄÚ´æ
-								3.ÊÍ·Å½Úµã±¾Éí
+  å¤‡    æ³¨ï¼šåµŒå¥—é“¾è¡¨ä¸­çš„æ¯ä¸ªèŠ‚ç‚¹çš„æ•°æ®æŒ‡é’ˆæŒ‡å‘çš„å†…å­˜ä¸­è¿˜å¼€è¾Ÿäº†å†…å­˜
+            åµŒå¥—é“¾è¡¨é‡Šæ”¾é¡ºåºï¼š1.ä»å¤´èŠ‚ç‚¹å‘åé€ä¸ªé‡Šæ”¾  2.é‡Šæ”¾å®ŒèŠ‚ç‚¹åé‡Šæ”¾é“¾è¡¨ç»“æ„ä½“
+			æ¯ä¸ªèŠ‚ç‚¹çš„é‡Šæ”¾æ­¥éª¤ï¼š1.å…ˆé‡Šæ”¾èŠ‚ç‚¹æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜ï¼Œå³èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆæŒ‡å‘çš„å†…å­˜ä¸­è¿˜æœ‰æŒ‡é’ˆï¼Œä¸”è¯¥æŒ‡é’ˆæŒ‡å‘çš„ä¸€å—å†…å­˜
+			                    2.é‡Šæ”¾èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆæŒ‡å‘çš„å†…å­˜
+								3.é‡Šæ”¾èŠ‚ç‚¹æœ¬èº«
 **************************************************/
 void freeList_2(SList** ppList, FreeData customFree)
 {
-	SNode* pCurr = NULL;
-	if ((*ppList) == NULL || ppList == NULL)  //²»ĞèÒªÊÍ·Å
-	{
-		return;
-	}
-	pCurr = (*ppList)->pHead;//Ö¸ÏòÍ·½Úµã
+    SNode* pCurr = NULL;
+    if ((*ppList) == NULL || ppList == NULL) //ä¸éœ€è¦é‡Šæ”¾
+    {
+        return;
+    }
+    pCurr = (*ppList)->pHead; //æŒ‡å‘å¤´èŠ‚ç‚¹
 
-	while (pCurr != NULL)
-	{
-		SNode* pNext = pCurr->pNextNode;
+    while (pCurr != NULL)
+    {
+        SNode* pNext = pCurr->pNextNode;
 
-		customFree(pCurr->pData);  //ÂŞÏéçâ241006£º½öÊÍ·Å½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ£¬½á¹¹Ìå×ÔÉí¿ª±ÙµÄÄÚ´æ²»ÊÍ·Å£¨ÊÍ·Å½ÚµãÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æ£¬¼´½ÚµãÊı¾İÓòÖ¸ÕëÖ¸ÏòµÄÄÚ´æÖĞ»¹ÓĞÖ¸Õë£¬ÇÒ¸ÃÖ¸ÕëÖ¸ÏòÁËÒ»¿éÄÚ´æ£©
-		freeGCode(pCurr->pData);   //ÂŞÏéçâ241006£ºÊÍ·Å½á¹¹Ìå×ÔÉí¿ª±ÙÄÚ´æ£¨ÊÍ·Å½Úµã¿ª±ÙµÄÊı¾İÓòÄÚ´æ£¬¼´½ÚµãÊı¾İÓòÖ¸ÕëÖ¸ÏòµÄÄÚ´æ£©
-		pCurr->pData = NULL;//ÊÍ·ÅÍê½ÚµãÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æÒÔ¼°½ÚµãÊı¾İÓòÄÚ´æºó£¬½«½ÚµãÊı¾İÓòÖ¸ÕëÖÃÎªNULL
+        customFree(
+            pCurr
+                ->pData); //ç½—ç¥¥ç®241006ï¼šä»…é‡Šæ”¾ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜ï¼Œç»“æ„ä½“è‡ªèº«å¼€è¾Ÿçš„å†…å­˜ä¸é‡Šæ”¾ï¼ˆé‡Šæ”¾èŠ‚ç‚¹æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜ï¼Œå³èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆæŒ‡å‘çš„å†…å­˜ä¸­è¿˜æœ‰æŒ‡é’ˆï¼Œä¸”è¯¥æŒ‡é’ˆæŒ‡å‘äº†ä¸€å—å†…å­˜ï¼‰
+        freeGCode(
+            pCurr
+                ->pData); //ç½—ç¥¥ç®241006ï¼šé‡Šæ”¾ç»“æ„ä½“è‡ªèº«å¼€è¾Ÿå†…å­˜ï¼ˆé‡Šæ”¾èŠ‚ç‚¹å¼€è¾Ÿçš„æ•°æ®åŸŸå†…å­˜ï¼Œå³èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆæŒ‡å‘çš„å†…å­˜ï¼‰
+        pCurr->pData = NULL; //é‡Šæ”¾å®ŒèŠ‚ç‚¹æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜ä»¥åŠèŠ‚ç‚¹æ•°æ®åŸŸå†…å­˜åï¼Œå°†èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆç½®ä¸ºNULL
 
-		freeGCode(pCurr);    //ÊÍ·ÅÍêÊı¾İÓòºó£¬ÊÍ·Åµ±Ç°½Úµã
-		pCurr = NULL;//µ±Ç°Ö¸ÕëÖÃÎªNULL
-		pCurr = pNext;//µ±Ç°Ö¸ÕëµØÖ·¸ÄÎªÏÂÒ»¸ö½ÚµãµÄµØÖ·
-	}
+        freeGCode(pCurr); //é‡Šæ”¾å®Œæ•°æ®åŸŸåï¼Œé‡Šæ”¾å½“å‰èŠ‚ç‚¹
+        pCurr = NULL;     //å½“å‰æŒ‡é’ˆç½®ä¸ºNULL
+        pCurr = pNext;    //å½“å‰æŒ‡é’ˆåœ°å€æ”¹ä¸ºä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„åœ°å€
+    }
 
-	(*ppList)->cSize = 0;//Á´±í´óĞ¡ÖÃÎª0
+    (*ppList)->cSize = 0; //é“¾è¡¨å¤§å°ç½®ä¸º0
 
-	freeGCode((*ppList));//ÊÍ·Å¿ª±ÙµÄÁ´±í½á¹¹Ìå
-	(*ppList) = NULL;//Á´±íÖ¸ÕëÖÃÎªNULL
-
-
+    freeGCode((*ppList)); //é‡Šæ”¾å¼€è¾Ÿçš„é“¾è¡¨ç»“æ„ä½“
+    (*ppList) = NULL;     //é“¾è¡¨æŒ‡é’ˆç½®ä¸ºNULL
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool removeNode(SList *pList, int8 cPos,bool bSaveNodeFlag)
-  º¯Êı¹¦ÄÜ: É¾³ıµ¥²ãÁ´±íÖĞµÄ½Úµã
-  ÊäÈë²ÎÊı£ºpListÁ´±í£¬posÎ»ÖÃ£¬bSaveNodeFlag±êÖ¾Î»
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šbool removeNode(SList *pList, int8 cPos,bool bSaveNodeFlag)
+  å‡½æ•°åŠŸèƒ½: åˆ é™¤å•å±‚é“¾è¡¨ä¸­çš„èŠ‚ç‚¹
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨ï¼Œposä½ç½®ï¼ŒbSaveNodeFlagæ ‡å¿—ä½
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºµÚÒ»¸öÊı¾İ½ÚµãµÄÎ»ÖÃÊÇ0£¬×îºóÒ»¸öÊı¾İ½ÚµãµÄÎ»ÖÃÊÇ£¨Á´±í´óĞ¡-1£©
-			×¢Òâ£ºbSaveNodeFlag £ºTRUE ²»ÊÍ·Å½ÚµãÄÚ´æ£¬Ö»ÊÇ½«½Úµã´ÓÁ´±íÖĞ½â³ı    FALSE ÊÍ·ÅÄÚ´æ£¬²»½ö½«½Úµã´ÓÁ´±íÖĞ½â³ı£¬»¹ÊÍ·Å½ÚµãÄÚ´æ
+  å¤‡    æ³¨ï¼šç¬¬ä¸€ä¸ªæ•°æ®èŠ‚ç‚¹çš„ä½ç½®æ˜¯0ï¼Œæœ€åä¸€ä¸ªæ•°æ®èŠ‚ç‚¹çš„ä½ç½®æ˜¯ï¼ˆé“¾è¡¨å¤§å°-1ï¼‰
+			æ³¨æ„ï¼šbSaveNodeFlag ï¼šTRUE ä¸é‡Šæ”¾èŠ‚ç‚¹å†…å­˜ï¼Œåªæ˜¯å°†èŠ‚ç‚¹ä»é“¾è¡¨ä¸­è§£é™¤    FALSE é‡Šæ”¾å†…å­˜ï¼Œä¸ä»…å°†èŠ‚ç‚¹ä»é“¾è¡¨ä¸­è§£é™¤ï¼Œè¿˜é‡Šæ”¾èŠ‚ç‚¹å†…å­˜
 
 **************************************************/
 bool removeNode(SList* pList, int16 cPos, bool bSaveNodeFlag)
 {
-	int16 i;   //¸¨Öú
-	SNode* pCurr;     //µ±Ç°½Úµã 
-	SNode* pDel;  //ÒªÉ¾³ıµÄ½Úµã
+    int16 i;      //è¾…åŠ©
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    SNode* pDel;  //è¦åˆ é™¤çš„èŠ‚ç‚¹
 
-	if (pList == NULL)
-	{
-		return FALSE;
-	}
+    if (pList == NULL)
+    {
+        return FALSE;
+    }
 
-	if (cPos < 0 || cPos >= pList->cSize)
-	{
-		return FALSE;
-	}
+    if (cPos < 0 || cPos >= pList->cSize)
+    {
+        return FALSE;
+    }
 
-	//Ö¸ÏòÍ·½Úµã
-	pCurr = pList->pHead;
+    //æŒ‡å‘å¤´èŠ‚ç‚¹
+    pCurr = pList->pHead;
 
-	for (i = 0; i < cPos; i++)  //²éÕÒ±»É¾³ı½ÚµãµÄÇ°Ò»¸ö½Úµã
-	{
-		pCurr = pCurr->pNextNode;
-	}
+    for (i = 0; i < cPos; i++) //æŸ¥æ‰¾è¢«åˆ é™¤èŠ‚ç‚¹çš„å‰ä¸€ä¸ªèŠ‚ç‚¹
+    {
+        pCurr = pCurr->pNextNode;
+    }
 
-	pDel = pCurr->pNextNode;//ÒªÉ¾³ıµÄ½Úµã
+    pDel = pCurr->pNextNode; //è¦åˆ é™¤çš„èŠ‚ç‚¹
 
-	pCurr->pNextNode = pDel->pNextNode;
+    pCurr->pNextNode = pDel->pNextNode;
 
-	//ÊÍ·Å½ÚµãÄÚ´æ
-	if (bSaveNodeFlag == FALSE)
-	{
-		//ÊÍ·Å½ÚµãÊı¾İÓò
-		if (pDel->pData)
-		{
-			freeGCode(pDel->pData); ///ÊÍ·ÅµÄpData²»ÄÜÊÇÓĞÖ¸Õë±äÁ¿ÊÇmalloc³öÀ´µÄ
+    //é‡Šæ”¾èŠ‚ç‚¹å†…å­˜
+    if (bSaveNodeFlag == FALSE)
+    {
+        //é‡Šæ”¾èŠ‚ç‚¹æ•°æ®åŸŸ
+        if (pDel->pData)
+        {
+            freeGCode(pDel->pData); ///é‡Šæ”¾çš„pDataä¸èƒ½æ˜¯æœ‰æŒ‡é’ˆå˜é‡æ˜¯mallocå‡ºæ¥çš„
 
-			pDel->pData = NULL;
-		}
-		//ÊÍ·Å½Úµã
-		if (pDel)
-		{
-			pDel->pNextNode = NULL;
+            pDel->pData = NULL;
+        }
+        //é‡Šæ”¾èŠ‚ç‚¹
+        if (pDel)
+        {
+            pDel->pNextNode = NULL;
 
-			freeGCode(pDel);
+            freeGCode(pDel);
 
-			pDel = NULL;
-		}
+            pDel = NULL;
+        }
+    }
+    //ä¸é‡Šæ”¾èŠ‚ç‚¹å†…å­˜ï¼Œåªæ˜¯å°†èŠ‚ç‚¹ä»é“¾è¡¨ä¸­è§£é™¤
+    else
+    {
+        pDel->pNextNode = NULL; //åˆ é™¤æŒ‡å‘
+    }
 
-	}
-	//²»ÊÍ·Å½ÚµãÄÚ´æ£¬Ö»ÊÇ½«½Úµã´ÓÁ´±íÖĞ½â³ı
-	else
-	{
-		pDel->pNextNode = NULL;   //É¾³ıÖ¸Ïò
-	}
+    pList->cSize--;
 
-
-	pList->cSize--;
-
-	return TRUE;
+    return TRUE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool removeNode_2(SList *pList, int8 cPos,bool bFlag)
-  º¯Êı¹¦ÄÜ: É¾³ıÇ¶Ì×Á´±íÖĞµÄ½Úµã
-  ÊäÈë²ÎÊı£ºpListÁ´±í£¬posÎ»ÖÃ£¬bSaveNodeFlag±êÖ¾Î»£¬customFreeº¯ÊıÖ¸Õë£¬¸Ãº¯Êı¶¨Òå½ÚµãÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æµÄÊÍ·Å·½·¨
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šbool removeNode_2(SList *pList, int8 cPos,bool bFlag)
+  å‡½æ•°åŠŸèƒ½: åˆ é™¤åµŒå¥—é“¾è¡¨ä¸­çš„èŠ‚ç‚¹
+  è¾“å…¥å‚æ•°ï¼špListé“¾è¡¨ï¼Œposä½ç½®ï¼ŒbSaveNodeFlagæ ‡å¿—ä½ï¼ŒcustomFreeå‡½æ•°æŒ‡é’ˆï¼Œè¯¥å‡½æ•°å®šä¹‰èŠ‚ç‚¹æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜çš„é‡Šæ”¾æ–¹æ³•
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£ºµÚÒ»¸ö½ÚµãµÄÎ»ÖÃÊÇ0
-			bSaveNodeFlag£ºTRUE ²»ÊÍ·ÅÄÚ´æ FALSE ÊÍ·ÅÄÚ´æ
+  å¤‡    æ³¨ï¼šç¬¬ä¸€ä¸ªèŠ‚ç‚¹çš„ä½ç½®æ˜¯0
+			bSaveNodeFlagï¼šTRUE ä¸é‡Šæ”¾å†…å­˜ FALSE é‡Šæ”¾å†…å­˜
 **************************************************/
 bool removeNode_2(SList* pList, int16 cPos, bool bSaveNodeFlag, FreeData customFree)
 {
-	int16 i;   //¸¨Öú
-	SNode* pCurr;     //µ±Ç°½Úµã 
-	SNode* pDel;  //ÒªÉ¾³ıµÄ½Úµã
+    int16 i;      //è¾…åŠ©
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    SNode* pDel;  //è¦åˆ é™¤çš„èŠ‚ç‚¹
 
-	if (pList == NULL)
-	{
-		return FALSE;
-	}
+    if (pList == NULL)
+    {
+        return FALSE;
+    }
 
-	if (cPos < 0 || cPos >= pList->cSize)
-	{
-		return FALSE;
-	}
+    if (cPos < 0 || cPos >= pList->cSize)
+    {
+        return FALSE;
+    }
 
-	//Ö¸ÏòÍ·½Úµã
-	pCurr = pList->pHead;
+    //æŒ‡å‘å¤´èŠ‚ç‚¹
+    pCurr = pList->pHead;
 
-	for (i = 0; i < cPos; i++)  //²éÕÒÉ¾³ı½ÚµãµÄÇ°Ò»¸ö½Úµã
-	{
-		pCurr = pCurr->pNextNode;
-	}
-	//»ñÈ¡ÒªÉ¾³ıµÄ½Úµã
-	pDel = pCurr->pNextNode;
+    for (i = 0; i < cPos; i++) //æŸ¥æ‰¾åˆ é™¤èŠ‚ç‚¹çš„å‰ä¸€ä¸ªèŠ‚ç‚¹
+    {
+        pCurr = pCurr->pNextNode;
+    }
+    //è·å–è¦åˆ é™¤çš„èŠ‚ç‚¹
+    pDel = pCurr->pNextNode;
 
-	pCurr->pNextNode = pDel->pNextNode;
+    pCurr->pNextNode = pDel->pNextNode;
 
-	//ÊÍ·Å½ÚµãÄÚ´æ
-	if (bSaveNodeFlag == FALSE)
-	{
-		//½ÚµãÊı¾İÓò²»Îª¿Õ
-		if (pDel->pData!=NULL)
-		{
-			//ÏÈÊÍ·ÅÊı¾İÓòÄÚ²¿¿ª±ÙµÄÄÚ´æ
-			customFree(pDel->pData);
-			//ÔÙÊÍ·ÅÊı¾İÓòÄÚ´æ
-			freeGCode(pDel->pData);
-			//½ÚµãÊı¾İÓòÖ¸ÕëÖÃÎªNULL
-			pDel->pData = NULL;
-		}
-		//ÊÍ·Å½Úµã±¾ÉíÄÚ´æ
-		if (pDel)
-		{
-			pDel->pNextNode = NULL;
+    //é‡Šæ”¾èŠ‚ç‚¹å†…å­˜
+    if (bSaveNodeFlag == FALSE)
+    {
+        //èŠ‚ç‚¹æ•°æ®åŸŸä¸ä¸ºç©º
+        if (pDel->pData != NULL)
+        {
+            //å…ˆé‡Šæ”¾æ•°æ®åŸŸå†…éƒ¨å¼€è¾Ÿçš„å†…å­˜
+            customFree(pDel->pData);
+            //å†é‡Šæ”¾æ•°æ®åŸŸå†…å­˜
+            freeGCode(pDel->pData);
+            //èŠ‚ç‚¹æ•°æ®åŸŸæŒ‡é’ˆç½®ä¸ºNULL
+            pDel->pData = NULL;
+        }
+        //é‡Šæ”¾èŠ‚ç‚¹æœ¬èº«å†…å­˜
+        if (pDel)
+        {
+            pDel->pNextNode = NULL;
 
-			freeGCode(pDel);
+            freeGCode(pDel);
 
-			pDel = NULL;
-		}
+            pDel = NULL;
+        }
+    }
+    //ä¸é‡Šæ”¾èŠ‚ç‚¹å†…å­˜ï¼Œåªæ˜¯å°†èŠ‚ç‚¹ä»é“¾è¡¨ä¸­è§£é™¤
+    else
+    {
+        pDel->pNextNode = NULL; //åˆ é™¤æŒ‡å‘
+    }
 
-	}
-	//²»ÊÍ·Å½ÚµãÄÚ´æ£¬Ö»ÊÇ½«½Úµã´ÓÁ´±íÖĞ½â³ı
-	else
-	{
-		pDel->pNextNode = NULL;   //É¾³ıÖ¸Ïò
-	}
+    pList->cSize--;
 
-
-	pList->cSize--;
-
-	return TRUE;
+    return TRUE;
 }
-
-
-
 
 #if !STM32_MODE
 
-
-//´òÓ¡Á´±í
+//æ‰“å°é“¾è¡¨
 void printList(SList* pList, PrintNode print)
 {
-	SNode* pCurr;  //µ±Ç°½Úµã
-	int8 cCnt = 0;
-	if (pList == NULL)
-	{
-		return;
-	}
-	pCurr = pList->pHead->pNextNode;
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    int8 cCnt = 0;
+    if (pList == NULL)
+    {
+        return;
+    }
+    pCurr = pList->pHead->pNextNode;
 
-	while (pCurr != NULL)
-	{
+    while (pCurr != NULL)
+    {
 
-		print(pCurr->pData);
-		cCnt += 1;
+        print(pCurr->pData);
+        cCnt += 1;
 #if ENABLE_DEBUG_ASSIGN
-		if (cCnt % 5 == 0)
-		{
-			printf("---------------------------------------------\n");
-		}
+        if (cCnt % 5 == 0)
+        {
+            printf("---------------------------------------------\n");
+        }
 #endif // ENABLE_DEBUG_ASSIGN
 
-
-		pCurr = pCurr->pNextNode;
-	}
+        pCurr = pCurr->pNextNode;
+    }
 
 #if ENABLE_DEBUG_ASSIGN
-	if (pCurr == NULL)
-	{
-		printf("\n");
-	}
+    if (pCurr == NULL)
+    {
+        printf("\n");
+    }
 #endif // ENABLE_DEBUG_ASSIGN
-
 }
 
-
-
-
-
 #endif
-

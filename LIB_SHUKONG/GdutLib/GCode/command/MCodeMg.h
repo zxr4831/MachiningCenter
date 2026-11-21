@@ -1,24 +1,18 @@
 #include "common.h"
 #include "GCode.h"
 
-
-
 //*******************************M14***************************************
-// 主轴使能
-//添加M14规则
+// 涓昏酱浣胯兘
+//娣诲姞M14瑙勫垯
 void addM14RegulationAPI();
 
-
-//赋值M14
+//璧嬪�糓14
 int8 AssignM14(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 //*******************************M15***************************************
-// 第一主轴工件松开
-//添加M15规则
+// 绗竴涓昏酱宸ヤ欢鏉惧紑
+//娣诲姞M15瑙勫垯
 void addM15RegulationAPI();
 
-
-//赋值M15
+//璧嬪�糓15
 int8 AssignM15(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-

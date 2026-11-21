@@ -7,5 +7,4 @@ int8 CheckG10(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeB
 
 int8 AssignG10(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBufUnit);
 
-
 #endif

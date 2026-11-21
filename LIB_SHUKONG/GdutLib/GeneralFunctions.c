@@ -6,1294 +6,1327 @@
 #include "GeneralFunctions.h"
 #include "Config.h"
 #include "Channel.h"
-const double EPSINON = 0.000001;//ÓÃÓÚ±äÁ¿ÊıÖµ±È½Ï (10^-6)
-const double EPSINON2 = 0.001;//ÓÃÓÚ±äÁ¿ÊıÖµ±È½Ï
+const double EPSINON = 0.000001; //ç”¨äºå˜é‡æ•°å€¼æ¯”è¾ƒ (10^-6)
+const double EPSINON2 = 0.001;   //ç”¨äºå˜é‡æ•°å€¼æ¯”è¾ƒ
 
 /****************************************
-  º¯ÊıÃû³Æ£ºisZero(double dA)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶Ïdouble±äÁ¿ÊÇ·ñÎª0
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE:  dAµÈÓÚ0£¬
-			FALSE: dA²»µÈÓÚ0
-  ±¸    ×¢£ºdA == 0
+  å‡½æ•°åç§°ï¼šisZero(double dA)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­doubleå˜é‡æ˜¯å¦ä¸º0
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE:  dAç­‰äº0ï¼Œ
+			FALSE: dAä¸ç­‰äº0
+  å¤‡    æ³¨ï¼šdA == 0
 ****************************************/
-bool isZero(double dA) //ÀûÓÃEPSINONÅĞ¶Ï¸¡µãÊıdAÊÇ·ñÎªÁã
+bool isZero(double dA) //åˆ©ç”¨EPSINONåˆ¤æ–­æµ®ç‚¹æ•°dAæ˜¯å¦ä¸ºé›¶
 {
-	if ((dA >= -EPSINON) && (dA <= EPSINON))
-	{
-		return TRUE;
-	}
+    if ((dA >= -EPSINON) && (dA <= EPSINON))
+    {
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 /****************************************
-  º¯ÊıÃû³Æ£ºisZero(double dA)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶Ïdouble±äÁ¿ÊÇ·ñÎª0
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE:  dAµÈÓÚ0£¬
-			FALSE: dA²»µÈÓÚ0
-  ±¸    ×¢£ºÓÃEPSINON2×ö±È½Ï
+  å‡½æ•°åç§°ï¼šisZero(double dA)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­doubleå˜é‡æ˜¯å¦ä¸º0
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE:  dAç­‰äº0ï¼Œ
+			FALSE: dAä¸ç­‰äº0
+  å¤‡    æ³¨ï¼šç”¨EPSINON2åšæ¯”è¾ƒ
 ****************************************/
-bool isZero_EPSINON2(double dA) //ÀûÓÃEPSINONÅĞ¶Ï¸¡µãÊıdAÊÇ·ñÎªÁã
+bool isZero_EPSINON2(double dA) //åˆ©ç”¨EPSINONåˆ¤æ–­æµ®ç‚¹æ•°dAæ˜¯å¦ä¸ºé›¶
 {
-	if ((dA >= -EPSINON2) && (dA <= EPSINON2))
-	{
-		return TRUE;
-	}
+    if ((dA >= -EPSINON2) && (dA <= EPSINON2))
+    {
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisZeroWithDeviation(double dA, double dDeviation)
-  º¯Êı¹¦ÄÜ  ÀûÓÃdDeviationÅĞ¶Ï¸¡µãÊıÎªÁã
-  ÊäÈë²ÎÊı£ºdA			doubleĞÍ±äÁ¿
-			dDeviation	ÔÊĞíÎó²î
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE:  dAÔÚÎó²î·¶Î§ÄÚµÈÓÚ0£¬ 
-			FALSE: dAÔÚÎó²î·¶Î§ÄÚ²»µÈÓÚ0
-  ±¸    ×¢£º-dDeviation <= dA <= dDeviation ?
+  å‡½æ•°åç§°ï¼šisZeroWithDeviation(double dA, double dDeviation)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨dDeviationåˆ¤æ–­æµ®ç‚¹æ•°ä¸ºé›¶
+  è¾“å…¥å‚æ•°ï¼šdA			doubleå‹å˜é‡
+			dDeviation	å…è®¸è¯¯å·®
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE:  dAåœ¨è¯¯å·®èŒƒå›´å†…ç­‰äº0ï¼Œ 
+			FALSE: dAåœ¨è¯¯å·®èŒƒå›´å†…ä¸ç­‰äº0
+  å¤‡    æ³¨ï¼š-dDeviation <= dA <= dDeviation ?
 **************************************************/
 bool isZeroWithDeviation(double dA, double dDeviation)
 {
-	if ((dA >= -dDeviation) && (dA <= dDeviation))
-	{
-		return TRUE;
-	}
+    if ((dA >= -dDeviation) && (dA <= dDeviation))
+    {
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool isBetweenA2B(double dVal, double dA, double dB)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸¡µã±äÁ¿dValÊÇ·ñÔÚdAÓëdBÖ®¼ä
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ·ûºÏÌõ¼ş
-			FALSE ²»·ûºÏÌõ¼ş
-  ±¸    ×¢£ºdA <= dVal <= dB »ò dB <= dVal <= dA ?
+  å‡½æ•°åç§°ï¼šbool isBetweenA2B(double dVal, double dA, double dB)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æµ®ç‚¹å˜é‡dValæ˜¯å¦åœ¨dAä¸dBä¹‹é—´
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ç¬¦åˆæ¡ä»¶
+			FALSE ä¸ç¬¦åˆæ¡ä»¶
+  å¤‡    æ³¨ï¼šdA <= dVal <= dB æˆ– dB <= dVal <= dA ?
 **************************************************/
 bool isBetweenA2B(double dVal, double dA, double dB)
 {
-	//1.dA <= dVal <= dB
-	if (isEqualOrGreaterThanZero(dVal - dA) && isEqualOrLessThanZero(dVal - dB))
-	{
-		return TRUE;
-	}
-	//2.dB <= dVal <= dA
-	if (isEqualOrGreaterThanZero(dVal - dB) && isEqualOrLessThanZero(dVal - dA))
-	{
-		return TRUE;
-	}
-	return FALSE;
+    //1.dA <= dVal <= dB
+    if (isEqualOrGreaterThanZero(dVal - dA) && isEqualOrLessThanZero(dVal - dB))
+    {
+        return TRUE;
+    }
+    //2.dB <= dVal <= dA
+    if (isEqualOrGreaterThanZero(dVal - dB) && isEqualOrLessThanZero(dVal - dA))
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisEqualOrGreaterThanZero(double dA)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸¡µã±äÁ¿ÊÇ·ñ´óÓÚµÈÓÚÁã
-  ÊäÈë²ÎÊı£ºdA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ·ûºÏÌõ¼ş
-			FALSE ²»·ûºÏÌõ¼ş
-  ±¸    ×¢£ºdA >= 0 ?
+  å‡½æ•°åç§°ï¼šisEqualOrGreaterThanZero(double dA)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æµ®ç‚¹å˜é‡æ˜¯å¦å¤§äºç­‰äºé›¶
+  è¾“å…¥å‚æ•°ï¼šdAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ç¬¦åˆæ¡ä»¶
+			FALSE ä¸ç¬¦åˆæ¡ä»¶
+  å¤‡    æ³¨ï¼šdA >= 0 ?
 **************************************************/
 bool isEqualOrGreaterThanZero(double dA)
 {
-	if (dA > 0 ||isZero(dA)) //´óÓÚÁã »òÕß ÎªÁã ·ûºÏÌõ¼ş
-	{
-		return TRUE;
-	}
+    if (dA > 0 || isZero(dA)) //å¤§äºé›¶ æˆ–è€… ä¸ºé›¶ ç¬¦åˆæ¡ä»¶
+    {
+        return TRUE;
+    }
 
-	return FALSE;//²»ÎªÁã ÇÒ²»´óÓÚÁã
+    return FALSE; //ä¸ä¸ºé›¶ ä¸”ä¸å¤§äºé›¶
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisUnEqualAndGreaterThanZero(double dA)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸¡µã±äÁ¿ÊÇ·ñ´óÓÚÁã µ«²»µÈÓÚÁã
-  ÊäÈë²ÎÊı£ºdA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ·ûºÏÌõ¼ş
-			FALSE ²»·ûºÏÌõ¼ş
-  ±¸    ×¢£ºdA > 0 ?
+  å‡½æ•°åç§°ï¼šisUnEqualAndGreaterThanZero(double dA)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æµ®ç‚¹å˜é‡æ˜¯å¦å¤§äºé›¶ ä½†ä¸ç­‰äºé›¶
+  è¾“å…¥å‚æ•°ï¼šdAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ç¬¦åˆæ¡ä»¶
+			FALSE ä¸ç¬¦åˆæ¡ä»¶
+  å¤‡    æ³¨ï¼šdA > 0 ?
 **************************************************/
 bool isUnEqualAndGreaterThanZero(double dA)
 {
-	if (isZero(dA)) // ÎªÁã ²»·ûºÏÌõ¼ş
-	{
-		return FALSE;
-	}
-	else if (dA < 0) //²»ÎªÁã  µ«Ğ¡ÓÚÁã ²»·ûºÏÌõ¼ş
-	{
-		return FALSE;
-	}
-	return TRUE; //²»ÎªÁã ÇÒ´óÓÚÁã
+    if (isZero(dA)) // ä¸ºé›¶ ä¸ç¬¦åˆæ¡ä»¶
+    {
+        return FALSE;
+    }
+    else if (dA < 0) //ä¸ä¸ºé›¶  ä½†å°äºé›¶ ä¸ç¬¦åˆæ¡ä»¶
+    {
+        return FALSE;
+    }
+    return TRUE; //ä¸ä¸ºé›¶ ä¸”å¤§äºé›¶
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisEqualOrLessThanZero(double dA)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸¡µã±äÁ¿ÊÇ·ñĞ¡ÓÚµÈÓÚÁã
-  ÊäÈë²ÎÊı£ºdA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ·ûºÏÌõ¼ş
-			FALSE ²»·ûºÏÌõ¼ş
-  ±¸    ×¢£ºdA <= 0 ?
+  å‡½æ•°åç§°ï¼šisEqualOrLessThanZero(double dA)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æµ®ç‚¹å˜é‡æ˜¯å¦å°äºç­‰äºé›¶
+  è¾“å…¥å‚æ•°ï¼šdAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ç¬¦åˆæ¡ä»¶
+			FALSE ä¸ç¬¦åˆæ¡ä»¶
+  å¤‡    æ³¨ï¼šdA <= 0 ?
 **************************************************/
 bool isEqualOrLessThanZero(double dA)
 {
-	if (dA < 0 ||isZero(dA)) //Ğ¡ÓÚÁã »òÕßÎªÁã ·ûºÏÌõ¼ş
-	{
-		return TRUE;
-	}
+    if (dA < 0 || isZero(dA)) //å°äºé›¶ æˆ–è€…ä¸ºé›¶ ç¬¦åˆæ¡ä»¶
+    {
+        return TRUE;
+    }
 
-	return FALSE;//²»ÎªÁã ÇÒ´óÓÚÁã
+    return FALSE; //ä¸ä¸ºé›¶ ä¸”å¤§äºé›¶
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisUnEqualAndLessThanZero(double dA)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ï¸¡µã±äÁ¿ÊÇ·ñĞ¡ÓÚÁã µ«²»µÈÓÚÁã
-  ÊäÈë²ÎÊı£ºdA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE ·ûºÏÌõ¼ş
-			FALSE ²»·ûºÏÌõ¼ş
-  ±¸    ×¢£ºdA < 0 ?
+  å‡½æ•°åç§°ï¼šisUnEqualAndLessThanZero(double dA)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­æµ®ç‚¹å˜é‡æ˜¯å¦å°äºé›¶ ä½†ä¸ç­‰äºé›¶
+  è¾“å…¥å‚æ•°ï¼šdAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE ç¬¦åˆæ¡ä»¶
+			FALSE ä¸ç¬¦åˆæ¡ä»¶
+  å¤‡    æ³¨ï¼šdA < 0 ?
 **************************************************/
 bool isUnEqualAndLessThanZero(double dA)
 {
-	if (isZero(dA)) // ÎªÁã ²»·ûºÏÌõ¼ş
-	{
-		return FALSE;
-	}
-	else if (dA > 0) //²»ÎªÁã  µ«´óÓÚÁã ²»·ûºÏÌõ¼ş
-	{
-		return FALSE;
-	}
-	return TRUE; //²»ÎªÁã ÇÒĞ¡ÓÚÁã
+    if (isZero(dA)) // ä¸ºé›¶ ä¸ç¬¦åˆæ¡ä»¶
+    {
+        return FALSE;
+    }
+    else if (dA > 0) //ä¸ä¸ºé›¶  ä½†å¤§äºé›¶ ä¸ç¬¦åˆæ¡ä»¶
+    {
+        return FALSE;
+    }
+    return TRUE; //ä¸ä¸ºé›¶ ä¸”å°äºé›¶
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsgn(double dA)
-  º¯Êı¹¦ÄÜ  ·ûºÅÅĞ¶Ïº¯Êı£¬Óë0±È½ÏÅĞ¶ÏÕı¸º
-  ÊäÈë²ÎÊı£ºdA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1:  dA·ûºÅÎªÕı
-			-1: dA·ûºÅÎª¸º
-			0:	dAµÈÓÚ0
-  ±¸    ×¢£ºsgn(dA)
+  å‡½æ•°åç§°ï¼šsgn(double dA)
+  å‡½æ•°åŠŸèƒ½  ç¬¦å·åˆ¤æ–­å‡½æ•°ï¼Œä¸0æ¯”è¾ƒåˆ¤æ–­æ­£è´Ÿ
+  è¾“å…¥å‚æ•°ï¼šdAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1:  dAç¬¦å·ä¸ºæ­£
+			-1: dAç¬¦å·ä¸ºè´Ÿ
+			0:	dAç­‰äº0
+  å¤‡    æ³¨ï¼šsgn(dA)
 **************************************************/
 int8 sgn(double dA)
 {
-	
-	if (isUnEqualAndGreaterThanZero(dA))
-	{
-		return 1;
-	}
-	if (isUnEqualAndLessThanZero(dA))
-	{
-		return -1;
-	}
-	return 0;
+
+    if (isUnEqualAndGreaterThanZero(dA))
+    {
+        return 1;
+    }
+    if (isUnEqualAndLessThanZero(dA))
+    {
+        return -1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºnSgn(int dA)
-  º¯Êı¹¦ÄÜ  ·ûºÅÅĞ¶Ïº¯Êı£¬Óë0±È½ÏÅĞ¶ÏÕı¸º
-  ÊäÈë²ÎÊı£ºnA£¬doubleĞÍ±äÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1:  nA·ûºÅÎªÕı
-			-1: nA·ûºÅÎª¸º
-			0:	nAµÈÓÚ0
-  ±¸    ×¢£ºsgn(nA)
+  å‡½æ•°åç§°ï¼šnSgn(int dA)
+  å‡½æ•°åŠŸèƒ½  ç¬¦å·åˆ¤æ–­å‡½æ•°ï¼Œä¸0æ¯”è¾ƒåˆ¤æ–­æ­£è´Ÿ
+  è¾“å…¥å‚æ•°ï¼šnAï¼Œdoubleå‹å˜é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1:  nAç¬¦å·ä¸ºæ­£
+			-1: nAç¬¦å·ä¸ºè´Ÿ
+			0:	nAç­‰äº0
+  å¤‡    æ³¨ï¼šsgn(nA)
 **************************************************/
 int8 nSgn(int nA)
 {
-	if (nA > 0)
-	{
-		return 1;
-	}
-	if (nA < 0)
-	{
-		return -1;
-	}
-	return 0;
+    if (nA > 0)
+    {
+        return 1;
+    }
+    if (nA < 0)
+    {
+        return -1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºradCalculateIK(SPointDouble SStartPoint,SPointDouble SEndPoint,SPointDouble SCenterPoint,int8 cArcDir,double *dRad)
-  º¯Êı¹¦ÄÜ  ÀûÓÃÖ¸¶¨µÄIK£¬ÆğµãºÍÖÕµã×ø±êÀ´ÇóÔ²ĞÄ½Ç
-  ÊäÈë²ÎÊı£ºpdStartPoint	Æğµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			pdEndPoint		ÖÕµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			pdCenterPoint	Ô²ĞÄ×ø±ê£¨¾ø¶Ô×ø±ê£©
-			cArcDir			Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-			ucHorizontalAxis	ºáÖáÖáºÅ£¨×¢Òâ¼õ 1 £©
-			ucVerticalAxis		×İÖáÖáºÅ£¨×¢Òâ¼õ 1 £©
-  Êä³ö²ÎÊı£ºdRad		²å²¹Ô²»¡¶ÔÓ¦µÄÔ²ĞÄ½Ç£¨»¡¶È£©
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º´Ëº¯Êı²»ÄÜÅĞ¶Ï£¬ÆğµãÓëÔ²ĞÄ¹¹³ÉµÄÔ² = ÖÕµãÓëÔ²ĞÄ¹¹³ÉµÄÔ²  £¨ÊÇ·ñÍ¬Ô²£©
+  å‡½æ•°åç§°ï¼šradCalculateIK(SPointDouble SStartPoint,SPointDouble SEndPoint,SPointDouble SCenterPoint,int8 cArcDir,double *dRad)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨æŒ‡å®šçš„IKï¼Œèµ·ç‚¹å’Œç»ˆç‚¹åæ ‡æ¥æ±‚åœ†å¿ƒè§’
+  è¾“å…¥å‚æ•°ï¼špdStartPoint	èµ·ç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			pdEndPoint		ç»ˆç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			pdCenterPoint	åœ†å¿ƒåæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			cArcDir			åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+			ucHorizontalAxis	æ¨ªè½´è½´å·ï¼ˆæ³¨æ„å‡ 1 ï¼‰
+			ucVerticalAxis		çºµè½´è½´å·ï¼ˆæ³¨æ„å‡ 1 ï¼‰
+  è¾“å‡ºå‚æ•°ï¼šdRad		æ’è¡¥åœ†å¼§å¯¹åº”çš„åœ†å¿ƒè§’ï¼ˆå¼§åº¦ï¼‰
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šæ­¤å‡½æ•°ä¸èƒ½åˆ¤æ–­ï¼Œèµ·ç‚¹ä¸åœ†å¿ƒæ„æˆçš„åœ† = ç»ˆç‚¹ä¸åœ†å¿ƒæ„æˆçš„åœ†  ï¼ˆæ˜¯å¦åŒåœ†ï¼‰
 **************************************************/
-void radCalculateIK(double* pdStartPoint, double* pdEndPoint, double* pdCenterPoint, int8 cArcDir, double* dRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+void radCalculateIK(double* pdStartPoint, double* pdEndPoint, double* pdCenterPoint, int8 cArcDir, double* dRad,
+                    uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
 {
-	//cArcDir = -cArcDir;//ºóÖÃµ¶¼Ü×ø±êÏµ
-	pdCenterPoint[ucHorizontalAxis] -= pdStartPoint[ucHorizontalAxis];//½«Ô²ĞÄ¾ø¶Ô×ø±ê×ª»»ÎªÏà¶Ô×ø±ê£¨Ïà¶ÔÆğµã£©
-	pdCenterPoint[ucVerticalAxis] -= pdStartPoint[ucVerticalAxis];
+    //cArcDir = -cArcDir;//åç½®åˆ€æ¶åæ ‡ç³»
+    pdCenterPoint[ucHorizontalAxis] -= pdStartPoint[ucHorizontalAxis]; //å°†åœ†å¿ƒç»å¯¹åæ ‡è½¬æ¢ä¸ºç›¸å¯¹åæ ‡ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+    pdCenterPoint[ucVerticalAxis] -= pdStartPoint[ucVerticalAxis];
 
-	if (isZero(pdStartPoint[ucHorizontalAxis] - pdEndPoint[ucHorizontalAxis]) && isZero(pdStartPoint[ucVerticalAxis] - pdEndPoint[ucVerticalAxis]))
-	{
-		*dRad = 2 * PI;  //ÆğµãºÍÖÕµã×ø±êÏàÍ¬ ·µ»Ø360
-		return;
-	}
-	else
-	{
+    if (isZero(pdStartPoint[ucHorizontalAxis] - pdEndPoint[ucHorizontalAxis]) &&
+        isZero(pdStartPoint[ucVerticalAxis] - pdEndPoint[ucVerticalAxis]))
+    {
+        *dRad = 2 * PI; //èµ·ç‚¹å’Œç»ˆç‚¹åæ ‡ç›¸åŒ è¿”å›360
+        return;
+    }
+    else
+    {
 
-		double rad;   //·µ»ØÖµ  Ô²ĞÄ½Ç
+        double rad; //è¿”å›å€¼  åœ†å¿ƒè§’
 
-		double dRelaXe = pdEndPoint[ucHorizontalAxis] - pdStartPoint[ucHorizontalAxis];//ÖÕµã×ø±ê£¨Ïà¶ÔÆğµã£©
-		double dRelaZe = pdEndPoint[ucVerticalAxis] - pdStartPoint[ucVerticalAxis];
+        double dRelaXe = pdEndPoint[ucHorizontalAxis] - pdStartPoint[ucHorizontalAxis]; //ç»ˆç‚¹åæ ‡ï¼ˆç›¸å¯¹èµ·ç‚¹ï¼‰
+        double dRelaZe = pdEndPoint[ucVerticalAxis] - pdStartPoint[ucVerticalAxis];
 
-		double dVectorSx = -pdCenterPoint[ucHorizontalAxis];   //Ô²ĞÄ¡úÆğµã µÄÏòÁ¿O'S'
-		double dVectorSz = -pdCenterPoint[ucVerticalAxis];
+        double dVectorSx = -pdCenterPoint[ucHorizontalAxis]; //åœ†å¿ƒâ†’èµ·ç‚¹ çš„å‘é‡O'S'
+        double dVectorSz = -pdCenterPoint[ucVerticalAxis];
 
-		double dVectorEx = -pdCenterPoint[ucHorizontalAxis] + dRelaXe;   //Ô²ĞÄ¡úÖÕµã µÄ ÏòÁ¿O'E'
-		double dVectorEz = -pdCenterPoint[ucVerticalAxis] + dRelaZe;
+        double dVectorEx = -pdCenterPoint[ucHorizontalAxis] + dRelaXe; //åœ†å¿ƒâ†’ç»ˆç‚¹ çš„ å‘é‡O'E'
+        double dVectorEz = -pdCenterPoint[ucVerticalAxis] + dRelaZe;
 
-		double dVectorRx = dVectorSz;   //ÓëÏòÁ¿S´¹Ö± ÇÒÖ¸ÏòÆäÓÒ²àµÄÏòÁ¿ O'R
-		double dVectorRz = -dVectorSx;
+        double dVectorRx = dVectorSz; //ä¸å‘é‡Så‚ç›´ ä¸”æŒ‡å‘å…¶å³ä¾§çš„å‘é‡ O'R
+        double dVectorRz = -dVectorSx;
 
-		double dDotER = dVectorRx * dVectorEx + dVectorRz * dVectorEz;   //ÏòÁ¿O'E'ºÍÏòÁ¿O'RµÄÄÚ»ı
-		double dDotSE = dVectorSx * dVectorEx + dVectorSz * dVectorEz;    //ÏòÁ¿O'S'ºÍÏòÁ¿O'E'µÄÄÚ»ı
+        double dDotER = dVectorRx * dVectorEx + dVectorRz * dVectorEz; //å‘é‡O'E'å’Œå‘é‡O'Rçš„å†…ç§¯
+        double dDotSE = dVectorSx * dVectorEx + dVectorSz * dVectorEz; //å‘é‡O'S'å’Œå‘é‡O'E'çš„å†…ç§¯
 
-		double flag = (dDotER * cArcDir);     //£¨O'E'ºÍO'RµÄÄÚ»ı£©* cArcDir
-		if (isZero(dDotER))
-		{//ÄÚ»ıÎª0  ´¹Ö± Ô²ĞÄ½ÇÎªPI
-			*dRad = PI;
-			return;
-		}
+        double flag = (dDotER * cArcDir); //ï¼ˆO'E'å’ŒO'Rçš„å†…ç§¯ï¼‰* cArcDir
+        if (isZero(dDotER))
+        { //å†…ç§¯ä¸º0  å‚ç›´ åœ†å¿ƒè§’ä¸ºPI
+            *dRad = PI;
+            return;
+        }
 
-		//²»Îª0£¬¼ÆËãÔ²ĞÄ½Ç£¨Ğ¡ÓÚPI£©
-		rad = acos((dDotSE) / (sqrt(dVectorSx * dVectorSx + dVectorSz * dVectorSz) * sqrt(dVectorEx * dVectorEx + dVectorEz * dVectorEz)));
+        //ä¸ä¸º0ï¼Œè®¡ç®—åœ†å¿ƒè§’ï¼ˆå°äºPIï¼‰
+        rad = acos((dDotSE) / (sqrt(dVectorSx * dVectorSx + dVectorSz * dVectorSz) *
+                               sqrt(dVectorEx * dVectorEx + dVectorEz * dVectorEz)));
 
-		//½áºÏ¡¾Ë³¡¿ ¡¾Äæ¡¿ ºÍÏòÁ¿SÓëEµÄÎ»ÖÃ¹ØÏµ  ¼´¿ÉÖªµÀÂ·¾¶ÊÇ·ñ´óÓÚPI
-		rad = (flag > 0) ? rad : 2 * PI - rad;
+        //ç»“åˆã€é¡ºã€‘ ã€é€†ã€‘ å’Œå‘é‡Sä¸Eçš„ä½ç½®å…³ç³»  å³å¯çŸ¥é“è·¯å¾„æ˜¯å¦å¤§äºPI
+        rad = (flag > 0) ? rad : 2 * PI - rad;
 
-		*dRad = rad;//´«³öÔ²ĞÄ½Ç
+        *dRad = rad; //ä¼ å‡ºåœ†å¿ƒè§’
 
-		return;
-	}//end of else
+        return;
+    } //end of else
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºradCalculateR(SPointDouble SStartPoint,SPointDouble SEndPoint,double dRadius, SPointDouble *SCenterPoint,int8 cArcDir,double *dRad)
-  º¯Êı¹¦ÄÜ  ÀûÓÃÔ²»¡°ë¾¶R(´ø·ûºÅ)£¬ÆğµãºÍÖÕµã×ø±êÀ´ÇóÔ²ĞÄ½Ç
-  ÊäÈë²ÎÊı£ºpdStartPoint		Æğµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			pdEndPoint			ÖÕµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			dRadius				Ô²»¡°ë¾¶£¨>0±íÊ¾Ğ¡ÓÚ»òµÈÓÚ180¶ÈµÄÔ²»¡£»<0±íÊ¾´óÓÚ180¡ãµÄÔ²»¡)
-			cArcDir				Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-			ucHorizontalAxis	ºáÖáÖáºÅ£¨×¢Òâ¼õ 1£©
-			ucVerticalAxis		×İÖáÖáºÅ£¨×¢Òâ¼õ 1£©
-  Êä³ö²ÎÊı£ºpdCenterPoint		Ô²ĞÄ×ø±ê£¨¾ø¶Ô×ø±ê£©
-			dRad		²å²¹Ô²»¡¶ÔÓ¦µÄÔ²ĞÄ½Ç£¨»¡¶È£©
-  ·µ »Ø Öµ£ºTRUE:  ¼ÆËã³É¹¦
-			FALSE: ²ÎÊı´íÎó
-  ±¸    ×¢£º1.ÓÉ Æğµã¡¢ÖÕµã¡¢Ô²»¡·½Ïò¡¢Ô²»¡°ë¾¶ µÃµ½ Ô²ĞÄ×ø±ê¡¢Ô²ĞÄ½Ç
-			2.²»ÄÜ¶ÔÕûÔ²½øĞĞÅĞ¶Ï£¬ÊäÈëÔ²»¡µÄÆğµã
+  å‡½æ•°åç§°ï¼šradCalculateR(SPointDouble SStartPoint,SPointDouble SEndPoint,double dRadius, SPointDouble *SCenterPoint,int8 cArcDir,double *dRad)
+  å‡½æ•°åŠŸèƒ½  åˆ©ç”¨åœ†å¼§åŠå¾„R(å¸¦ç¬¦å·)ï¼Œèµ·ç‚¹å’Œç»ˆç‚¹åæ ‡æ¥æ±‚åœ†å¿ƒè§’
+  è¾“å…¥å‚æ•°ï¼špdStartPoint		èµ·ç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			pdEndPoint			ç»ˆç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			dRadius				åœ†å¼§åŠå¾„ï¼ˆ>0è¡¨ç¤ºå°äºæˆ–ç­‰äº180åº¦çš„åœ†å¼§ï¼›<0è¡¨ç¤ºå¤§äº180Â°çš„åœ†å¼§)
+			cArcDir				åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+			ucHorizontalAxis	æ¨ªè½´è½´å·ï¼ˆæ³¨æ„å‡ 1ï¼‰
+			ucVerticalAxis		çºµè½´è½´å·ï¼ˆæ³¨æ„å‡ 1ï¼‰
+  è¾“å‡ºå‚æ•°ï¼špdCenterPoint		åœ†å¿ƒåæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			dRad		æ’è¡¥åœ†å¼§å¯¹åº”çš„åœ†å¿ƒè§’ï¼ˆå¼§åº¦ï¼‰
+  è¿” å› å€¼ï¼šTRUE:  è®¡ç®—æˆåŠŸ
+			FALSE: å‚æ•°é”™è¯¯
+  å¤‡    æ³¨ï¼š1.ç”± èµ·ç‚¹ã€ç»ˆç‚¹ã€åœ†å¼§æ–¹å‘ã€åœ†å¼§åŠå¾„ å¾—åˆ° åœ†å¿ƒåæ ‡ã€åœ†å¿ƒè§’
+			2.ä¸èƒ½å¯¹æ•´åœ†è¿›è¡Œåˆ¤æ–­ï¼Œè¾“å…¥åœ†å¼§çš„èµ·ç‚¹
 **************************************************/
-bool radCalculateR(double* pdStartPoint, double* pdEndPoint, double dRadius, double* pdCenterPoint,
-	int8 cArcDir, double* pRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+bool radCalculateR(double* pdStartPoint, double* pdEndPoint, double dRadius, double* pdCenterPoint, int8 cArcDir,
+                   double* pRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
 {
-	double dDx = pdEndPoint[ucHorizontalAxis] - pdStartPoint[ucHorizontalAxis];
-	double dDy = pdEndPoint[ucVerticalAxis] - pdStartPoint[ucVerticalAxis];
-	double dAbsRadius = fabs(dRadius);
-	double dHalfChord = hypot(0.5 * dDx, 0.5 * dDy);
-	double dTolerance = 8.0 * DBL_EPSILON * fmax(dAbsRadius, dHalfChord);
+    double dDx = pdEndPoint[ucHorizontalAxis] - pdStartPoint[ucHorizontalAxis];
+    double dDy = pdEndPoint[ucVerticalAxis] - pdStartPoint[ucVerticalAxis];
+    double dAbsRadius = fabs(dRadius);
+    double dHalfChord = hypot(0.5 * dDx, 0.5 * dDy);
+    double dTolerance = 8.0 * DBL_EPSILON * fmax(dAbsRadius, dHalfChord);
 
-	// Compare lengths with a relative roundoff allowance, not the global squared-distance tolerance.
-	if (!isfinite(dDx) || !isfinite(dDy) || !isfinite(dAbsRadius) || !isfinite(dHalfChord)
-		|| dHalfChord - dAbsRadius > dTolerance)
-	{
-		*pRad = 0.0;
-		return FALSE;
-	}
-	// R cannot define a full circle; preserve the exact coincident-point convention.
-	if (dDx == 0.0 && dDy == 0.0)
-	{
-		pdCenterPoint[ucHorizontalAxis] = pdStartPoint[ucHorizontalAxis];
-		pdCenterPoint[ucVerticalAxis] = pdStartPoint[ucVerticalAxis];
-		*pRad = 0.0;
-		return TRUE;
-	}
-	if (dAbsRadius == 0.0 || dHalfChord == 0.0)
-	{
-		*pRad = 0.0;
-		return FALSE;
-	}
-	if (fabs(dHalfChord - dAbsRadius) <= dTolerance)
-	{
-		pdCenterPoint[ucHorizontalAxis] = pdStartPoint[ucHorizontalAxis] + 0.5 * dDx;
-		pdCenterPoint[ucVerticalAxis] = pdStartPoint[ucVerticalAxis] + 0.5 * dDy;
-		*pRad = PI;
-		return TRUE;
-	}
-	else
-	{
-		// Normalize before multiplication to avoid squaring very small or large lengths.
-		double dRatio = dHalfChord / dAbsRadius;
-		double dHeight = dAbsRadius * sqrt((1.0 - dRatio) * (1.0 + dRatio));
-		int signR = dRadius < 0.0 ? -1 : 1; // sgn() would discard the sign of a tiny R.
-		double dSide = signR * cArcDir > 0 ? 1.0 : -1.0;
-		double dCenterH = pdStartPoint[ucHorizontalAxis] + 0.5 * dDx
-			+ dSide * ((0.5 * dDy) / dHalfChord) * dHeight;
-		double dCenterV = pdStartPoint[ucVerticalAxis] + 0.5 * dDy
-			- dSide * ((0.5 * dDx) / dHalfChord) * dHeight;
-		double dRad = 2.0 * asin(dRatio);
-		dRad = signR > 0 ? dRad : 2.0 * PI - dRad;
-		if (!isfinite(dCenterH) || !isfinite(dCenterV) || !isfinite(dRad))
-		{
-			*pRad = 0.0;
-			return FALSE;
-		}
-		pdCenterPoint[ucHorizontalAxis] = dCenterH;
-		pdCenterPoint[ucVerticalAxis] = dCenterV;
-		*pRad = dRad;
-		return TRUE;
-	}
+    // Compare lengths with a relative roundoff allowance, not the global squared-distance tolerance.
+    if (!isfinite(dDx) || !isfinite(dDy) || !isfinite(dAbsRadius) || !isfinite(dHalfChord) ||
+        dHalfChord - dAbsRadius > dTolerance)
+    {
+        *pRad = 0.0;
+        return FALSE;
+    }
+    // R cannot define a full circle; preserve the exact coincident-point convention.
+    if (dDx == 0.0 && dDy == 0.0)
+    {
+        pdCenterPoint[ucHorizontalAxis] = pdStartPoint[ucHorizontalAxis];
+        pdCenterPoint[ucVerticalAxis] = pdStartPoint[ucVerticalAxis];
+        *pRad = 0.0;
+        return TRUE;
+    }
+    if (dAbsRadius == 0.0 || dHalfChord == 0.0)
+    {
+        *pRad = 0.0;
+        return FALSE;
+    }
+    if (fabs(dHalfChord - dAbsRadius) <= dTolerance)
+    {
+        pdCenterPoint[ucHorizontalAxis] = pdStartPoint[ucHorizontalAxis] + 0.5 * dDx;
+        pdCenterPoint[ucVerticalAxis] = pdStartPoint[ucVerticalAxis] + 0.5 * dDy;
+        *pRad = PI;
+        return TRUE;
+    }
+    else
+    {
+        // Normalize before multiplication to avoid squaring very small or large lengths.
+        double dRatio = dHalfChord / dAbsRadius;
+        double dHeight = dAbsRadius * sqrt((1.0 - dRatio) * (1.0 + dRatio));
+        int signR = dRadius < 0.0 ? -1 : 1; // sgn() would discard the sign of a tiny R.
+        double dSide = signR * cArcDir > 0 ? 1.0 : -1.0;
+        double dCenterH = pdStartPoint[ucHorizontalAxis] + 0.5 * dDx + dSide * ((0.5 * dDy) / dHalfChord) * dHeight;
+        double dCenterV = pdStartPoint[ucVerticalAxis] + 0.5 * dDy - dSide * ((0.5 * dDx) / dHalfChord) * dHeight;
+        double dRad = 2.0 * asin(dRatio);
+        dRad = signR > 0 ? dRad : 2.0 * PI - dRad;
+        if (!isfinite(dCenterH) || !isfinite(dCenterV) || !isfinite(dRad))
+        {
+            *pRad = 0.0;
+            return FALSE;
+        }
+        pdCenterPoint[ucHorizontalAxis] = dCenterH;
+        pdCenterPoint[ucVerticalAxis] = dCenterV;
+        *pRad = dRad;
+        return TRUE;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  ¼ÆËãÔ²ĞÄ½Ç
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£ºpdCenterPoint		Ô²ĞÄ×ø±ê£¨¾ø¶Ô×ø±ê£©
-			dRad		²å²¹Ô²»¡¶ÔÓ¦µÄÔ²ĞÄ½Ç£¨»¡¶È£©
-  ·µ »Ø Öµ£ºTRUE:  ¼ÆËã³É¹¦
-			FALSE: ²ÎÊı´íÎó
-  ±¸    ×¢£º1
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—åœ†å¿ƒè§’
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼špdCenterPoint		åœ†å¿ƒåæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			dRad		æ’è¡¥åœ†å¼§å¯¹åº”çš„åœ†å¿ƒè§’ï¼ˆå¼§åº¦ï¼‰
+  è¿” å› å€¼ï¼šTRUE:  è®¡ç®—æˆåŠŸ
+			FALSE: å‚æ•°é”™è¯¯
+  å¤‡    æ³¨ï¼š1
 **************************************************/
-double calculateCentralAngle(double dCenter_X, double dCenter_Y, double dStart_X, double dStart_Y, double dEnd_X, double dEnd_Y, int cArcDir) 
+double calculateCentralAngle(double dCenter_X, double dCenter_Y, double dStart_X, double dStart_Y, double dEnd_X,
+                             double dEnd_Y, int cArcDir)
 {
-	// ¼ÆËãÏòÁ¿ OA ºÍ OB
-	double dOA_X = dStart_X - dCenter_X;
-	double dOA_Y = dStart_Y - dCenter_Y;
-	double dOB_X = dEnd_X - dCenter_X;
-	double dOB_Y = dEnd_Y - dCenter_Y;
+    // è®¡ç®—å‘é‡ OA å’Œ OB
+    double dOA_X = dStart_X - dCenter_X;
+    double dOA_Y = dStart_Y - dCenter_Y;
+    double dOB_X = dEnd_X - dCenter_X;
+    double dOB_Y = dEnd_Y - dCenter_Y;
 
-	// ¼ÆËãÏòÁ¿ OA ºÍ OB µÄ³¤¶È
-	double OA_length = sqrt(dOA_X * dOA_X + dOA_Y * dOA_Y);
-	double OB_length = sqrt(dOB_X * dOB_X + dOB_Y * dOB_Y);
+    // è®¡ç®—å‘é‡ OA å’Œ OB çš„é•¿åº¦
+    double OA_length = sqrt(dOA_X * dOA_X + dOA_Y * dOA_Y);
+    double OB_length = sqrt(dOB_X * dOB_X + dOB_Y * dOB_Y);
 
-	// ¼ÆËãÏòÁ¿ OA ºÍ OB µÄµã»ı
-	double dot_product = dOA_X * dOB_X + dOA_Y * dOB_Y;
+    // è®¡ç®—å‘é‡ OA å’Œ OB çš„ç‚¹ç§¯
+    double dot_product = dOA_X * dOB_X + dOA_Y * dOB_Y;
 
-	// ¼ÆËã¼Ğ½ÇµÄÓàÏÒÖµ
-	double cos_theta = dot_product / (OA_length * OB_length);
+    // è®¡ç®—å¤¹è§’çš„ä½™å¼¦å€¼
+    double cos_theta = dot_product / (OA_length * OB_length);
 
-	// Í¨¹ı·´ÓàÏÒº¯ÊıÇó³ö¼Ğ½Ç£¨ÒÔ»¡¶ÈÎªµ¥Î»£©
-	double theta = acos(cos_theta);
+    // é€šè¿‡åä½™å¼¦å‡½æ•°æ±‚å‡ºå¤¹è§’ï¼ˆä»¥å¼§åº¦ä¸ºå•ä½ï¼‰
+    double theta = acos(cos_theta);
 
-	// ¼ÆËãÏòÁ¿²æ»ıÀ´ÅĞ¶Ï·½Ïò
-	double cross_product = dOA_X * dOB_Y - dOA_Y * dOB_X;
+    // è®¡ç®—å‘é‡å‰ç§¯æ¥åˆ¤æ–­æ–¹å‘
+    double cross_product = dOA_X * dOB_Y - dOA_Y * dOB_X;
 
-	// ¸ù¾İ·½Ïòµ÷Õû½Ç¶È£¬Ë³Ê±ÕëÊ±ÓÃ 2*PI - theta
-	if ((cArcDir && cross_product > 0) || (!cArcDir && cross_product < 0)) {
-		theta = 2 * PI - theta;
-	}
+    // æ ¹æ®æ–¹å‘è°ƒæ•´è§’åº¦ï¼Œé¡ºæ—¶é’ˆæ—¶ç”¨ 2*PI - theta
+    if ((cArcDir && cross_product > 0) || (!cArcDir && cross_product < 0))
+    {
+        theta = 2 * PI - theta;
+    }
 
-	// ·µ»Ø½Ç¶È£¨»¡¶È£©
-	return theta;
+    // è¿”å›è§’åº¦ï¼ˆå¼§åº¦ï¼‰
+    return theta;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºdouble surplusDoubleData(double data, int remainder)
-  º¯Êı¹¦ÄÜ  ¼ÆËã¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û
-  ÊäÈë²ÎÊı£ºdata ±»ÓàÊı
-			remainder ÓàÊı
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£º¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û
-  ±¸    ×¢£ºdData % nRemainder£¨Êä³ö+or-£©
+  å‡½æ•°åç§°ï¼šdouble surplusDoubleData(double data, int remainder)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—æµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ
+  è¾“å…¥å‚æ•°ï¼šdata è¢«ä½™æ•°
+			remainder ä½™æ•°
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼šæµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ
+  å¤‡    æ³¨ï¼šdData % nRemainderï¼ˆè¾“å‡º+or-ï¼‰
 **************************************************/
 double surplusDoubleData(double dData, int nRemainder)
 {
-	int64 nintegerPart;     //ÕûÊı²¿·Ö
-	double dDecimalPart;  //Ğ¡Êı²¿·Ö
-	int64 AfterSurpulsNum;  //ÕûÊı²¿·ÖÈ¡ÓàºóµÄÊıÖµ
+    int64 nintegerPart;    //æ•´æ•°éƒ¨åˆ†
+    double dDecimalPart;   //å°æ•°éƒ¨åˆ†
+    int64 AfterSurpulsNum; //æ•´æ•°éƒ¨åˆ†å–ä½™åçš„æ•°å€¼
 
-	if (nRemainder == 0)
-	{
-		parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-		return 0;
-	}
-	
-	dDecimalPart = dData - (int64)dData;        //¼ÆËãÄ¿±êÖµµÄĞ¡Êı²¿·Ö
-	nintegerPart = (int64)dData;               //¼ÆËãÄ¿±êÖµµÄÕûÊı²¿·Ö
-	AfterSurpulsNum = nintegerPart % nRemainder;   //¼ÆËãÄ¿±êÖµÕûÊı²¿·ÖÈ¡ÓàºóµÄÊıÖµ
-	return AfterSurpulsNum + dDecimalPart;      //·µ»Ø¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û
+    if (nRemainder == 0)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+        return 0;
+    }
+
+    dDecimalPart = dData - (int64)dData;         //è®¡ç®—ç›®æ ‡å€¼çš„å°æ•°éƒ¨åˆ†
+    nintegerPart = (int64)dData;                 //è®¡ç®—ç›®æ ‡å€¼çš„æ•´æ•°éƒ¨åˆ†
+    AfterSurpulsNum = nintegerPart % nRemainder; //è®¡ç®—ç›®æ ‡å€¼æ•´æ•°éƒ¨åˆ†å–ä½™åçš„æ•°å€¼
+    return AfterSurpulsNum + dDecimalPart;       //è¿”å›æµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsurplusDoubleToPositive(double data, int remainder)
-  º¯Êı¹¦ÄÜ  ¼ÆËã¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û
-  ÊäÈë²ÎÊı£ºdata ±»ÓàÊı
-			remainder ÓàÊı
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£º¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û  £¨ÕıÊı£©
-  ±¸    ×¢£ºdData % nRemainder£¨Êä³ö+£©
+  å‡½æ•°åç§°ï¼šsurplusDoubleToPositive(double data, int remainder)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—æµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ
+  è¾“å…¥å‚æ•°ï¼šdata è¢«ä½™æ•°
+			remainder ä½™æ•°
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼šæµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ  ï¼ˆæ­£æ•°ï¼‰
+  å¤‡    æ³¨ï¼šdData % nRemainderï¼ˆè¾“å‡º+ï¼‰
 **************************************************/
 double surplusDoubleToPositive(double dData, int nRemainder)
 {
-	// int nIntegerPart;     //ÕûÊı²¿·Ö
-	// double dDecimalPart;  //Ğ¡Êı²¿·Ö
-	// int AfterSurpulsNum;  //ÕûÊı²¿·ÖÈ¡ÓàºóµÄÊıÖµ
+    // int nIntegerPart;     //æ•´æ•°éƒ¨åˆ†
+    // double dDecimalPart;  //å°æ•°éƒ¨åˆ†
+    // int AfterSurpulsNum;  //æ•´æ•°éƒ¨åˆ†å–ä½™åçš„æ•°å€¼
 
-	// dDecimalPart = dData - (int)dData;        //¼ÆËãÄ¿±êÖµµÄĞ¡Êı²¿·Ö
-	// nIntegerPart = (int)dData;               //¼ÆËãÄ¿±êÖµµÄÕûÊı²¿·Ö
-	// // AfterSurpulsNum = (dData >= 0) ? nIntegerPart % nRemainder : nIntegerPart % nRemainder + nRemainder;   //¼ÆËãÄ¿±êÖµÕûÊı²¿·ÖÈ¡ÓàºóµÄÊıÖµ
+    // dDecimalPart = dData - (int)dData;        //è®¡ç®—ç›®æ ‡å€¼çš„å°æ•°éƒ¨åˆ†
+    // nIntegerPart = (int)dData;               //è®¡ç®—ç›®æ ‡å€¼çš„æ•´æ•°éƒ¨åˆ†
+    // // AfterSurpulsNum = (dData >= 0) ? nIntegerPart % nRemainder : nIntegerPart % nRemainder + nRemainder;   //è®¡ç®—ç›®æ ‡å€¼æ•´æ•°éƒ¨åˆ†å–ä½™åçš„æ•°å€¼
 
-	// return AfterSurpulsNum + dDecimalPart;      //·µ»Ø¸¡µãÀàĞÍÊı¾İÈ¡ÓàºóµÄ½á¹û
-	
-	//ĞŞ¸Ä¼ÆËãÄ¿±êÖµÕûÊı²¿·ÖÈ¡ÓàºóµÄÊıÖµ 2026.5.7
-	if (nRemainder == 0)
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
-		return 0;
-	}
+    // return AfterSurpulsNum + dDecimalPart;      //è¿”å›æµ®ç‚¹ç±»å‹æ•°æ®å–ä½™åçš„ç»“æœ
 
-	double dResult = fmod(dData, (double)nRemainder); //ÀûÓÃ fmod »ñÈ¡ÓàÊı£¬ÈôÎª¸ºÔò¼ÓÉÏ³ıÊı
+    //ä¿®æ”¹è®¡ç®—ç›®æ ‡å€¼æ•´æ•°éƒ¨åˆ†å–ä½™åçš„æ•°å€¼ 2026.5.7
+    if (nRemainder == 0)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+        return 0;
+    }
 
-	// ±ê×¼»¯µ½ [0, nRemainder)
-	if (dResult < 0)
-	{
-		dResult += (double)nRemainder;
-	}
+    double dResult = fmod(dData, (double)nRemainder); //åˆ©ç”¨ fmod è·å–ä½™æ•°ï¼Œè‹¥ä¸ºè´Ÿåˆ™åŠ ä¸Šé™¤æ•°
 
-	return dResult;
+    // æ ‡å‡†åŒ–åˆ° [0, nRemainder)
+    if (dResult < 0)
+    {
+        dResult += (double)nRemainder;
+    }
+
+    return dResult;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºaddPoint(double* pSPara1, double* pSPara2, double* pSOutPut, int nArraySize)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÁ½¸ö×ø±êÏà¼Ó£¨ÏòÁ¿Ïà¼Ó£©
-  ÊäÈë²ÎÊı£ºpSPara1			×ø±ê1
-			pSPara2			×ø±ê2
-			nArraySize		Êı×é³¤¶È
-			ucValStatus		ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£ºpSOutPut		Êä³ö×ø±ê
-  ·µ »Ø Öµ£º-1 Êı×é³¤¶È´íÎó
-			-2 ¿ÕÖ¸Õë
-			1  ¼ÆËãÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šaddPoint(double* pSPara1, double* pSPara2, double* pSOutPut, int nArraySize)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—ä¸¤ä¸ªåæ ‡ç›¸åŠ ï¼ˆå‘é‡ç›¸åŠ ï¼‰
+  è¾“å…¥å‚æ•°ï¼špSPara1			åæ ‡1
+			pSPara2			åæ ‡2
+			nArraySize		æ•°ç»„é•¿åº¦
+			ucValStatus		æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼špSOutPut		è¾“å‡ºåæ ‡
+  è¿” å› å€¼ï¼š-1 æ•°ç»„é•¿åº¦é”™è¯¯
+			-2 ç©ºæŒ‡é’ˆ
+			1  è®¡ç®—å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 addPoint(double* pSPara1, double* pSPara2, double* pSOutPut, int nArraySize, const VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
+    int i = 0;
 
-	if (nArraySize <= 0) return -1; // ·Ç·¨Öµ
-	if (pSOutPut == NULL) return -2;//¿ÕÖ¸Õë
+    if (nArraySize <= 0)
+        return -1; // éæ³•å€¼
+    if (pSOutPut == NULL)
+        return -2; //ç©ºæŒ‡é’ˆ
 
-	if (ucValStatus == NULL)
-	{
-		//ÖğÏîÏà¼Ó
-		for (i = 0; i < nArraySize; i++)
-		{
-			pSOutPut[i] = pSPara1[i] + pSPara2[i];
-		}
-	}
-	else
-	{
-		//ÖğÏîÏà¼Ó
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (VAL_VALID != getbit(*ucValStatus, i)) continue;
-			pSOutPut[i] = pSPara1[i] + pSPara2[i];
-		}
-	}
+    if (ucValStatus == NULL)
+    {
+        //é€é¡¹ç›¸åŠ 
+        for (i = 0; i < nArraySize; i++)
+        {
+            pSOutPut[i] = pSPara1[i] + pSPara2[i];
+        }
+    }
+    else
+    {
+        //é€é¡¹ç›¸åŠ 
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (VAL_VALID != getbit(*ucValStatus, i))
+                continue;
+            pSOutPut[i] = pSPara1[i] + pSPara2[i];
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsubtractPoint(double * pSPara1, double * pSPara2, double * pSOutPut, int nArraySize)
-  º¯Êı¹¦ÄÜ  ¼ÆËãÁ½¸ö×ø±êÏà¼õ£¨ÏòÁ¿Ïà¼õ£© ×ø±ê1 - ×ø±ê2
-  ÊäÈë²ÎÊı£ºpSPara1			×ø±ê1
-			pSPara2			×ø±ê2
-			nArraySize		Êı×é³¤¶È
-			ucValStatus		ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£ºpSOutPut		Êä³ö×ø±ê
-  ·µ »Ø Öµ£º-1 Êı×é³¤¶È´íÎó
-			-2 ¿ÕÖ¸Õë
-			1  ¼ÆËãÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsubtractPoint(double * pSPara1, double * pSPara2, double * pSOutPut, int nArraySize)
+  å‡½æ•°åŠŸèƒ½  è®¡ç®—ä¸¤ä¸ªåæ ‡ç›¸å‡ï¼ˆå‘é‡ç›¸å‡ï¼‰ åæ ‡1 - åæ ‡2
+  è¾“å…¥å‚æ•°ï¼špSPara1			åæ ‡1
+			pSPara2			åæ ‡2
+			nArraySize		æ•°ç»„é•¿åº¦
+			ucValStatus		æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼špSOutPut		è¾“å‡ºåæ ‡
+  è¿” å› å€¼ï¼š-1 æ•°ç»„é•¿åº¦é”™è¯¯
+			-2 ç©ºæŒ‡é’ˆ
+			1  è®¡ç®—å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 subtractPoint(double* pSPara1, double* pSPara2, double* pSOutPut, int nArraySize, const VAL_STRUCT_TYPE* ucValStatus)
+int8 subtractPoint(double* pSPara1, double* pSPara2, double* pSOutPut, int nArraySize,
+                   const VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
+    int i = 0;
 
-	if (nArraySize <= 0) return -1; // ·Ç·¨Öµ
-	if (pSOutPut == NULL) return -2;//¿ÕÖ¸Õë
+    if (nArraySize <= 0)
+        return -1; // éæ³•å€¼
+    if (pSOutPut == NULL)
+        return -2; //ç©ºæŒ‡é’ˆ
 
-	if (ucValStatus == NULL)
-	{
-		//ÖğÏîÏà¼õ
-		for (i = 0; i < nArraySize; i++)
-		{
-			pSOutPut[i] = pSPara1[i] - pSPara2[i];
-		}
-	}
-	else
-	{
-		//ÖğÏîÏà¼õ
-		for (i = 0; i < nArraySize; i++)
-		{
-			if (VAL_VALID != getbit(*ucValStatus, i)) continue;
-			pSOutPut[i] = pSPara1[i] - pSPara2[i];
-		}
-	}
+    if (ucValStatus == NULL)
+    {
+        //é€é¡¹ç›¸å‡
+        for (i = 0; i < nArraySize; i++)
+        {
+            pSOutPut[i] = pSPara1[i] - pSPara2[i];
+        }
+    }
+    else
+    {
+        //é€é¡¹ç›¸å‡
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (VAL_VALID != getbit(*ucValStatus, i))
+                continue;
+            pSOutPut[i] = pSPara1[i] - pSPara2[i];
+        }
+    }
 
-
-
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisZeroPoint(double* dTargetPoint, int nArraySize, const VAL_STRUCT_TYPE* ucValStatus)
-  º¯Êı¹¦ÄÜ  ×ø±êÅĞ¶ÏÊÇ·ñÎªÁã
-  ÊäÈë²ÎÊı£ºpdTargetPoint	Ä¿±êµã
-			nArraySize		Êı×é´óĞ¡
-			ucValStatus		ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE Áãµã
-			FALSE ²»ÊÇÁãµã
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šisZeroPoint(double* dTargetPoint, int nArraySize, const VAL_STRUCT_TYPE* ucValStatus)
+  å‡½æ•°åŠŸèƒ½  åæ ‡åˆ¤æ–­æ˜¯å¦ä¸ºé›¶
+  è¾“å…¥å‚æ•°ï¼špdTargetPoint	ç›®æ ‡ç‚¹
+			nArraySize		æ•°ç»„å¤§å°
+			ucValStatus		æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE é›¶ç‚¹
+			FALSE ä¸æ˜¯é›¶ç‚¹
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isZeroPoint(double* pdTargetPoint, int nArraySize, const VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
-	if (pdTargetPoint == NULL)//¿ÕÖ¸Õë ·µ»Ø
-	{
-		return FALSE;
-	}
-	
-	if (ucValStatus == NULL)
-	{
-		for ( i = 0; i < nArraySize; i++)
-		{
-			if (!isZero(pdTargetPoint[i]))// ²»Îª0 ·µ»ØFALSE
-			{
-				return FALSE;
-			}
-		}
-	}
-	else
-	{
-		for (i = 0; i < nArraySize; i++)
-		{
-			if ((VAL_VALID == getbit(*ucValStatus,i)) && !isZero(pdTargetPoint[i]))//ÖáÓĞĞ§ ÇÒ²»Îª0Ê±
-			{
-				return FALSE;
-			}
-		}
-	}
+    int i = 0;
+    if (pdTargetPoint == NULL) //ç©ºæŒ‡é’ˆ è¿”å›
+    {
+        return FALSE;
+    }
 
-	return TRUE;//ËùÓĞ×ø±êÎª0 ·µ»ØTRUE
+    if (ucValStatus == NULL)
+    {
+        for (i = 0; i < nArraySize; i++)
+        {
+            if (!isZero(pdTargetPoint[i])) // ä¸ä¸º0 è¿”å›FALSE
+            {
+                return FALSE;
+            }
+        }
+    }
+    else
+    {
+        for (i = 0; i < nArraySize; i++)
+        {
+            if ((VAL_VALID == getbit(*ucValStatus, i)) && !isZero(pdTargetPoint[i])) //è½´æœ‰æ•ˆ ä¸”ä¸ä¸º0æ—¶
+            {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE; //æ‰€æœ‰åæ ‡ä¸º0 è¿”å›TRUE
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmodifyRelaEndPoint(double *pdStartPoint, double *pdEndPoint, uint8* ucAxisMap, int nArraySize,const VAL_STRUCT_TYPE *ucRelaVal)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊµÊ±×ø±êĞŞÕı  ¡¶ÓÉÏà¶ÔÎ»ÒÆÖ¸¶¨µÄÖÕµã×ø±ê¡·  
-  ÊäÈë²ÎÊı£ºpdStartPoint	Æğµã×ø±ê
-			pdEndPoint		ÖÕµã×ø±ê
-			ucAxisMap		Ó³Éä
-			nArraySize		Êı×é³¤¶È
-			ucRelaVal		ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£ºpdEndPoint		Êä³öÖÕµã×ø±ê
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			-2 Êı×é³¤¶È´íÎó
-			1  ¼ÆËãÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmodifyRelaEndPoint(double *pdStartPoint, double *pdEndPoint, uint8* ucAxisMap, int nArraySize,const VAL_STRUCT_TYPE *ucRelaVal)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®å®æ—¶åæ ‡ä¿®æ­£  ã€Šç”±ç›¸å¯¹ä½ç§»æŒ‡å®šçš„ç»ˆç‚¹åæ ‡ã€‹  
+  è¾“å…¥å‚æ•°ï¼špdStartPoint	èµ·ç‚¹åæ ‡
+			pdEndPoint		ç»ˆç‚¹åæ ‡
+			ucAxisMap		æ˜ å°„
+			nArraySize		æ•°ç»„é•¿åº¦
+			ucRelaVal		æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼špdEndPoint		è¾“å‡ºç»ˆç‚¹åæ ‡
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			-2 æ•°ç»„é•¿åº¦é”™è¯¯
+			1  è®¡ç®—å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 modifyRelaEndPoint(double *pdStartPoint, double *pdEndPoint,const uint8* ucAxisMap, int nArraySize,const VAL_STRUCT_TYPE *ucRelaVal)
+int8 modifyRelaEndPoint(double* pdStartPoint, double* pdEndPoint, const uint8* ucAxisMap, int nArraySize,
+                        const VAL_STRUCT_TYPE* ucRelaVal)
 {
-	double dDeltaArray[AXIS_NUM_MAX] = { 0 };
-	if (pdStartPoint == NULL || pdEndPoint == NULL || ucAxisMap == NULL)
-	{
-		return -1;
-	}
-	if (AXIS_NUM_MAX < nArraySize)//DeltaÊı×é¿Õ¼ä²»×ã
-	{
-		return -2;
-	}
-	subtractPoint(pdEndPoint, pdStartPoint, dDeltaArray, nArraySize, ucRelaVal);  //ÖÕµã¼õÈ¥Æğµã  µÃµ½deltaÖµ
-	getRealTimePoint(pdStartPoint, nArraySize, ucAxisMap, ucRelaVal);					//ÖÕµã»ñÈ¡ÊµÊ±×ø±ê
-	addPoint(pdStartPoint, dDeltaArray, pdEndPoint, nArraySize, ucRelaVal);			//ÊµÊ±×ø±ê+ÖÕµã  µÈÓÚÄ¿±êÖÕµã
-	return 1;
+    double dDeltaArray[AXIS_NUM_MAX] = {0};
+    if (pdStartPoint == NULL || pdEndPoint == NULL || ucAxisMap == NULL)
+    {
+        return -1;
+    }
+    if (AXIS_NUM_MAX < nArraySize) //Deltaæ•°ç»„ç©ºé—´ä¸è¶³
+    {
+        return -2;
+    }
+    subtractPoint(pdEndPoint, pdStartPoint, dDeltaArray, nArraySize, ucRelaVal); //ç»ˆç‚¹å‡å»èµ·ç‚¹  å¾—åˆ°deltaå€¼
+    getRealTimePoint(pdStartPoint, nArraySize, ucAxisMap, ucRelaVal);            //ç»ˆç‚¹è·å–å®æ—¶åæ ‡
+    addPoint(pdStartPoint, dDeltaArray, pdEndPoint, nArraySize, ucRelaVal);      //å®æ—¶åæ ‡+ç»ˆç‚¹  ç­‰äºç›®æ ‡ç»ˆç‚¹
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºdoubleArrayMax(double* array, int nArraySize, double* pdMaxVal)
-  º¯Êı¹¦ÄÜ  Ñ°ÕÒÊı×é×î´óÖµµÄÏÂ±ê  £¨¿ÉÑ¡ Êä³ö×î´óÖµ£©
-  ÊäÈë²ÎÊı£ºarray			Êı×éÊ×µØÖ·
-			nArraySize		Êı×é³¤¶È
-  Êä³ö²ÎÊı£ºpdMaxVal		Êä³ö×î´óÖµ
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			1  ¼ÆËãÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šdoubleArrayMax(double* array, int nArraySize, double* pdMaxVal)
+  å‡½æ•°åŠŸèƒ½  å¯»æ‰¾æ•°ç»„æœ€å¤§å€¼çš„ä¸‹æ ‡  ï¼ˆå¯é€‰ è¾“å‡ºæœ€å¤§å€¼ï¼‰
+  è¾“å…¥å‚æ•°ï¼šarray			æ•°ç»„é¦–åœ°å€
+			nArraySize		æ•°ç»„é•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼špdMaxVal		è¾“å‡ºæœ€å¤§å€¼
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			1  è®¡ç®—å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int doubleArrayMax(double* array, int nArraySize, double* pdMaxVal)
 {
-	double maxVal;
-	int nNum = 0;
-	int i;
-	if (array == NULL)
-	{
-		return -1;
-	}
-	maxVal = array[0];
-	for (i = 1; i < nArraySize; i++)
-	{
-		if (array[i] > maxVal)
-		{
-			maxVal = array[i];
-			nNum = i;
-		}
-	}
-	if (pdMaxVal != NULL)
-	{
-		*pdMaxVal = maxVal;
-	}
-	return nNum;
+    double maxVal;
+    int nNum = 0;
+    int i;
+    if (array == NULL)
+    {
+        return -1;
+    }
+    maxVal = array[0];
+    for (i = 1; i < nArraySize; i++)
+    {
+        if (array[i] > maxVal)
+        {
+            maxVal = array[i];
+            nNum = i;
+        }
+    }
+    if (pdMaxVal != NULL)
+    {
+        *pdMaxVal = maxVal;
+    }
+    return nNum;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  ÅĞ¶ÏÍ¨µÀ¼äÊÇ·ñ´æÔÚ¹«¹²Öá   2022.4.25 ¹ùÇ¿
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º TRUE:  ÓĞ¹«¹²Öá
-			FALSE: ÎŞ¹«¹²Öá
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­é€šé“é—´æ˜¯å¦å­˜åœ¨å…¬å…±è½´   2022.4.25 éƒ­å¼º
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š TRUE:  æœ‰å…¬å…±è½´
+			FALSE: æ— å…¬å…±è½´
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool judgeCommonPhyAxisBtwChannels()
 {
-	//CHANNEL_NUM_MAX   AXIS_NUM_MAX
-	//g_SSystemPara.ucAxisMapArray[0][AXIS_X]
-	int i = 0;
-	int j = 0;
+    //CHANNEL_NUM_MAX   AXIS_NUM_MAX
+    //g_SSystemPara.ucAxisMapArray[0][AXIS_X]
+    int i = 0;
+    int j = 0;
 
-	uint8 ucNumI;
-	uint8 ucNumJ;
-	for (i = 0; i < CHANNEL_NUM_MAX * AXIS_NUM_MAX - 1; i++)
-	{
-		ucNumI = g_SSystemPara.ucAxisMapArray[i / AXIS_NUM_MAX][i % AXIS_NUM_MAX];
-		if (ucNumI < AXIS_PHYSICS_NUM_MAX)//i´ú±íÖá·Ç¿Õ
-		{
-			for (j = i + 1; j < CHANNEL_NUM_MAX * AXIS_NUM_MAX; j++)
-			{
-				ucNumJ = g_SSystemPara.ucAxisMapArray[j / AXIS_NUM_MAX][j % AXIS_NUM_MAX];
-				if (ucNumJ < AXIS_PHYSICS_NUM_MAX)//j´ú±íÖá·Ç¿Õ
-				{
-					if (ucNumI == ucNumJ)
-					{
-						return TRUE;
-					}
-				}
-			}
-		}
-
-	}
-	return FALSE;
+    uint8 ucNumI;
+    uint8 ucNumJ;
+    for (i = 0; i < CHANNEL_NUM_MAX * AXIS_NUM_MAX - 1; i++)
+    {
+        ucNumI = g_SSystemPara.ucAxisMapArray[i / AXIS_NUM_MAX][i % AXIS_NUM_MAX];
+        if (ucNumI < AXIS_PHYSICS_NUM_MAX) //iä»£è¡¨è½´éç©º
+        {
+            for (j = i + 1; j < CHANNEL_NUM_MAX * AXIS_NUM_MAX; j++)
+            {
+                ucNumJ = g_SSystemPara.ucAxisMapArray[j / AXIS_NUM_MAX][j % AXIS_NUM_MAX];
+                if (ucNumJ < AXIS_PHYSICS_NUM_MAX) //jä»£è¡¨è½´éç©º
+                {
+                    if (ucNumI == ucNumJ)
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+        }
+    }
+    return FALSE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºpolarCoord2CommonCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
-  º¯Êı¹¦ÄÜ  //¼«×ø±ê×ª»»³ÉÆÕÍ¨
-  ÊäÈë²ÎÊı£ºdPoint				×ª»»µÄµã
-			nArraySize			Êı×é´óĞ¡
-			ucHorizontalAxis	ºáÖá
-			ucVerticalAxis		×İÖá
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špolarCoord2CommonCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+  å‡½æ•°åŠŸèƒ½  //æåæ ‡è½¬æ¢æˆæ™®é€š
+  è¾“å…¥å‚æ•°ï¼šdPoint				è½¬æ¢çš„ç‚¹
+			nArraySize			æ•°ç»„å¤§å°
+			ucHorizontalAxis	æ¨ªè½´
+			ucVerticalAxis		çºµè½´
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 polarCoord2CommonCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis,int8 cDir)
-{ // ¸ù¾İ¼«×ø±ê·½Ïò×ª»»
-	double dPolarCoord[2];//¼«×ø±ê
-	double dCommonCoord[2];//ÆÕÍ¨×ø±ê
-	if (dPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
-	{
-		return -1;
-	}
-	//¶ÁÈ¡×ø±ê
-	dPolarCoord[0] = dPoint[ucHorizontalAxis];//ºáÖá
-	dPolarCoord[1] = dPoint[ucVerticalAxis];//×İÖá
+int8 polarCoord2CommonCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis, int8 cDir)
+{                           // æ ¹æ®æåæ ‡æ–¹å‘è½¬æ¢
+    double dPolarCoord[2];  //æåæ ‡
+    double dCommonCoord[2]; //æ™®é€šåæ ‡
+    if (dPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
+    //è¯»å–åæ ‡
+    dPolarCoord[0] = dPoint[ucHorizontalAxis]; //æ¨ªè½´
+    dPolarCoord[1] = dPoint[ucVerticalAxis];   //çºµè½´
 
-	//ÆÕX = sqrt[(¼«×ø±êX)^2 + (¼«×ø±êC)^2]
-	//ÆÕC = atan2(¼«×ø±êC, ¼«×ø±êX);
-	dCommonCoord[0] = cDir*sqrt(dPolarCoord[0] * dPolarCoord[0] + dPolarCoord[1] * dPolarCoord[1]);
-	dCommonCoord[1] = atan2(dPolarCoord[1], dPolarCoord[0]) * 180 / PI;
-	//if (cDir<0 )
-	//{
-	//	dCommonCoord[1] = atan2(dPolarCoord[1], -dPolarCoord[0]) * 180 / PI;
-	//}
-	//Ğ´Èë×ø±ê
-	dPoint[ucHorizontalAxis] = dCommonCoord[0];
-	dPoint[ucVerticalAxis] = dCommonCoord[1];
-	return 1;
+    //æ™®X = sqrt[(æåæ ‡X)^2 + (æåæ ‡C)^2]
+    //æ™®C = atan2(æåæ ‡C, æåæ ‡X);
+    dCommonCoord[0] = cDir * sqrt(dPolarCoord[0] * dPolarCoord[0] + dPolarCoord[1] * dPolarCoord[1]);
+    dCommonCoord[1] = atan2(dPolarCoord[1], dPolarCoord[0]) * 180 / PI;
+    //if (cDir<0 )
+    //{
+    //	dCommonCoord[1] = atan2(dPolarCoord[1], -dPolarCoord[0]) * 180 / PI;
+    //}
+    //å†™å…¥åæ ‡
+    dPoint[ucHorizontalAxis] = dCommonCoord[0];
+    dPoint[ucVerticalAxis] = dCommonCoord[1];
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcommonCoord2PolarCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
-  º¯Êı¹¦ÄÜ  //ÆÕÍ¨×ø±ê×ª»»³É¼«×ø±ê
-  ÊäÈë²ÎÊı£ºdPoint				×ª»»µÄµã
-			nArraySize			Êı×é´óĞ¡
-			ucHorizontalAxis	ºáÖá
-			ucVerticalAxis		×İÖá
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcommonCoord2PolarCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+  å‡½æ•°åŠŸèƒ½  //æ™®é€šåæ ‡è½¬æ¢æˆæåæ ‡
+  è¾“å…¥å‚æ•°ï¼šdPoint				è½¬æ¢çš„ç‚¹
+			nArraySize			æ•°ç»„å¤§å°
+			ucHorizontalAxis	æ¨ªè½´
+			ucVerticalAxis		çºµè½´
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 commonCoord2PolarCoord(double* dPoint, int nArraySize, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
 {
-	double dPolarCoord[2];//¼«×ø±ê
-	double dCommonCoord[2];//ÆÕÍ¨×ø±ê
-	if (dPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
-	{
-		return -1;
-	}
+    double dPolarCoord[2];  //æåæ ‡
+    double dCommonCoord[2]; //æ™®é€šåæ ‡
+    if (dPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
 
-	//¶ÁÈ¡×ø±ê
-	dCommonCoord[0] = dPoint[ucHorizontalAxis];//ºáÖá
-	dCommonCoord[1] = dPoint[ucVerticalAxis];//×İÖá
+    //è¯»å–åæ ‡
+    dCommonCoord[0] = dPoint[ucHorizontalAxis]; //æ¨ªè½´
+    dCommonCoord[1] = dPoint[ucVerticalAxis];   //çºµè½´
 
-	//¼«×ø±êX = ÆÕX * sin[(90-ÆÕC)/360]
-	//¼«×ø±êC = ÆÕX * cos[(90 - ÆÕC) / 360]
-	//double sss = sin((90 - dCommonCoord[1]) * PI / 180.0);
-	dPolarCoord[0] = dCommonCoord[0] * sin((90 - dCommonCoord[1]) * PI / 180.0);
-	dPolarCoord[1] = dCommonCoord[0] * cos((90 - dCommonCoord[1]) * PI / 180.0);
+    //æåæ ‡X = æ™®X * sin[(90-æ™®C)/360]
+    //æåæ ‡C = æ™®X * cos[(90 - æ™®C) / 360]
+    //double sss = sin((90 - dCommonCoord[1]) * PI / 180.0);
+    dPolarCoord[0] = dCommonCoord[0] * sin((90 - dCommonCoord[1]) * PI / 180.0);
+    dPolarCoord[1] = dCommonCoord[0] * cos((90 - dCommonCoord[1]) * PI / 180.0);
 
-	//Ğ´Èë×ø±ê
-	dPoint[ucHorizontalAxis] = dPolarCoord[0];
-	dPoint[ucVerticalAxis] = dPolarCoord[1];
-	return 1;
+    //å†™å…¥åæ ‡
+    dPoint[ucHorizontalAxis] = dPolarCoord[0];
+    dPoint[ucVerticalAxis] = dPolarCoord[1];
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºabsPoint2RealTimePoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
-  º¯Êı¹¦ÄÜ  // ²¿·Ö¾ø¶Ô×ø±ê×ª»»³É»úĞµ×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ  -¡· ĞèÒªÖªµÀ×ÜÆ«ÒÆÖµ
-			dPoint				ĞèÒª×ª»»µÄ×ø±ê
-			nArraySize			Êı×é´óĞ¡
-			ucValStatus			ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šabsPoint2RealTimePoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
+  å‡½æ•°åŠŸèƒ½  // éƒ¨åˆ†ç»å¯¹åæ ‡è½¬æ¢æˆæœºæ¢°åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å·  -ã€‹ éœ€è¦çŸ¥é“æ€»åç§»å€¼
+			dPoint				éœ€è¦è½¬æ¢çš„åæ ‡
+			nArraySize			æ•°ç»„å¤§å°
+			ucValStatus			æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 absPoint2RealTimePoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
 {
-	if (dPoint == NULL || ucChannelNum>= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	addPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
-	//subtractPoint(dPoint,(double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
-	return 1;
+    if (dPoint == NULL || ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    addPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
+    //subtractPoint(dPoint,(double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºrealTimePoint2AbsPoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
-  º¯Êı¹¦ÄÜ  // ²¿·Ö»úĞµ×ø±ê×ª»»³É¾ø¶Ô×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ  -¡· ĞèÒªÖªµÀ×ÜÆ«ÒÆÖµ
-			dPoint				ĞèÒª×ª»»µÄ×ø±ê
-			nArraySize			Êı×é´óĞ¡
-			ucValStatus			ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrealTimePoint2AbsPoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
+  å‡½æ•°åŠŸèƒ½  // éƒ¨åˆ†æœºæ¢°åæ ‡è½¬æ¢æˆç»å¯¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å·  -ã€‹ éœ€è¦çŸ¥é“æ€»åç§»å€¼
+			dPoint				éœ€è¦è½¬æ¢çš„åæ ‡
+			nArraySize			æ•°ç»„å¤§å°
+			ucValStatus			æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 realTimePoint2AbsPoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
 {
-	if (dPoint == NULL || ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	subtractPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
-	//addPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
-	return 1;
+    if (dPoint == NULL || ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    subtractPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize,
+                  &ucValStatus);
+    //addPoint(dPoint, (double*)&g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray, dPoint, nArraySize, &ucValStatus);
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºrealTimePoint2AbsPoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
-  º¯Êı¹¦ÄÜ  //¼ÆËãĞı×ª×ø±êÏµºóµÄµã×ø±ê
-  ÊäÈë²ÎÊı£ºdPoint				ĞèÒª×ª»»µÄ×ø±ê
-			nArraySize			Êı×é´óĞ¡
-			dOutputPoint		Êä³ö×ø±ê
-			dDeltaRad			Ğı×ª»¡¶È´óĞ¡
-			ucHorizontalAxis	ºáÖá
-			ucVerticalAxis		×İÖá
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrealTimePoint2AbsPoint(uint8 ucChannelNum, double* dPoint, int nArraySize, const VAL_STRUCT_TYPE ucValStatus)
+  å‡½æ•°åŠŸèƒ½  //è®¡ç®—æ—‹è½¬åæ ‡ç³»åçš„ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šdPoint				éœ€è¦è½¬æ¢çš„åæ ‡
+			nArraySize			æ•°ç»„å¤§å°
+			dOutputPoint		è¾“å‡ºåæ ‡
+			dDeltaRad			æ—‹è½¬å¼§åº¦å¤§å°
+			ucHorizontalAxis	æ¨ªè½´
+			ucVerticalAxis		çºµè½´
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 rotatingCoordinate(double* dPoint, int nArraySize,double *dOutputPoint, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+int8 rotatingCoordinate(double* dPoint, int nArraySize, double* dOutputPoint, double dDeltaRad, uint8 ucHorizontalAxis,
+                        uint8 ucVerticalAxis)
 {
-	double dTempPoint[2];
-	if (dPoint == NULL || dOutputPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
-	{
-		return -1;
-	}
+    double dTempPoint[2];
+    if (dPoint == NULL || dOutputPoint == NULL || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
 
-	dTempPoint[0] = dPoint[ucHorizontalAxis] * cos(dDeltaRad) + dPoint[ucVerticalAxis] * sin(dDeltaRad);
-	dTempPoint[1] = -dPoint[ucHorizontalAxis] * sin(dDeltaRad) + dPoint[ucVerticalAxis] * cos(dDeltaRad);
-	dOutputPoint[ucHorizontalAxis] = dTempPoint[0];
-	dOutputPoint[ucVerticalAxis] = dTempPoint[1];
-	return 1;
+    dTempPoint[0] = dPoint[ucHorizontalAxis] * cos(dDeltaRad) + dPoint[ucVerticalAxis] * sin(dDeltaRad);
+    dTempPoint[1] = -dPoint[ucHorizontalAxis] * sin(dDeltaRad) + dPoint[ucVerticalAxis] * cos(dDeltaRad);
+    dOutputPoint[ucHorizontalAxis] = dTempPoint[0];
+    dOutputPoint[ucVerticalAxis] = dTempPoint[1];
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisOnTheEllipse(double dH, double dV, double dH0, double dV0, double dA, double dB)
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ïµã  ÊÇ·ñÔÚÍÖÔ²»¡ÉÏ
-  ÊäÈë²ÎÊı£ºdH					ºáÖá×ø±ê
-			dV					×İÖá×ø±ê
-			dH0					ÖĞĞÄµãºáÖá×ø±ê
-			dV0					ÖĞĞÄµã×İÖá×ø±ê	
-			dA					ÍÖÔ²²ÎÊıA
-			dB					ÍÖÔ²²ÎÊıB
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šisOnTheEllipse(double dH, double dV, double dH0, double dV0, double dA, double dB)
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­ç‚¹  æ˜¯å¦åœ¨æ¤­åœ†å¼§ä¸Š
+  è¾“å…¥å‚æ•°ï¼šdH					æ¨ªè½´åæ ‡
+			dV					çºµè½´åæ ‡
+			dH0					ä¸­å¿ƒç‚¹æ¨ªè½´åæ ‡
+			dV0					ä¸­å¿ƒç‚¹çºµè½´åæ ‡	
+			dA					æ¤­åœ†å‚æ•°A
+			dB					æ¤­åœ†å‚æ•°B
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isOnTheEllipse(double dH, double dV, double dH0, double dV0, double dA, double dB)
 {
-	double dResult;
+    double dResult;
 
-	//ÍÖÔ²±ê×¼·½³Ì
-	dResult = pow((dH - dH0)  / dA,  2 )+ pow((dV - dV0)  / dB , 2) - 1.0;
+    //æ¤­åœ†æ ‡å‡†æ–¹ç¨‹
+    dResult = pow((dH - dH0) / dA, 2) + pow((dV - dV0) / dB, 2) - 1.0;
 
-	if (isZero(dResult))
-	{
-		return TRUE;
-	}
-	return FALSE;
+    if (isZero(dResult))
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºellipseCenterCalculate(double* pdStartPoint, double* pdEndPoint, int nArraySize, double dA,double dB, double* pdCenterPoint, int8 cArcDir, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
-  º¯Êı¹¦ÄÜ  ÍÖÔ²»¡ÖĞĞÄµã¼ÆËã
-  ÊäÈë²ÎÊı£ºpdStartPoint		Æğµã
-			pdEndPoint			ÖÕµã
-			nArraySize			Êı×é´óĞ¡
-			dA					ÍÖÔ²²ÎÊıA
-			dB					ÍÖÔ²²ÎÊıB
-			pdCenterPoint		Êä³ö×ø±ê
-			cArcDir				Ô²»¡·½Ïò   1ÎªË³Ê±Õë  -1ÎªÄæÊ±Õë
-			dDeltaRad			Ğı×ª»¡¶È´óĞ¡
-			ucHorizontalAxis	ºáÖá
-			ucVerticalAxis		×İÖá
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1 ´íÎóÖµ
-			  1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šellipseCenterCalculate(double* pdStartPoint, double* pdEndPoint, int nArraySize, double dA,double dB, double* pdCenterPoint, int8 cArcDir, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+  å‡½æ•°åŠŸèƒ½  æ¤­åœ†å¼§ä¸­å¿ƒç‚¹è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼špdStartPoint		èµ·ç‚¹
+			pdEndPoint			ç»ˆç‚¹
+			nArraySize			æ•°ç»„å¤§å°
+			dA					æ¤­åœ†å‚æ•°A
+			dB					æ¤­åœ†å‚æ•°B
+			pdCenterPoint		è¾“å‡ºåæ ‡
+			cArcDir				åœ†å¼§æ–¹å‘   1ä¸ºé¡ºæ—¶é’ˆ  -1ä¸ºé€†æ—¶é’ˆ
+			dDeltaRad			æ—‹è½¬å¼§åº¦å¤§å°
+			ucHorizontalAxis	æ¨ªè½´
+			ucVerticalAxis		çºµè½´
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1 é”™è¯¯å€¼
+			  1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 ellipseCenterCalculate(double* pdStartPoint, double* pdEndPoint, int nArraySize, double dA,double dB, double* pdCenterPoint, int8 cArcDir, double dDeltaRad, uint8 ucHorizontalAxis, uint8 ucVerticalAxis)
+int8 ellipseCenterCalculate(double* pdStartPoint, double* pdEndPoint, int nArraySize, double dA, double dB,
+                            double* pdCenterPoint, int8 cArcDir, double dDeltaRad, uint8 ucHorizontalAxis,
+                            uint8 ucVerticalAxis)
 {
-	double SStartPoint[2]; // Æğµã
-	double SEndPoint[2];   // ÖÕµã
-	double SCenterPoint[2]; // ÍÖÔ²ĞÄ
-	double SVector[2];  //ÏòÁ¿
-	double dC, dD, dE; // ¼ÆËãÏµÊı
-	double dSquareA = dA*dA;
-	double dSquareB = dB*dB;
-	double dSquareV2subV1; // (ÖÕµã×İ×ø±ê-Æğµã×İ×ø±ê)^2
-	double dDelta;//Çó¸ù¹«Ê½delta
-	double dDot; // ÄÚ»ı
+    double SStartPoint[2];  // èµ·ç‚¹
+    double SEndPoint[2];    // ç»ˆç‚¹
+    double SCenterPoint[2]; // æ¤­åœ†å¿ƒ
+    double SVector[2];      //å‘é‡
+    double dC, dD, dE;      // è®¡ç®—ç³»æ•°
+    double dSquareA = dA * dA;
+    double dSquareB = dB * dB;
+    double dSquareV2subV1; // (ç»ˆç‚¹çºµåæ ‡-èµ·ç‚¹çºµåæ ‡)^2
+    double dDelta;         //æ±‚æ ¹å…¬å¼delta
+    double dDot;           // å†…ç§¯
 
-	if (pdStartPoint==NULL || pdEndPoint == NULL || pdCenterPoint == NULL //|| pDeltaRad == NULL
-		|| ucHorizontalAxis>= nArraySize|| ucVerticalAxis >= nArraySize  )
-	{
-		return -1;
-	}
-	// Æğµã
-	SStartPoint[AXIS_HORIZONTAL] = pdStartPoint[ucHorizontalAxis]; 
-	SStartPoint[AXIS_VERTICAL] = pdStartPoint[ucVerticalAxis];
-	// ÖÕµã
-	SEndPoint[AXIS_HORIZONTAL] = pdEndPoint[ucHorizontalAxis];
-	SEndPoint[AXIS_VERTICAL] = pdEndPoint[ucVerticalAxis];
+    if (pdStartPoint == NULL || pdEndPoint == NULL || pdCenterPoint == NULL //|| pDeltaRad == NULL
+        || ucHorizontalAxis >= nArraySize || ucVerticalAxis >= nArraySize)
+    {
+        return -1;
+    }
+    // èµ·ç‚¹
+    SStartPoint[AXIS_HORIZONTAL] = pdStartPoint[ucHorizontalAxis];
+    SStartPoint[AXIS_VERTICAL] = pdStartPoint[ucVerticalAxis];
+    // ç»ˆç‚¹
+    SEndPoint[AXIS_HORIZONTAL] = pdEndPoint[ucHorizontalAxis];
+    SEndPoint[AXIS_VERTICAL] = pdEndPoint[ucVerticalAxis];
 
-	//Ğı×ª×ø±êÏµ
-	rotatingCoordinate(SStartPoint, 2, SStartPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	rotatingCoordinate(SEndPoint, 2, SEndPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    //æ—‹è½¬åæ ‡ç³»
+    rotatingCoordinate(SStartPoint, 2, SStartPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+    rotatingCoordinate(SEndPoint, 2, SEndPoint, dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
 
-	if (isZero(SStartPoint[AXIS_VERTICAL] - SEndPoint[AXIS_VERTICAL]) )
-	{ //ÆğµãÖÕµãºá×ø±êÏàµÈ Ö±½Ó¼ÆËã
-		SCenterPoint[AXIS_HORIZONTAL] = (SStartPoint[AXIS_HORIZONTAL] + SEndPoint[AXIS_HORIZONTAL]) / 2;
-		SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] - dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
-		if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL], SCenterPoint[AXIS_VERTICAL], dA, dB))
-		{
-			SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] + dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
-		}
-	}
-	else if (isZero(SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]))
-	{//ÆğµãÖÕµãºá×ø±êÏàµÈ Ö±½Ó¼ÆËã
-		SCenterPoint[AXIS_VERTICAL] = (SStartPoint[AXIS_VERTICAL] + SEndPoint[AXIS_VERTICAL]) / 2;
-		SCenterPoint[AXIS_HORIZONTAL] = SStartPoint[AXIS_HORIZONTAL] - dA * sqrt(1 - pow((SStartPoint[AXIS_VERTICAL] - SCenterPoint[AXIS_VERTICAL]) / dB, 2));
-		if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL], SCenterPoint[AXIS_VERTICAL], dA, dB))
-		{
-			SCenterPoint[AXIS_HORIZONTAL] = SStartPoint[AXIS_HORIZONTAL] + dA * sqrt(1 - pow((SStartPoint[AXIS_VERTICAL] - SCenterPoint[AXIS_VERTICAL]) / dB, 2));
-		}
-	}
-	else
-	{
-		dSquareV2subV1 = (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL])* (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]);
-	
-		//ÏòÁ¿  Æğµã--¡·ÖÕµã   //×ª»»Îª´¹Ö±ÏòÓÒÏòÁ¿
-		SVector[AXIS_HORIZONTAL] = (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]);
-		SVector[AXIS_HORIZONTAL] = -(SEndPoint[AXIS_HORIZONTAL] - SStartPoint[AXIS_HORIZONTAL]);
-	
-		//Ò»Ôª¶ş´Î·½³ÌÏµÊı
-		dC = 4 * dSquareB * (dSquareB * (SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) *(SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) + dSquareA * dSquareV2subV1);
-		dD = 4 * dSquareB * (dSquareB * (SEndPoint[AXIS_HORIZONTAL] * SEndPoint[AXIS_HORIZONTAL] - SStartPoint[AXIS_HORIZONTAL]* SStartPoint[AXIS_HORIZONTAL]) * (SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) - dSquareA * dSquareV2subV1 * (SStartPoint[AXIS_HORIZONTAL] + SEndPoint[AXIS_HORIZONTAL]));
-		dE = pow(dSquareB * (SEndPoint[AXIS_HORIZONTAL] * SEndPoint[AXIS_HORIZONTAL] - SStartPoint[AXIS_HORIZONTAL] * SStartPoint[AXIS_HORIZONTAL] ) + dSquareA * dSquareV2subV1,2) - 4 * dSquareA * dSquareA * dSquareB * dSquareV2subV1 * (1 - SStartPoint[AXIS_HORIZONTAL]* SStartPoint[AXIS_HORIZONTAL] / dSquareA);
+    if (isZero(SStartPoint[AXIS_VERTICAL] - SEndPoint[AXIS_VERTICAL]))
+    { //èµ·ç‚¹ç»ˆç‚¹æ¨ªåæ ‡ç›¸ç­‰ ç›´æ¥è®¡ç®—
+        SCenterPoint[AXIS_HORIZONTAL] = (SStartPoint[AXIS_HORIZONTAL] + SEndPoint[AXIS_HORIZONTAL]) / 2;
+        SCenterPoint[AXIS_VERTICAL] =
+            SStartPoint[AXIS_VERTICAL] -
+            dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+        if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL],
+                            SCenterPoint[AXIS_VERTICAL], dA, dB))
+        {
+            SCenterPoint[AXIS_VERTICAL] =
+                SStartPoint[AXIS_VERTICAL] +
+                dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+        }
+    }
+    else if (isZero(SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]))
+    { //èµ·ç‚¹ç»ˆç‚¹æ¨ªåæ ‡ç›¸ç­‰ ç›´æ¥è®¡ç®—
+        SCenterPoint[AXIS_VERTICAL] = (SStartPoint[AXIS_VERTICAL] + SEndPoint[AXIS_VERTICAL]) / 2;
+        SCenterPoint[AXIS_HORIZONTAL] =
+            SStartPoint[AXIS_HORIZONTAL] -
+            dA * sqrt(1 - pow((SStartPoint[AXIS_VERTICAL] - SCenterPoint[AXIS_VERTICAL]) / dB, 2));
+        if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL],
+                            SCenterPoint[AXIS_VERTICAL], dA, dB))
+        {
+            SCenterPoint[AXIS_HORIZONTAL] =
+                SStartPoint[AXIS_HORIZONTAL] +
+                dA * sqrt(1 - pow((SStartPoint[AXIS_VERTICAL] - SCenterPoint[AXIS_VERTICAL]) / dB, 2));
+        }
+    }
+    else
+    {
+        dSquareV2subV1 = (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]) *
+                         (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]);
 
-		//% Çó¸ù¹«Ê½
-		dDelta = dD *dD - 4 * dC *dE;
+        //å‘é‡  èµ·ç‚¹--ã€‹ç»ˆç‚¹   //è½¬æ¢ä¸ºå‚ç›´å‘å³å‘é‡
+        SVector[AXIS_HORIZONTAL] = (SEndPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]);
+        SVector[AXIS_HORIZONTAL] = -(SEndPoint[AXIS_HORIZONTAL] - SStartPoint[AXIS_HORIZONTAL]);
 
-		//Ô²ĞÄ1 
-		SCenterPoint[AXIS_HORIZONTAL] = (-dD + sqrt(dDelta)) / (2 * dC);
-		SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] - dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL])  / dA,2));
-		if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL], SCenterPoint[AXIS_VERTICAL],dA,dB))
-		{
-			SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] + dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
-		}
+        //ä¸€å…ƒäºŒæ¬¡æ–¹ç¨‹ç³»æ•°
+        dC = 4 * dSquareB *
+             (dSquareB * (SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) *
+                  (SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) +
+              dSquareA * dSquareV2subV1);
+        dD = 4 * dSquareB *
+             (dSquareB *
+                  (SEndPoint[AXIS_HORIZONTAL] * SEndPoint[AXIS_HORIZONTAL] -
+                   SStartPoint[AXIS_HORIZONTAL] * SStartPoint[AXIS_HORIZONTAL]) *
+                  (SStartPoint[AXIS_HORIZONTAL] - SEndPoint[AXIS_HORIZONTAL]) -
+              dSquareA * dSquareV2subV1 * (SStartPoint[AXIS_HORIZONTAL] + SEndPoint[AXIS_HORIZONTAL]));
+        dE = pow(dSquareB * (SEndPoint[AXIS_HORIZONTAL] * SEndPoint[AXIS_HORIZONTAL] -
+                             SStartPoint[AXIS_HORIZONTAL] * SStartPoint[AXIS_HORIZONTAL]) +
+                     dSquareA * dSquareV2subV1,
+                 2) -
+             4 * dSquareA * dSquareA * dSquareB * dSquareV2subV1 *
+                 (1 - SStartPoint[AXIS_HORIZONTAL] * SStartPoint[AXIS_HORIZONTAL] / dSquareA);
 
-		//ÏòÁ¿ ÖÕµã-Æğµã
-		dDot = SVector[AXIS_HORIZONTAL] * (SCenterPoint[AXIS_HORIZONTAL]- SStartPoint[AXIS_HORIZONTAL]) 
-			+ SVector[AXIS_VERTICAL] * (SCenterPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]);   //ÄÚ»ı
+        //% æ±‚æ ¹å…¬å¼
+        dDelta = dD * dD - 4 * dC * dE;
 
-		//double dDotSE = dVectorSx * dVectorEx + dVectorSz * dVectorEz;    //ÏòÁ¿O'S'ºÍÏòÁ¿O'E'µÄÄÚ»ı
-		if (cArcDir * dDot > 0)
-		{
-			//Ô²ĞÄ2
-			SCenterPoint[AXIS_HORIZONTAL] = (-dD - sqrt(dDelta)) / (2 * dC);
-			SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] - dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
-			if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL], SCenterPoint[AXIS_VERTICAL], dA, dB))
-			{
-				SCenterPoint[AXIS_VERTICAL] = SStartPoint[AXIS_VERTICAL] + dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
-			}
-		}
-	}
-	//Ô²ĞÄĞı×ª×ø±êÏµ
-	rotatingCoordinate(SCenterPoint, 2, SCenterPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
-	
-	//´«³öÖĞĞÄµã
-	pdCenterPoint[ucHorizontalAxis] = SCenterPoint[AXIS_HORIZONTAL];
-	pdCenterPoint[ucVerticalAxis] = SCenterPoint[AXIS_VERTICAL];
+        //åœ†å¿ƒ1
+        SCenterPoint[AXIS_HORIZONTAL] = (-dD + sqrt(dDelta)) / (2 * dC);
+        SCenterPoint[AXIS_VERTICAL] =
+            SStartPoint[AXIS_VERTICAL] -
+            dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+        if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL],
+                            SCenterPoint[AXIS_VERTICAL], dA, dB))
+        {
+            SCenterPoint[AXIS_VERTICAL] =
+                SStartPoint[AXIS_VERTICAL] +
+                dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+        }
 
-	return 1;
+        //å‘é‡ ç»ˆç‚¹-èµ·ç‚¹
+        dDot = SVector[AXIS_HORIZONTAL] * (SCenterPoint[AXIS_HORIZONTAL] - SStartPoint[AXIS_HORIZONTAL]) +
+               SVector[AXIS_VERTICAL] * (SCenterPoint[AXIS_VERTICAL] - SStartPoint[AXIS_VERTICAL]); //å†…ç§¯
+
+        //double dDotSE = dVectorSx * dVectorEx + dVectorSz * dVectorEz;    //å‘é‡O'S'å’Œå‘é‡O'E'çš„å†…ç§¯
+        if (cArcDir * dDot > 0)
+        {
+            //åœ†å¿ƒ2
+            SCenterPoint[AXIS_HORIZONTAL] = (-dD - sqrt(dDelta)) / (2 * dC);
+            SCenterPoint[AXIS_VERTICAL] =
+                SStartPoint[AXIS_VERTICAL] -
+                dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+            if (!isOnTheEllipse(SEndPoint[AXIS_VERTICAL], SEndPoint[AXIS_VERTICAL], SCenterPoint[AXIS_HORIZONTAL],
+                                SCenterPoint[AXIS_VERTICAL], dA, dB))
+            {
+                SCenterPoint[AXIS_VERTICAL] =
+                    SStartPoint[AXIS_VERTICAL] +
+                    dB * sqrt(1 - pow((SStartPoint[AXIS_HORIZONTAL] - SCenterPoint[AXIS_HORIZONTAL]) / dA, 2));
+            }
+        }
+    }
+    //åœ†å¿ƒæ—‹è½¬åæ ‡ç³»
+    rotatingCoordinate(SCenterPoint, 2, SCenterPoint, -dDeltaRad, AXIS_HORIZONTAL, AXIS_VERTICAL);
+
+    //ä¼ å‡ºä¸­å¿ƒç‚¹
+    pdCenterPoint[ucHorizontalAxis] = SCenterPoint[AXIS_HORIZONTAL];
+    pdCenterPoint[ucVerticalAxis] = SCenterPoint[AXIS_VERTICAL];
+
+    return 1;
 }
 
-//Ô²Öù×ø±ê×ª»¯
+//åœ†æŸ±åæ ‡è½¬åŒ–
 double commonCoord2Cylinder(double dPoint, double dCylinderRadius)
 {
-	double dPerimeter = 2 * PI * dCylinderRadius;
-	if (isZero(dPerimeter))
-	{
-		return 0;
-	}
-	return dPoint/DEGREE_OF_CIRCLE * dPerimeter;
+    double dPerimeter = 2 * PI * dCylinderRadius;
+    if (isZero(dPerimeter))
+    {
+        return 0;
+    }
+    return dPoint / DEGREE_OF_CIRCLE * dPerimeter;
 }
 
-//Ô²Öù×ª»¯ÆÕÍ¨×ø±ê
+//åœ†æŸ±è½¬åŒ–æ™®é€šåæ ‡
 double cylinderCoord2Common(double dPoint, double dCylinderRadius)
 {
-	double dPerimeter = 2 * PI * dCylinderRadius;
-	if (isZero(dPerimeter))
-	{
-		return 0;
-	}
-	return dPoint * DEGREE_OF_CIRCLE / dPerimeter;
+    double dPerimeter = 2 * PI * dCylinderRadius;
+    if (isZero(dPerimeter))
+    {
+        return 0;
+    }
+    return dPoint * DEGREE_OF_CIRCLE / dPerimeter;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcalArcVectorAndDistance(uint8* ucAxisArray, uint32 unCommandType)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÖ¸ÁîÀàĞÍÑ¡Ôñ²å²¹Æ½Ãæ   ºá×İÖáÒª¶ÔÓ¦   G17 ->XY   G18 ->ZX   G19 ->YZ
-  ÊäÈë²ÎÊı£ºucAxisArray		ÖáÊı×é  ³¤¶È±ØĞë´óÓÚµÈÓÚ2
-			unCommandType	Ö¸ÁîÀàĞÍ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ¿ÕÖ¸Õë
-			1  ´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šcalArcVectorAndDistance(uint8* ucAxisArray, uint32 unCommandType)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æŒ‡ä»¤ç±»å‹é€‰æ‹©æ’è¡¥å¹³é¢   æ¨ªçºµè½´è¦å¯¹åº”   G17 ->XY   G18 ->ZX   G19 ->YZ
+  è¾“å…¥å‚æ•°ï¼šucAxisArray		è½´æ•°ç»„  é•¿åº¦å¿…é¡»å¤§äºç­‰äº2
+			unCommandType	æŒ‡ä»¤ç±»å‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç©ºæŒ‡é’ˆ
+			1  å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 chooseInterpPlane(uint8* ucAxisArray, uint32 unCommandType)
 {
-	if (ucAxisArray == NULL) return -1;
+    if (ucAxisArray == NULL)
+        return -1;
 
-	if (getBits(unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
-	{ //Ô²Öù²å²¹
-		switch (getBits(unCommandType, CMD_PLANE_ADDR))//¶ÁÈ¡Ö¸ÁîÀàĞÍ
-		{
-		case CMD_PLANE_G18: //G18
-		default://Ä¬ÈÏG18
-			ucAxisArray[0] = AXIS_Z;
-			ucAxisArray[1] = AXIS_C;
-			break;
-		case CMD_PLANE_G17: //G17
-			ucAxisArray[0] = AXIS_X;
-			ucAxisArray[1] = AXIS_C;
-			break;
-		case CMD_PLANE_G19: //G19
-			ucAxisArray[0] = AXIS_C;
-			ucAxisArray[1] = AXIS_Z;
-			break;
-		}
-	}
-	else
-	{ //ÆÕÍ¨²å²¹
-		switch (getBits(unCommandType, CMD_PLANE_ADDR))//¶ÁÈ¡Ö¸ÁîÀàĞÍ
-		{
-		case CMD_PLANE_G18: //G18
-		default://Ä¬ÈÏG18
-			ucAxisArray[0] = AXIS_Z;
-			ucAxisArray[1] = AXIS_X;
-			break;
-		case CMD_PLANE_G17: //G17
-			ucAxisArray[0] = AXIS_X;
-			ucAxisArray[1] = AXIS_Y;
-			break;
-		case CMD_PLANE_G19: //G19
-			ucAxisArray[0] = AXIS_Y;
-			ucAxisArray[1] = AXIS_Z;
-			break;
-		}
-	}
-	return 1;
+    if (getBits(unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_CYLINDRICAL)
+    {                                                   //åœ†æŸ±æ’è¡¥
+        switch (getBits(unCommandType, CMD_PLANE_ADDR)) //è¯»å–æŒ‡ä»¤ç±»å‹
+        {
+        case CMD_PLANE_G18: //G18
+        default:            //é»˜è®¤G18
+            ucAxisArray[0] = AXIS_Z;
+            ucAxisArray[1] = AXIS_C;
+            break;
+        case CMD_PLANE_G17: //G17
+            ucAxisArray[0] = AXIS_X;
+            ucAxisArray[1] = AXIS_C;
+            break;
+        case CMD_PLANE_G19: //G19
+            ucAxisArray[0] = AXIS_C;
+            ucAxisArray[1] = AXIS_Z;
+            break;
+        }
+    }
+    else
+    {                                                   //æ™®é€šæ’è¡¥
+        switch (getBits(unCommandType, CMD_PLANE_ADDR)) //è¯»å–æŒ‡ä»¤ç±»å‹
+        {
+        case CMD_PLANE_G18: //G18
+        default:            //é»˜è®¤G18
+            ucAxisArray[0] = AXIS_Z;
+            ucAxisArray[1] = AXIS_X;
+            break;
+        case CMD_PLANE_G17: //G17
+            ucAxisArray[0] = AXIS_X;
+            ucAxisArray[1] = AXIS_Y;
+            break;
+        case CMD_PLANE_G19: //G19
+            ucAxisArray[0] = AXIS_Y;
+            ucAxisArray[1] = AXIS_Z;
+            break;
+        }
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºdouble findValue(const int8* const pStartPtr, uint8 ucWord_Len,const uint32 unLineNum)
-  º¯Êı¹¦ÄÜ  ½«×Ö·û´®×ª»»ÊıÖµ
-  ÊäÈë²ÎÊı£ºpStartPtr		Ö¸Ïò×Ö·û´®Ê××Ö·ûµØÖ·
-			ucLen			×Ö·û´®³¤¶È
-			unLineNum		ĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º´Ê·¨µ¥ÔªµÄÊıÖµ
+  å‡½æ•°åç§°ï¼šdouble findValue(const int8* const pStartPtr, uint8 ucWord_Len,const uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½  å°†å­—ç¬¦ä¸²è½¬æ¢æ•°å€¼
+  è¾“å…¥å‚æ•°ï¼špStartPtr		æŒ‡å‘å­—ç¬¦ä¸²é¦–å­—ç¬¦åœ°å€
+			ucLen			å­—ç¬¦ä¸²é•¿åº¦
+			unLineNum		è¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¯æ³•å•å…ƒçš„æ•°å€¼
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double stringToValue(const int8* pStartPtr, uint8 ucLen, const uint32 unLineNum)
 {
-	if (pStartPtr == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	if ((ucLen < 2) || (ucLen > 11))       //´Ê·¨µ¥Ôª³¤¶ÈĞèÔÚ2µ½11ÄÚ
-	{
-		setErrorType(GCODE_ERROR_NUM85);
-		findError(pStartPtr, unLineNum);
-		return MAXIMUM_OF_UINT8;
-	}
+    if (pStartPtr == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    if ((ucLen < 2) || (ucLen > 11)) //è¯æ³•å•å…ƒé•¿åº¦éœ€åœ¨2åˆ°11å†…
+    {
+        setErrorType(GCODE_ERROR_NUM85);
+        findError(pStartPtr, unLineNum);
+        return MAXIMUM_OF_UINT8;
+    }
 
-	int8 cDataStrBuf[MAX_LENGTH_OF_STRING + 1] = { 0 };    //×Ö·û´®Êı×é:´æ·Å×Ö·û´®µÄÊı×Ö
-	const int8* pTemp = pStartPtr;                               //´´½¨Ò»¸ö¸úpStart_PtrÖ¸ÏòÒ»ÑùµÄÖ¸Õë
-	uint8 i = 0;
+    int8 cDataStrBuf[MAX_LENGTH_OF_STRING + 1] = {0}; //å­—ç¬¦ä¸²æ•°ç»„:å­˜æ”¾å­—ç¬¦ä¸²çš„æ•°å­—
+    const int8* pTemp = pStartPtr;                    //åˆ›å»ºä¸€ä¸ªè·ŸpStart_PtræŒ‡å‘ä¸€æ ·çš„æŒ‡é’ˆ
+    uint8 i = 0;
 
-	for (; i < ucLen; i++)
-	{
-		cDataStrBuf[i] = *(pTemp + i);
-	}
-	//atof»á³öÏÖÎÊÌâ£ºÈç"0X100"»áÊä³ö256£¬Ó¦Îª0X±»Ê¶±ğÎª16½øÖÆ£¬×îºÃÓÃatoi£¨10½øÖÆ£©
-	return atof(cDataStrBuf);        //atof:°Ñ×Ö·û´®µÄ×ª³É¸¡µãÊı ÀıÈç£º"123"==>123.000000
+    for (; i < ucLen; i++)
+    {
+        cDataStrBuf[i] = *(pTemp + i);
+    }
+    //atofä¼šå‡ºç°é—®é¢˜ï¼šå¦‚"0X100"ä¼šè¾“å‡º256ï¼Œåº”ä¸º0Xè¢«è¯†åˆ«ä¸º16è¿›åˆ¶ï¼Œæœ€å¥½ç”¨atoiï¼ˆ10è¿›åˆ¶ï¼‰
+    return atof(cDataStrBuf); //atof:æŠŠå­—ç¬¦ä¸²çš„è½¬æˆæµ®ç‚¹æ•° ä¾‹å¦‚ï¼š"123"==>123.000000
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºdouble findValue(const int8* const pStartPtr, uint8 ucWord_Len,const uint32 unLineNum)
-  º¯Êı¹¦ÄÜ  ½«×Ö·û´®×ª»»ÊıÖµ
-  ÊäÈë²ÎÊı£ºÖ¸ÏòcharÊı¾İÀàĞÍµÄÖ¸Õë£¬pStart_PtrÖ¸Ïò´Ê·¨µ¥Ôª¿ªÍ·,sWord_Len´Ê·¨µ¥Ôª³¤¶È,unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º´Ê·¨µ¥ÔªµÄÊıÖµ
+  å‡½æ•°åç§°ï¼šdouble findValue(const int8* const pStartPtr, uint8 ucWord_Len,const uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½  å°†å­—ç¬¦ä¸²è½¬æ¢æ•°å€¼
+  è¾“å…¥å‚æ•°ï¼šæŒ‡å‘charæ•°æ®ç±»å‹çš„æŒ‡é’ˆï¼ŒpStart_PtræŒ‡å‘è¯æ³•å•å…ƒå¼€å¤´,sWord_Lenè¯æ³•å•å…ƒé•¿åº¦,unLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¯æ³•å•å…ƒçš„æ•°å€¼
 
-  ±¸    ×¢£ºstring -> value
+  å¤‡    æ³¨ï¼šstring -> value
 **************************************************/
 double findValue(const int8* pStartPtr, uint8 ucWord_Len, const uint32 unLineNum)
 {
-	if (pStartPtr == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	
-	int8 cDataStrBuf[MAX_LENGTH_OF_STRING + 1] = { 0 };    //×Ö·û´®Êı×é:´æ·Å×Ö·û´®µÄÊı×Ö
-	const int8* pTemp = pStartPtr;                                    //´´½¨Ò»¸ö¸úpStart_PtrÖ¸ÏòÒ»ÑùµÄÖ¸Õë
-	uint8 i = 0;
+    if (pStartPtr == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	if ((ucWord_Len < 2) || (ucWord_Len > 11))       //´Ê·¨µ¥Ôª³¤¶ÈĞèÔÚ2µ½11ÄÚ
-	{
-		setErrorType(GCODE_ERROR_NUM85);
-		findError(pStartPtr, unLineNum);
-		return MAXIMUM_OF_UINT8;
-	}
-	pTemp++;                                                  //Ö¸ÕëÒÆ¶¯Ò»Î»£¬Ìø¹ı×ÖÄ¸
-	ucWord_Len--;                                              //Êı×Ö³¤¶ÈÎª´Ê·¨µ¥Ôª³¤¶È-1
-	while (ucWord_Len-- != 0)
-	{
-		cDataStrBuf[i] = *pTemp;
-		*(cDataStrBuf + i) = *pTemp;
-		pTemp++;
-		i++;
-	}
+    int8 cDataStrBuf[MAX_LENGTH_OF_STRING + 1] = {0}; //å­—ç¬¦ä¸²æ•°ç»„:å­˜æ”¾å­—ç¬¦ä¸²çš„æ•°å­—
+    const int8* pTemp = pStartPtr;                    //åˆ›å»ºä¸€ä¸ªè·ŸpStart_PtræŒ‡å‘ä¸€æ ·çš„æŒ‡é’ˆ
+    uint8 i = 0;
 
-	return atof(cDataStrBuf);        //atof:°Ñ×Ö·û´®µÄ×ª³É¸¡µãÊı ÀıÈç£º"123"==>123.000000
-	//return stringToDouble(cDataStrBuf);  
+    if ((ucWord_Len < 2) || (ucWord_Len > 11)) //è¯æ³•å•å…ƒé•¿åº¦éœ€åœ¨2åˆ°11å†…
+    {
+        setErrorType(GCODE_ERROR_NUM85);
+        findError(pStartPtr, unLineNum);
+        return MAXIMUM_OF_UINT8;
+    }
+    pTemp++;      //æŒ‡é’ˆç§»åŠ¨ä¸€ä½ï¼Œè·³è¿‡å­—æ¯
+    ucWord_Len--; //æ•°å­—é•¿åº¦ä¸ºè¯æ³•å•å…ƒé•¿åº¦-1
+    while (ucWord_Len-- != 0)
+    {
+        cDataStrBuf[i] = *pTemp;
+        *(cDataStrBuf + i) = *pTemp;
+        pTemp++;
+        i++;
+    }
+
+    return atof(cDataStrBuf); //atof:æŠŠå­—ç¬¦ä¸²çš„è½¬æˆæµ®ç‚¹æ•° ä¾‹å¦‚ï¼š"123"==>123.000000
+                              //return stringToDouble(cDataStrBuf);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid eliminateBlank(int8* pString, uint16 usStrSize)
-  º¯Êı¹¦ÄÜ  ³ıÈ¥×Ö·û´®ÀïµÄ¿Õ¸ñ
-  ÊäÈë²ÎÊı£ºpString		×Ö·û´®µØÖ·
-			usStrSize	×Ö·û´®´óĞ¡
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid eliminateBlank(int8* pString, uint16 usStrSize)
+  å‡½æ•°åŠŸèƒ½  é™¤å»å­—ç¬¦ä¸²é‡Œçš„ç©ºæ ¼
+  è¾“å…¥å‚æ•°ï¼špString		å­—ç¬¦ä¸²åœ°å€
+			usStrSize	å­—ç¬¦ä¸²å¤§å°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void eliminateBlank(int8* pString, uint16 usStrSize)
 {
-	int8* pSlow, * pFast;   //¿ìÂıÖ¸Õë
-	uint16 cnt = 0;
-	if (pString == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    int8 *pSlow, *pFast; //å¿«æ…¢æŒ‡é’ˆ
+    uint16 cnt = 0;
+    if (pString == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	pSlow = pString;
-	pFast = pString;
-	for (; cnt < usStrSize && *pFast != '\0'; cnt++, pFast++)
-	{
-		if (*pFast != ' ' && *pFast != '\t')
-		{
-			*pSlow = *pFast;
-			pSlow++;
-		}
-
-	}
-	*pSlow = '\0';
-	pString[usStrSize - 1] = '\0';
-
+    pSlow = pString;
+    pFast = pString;
+    for (; cnt < usStrSize && *pFast != '\0'; cnt++, pFast++)
+    {
+        if (*pFast != ' ' && *pFast != '\t')
+        {
+            *pSlow = *pFast;
+            pSlow++;
+        }
+    }
+    *pSlow = '\0';
+    pString[usStrSize - 1] = '\0';
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeGcode(void *pFreeTarget)
-  º¯Êı¹¦ÄÜ: ÊÇ·ñÎªÄ¿±ê×Ö·û´®
-  ÊäÈë²ÎÊı£ºcStrÄ¿±ê×Ö·û´®£¬pCurrPtrµ±Ç°×Ö·ûµÄµØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º²»±È½ÏµÚÒ»¸ö×Ö·û!
+  å‡½æ•°åç§°ï¼švoid freeGcode(void *pFreeTarget)
+  å‡½æ•°åŠŸèƒ½: æ˜¯å¦ä¸ºç›®æ ‡å­—ç¬¦ä¸²
+  è¾“å…¥å‚æ•°ï¼šcStrç›®æ ‡å­—ç¬¦ä¸²ï¼ŒpCurrPtrå½“å‰å­—ç¬¦çš„åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šä¸æ¯”è¾ƒç¬¬ä¸€ä¸ªå­—ç¬¦!
 **************************************************/
 bool isTagetStr_A(const int8* cStr, const int8* pCurrPtr)
 {
-	if (!cStr || !pCurrPtr)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (!cStr || !pCurrPtr)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	uint8 ucIdx = 1;    //²»±È½ÏµÚÒ»¸ö×Ö·û
-	size_t len = strlen(cStr);
-	while (ucIdx < len)
-	{
-		if (*(pCurrPtr + ucIdx) != cStr[ucIdx])
-		{
-			return FALSE;
-		}
-		ucIdx++;
-	}
-	return TRUE;
+    uint8 ucIdx = 1; //ä¸æ¯”è¾ƒç¬¬ä¸€ä¸ªå­—ç¬¦
+    size_t len = strlen(cStr);
+    while (ucIdx < len)
+    {
+        if (*(pCurrPtr + ucIdx) != cStr[ucIdx])
+        {
+            return FALSE;
+        }
+        ucIdx++;
+    }
+    return TRUE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool isTagetStr_B(const int8 *cStr, const int8 *pCurrPtr)
-  º¯Êı¹¦ÄÜ: ÊÇ·ñÎªÄ¿±ê×Ö·û´®
-  ÊäÈë²ÎÊı£ºcStrÄ¿±ê×Ö·û´®£¬pCurrPtrµ±Ç°×Ö·ûµÄµØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º±È½ÏµÚÒ»¸ö×Ö·û!
+  å‡½æ•°åç§°ï¼šbool isTagetStr_B(const int8 *cStr, const int8 *pCurrPtr)
+  å‡½æ•°åŠŸèƒ½: æ˜¯å¦ä¸ºç›®æ ‡å­—ç¬¦ä¸²
+  è¾“å…¥å‚æ•°ï¼šcStrç›®æ ‡å­—ç¬¦ä¸²ï¼ŒpCurrPtrå½“å‰å­—ç¬¦çš„åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šæ¯”è¾ƒç¬¬ä¸€ä¸ªå­—ç¬¦!
 **************************************************/
 bool isTagetStr_B(const int8* cStr, const int8* pCurrPtr)
 {
-	if (!cStr || !pCurrPtr)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (!cStr || !pCurrPtr)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	uint8 ucIdx = 0;    //±È½ÏµÚÒ»¸ö×Ö·û
-	size_t len = strlen(cStr);
-	while (ucIdx < len)
-	{
-		if (*(pCurrPtr + ucIdx) != cStr[ucIdx])
-		{
-			return FALSE;
-		}
-		ucIdx++;
-	}
-	return TRUE;
+    uint8 ucIdx = 0; //æ¯”è¾ƒç¬¬ä¸€ä¸ªå­—ç¬¦
+    size_t len = strlen(cStr);
+    while (ucIdx < len)
+    {
+        if (*(pCurrPtr + ucIdx) != cStr[ucIdx])
+        {
+            return FALSE;
+        }
+        ucIdx++;
+    }
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºchar* itoaNC(int value, char* str, int radix)
-  º¯Êı¹¦ÄÜ: itoa£¨ÕûĞÍ×ª×Ö·û´®£©µÄÊµÏÖ£¬µ¥Æ¬»úÃ»ÓĞÕâ¸öº¯Êı
-  ÊäÈë²ÎÊı£ºvalueÊı×Ö£¬strÄ¿±ê×Ö·û´®£¬radix½øÖÆ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstrÄ¿±ê×Ö·û´®
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šchar* itoaNC(int value, char* str, int radix)
+  å‡½æ•°åŠŸèƒ½: itoaï¼ˆæ•´å‹è½¬å­—ç¬¦ä¸²ï¼‰çš„å®ç°ï¼Œå•ç‰‡æœºæ²¡æœ‰è¿™ä¸ªå‡½æ•°
+  è¾“å…¥å‚æ•°ï¼švalueæ•°å­—ï¼Œstrç›®æ ‡å­—ç¬¦ä¸²ï¼Œradixè¿›åˆ¶
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstrç›®æ ‡å­—ç¬¦ä¸²
+  å¤‡    æ³¨ï¼š
 **************************************************/
 char* itoaNC(int value, char* str, int radix)
 {
-	static char dig[] =
-		"0123456789"
-		"abcdefghijklmnopqrstuvwxyz";
-	int n = 0, neg = 0;
-	unsigned int v;
-	char* p, * q;
-	char c;
-	/* ¸ºÊı£ºÊ®½øÖÆÖ±½ÓÔÚÇ°Ãæ¼Ó¸ººÅ£¬ÆäËü½øÖÆÓÃ²¹Âë */
-	if (radix == 10 && value < 0)
-	{
-		v = -value;
-		neg = 1;//¸ººÅ±êÖ¾Î»Îª1£¬±íÊ¾Îª¸ºÊı
-	}
-	else
-	{
-		v = value;
-	}
+    static char dig[] = "0123456789"
+                        "abcdefghijklmnopqrstuvwxyz";
+    int n = 0, neg = 0;
+    unsigned int v;
+    char *p, *q;
+    char c;
+    /* è´Ÿæ•°ï¼šåè¿›åˆ¶ç›´æ¥åœ¨å‰é¢åŠ è´Ÿå·ï¼Œå…¶å®ƒè¿›åˆ¶ç”¨è¡¥ç  */
+    if (radix == 10 && value < 0)
+    {
+        v = -value;
+        neg = 1; //è´Ÿå·æ ‡å¿—ä½ä¸º1ï¼Œè¡¨ç¤ºä¸ºè´Ÿæ•°
+    }
+    else
+    {
+        v = value;
+    }
 
-	/* ÆäËü½øÖÆµÄ¸ºÊı×ªÎªunsigned intÀàĞÍ£¬¼´È¡ÁË²¹Âë */
-	do
-	{
-		str[n++] = dig[v % radix];//v%radix¾ÍÊÇÈ¡×îºóÒ»¸öµÄÊı×Ö£¬È»ºóÕâ¸öÊı×Ö¶ÔÓ¦Êı×éµÄÎ»ÖÃ¸ÕºÃ¾ÍÊÇ¶ÔÓ¦×Ö·û
-		v /= radix;//v /= radix ³ıÈ¥×îºóÒ»¸öÊı×Ö
-	} while (v);
+    /* å…¶å®ƒè¿›åˆ¶çš„è´Ÿæ•°è½¬ä¸ºunsigned intç±»å‹ï¼Œå³å–äº†è¡¥ç  */
+    do
+    {
+        str[n++] = dig[v % radix]; //v%radixå°±æ˜¯å–æœ€åä¸€ä¸ªçš„æ•°å­—ï¼Œç„¶åè¿™ä¸ªæ•°å­—å¯¹åº”æ•°ç»„çš„ä½ç½®åˆšå¥½å°±æ˜¯å¯¹åº”å­—ç¬¦
+        v /= radix;                //v /= radix é™¤å»æœ€åä¸€ä¸ªæ•°å­—
+    } while (v);
 
-	if (neg)
-		str[n++] = '-'; //²¹ÉÏ¸ººÅ
+    if (neg)
+        str[n++] = '-'; //è¡¥ä¸Šè´Ÿå·
 
-	str[n] = '\0';//½ØÖÁ·ûºÅ
-	/* ×Ö·û´®·´×ª */
-	for (p = str, q = p + (n - 1); p < q; ++p, --q)//·­×ª×Ö·û´® ´ÓË÷Òı0 µ½Ë÷Òı£¨n-1£©
-		c = *p, * p = *q, * q = c;
-	return str;
+    str[n] = '\0'; //æˆªè‡³ç¬¦å·
+    /* å­—ç¬¦ä¸²åè½¬ */
+    for (p = str, q = p + (n - 1); p < q; ++p, --q) //ç¿»è½¬å­—ç¬¦ä¸² ä»ç´¢å¼•0 åˆ°ç´¢å¼•ï¼ˆn-1ï¼‰
+        c = *p, *p = *q, *q = c;
+    return str;
 }

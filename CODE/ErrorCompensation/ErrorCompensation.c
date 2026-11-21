@@ -5,432 +5,435 @@
 #include <stdlib.h>
 #include "Channel.h"
 #include "motion.h"
-SRevClearanceComp g_SRevClearanceComp[AXIS_NUM_MAX]; //·´Ïò¼äÏ¶²¹³¥
-
+SRevClearanceComp g_SRevClearanceComp[AXIS_NUM_MAX]; //åå‘é—´éš™è¡¥å¿
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitAxisRevData(SRevClearanceComp *pSRevClearanceComp)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá¹Ì¶¨²ÎÊı
-  ÊäÈë²ÎÊı£ºSRevClearanceComp * ·´ÏòÎó²î²¹³¥½á¹¹ÌåÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitAxisRevData(SRevClearanceComp *pSRevClearanceComp)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´å›ºå®šå‚æ•°
+  è¾“å…¥å‚æ•°ï¼šSRevClearanceComp * åå‘è¯¯å·®è¡¥å¿ç»“æ„ä½“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initAxisRevData(SRevClearanceComp* pSRevClearanceComp)
 {
-	struct SPlan* pSPlan = &pSRevClearanceComp->SPlanData;
-	pSPlan->dTc = g_SSystemPara.dInterpolationTime;//²å²¹Ê±¼ä
-	pSPlan->unCurrentT = 0;
-	pSPlan->ucAccVelPlanType = VEL_PLAN_T_CURVE;     // TĞÍ¹æ»®
-	pSPlan->ucDecVelPlanType = VEL_PLAN_T_CURVE;     // TĞÍ¹æ»®
-	pSPlan->ucDistReAverageType = DIST_REAVG_RATIO;  // ±ÈÀı¾ùÌ¯   ÆäËû¾ùÌ¯£¨TĞÍ£©ĞèÒª¸Ä³ÌĞò   unT5->unDistReT3
-	pSPlan->cInterpDir = INP_GO_AHEAD;//Ñ¡Ôñ·½Ïò
-	return 1;
+    struct SPlan* pSPlan = &pSRevClearanceComp->SPlanData;
+    pSPlan->dTc = g_SSystemPara.dInterpolationTime; //æ’è¡¥æ—¶é—´
+    pSPlan->unCurrentT = 0;
+    pSPlan->ucAccVelPlanType = VEL_PLAN_T_CURVE;    // Tå‹è§„åˆ’
+    pSPlan->ucDecVelPlanType = VEL_PLAN_T_CURVE;    // Tå‹è§„åˆ’
+    pSPlan->ucDistReAverageType = DIST_REAVG_RATIO; // æ¯”ä¾‹å‡æ‘Š   å…¶ä»–å‡æ‘Šï¼ˆTå‹ï¼‰éœ€è¦æ”¹ç¨‹åº   unT5->unDistReT3
+    pSPlan->cInterpDir = INP_GO_AHEAD;              //é€‰æ‹©æ–¹å‘
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºupdateSingleAxisRevPlan(uint8 ucPhysicalAxis)
-  º¯Êı¹¦ÄÜ  ¸üĞÂµ¥Öá·´Ïò¼äÏ¶²¹³¥µÄËÙ¶È¹æ»®£¨ÓÃÏµÍ³²ÎÊı£©
-  ÊäÈë²ÎÊı£ºucPhysicalAxis ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÎïÀíÖáºÅ´íÎó
-			0  ¾àÀëÎª0
-			1  ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šupdateSingleAxisRevPlan(uint8 ucPhysicalAxis)
+  å‡½æ•°åŠŸèƒ½  æ›´æ–°å•è½´åå‘é—´éš™è¡¥å¿çš„é€Ÿåº¦è§„åˆ’ï¼ˆç”¨ç³»ç»Ÿå‚æ•°ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç‰©ç†è½´å·é”™è¯¯
+			0  è·ç¦»ä¸º0
+			1  æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 updateSingleAxisRevPlan(uint8 ucPhysicalAxis)
 {
-	SRevClearanceComp* pSRevClearanceComp;//µ¥Öá·´Ïò¼äÏ¶²¹³¥½á¹¹Ìå
-	struct SPlan* pSPlan;//¹æ»®Ö¸Õë
-	double dDist;
+    SRevClearanceComp* pSRevClearanceComp; //å•è½´åå‘é—´éš™è¡¥å¿ç»“æ„ä½“
+    struct SPlan* pSPlan;                  //è§„åˆ’æŒ‡é’ˆ
+    double dDist;
 
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
 
-	pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];//µ¥Öá·´Ïò¼äÏ¶²¹³¥½á¹¹Ìå
-	pSPlan = &pSRevClearanceComp->SPlanData;//¹æ»®Ö¸Õë
-	dDist = fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist);// ´ÓÏµÍ³²ÎÊı»ñÈ¡²¹³¥¾àÀë
+    pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];                   //å•è½´åå‘é—´éš™è¡¥å¿ç»“æ„ä½“
+    pSPlan = &pSRevClearanceComp->SPlanData;                                     //è§„åˆ’æŒ‡é’ˆ
+    dDist = fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist); // ä»ç³»ç»Ÿå‚æ•°è·å–è¡¥å¿è·ç¦»
 
-	if (isZero(dDist))
-	{
-		pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF;//½øÈëÎŞ²¹³¥µÄ×´Ì¬
-		return 0;
-	}
+    if (isZero(dDist))
+    {
+        pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF; //è¿›å…¥æ— è¡¥å¿çš„çŠ¶æ€
+        return 0;
+    }
 
-	if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType == ROTATION_AXIS)//Ğı×ªÖá
-	{
-		//pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist = dDist;//¸³Öµ¾àÀë  -->Âö³åÊı
-		//pSPlan->dAcc = RToAngle(g_SSystemPara.dRevClearanceCompAcc, ucPhysicalAxis)/g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ¼ÓËÙ¶È
-		//pSPlan->dDec = RToAngle(g_SSystemPara.dRevClearanceCompDec, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ¼õËÙ¶È
-		//pSPlan->dVmax = RToAngle(g_SSystemPara.dRevClearanceCompVmax, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ×î´óËÙ¶È
-		//pSPlan->dVs = pSPlan->dVe = RToAngle(g_SSystemPara.dRevClearanceCompVs, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; //³õËÙ¶È Ä©ËÙ¶È
+    if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType == ROTATION_AXIS) //æ—‹è½¬è½´
+    {
+        //pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist = dDist;//èµ‹å€¼è·ç¦»  -->è„‰å†²æ•°
+        //pSPlan->dAcc = RToAngle(g_SSystemPara.dRevClearanceCompAcc, ucPhysicalAxis)/g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // åŠ é€Ÿåº¦
+        //pSPlan->dDec = RToAngle(g_SSystemPara.dRevClearanceCompDec, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // å‡é€Ÿåº¦
+        //pSPlan->dVmax = RToAngle(g_SSystemPara.dRevClearanceCompVmax, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // æœ€å¤§é€Ÿåº¦
+        //pSPlan->dVs = pSPlan->dVe = RToAngle(g_SSystemPara.dRevClearanceCompVs, ucPhysicalAxis) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; //åˆé€Ÿåº¦ æœ«é€Ÿåº¦
 
-		pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist = dDist * 1000 ;//¸³Öµ¾àÀë  -->Âö³åÊı  // mm×ªÂö³å 1mmÎª1000Âö³å
-		pSPlan->dAcc = g_SSystemPara.dRevClearanceCompAcc / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ¼ÓËÙ¶È
-		pSPlan->dDec = g_SSystemPara.dRevClearanceCompDec / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ¼õËÙ¶È
-		pSPlan->dVmax = g_SSystemPara.dRevClearanceCompVmax / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // ×î´óËÙ¶È
-		pSPlan->dVs = pSPlan->dVe = g_SSystemPara.dRevClearanceCompVs / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; //³õËÙ¶È Ä©ËÙ¶È
-	}
-	else//Ö±ÏßÖá
-	{
-		pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist = dDist;//¸³Öµ¾àÀë -->mm
-		pSPlan->dAcc = g_SSystemPara.dRevClearanceCompAcc; // ¼ÓËÙ¶È
-		pSPlan->dDec = g_SSystemPara.dRevClearanceCompDec; // ¼õËÙ¶È
-		pSPlan->dVmax = g_SSystemPara.dRevClearanceCompVmax; // ×î´óËÙ¶È
-		pSPlan->dVs = pSPlan->dVe = g_SSystemPara.dRevClearanceCompVs; //³õËÙ¶È Ä©ËÙ¶È
-	}
+        pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist =
+            dDist * 1000; //èµ‹å€¼è·ç¦»  -->è„‰å†²æ•°  // mmè½¬è„‰å†² 1mmä¸º1000è„‰å†²
+        pSPlan->dAcc =
+            g_SSystemPara.dRevClearanceCompAcc / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // åŠ é€Ÿåº¦
+        pSPlan->dDec =
+            g_SSystemPara.dRevClearanceCompDec / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // å‡é€Ÿåº¦
+        pSPlan->dVmax =
+            g_SSystemPara.dRevClearanceCompVmax / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; // æœ€å¤§é€Ÿåº¦
+        pSPlan->dVs = pSPlan->dVe =
+            g_SSystemPara.dRevClearanceCompVs / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; //åˆé€Ÿåº¦ æœ«é€Ÿåº¦
+    }
+    else //ç›´çº¿è½´
+    {
+        pSPlan->dDistance = pSPlan->dCurLeftDist = pSPlan->dTargetDist = dDist; //èµ‹å€¼è·ç¦» -->mm
+        pSPlan->dAcc = g_SSystemPara.dRevClearanceCompAcc;                      // åŠ é€Ÿåº¦
+        pSPlan->dDec = g_SSystemPara.dRevClearanceCompDec;                      // å‡é€Ÿåº¦
+        pSPlan->dVmax = g_SSystemPara.dRevClearanceCompVmax;                    // æœ€å¤§é€Ÿåº¦
+        pSPlan->dVs = pSPlan->dVe = g_SSystemPara.dRevClearanceCompVs;          //åˆé€Ÿåº¦ æœ«é€Ÿåº¦
+    }
 
-	if(pSPlan->dAcc <= 0 || pSPlan->dDec <= 0)//ÅĞ¶Ï¼ÓËÙ¶ÈÊÇ·ñÎªÕı
-	{
-		pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF;
-		return -1;
-	}
-	if(preparePlanningAndDistReAvg(pSPlan, FALSE) != 1)//ËÙ¶È¹æ»®+±ÈÀıÆ½Ì¯
-	{
-		pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF;
-		clearSPlanData(pSPlan);
-		return -1;
-	}
+    if (pSPlan->dAcc <= 0 || pSPlan->dDec <= 0) //åˆ¤æ–­åŠ é€Ÿåº¦æ˜¯å¦ä¸ºæ­£
+    {
+        pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF;
+        return -1;
+    }
+    if (preparePlanningAndDistReAvg(pSPlan, FALSE) != 1) //é€Ÿåº¦è§„åˆ’+æ¯”ä¾‹å¹³æ‘Š
+    {
+        pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_OFF;
+        clearSPlanData(pSPlan);
+        return -1;
+    }
 
-	pSPlan->unCurrentT = 0; // Ê±¼ä
-	pSRevClearanceComp->dCurDist = 0;//ÒÑ²¹³¥¾àÀë
+    pSPlan->unCurrentT = 0;           // æ—¶é—´
+    pSRevClearanceComp->dCurDist = 0; //å·²è¡¥å¿è·ç¦»
 
-	pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_ON;//¿ªÆô·´Ïò¼äÏ¶²¹³¥
-	return 1;
+    pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_ON; //å¼€å¯åå‘é—´éš™è¡¥å¿
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitSingleAxisRev(uint8 ucPhysicalAxis, int8 cDir)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥
-  ÊäÈë²ÎÊı£ºucPhysicalAxis ÎïÀíÖáºÅ
-			cDir  ²¹³¥·½Ïò    Ã¿¸öÎïÀíÖáÊ×´Îµ÷ÓÃÊ±ÓĞĞ§  £¬ ·½ÏòÓë»ØÁã·½ÏòÓĞ¹Ø
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÎïÀíÖáºÅ´íÎó
-			 1 ³É¹¦
-			 2 ³É¹¦ ´ıÉúĞ§
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitSingleAxisRev(uint8 ucPhysicalAxis, int8 cDir)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis ç‰©ç†è½´å·
+			cDir  è¡¥å¿æ–¹å‘    æ¯ä¸ªç‰©ç†è½´é¦–æ¬¡è°ƒç”¨æ—¶æœ‰æ•ˆ  ï¼Œ æ–¹å‘ä¸å›é›¶æ–¹å‘æœ‰å…³
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç‰©ç†è½´å·é”™è¯¯
+			 1 æˆåŠŸ
+			 2 æˆåŠŸ å¾…ç”Ÿæ•ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initSingleAxisRev(uint8 ucPhysicalAxis, int8 cDir)
 {
-	SRevClearanceComp* pSRevClearanceComp;
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];
+    SRevClearanceComp* pSRevClearanceComp;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];
 
-	switch (pSRevClearanceComp->ucStatus)
-	{
-	case ERROR_COMPENSATION_INIT:
-		if (cDir != INP_GO_AHEAD && cDir != INP_GO_BACK)
-		{
-			pSRevClearanceComp->cDir = -pSRevClearanceComp->cCurrentDir;//¸ù¾İ×î½üµÄÔË¶¯·½ÏòÅĞ¶Ï²¹³¥·½Ïò
-		}
-		else
-		{
-			pSRevClearanceComp->cDir = cDir; // ÉèÖÃ·½Ïò  Ö»ÄÜÔÚ»ØÁãºó³õÊ¼»¯µÄÊ±ºò¸³Öµ·½Ïò
-		}
-		if (pSRevClearanceComp->cDir == INP_GO_AHEAD || pSRevClearanceComp->cDir == INP_GO_BACK)//Ö»ÓĞÖá·½Ïò²»Îª0Ê±£¬²¹³¥×´Ì¬²ÅÖÃÎªon 2026.4.9
-		{
-			updateSingleAxisRevPlan(ucPhysicalAxis);
-		}
-		break;
-	default:
-	case ERROR_COMPENSATION_OFF:     //·´ÏòÎó²î²¹³¥¹Ø±Õ
-	case ERROR_COMPENSATION_ON:   	//»ØÁãºó ·´ÏòÎó²î²¹³¥¿ªÆô
-	case ERROR_COMPENSATION_MODIFY:	 //ÖØĞÂÉèÖÃ·´ÏòÎó²îºó ´ıcurrentT»Øµ½0Ê±£¬²ÅÄÜÖØĞÂ¹æ»® Ê¹ÓÃĞÂµÄ²¹³¥¾àÀë
-		if(pSRevClearanceComp->cDir == 0) //Èô²¹³¥·½ÏòÎª0,Ôò²»µÃĞ´Èë MODIFY
-		{
-			return 1;
-		}
-		pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_MODIFY;
-		if (pSRevClearanceComp->SPlanData.unCurrentT == 0)
-		{
-			return updateSingleAxisRevPlan(ucPhysicalAxis);
-		}
-		return 2;
-	}
-	return 1;
+    switch (pSRevClearanceComp->ucStatus)
+    {
+    case ERROR_COMPENSATION_INIT:
+        if (cDir != INP_GO_AHEAD && cDir != INP_GO_BACK)
+        {
+            pSRevClearanceComp->cDir = -pSRevClearanceComp->cCurrentDir; //æ ¹æ®æœ€è¿‘çš„è¿åŠ¨æ–¹å‘åˆ¤æ–­è¡¥å¿æ–¹å‘
+        }
+        else
+        {
+            pSRevClearanceComp->cDir = cDir; // è®¾ç½®æ–¹å‘  åªèƒ½åœ¨å›é›¶ååˆå§‹åŒ–çš„æ—¶å€™èµ‹å€¼æ–¹å‘
+        }
+        if (pSRevClearanceComp->cDir == INP_GO_AHEAD ||
+            pSRevClearanceComp->cDir == INP_GO_BACK) //åªæœ‰è½´æ–¹å‘ä¸ä¸º0æ—¶ï¼Œè¡¥å¿çŠ¶æ€æ‰ç½®ä¸ºon 2026.4.9
+        {
+            updateSingleAxisRevPlan(ucPhysicalAxis);
+        }
+        break;
+    default:
+    case ERROR_COMPENSATION_OFF:           //åå‘è¯¯å·®è¡¥å¿å…³é—­
+    case ERROR_COMPENSATION_ON:            //å›é›¶å åå‘è¯¯å·®è¡¥å¿å¼€å¯
+    case ERROR_COMPENSATION_MODIFY:        //é‡æ–°è®¾ç½®åå‘è¯¯å·®å å¾…currentTå›åˆ°0æ—¶ï¼Œæ‰èƒ½é‡æ–°è§„åˆ’ ä½¿ç”¨æ–°çš„è¡¥å¿è·ç¦»
+        if (pSRevClearanceComp->cDir == 0) //è‹¥è¡¥å¿æ–¹å‘ä¸º0,åˆ™ä¸å¾—å†™å…¥ MODIFY
+        {
+            return 1;
+        }
+        pSRevClearanceComp->ucStatus = ERROR_COMPENSATION_MODIFY;
+        if (pSRevClearanceComp->SPlanData.unCurrentT == 0)
+        {
+            return updateSingleAxisRevPlan(ucPhysicalAxis);
+        }
+        return 2;
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºrevCompEnabled(uint8 ucPhysicalAxis, bool bEnable)
-  º¯Êı¹¦ÄÜ  Ê¹ÄÜ·´Ïò¼äÏ¶²¹³¥
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÎïÀíÖáºÅ´íÎó
-			0  ×´Ì¬ÎªINIT  ºöÂÔ²Ù×÷
-			1  ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrevCompEnabled(uint8 ucPhysicalAxis, bool bEnable)
+  å‡½æ•°åŠŸèƒ½  ä½¿èƒ½åå‘é—´éš™è¡¥å¿
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç‰©ç†è½´å·é”™è¯¯
+			0  çŠ¶æ€ä¸ºINIT  å¿½ç•¥æ“ä½œ
+			1  æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 revCompEnabled(uint8 ucPhysicalAxis, bool bEnable)
 {
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SRevClearanceComp[ucPhysicalAxis].ucStatus == ERROR_COMPENSATION_INIT)
-	{
-		return 0;
-	}
-	if (bEnable == TRUE && fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist) > 0) // ÖáÊ¹ÄÜÇÒ²¹³¥¾àÀë²»Îª0 2026.4.9
-	{
-		g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_ON;
-	}
-	else
-	{
-		g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_OFF;
-	}
-	return 1;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SRevClearanceComp[ucPhysicalAxis].ucStatus == ERROR_COMPENSATION_INIT)
+    {
+        return 0;
+    }
+    if (bEnable == TRUE &&
+        fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist) > 0) // è½´ä½¿èƒ½ä¸”è¡¥å¿è·ç¦»ä¸ä¸º0 2026.4.9
+    {
+        g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_ON;
+    }
+    else
+    {
+        g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_OFF;
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitAxisRevDataAPI()
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá¹Ì¶¨²ÎÊıÑ­»·
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitAxisRevDataAPI()
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´å›ºå®šå‚æ•°å¾ªç¯
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initAxisRevDataAPI()
 {
-	uint8 ucCounter = 0;
-	for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
-	{
-		initAxisRevData(&g_SRevClearanceComp[ucCounter]);//³õÊ¼»¯¹Ì¶¨²ÎÊı
-	}
-	return 1;
+    uint8 ucCounter = 0;
+    for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
+    {
+        initAxisRevData(&g_SRevClearanceComp[ucCounter]); //åˆå§‹åŒ–å›ºå®šå‚æ•°
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºrevCompEnabledAPI(uint8 ucChannelNum, uint8 ucAxis, bool bEnable)
-  º¯Êı¹¦ÄÜ  Ê¹ÄÜ·´Ïò¼äÏ¶²¹³¥APIº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÎïÀíÖáºÅ´íÎó
-			0  ×´Ì¬ÎªINIT  ºöÂÔ²Ù×÷
-			1  ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrevCompEnabledAPI(uint8 ucChannelNum, uint8 ucAxis, bool bEnable)
+  å‡½æ•°åŠŸèƒ½  ä½¿èƒ½åå‘é—´éš™è¡¥å¿APIå‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç‰©ç†è½´å·é”™è¯¯
+			0  çŠ¶æ€ä¸ºINIT  å¿½ç•¥æ“ä½œ
+			1  æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 revCompEnabledAPI(uint8 ucChannelNum, uint8 ucAxis, bool bEnable)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
-	{
-		return -1;
-	}
-	return revCompEnabled(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis],bEnable);
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
+    {
+        return -1;
+    }
+    return revCompEnabled(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis], bEnable);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitSingleAxisRevAPI(uint8 ucChannelNum ,uint8 ucAxis , int8 cDir)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2 ´íÎóµÄ·½Ïò
-			-1 Í¨µÀºÅ»òÖáºÅ´íÎó
-			 1 ³É¹¦
-			 2 ³É¹¦ ´ıÉúĞ§
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitSingleAxisRevAPI(uint8 ucChannelNum ,uint8 ucAxis , int8 cDir)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucAxis			è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2 é”™è¯¯çš„æ–¹å‘
+			-1 é€šé“å·æˆ–è½´å·é”™è¯¯
+			 1 æˆåŠŸ
+			 2 æˆåŠŸ å¾…ç”Ÿæ•ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initRevCompAfterHomeAPI(uint8 ucChannelNum, uint8 ucAxis)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX || g_SChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	g_SRevClearanceComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus = ERROR_COMPENSATION_INIT;//½øÈë³õÊ¼×´Ì¬
-	return initSingleAxisRev(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis], 0);
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX ||
+        g_SChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    g_SRevClearanceComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus =
+        ERROR_COMPENSATION_INIT; //è¿›å…¥åˆå§‹çŠ¶æ€
+    return initSingleAxisRev(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis], 0);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitRevCompAfterDistEditedAPI(uint8 ucPhysicalAxis)
-  º¯Êı¹¦ÄÜ  ²ÎÊı±à¼­Ê±  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÎïÀíÖáºÅ´íÎó
-			0  ²¹³¥ÖµÎª0 
-			1  Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitRevCompAfterDistEditedAPI(uint8 ucPhysicalAxis)
+  å‡½æ•°åŠŸèƒ½  å‚æ•°ç¼–è¾‘æ—¶  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ç‰©ç†è½´å·é”™è¯¯
+			0  è¡¥å¿å€¼ä¸º0 
+			1  å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initRevCompAfterDistEditedAPI(uint8 ucPhysicalAxis)
 {
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (isZero(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist))
-	{//·´Ïò¼äÏ¶²¹³¥Îª0   ½øÈë²âÁ¿Ä£Ê½  Ö±½Ó¹Ø±Õ·´Ïò¼äÏ¶²¹³¥ 
-		g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_OFF;
-		return 0;
-	}
-	initSingleAxisRev(ucPhysicalAxis, 0);//ÖØĞÂ²¹³¥
-	return 1;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (isZero(g_SSystemPara.SAxisPara[ucPhysicalAxis].dRevClearanceCompDist))
+    { //åå‘é—´éš™è¡¥å¿ä¸º0   è¿›å…¥æµ‹é‡æ¨¡å¼  ç›´æ¥å…³é—­åå‘é—´éš™è¡¥å¿
+        g_SRevClearanceComp[ucPhysicalAxis].ucStatus = ERROR_COMPENSATION_OFF;
+        return 0;
+    }
+    initSingleAxisRev(ucPhysicalAxis, 0); //é‡æ–°è¡¥å¿
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitSingleAxisRevLoopAPI()
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá·´ÏòÎó²îÑ­»·½Ó¿Ú
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitSingleAxisRevLoopAPI()
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´åå‘è¯¯å·®å¾ªç¯æ¥å£
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initSingleAxisRevLoopAPI()
 {
-	uint8 ucCounter;
-	for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
-	{
-		initSingleAxisRev(ucCounter, 0);
-	}
-	return 1;
+    uint8 ucCounter;
+    for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
+    {
+        initSingleAxisRev(ucCounter, 0);
+    }
+    return 1;
 }
 
 /*************************************************
-  zxr: Í£Ö¹½Ó¹ÜÊ±Çå³ıĞø²¹·½Ïò£¬±£ÁôÇúÏß½ø¶ÈºÍÒÑ²¹³¥¾àÀë
-  º¯ÊıÃû³Æ£ºholdRevCompensationAPI(uint8 ucPhysicalAxis)
-  º¯Êı¹¦ÄÜ  ±£³Öµ¥Öá·´Ïò¼äÏ¶²¹³¥£¬µÈ´ıĞÂµÄÔË¶¯·½Ïò
-  ÊäÈë²ÎÊı£ºucPhysicalAxis ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£º
+  zxr: åœæ­¢æ¥ç®¡æ—¶æ¸…é™¤ç»­è¡¥æ–¹å‘ï¼Œä¿ç•™æ›²çº¿è¿›åº¦å’Œå·²è¡¥å¿è·ç¦»
+  å‡½æ•°åç§°ï¼šholdRevCompensationAPI(uint8 ucPhysicalAxis)
+  å‡½æ•°åŠŸèƒ½  ä¿æŒå•è½´åå‘é—´éš™è¡¥å¿ï¼Œç­‰å¾…æ–°çš„è¿åŠ¨æ–¹å‘
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void holdRevCompensationAPI(uint8 ucPhysicalAxis)
 {
-	if (ucPhysicalAxis < AXIS_PHYSICS_NUM_MAX)
-	{
-		g_SRevClearanceComp[ucPhysicalAxis].cCurrentDir = 0;
-	}
+    if (ucPhysicalAxis < AXIS_PHYSICS_NUM_MAX)
+    {
+        g_SRevClearanceComp[ucPhysicalAxis].cCurrentDir = 0;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCompensationPulseAPI(uint8 ucPhysicalAxis , int8 cDir)
-  º¯Êı¹¦ÄÜ  »ñÈ¡µ¥Öá·´Ïò¼äÏ¶²¹³¥Öµ ½Ó¿Ú
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-			cDir			ÒÆ¶¯·½Ïò
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º²¹³¥Öµ  pulse
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCompensationPulseAPI(uint8 ucPhysicalAxis , int8 cDir)
+  å‡½æ•°åŠŸèƒ½  è·å–å•è½´åå‘é—´éš™è¡¥å¿å€¼ æ¥å£
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+			cDir			ç§»åŠ¨æ–¹å‘
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¡¥å¿å€¼  pulse
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getCompensationPulseAPI(uint8 ucPhysicalAxis, int8 cDir)
 {
-	float fTargetDist;
-	int16 sOutputPulse;
-	SRevClearanceComp* pSRevClearanceComp;
-	struct SPlan* pSPlan;
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0;
-	}
+    float fTargetDist;
+    int16 sOutputPulse;
+    SRevClearanceComp* pSRevClearanceComp;
+    struct SPlan* pSPlan;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0;
+    }
 
-	pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];
-	pSPlan = &pSRevClearanceComp->SPlanData;
+    pSRevClearanceComp = &g_SRevClearanceComp[ucPhysicalAxis];
+    pSPlan = &pSRevClearanceComp->SPlanData;
 
-	//¼ÇÂ¼·½Ïò
-	pSRevClearanceComp->cCurrentDir = (cDir == 0) ? pSRevClearanceComp->cCurrentDir : cDir;
-	// zxr: Í£Ö¹±£³ÖºóÎŞĞÂ·½Ïò²»Ğø²¹£»Õı³£ÔËĞĞµÄÁãÂö³åÖÜÆÚÈÔÑØÓÃÔ­·½Ïò
-	if (pSRevClearanceComp->cCurrentDir == 0)
-	{
-		return 0;
-	}
+    //è®°å½•æ–¹å‘
+    pSRevClearanceComp->cCurrentDir = (cDir == 0) ? pSRevClearanceComp->cCurrentDir : cDir;
+    // zxr: åœæ­¢ä¿æŒåæ— æ–°æ–¹å‘ä¸ç»­è¡¥ï¼›æ­£å¸¸è¿è¡Œçš„é›¶è„‰å†²å‘¨æœŸä»æ²¿ç”¨åŸæ–¹å‘
+    if (pSRevClearanceComp->cCurrentDir == 0)
+    {
+        return 0;
+    }
 
-	//¸ù¾İ×´Ì¬´¦Àí
-	switch (pSRevClearanceComp->ucStatus)
-	{
-	case ERROR_COMPENSATION_INIT:
-	default:
-	case ERROR_COMPENSATION_OFF:     //»ØÁãÇ° ·´ÏòÎó²î²¹³¥¹Ø±Õ
-		return 0;
+    //æ ¹æ®çŠ¶æ€å¤„ç†
+    switch (pSRevClearanceComp->ucStatus)
+    {
+    case ERROR_COMPENSATION_INIT:
+    default:
+    case ERROR_COMPENSATION_OFF: //å›é›¶å‰ åå‘è¯¯å·®è¡¥å¿å…³é—­
+        return 0;
 
-	case ERROR_COMPENSATION_MODIFY:	 //ÖØĞÂÉèÖÃ·´ÏòÎó²îºó ´ıcurrentT»Øµ½0Ê±£¬²ÅÄÜÖØĞÂ¹æ»® Ê¹ÓÃĞÂµÄ²¹³¥¾àÀë
-		if (pSRevClearanceComp->SPlanData.unCurrentT == 0)
-		{
-			if(updateSingleAxisRevPlan(ucPhysicalAxis) != 1)
-			{
-				return 0;
-			}
-			return getCompensationPulseAPI(ucPhysicalAxis, cDir);
-		}
-	case ERROR_COMPENSATION_ON:   	//»ØÁãºó ·´ÏòÎó²î²¹³¥¿ªÆô
+    case ERROR_COMPENSATION_MODIFY: //é‡æ–°è®¾ç½®åå‘è¯¯å·®å å¾…currentTå›åˆ°0æ—¶ï¼Œæ‰èƒ½é‡æ–°è§„åˆ’ ä½¿ç”¨æ–°çš„è¡¥å¿è·ç¦»
+        if (pSRevClearanceComp->SPlanData.unCurrentT == 0)
+        {
+            if (updateSingleAxisRevPlan(ucPhysicalAxis) != 1)
+            {
+                return 0;
+            }
+            return getCompensationPulseAPI(ucPhysicalAxis, cDir);
+        }
+    case ERROR_COMPENSATION_ON: //å›é›¶å åå‘è¯¯å·®è¡¥å¿å¼€å¯
 
-		if (pSRevClearanceComp->cCurrentDir == pSRevClearanceComp->cDir)  //ÅĞ¶Ï²¹³¥µÄ·´Ïò
-		{
+        if (pSRevClearanceComp->cCurrentDir == pSRevClearanceComp->cDir) //åˆ¤æ–­è¡¥å¿çš„åå‘
+        {
 
-			pSPlan->unCurrentT = min(pSPlan->unCurrentT + 1, pSPlan->unT5);//unT5±íÊ¾²¹³¥Íê±Ï
-		}
-		else if (pSRevClearanceComp->cCurrentDir == -pSRevClearanceComp->cDir)
-		{
-			if (pSPlan->unCurrentT != 0)//·´Ïò²»ÄÜ³¬¹ı0Ê±¼ä½Úµã
-			{
-				pSPlan->unCurrentT--;
-			}
-		}
+            pSPlan->unCurrentT = min(pSPlan->unCurrentT + 1, pSPlan->unT5); //unT5è¡¨ç¤ºè¡¥å¿å®Œæ¯•
+        }
+        else if (pSRevClearanceComp->cCurrentDir == -pSRevClearanceComp->cDir)
+        {
+            if (pSPlan->unCurrentT != 0) //åå‘ä¸èƒ½è¶…è¿‡0æ—¶é—´èŠ‚ç‚¹
+            {
+                pSPlan->unCurrentT--;
+            }
+        }
 
-		if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType == ROTATION_AXIS)
-		{
-			fTargetDist = (double)pSRevClearanceComp->cDir * nextstepPlanningAndDistReAvg(pSPlan->unCurrentT, pSPlan); //¼ÆËãÄ¿±êÎ»ÖÃ
-			sOutputPulse = round((double)fTargetDist - pSRevClearanceComp->dCurDist);//¼ÆËãµ½´ïÄ¿±êÎ»ÖÃĞèÒªµÄÂö³åÊı
-			pSRevClearanceComp->dCurDist += sOutputPulse;
-		}
-		else
-		{
-			fTargetDist = (double)pSRevClearanceComp->cDir * nextstepPlanningAndDistReAvg(pSPlan->unCurrentT, pSPlan); //¼ÆËãÄ¿±êÎ»ÖÃ
-			// sOutputPulse = round(((double)fTargetDist - pSRevClearanceComp->dCurDist) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm);
-			//¼ÆËãµ½´ïÄ¿±êÎ»ÖÃĞèÒªµÄÂö³åÊı
-			calcPulseWithCheck((double)fTargetDist - pSRevClearanceComp->dCurDist,g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm,&sOutputPulse);
-			pSRevClearanceComp->dCurDist += sOutputPulse * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm;//ĞŞÕıµ±Ç°ÒÑ²¹³¥Öµ
-		}
+        if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType == ROTATION_AXIS)
+        {
+            fTargetDist = (double)pSRevClearanceComp->cDir *
+                          nextstepPlanningAndDistReAvg(pSPlan->unCurrentT, pSPlan);   //è®¡ç®—ç›®æ ‡ä½ç½®
+            sOutputPulse = round((double)fTargetDist - pSRevClearanceComp->dCurDist); //è®¡ç®—åˆ°è¾¾ç›®æ ‡ä½ç½®éœ€è¦çš„è„‰å†²æ•°
+            pSRevClearanceComp->dCurDist += sOutputPulse;
+        }
+        else
+        {
+            fTargetDist = (double)pSRevClearanceComp->cDir *
+                          nextstepPlanningAndDistReAvg(pSPlan->unCurrentT, pSPlan); //è®¡ç®—ç›®æ ‡ä½ç½®
+            // sOutputPulse = round(((double)fTargetDist - pSRevClearanceComp->dCurDist) / g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm);
+            //è®¡ç®—åˆ°è¾¾ç›®æ ‡ä½ç½®éœ€è¦çš„è„‰å†²æ•°
+            calcPulseWithCheck((double)fTargetDist - pSRevClearanceComp->dCurDist,
+                               g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm, &sOutputPulse);
+            pSRevClearanceComp->dCurDist +=
+                sOutputPulse * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm; //ä¿®æ­£å½“å‰å·²è¡¥å¿å€¼
+        }
 
-		//printf(" µ±Ç°²¹³¥Öµ:%lf ", pSRevClearanceComp->dCurDist);
-		return sOutputPulse;
-	}
+        //printf(" å½“å‰è¡¥å¿å€¼:%lf ", pSRevClearanceComp->dCurDist);
+        return sOutputPulse;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisRevCompFinishedAPI
-  º¯Êı¹¦ÄÜ£ºÖ»¶Á¼ì²éÎïÀíÖá·´Ïò¼äÏ¶²¹³¥¹æ»®ÊÇ·ñÒÑ×ßµ½µ±Ç°·½ÏòÖÕµã
-  ÊäÈë²ÎÊı£ºucPhysicalAxis - ÎïÀíÖáºÅ£¬Ğ¡ÓÚ AXIS_PHYSICS_NUM_MAX
-  Êä³ö²ÎÊı£ºÎŞ£¬²»ÍÆ½ø²¹³¥Ê±¼ä»òÊä³öÂö³å
-  ·µ »Ø Öµ£ºTRUE ÎŞ´ıÍê³É²¹³¥£»FALSE ²ÎÊıÎŞĞ§»ò²¹³¥ÉĞÎ´½áÊø
-  ±¸    ×¢£º²å²¹ÖÜÆÚÄÚÖ»¶Á¹²Ïí²¹³¥×´Ì¬£¬¹©Í¬²½¶ÎÍê³ÉÃÅ¿ØÊ¹ÓÃ
+  å‡½æ•°åç§°ï¼šisRevCompFinishedAPI
+  å‡½æ•°åŠŸèƒ½ï¼šåªè¯»æ£€æŸ¥ç‰©ç†è½´åå‘é—´éš™è¡¥å¿è§„åˆ’æ˜¯å¦å·²èµ°åˆ°å½“å‰æ–¹å‘ç»ˆç‚¹
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis - ç‰©ç†è½´å·ï¼Œå°äº AXIS_PHYSICS_NUM_MAX
+  è¾“å‡ºå‚æ•°ï¼šæ— ï¼Œä¸æ¨è¿›è¡¥å¿æ—¶é—´æˆ–è¾“å‡ºè„‰å†²
+  è¿” å› å€¼ï¼šTRUE æ— å¾…å®Œæˆè¡¥å¿ï¼›FALSE å‚æ•°æ— æ•ˆæˆ–è¡¥å¿å°šæœªç»“æŸ
+  å¤‡    æ³¨ï¼šæ’è¡¥å‘¨æœŸå†…åªè¯»å…±äº«è¡¥å¿çŠ¶æ€ï¼Œä¾›åŒæ­¥æ®µå®Œæˆé—¨æ§ä½¿ç”¨
 ****************************************/
 bool isRevCompFinishedAPI(uint8 ucPhysicalAxis)
 {
     const SRevClearanceComp* pComp;
-    /* ¾Ü¾øÎŞĞ§ÎïÀíÖá£¬±ÜÃâ·ÃÎÊ²¹³¥Êı×éÖ®ÍâµÄ×´Ì¬¡£ */
+    /* æ‹’ç»æ— æ•ˆç‰©ç†è½´ï¼Œé¿å…è®¿é—®è¡¥å¿æ•°ç»„ä¹‹å¤–çš„çŠ¶æ€ã€‚ */
     if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
     {
         return FALSE;
     }
-    /* ÒıÓÃ¹²Ïí g_SRevClearanceComp µÄµ±Ç°ÎïÀíÖá£¬½ö¼ì²é£¬²»¸Ä±ä²¹³¥¹æ»®¡£ */
+    /* å¼•ç”¨å…±äº« g_SRevClearanceComp çš„å½“å‰ç‰©ç†è½´ï¼Œä»…æ£€æŸ¥ï¼Œä¸æ”¹å˜è¡¥å¿è§„åˆ’ã€‚ */
     pComp = &g_SRevClearanceComp[ucPhysicalAxis];
-    /* Î´³õÊ¼»¯»ò¹Ø±ÕµÄ²¹³¥Ã»ÓĞ´ıÍê³ÉÂö³å¡£ */
-    if (pComp->ucStatus == ERROR_COMPENSATION_INIT
-        || pComp->ucStatus == ERROR_COMPENSATION_OFF)
+    /* æœªåˆå§‹åŒ–æˆ–å…³é—­çš„è¡¥å¿æ²¡æœ‰å¾…å®Œæˆè„‰å†²ã€‚ */
+    if (pComp->ucStatus == ERROR_COMPENSATION_INIT || pComp->ucStatus == ERROR_COMPENSATION_OFF)
     {
         return TRUE;
     }
-    /* MODIFY ÔÚÁã¶Ëµã»áÖØÔØ²ÎÊı£»ÁíÒ»¶ËÒÑÅÅ¿ÕÊ±ÔÊĞíÏÈ½»½Ó£¬ÏÂ´Î·´ÏòÔÙ¸üĞÂ¡£ */
-    if (pComp->ucStatus == ERROR_COMPENSATION_MODIFY
-        && pComp->SPlanData.unCurrentT == 0)
+    /* MODIFY åœ¨é›¶ç«¯ç‚¹ä¼šé‡è½½å‚æ•°ï¼›å¦ä¸€ç«¯å·²æ’ç©ºæ—¶å…è®¸å…ˆäº¤æ¥ï¼Œä¸‹æ¬¡åå‘å†æ›´æ–°ã€‚ */
+    if (pComp->ucStatus == ERROR_COMPENSATION_MODIFY && pComp->SPlanData.unCurrentT == 0)
     {
         return FALSE;
     }
-    /* ÕıÏò²¹³¥±ØĞë×ßµ½¹æ»®Ä©¶Ë£¬²ÅÄÜ½»½ÓÍ¬²½¶Î¡£ */
+    /* æ­£å‘è¡¥å¿å¿…é¡»èµ°åˆ°è§„åˆ’æœ«ç«¯ï¼Œæ‰èƒ½äº¤æ¥åŒæ­¥æ®µã€‚ */
     if (pComp->cCurrentDir == pComp->cDir)
     {
         return pComp->SPlanData.unCurrentT == pComp->SPlanData.unT5;
     }
-    /* ·´Ïò²¹³¥±ØĞëÍË»ØÁã¶Ëµã£¬²ÅÄÜ½»½ÓÍ¬²½¶Î¡£ */
+    /* åå‘è¡¥å¿å¿…é¡»é€€å›é›¶ç«¯ç‚¹ï¼Œæ‰èƒ½äº¤æ¥åŒæ­¥æ®µã€‚ */
     if (pComp->cCurrentDir == -pComp->cDir)
     {
         return pComp->SPlanData.unCurrentT == 0;
@@ -438,670 +441,704 @@ bool isRevCompFinishedAPI(uint8 ucPhysicalAxis)
     return pComp->SPlanData.unT5 == 0;
 }
 
-/*******************************Âİ¾à²¹³¥*************************************/
+/*******************************èºè·è¡¥å¿*************************************/
 
-//Âİ¾àÎó²î²¹³¥ Êı¾İ
+//èºè·è¯¯å·®è¡¥å¿ æ•°æ®
 SScrewComp g_SScrewComp[AXIS_PHYSICS_NUM_MAX];
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºscrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  È¡Ïûµ¥±íÂİ¾àÎó²î²¹³¥
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2 ´íÎóµÄÓ³Éä
-			-1 Í¨µÀºÅ»òÖáºÅ´íÎó
-			 1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šscrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  å–æ¶ˆå•è¡¨èºè·è¯¯å·®è¡¥å¿
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucAxis			è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2 é”™è¯¯çš„æ˜ å°„
+			-1 é€šé“å·æˆ–è½´å·é”™è¯¯
+			 1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 screwCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis>=AXIS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].pMapAxisArray[ucAxis] == AXIS_NULL)
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].pMapAxisArray[ucAxis] == AXIS_NULL)
+    {
+        return -2;
+    }
 
-	g_SScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].bEnabled = FALSE;
-	return 1;
+    g_SScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].bEnabled = FALSE;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitScrewComp
-  º¯Êı¹¦ÄÜ£º³õÊ¼»¯Âİ¾à²¹³¥Êı¾İ
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£ºg_SScrewComp Âİ¾à²¹³¥½á¹¹Ìå
-  ·µ »Ø Öµ£º-1 ÊäÈëÎïÀíÖá³¬³ö×î´óÖµ£¬ 0 Âİ¾à²¹³¥²¹³¥¹¦ÄÜÎ´¿ªÆô£¬1 ³õÊ¼»¯³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitScrewComp
+  å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–èºè·è¡¥å¿æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼šg_SScrewComp èºè·è¡¥å¿ç»“æ„ä½“
+  è¿” å› å€¼ï¼š-1 è¾“å…¥ç‰©ç†è½´è¶…å‡ºæœ€å¤§å€¼ï¼Œ 0 èºè·è¡¥å¿è¡¥å¿åŠŸèƒ½æœªå¼€å¯ï¼Œ1 åˆå§‹åŒ–æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 initScrewComp(uint8 ucPhysicalAxis) // ³õÊ¼»¯£¬²¢¿ªÊ¼Âİ¾à²¹³¥
+int8 initScrewComp(uint8 ucPhysicalAxis) // åˆå§‹åŒ–ï¼Œå¹¶å¼€å§‹èºè·è¡¥å¿
 {
-	int16 sTargetSeg;
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SSystemPara.bScrewCompEnable[ucPhysicalAxis] != TRUE || g_SSystemPara.ScrewCompGap[ucPhysicalAxis] <= 0)
-	{
-		return 0;
-	}
-	//¼ÆËãµ±Ç°Ëù´¦Çø¼ä
-	sTargetSeg = (int)(g_dRealTimePointArray[ucPhysicalAxis]) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] + g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
+    int16 sTargetSeg;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SSystemPara.bScrewCompEnable[ucPhysicalAxis] != TRUE || g_SSystemPara.ScrewCompGap[ucPhysicalAxis] <= 0)
+    {
+        return 0;
+    }
+    //è®¡ç®—å½“å‰æ‰€å¤„åŒºé—´
+    sTargetSeg = (int)(g_dRealTimePointArray[ucPhysicalAxis]) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] +
+                 g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
 
-	//ÕıÊıµÄÇø¼ä ÕûÌåÒÆ¶¯Ò»¸öÎ»ÖÃ  // zxr: ¸ù¾İÄ¿±ê×ø±êÇø·ÖÕı¸ºÇø¼ä£¬½öÁãµã¼°ÕıÇø¼äµÄ¶ÎºÅ¼Ó1£¬±ÜÃâ¸ºÇø¼äÑ¡´í²¹³¥Öµ
-	if (g_dRealTimePointArray[ucPhysicalAxis] >= 0)
-	{
-		sTargetSeg += 1;
-	}
+    //æ­£æ•°çš„åŒºé—´ æ•´ä½“ç§»åŠ¨ä¸€ä¸ªä½ç½®  // zxr: æ ¹æ®ç›®æ ‡åæ ‡åŒºåˆ†æ­£è´ŸåŒºé—´ï¼Œä»…é›¶ç‚¹åŠæ­£åŒºé—´çš„æ®µå·åŠ 1ï¼Œé¿å…è´ŸåŒºé—´é€‰é”™è¡¥å¿å€¼
+    if (g_dRealTimePointArray[ucPhysicalAxis] >= 0)
+    {
+        sTargetSeg += 1;
+    }
 
-	//¿ªÆôÂİ¾à²¹³¥
-	g_SScrewComp[ucPhysicalAxis].bEnabled = TRUE;
+    //å¼€å¯èºè·è¡¥å¿
+    g_SScrewComp[ucPhysicalAxis].bEnabled = TRUE;
 
-	//ÅĞ¶ÏÇø¼äÊÇ·ñÔÚÊı×é·¶Î§ÄÚ
-	if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
-	{
-		//¼ÓÔØĞÂÇø¼äµÄ²ÎÊı
-		g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-		g_SScrewComp[ucPhysicalAxis].cCurError = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-		g_SScrewComp[ucPhysicalAxis].dDeltaError = (double)g_SScrewComp[ucPhysicalAxis].cCurError / (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
-	}
-	else
-	{	//Çø¼ä²»´æÔÚ   ÍË»¯³ÉÎŞÂİ¾à²¹³¥
-		g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-		g_SScrewComp[ucPhysicalAxis].cCurError = 0;
-		g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
-		g_SScrewComp[ucPhysicalAxis].bEnabled = FALSE;
-		return 0;
-	}
-	g_SScrewComp[ucPhysicalAxis].dRecorder = 0;  //³õÊ¼»¯¼ÇÂ¼Æ÷  2023.3.24 ÖìÎÈÖĞ
-	return 1;
+    //åˆ¤æ–­åŒºé—´æ˜¯å¦åœ¨æ•°ç»„èŒƒå›´å†…
+    if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
+    {
+        //åŠ è½½æ–°åŒºé—´çš„å‚æ•°
+        g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+        g_SScrewComp[ucPhysicalAxis].cCurError = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+        g_SScrewComp[ucPhysicalAxis].dDeltaError =
+            (double)g_SScrewComp[ucPhysicalAxis].cCurError / (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
+    }
+    else
+    { //åŒºé—´ä¸å­˜åœ¨   é€€åŒ–æˆæ— èºè·è¡¥å¿
+        g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+        g_SScrewComp[ucPhysicalAxis].cCurError = 0;
+        g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
+        g_SScrewComp[ucPhysicalAxis].bEnabled = FALSE;
+        return 0;
+    }
+    g_SScrewComp[ucPhysicalAxis].dRecorder = 0; //åˆå§‹åŒ–è®°å½•å™¨  2023.3.24 æœ±ç¨³ä¸­
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºoutPutAbsPointWithScrewComp
-  º¯Êı¹¦ÄÜ£ºÀûÓÃÀíÂÛ×ø±êºÍÂİ¾à²¹³¥Éú³ÉSRun½á¹¹ÌåÊı¾İ
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£ºg_SScrewComp Âİ¾à²¹³¥½á¹¹Ìå
-  ·µ »Ø Öµ£º-1 ÊäÈëÎïÀíÖá³¬³ö×î´óÖµ£¬ 0 Âİ¾à²¹³¥²¹³¥¹¦ÄÜÎ´¿ªÆô£¬1 ³õÊ¼»¯³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šoutPutAbsPointWithScrewComp
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ©ç”¨ç†è®ºåæ ‡å’Œèºè·è¡¥å¿ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼šg_SScrewComp èºè·è¡¥å¿ç»“æ„ä½“
+  è¿” å› å€¼ï¼š-1 è¾“å…¥ç‰©ç†è½´è¶…å‡ºæœ€å¤§å€¼ï¼Œ 0 èºè·è¡¥å¿è¡¥å¿åŠŸèƒ½æœªå¼€å¯ï¼Œ1 åˆå§‹åŒ–æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 outPutAbsPointWithScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
+int8 outPutAbsPointWithScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap,
+                                 double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
-	double dPulseToMm;
-	double dSum;
-	uint8 ucPhysicalAxis;
-	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
+    int i = 0;
+    double dPulseToMm;
+    double dSum;
+    uint8 ucPhysicalAxis;
+    int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
 
-	if (pSRun == NULL)//¿ÕÖ¸Õë
-	{
-		return FALSE;
-	}
+    if (pSRun == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return FALSE;
+    }
 
-	//»ñÈ¡ÊµÊ±µã×÷ÎªÉÏÒ»µãµÄÎ»ÖÃ
-	getRealTimePoint((double*)&pSRun->SLastAbsCoord, AXIS_NUM_MAX, ucAxisMap, NULL);
+    //è·å–å®æ—¶ç‚¹ä½œä¸ºä¸Šä¸€ç‚¹çš„ä½ç½®
+    getRealTimePoint((double*)&pSRun->SLastAbsCoord, AXIS_NUM_MAX, ucAxisMap, NULL);
 
-	for (i = 0; i < nArraySize; i++)
-	{
-		ucPhysicalAxis = ucAxisMap[i];
+    for (i = 0; i < nArraySize; i++)
+    {
+        ucPhysicalAxis = ucAxisMap[i];
 
-		if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) continue;  //Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ²»¼ÆËã
-		//Ä¿±êÖáµÄÂö³åµ±Á¿
-		dPulseToMm = (dPulseToMmArray == NULL) ? g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm : dPulseToMmArray[i];
-		if(isZero(dPulseToMm) || !isfinite(dPulseToMm))//Ôö¼ÓĞ£Ñé
-		{
-			initSRunPulseBuf(pSRun, 0x3F); //Çå¿ÕËùÓĞÖáÂö³å
-			parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-			return FALSE;
-		}
-		if (g_SScrewComp[ucPhysicalAxis].bEnabled && g_SSystemPara.ScrewCompGap[ucPhysicalAxis] != 0)//¿ªÆôÁËÂİ¾à²¹³¥ÇÒ²¹³¥¼ä¸ô²»ÄÜÎª0
-		{
-			//Ä¿±êµãµÄÇø¼ä
-			sTargetSeg = (int)(pdTargetPoint[i]) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] + g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
+        if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i)))
+            continue; //æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  ä¸è®¡ç®—
+        //ç›®æ ‡è½´çš„è„‰å†²å½“é‡
+        dPulseToMm =
+            (dPulseToMmArray == NULL) ? g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm : dPulseToMmArray[i];
+        if (isZero(dPulseToMm) || !isfinite(dPulseToMm)) //å¢åŠ æ ¡éªŒ
+        {
+            initSRunPulseBuf(pSRun, 0x3F); //æ¸…ç©ºæ‰€æœ‰è½´è„‰å†²
+            parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+            return FALSE;
+        }
+        if (g_SScrewComp[ucPhysicalAxis].bEnabled &&
+            g_SSystemPara.ScrewCompGap[ucPhysicalAxis] != 0) //å¼€å¯äº†èºè·è¡¥å¿ä¸”è¡¥å¿é—´éš”ä¸èƒ½ä¸º0
+        {
+            //ç›®æ ‡ç‚¹çš„åŒºé—´
+            sTargetSeg = (int)(pdTargetPoint[i]) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] +
+                         g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
 
-			if (pdTargetPoint[i] >= 0)//ÕıÊıµÄÇø¼ä ÕûÌåÒÆ¶¯Ò»¸öÎ»ÖÃ  // zxr: ¸ù¾İÄ¿±ê×ø±êÇø·ÖÕı¸ºÇø¼ä£¬½öÁãµã¼°ÕıÇø¼äµÄ¶ÎºÅ¼Ó1£¬±ÜÃâ¸ºÇø¼äÑ¡´í²¹³¥Öµ
-			{
-				sTargetSeg += 1;
-			}
-
-			if (sTargetSeg == g_SScrewComp[ucPhysicalAxis].sCurSeg)
-			{	//¢ÙÇø¼äÏàÍ¬
-				dSum = (pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) + g_SScrewComp[ucPhysicalAxis].dRecorder;
-
-				//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-				//pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
-				if (calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[i]) != 1)
-				{
-					return FALSE; 
-                }
-	
-				//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-				g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[i] * dPulseToMm;
-			}
-			else
-			{	//¢ÚÇø¼ä²»Í¬    Ä¬ÈÏ×î¶à¿çÔ½Ò»¸öÇø¼ä
-				double dDivisionPoint;
-				int16 sNewSegPulse;
-
-				//·Ö¸îµã
-				if (sTargetSeg > g_SScrewComp[ucPhysicalAxis].sCurSeg)//·´Ïò 
-				{
-					dDivisionPoint = (g_SScrewComp[ucPhysicalAxis].sCurSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) * (int)g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
-				}
-				else //ÕıÏò
-				{
-					dDivisionPoint = (sTargetSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) * g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
-				}
-
-				//¼ÆËãÆğµãµ½·Ö¸îµã
-				dSum = (dDivisionPoint - pSRun->SLastAbsCoord.dArray[i]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) + g_SScrewComp[ucPhysicalAxis].dRecorder;
-
-				//¸ù¾İ·Ö¸îµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-				//pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
-				if (calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[i]) != 1)
-				{
-					return FALSE;
-                }
-				//ÅĞ¶ÏÇø¼äÊÇ·ñÔÚÊı×é·¶Î§ÄÚ
-				if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
-				{
-					//¼ÓÔØĞÂÇø¼äµÄ²ÎÊı
-					g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-					g_SScrewComp[ucPhysicalAxis].cCurError = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-					g_SScrewComp[ucPhysicalAxis].dDeltaError = (double)g_SScrewComp[ucPhysicalAxis].cCurError / (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
-				}
-				else
-				{	//Çø¼ä²»´æÔÚ   ÍË»¯³ÉÎŞÂİ¾à²¹³¥
-					g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-					g_SScrewComp[ucPhysicalAxis].cCurError = 0;
-					g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
-				}
-
-				//¼ÆËã·Ö¸îµãµ½Ä¿±êµã
-				dSum = (pdTargetPoint[i] - dDivisionPoint) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError);
-
-				//¸ù¾İÄ¿±êµãºÍ·Ö¸îµã¼ÆËãÂö³åµ±Á¿
-				//sNewSegPulse = round(dSum / dPulseToMm);
-				if (calcPulseWithCheck(dSum, dPulseToMm, &sNewSegPulse) != 1)
-				{
-					return FALSE;
-                }
-				//¼ÆËã¼ÇÂ¼Æ÷µÄÖµ
-				g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - sNewSegPulse * dPulseToMm;
-				int32 nPulseNum = pSRun->sAxisDeltaPulse[i] + sNewSegPulse;
-				//Âö³åÖ®ºÍ
-				if (nPulseNum > 32767 || nPulseNum < -32768) 
-				{
-        			parseRunningError(9999, GCODE_ERROR_NUM152, 9999); 
-					return FALSE;
-    			} 
-				pSRun->sAxisDeltaPulse[i] += sNewSegPulse;
-			}
-
-			pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i];//½«Ä¿±êµã¸³Öµµ½ SAbsCoord  ¸Ä±äÊµÊ±µãµÄÎ»ÖÃÊ±Í³Ò»´¦Àí
-		}
-		else
-		{
-			//Ã»ÓĞÊ¹ÄÜÂİ¾à²¹³¥
-
-			//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-			//pSRun->sAxisDeltaPulse[i] = round((pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) / g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm);
-			if (calcPulseWithCheck(pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i], dPulseToMm, &pSRun->sAxisDeltaPulse[i]) != 1)
-			{
-				return FALSE;
+            if (pdTargetPoint[i] >=
+                0) //æ­£æ•°çš„åŒºé—´ æ•´ä½“ç§»åŠ¨ä¸€ä¸ªä½ç½®  // zxr: æ ¹æ®ç›®æ ‡åæ ‡åŒºåˆ†æ­£è´ŸåŒºé—´ï¼Œä»…é›¶ç‚¹åŠæ­£åŒºé—´çš„æ®µå·åŠ 1ï¼Œé¿å…è´ŸåŒºé—´é€‰é”™è¡¥å¿å€¼
+            {
+                sTargetSeg += 1;
             }
-			//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-			pSRun->SAbsCoord.dArray[i] = pSRun->SLastAbsCoord.dArray[i] + pSRun->sAxisDeltaPulse[i] * g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm;
-		}
-	}
 
-	//¸Ä±äÊµÊ±µãµÄÎ»ÖÃ
-	updateRealTimePoint((double*)&pSRun->SAbsCoord, AXIS_NUM_MAX, ucAxisMap, ucValStatus);
-	return TRUE;
+            if (sTargetSeg == g_SScrewComp[ucPhysicalAxis].sCurSeg)
+            { //â‘ åŒºé—´ç›¸åŒ
+                dSum = (pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) *
+                           (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) +
+                       g_SScrewComp[ucPhysicalAxis].dRecorder;
+
+                //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+                //pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
+                if (calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[i]) != 1)
+                {
+                    return FALSE;
+                }
+
+                //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+                g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[i] * dPulseToMm;
+            }
+            else
+            { //â‘¡åŒºé—´ä¸åŒ    é»˜è®¤æœ€å¤šè·¨è¶Šä¸€ä¸ªåŒºé—´
+                double dDivisionPoint;
+                int16 sNewSegPulse;
+
+                //åˆ†å‰²ç‚¹
+                if (sTargetSeg > g_SScrewComp[ucPhysicalAxis].sCurSeg) //åå‘
+                {
+                    dDivisionPoint =
+                        (g_SScrewComp[ucPhysicalAxis].sCurSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) *
+                        (int)g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
+                }
+                else //æ­£å‘
+                {
+                    dDivisionPoint = (sTargetSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) *
+                                     g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
+                }
+
+                //è®¡ç®—èµ·ç‚¹åˆ°åˆ†å‰²ç‚¹
+                dSum =
+                    (dDivisionPoint - pSRun->SLastAbsCoord.dArray[i]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) +
+                    g_SScrewComp[ucPhysicalAxis].dRecorder;
+
+                //æ ¹æ®åˆ†å‰²ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+                //pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
+                if (calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[i]) != 1)
+                {
+                    return FALSE;
+                }
+                //åˆ¤æ–­åŒºé—´æ˜¯å¦åœ¨æ•°ç»„èŒƒå›´å†…
+                if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
+                {
+                    //åŠ è½½æ–°åŒºé—´çš„å‚æ•°
+                    g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+                    g_SScrewComp[ucPhysicalAxis].cCurError =
+                        g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+                    g_SScrewComp[ucPhysicalAxis].dDeltaError = (double)g_SScrewComp[ucPhysicalAxis].cCurError /
+                                                               (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
+                }
+                else
+                { //åŒºé—´ä¸å­˜åœ¨   é€€åŒ–æˆæ— èºè·è¡¥å¿
+                    g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+                    g_SScrewComp[ucPhysicalAxis].cCurError = 0;
+                    g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
+                }
+
+                //è®¡ç®—åˆ†å‰²ç‚¹åˆ°ç›®æ ‡ç‚¹
+                dSum = (pdTargetPoint[i] - dDivisionPoint) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError);
+
+                //æ ¹æ®ç›®æ ‡ç‚¹å’Œåˆ†å‰²ç‚¹è®¡ç®—è„‰å†²å½“é‡
+                //sNewSegPulse = round(dSum / dPulseToMm);
+                if (calcPulseWithCheck(dSum, dPulseToMm, &sNewSegPulse) != 1)
+                {
+                    return FALSE;
+                }
+                //è®¡ç®—è®°å½•å™¨çš„å€¼
+                g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - sNewSegPulse * dPulseToMm;
+                int32 nPulseNum = pSRun->sAxisDeltaPulse[i] + sNewSegPulse;
+                //è„‰å†²ä¹‹å’Œ
+                if (nPulseNum > 32767 || nPulseNum < -32768)
+                {
+                    parseRunningError(9999, GCODE_ERROR_NUM152, 9999);
+                    return FALSE;
+                }
+                pSRun->sAxisDeltaPulse[i] += sNewSegPulse;
+            }
+
+            pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i]; //å°†ç›®æ ‡ç‚¹èµ‹å€¼åˆ° SAbsCoord  æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®æ—¶ç»Ÿä¸€å¤„ç†
+        }
+        else
+        {
+            //æ²¡æœ‰ä½¿èƒ½èºè·è¡¥å¿
+
+            //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+            //pSRun->sAxisDeltaPulse[i] = round((pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) / g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm);
+            if (calcPulseWithCheck(pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i], dPulseToMm,
+                                   &pSRun->sAxisDeltaPulse[i]) != 1)
+            {
+                return FALSE;
+            }
+            //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+            pSRun->SAbsCoord.dArray[i] = pSRun->SLastAbsCoord.dArray[i] +
+                                         pSRun->sAxisDeltaPulse[i] * g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm;
+        }
+    }
+
+    //æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®
+    updateRealTimePoint((double*)&pSRun->SAbsCoord, AXIS_NUM_MAX, ucAxisMap, ucValStatus);
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºoutPutAbsPointWithScrewComp
-  º¯Êı¹¦ÄÜ£ºÀûÓÃÀíÂÛ×ø±êºÍÂİ¾à²¹³¥Éú³ÉSRun½á¹¹ÌåÊı¾İ
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£ºg_SScrewComp Âİ¾à²¹³¥½á¹¹Ìå
-  ·µ »Ø Öµ£ºĞŞÕıºóµÄÊµÊ±µã
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šoutPutAbsPointWithScrewComp
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ©ç”¨ç†è®ºåæ ‡å’Œèºè·è¡¥å¿ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼šg_SScrewComp èºè·è¡¥å¿ç»“æ„ä½“
+  è¿” å› å€¼ï¼šä¿®æ­£åçš„å®æ—¶ç‚¹
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double outPutAbsPointWithScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap, double dPulseToMm)
+double outPutAbsPointWithScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap,
+                                        double dPulseToMm)
 {
-	double dSum;
-	uint8 ucPhysicalAxis;
-	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
-	ucPhysicalAxis = ucAxisMap[ucAxis];
-	double dAbsCoord;
-	//»ñÈ¡µ±Ç°µãµÄ×ø±ê
-	getSingleAxisRealTimePoint(&pSRun->SLastAbsCoord.dArray[ucAxis], ucAxis, ucAxisMap);
+    double dSum;
+    uint8 ucPhysicalAxis;
+    int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
+    ucPhysicalAxis = ucAxisMap[ucAxis];
+    double dAbsCoord;
+    //è·å–å½“å‰ç‚¹çš„åæ ‡
+    getSingleAxisRealTimePoint(&pSRun->SLastAbsCoord.dArray[ucAxis], ucAxis, ucAxisMap);
 
-	if (g_SScrewComp[ucPhysicalAxis].bEnabled && g_SSystemPara.ScrewCompGap[ucPhysicalAxis] != 0)//¿ªÆôÁËÂİ¾à²¹³¥ÇÒ²¹³¥¼ä¸ô²»ÄÜÎª0
-	{
-		//Ä¿±êµãµÄÇø¼ä
-		sTargetSeg = (int)(dTargetPoint) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] + g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
-		
-		if (dTargetPoint >= 0)//ÕıÊıµÄÇø¼ä ÕûÌåÒÆ¶¯Ò»¸öÎ»ÖÃ  // zxr: ¸ù¾İÄ¿±ê×ø±êÇø·ÖÕı¸ºÇø¼ä£¬½öÁãµã¼°ÕıÇø¼äµÄ¶ÎºÅ¼Ó1£¬±ÜÃâ¸ºÇø¼äÑ¡´í²¹³¥Öµ
-		{
-			sTargetSeg += 1;
-		}
+    if (g_SScrewComp[ucPhysicalAxis].bEnabled &&
+        g_SSystemPara.ScrewCompGap[ucPhysicalAxis] != 0) //å¼€å¯äº†èºè·è¡¥å¿ä¸”è¡¥å¿é—´éš”ä¸èƒ½ä¸º0
+    {
+        //ç›®æ ‡ç‚¹çš„åŒºé—´
+        sTargetSeg = (int)(dTargetPoint) / g_SSystemPara.ScrewCompGap[ucPhysicalAxis] +
+                     g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis];
 
-		if (sTargetSeg == g_SScrewComp[ucPhysicalAxis].sCurSeg)
-		{	//¢ÙÇø¼äÏàÍ¬
-			dSum = (dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) + g_SScrewComp[ucPhysicalAxis].dRecorder;
+        if (dTargetPoint >=
+            0) //æ­£æ•°çš„åŒºé—´ æ•´ä½“ç§»åŠ¨ä¸€ä¸ªä½ç½®  // zxr: æ ¹æ®ç›®æ ‡åæ ‡åŒºåˆ†æ­£è´ŸåŒºé—´ï¼Œä»…é›¶ç‚¹åŠæ­£åŒºé—´çš„æ®µå·åŠ 1ï¼Œé¿å…è´ŸåŒºé—´é€‰é”™è¡¥å¿å€¼
+        {
+            sTargetSeg += 1;
+        }
 
-			//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-			//pSRun->sAxisDeltaPulse[ucAxis] = round(dSum / dPulseToMm);
-			calcPulseWithCheck(dSum,dPulseToMm,&pSRun->sAxisDeltaPulse[ucAxis]);
-			//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-			g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
-		}
-		else
-		{	//¢ÚÇø¼ä²»Í¬    Ä¬ÈÏ×î¶à¿çÔ½Ò»¸öÇø¼ä
-			double dDivisionPoint;
-			int16 sNewSegPulse;
+        if (sTargetSeg == g_SScrewComp[ucPhysicalAxis].sCurSeg)
+        { //â‘ åŒºé—´ç›¸åŒ
+            dSum =
+                (dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) +
+                g_SScrewComp[ucPhysicalAxis].dRecorder;
 
-			//·Ö¸îµã
-			if (sTargetSeg > g_SScrewComp[ucPhysicalAxis].sCurSeg)//·´Ïò 
-			{
-				dDivisionPoint = (g_SScrewComp[ucPhysicalAxis].sCurSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) * (int)g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
-			}
-			else //ÕıÏò
-			{
-				dDivisionPoint = (sTargetSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) * g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
-			}
+            //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+            //pSRun->sAxisDeltaPulse[ucAxis] = round(dSum / dPulseToMm);
+            calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[ucAxis]);
+            //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+            g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
+        }
+        else
+        { //â‘¡åŒºé—´ä¸åŒ    é»˜è®¤æœ€å¤šè·¨è¶Šä¸€ä¸ªåŒºé—´
+            double dDivisionPoint;
+            int16 sNewSegPulse;
 
-			//¼ÆËãÆğµãµ½·Ö¸îµã
-			dSum = (dDivisionPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) + g_SScrewComp[ucPhysicalAxis].dRecorder;
+            //åˆ†å‰²ç‚¹
+            if (sTargetSeg > g_SScrewComp[ucPhysicalAxis].sCurSeg) //åå‘
+            {
+                dDivisionPoint =
+                    (g_SScrewComp[ucPhysicalAxis].sCurSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) *
+                    (int)g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
+            }
+            else //æ­£å‘
+            {
+                dDivisionPoint = (sTargetSeg - g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis]) *
+                                 g_SSystemPara.ScrewCompGap[ucPhysicalAxis];
+            }
 
-			//¸ù¾İ·Ö¸îµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-			//pSRun->sAxisDeltaPulse[ucAxis] = round(dSum / dPulseToMm);
-			calcPulseWithCheck(dSum,dPulseToMm,&pSRun->sAxisDeltaPulse[ucAxis]);
-			//ÅĞ¶ÏÇø¼äÊÇ·ñÔÚÊı×é·¶Î§ÄÚ
-			if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
-			{
-				//¼ÓÔØĞÂÇø¼äµÄ²ÎÊı
-				g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-				g_SScrewComp[ucPhysicalAxis].cCurError = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-				g_SScrewComp[ucPhysicalAxis].dDeltaError = (double)g_SScrewComp[ucPhysicalAxis].cCurError / (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
-			}
-			else
-			{	//Çø¼ä²»´æÔÚ   ÍË»¯³ÉÎŞÂİ¾à²¹³¥
-				g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
-				g_SScrewComp[ucPhysicalAxis].cCurError = 0;
-				g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
-			}
+            //è®¡ç®—èµ·ç‚¹åˆ°åˆ†å‰²ç‚¹
+            dSum = (dDivisionPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) *
+                       (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError) +
+                   g_SScrewComp[ucPhysicalAxis].dRecorder;
 
-			//¼ÆËã·Ö¸îµãµ½Ä¿±êµã
-			dSum = (dTargetPoint - dDivisionPoint) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError);
+            //æ ¹æ®åˆ†å‰²ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+            //pSRun->sAxisDeltaPulse[ucAxis] = round(dSum / dPulseToMm);
+            calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[ucAxis]);
+            //åˆ¤æ–­åŒºé—´æ˜¯å¦åœ¨æ•°ç»„èŒƒå›´å†…
+            if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
+            {
+                //åŠ è½½æ–°åŒºé—´çš„å‚æ•°
+                g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+                g_SScrewComp[ucPhysicalAxis].cCurError = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+                g_SScrewComp[ucPhysicalAxis].dDeltaError = (double)g_SScrewComp[ucPhysicalAxis].cCurError /
+                                                           (g_SSystemPara.ScrewCompGap[ucPhysicalAxis] * 1000);
+            }
+            else
+            { //åŒºé—´ä¸å­˜åœ¨   é€€åŒ–æˆæ— èºè·è¡¥å¿
+                g_SScrewComp[ucPhysicalAxis].sCurSeg = sTargetSeg;
+                g_SScrewComp[ucPhysicalAxis].cCurError = 0;
+                g_SScrewComp[ucPhysicalAxis].dDeltaError = 0;
+            }
 
-			//¸ù¾İÄ¿±êµãºÍ·Ö¸îµã¼ÆËãÂö³åµ±Á¿
-			//sNewSegPulse = round(dSum / dPulseToMm);
-			calcPulseWithCheck(dSum,dPulseToMm,&sNewSegPulse);
-			//¼ÆËã¼ÇÂ¼Æ÷µÄÖµ
-			g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - sNewSegPulse * dPulseToMm;
+            //è®¡ç®—åˆ†å‰²ç‚¹åˆ°ç›®æ ‡ç‚¹
+            dSum = (dTargetPoint - dDivisionPoint) * (1 + g_SScrewComp[ucPhysicalAxis].dDeltaError);
 
-			//Âö³åÖ®ºÍ
-			int32 nPulseNum = pSRun->sAxisDeltaPulse[ucAxis] + sNewSegPulse;
-			//Âö³åÖ®ºÍ
-			if (nPulseNum > 32767 || nPulseNum < -32768) 
-			{
-        		parseRunningError(9999, GCODE_ERROR_NUM152, 9999); 
-				return -1;
-    		} 
-			pSRun->sAxisDeltaPulse[ucAxis] += sNewSegPulse;
-		}
+            //æ ¹æ®ç›®æ ‡ç‚¹å’Œåˆ†å‰²ç‚¹è®¡ç®—è„‰å†²å½“é‡
+            //sNewSegPulse = round(dSum / dPulseToMm);
+            calcPulseWithCheck(dSum, dPulseToMm, &sNewSegPulse);
+            //è®¡ç®—è®°å½•å™¨çš„å€¼
+            g_SScrewComp[ucPhysicalAxis].dRecorder = dSum - sNewSegPulse * dPulseToMm;
 
-		dAbsCoord = dTargetPoint;//½«Ä¿±êµã¸³Öµµ½ SAbsCoord  ¸Ä±äÊµÊ±µãµÄÎ»ÖÃÊ±Í³Ò»´¦Àí
-	}
-	else
-	{
-		//Ã»ÓĞÊ¹ÄÜÂİ¾à²¹³¥
+            //è„‰å†²ä¹‹å’Œ
+            int32 nPulseNum = pSRun->sAxisDeltaPulse[ucAxis] + sNewSegPulse;
+            //è„‰å†²ä¹‹å’Œ
+            if (nPulseNum > 32767 || nPulseNum < -32768)
+            {
+                parseRunningError(9999, GCODE_ERROR_NUM152, 9999);
+                return -1;
+            }
+            pSRun->sAxisDeltaPulse[ucAxis] += sNewSegPulse;
+        }
 
-			//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-		//pSRun->sAxisDeltaPulse[ucAxis] = round((dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) / dPulseToMm);
-		calcPulseWithCheck(dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis],dPulseToMm,&pSRun->sAxisDeltaPulse[ucAxis]);
-			//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-		dAbsCoord = pSRun->SLastAbsCoord.dArray[ucAxis] + pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
-	}
-	return dAbsCoord;
+        dAbsCoord = dTargetPoint; //å°†ç›®æ ‡ç‚¹èµ‹å€¼åˆ° SAbsCoord  æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®æ—¶ç»Ÿä¸€å¤„ç†
+    }
+    else
+    {
+        //æ²¡æœ‰ä½¿èƒ½èºè·è¡¥å¿
+
+        //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+        //pSRun->sAxisDeltaPulse[ucAxis] = round((dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) / dPulseToMm);
+        calcPulseWithCheck(dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis], dPulseToMm,
+                           &pSRun->sAxisDeltaPulse[ucAxis]);
+        //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+        dAbsCoord = pSRun->SLastAbsCoord.dArray[ucAxis] + pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
+    }
+    return dAbsCoord;
 }
 
 #if SCREWCOMPTESTCODE
 
 void Vs_ScrewCompLoadPara(uint8 ucPhysicalAxis)
 {
-	g_SSystemPara.bScrewCompEnable[ucPhysicalAxis] = TRUE;
-	g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][9] = 8; //8um
-	g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][10] = 5; //5um
-	g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][11] = 4; //5um
-	g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][12] = 8; //8um
-	g_SSystemPara.ScrewCompGap[ucPhysicalAxis] = 10; //10mm
-	g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis] = 10;
+    g_SSystemPara.bScrewCompEnable[ucPhysicalAxis] = TRUE;
+    g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][9] = 8;  //8um
+    g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][10] = 5; //5um
+    g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][11] = 4; //5um
+    g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][12] = 8; //8um
+    g_SSystemPara.ScrewCompGap[ucPhysicalAxis] = 10;          //10mm
+    g_SSystemPara.sScrewCompHomeNum[ucPhysicalAxis] = 10;
 }
 #endif // ScrewCpmpTestCode
 
-
-//Ë«ÏòÂİ¾à²¹³¥
+//åŒå‘èºè·è¡¥å¿
 SBilateralScrewComp g_SBilateralScrewComp[AXIS_PHYSICS_NUM_MAX];
 
-
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitSBilateralScrewComp(uint8 ucPhysicalAxis, int8 cDir)
-  º¯Êı¹¦ÄÜ£º³õÊ¼»¯Ë«ÏòÂİ¾à   Ğè¸³·½Ïò
-  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-			cDir			·½Ïò
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ÊäÈëÎïÀíÖá³¬³ö×î´óÖµ
-			-2 Âİ¾à²¹³¥²¹³¥¹¦ÄÜÎ´¿ªÆô
-			1  ³õÊ¼»¯³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitSBilateralScrewComp(uint8 ucPhysicalAxis, int8 cDir)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–åŒå‘èºè·   éœ€èµ‹æ–¹å‘
+  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+			cDir			æ–¹å‘
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 è¾“å…¥ç‰©ç†è½´è¶…å‡ºæœ€å¤§å€¼
+			-2 èºè·è¡¥å¿è¡¥å¿åŠŸèƒ½æœªå¼€å¯
+			1  åˆå§‹åŒ–æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initSBilateralScrewComp(uint8 ucPhysicalAxis, int8 cDir)
 {
-	int16 sSegNum;
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SSystemPara.bBilateralScrewEnable[ucPhysicalAxis] != TRUE)
-	{
-		return -2;
-	}
-	//»ñÈ¡Çø¼äºÅ
-	sSegNum = getSegNum(g_dRealTimePointArray[ucPhysicalAxis], ucPhysicalAxis);
-	//»ñÈ¡²¹³¥Öµ£¨Ïà¶Ô+¾ø¶Ô£©
-	getCompVal(sSegNum, ucPhysicalAxis, &g_SBilateralScrewComp[ucPhysicalAxis]);
+    int16 sSegNum;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SSystemPara.bBilateralScrewEnable[ucPhysicalAxis] != TRUE)
+    {
+        return -2;
+    }
+    //è·å–åŒºé—´å·
+    sSegNum = getSegNum(g_dRealTimePointArray[ucPhysicalAxis], ucPhysicalAxis);
+    //è·å–è¡¥å¿å€¼ï¼ˆç›¸å¯¹+ç»å¯¹ï¼‰
+    getCompVal(sSegNum, ucPhysicalAxis, &g_SBilateralScrewComp[ucPhysicalAxis]);
 
-	//¸ù¾İ·½Ïò¼ÆËãµ±Ç°µãµÄ¾ø¶Ô²¹³¥Öµ
-	g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir = cDir;
-	cDir = (cDir == 1) ? SCREWCOMP_AHEAD : SCREWCOMP_BACK;
-	g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal = g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[cDir] / 1000.0 + //·Ö¸îµãµÄ²¹³¥¾ø¶ÔÖµ
-		(g_dRealTimePointArray[ucPhysicalAxis] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[cDir];//+Ïà¶ÔÖµxÃ¿mm¶ÔÓ¦µÄ²¹³¥Öµ
-	g_SBilateralScrewComp[ucPhysicalAxis].fVel = g_SSystemPara.dRevClearanceCompVs;
-	g_SBilateralScrewComp[ucPhysicalAxis].fAcc = g_SSystemPara.dRevClearanceCompAcc;
-	g_SBilateralScrewComp[ucPhysicalAxis].dLimitVmax = g_SSystemPara.dRevClearanceCompVmax;	//2023/2/28	³ÂÃô´Ï
-	g_SBilateralScrewComp[ucPhysicalAxis].cDir = 1;
-	g_SBilateralScrewComp[ucPhysicalAxis].ucStatus = BILATERAL_SCREW_ON;
-	g_SBilateralScrewComp[ucPhysicalAxis].dRecorder = 0;  //³õÊ¼»¯¼ÇÂ¼Æ÷  2023.3.24 ÖìÎÈÖĞ
-	return 1;
+    //æ ¹æ®æ–¹å‘è®¡ç®—å½“å‰ç‚¹çš„ç»å¯¹è¡¥å¿å€¼
+    g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir = cDir;
+    cDir = (cDir == 1) ? SCREWCOMP_AHEAD : SCREWCOMP_BACK;
+    g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal =
+        g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[cDir] / 1000.0 + //åˆ†å‰²ç‚¹çš„è¡¥å¿ç»å¯¹å€¼
+        (g_dRealTimePointArray[ucPhysicalAxis] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) *
+            g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[cDir]; //+ç›¸å¯¹å€¼xæ¯mmå¯¹åº”çš„è¡¥å¿å€¼
+    g_SBilateralScrewComp[ucPhysicalAxis].fVel = g_SSystemPara.dRevClearanceCompVs;
+    g_SBilateralScrewComp[ucPhysicalAxis].fAcc = g_SSystemPara.dRevClearanceCompAcc;
+    g_SBilateralScrewComp[ucPhysicalAxis].dLimitVmax = g_SSystemPara.dRevClearanceCompVmax; //2023/2/28	é™ˆæ•èª
+    g_SBilateralScrewComp[ucPhysicalAxis].cDir = 1;
+    g_SBilateralScrewComp[ucPhysicalAxis].ucStatus = BILATERAL_SCREW_ON;
+    g_SBilateralScrewComp[ucPhysicalAxis].dRecorder = 0; //åˆå§‹åŒ–è®°å½•å™¨  2023.3.24 æœ±ç¨³ä¸­
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSegNum(double curPoint, uint8 ucPhysicalAxis)
-  º¯Êı¹¦ÄÜ£º¸ù¾İ×ø±ê»ñÈ¡Çø¼äºÅÂë
-  ÊäÈë²ÎÊı£ºcurPoint		×ø±êµã
-			ucPhysicalAxis	ÎïÀíÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÇø¼äºÅÂë(int16)
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSegNum(double curPoint, uint8 ucPhysicalAxis)
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®åæ ‡è·å–åŒºé—´å·ç 
+  è¾“å…¥å‚æ•°ï¼šcurPoint		åæ ‡ç‚¹
+			ucPhysicalAxis	ç‰©ç†è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåŒºé—´å·ç (int16)
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getSegNum(double curPoint, uint8 ucPhysicalAxis)
 {
-	int16 sSeg;
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	//Ä¿±êµãµÄÇø¼ä
-	sSeg = (int)((curPoint - g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis]) / g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis]) + g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
+    int16 sSeg;
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    //ç›®æ ‡ç‚¹çš„åŒºé—´
+    sSeg = (int)((curPoint - g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis]) /
+                 g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis]) +
+           g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
 
-	if (curPoint < g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis])//¸ºÊıµÄÇø¼ä ÕûÌåÒÆ¶¯Ò»¸öÎ»ÖÃ
-	{
-		sSeg -= 1;
-	}
-	else {
-		sSeg += 1;
-	}
-	return sSeg;
+    if (curPoint < g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis]) //è´Ÿæ•°çš„åŒºé—´ æ•´ä½“ç§»åŠ¨ä¸€ä¸ªä½ç½®
+    {
+        sSeg -= 1;
+    }
+    else
+    {
+        sSeg += 1;
+    }
+    return sSeg;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCompVal(int16 sSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
-  º¯Êı¹¦ÄÜ£º¸ù¾İÇø¼äºÅÂë»ñÈ¡²¹³¥Êı¾İ
-  ÊäÈë²ÎÊı£ºsSeg			Çø¼ä
-			ucPhysicalAxis	ÎïÀíÖáºÅ
-			pSScrewComp		Ë«±íÂİ¾à²¹³¥Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	²ÎÊı´íÎó
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCompVal(int16 sSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®åŒºé—´å·ç è·å–è¡¥å¿æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šsSeg			åŒºé—´
+			ucPhysicalAxis	ç‰©ç†è½´å·
+			pSScrewComp		åŒè¡¨èºè·è¡¥å¿æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	å‚æ•°é”™è¯¯
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getCompVal(int16 sSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
 {
-	int16 curSeg;
-	int16 sAbsCompVal[2] = { 0 };
-	int16 sDir;
-	int16 sTargetSeg = sSeg;
+    int16 curSeg;
+    int16 sAbsCompVal[2] = {0};
+    int16 sDir;
+    int16 sTargetSeg = sSeg;
 
+    if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || pSScrewComp == NULL)
+    {
+        return -1;
+    }
+    curSeg = g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
 
-	if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || pSScrewComp == NULL)
-	{
-		return -1;
-	}
-	curSeg = g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
+    sAbsCompVal[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg]; //ç»å¯¹å€¼
+    sAbsCompVal[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];   //ç»å¯¹å€¼
 
-	sAbsCompVal[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg];//¾ø¶ÔÖµ
-	sAbsCompVal[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];//¾ø¶ÔÖµ
+    if (sTargetSeg >= g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis])
+    { //å³è¾¹  é€’å¢
+        curSeg += 1;
+        for (; (curSeg < sTargetSeg && curSeg <= SCREWDEVIATION_NUM_MAX - 1); curSeg++)
+        {
+            sAbsCompVal[SCREWCOMP_AHEAD] += g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg]; //ç›¸å¯¹å€¼
+            sAbsCompVal[SCREWCOMP_BACK] += g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];   //ç›¸å¯¹å€¼
+        }
+    }
+    else
+    { //å·¦è¾¹  é€’å‡
+        curSeg -= 1;
+        for (; (curSeg > sTargetSeg && curSeg >= 0); curSeg--)
+        {
+            sAbsCompVal[SCREWCOMP_AHEAD] -= g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg]; //ç›¸å¯¹å€¼
+            sAbsCompVal[SCREWCOMP_BACK] -= g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];   //ç›¸å¯¹å€¼
+        }
+    }
 
-	if (sTargetSeg >= g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis])
-	{//ÓÒ±ß  µİÔö
-		curSeg += 1;
-		for (; (curSeg < sTargetSeg && curSeg <= SCREWDEVIATION_NUM_MAX - 1); curSeg++)
-		{
-			sAbsCompVal[SCREWCOMP_AHEAD] += g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg];//Ïà¶ÔÖµ
-			sAbsCompVal[SCREWCOMP_BACK] += g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];//Ïà¶ÔÖµ
-		}
-	}
-	else
-	{//×ó±ß  µİ¼õ
-		curSeg -= 1;
-		for (; (curSeg > sTargetSeg && curSeg >= 0); curSeg--)
-		{
-			sAbsCompVal[SCREWCOMP_AHEAD] -= g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][curSeg];//Ïà¶ÔÖµ
-			sAbsCompVal[SCREWCOMP_BACK] -= g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][curSeg];//Ïà¶ÔÖµ
-		}
-	}
+    //ä¼ å‡ºæ•°æ®  ï¼ˆç»å¯¹å€¼ï¼‰
+    pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = sAbsCompVal[SCREWCOMP_AHEAD];
+    pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = sAbsCompVal[SCREWCOMP_BACK];
 
-	//´«³öÊı¾İ  £¨¾ø¶ÔÖµ£©
-	pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = sAbsCompVal[SCREWCOMP_AHEAD];
-	pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = sAbsCompVal[SCREWCOMP_BACK];
+    //è·å¾—ç›¸å¯¹å€¼
+    if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
+    { //æœ‰æ•ˆåŒºé—´å†…
 
-	//»ñµÃÏà¶ÔÖµ
-	if (sTargetSeg < SCREWDEVIATION_NUM_MAX && sTargetSeg >= 0)
-	{//ÓĞĞ§Çø¼äÄÚ
+        pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+        pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
+    }
+    else
+    {
+        //æœ‰æ•ˆåŒºé—´å¤–  å½“å‰åŒºé—´çš„è¡¥å¿å€¼ä¸º0
+        pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = 0;
+    }
 
-		pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-		pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
-	}
-	else
-	{
-		//ÓĞĞ§Çø¼äÍâ  µ±Ç°Çø¼äµÄ²¹³¥ÖµÎª0
-		pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = 0;
-	}
+    //è®¡ç®—æ¯1mmå¯¹åº”çš„è¡¥å¿å€¼
+    pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
+    pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
 
-	//¼ÆËãÃ¿1mm¶ÔÓ¦µÄ²¹³¥Öµ
-	pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
-	pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
-	
-	//¸³ÖµÇø¼äºÅ
-	pSScrewComp->sCurSeg = sTargetSeg;
-	
-	//¼ÆËã·Ö¸îµã
-	pSScrewComp->dDivisionPoint = (sTargetSeg >= g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis]) ?
-		(sTargetSeg - 1 - g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis]) * g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] + g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis] :
-		(sTargetSeg + 1 - g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis]) * g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] + g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis];
-	return 1;
+    //èµ‹å€¼åŒºé—´å·
+    pSScrewComp->sCurSeg = sTargetSeg;
+
+    //è®¡ç®—åˆ†å‰²ç‚¹
+    pSScrewComp->dDivisionPoint = (sTargetSeg >= g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis])
+                                      ? (sTargetSeg - 1 - g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis]) *
+                                                g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] +
+                                            g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis]
+                                      : (sTargetSeg + 1 - g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis]) *
+                                                g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] +
+                                            g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis];
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmoveScrewSeg(int16 sTargetSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
-  º¯Êı¹¦ÄÜ£ºÒÆ¶¯Çø¼ä£¬»ñÈ¡²¹³¥Êı¾İ
-  ÊäÈë²ÎÊı£ºsTargetSeg		Ä¿±êÇø¼ä
-			ucPhysicalAxis	ÎïÀíÖáºÅ
-			pSScrewComp		Ë«±íÂİ¾à²¹³¥Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	²ÎÊı´íÎó
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmoveScrewSeg(int16 sTargetSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
+  å‡½æ•°åŠŸèƒ½ï¼šç§»åŠ¨åŒºé—´ï¼Œè·å–è¡¥å¿æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šsTargetSeg		ç›®æ ‡åŒºé—´
+			ucPhysicalAxis	ç‰©ç†è½´å·
+			pSScrewComp		åŒè¡¨èºè·è¡¥å¿æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	å‚æ•°é”™è¯¯
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 moveScrewSeg(int16 sTargetSeg, uint8 ucPhysicalAxis, SBilateralScrewComp* pSScrewComp)
 {
-	int16 sDir;
-	sDir = sTargetSeg - pSScrewComp->sCurSeg;
-	int16 sReferenceNum;
+    int16 sDir;
+    sDir = sTargetSeg - pSScrewComp->sCurSeg;
+    int16 sReferenceNum;
 
-	if (sDir == 0)
-	{
-		return 0;
-	}
-	//²Î¿¼µãºÅÂë
-	sReferenceNum = g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
+    if (sDir == 0)
+    {
+        return 0;
+    }
+    //å‚è€ƒç‚¹å·ç 
+    sReferenceNum = g_SSystemPara.sScrewReferenceNum[ucPhysicalAxis];
 
-	if (sTargetSeg == sReferenceNum - 1 || sTargetSeg == sReferenceNum + 1)
-	{//ÌØÊâÇø¼ä Ö±½ÓµÃ³ö½á¹û
+    if (sTargetSeg == sReferenceNum - 1 || sTargetSeg == sReferenceNum + 1)
+    { //ç‰¹æ®ŠåŒºé—´ ç›´æ¥å¾—å‡ºç»“æœ
 
-		pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sReferenceNum];
-		pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sReferenceNum];
+        pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sReferenceNum];
+        pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sReferenceNum];
 
-		pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-		pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
-		//¼ÆËãÃ¿1mm²¹³¥µÄÂö³åÖµ
-		pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
-		pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
+        pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+        pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
+        //è®¡ç®—æ¯1mmè¡¥å¿çš„è„‰å†²å€¼
+        pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
+        pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
 
-		//Çø¼äºÅ
-		pSScrewComp->sCurSeg = sTargetSeg;
-		//·Ö¸îµã
-		pSScrewComp->dDivisionPoint = g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis];
+        //åŒºé—´å·
+        pSScrewComp->sCurSeg = sTargetSeg;
+        //åˆ†å‰²ç‚¹
+        pSScrewComp->dDivisionPoint = g_SSystemPara.fScrewReferencePoint[ucPhysicalAxis];
 
-		return 2;
-	}
+        return 2;
+    }
 
-	if (sDir >= 2 || sDir <= -2)
-	{//¿ç¶È½Ï´ó Ê¹ÓÃµü´úÖØĞÂ¼ÆËã
-		return getCompVal(sTargetSeg, ucPhysicalAxis, pSScrewComp);
-	}
+    if (sDir >= 2 || sDir <= -2)
+    { //è·¨åº¦è¾ƒå¤§ ä½¿ç”¨è¿­ä»£é‡æ–°è®¡ç®—
+        return getCompVal(sTargetSeg, ucPhysicalAxis, pSScrewComp);
+    }
 
-	if (sTargetSeg >= SCREWDEVIATION_NUM_MAX || sTargetSeg < 0)
-	{ //Ä¿±êÇø¼äÔ½½ç
+    if (sTargetSeg >= SCREWDEVIATION_NUM_MAX || sTargetSeg < 0)
+    { //ç›®æ ‡åŒºé—´è¶Šç•Œ
 
-		//²¹³¥¾ø¶ÔÖµ
-		//pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD];
-		//pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = pSScrewComp->sAbsCompVal[SCREWCOMP_BACK];
+        //è¡¥å¿ç»å¯¹å€¼
+        //pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] = pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD];
+        //pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] = pSScrewComp->sAbsCompVal[SCREWCOMP_BACK];
 
-		//Ã¿1mm²¹³¥µÄÂö³åÖµ
-		pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = 0;
-		pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = 0;
+        //æ¯1mmè¡¥å¿çš„è„‰å†²å€¼
+        pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = 0;
+        pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = 0;
 
-		//Çø¼äºÅ
-		pSScrewComp->sCurSeg = sTargetSeg;
-		//·Ö¸îµã
-		pSScrewComp->dDivisionPoint += sDir * (int32)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis];
-		return 1;
-	}
+        //åŒºé—´å·
+        pSScrewComp->sCurSeg = sTargetSeg;
+        //åˆ†å‰²ç‚¹
+        pSScrewComp->dDivisionPoint += sDir * (int32)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis];
+        return 1;
+    }
 
-	//Ä¿±êÇø¼äÃ»ÓĞÔ½½ç
+    //ç›®æ ‡åŒºé—´æ²¡æœ‰è¶Šç•Œ
 
-	//´æ·ÅµÄÊÇÏà¶ÔÖµ  ÀÛ¼Ó
-	if (sDir * (sTargetSeg - sReferenceNum) > 0)
-	{
-		pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] += sDir * g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][pSScrewComp->sCurSeg];
-		pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] += sDir * g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][pSScrewComp->sCurSeg];
-	}
-	else
-	{
-		pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] += sDir * g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-		pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] += sDir * g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
-	}
+    //å­˜æ”¾çš„æ˜¯ç›¸å¯¹å€¼  ç´¯åŠ 
+    if (sDir * (sTargetSeg - sReferenceNum) > 0)
+    {
+        pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] +=
+            sDir * g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][pSScrewComp->sCurSeg];
+        pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] +=
+            sDir * g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][pSScrewComp->sCurSeg];
+    }
+    else
+    {
+        pSScrewComp->sAbsCompVal[SCREWCOMP_AHEAD] +=
+            sDir * g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+        pSScrewComp->sAbsCompVal[SCREWCOMP_BACK] += sDir * g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
+    }
 
-	//»ñÈ¡µ±Ç°Çø¼äÏà¶ÔÖµ
-	pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
-	pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
+    //è·å–å½“å‰åŒºé—´ç›¸å¯¹å€¼
+    pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] = g_SSystemPara.cAheadScrewCompVal[ucPhysicalAxis][sTargetSeg];
+    pSScrewComp->dDeltaComp[SCREWCOMP_BACK] = g_SSystemPara.cBackScrewCompVal[ucPhysicalAxis][sTargetSeg];
 
-	//¼ÆËãÃ¿1mm²¹³¥µÄÂö³åÖµ
-	pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
-	pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
+    //è®¡ç®—æ¯1mmè¡¥å¿çš„è„‰å†²å€¼
+    pSScrewComp->dDeltaComp[SCREWCOMP_AHEAD] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
+    pSScrewComp->dDeltaComp[SCREWCOMP_BACK] /= ((double)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis] * 1000);
 
-	//Çø¼äºÅ
-	pSScrewComp->sCurSeg = sTargetSeg;
-	//·Ö¸îµã
-	pSScrewComp->dDivisionPoint += sDir * (int16)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis];
-	return 2;
+    //åŒºé—´å·
+    pSScrewComp->sCurSeg = sTargetSeg;
+    //åˆ†å‰²ç‚¹
+    pSScrewComp->dDivisionPoint += sDir * (int16)g_SSystemPara.ucBilateralScrewGap[ucPhysicalAxis];
+    return 2;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºscrewVelLimit(double  dTargetComp, SBilateralScrewComp* pSScrewComp)
-  º¯Êı¹¦ÄÜ£º²¹³¥ËÙ¶ÈÏŞÖÆ  £¨µ¥ÖÜÆÚ²¹³¥Á¿¹ı´óÊ±£¬½øĞĞËÙ¶ÈÏŞÖÆ£¬Ê¹ÓÃÌİĞÎÇúÏß½øĞĞ¼Ó¼õËÙ£©
-  ÊäÈë²ÎÊı£ºdTargetComp		Ä¿±ê²¹³¥Öµ
-			pSScrewComp		Ë«±íÂİ¾à²¹³¥Ö¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	²ÎÊı´íÎó
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šscrewVelLimit(double  dTargetComp, SBilateralScrewComp* pSScrewComp)
+  å‡½æ•°åŠŸèƒ½ï¼šè¡¥å¿é€Ÿåº¦é™åˆ¶  ï¼ˆå•å‘¨æœŸè¡¥å¿é‡è¿‡å¤§æ—¶ï¼Œè¿›è¡Œé€Ÿåº¦é™åˆ¶ï¼Œä½¿ç”¨æ¢¯å½¢æ›²çº¿è¿›è¡ŒåŠ å‡é€Ÿï¼‰
+  è¾“å…¥å‚æ•°ï¼šdTargetComp		ç›®æ ‡è¡¥å¿å€¼
+			pSScrewComp		åŒè¡¨èºè·è¡¥å¿æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	å‚æ•°é”™è¯¯
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double screwVelLimit(double  dTargetComp, SBilateralScrewComp* pSScrewComp)
+double screwVelLimit(double dTargetComp, SBilateralScrewComp* pSScrewComp)
 {
-	float fDelta;
-	float fDistLimtVel;//¾àÀëÏŞÖÆµÄËÙ¶È
-	double dRes;
-	float fVs = g_SSystemPara.dRevClearanceCompVs;;
-	if (pSScrewComp == NULL)
-	{
-		return dTargetComp;
-	}
-	//²¹³¥Ïà¶ÔÖµ
-	fDelta = (float)(dTargetComp - pSScrewComp->dCurAbsCompVal);
+    float fDelta;
+    float fDistLimtVel; //è·ç¦»é™åˆ¶çš„é€Ÿåº¦
+    double dRes;
+    float fVs = g_SSystemPara.dRevClearanceCompVs;
+    ;
+    if (pSScrewComp == NULL)
+    {
+        return dTargetComp;
+    }
+    //è¡¥å¿ç›¸å¯¹å€¼
+    fDelta = (float)(dTargetComp - pSScrewComp->dCurAbsCompVal);
 
-	if (fDelta * pSScrewComp->cDir < 0)// ·½ÏòÏà·´  
-	{
-		pSScrewComp->fVel = g_SSystemPara.dRevClearanceCompVs;//·½Ïò¸Ä±ä  ËÙ¶È³õÊ¼»¯Îª³õËÙ¶È
-		pSScrewComp->cDir = sgn((double)fDelta);//¸³Öµ²¹³¥·½Ïò
-	}
-	//²¹³¥µÄ¾ø¶ÔÖµ
-	fDelta = fabs(fDelta);
+    if (fDelta * pSScrewComp->cDir < 0) // æ–¹å‘ç›¸å
+    {
+        pSScrewComp->fVel = g_SSystemPara.dRevClearanceCompVs; //æ–¹å‘æ”¹å˜  é€Ÿåº¦åˆå§‹åŒ–ä¸ºåˆé€Ÿåº¦
+        pSScrewComp->cDir = sgn((double)fDelta);               //èµ‹å€¼è¡¥å¿æ–¹å‘
+    }
+    //è¡¥å¿çš„ç»å¯¹å€¼
+    fDelta = fabs(fDelta);
 
-	if (fDelta < fVs)//ËÙ¶ÈÃ»ÓĞ³¬ÏŞ  Ö±½ÓÊä³ö
-	{
-		pSScrewComp->ucStatus = BILATERAL_SCREW_ON;//×´Ì¬¸Ä±äÎªON£¬ÒòÎª²¹³¥ÔÚÕâ¸öÖÜÆÚ¿ÉÒÔÈ«²¿Êä³öÍê³É
-		return dTargetComp;
-	}
-	//¾àÀëÏŞÖÆµÄËÙ¶È
-	fDistLimtVel = sqrt(2 * pSScrewComp->fAcc * (float)fDelta + fVs * fVs);
-	//¼ÆËãËÙ¶È
-	pSScrewComp->fVel = min(pSScrewComp->fVel, fDelta);
-	pSScrewComp->fVel = min(pSScrewComp->fVel, pSScrewComp->dLimitVmax);	//2023.2.28	³ÂÃô´Ï
-	pSScrewComp->fVel = min(pSScrewComp->fVel, fDistLimtVel);
+    if (fDelta < fVs) //é€Ÿåº¦æ²¡æœ‰è¶…é™  ç›´æ¥è¾“å‡º
+    {
+        pSScrewComp->ucStatus = BILATERAL_SCREW_ON; //çŠ¶æ€æ”¹å˜ä¸ºONï¼Œå› ä¸ºè¡¥å¿åœ¨è¿™ä¸ªå‘¨æœŸå¯ä»¥å…¨éƒ¨è¾“å‡ºå®Œæˆ
+        return dTargetComp;
+    }
+    //è·ç¦»é™åˆ¶çš„é€Ÿåº¦
+    fDistLimtVel = sqrt(2 * pSScrewComp->fAcc * (float)fDelta + fVs * fVs);
+    //è®¡ç®—é€Ÿåº¦
+    pSScrewComp->fVel = min(pSScrewComp->fVel, fDelta);
+    pSScrewComp->fVel = min(pSScrewComp->fVel, pSScrewComp->dLimitVmax); //2023.2.28	é™ˆæ•èª
+    pSScrewComp->fVel = min(pSScrewComp->fVel, fDistLimtVel);
 
-	//Êä³öµ±Ç°²¹³¥ + ËÙ¶È
-	dRes = pSScrewComp->dCurAbsCompVal + pSScrewComp->cDir * pSScrewComp->fVel;
-	//ÌİĞÎËÙ¶ÈÇúÏß ÏÂ¸öÖÜÆÚÔÊĞíµÄËÙ¶ÈÔö¼ÓÒ»¸ö¼ÓËÙ¶È
-	pSScrewComp->fVel += pSScrewComp->fAcc * g_SSystemPara.dInterpolationTime;
-	//½«×´Ì¬¸Ä±äÎª²¹³¥»îÔ¾ £¨²¹³¥µÄÁ¿Î´Êä³öÍê³É£©
-	pSScrewComp->ucStatus = BILATERAL_SCREW_ACTIVE;
-	return dRes;
+    //è¾“å‡ºå½“å‰è¡¥å¿ + é€Ÿåº¦
+    dRes = pSScrewComp->dCurAbsCompVal + pSScrewComp->cDir * pSScrewComp->fVel;
+    //æ¢¯å½¢é€Ÿåº¦æ›²çº¿ ä¸‹ä¸ªå‘¨æœŸå…è®¸çš„é€Ÿåº¦å¢åŠ ä¸€ä¸ªåŠ é€Ÿåº¦
+    pSScrewComp->fVel += pSScrewComp->fAcc * g_SSystemPara.dInterpolationTime;
+    //å°†çŠ¶æ€æ”¹å˜ä¸ºè¡¥å¿æ´»è·ƒ ï¼ˆè¡¥å¿çš„é‡æœªè¾“å‡ºå®Œæˆï¼‰
+    pSScrewComp->ucStatus = BILATERAL_SCREW_ACTIVE;
+    return dRes;
 }
 
-
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºoutPutAbsPointWithScrewComp
-//  º¯Êı¹¦ÄÜ£ºÀûÓÃÀíÂÛ×ø±êºÍÂİ¾à²¹³¥Éú³ÉSRun½á¹¹ÌåÊı¾İ
-//  ÊäÈë²ÎÊı£ºucPhysicalAxis	ÎïÀíÖáºÅ
-//  Êä³ö²ÎÊı£ºg_SScrewComp Âİ¾à²¹³¥½á¹¹Ìå
-//  ·µ »Ø Öµ£º-1 ÊäÈëÎïÀíÖá³¬³ö×î´óÖµ£¬ 0 Âİ¾à²¹³¥²¹³¥¹¦ÄÜÎ´¿ªÆô£¬1 ³õÊ¼»¯³É¹¦
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šoutPutAbsPointWithScrewComp
+//  å‡½æ•°åŠŸèƒ½ï¼šåˆ©ç”¨ç†è®ºåæ ‡å’Œèºè·è¡¥å¿ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+//  è¾“å…¥å‚æ•°ï¼šucPhysicalAxis	ç‰©ç†è½´å·
+//  è¾“å‡ºå‚æ•°ï¼šg_SScrewComp èºè·è¡¥å¿ç»“æ„ä½“
+//  è¿” å› å€¼ï¼š-1 è¾“å…¥ç‰©ç†è½´è¶…å‡ºæœ€å¤§å€¼ï¼Œ 0 èºè·è¡¥å¿è¡¥å¿åŠŸèƒ½æœªå¼€å¯ï¼Œ1 åˆå§‹åŒ–æˆåŠŸ
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 outPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
 //{
@@ -1109,311 +1146,326 @@ double screwVelLimit(double  dTargetComp, SBilateralScrewComp* pSScrewComp)
 //	double dPulseToMm;
 //	double dSum;
 //	uint8 ucPhysicalAxis;
-//	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
+//	int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
 //
-//	if (pSRun == NULL)//¿ÕÖ¸Õë
+//	if (pSRun == NULL)//ç©ºæŒ‡é’ˆ
 //	{
 //		return FALSE;
 //	}
 //
-//	//»ñÈ¡ÊµÊ±µã×÷ÎªÉÏÒ»µãµÄÎ»ÖÃ
+//	//è·å–å®æ—¶ç‚¹ä½œä¸ºä¸Šä¸€ç‚¹çš„ä½ç½®
 //	getRealTimePoint((double*)&pSRun->SLastAbsCoord, AXIS_NUM_MAX, ucAxisMap, NULL);
 //
 //	for (i = 0; i < nArraySize; i++)
 //	{
 //		ucPhysicalAxis = ucAxisMap[i];
 //
-//		if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) continue;  //Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ²»¼ÆËã
-//		//Ä¿±êÖáµÄÂö³åµ±Á¿
+//		if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) continue;  //æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  ä¸è®¡ç®—
+//		//ç›®æ ‡è½´çš„è„‰å†²å½“é‡
 //		dPulseToMm = (dPulseToMmArray == NULL) ? g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm : dPulseToMmArray[i];
 //
-//		if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus)//¿ªÆôÁËÂİ¾à²¹³¥
+//		if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus)//å¼€å¯äº†èºè·è¡¥å¿
 //		{
-//			double dCurCompVal;//µ±Ç°²¹³¥¾ø¶ÔÖµ
-//			//Ä¿±êµãµÄÇø¼ä
+//			double dCurCompVal;//å½“å‰è¡¥å¿ç»å¯¹å€¼
+//			//ç›®æ ‡ç‚¹çš„åŒºé—´
 //			sTargetSeg = getSegNum(pdTargetPoint[i], ucPhysicalAxis);
 //
-//			//ÒÆ¶¯Çø¼ä£¨Çø¼äÏàÍ¬Ê±£¬ÄÚ²¿²»²Ù×÷£©
+//			//ç§»åŠ¨åŒºé—´ï¼ˆåŒºé—´ç›¸åŒæ—¶ï¼Œå†…éƒ¨ä¸æ“ä½œï¼‰
 //			moveScrewSeg(sTargetSeg, ucPhysicalAxis, &g_SBilateralScrewComp[ucPhysicalAxis]);
 //
-//			//¸ù¾İ·½Ïò  ¼ÆËã²¹³¥¾ø¶ÔÖµ
+//			//æ ¹æ®æ–¹å‘  è®¡ç®—è¡¥å¿ç»å¯¹å€¼
 //			if (pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i] >0)
-//			{//ÕıÏò   ¼ÆËãÕıÏòµÄ²¹³¥¾ø¶ÔÖµ
-//				dCurCompVal =g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_AHEAD]/1000.0  + //·Ö¸îµãµÄ²¹³¥¾ø¶ÔÖµ
-//					(pdTargetPoint[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_AHEAD];//+Ïà¶ÔÖµxÃ¿mm¶ÔÓ¦µÄ²¹³¥Öµ
+//			{//æ­£å‘   è®¡ç®—æ­£å‘çš„è¡¥å¿ç»å¯¹å€¼
+//				dCurCompVal =g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_AHEAD]/1000.0  + //åˆ†å‰²ç‚¹çš„è¡¥å¿ç»å¯¹å€¼
+//					(pdTargetPoint[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_AHEAD];//+ç›¸å¯¹å€¼xæ¯mmå¯¹åº”çš„è¡¥å¿å€¼
 //			}
 //			else
-//			{//·´Ïò   ¼ÆËã·´ÏòµÄ²¹³¥¾ø¶ÔÖµ
-//				dCurCompVal = g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_BACK]/1000.0 + //·Ö¸îµãµÄ²¹³¥¾ø¶ÔÖµ
-//					(pdTargetPoint[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_BACK];//+Ïà¶ÔÖµxÃ¿mm¶ÔÓ¦µÄ²¹³¥Öµ
+//			{//åå‘   è®¡ç®—åå‘çš„è¡¥å¿ç»å¯¹å€¼
+//				dCurCompVal = g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_BACK]/1000.0 + //åˆ†å‰²ç‚¹çš„è¡¥å¿ç»å¯¹å€¼
+//					(pdTargetPoint[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_BACK];//+ç›¸å¯¹å€¼xæ¯mmå¯¹åº”çš„è¡¥å¿å€¼
 //			}
 //
-//			//²¹³¥ËÙ¶ÈÏŞÖÆÅĞ¶Ï
+//			//è¡¥å¿é€Ÿåº¦é™åˆ¶åˆ¤æ–­
 //			dCurCompVal = screwVelLimit(dCurCompVal, &g_SBilateralScrewComp[ucPhysicalAxis]);
 //
-//			//¼ÆËã×Ü¾àÀë
+//			//è®¡ç®—æ€»è·ç¦»
 //			dSum = (pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) + (dCurCompVal - g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal) + g_SBilateralScrewComp[ucPhysicalAxis].dRecorder;
-//			
-//			//¼ÆËãÂö³å
+//
+//			//è®¡ç®—è„‰å†²
 //			pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
 //
-//			//¼ÇÂ¼²¹³¥µÄÓàÖµ
+//			//è®°å½•è¡¥å¿çš„ä½™å€¼
 //			g_SBilateralScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[i] * dPulseToMm;
 //
-//			//¼ÇÂ¼²¹³¥¾ø¶ÔÖµ
+//			//è®°å½•è¡¥å¿ç»å¯¹å€¼
 //			g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal = dCurCompVal;
 //
 //			printf("abs = %lf ", g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal);
 //
-//			pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i];//½«Ä¿±êµã¸³Öµµ½ SAbsCoord  ¸Ä±äÊµÊ±µãµÄÎ»ÖÃÊ±Í³Ò»´¦Àí
+//			pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i];//å°†ç›®æ ‡ç‚¹èµ‹å€¼åˆ° SAbsCoord  æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®æ—¶ç»Ÿä¸€å¤„ç†
 //		}
 //		else
 //		{
-//			//Ã»ÓĞÊ¹ÄÜÂİ¾à²¹³¥
+//			//æ²¡æœ‰ä½¿èƒ½èºè·è¡¥å¿
 //
-//			//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
+//			//æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
 //			pSRun->sAxisDeltaPulse[i] = round((pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) / g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm);
 //
-//			//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
+//			//ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
 //			pSRun->SAbsCoord.dArray[i] = pSRun->SLastAbsCoord.dArray[i] + pSRun->sAxisDeltaPulse[i] * g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm;
 //		}
 //	}
 //
-//	//¸Ä±äÊµÊ±µãµÄÎ»ÖÃ
+//	//æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®
 //	updateRealTimePoint((double*)&pSRun->SAbsCoord, AXIS_NUM_MAX, ucAxisMap, ucValStatus);
 //	return TRUE;
 //}
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºoutPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
-  º¯Êı¹¦ÄÜ£ºÀûÓÃÀíÂÛ×ø±êºÍÂİ¾à²¹³¥Éú³ÉSRun½á¹¹ÌåÊı¾İ
-  ÊäÈë²ÎÊı£ºpdTargetPoint	Ä¿±êµãÊı×é
-			nArraySize		Ä¿±êµãÊı×é´óĞ¡
-			ucAxisMap		Ó³Éä
-			dPulseToMmArray	Âö³åµ±Á¿
-			ucValStatus		ÓĞĞ§Öµ
-  Êä³ö²ÎÊı£ºpSRun ÔËĞĞ½á¹¹ÌåÖ¸Õë
-  ·µ »Ø Öµ£ºFALSE	¿ÕÖ¸Õë
-			TRUE	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šoutPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ©ç”¨ç†è®ºåæ ‡å’Œèºè·è¡¥å¿ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+  è¾“å…¥å‚æ•°ï¼špdTargetPoint	ç›®æ ‡ç‚¹æ•°ç»„
+			nArraySize		ç›®æ ‡ç‚¹æ•°ç»„å¤§å°
+			ucAxisMap		æ˜ å°„
+			dPulseToMmArray	è„‰å†²å½“é‡
+			ucValStatus		æœ‰æ•ˆå€¼
+  è¾“å‡ºå‚æ•°ï¼špSRun è¿è¡Œç»“æ„ä½“æŒ‡é’ˆ
+  è¿” å› å€¼ï¼šFALSE	ç©ºæŒ‡é’ˆ
+			TRUE	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 outPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
+int8 outPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize,
+                                          const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
 {
-	int i = 0;
-	double dPulseToMm;
-	double dSum;
-	uint8 ucPhysicalAxis;
-	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
+    int i = 0;
+    double dPulseToMm;
+    double dSum;
+    uint8 ucPhysicalAxis;
+    int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
 
-	if (pSRun == NULL)//¿ÕÖ¸Õë
-	{
-		return FALSE;
-	}
+    if (pSRun == NULL) //ç©ºæŒ‡é’ˆ
+    {
+        return FALSE;
+    }
 
-	//»ñÈ¡ÊµÊ±µã×÷ÎªÉÏÒ»µãµÄÎ»ÖÃ
-	getRealTimePoint((double*)&pSRun->SLastAbsCoord, AXIS_NUM_MAX, ucAxisMap, NULL);
+    //è·å–å®æ—¶ç‚¹ä½œä¸ºä¸Šä¸€ç‚¹çš„ä½ç½®
+    getRealTimePoint((double*)&pSRun->SLastAbsCoord, AXIS_NUM_MAX, ucAxisMap, NULL);
 
-	pSRun->ucValStatus = *ucValStatus;
+    pSRun->ucValStatus = *ucValStatus;
 
-	for (i = 0; i < nArraySize; i++)
-	{
-		ucPhysicalAxis = ucAxisMap[i];
+    for (i = 0; i < nArraySize; i++)
+    {
+        ucPhysicalAxis = ucAxisMap[i];
 
-		if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i))) continue;  //Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ²»¼ÆËã
-		//Ä¿±êÖáµÄÂö³åµ±Á¿
-		dPulseToMm = (dPulseToMmArray == NULL) ? g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm : dPulseToMmArray[i];
+        if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || (ucValStatus != NULL && VAL_VALID != getbit(*ucValStatus, i)))
+            continue; //æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  ä¸è®¡ç®—
+        //ç›®æ ‡è½´çš„è„‰å†²å½“é‡
+        dPulseToMm =
+            (dPulseToMmArray == NULL) ? g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm : dPulseToMmArray[i];
 
-		if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus)//¿ªÆôÁËÂİ¾à²¹³¥
-		{
+        if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus) //å¼€å¯äº†èºè·è¡¥å¿
+        {
 
-			pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i];//½«Ä¿±êµã¸³Öµµ½ SAbsCoord  ¸Ä±äÊµÊ±µãµÄÎ»ÖÃÊ±Í³Ò»´¦Àí
-		}
-		else
-		{
-			//Ã»ÓĞÊ¹ÄÜÂİ¾à²¹³¥
+            pSRun->SAbsCoord.dArray[i] = pdTargetPoint[i]; //å°†ç›®æ ‡ç‚¹èµ‹å€¼åˆ° SAbsCoord  æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®æ—¶ç»Ÿä¸€å¤„ç†
+        }
+        else
+        {
+            //æ²¡æœ‰ä½¿èƒ½èºè·è¡¥å¿
 
-			//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-			pSRun->sAxisDeltaPulse[i] = round((pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) / g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm);
-			calcPulseWithCheck(pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i],g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm,&pSRun->sAxisDeltaPulse[i]);
-			//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-			pSRun->SAbsCoord.dArray[i] = pSRun->SLastAbsCoord.dArray[i] + pSRun->sAxisDeltaPulse[i] * g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm;
-		}
-	}
+            //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+            pSRun->sAxisDeltaPulse[i] = round((pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i]) /
+                                              g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm);
+            calcPulseWithCheck(pdTargetPoint[i] - pSRun->SLastAbsCoord.dArray[i],
+                               g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm, &pSRun->sAxisDeltaPulse[i]);
+            //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+            pSRun->SAbsCoord.dArray[i] = pSRun->SLastAbsCoord.dArray[i] +
+                                         pSRun->sAxisDeltaPulse[i] * g_SSystemPara.SAxisPara[ucAxisMap[i]].dPulseToMm;
+        }
+    }
 
-	//¸Ä±äÊµÊ±µãµÄÎ»ÖÃ
-	updateRealTimePoint((double*)&pSRun->SAbsCoord, AXIS_NUM_MAX, ucAxisMap, ucValStatus);
-	return TRUE;
+    //æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®
+    updateRealTimePoint((double*)&pSRun->SAbsCoord, AXIS_NUM_MAX, ucAxisMap, ucValStatus);
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºoutPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
-  º¯Êı¹¦ÄÜ£ºÀûÓÃÀíÂÛ×ø±êºÍÂİ¾à²¹³¥Éú³ÉSRun½á¹¹ÌåÊı¾İ
-  ÊäÈë²ÎÊı£ºpdTargetPoint	Ä¿±êµã
-			ucAxisMap		Ó³Éä
-			dPulseToMm		Âö³åµ±Á¿
-  Êä³ö²ÎÊı£ºpSRun ÔËĞĞ½á¹¹ÌåÖ¸Õë
-  ·µ »Ø Öµ£ºĞŞÕıºóµÄÊµÊ±µã
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šoutPutAbsPointWithBilateralScrewComp(struct _SRun* pSRun, double* pdTargetPoint, int nArraySize, const uint8* ucAxisMap, double* dPulseToMmArray, VAL_STRUCT_TYPE* ucValStatus)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ©ç”¨ç†è®ºåæ ‡å’Œèºè·è¡¥å¿ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+  è¾“å…¥å‚æ•°ï¼špdTargetPoint	ç›®æ ‡ç‚¹
+			ucAxisMap		æ˜ å°„
+			dPulseToMm		è„‰å†²å½“é‡
+  è¾“å‡ºå‚æ•°ï¼špSRun è¿è¡Œç»“æ„ä½“æŒ‡é’ˆ
+  è¿” å› å€¼ï¼šä¿®æ­£åçš„å®æ—¶ç‚¹
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double outPutAbsPointWithBilateralScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis, const uint8* ucAxisMap, double dPulseToMm)
+double outPutAbsPointWithBilateralScrewCompForG0(struct _SRun* pSRun, double dTargetPoint, uint8 ucAxis,
+                                                 const uint8* ucAxisMap, double dPulseToMm)
 {
-	double dSum;
-	uint8 ucPhysicalAxis;
-	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
-	ucPhysicalAxis = ucAxisMap[ucAxis];
-	double dAbsCoord;
+    double dSum;
+    uint8 ucPhysicalAxis;
+    int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
+    ucPhysicalAxis = ucAxisMap[ucAxis];
+    double dAbsCoord;
 
-	getSingleAxisRealTimePoint(&pSRun->SLastAbsCoord.dArray[ucAxis], ucAxis, ucAxisMap);
+    getSingleAxisRealTimePoint(&pSRun->SLastAbsCoord.dArray[ucAxis], ucAxis, ucAxisMap);
 
-	if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus)//¿ªÆôÁËÂİ¾à²¹³¥
-	{
-		pSRun->SAbsCoord.dArray[ucAxis] = dTargetPoint;//½«Ä¿±êµã¸³Öµµ½ SAbsCoord  ¸Ä±äÊµÊ±µãµÄÎ»ÖÃÊ±Í³Ò»´¦Àí
-		dAbsCoord = dTargetPoint;
-		pSRun->ucValStatus |= 0x01 << ucAxis;//ÓĞĞ§Öµ
-	}
-	else
-	{
-		//Ã»ÓĞÊ¹ÄÜÂİ¾à²¹³¥
+    if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus) //å¼€å¯äº†èºè·è¡¥å¿
+    {
+        pSRun->SAbsCoord.dArray[ucAxis] = dTargetPoint; //å°†ç›®æ ‡ç‚¹èµ‹å€¼åˆ° SAbsCoord  æ”¹å˜å®æ—¶ç‚¹çš„ä½ç½®æ—¶ç»Ÿä¸€å¤„ç†
+        dAbsCoord = dTargetPoint;
+        pSRun->ucValStatus |= 0x01 << ucAxis; //æœ‰æ•ˆå€¼
+    }
+    else
+    {
+        //æ²¡æœ‰ä½¿èƒ½èºè·è¡¥å¿
 
-		//¸ù¾İÄ¿±êµãºÍµ±Ç°µã¼ÆËãÂö³åµ±Á¿
-		pSRun->sAxisDeltaPulse[ucAxis] = round((dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) / dPulseToMm);
-		calcPulseWithCheck(dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis],dPulseToMm,&pSRun->sAxisDeltaPulse[ucAxis]);
-		//ĞŞÕı¸Ãµã¾ø¶Ô×ø±ê(¸ù¾İÉÏÒ»µã×ø±êºÍÂö³åÔöÁ¿¼ÆËã)
-		dAbsCoord = pSRun->SLastAbsCoord.dArray[ucAxis] + pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
-	}
-	return dAbsCoord;
+        //æ ¹æ®ç›®æ ‡ç‚¹å’Œå½“å‰ç‚¹è®¡ç®—è„‰å†²å½“é‡
+        pSRun->sAxisDeltaPulse[ucAxis] = round((dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis]) / dPulseToMm);
+        calcPulseWithCheck(dTargetPoint - pSRun->SLastAbsCoord.dArray[ucAxis], dPulseToMm,
+                           &pSRun->sAxisDeltaPulse[ucAxis]);
+        //ä¿®æ­£è¯¥ç‚¹ç»å¯¹åæ ‡(æ ¹æ®ä¸Šä¸€ç‚¹åæ ‡å’Œè„‰å†²å¢é‡è®¡ç®—)
+        dAbsCoord = pSRun->SLastAbsCoord.dArray[ucAxis] + pSRun->sAxisDeltaPulse[ucAxis] * dPulseToMm;
+    }
+    return dAbsCoord;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºBilateralScrewComp(struct _SRun* pSRun, int nArraySize, const uint8* ucAxisMap)
-  º¯Êı¹¦ÄÜ£º¸ù¾İSRUN½á¹¹ÌåÊı¾İ¼ÆËã²¹³¥ÖµºÍÉú³ÉÂö³å
-  ÊäÈë²ÎÊı£ºpSRun ÔËĞĞ½á¹¹ÌåÖ¸Õë
-			nArraySize		Êı×é´óĞ¡
-			ucAxisMap		Ó³Éä
-  Êä³ö²ÎÊı£ºpSRun ÔËĞĞ½á¹¹ÌåÖ¸Õë
-  ·µ »Ø Öµ£ºFALSE	¿ÕÖ¸Õë
-			TRUE	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šBilateralScrewComp(struct _SRun* pSRun, int nArraySize, const uint8* ucAxisMap)
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®SRUNç»“æ„ä½“æ•°æ®è®¡ç®—è¡¥å¿å€¼å’Œç”Ÿæˆè„‰å†²
+  è¾“å…¥å‚æ•°ï¼špSRun è¿è¡Œç»“æ„ä½“æŒ‡é’ˆ
+			nArraySize		æ•°ç»„å¤§å°
+			ucAxisMap		æ˜ å°„
+  è¾“å‡ºå‚æ•°ï¼špSRun è¿è¡Œç»“æ„ä½“æŒ‡é’ˆ
+  è¿” å› å€¼ï¼šFALSE	ç©ºæŒ‡é’ˆ
+			TRUE	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 BilateralScrewComp(struct _SRun* pSRun, int nArraySize, const uint8* ucAxisMap)
 {
-	int i;
-	double dSum;
-	uint8 ucPhysicalAxis;
-	int16 sTargetSeg; // Ä¿±êµÄÇø¼ä
-	double dPulseToMm;
-	double dDist;
-	for (i = 0; i < nArraySize; i++)
-	{
-		double dCurCompVal;//µ±Ç°²¹³¥¾ø¶ÔÖµ
-		ucPhysicalAxis = ucAxisMap[i];
-		if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX) continue;  //Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ²»¼ÆËã
-		if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus != BILATERAL_SCREW_ACTIVE)
-		{//·Ç²¹³¥»îÔ¾×´Ì¬ÏÂ£¬ÅĞ¶ÏÓĞĞ§Öµ
-			if (VAL_VALID != getbit(pSRun->ucValStatus, i))
-			{
-				continue;
-			}
-		}
-		if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus == BILATERAL_SCREW_OFF)
-		{//²¹³¥Î´¿ªÆô£¬Ìø¹ı
-			continue;
-		}
-		//Âö³åµ±Á¿
-		dPulseToMm = g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm;
-		//Ä¿±êµãµÄÇø¼ä
-		sTargetSeg = getSegNum(pSRun->SAbsCoord.dArray[i], ucPhysicalAxis);
+    int i;
+    double dSum;
+    uint8 ucPhysicalAxis;
+    int16 sTargetSeg; // ç›®æ ‡çš„åŒºé—´
+    double dPulseToMm;
+    double dDist;
+    for (i = 0; i < nArraySize; i++)
+    {
+        double dCurCompVal; //å½“å‰è¡¥å¿ç»å¯¹å€¼
+        ucPhysicalAxis = ucAxisMap[i];
+        if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
+            continue; //æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  ä¸è®¡ç®—
+        if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus != BILATERAL_SCREW_ACTIVE)
+        { //éè¡¥å¿æ´»è·ƒçŠ¶æ€ä¸‹ï¼Œåˆ¤æ–­æœ‰æ•ˆå€¼
+            if (VAL_VALID != getbit(pSRun->ucValStatus, i))
+            {
+                continue;
+            }
+        }
+        if (g_SBilateralScrewComp[ucPhysicalAxis].ucStatus == BILATERAL_SCREW_OFF)
+        { //è¡¥å¿æœªå¼€å¯ï¼Œè·³è¿‡
+            continue;
+        }
+        //è„‰å†²å½“é‡
+        dPulseToMm = g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm;
+        //ç›®æ ‡ç‚¹çš„åŒºé—´
+        sTargetSeg = getSegNum(pSRun->SAbsCoord.dArray[i], ucPhysicalAxis);
 
-		//ÒÆ¶¯Çø¼ä£¨Çø¼äÏàÍ¬Ê±£¬ÄÚ²¿²»²Ù×÷£©
-		moveScrewSeg(sTargetSeg, ucPhysicalAxis, &g_SBilateralScrewComp[ucPhysicalAxis]);
+        //ç§»åŠ¨åŒºé—´ï¼ˆåŒºé—´ç›¸åŒæ—¶ï¼Œå†…éƒ¨ä¸æ“ä½œï¼‰
+        moveScrewSeg(sTargetSeg, ucPhysicalAxis, &g_SBilateralScrewComp[ucPhysicalAxis]);
 
-		dDist = pSRun->SAbsCoord.dArray[i] - pSRun->SLastAbsCoord.dArray[i];
-		if (dDist * g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir < 0)
-		{
-			g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir = sgn(dDist);
-		}
-		//¸ù¾İ·½Ïò  ¼ÆËã²¹³¥¾ø¶ÔÖµ
-		if (g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir > 0)
-		{//ÕıÏò   ¼ÆËãÕıÏòµÄ²¹³¥¾ø¶ÔÖµ
-			dCurCompVal = g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_AHEAD] / 1000.0 + //·Ö¸îµãµÄ²¹³¥¾ø¶ÔÖµ
-				(pSRun->SAbsCoord.dArray[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_AHEAD];//+Ïà¶ÔÖµxÃ¿mm¶ÔÓ¦µÄ²¹³¥Öµ
-		}
-		else
-		{//·´Ïò   ¼ÆËã·´ÏòµÄ²¹³¥¾ø¶ÔÖµ
-			dCurCompVal = g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_BACK] / 1000.0 + //·Ö¸îµãµÄ²¹³¥¾ø¶ÔÖµ
-				(pSRun->SAbsCoord.dArray[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) * g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_BACK];//+Ïà¶ÔÖµxÃ¿mm¶ÔÓ¦µÄ²¹³¥Öµ
-		}
+        dDist = pSRun->SAbsCoord.dArray[i] - pSRun->SLastAbsCoord.dArray[i];
+        if (dDist * g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir < 0)
+        {
+            g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir = sgn(dDist);
+        }
+        //æ ¹æ®æ–¹å‘  è®¡ç®—è¡¥å¿ç»å¯¹å€¼
+        if (g_SBilateralScrewComp[ucPhysicalAxis].cMoveDir > 0)
+        { //æ­£å‘   è®¡ç®—æ­£å‘çš„è¡¥å¿ç»å¯¹å€¼
+            dCurCompVal =
+                g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_AHEAD] / 1000.0 + //åˆ†å‰²ç‚¹çš„è¡¥å¿ç»å¯¹å€¼
+                (pSRun->SAbsCoord.dArray[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) *
+                    g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_AHEAD]; //+ç›¸å¯¹å€¼xæ¯mmå¯¹åº”çš„è¡¥å¿å€¼
+        }
+        else
+        { //åå‘   è®¡ç®—åå‘çš„è¡¥å¿ç»å¯¹å€¼
+            dCurCompVal =
+                g_SBilateralScrewComp[ucPhysicalAxis].sAbsCompVal[SCREWCOMP_BACK] / 1000.0 + //åˆ†å‰²ç‚¹çš„è¡¥å¿ç»å¯¹å€¼
+                (pSRun->SAbsCoord.dArray[i] - g_SBilateralScrewComp[ucPhysicalAxis].dDivisionPoint) *
+                    g_SBilateralScrewComp[ucPhysicalAxis].dDeltaComp[SCREWCOMP_BACK]; //+ç›¸å¯¹å€¼xæ¯mmå¯¹åº”çš„è¡¥å¿å€¼
+        }
 
-		//²¹³¥ËÙ¶ÈÏŞÖÆÅĞ¶Ï
-		dCurCompVal = screwVelLimit(dCurCompVal, &g_SBilateralScrewComp[ucPhysicalAxis]);
+        //è¡¥å¿é€Ÿåº¦é™åˆ¶åˆ¤æ–­
+        dCurCompVal = screwVelLimit(dCurCompVal, &g_SBilateralScrewComp[ucPhysicalAxis]);
 
-		//¼ÆËã×Ü¾àÀë
-		dSum = (pSRun->SAbsCoord.dArray[i] - pSRun->SLastAbsCoord.dArray[i]) + (dCurCompVal - g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal) + g_SBilateralScrewComp[ucPhysicalAxis].dRecorder;
+        //è®¡ç®—æ€»è·ç¦»
+        dSum = (pSRun->SAbsCoord.dArray[i] - pSRun->SLastAbsCoord.dArray[i]) +
+               (dCurCompVal - g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal) +
+               g_SBilateralScrewComp[ucPhysicalAxis].dRecorder;
 
-		//¼ÆËãÂö³å
-		//pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
-		calcPulseWithCheck(dSum,dPulseToMm,&pSRun->sAxisDeltaPulse[i]);
-		//¼ÇÂ¼²¹³¥µÄÓàÖµ
-		g_SBilateralScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[i] * dPulseToMm;
+        //è®¡ç®—è„‰å†²
+        //pSRun->sAxisDeltaPulse[i] = round(dSum / dPulseToMm);
+        calcPulseWithCheck(dSum, dPulseToMm, &pSRun->sAxisDeltaPulse[i]);
+        //è®°å½•è¡¥å¿çš„ä½™å€¼
+        g_SBilateralScrewComp[ucPhysicalAxis].dRecorder = dSum - pSRun->sAxisDeltaPulse[i] * dPulseToMm;
 
-		//¼ÇÂ¼²¹³¥¾ø¶ÔÖµ
-		g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal = dCurCompVal;
+        //è®°å½•è¡¥å¿ç»å¯¹å€¼
+        g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal = dCurCompVal;
 #if ABSCOMPVAL_PRINT
-		printf("abs = %lf ", g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal);
+        printf("abs = %lf ", g_SBilateralScrewComp[ucPhysicalAxis].dCurAbsCompVal);
 #endif // ABSCOMPVAL_PRINT
-		pSRun->SLastAbsCoord.dArray[i] = pSRun->SAbsCoord.dArray[i];
-	}
+        pSRun->SLastAbsCoord.dArray[i] = pSRun->SAbsCoord.dArray[i];
+    }
 
-	pSRun->ucValStatus = 0;
-	return 1;
+    pSRun->ucValStatus = 0;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinitSBilateralScrewCompAfterHomeAPI(uint8 ucChannelNum ,uint8 ucAxis , int8 cDir)
-  º¯Êı¹¦ÄÜ  ³õÊ¼»¯µ¥Öá·´Ïò¼äÏ¶²¹³¥½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2 ´íÎóµÄ·½Ïò
-			-1 Í¨µÀºÅ»òÖáºÅ´íÎó
-			 1 ³É¹¦
-			 2 ³É¹¦ ´ıÉúĞ§
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinitSBilateralScrewCompAfterHomeAPI(uint8 ucChannelNum ,uint8 ucAxis , int8 cDir)
+  å‡½æ•°åŠŸèƒ½  åˆå§‹åŒ–å•è½´åå‘é—´éš™è¡¥å¿æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucAxis			è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2 é”™è¯¯çš„æ–¹å‘
+			-1 é€šé“å·æˆ–è½´å·é”™è¯¯
+			 1 æˆåŠŸ
+			 2 æˆåŠŸ å¾…ç”Ÿæ•ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 initSBilateralScrewCompAfterHomeAPI(uint8 ucChannelNum, uint8 ucAxis, int8 cDir)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX || g_SChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return -1;
-	}
-	return initSBilateralScrewComp(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis], cDir);
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX ||
+        g_SChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return -1;
+    }
+    return initSBilateralScrewComp(g_SChannel[ucChannelNum].pMapAxisArray[ucAxis], cDir);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºbilateralScrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  È¡ÏûË«±í²¹³¥
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2 ´íÎóµÄÓ³Éä
-			-1 Í¨µÀºÅ»òÖáºÅ´íÎó
-			 1 ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šbilateralScrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  å–æ¶ˆåŒè¡¨è¡¥å¿
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucAxis			è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2 é”™è¯¯çš„æ˜ å°„
+			-1 é€šé“å·æˆ–è½´å·é”™è¯¯
+			 1 æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 bilateralScrewCompDisableAPI(uint8 ucChannelNum, uint8 ucAxis)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].pMapAxisArray[ucAxis] == AXIS_NULL)
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].pMapAxisArray[ucAxis] == AXIS_NULL)
+    {
+        return -2;
+    }
 
-	//g_SBilateralScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus = BILATERAL_SCREW_ON;
-	g_SBilateralScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus = BILATERAL_SCREW_OFF;//206.5.6 ĞŞ¸Ä×´Ì¬ÎªÈ¡ÏûË«±í²¹³¥£¬¶ÔÓ¦º¯Êı½Ó¿Ú¹¦ÄÜ
-	return 1;
+    //g_SBilateralScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus = BILATERAL_SCREW_ON;
+    g_SBilateralScrewComp[g_SChannel[ucChannelNum].pMapAxisArray[ucAxis]].ucStatus =
+        BILATERAL_SCREW_OFF; //206.5.6 ä¿®æ”¹çŠ¶æ€ä¸ºå–æ¶ˆåŒè¡¨è¡¥å¿ï¼Œå¯¹åº”å‡½æ•°æ¥å£åŠŸèƒ½
+    return 1;
 }

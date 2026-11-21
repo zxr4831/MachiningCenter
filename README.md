@@ -26,6 +26,11 @@
 
 `LocalDev/` 保存本地备份和验证资料，`.vscode/` 保存本机编辑器配置，均已忽略。历史测试、导出工具和过程说明集中在本机 `LocalDev/local-support/`。
 
+## 代码格式
+
+C/H 使用 UTF-8、CRLF、Microsoft／Allman 风格和 4 空格缩进。VS 编译采用 `/utf-8`。
+新增源码时同步 VS 与 CMake 清单。
+
 ## 来源与对照
 
 参考快照来自用户指定目录 `C:\Users\zxr\Desktop\newgcode\2024.9.11\VS_Interpolation`，快照日期为 2026-11-23。该目录映射到本仓库根目录，解决方案来自上一级。原作者署名和代码权属沿用原工程，早期加工中心副本的精确分叉点仍待确认。
@@ -34,6 +39,7 @@
 |---|---|
 | `upstream-yashu-20261121` | 亚数参考源码与项目文件 |
 | `machining-center-initial` | 沿用原排版的 XYZ 加工中心初始工程 |
+| `machining-center-formatted` | 统一编码和排版后的加工中心工程 |
 
 查看从原源码到加工中心的裁剪增删。
 

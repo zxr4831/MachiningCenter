@@ -1,7 +1,6 @@
 /*
-ËµÃ÷£º½âÎöÖ¸Áîº¯ÊıÖĞ£¬¿ÉÍ¨¹ıµ÷ÓÃ´ËÎÄ¼şÖĞµÄº¯Êı½Ó¿Ú£¬ÒÔ¼ò±ãÖ¸ÁîµÄÀ©Õ¹
+è¯´æ˜ï¼šè§£ææŒ‡ä»¤å‡½æ•°ä¸­ï¼Œå¯é€šè¿‡è°ƒç”¨æ­¤æ–‡ä»¶ä¸­çš„å‡½æ•°æ¥å£ï¼Œä»¥ç®€ä¾¿æŒ‡ä»¤çš„æ‰©å±•
 */
-
 
 #include "ErrorFunction.h"
 #include "GeneralFunctions.h"
@@ -11,20 +10,22 @@
 #include "ringbuff.h"
 #include "Channel.h"
 #include "list.h"
-static SGetTextStateInfo* g_pSTextInfoCheck[CHANNEL_NUM_MAX];	//ÓÃÓÚ¼ì²éÁ÷³Ìº¯ÊıfindTargetSegment()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
-static SGetTextStateInfo* g_pSTextInfoAssign[CHANNEL_NUM_MAX];	//ÓÃÓÚº¯ÊıfindTargetSegment()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
+static SGetTextStateInfo* g_pSTextInfoCheck[CHANNEL_NUM_MAX];  //ç”¨äºæ£€æŸ¥æµç¨‹å‡½æ•°findTargetSegment()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
+static SGetTextStateInfo* g_pSTextInfoAssign[CHANNEL_NUM_MAX]; //ç”¨äºå‡½æ•°findTargetSegment()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
 
-static SCheckPathInfo* g_pSCheckPathInfo[CHANNEL_NUM_MAX];		//ÓÃÓÚº¯ÊıgetMachiningPath()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
-static SGetPathInfo* g_pSGetPathInfo[CHANNEL_NUM_MAX];			//ÓÃÓÚº¯Êı
+static SCheckPathInfo* g_pSCheckPathInfo[CHANNEL_NUM_MAX]; //ç”¨äºå‡½æ•°getMachiningPath()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
+static SGetPathInfo* g_pSGetPathInfo[CHANNEL_NUM_MAX];     //ç”¨äºå‡½æ•°
 
 /*************************************************
-º¯ÊıÃû³Æ£ºvoid addAllGCommandRegulationAPI()
-º¯Êı¹¦ÄÜ£ºÌí¼ÓËùÓĞGÖ¸Áî¹æÔòº¯Êı½Ó¿Ú
-ÊäÈë²ÎÊı£º
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º¿ª»ú³õÊ¼»¯µ÷ÓÃ
+å‡½æ•°åç§°ï¼švoid addAllGCommandRegulationAPI()
+å‡½æ•°åŠŸèƒ½ï¼šæ·»åŠ æ‰€æœ‰GæŒ‡ä»¤è§„åˆ™å‡½æ•°æ¥å£
+è¾“å…¥å‚æ•°ï¼š
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼šå¼€æœºåˆå§‹åŒ–è°ƒç”¨
 **************************************************/
+/* é“£å‰Šé…ç½®é‡‡ç”¨æ¯åˆ†é’Ÿé•¿åº¦è¿›ç»™ã€‚
+ * ä¸»è½´ã€æ¢åˆ€ä¸å›ºå®šå¾ªç¯éœ€å®Œæˆç›¸åº”æœºåºŠæ‰§è¡Œæ¥å£åå†å¼€æ”¾ã€‚ */
 static int8 checkMillingG94(SSyntaxConfiguration* config, struct SGCodeParse* block)
 {
     block->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
@@ -35,1546 +36,1518 @@ static int8 assignMillingG94(SAssignConfiguration* config, struct SGCodeParse* b
     block->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
     return 2;
 }
+
 void addAllGCommandRegulationAPI()
 {
-	addG0RegulationAPI();
-	addG1RegulationAPI();
-	addG2RegulationAPI();
-	addG3RegulationAPI();
-
-	addG4RegulationAPI();
-
-	addG17RegulationAPI();
-	addG18RegulationAPI();
-	addG19RegulationAPI();
-
-	addG20RegulationAPI();
-	addG21RegulationAPI();
-
-	addG40RegulationAPI();
-
-	addG54RegulationAPI();
-	addG55RegulationAPI();
-	addG56RegulationAPI();
-	addG57RegulationAPI();
-	addG58RegulationAPI();
-	addG59RegulationAPI();
-
-
-	addG90RegulationAPI();//ÆóÒµÒÑ¾­Ã»ÓĞÕâ¸öÖ¸Áî
-	addG91RegulationAPI();
+    /* æ˜¾å¼æ³¨å†Œå½“å‰æ”¯æŒçš„é“£å‰ŠæŒ‡ä»¤ï¼Œé‡åˆ°æœªæ³¨å†Œçš„ G ä»£ç æŠ¥å‘Š 87 å·é”™è¯¯ã€‚ */
+    addG0RegulationAPI();
+    addG1RegulationAPI();
+    addG2RegulationAPI();
+    addG3RegulationAPI();
+    addG4RegulationAPI();
+    addG17RegulationAPI();
+    addG18RegulationAPI();
+    addG19RegulationAPI();
+    addG20RegulationAPI();
+    addG21RegulationAPI();
+    addG40RegulationAPI();
+    addG54RegulationAPI();
+    addG55RegulationAPI();
+    addG56RegulationAPI();
+    addG57RegulationAPI();
+    addG58RegulationAPI();
+    addG59RegulationAPI();
+    addG90RegulationAPI();
+    addG91RegulationAPI();
     addGCommadRegulation(94, sGg, 1, NULL, NULL, NULL, checkMillingG94, assignMillingG94);
-
 }
 
 /*************************************************
-º¯ÊıÃû³Æ£ºvoid addAllMCommandRegulationAPI()
-º¯Êı¹¦ÄÜ£ºÌí¼ÓËùÓĞMÖ¸Áî¹æÔòº¯Êı½Ó¿Ú
-ÊäÈë²ÎÊı£º
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º¿ª»ú³õÊ¼»¯µ÷ÓÃ
+å‡½æ•°åç§°ï¼švoid addAllMCommandRegulationAPI()
+å‡½æ•°åŠŸèƒ½ï¼šæ·»åŠ æ‰€æœ‰MæŒ‡ä»¤è§„åˆ™å‡½æ•°æ¥å£
+è¾“å…¥å‚æ•°ï¼š
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼šå¼€æœºåˆå§‹åŒ–è°ƒç”¨
 **************************************************/
 void addAllMCommandRegulationAPI()
 {
-
-	addM00RegulationAPI();
-	addM01RegulationAPI();
-	addM02RegulationAPI();
-	addM30RegulationAPI();
-
+    /* æ­¤å¤„æ³¨å†Œç¨‹åºæ§åˆ¶æŒ‡ä»¤ï¼ŒæœºåºŠåŠ¨ä½œéœ€é€šè¿‡åŠ å·¥ä¸­å¿ƒæ‰§è¡Œæ¥å£å¦è¡Œæ¥å…¥ã€‚ */
+    addM00RegulationAPI();
+    addM01RegulationAPI();
+    addM02RegulationAPI();
+    addM30RegulationAPI();
 }
 
-/*************************************************
-º¯ÊıÃû³Æ£ºvoid freeAllCommandParaStruct()
-º¯Êı¹¦ÄÜ£ºÊÍ·ÅËùÓĞÖ¸ÁîµÄ²ÎÊı½á¹¹Ìå
-ÊäÈë²ÎÊı£º
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º
-**************************************************/
+/* å¤ä½æœ¬é€šé“ç”±è¯‘ç å™¨ç®¡ç†çš„ä¸´æ—¶å®¹å™¨ã€‚ */
 void initGCodeCommand(uint8 ucChannelNum)
 {
-	//1.ÊÍ·ÅÖ¸Áî²ÎÊı½á¹¹Ìå
-	freeAllCommandParaStruct(ucChannelNum);
+    //1.é‡Šæ”¾æŒ‡ä»¤å‚æ•°ç»“æ„ä½“
+    freeAllCommandParaStruct(ucChannelNum);
 
-
-	//2.³õÊ¼»¯À©Õ¹Ö¸Áî½Ó¿ÚÖĞµÄÈ«¾Ö±äÁ¿
-	if (g_pSTextInfoCheck[ucChannelNum] != NULL)//ÓÃÓÚ¼ì²éÁ÷³Ìº¯ÊıfindTargetSegment()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
-	{
-		freeGCode(g_pSTextInfoCheck[ucChannelNum]);
-		g_pSTextInfoCheck[ucChannelNum] = NULL;
-	}		
-	if (g_pSTextInfoAssign[ucChannelNum] != NULL)	//ÓÃÓÚº¯ÊıfindTargetSegment()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
-	{
-		freeGCode(g_pSTextInfoAssign[ucChannelNum]);
-		g_pSTextInfoAssign[ucChannelNum] = NULL;
-	}
-	if (g_pSCheckPathInfo[ucChannelNum] != NULL)	//ÓÃÓÚº¯ÊıgetMachiningPath()ÇĞÆ¬²úÉúÊı¾İµÄ´æ·Å
-	{
-		freeGCode(g_pSCheckPathInfo[ucChannelNum]);
-		g_pSCheckPathInfo[ucChannelNum] = NULL;
-	}
-	if (g_pSGetPathInfo[ucChannelNum] != NULL)		//ÓÃÓÚº¯Êı
-	{
-		//ÄÚ²¿º¬ÓĞ¶¯Ì¬ÄÚ´æ
-		freeGCode(g_pSGetPathInfo[ucChannelNum]);
-		g_pSGetPathInfo[ucChannelNum] = NULL;
-	}
-
+    //2.åˆå§‹åŒ–æ‰©å±•æŒ‡ä»¤æ¥å£ä¸­çš„å…¨å±€å˜é‡
+    if (g_pSTextInfoCheck[ucChannelNum] != NULL) //ç”¨äºæ£€æŸ¥æµç¨‹å‡½æ•°findTargetSegment()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
+    {
+        freeGCode(g_pSTextInfoCheck[ucChannelNum]);
+        g_pSTextInfoCheck[ucChannelNum] = NULL;
+    }
+    if (g_pSTextInfoAssign[ucChannelNum] != NULL) //ç”¨äºå‡½æ•°findTargetSegment()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
+    {
+        freeGCode(g_pSTextInfoAssign[ucChannelNum]);
+        g_pSTextInfoAssign[ucChannelNum] = NULL;
+    }
+    if (g_pSCheckPathInfo[ucChannelNum] != NULL) //ç”¨äºå‡½æ•°getMachiningPath()åˆ‡ç‰‡äº§ç”Ÿæ•°æ®çš„å­˜æ”¾
+    {
+        freeGCode(g_pSCheckPathInfo[ucChannelNum]);
+        g_pSCheckPathInfo[ucChannelNum] = NULL;
+    }
+    if (g_pSGetPathInfo[ucChannelNum] != NULL) //ç”¨äºå‡½æ•°
+    {
+        //å†…éƒ¨å«æœ‰åŠ¨æ€å†…å­˜
+        freeGCode(g_pSGetPathInfo[ucChannelNum]);
+        g_pSGetPathInfo[ucChannelNum] = NULL;
+    }
 }
 
 /*************************************************
-º¯ÊıÃû³Æ£ºvoid freeAllCommandParaStruct()
-º¯Êı¹¦ÄÜ£ºÊÍ·ÅËùÓĞÖ¸ÁîµÄ²ÎÊı½á¹¹Ìå
-ÊäÈë²ÎÊı£º
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º
+å‡½æ•°åç§°ï¼švoid freeAllCommandParaStruct()
+å‡½æ•°åŠŸèƒ½ï¼šé‡Šæ”¾æ‰€æœ‰æŒ‡ä»¤çš„å‚æ•°ç»“æ„ä½“
+è¾“å…¥å‚æ•°ï¼š
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼š
 **************************************************/
 void freeAllCommandParaStruct(uint8 ucChannelNum)
 {
-	//ucMod == 0£ºÊÍ·ÅÓÃÓÚ¼ì²éµÄ²ÎÊı½á¹¹Ìå
-	//ucMod == 1£ºÊÍ·ÅÓÃÓÚ¸³ÖµµÄ²ÎÊı½á¹¹Ìå
     for (uint8 ucMod = 0; ucMod < 2; ++ucMod)
-	{
-		//Ga×é
-		freeG2ParaStruct(ucMod, ucChannelNum);
-		freeG3ParaStruct(ucMod, ucChannelNum);
-
-
-	}
+    {
+        freeG2ParaStruct(ucMod, ucChannelNum);
+        freeG3ParaStruct(ucMod, ucChannelNum);
+    }
 }
 
-
-
 /*************************************************
-º¯ÊıÃû³Æ£º
-º¯Êı¹¦ÄÜ£º¼ì²éÖ¸Áî´øµÄ²ÎÊı×ÖÊÇ·ñ·ûºÏÒªÇó
-ÊäÈë²ÎÊı£ºpAllowLetter		ÔÊĞí²ÎÊı×Ö·û´®
-          pSScanContainer	É¨Ãè½á¹¹Ìå
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º	1	ÕıÈ·
-			-1	´íÎó
-±¸    ×¢£º1.´«ÈëpAllowLetter¸ñÊ½±ØĞëÎª×Ö·û´®¸ñÊ½£¬Èç£º "XYZ" »ò "X"£¨ÒòÎª×Ö·û´®¸ñÊ½´øÓĞ'\0'£©
-		  2.½ûÖ¹ÊäÈëµ¥¸ö×Ö·û¸ñÊ½£¬Èç'X'£¨ÒòÎª×Ö·û¸ñÊ½²»´øÓĞ'\0'£©
-		  3.´«ÈëµÄ×Ö·û´®±ØĞëÈ«Îª´óĞ´
-		  4.¶à³ÌĞò¶ÎÖ¸ÁîÔİÊ±²»ÄÜÊ¹ÓÃ¸Ãº¯Êı½øĞĞ¼ì²é
+å‡½æ•°åç§°ï¼š
+å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥æŒ‡ä»¤å¸¦çš„å‚æ•°å­—æ˜¯å¦ç¬¦åˆè¦æ±‚
+è¾“å…¥å‚æ•°ï¼špAllowLetter		å…è®¸å‚æ•°å­—ç¬¦ä¸²
+          pSScanContainer	æ‰«æç»“æ„ä½“
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š	1	æ­£ç¡®
+			-1	é”™è¯¯
+å¤‡    æ³¨ï¼š1.ä¼ å…¥pAllowLetteræ ¼å¼å¿…é¡»ä¸ºå­—ç¬¦ä¸²æ ¼å¼ï¼Œå¦‚ï¼š "XYZ" æˆ– "X"ï¼ˆå› ä¸ºå­—ç¬¦ä¸²æ ¼å¼å¸¦æœ‰'\0'ï¼‰
+		  2.ç¦æ­¢è¾“å…¥å•ä¸ªå­—ç¬¦æ ¼å¼ï¼Œå¦‚'X'ï¼ˆå› ä¸ºå­—ç¬¦æ ¼å¼ä¸å¸¦æœ‰'\0'ï¼‰
+		  3.ä¼ å…¥çš„å­—ç¬¦ä¸²å¿…é¡»å…¨ä¸ºå¤§å†™
+		  4.å¤šç¨‹åºæ®µæŒ‡ä»¤æš‚æ—¶ä¸èƒ½ä½¿ç”¨è¯¥å‡½æ•°è¿›è¡Œæ£€æŸ¥
 **************************************************/
 int8 checkParaLetter(char* pAllowLetter, SScan* pSScanContainer)
 {
-	uint8 i = 0;
-	uint8 j;
-	int8 cAllowLetter[26];
-	memset(cAllowLetter, 0, 26 * sizeof(int8));
+    uint8 i = 0;
+    uint8 j;
+    int8 cAllowLetter[26];
+    memset(cAllowLetter, 0, 26 * sizeof(int8));
 
-	//1.ÔÚcAllowLetterÖĞĞ´ÈëÖ¸ÁîÔÊĞíµÄ²ÎÊı×Ö
-	while (pAllowLetter[i] != '\0')
-	{
-		cAllowLetter[pAllowLetter[i] - 65] = 1;
-		i++;
-	}
+    //1.åœ¨cAllowLetterä¸­å†™å…¥æŒ‡ä»¤å…è®¸çš„å‚æ•°å­—
+    while (pAllowLetter[i] != '\0')
+    {
+        cAllowLetter[pAllowLetter[i] - 65] = 1;
+        i++;
+    }
 
-	//2.ÔÚcAllowLetterÖĞĞ´Èë¹«¹²²ÎÊı×Ö  //GM FST RC
-	i = 0;
-	while (CommonPara[i] != '\0')
-	{
-		cAllowLetter[CommonPara[i] - 65] = 1;
-		i++;
-	}
+    //2.åœ¨cAllowLetterä¸­å†™å…¥å…¬å…±å‚æ•°å­—  //GM FST RC
+    i = 0;
+    while (CommonPara[i] != '\0')
+    {
+        cAllowLetter[CommonPara[i] - 65] = 1;
+        i++;
+    }
 
-	//3.±È½ÏÖ¸ÁîÊµ¼Ê³öÏÖµÄ²ÎÊı×ÖÓëcAllowLetter
-	for (i = 0; i < 26; i++)
-	{
-		//³öÏÖÁËÔÊĞí²ÎÊı×ÖÒÔÍâµÄ×Ö
-		if (pSScanContainer->bA2Z[i] == TRUE && cAllowLetter[i] == FALSE)
-		{
-			//±¨´í
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM403);
-			return -1;
-		}
-	}
-	
-	return 1;
+    //3.æ¯”è¾ƒæŒ‡ä»¤å®é™…å‡ºç°çš„å‚æ•°å­—ä¸cAllowLetter
+    for (i = 0; i < 26; i++)
+    {
+        //å‡ºç°äº†å…è®¸å‚æ•°å­—ä»¥å¤–çš„å­—
+        if (pSScanContainer->bA2Z[i] == TRUE && cAllowLetter[i] == FALSE)
+        {
+            //æŠ¥é”™
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM403);
+            return -1;
+        }
+    }
+
+    return 1;
 }
 
 /*************************************************
-º¯ÊıÃû³Æ£ºint8 checkParaRange(int8 cLetter, SScan* pSScanContainer, double dMin, double dMax)
-º¯Êı¹¦ÄÜ£º¼ì²é²ÎÊı×ÖµÄ·¶Î§ÊÇ·ñ·ûºÏÒªÇó
-ÊäÈë²ÎÊı£ºcLetter			ÔÊĞí²ÎÊı×Ö·û´®
-		  pSScanContainer	É¨Ãè½á¹¹Ìå
-		  dMin				×îĞ¡Öµ
-		  dMax				×î´óÖµ
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º1.´«ÈëµÄ×Ö·ûcLetter±ØĞëÈ«Îª´óĞ´
-		  2.¶àĞĞÖ¸Áî×ÖµÄ¼ì²éÒªÔÚ»ñÈ¡²ÎÊıº¯ÊıÖĞµ÷ÓÃ
+å‡½æ•°åç§°ï¼šint8 checkParaRange(int8 cLetter, SScan* pSScanContainer, double dMin, double dMax)
+å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥å‚æ•°å­—çš„èŒƒå›´æ˜¯å¦ç¬¦åˆè¦æ±‚
+è¾“å…¥å‚æ•°ï¼šcLetter			å…è®¸å‚æ•°å­—ç¬¦ä¸²
+		  pSScanContainer	æ‰«æç»“æ„ä½“
+		  dMin				æœ€å°å€¼
+		  dMax				æœ€å¤§å€¼
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼š1.ä¼ å…¥çš„å­—ç¬¦cLetterå¿…é¡»å…¨ä¸ºå¤§å†™
+		  2.å¤šè¡ŒæŒ‡ä»¤å­—çš„æ£€æŸ¥è¦åœ¨è·å–å‚æ•°å‡½æ•°ä¸­è°ƒç”¨
 **************************************************/
 int8 checkParaRange(int8 cLetter, SScan* pSScanContainer, double dMin, double dMax)
 {
-	int8 ucRet = 1;
+    int8 ucRet = 1;
 
-	//½ö³öÏÖ¸ÃÖ¸Áî×Ö²ÅÅĞ¶ÏÖµÊÇ·ñÔÚÒªÇó·¶Î§ÄÚ
-	if (pSScanContainer->bA2Z[cLetter-65] == TRUE)
-	{
-		//dMin <= Ä¿±êÖµ && Ä¿±êÖµ <= dMax
-		if (isEqualOrGreaterThanZero(pSScanContainer->dA2Z[cLetter - 65] - dMin) &&
-			isEqualOrLessThanZero(pSScanContainer->dA2Z[cLetter - 65] - dMax))
-		{
-			return 1;
-		}
-		else
-		{
-			//±¨´í
-			//parseGCodeError()
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
-			return -1;
-		}
-	}
+    //ä»…å‡ºç°è¯¥æŒ‡ä»¤å­—æ‰åˆ¤æ–­å€¼æ˜¯å¦åœ¨è¦æ±‚èŒƒå›´å†…
+    if (pSScanContainer->bA2Z[cLetter - 65] == TRUE)
+    {
+        //dMin <= ç›®æ ‡å€¼ && ç›®æ ‡å€¼ <= dMax
+        if (isEqualOrGreaterThanZero(pSScanContainer->dA2Z[cLetter - 65] - dMin) &&
+            isEqualOrLessThanZero(pSScanContainer->dA2Z[cLetter - 65] - dMax))
+        {
+            return 1;
+        }
+        else
+        {
+            //æŠ¥é”™
+            //parseGCodeError()
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºcheckPolarCoordinateInput
-  º¯Êı¹¦ÄÜ£º¼ì²é G16 ÆÕÍ¨ÔË¶¯¶ÎµÄÆ½Ãæ×ø±êÊäÈë¡£
-  ÊäÈë²ÎÊı£ºpSScanContainer ÎªÉĞÎ´½øĞĞµ¥Î»ºÍ¼«×ø±ê×ª»»µÄÉ¨ÃèÊäÈë£»
-            pSGCodeCurrSysState Îª±¾¶ÎÓĞĞ§Ä£Ì¬£¬Á½¸öÖ¸Õë¾ùĞëÓĞĞ§¡£
-  Êä³ö²ÎÊı£º·Ç·¨²ÎÊı¼ÇÂ¼±¨¾¯£»²»ĞŞ¸ÄÉ¨ÃèÊäÈëºÍÏµÍ³×´Ì¬¡£
-  ·µ »Ø Öµ£º1 ¼ì²éÍ¨¹ı»ò·Ç¼«×ø±êÄ£Ê½£»-1 ÊäÈë·Ç·¨¡£
-  ±¸    ×¢£º¹© G0¡«G3 ¼ì²éºÍ¸³ÖµÊ¹ÓÃ£»ÔÊĞíÁã¼«¾¶¼°È±Ê¡ X/C¡£
+  å‡½æ•°åç§°ï¼šcheckPolarCoordinateInput
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥ G16 æ™®é€šè¿åŠ¨æ®µçš„å¹³é¢åæ ‡è¾“å…¥ã€‚
+  è¾“å…¥å‚æ•°ï¼špSScanContainer ä¸ºå°šæœªè¿›è¡Œå•ä½å’Œæåæ ‡è½¬æ¢çš„æ‰«æè¾“å…¥ï¼›
+            pSGCodeCurrSysState ä¸ºæœ¬æ®µæœ‰æ•ˆæ¨¡æ€ï¼Œä¸¤ä¸ªæŒ‡é’ˆå‡é¡»æœ‰æ•ˆã€‚
+  è¾“å‡ºå‚æ•°ï¼šéæ³•å‚æ•°è®°å½•æŠ¥è­¦ï¼›ä¸ä¿®æ”¹æ‰«æè¾“å…¥å’Œç³»ç»ŸçŠ¶æ€ã€‚
+  è¿” å› å€¼ï¼š1 æ£€æŸ¥é€šè¿‡æˆ–éæåæ ‡æ¨¡å¼ï¼›-1 è¾“å…¥éæ³•ã€‚
+  å¤‡    æ³¨ï¼šä¾› G0ï½G3 æ£€æŸ¥å’Œèµ‹å€¼ä½¿ç”¨ï¼›å…è®¸é›¶æå¾„åŠç¼ºçœ X/Cã€‚
 **************************************************/
 int8 checkPolarCoordinateInput(const SScan* pSScanContainer, const SGCodeSysState* pSGCodeCurrSysState)
 {
-	if (!pSGCodeCurrSysState->bPolarCoordinateProgramming)
-	{
-		return 1;
-	}
+    if (!pSGCodeCurrSysState->bPolarCoordinateProgramming)
+    {
+        return 1;
+    }
 
-	// °´²ÎÊıÊÇ·ñ³öÏÖÅĞ¶Ï£¬Y0/U0/V0 Ò²²»ÄÜ±»¾²Ä¬ºöÂÔ¡£
-	if (pSScanContainer->bXYZ[AXIS_Y] || pSScanContainer->bUVW[0] || pSScanContainer->bUVW[1])
-	{
-		parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM403);
-		return -1;
-	}
+    // æŒ‰å‚æ•°æ˜¯å¦å‡ºç°åˆ¤æ–­ï¼ŒY0/U0/V0 ä¹Ÿä¸èƒ½è¢«é™é»˜å¿½ç•¥ã€‚
+    if (pSScanContainer->bXYZ[AXIS_Y] || pSScanContainer->bUVW[0] || pSScanContainer->bUVW[1])
+    {
+        parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM403);
+        return -1;
+    }
 
-	if (pSScanContainer->bXYZ[AXIS_X])
-	{
-		double dRadius = pSScanContainer->dXYZ[AXIS_X]; // ±¾¶ÎÏÔÊ½¼«¾¶¡£
-		// ½öÓÃ¾Ö²¿Öµ¼ì²éÓ¢ÖÆ»»ËãÒç³ö£¬²»ÌáÇ°ĞŞ¸ÄÉ¨ÃèÊäÈë¡£
-		if (pSGCodeCurrSysState->bImperialProgramming)
-		{
-			dRadius *= 25.4;
-		}
-		if (!isfinite(dRadius) || dRadius <= 0.0)
-		{
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
-			return -1;
-		}
-	}
+    if (pSScanContainer->bXYZ[AXIS_X])
+    {
+        double dRadius = pSScanContainer->dXYZ[AXIS_X]; // æœ¬æ®µæ˜¾å¼æå¾„ã€‚
+        // ä»…ç”¨å±€éƒ¨å€¼æ£€æŸ¥è‹±åˆ¶æ¢ç®—æº¢å‡ºï¼Œä¸æå‰ä¿®æ”¹æ‰«æè¾“å…¥ã€‚
+        if (pSGCodeCurrSysState->bImperialProgramming)
+        {
+            dRadius *= 25.4;
+        }
+        if (!isfinite(dRadius) || dRadius <= 0.0)
+        {
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+    }
 
-	if (pSScanContainer->bABC[2] && !isfinite(pSScanContainer->dABC[2]))
-	{
-		parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
-		return -1;
-	}
-	return 1;
+    if (pSScanContainer->bABC[2] && !isfinite(pSScanContainer->dABC[2]))
+    {
+        parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
+        return -1;
+    }
+    return 1;
 }
 
 /*************************************************
-º¯ÊıÃû³Æ£ºint8 checkParaInteger(int8 cLetter, SScan* pSScanContainer)
-º¯Êı¹¦ÄÜ£º¼ì²é²ÎÊı×ÖµÄ·¶Î§ÊÇ·ñ·ûºÏÒªÇó
-ÊäÈë²ÎÊı£ºcLetter			ÔÊĞí²ÎÊı×Ö·û´®
-		  pSScanContainer	É¨Ãè½á¹¹Ìå
+å‡½æ•°åç§°ï¼šint8 checkParaInteger(int8 cLetter, SScan* pSScanContainer)
+å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥å‚æ•°å­—çš„èŒƒå›´æ˜¯å¦ç¬¦åˆè¦æ±‚
+è¾“å…¥å‚æ•°ï¼šcLetter			å…è®¸å‚æ•°å­—ç¬¦ä¸²
+		  pSScanContainer	æ‰«æç»“æ„ä½“
 
-Êä³ö²ÎÊı£º
-·µ »Ø Öµ£º
-±¸    ×¢£º1.´«ÈëµÄ×Ö·ûcLetter±ØĞëÈ«Îª´óĞ´
-		  2.¶àĞĞÖ¸Áî×ÖµÄ¼ì²éÒªÔÚ»ñÈ¡²ÎÊıº¯ÊıÖĞµ÷ÓÃ
+è¾“å‡ºå‚æ•°ï¼š
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼š1.ä¼ å…¥çš„å­—ç¬¦cLetterå¿…é¡»å…¨ä¸ºå¤§å†™
+		  2.å¤šè¡ŒæŒ‡ä»¤å­—çš„æ£€æŸ¥è¦åœ¨è·å–å‚æ•°å‡½æ•°ä¸­è°ƒç”¨
 **************************************************/
 int8 checkParaInteger(int8 cLetter, SScan* pSScanContainer)
 {
-	double dValue;
-	double dIntegerValue;
+    double dValue;
+    double dIntegerValue;
 
-	if (pSScanContainer->bA2Z[cLetter - 65] == TRUE)
-	{
-		dValue = pSScanContainer->dA2Z[cLetter - 65];
-		dIntegerValue = round(dValue);
+    if (pSScanContainer->bA2Z[cLetter - 65] == TRUE)
+    {
+        dValue = pSScanContainer->dA2Z[cLetter - 65];
+        dIntegerValue = round(dValue);
 
-		if (isZero(dValue - dIntegerValue))
-		{
-			return 1;
-		}
-		else
-		{
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
-			return -1;
-		}
-	}
+        if (isZero(dValue - dIntegerValue))
+        {
+            return 1;
+        }
+        else
+        {
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+    }
 
-	return -1;
+    return -1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMacCoordByScanInfo
-  º¯Êı¹¦ÄÜ£º½«É¨Ãè×ø±êºÍ×ÜÆ«ÖÃ×ª»»Îª»úĞµÖÕµã
-  ÊäÈë²ÎÊı£ºucChannelNumÎªÓĞĞ§Í¨µÀ£»ÆğµãºÍ×ÜÆ«ÖÃÎªÄÚ²¿»úĞµÁ¿£»
-            pSScanContainerÎª±¾¶ÎÊäÈë£»³ıÉ¨ÃèÖ¸Õë¼ì²éÍâÆäÓàÖ¸ÕëĞëÓĞĞ§
-  Êä³ö²ÎÊı£ºpSTargetPoint¼Ì³ĞÎ´Ö¸¶¨Öá£»É¨ÃèÊı¾İÑØÓÃÔ­ÓĞµ¥Î»¼°¼«×ø±êĞŞÕı
-  ·µ »Ø Öµ£ºÎŞ£»É¨ÃèÖ¸ÕëÎª¿ÕÊ±±¨300²¢·µ»Ø
-  ±¸    ×¢£º½öÔÚPart4Ö®ºóµ÷ÓÃ£»Ó¢ÖÆÏßĞÔÊäÈëÔ­µØ»»ËãÒ»´Î£¬²»¿ÉÖØ¸´µ÷ÓÃ£»
-            G16¹Ì¶¨X¼«¾¶/C½Ç¶È×ª»úĞµX/Y£¬ÒÔ¹¤¼şÔ­µã¼ÆËã£¬ÏÔÊ½X°´Ö±¾¶ÉèÖÃ»»Ëã£»
-            ÎŞX/CÊ±±£ÁôX/Y£¬È±Ê¡½Ç´ÓÆğµã»Ö¸´£¬¼«µã´¦Ô¼¶¨0¶È£»
-            Z/W¡¢A/B¸´ÓÃÆÕÍ¨¹æÔò£¬C½ö×÷¼«½Ç£¬²»×÷Ğı×ªÖáÄ¿±ê
+  å‡½æ•°åç§°ï¼šgetMacCoordByScanInfo
+  å‡½æ•°åŠŸèƒ½ï¼šå°†æ‰«æåæ ‡å’Œæ€»åç½®è½¬æ¢ä¸ºæœºæ¢°ç»ˆç‚¹
+  è¾“å…¥å‚æ•°ï¼šucChannelNumä¸ºæœ‰æ•ˆé€šé“ï¼›èµ·ç‚¹å’Œæ€»åç½®ä¸ºå†…éƒ¨æœºæ¢°é‡ï¼›
+            pSScanContainerä¸ºæœ¬æ®µè¾“å…¥ï¼›é™¤æ‰«ææŒ‡é’ˆæ£€æŸ¥å¤–å…¶ä½™æŒ‡é’ˆé¡»æœ‰æ•ˆ
+  è¾“å‡ºå‚æ•°ï¼špSTargetPointç»§æ‰¿æœªæŒ‡å®šè½´ï¼›æ‰«ææ•°æ®æ²¿ç”¨åŸæœ‰å•ä½åŠæåæ ‡ä¿®æ­£
+  è¿” å› å€¼ï¼šæ— ï¼›æ‰«ææŒ‡é’ˆä¸ºç©ºæ—¶æŠ¥300å¹¶è¿”å›
+  å¤‡    æ³¨ï¼šä»…åœ¨Part4ä¹‹åè°ƒç”¨ï¼›è‹±åˆ¶çº¿æ€§è¾“å…¥åŸåœ°æ¢ç®—ä¸€æ¬¡ï¼Œä¸å¯é‡å¤è°ƒç”¨ï¼›
+            G16å›ºå®šXæå¾„/Cè§’åº¦è½¬æœºæ¢°X/Yï¼Œä»¥å·¥ä»¶åŸç‚¹è®¡ç®—ï¼Œæ˜¾å¼XæŒ‰ç›´å¾„è®¾ç½®æ¢ç®—ï¼›
+            æ— X/Cæ—¶ä¿ç•™X/Yï¼Œç¼ºçœè§’ä»èµ·ç‚¹æ¢å¤ï¼Œæç‚¹å¤„çº¦å®š0åº¦ï¼›
+            Z/Wã€A/Bå¤ç”¨æ™®é€šè§„åˆ™ï¼ŒCä»…ä½œæè§’ï¼Œä¸ä½œæ—‹è½¬è½´ç›®æ ‡
 **************************************************/
-void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState)
+void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDouble* pSStartPoint,
+                           SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState)
 {
-	if (pSScanContainer == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSScanContainer == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//Ïà¶Ô×ø±ê±à³Ì±êÖ¾
-	bool bRelativeCoordinateProgramming = pSGCodeCurrSysState->bRelativeCoordinateProgramming;
-	//¼«×ø±ê±à³Ì±êÖ¾
-	bool bPolarCoordinateProgramming = pSGCodeCurrSysState->bPolarCoordinateProgramming;
-	//Ó¢ÖÆ±à³Ì±êÖ¾
-	bool bImperialProgramming = pSGCodeCurrSysState->bImperialProgramming;
-	//µ±Ç°×ÜÆ«ÖÃ
-	SPointDouble* pSTotalOffset = &pSGCodeCurrSysState->SAllOffsetOfCoord.STotalOffset;
+    //ç›¸å¯¹åæ ‡ç¼–ç¨‹æ ‡å¿—
+    bool bRelativeCoordinateProgramming = pSGCodeCurrSysState->bRelativeCoordinateProgramming;
+    //æåæ ‡ç¼–ç¨‹æ ‡å¿—
+    bool bPolarCoordinateProgramming = pSGCodeCurrSysState->bPolarCoordinateProgramming;
+    //è‹±åˆ¶ç¼–ç¨‹æ ‡å¿—
+    bool bImperialProgramming = pSGCodeCurrSysState->bImperialProgramming;
+    //å½“å‰æ€»åç½®
+    SPointDouble* pSTotalOffset = &pSGCodeCurrSysState->SAllOffsetOfCoord.STotalOffset;
 
-	//0.³õÊ¼»¯Ä¿±êµã
-	*pSTargetPoint = *pSStartPoint;
+    //0.åˆå§‹åŒ–ç›®æ ‡ç‚¹
+    *pSTargetPoint = *pSStartPoint;
 
-	//ĞŞÕıÓ¢ÖÆ
-	if (bImperialProgramming)
-	{
-		int i;
-		for (i = 0; i < 3; i++)
-		{
-			pSScanContainer->dXYZ[i] *= 25.4;
-			pSScanContainer->dUVW[i] *= 25.4;
-			pSScanContainer->dRIJK[i] *= 25.4;
+    //ä¿®æ­£è‹±åˆ¶
+    if (bImperialProgramming)
+    {
+        int i;
+        for (i = 0; i < 3; i++)
+        {
+            pSScanContainer->dXYZ[i] *= 25.4;
+            pSScanContainer->dUVW[i] *= 25.4;
+            pSScanContainer->dRIJK[i] *= 25.4;
+        }
+        pSScanContainer->dRIJK[3] *= 25.4;
+    }
 
-		}
-		pSScanContainer->dRIJK[3] *= 25.4;
-	}
+    //1.å½“å‰ç»ˆç‚¹åæ ‡é€šè¿‡æåæ ‡è¡¨è¾¾ï¼šå°†æåæ ‡è½¬ä¸ºç›´è§’åæ ‡ï¼ˆXC -> XYï¼‰
+    if (bPolarCoordinateProgramming && (pSScanContainer->bXYZ[AXIS_X] || pSScanContainer->bABC[2]))
+    {
+        double dStartWorkX = pSStartPoint->dArray[AXIS_X] - pSTotalOffset->dArray[AXIS_X];
+        double dStartWorkY = pSStartPoint->dArray[AXIS_Y] - pSTotalOffset->dArray[AXIS_Y];
+        //ä¿®æ­£Cå€¼
+        pSScanContainer->dABC[2] = surplusDoubleToPositive(pSScanContainer->dABC[2], 360);
+        //ç»§æ‰¿èµ·ç‚¹çš„æåæ ‡
+        if (pSScanContainer->bXYZ[0] == FALSE)
+        {
+            //pSScanContainer->dXYZ[0] = sqrt(pow(pSStartPoint->dArray[0], 2) + pow(pSStartPoint->dArray[1], 2));
+            pSScanContainer->dXYZ[0] = sqrt(pow(dStartWorkX, 2) + pow(dStartWorkY, 2));
+        }
+        else if (g_SSystemPara.SAxisPara[AXIS_X].bShowByDiameter)
+        {
+            pSScanContainer->dXYZ[0] /= 2;
+        }
+        if (pSScanContainer->bABC[2] == FALSE)
+        {
+            // è§’åº¦ç»§æ‰¿ï¼Œæç‚¹å¤„æ²¿ç”¨0åº¦çº¦å®šï¼›å…¶ä»–ä½ç½®ä»èµ·ç‚¹æ¢å¤è§’åº¦ï¼Œä¸èƒ½æŠŠçœç•¥Cå½“æˆC0ã€‚
+            //pSScanContainer->dABC[2] = (pSStartPoint->dArray[AXIS_X] == 0.0 && pSStartPoint->dArray[AXIS_Y] == 0.0)
+            //	? 0.0 : atan2(pSStartPoint->dArray[AXIS_Y], pSStartPoint->dArray[AXIS_X]) * 180 / PI;
+            pSScanContainer->dABC[2] =
+                (dStartWorkX == 0.0 && dStartWorkY == 0.0) ? 0.0 : atan2(dStartWorkY, dStartWorkX) * 180 / PI;
+        }
+        //è®¡ç®—ç›´è§’åæ ‡(X,Y)
+        //pSTargetPoint->dArray[AXIS_X] = pSScanContainer->dXYZ[0] * cos(pSScanContainer->dABC[2] * PI / 180);//x = x * cos(c)
+        //pSTargetPoint->dArray[AXIS_Y] = pSScanContainer->dXYZ[0] * sin(pSScanContainer->dABC[2] * PI / 180);//y = x * sin(c)
+        pSTargetPoint->dArray[AXIS_X] = pSScanContainer->dXYZ[0] * cos(pSScanContainer->dABC[2] * PI / 180) +
+                                        pSTotalOffset->dArray[AXIS_X]; //x = x * cos(c) + offsetX
+        pSTargetPoint->dArray[AXIS_Y] = pSScanContainer->dXYZ[0] * sin(pSScanContainer->dABC[2] * PI / 180) +
+                                        pSTotalOffset->dArray[AXIS_Y]; //y = x * sin(c) + offsetY
+    }
 
-	//1.µ±Ç°ÖÕµã×ø±êÍ¨¹ı¼«×ø±ê±í´ï£º½«¼«×ø±ê×ªÎªÖ±½Ç×ø±ê£¨XC -> XY£©
-	if (bPolarCoordinateProgramming && (pSScanContainer->bXYZ[AXIS_X] || pSScanContainer->bABC[2]))
-	{
-		double dStartWorkX = pSStartPoint->dArray[AXIS_X] - pSTotalOffset->dArray[AXIS_X];
-		double dStartWorkY = pSStartPoint->dArray[AXIS_Y] - pSTotalOffset->dArray[AXIS_Y];
-		//ĞŞÕıCÖµ
-		pSScanContainer->dABC[2] = surplusDoubleToPositive(pSScanContainer->dABC[2], 360);
-		//¼Ì³ĞÆğµãµÄ¼«×ø±ê
-		if (pSScanContainer->bXYZ[0] == FALSE)
-		{
-			//pSScanContainer->dXYZ[0] = sqrt(pow(pSStartPoint->dArray[0], 2) + pow(pSStartPoint->dArray[1], 2));
-			pSScanContainer->dXYZ[0] = sqrt(pow(dStartWorkX, 2) + pow(dStartWorkY, 2));
-		}
-		else if (g_SSystemPara.SAxisPara[AXIS_X].bShowByDiameter)
-		{
-			pSScanContainer->dXYZ[0] /= 2;
-		}
-		if (pSScanContainer->bABC[2] == FALSE)
-		{
-			// ½Ç¶È¼Ì³Ğ£¬¼«µã´¦ÑØÓÃ0¶ÈÔ¼¶¨£»ÆäËûÎ»ÖÃ´ÓÆğµã»Ö¸´½Ç¶È£¬²»ÄÜ°ÑÊ¡ÂÔCµ±³ÉC0¡£
-			//pSScanContainer->dABC[2] = (pSStartPoint->dArray[AXIS_X] == 0.0 && pSStartPoint->dArray[AXIS_Y] == 0.0)
-			//	? 0.0 : atan2(pSStartPoint->dArray[AXIS_Y], pSStartPoint->dArray[AXIS_X]) * 180 / PI;
-			pSScanContainer->dABC[2] = (dStartWorkX == 0.0 && dStartWorkY == 0.0) ? 0.0 : atan2(dStartWorkY, dStartWorkX) * 180 / PI;
-		}
-		//¼ÆËãÖ±½Ç×ø±ê(X,Y)
-		//pSTargetPoint->dArray[AXIS_X] = pSScanContainer->dXYZ[0] * cos(pSScanContainer->dABC[2] * PI / 180);//x = x * cos(c)
-		//pSTargetPoint->dArray[AXIS_Y] = pSScanContainer->dXYZ[0] * sin(pSScanContainer->dABC[2] * PI / 180);//y = x * sin(c)
-		pSTargetPoint->dArray[AXIS_X] = pSScanContainer->dXYZ[0] * cos(pSScanContainer->dABC[2] * PI / 180) + pSTotalOffset->dArray[AXIS_X];//x = x * cos(c) + offsetX
-		pSTargetPoint->dArray[AXIS_Y] = pSScanContainer->dXYZ[0] * sin(pSScanContainer->dABC[2] * PI / 180) + pSTotalOffset->dArray[AXIS_Y];//y = x * sin(c) + offsetY
-	
-	}
+    //1.è¯»å–XYZã€‚
+    for (uint8 ucTemp = 0; ucTemp < sizeof(pSScanContainer->bXYZ) / sizeof(bool); ucTemp++)
+    {
+        //æåæ ‡G16æ¡ä»¶ä¸‹å¤ç”¨æ™®é€šåæ ‡è§„åˆ™ï¼›åªè·³è¿‡å·²ç”±æåæ ‡å¤„ç†çš„X/Yå’Œæè§’Cã€‚
+        if (bPolarCoordinateProgramming && (ucTemp == AXIS_X || ucTemp == AXIS_Y))
+        {
+            continue;
+        }
 
-	//1.¶ÁÈ¡XYZ¡£
-		for (uint8 ucTemp = 0; ucTemp < sizeof(pSScanContainer->bXYZ) / sizeof(bool); ucTemp++)
-		{
-		//¼«×ø±êG16Ìõ¼şÏÂ¸´ÓÃÆÕÍ¨×ø±ê¹æÔò£»Ö»Ìø¹ıÒÑÓÉ¼«×ø±ê´¦ÀíµÄX/YºÍ¼«½ÇC¡£
-		if (bPolarCoordinateProgramming && (ucTemp == AXIS_X || ucTemp == AXIS_Y))
-		{
-			continue;
-		}
-
-		//1.³öÏÖXYZ£º»úĞµ×ø±ê = ¹¤¼ş×ø±ê + ×ÜÆ«ÖÃÖµ
-			if (pSScanContainer->bXYZ[ucTemp] == TRUE)
-			{
-				switch (ucTemp)
-				{
-				case AXIS_X:
-				case AXIS_Y:
-				case AXIS_Z:
-				if (bRelativeCoordinateProgramming)
-					{
+        //1.å‡ºç°XYZï¼šæœºæ¢°åæ ‡ = å·¥ä»¶åæ ‡ + æ€»åç½®å€¼
+        if (pSScanContainer->bXYZ[ucTemp] == TRUE)
+        {
+            switch (ucTemp)
+            {
+            case AXIS_X:
+            case AXIS_Y:
+            case AXIS_Z:
+                if (bRelativeCoordinateProgramming)
+                {
+                    /* G91 çš„ XYZ è¡¨ç¤ºç›¸å¯¹å½“å‰æœºæ¢°ä½ç½®çš„ä½ç§»ã€‚ */
                     pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dXYZ[ucTemp];
-					}
-					else
-					{
-						pSTargetPoint->dArray[ucTemp] = pSScanContainer->dXYZ[ucTemp] + pSTotalOffset->dArray[ucTemp];
-					}
-				default:
-					break;
-				}
-			}
-			//2.Ã»³öÏÖXYZ£¬³öÏÖUVW£º»úĞµ×ø±ê = Æğµã»úĞµ×ø±ê + ÔöÁ¿¹¤¼ş×ø±ê
-			else if (pSScanContainer->bUVW[ucTemp] == TRUE)
-			{
-				switch (ucTemp)
-				{
-				case AXIS_X:
-				case AXIS_Y:case AXIS_Z:
-					if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter)	//Ö±¾¶ÏÔÊ¾	//³ÂÃô´Ï	2023/7/22
-					{
-						//
-						pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dUVW[ucTemp] / 2;
-					}
-					else
-					{
-						pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dUVW[ucTemp];
-					}
-				default:
-					break;
-				}
-			}
+                }
+                else
+                {
+                    /* G90 çš„ XYZ å·¥ä»¶åæ ‡åŠ å½“å‰ç”Ÿæ•ˆåç½®ï¼Œå¾—åˆ°ç›®æ ‡æœºæ¢°ä½ç½®ã€‚ */
+                    pSTargetPoint->dArray[ucTemp] = pSScanContainer->dXYZ[ucTemp] + pSTotalOffset->dArray[ucTemp];
+                }
+            default:
+                break;
+            }
+        }
+        //2.æ²¡å‡ºç°XYZï¼Œå‡ºç°UVWï¼šæœºæ¢°åæ ‡ = èµ·ç‚¹æœºæ¢°åæ ‡ + å¢é‡å·¥ä»¶åæ ‡
+        else if (pSScanContainer->bUVW[ucTemp] == TRUE)
+        {
+            switch (ucTemp)
+            {
+            case AXIS_X:
+            case AXIS_Y:
+            case AXIS_Z:
+                if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter) //ç›´å¾„æ˜¾ç¤º	//é™ˆæ•èª	2023/7/22
+                {
+                    //
+                    pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dUVW[ucTemp] / 2;
+                }
+                else
+                {
+                    pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dUVW[ucTemp];
+                }
+            default:
+                break;
+            }
+        }
 
+        //2.è¯»å–ABC
+        for (uint8 ucTemp = 0; ucTemp < sizeof(pSScanContainer->bABC) / sizeof(bool); ucTemp++)
+        {
+            if (bPolarCoordinateProgramming && AXIS_A + ucTemp == AXIS_C)
+            {
+                continue;
+            }
 
+            //1.å‡ºç°ABC
+            if (pSScanContainer->bABC[ucTemp] == TRUE)
+            {
+                //ç»å¯¹ç¼–ç¨‹
+                if (bRelativeCoordinateProgramming == FALSE)
+                {
+                    //è®¡ç®—ç›®æ ‡åæ ‡ï¼šæœºæ¢°åæ ‡ = å·¥ä»¶åæ ‡ + æ€»åç½®å€¼
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] =
+                        pSScanContainer->dABC[ucTemp] + pSTotalOffset->dArray[AXIS_A + ucTemp];
+                }
+                //å¢é‡ç¼–ç¨‹
+                else
+                {
+                    // zxr: å¢é‡åªåŠ åˆ°æœºæ¢°èµ·ç‚¹ï¼Œä¸é‡å¤å åŠ åç§»ã€‚
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] =
+                        pSStartPoint->dArray[AXIS_A + ucTemp] + pSScanContainer->dABC[ucTemp];
+                }
 
+                //æåæ ‡æ’è¡¥æ¨¡å¼
 
-		//2.¶ÁÈ¡ABC
-		for (uint8 ucTemp = 0; ucTemp < sizeof(pSScanContainer->bABC) / sizeof(bool); ucTemp++)
-		{
-			if (bPolarCoordinateProgramming && AXIS_A + ucTemp == AXIS_C)
-			{
-				continue;
-			}
+                //æ™®é€šæ’è¡¥æ¨¡å¼
 
-			//1.³öÏÖABC
-			if (pSScanContainer->bABC[ucTemp] == TRUE)
-			{
-				//¾ø¶Ô±à³Ì
-				if (bRelativeCoordinateProgramming == FALSE)
-				{
-					//¼ÆËãÄ¿±ê×ø±ê£º»úĞµ×ø±ê = ¹¤¼ş×ø±ê + ×ÜÆ«ÖÃÖµ
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = pSScanContainer->dABC[ucTemp] + pSTotalOffset->dArray[AXIS_A + ucTemp];
-				}
-				//ÔöÁ¿±à³Ì
-				else
-				{
-					// zxr: ÔöÁ¿Ö»¼Óµ½»úĞµÆğµã£¬²»ÖØ¸´µş¼ÓÆ«ÒÆ¡£
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = pSStartPoint->dArray[AXIS_A + ucTemp] +
-						pSScanContainer->dABC[ucTemp];
-				}
+                //ä¸»è½´ä½œä¸ºæ’è¡¥è”åŠ¨è½´æ—¶
+                //å½“å‰è½´å·ä¸ºä¸»è½´è½´å·
+                if ((AXIS_A + ucTemp) == g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)
+                {
+                    //ä¿®æ­£ä¸»è½´åæ ‡ä¸ºè„‰å†²å½“é‡çš„æ•´å€æ•°
+                    uint8* ucMapArray;                  //é€šé“æ˜ å°„
+                    double dSpindleAxisPulseEquivalent; //ä¸»è½´è„‰å†²å½“é‡   dSpindleAxisPulseEquivalent
+                    int32 nPulseRound;                  //è„‰å†²åœ†æ•´ç»“æœ
 
-				//¼«×ø±ê²å²¹Ä£Ê½
+                    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //è·å–é€šé“æ˜ å°„
+                    dSpindleAxisPulseEquivalent =
+                        g_SSystemPara.SAxisPara[ucMapArray[AXIS_A + ucTemp]].dPulseToMm; //Cè½´è„‰å†²å½“é‡  åº¦/pulse
+                    nPulseRound = round(pSTargetPoint->dArray[AXIS_A + ucTemp] / dSpindleAxisPulseEquivalent);
 
-				//ÆÕÍ¨²å²¹Ä£Ê½
-
-				//Ö÷Öá×÷Îª²å²¹Áª¶¯ÖáÊ±
-				//µ±Ç°ÖáºÅÎªÖ÷ÖáÖáºÅ
-				if ((AXIS_A + ucTemp) == g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)
-				{
-					//ĞŞÕıÖ÷Öá×ø±êÎªÂö³åµ±Á¿µÄÕû±¶Êı
-					uint8* ucMapArray;//Í¨µÀÓ³Éä
-					double  dSpindleAxisPulseEquivalent;//Ö÷ÖáÂö³åµ±Á¿   dSpindleAxisPulseEquivalent
-					int32 nPulseRound;//Âö³åÔ²Õû½á¹û
-
-					ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;//»ñÈ¡Í¨µÀÓ³Éä
-					dSpindleAxisPulseEquivalent = g_SSystemPara.SAxisPara[ucMapArray[AXIS_A + ucTemp]].dPulseToMm;//CÖáÂö³åµ±Á¿  ¶È/pulse
-					nPulseRound = round(pSTargetPoint->dArray[AXIS_A + ucTemp] / dSpindleAxisPulseEquivalent);
-
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = nPulseRound * dSpindleAxisPulseEquivalent;
-				}
-			}
-
-
-		}
-
-	}
-
-
-
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] = nPulseRound * dSpindleAxisPulseEquivalent;
+                }
+            }
+        }
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMacCoordByCoordInfo
-  º¯Êı¹¦ÄÜ£º½«ÒÑÌáÈ¡×ø±êºÍ×ÜÆ«ÖÃ×ª»»Îª»úĞµÖÕµã
-  ÊäÈë²ÎÊı£ºucChannelNumÎªÓĞĞ§Í¨µÀ£»ÆğµãºÍ×ÜÆ«ÖÃÎªÄÚ²¿»úĞµÁ¿£»
-            pSCoordInfoÎª±¾¶Î×ø±ê£»³ı×ø±êÖ¸Õë¼ì²éÍâÆäÓàÖ¸ÕëĞëÓĞĞ§
-  Êä³ö²ÎÊı£ºpSTargetPoint¼Ì³ĞÎ´Ö¸¶¨Öá£»×ø±êÊı¾İÑØÓÃÔ­ÓĞµ¥Î»¼°¼«×ø±êĞŞÕı
-  ·µ »Ø Öµ£ºÎŞ£»×ø±êÖ¸ÕëÎª¿ÕÊ±±¨300²¢·µ»Ø
-  ±¸    ×¢£ºÓ¢ÖÆÏßĞÔÊäÈëÔ­µØ»»ËãÒ»´Î£¬²»¿ÉÖØ¸´µ÷ÓÃ£»
-            G16¹Ì¶¨X¼«¾¶/C½Ç¶È×ª»úĞµX/Y£¬ÒÔ¹¤¼şÔ­µã¼ÆËã£¬ÏÔÊ½X°´Ö±¾¶ÉèÖÃ»»Ëã£»
-            ÎŞX/CÊ±±£ÁôX/Y£¬È±Ê¡½Ç´ÓÆğµã»Ö¸´£¬¼«µã´¦Ô¼¶¨0¶È£»
-            Z/W¡¢A/B¸´ÓÃÆÕÍ¨¹æÔò£¬C½ö×÷¼«½Ç£¬²»×÷Ğı×ªÖáÄ¿±ê
+  å‡½æ•°åç§°ï¼šgetMacCoordByCoordInfo
+  å‡½æ•°åŠŸèƒ½ï¼šå°†å·²æå–åæ ‡å’Œæ€»åç½®è½¬æ¢ä¸ºæœºæ¢°ç»ˆç‚¹
+  è¾“å…¥å‚æ•°ï¼šucChannelNumä¸ºæœ‰æ•ˆé€šé“ï¼›èµ·ç‚¹å’Œæ€»åç½®ä¸ºå†…éƒ¨æœºæ¢°é‡ï¼›
+            pSCoordInfoä¸ºæœ¬æ®µåæ ‡ï¼›é™¤åæ ‡æŒ‡é’ˆæ£€æŸ¥å¤–å…¶ä½™æŒ‡é’ˆé¡»æœ‰æ•ˆ
+  è¾“å‡ºå‚æ•°ï¼špSTargetPointç»§æ‰¿æœªæŒ‡å®šè½´ï¼›åæ ‡æ•°æ®æ²¿ç”¨åŸæœ‰å•ä½åŠæåæ ‡ä¿®æ­£
+  è¿” å› å€¼ï¼šæ— ï¼›åæ ‡æŒ‡é’ˆä¸ºç©ºæ—¶æŠ¥300å¹¶è¿”å›
+  å¤‡    æ³¨ï¼šè‹±åˆ¶çº¿æ€§è¾“å…¥åŸåœ°æ¢ç®—ä¸€æ¬¡ï¼Œä¸å¯é‡å¤è°ƒç”¨ï¼›
+            G16å›ºå®šXæå¾„/Cè§’åº¦è½¬æœºæ¢°X/Yï¼Œä»¥å·¥ä»¶åŸç‚¹è®¡ç®—ï¼Œæ˜¾å¼XæŒ‰ç›´å¾„è®¾ç½®æ¢ç®—ï¼›
+            æ— X/Cæ—¶ä¿ç•™X/Yï¼Œç¼ºçœè§’ä»èµ·ç‚¹æ¢å¤ï¼Œæç‚¹å¤„çº¦å®š0åº¦ï¼›
+            Z/Wã€A/Bå¤ç”¨æ™®é€šè§„åˆ™ï¼ŒCä»…ä½œæè§’ï¼Œä¸ä½œæ—‹è½¬è½´ç›®æ ‡
 **************************************************/
-void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDouble* pSStartPoint, SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState)
+void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDouble* pSStartPoint,
+                            SPointDouble* pSTargetPoint, struct _SGCodeSysState* pSGCodeCurrSysState)
 {
-	if (pSCoordInfo == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
-	//Ïà¶Ô×ø±ê±à³Ì±êÖ¾
-	bool bRelativeCoordinateProgramming = pSGCodeCurrSysState->bRelativeCoordinateProgramming;
-	//¼«×ø±ê±à³Ì±êÖ¾
-	bool bPolarCoordinateProgramming = pSGCodeCurrSysState->bPolarCoordinateProgramming;
-	//Ó¢ÖÆ±à³Ì±êÖ¾
-	bool bImperialProgramming = pSGCodeCurrSysState->bImperialProgramming;
-	//µ±Ç°×ÜÆ«ÖÃ
-	SPointDouble* pSTotalOffset = &pSGCodeCurrSysState->SAllOffsetOfCoord.STotalOffset;
+    if (pSCoordInfo == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
+    //ç›¸å¯¹åæ ‡ç¼–ç¨‹æ ‡å¿—
+    bool bRelativeCoordinateProgramming = pSGCodeCurrSysState->bRelativeCoordinateProgramming;
+    //æåæ ‡ç¼–ç¨‹æ ‡å¿—
+    bool bPolarCoordinateProgramming = pSGCodeCurrSysState->bPolarCoordinateProgramming;
+    //è‹±åˆ¶ç¼–ç¨‹æ ‡å¿—
+    bool bImperialProgramming = pSGCodeCurrSysState->bImperialProgramming;
+    //å½“å‰æ€»åç½®
+    SPointDouble* pSTotalOffset = &pSGCodeCurrSysState->SAllOffsetOfCoord.STotalOffset;
 
-	//0.³õÊ¼»¯Ä¿±êµã
-	*pSTargetPoint = *pSStartPoint;
-	
-	//ĞŞÕıÓ¢ÖÆ
-	if (bImperialProgramming)
-	{
-		int i;
-		for (i = 0; i < 3; i++)
-		{
-			pSCoordInfo->dXYZ[i] *= 25.4;
-			pSCoordInfo->dUVW[i] *= 25.4;
-		}
-	}
-	//1.µ±Ç°ÖÕµã×ø±êÍ¨¹ı¼«×ø±ê±í´ï£º½«¼«×ø±ê×ªÎªÖ±½Ç×ø±ê£¨XC -> XY£©
-	if (bPolarCoordinateProgramming && (pSCoordInfo->bXYZ[AXIS_X] || pSCoordInfo->bABC[2]))
-	{
-		double dStartWorkX = pSStartPoint->dArray[AXIS_X] - pSTotalOffset->dArray[AXIS_X];
-		double dStartWorkY = pSStartPoint->dArray[AXIS_Y] - pSTotalOffset->dArray[AXIS_Y];
-		//ĞŞÕıCÖµ
-		pSCoordInfo->dABC[2] = surplusDoubleToPositive(pSCoordInfo->dABC[2], 360);
-		//¼Ì³ĞÆğµãµÄ¼«×ø±ê
-		if (pSCoordInfo->bXYZ[0] == FALSE)
-		{
-			//pSCoordInfo->dXYZ[0] = sqrt(pow(pSStartPoint->dArray[0], 2) + pow(pSStartPoint->dArray[1], 2));
-			pSCoordInfo->dXYZ[0] = sqrt(pow(dStartWorkX, 2) + pow(dStartWorkY, 2));
-		}
-		else if (g_SSystemPara.SAxisPara[AXIS_X].bShowByDiameter)
-		{
-			pSCoordInfo->dXYZ[0] /= 2;
-		}
-		if (pSCoordInfo->bABC[2] == FALSE)
-		{
-			//// ¼«µã´¦ÑØÓÃ0¶ÈÔ¼¶¨£»ÆäËûÎ»ÖÃ´ÓÆğµã»Ö¸´½Ç¶È£¬²»ÄÜ°ÑÊ¡ÂÔCµ±³ÉC0¡£
-			//pSCoordInfo->dABC[2] = (pSStartPoint->dArray[AXIS_X] == 0.0 && pSStartPoint->dArray[AXIS_Y] == 0.0)
-			//	? 0.0 : atan2(pSStartPoint->dArray[AXIS_Y], pSStartPoint->dArray[AXIS_X]) * 180 / PI;
+    //0.åˆå§‹åŒ–ç›®æ ‡ç‚¹
+    *pSTargetPoint = *pSStartPoint;
 
-		pSCoordInfo->dABC[2] = (dStartWorkX == 0.0 && dStartWorkY == 0.0) ? 0.0 : atan2(dStartWorkY, dStartWorkX) * 180 / PI;
-		}
-		//¼ÆËãÖ±½Ç×ø±ê
-		//pSTargetPoint->dArray[AXIS_X] = pSCoordInfo->dXYZ[0] * cos(pSCoordInfo->dABC[2] * PI / 180);//x = x * cos(c)
-		//pSTargetPoint->dArray[AXIS_Y] = pSCoordInfo->dXYZ[0] * sin(pSCoordInfo->dABC[2] * PI / 180);//y = x * sin(c)
-		pSTargetPoint->dArray[AXIS_X] = pSCoordInfo->dXYZ[0] * cos(pSCoordInfo->dABC[2] * PI / 180) + pSTotalOffset->dArray[AXIS_X];//x = x * cos(c) + offsetX
-		pSTargetPoint->dArray[AXIS_Y] = pSCoordInfo->dXYZ[0] * sin(pSCoordInfo->dABC[2] * PI / 180) + pSTotalOffset->dArray[AXIS_Y];//y = x * sin(c) + offsetY
-	}
-	//2.¸´ÓÃÆÕÍ¨×ø±ê¹æÔò£»G16Ö»Ìø¹ıÒÑÓÉ¼«×ø±ê´¦ÀíµÄX/YºÍ¼«½ÇC¡£
-	{
-		//1.¶ÁÈ¡XYZ
-		for (uint8 ucTemp = 0; ucTemp < sizeof(pSCoordInfo->bXYZ) / sizeof(bool); ucTemp++)
-		{
-			if (bPolarCoordinateProgramming && (ucTemp == AXIS_X || ucTemp == AXIS_Y))
-			{
-				continue;
-			}
+    //ä¿®æ­£è‹±åˆ¶
+    if (bImperialProgramming)
+    {
+        int i;
+        for (i = 0; i < 3; i++)
+        {
+            pSCoordInfo->dXYZ[i] *= 25.4;
+            pSCoordInfo->dUVW[i] *= 25.4;
+        }
+    }
+    //1.å½“å‰ç»ˆç‚¹åæ ‡é€šè¿‡æåæ ‡è¡¨è¾¾ï¼šå°†æåæ ‡è½¬ä¸ºç›´è§’åæ ‡ï¼ˆXC -> XYï¼‰
+    if (bPolarCoordinateProgramming && (pSCoordInfo->bXYZ[AXIS_X] || pSCoordInfo->bABC[2]))
+    {
+        double dStartWorkX = pSStartPoint->dArray[AXIS_X] - pSTotalOffset->dArray[AXIS_X];
+        double dStartWorkY = pSStartPoint->dArray[AXIS_Y] - pSTotalOffset->dArray[AXIS_Y];
+        //ä¿®æ­£Cå€¼
+        pSCoordInfo->dABC[2] = surplusDoubleToPositive(pSCoordInfo->dABC[2], 360);
+        //ç»§æ‰¿èµ·ç‚¹çš„æåæ ‡
+        if (pSCoordInfo->bXYZ[0] == FALSE)
+        {
+            //pSCoordInfo->dXYZ[0] = sqrt(pow(pSStartPoint->dArray[0], 2) + pow(pSStartPoint->dArray[1], 2));
+            pSCoordInfo->dXYZ[0] = sqrt(pow(dStartWorkX, 2) + pow(dStartWorkY, 2));
+        }
+        else if (g_SSystemPara.SAxisPara[AXIS_X].bShowByDiameter)
+        {
+            pSCoordInfo->dXYZ[0] /= 2;
+        }
+        if (pSCoordInfo->bABC[2] == FALSE)
+        {
+            //// æç‚¹å¤„æ²¿ç”¨0åº¦çº¦å®šï¼›å…¶ä»–ä½ç½®ä»èµ·ç‚¹æ¢å¤è§’åº¦ï¼Œä¸èƒ½æŠŠçœç•¥Cå½“æˆC0ã€‚
+            //pSCoordInfo->dABC[2] = (pSStartPoint->dArray[AXIS_X] == 0.0 && pSStartPoint->dArray[AXIS_Y] == 0.0)
+            //	? 0.0 : atan2(pSStartPoint->dArray[AXIS_Y], pSStartPoint->dArray[AXIS_X]) * 180 / PI;
 
-			//1.³öÏÖXYZ£º»úĞµ×ø±ê = ¹¤¼ş×ø±ê + ×ÜÆ«ÖÃÖµ
-			if (pSCoordInfo->bXYZ[ucTemp] == TRUE)
-			{
-				switch (ucTemp)
-				{
-				case AXIS_X:
-				case AXIS_Y:
-				case AXIS_Z:
-					if (bRelativeCoordinateProgramming)
-					{
+            pSCoordInfo->dABC[2] =
+                (dStartWorkX == 0.0 && dStartWorkY == 0.0) ? 0.0 : atan2(dStartWorkY, dStartWorkX) * 180 / PI;
+        }
+        //è®¡ç®—ç›´è§’åæ ‡
+        //pSTargetPoint->dArray[AXIS_X] = pSCoordInfo->dXYZ[0] * cos(pSCoordInfo->dABC[2] * PI / 180);//x = x * cos(c)
+        //pSTargetPoint->dArray[AXIS_Y] = pSCoordInfo->dXYZ[0] * sin(pSCoordInfo->dABC[2] * PI / 180);//y = x * sin(c)
+        pSTargetPoint->dArray[AXIS_X] = pSCoordInfo->dXYZ[0] * cos(pSCoordInfo->dABC[2] * PI / 180) +
+                                        pSTotalOffset->dArray[AXIS_X]; //x = x * cos(c) + offsetX
+        pSTargetPoint->dArray[AXIS_Y] = pSCoordInfo->dXYZ[0] * sin(pSCoordInfo->dABC[2] * PI / 180) +
+                                        pSTotalOffset->dArray[AXIS_Y]; //y = x * sin(c) + offsetY
+    }
+    //2.å¤ç”¨æ™®é€šåæ ‡è§„åˆ™ï¼›G16åªè·³è¿‡å·²ç”±æåæ ‡å¤„ç†çš„X/Yå’Œæè§’Cã€‚
+    {
+        //1.è¯»å–XYZ
+        for (uint8 ucTemp = 0; ucTemp < sizeof(pSCoordInfo->bXYZ) / sizeof(bool); ucTemp++)
+        {
+            if (bPolarCoordinateProgramming && (ucTemp == AXIS_X || ucTemp == AXIS_Y))
+            {
+                continue;
+            }
+
+            //1.å‡ºç°XYZï¼šæœºæ¢°åæ ‡ = å·¥ä»¶åæ ‡ + æ€»åç½®å€¼
+            if (pSCoordInfo->bXYZ[ucTemp] == TRUE)
+            {
+                switch (ucTemp)
+                {
+                case AXIS_X:
+                case AXIS_Y:
+                case AXIS_Z:
+                    if (bRelativeCoordinateProgramming)
+                    {
+                        /* G91 çš„ XYZ è¡¨ç¤ºç›¸å¯¹å½“å‰æœºæ¢°ä½ç½®çš„ä½ç§»ã€‚ */
                         pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dXYZ[ucTemp];
-					}
-					else
-					{
-						pSTargetPoint->dArray[ucTemp] = pSCoordInfo->dXYZ[ucTemp] + pSTotalOffset->dArray[ucTemp];
-					}
-				default:
-					break;
-				}
-			}
-			//2.Ã»³öÏÖXYZ£¬³öÏÖUVW£º»úĞµ×ø±ê = Æğµã»úĞµ×ø±ê + ÔöÁ¿¹¤¼ş×ø±ê
-			else if (pSCoordInfo->bUVW[ucTemp] == TRUE)
-			{
-				switch (ucTemp)
-				{
-				case AXIS_X:
-				case AXIS_Y:case AXIS_Z:
-					if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter)	//Ö±¾¶ÏÔÊ¾	//³ÂÃô´Ï	2023/7/22
-					{
-						//
-						pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dUVW[ucTemp] / 2;
-					}
-					else
-					{
-						pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dUVW[ucTemp];
-					}
-				default:
-					break;
-				}
-			}
+                    }
+                    else
+                    {
+                        /* G90 çš„ XYZ å·¥ä»¶åæ ‡åŠ å½“å‰ç”Ÿæ•ˆåç½®ï¼Œå¾—åˆ°ç›®æ ‡æœºæ¢°ä½ç½®ã€‚ */
+                        pSTargetPoint->dArray[ucTemp] = pSCoordInfo->dXYZ[ucTemp] + pSTotalOffset->dArray[ucTemp];
+                    }
+                default:
+                    break;
+                }
+            }
+            //2.æ²¡å‡ºç°XYZï¼Œå‡ºç°UVWï¼šæœºæ¢°åæ ‡ = èµ·ç‚¹æœºæ¢°åæ ‡ + å¢é‡å·¥ä»¶åæ ‡
+            else if (pSCoordInfo->bUVW[ucTemp] == TRUE)
+            {
+                switch (ucTemp)
+                {
+                case AXIS_X:
+                case AXIS_Y:
+                case AXIS_Z:
+                    if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter) //ç›´å¾„æ˜¾ç¤º	//é™ˆæ•èª	2023/7/22
+                    {
+                        //
+                        pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dUVW[ucTemp] / 2;
+                    }
+                    else
+                    {
+                        pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dUVW[ucTemp];
+                    }
+                default:
+                    break;
+                }
+            }
+        }
 
+        //2.è¯»å–ABC
+        for (uint8 ucTemp = 0; ucTemp < sizeof(pSCoordInfo->bABC) / sizeof(bool); ucTemp++)
+        {
+            if (bPolarCoordinateProgramming && AXIS_A + ucTemp == AXIS_C)
+            {
+                continue;
+            }
 
-		}
+            //1.å‡ºç°ABC
+            if (pSCoordInfo->bABC[ucTemp] == TRUE)
+            {
+                //ç»å¯¹ç¼–ç¨‹
+                if (bRelativeCoordinateProgramming == FALSE)
+                {
+                    //è®¡ç®—ç›®æ ‡åæ ‡ï¼šæœºæ¢°åæ ‡ = å·¥ä»¶åæ ‡ + æ€»åç½®å€¼
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] =
+                        pSCoordInfo->dABC[ucTemp] + pSTotalOffset->dArray[AXIS_A + ucTemp];
+                }
+                //å¢é‡ç¼–ç¨‹
+                else
+                {
+                    // zxr: å¢é‡åªåŠ åˆ°æœºæ¢°èµ·ç‚¹ï¼Œä¸é‡å¤å åŠ åç§»ã€‚
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] =
+                        pSStartPoint->dArray[AXIS_A + ucTemp] + pSCoordInfo->dABC[ucTemp];
+                }
 
-		//2.¶ÁÈ¡ABC
-		for (uint8 ucTemp = 0; ucTemp < sizeof(pSCoordInfo->bABC) / sizeof(bool); ucTemp++)
-		{
-			if (bPolarCoordinateProgramming && AXIS_A + ucTemp == AXIS_C)
-			{
-				continue;
-			}
+                //æåæ ‡æ’è¡¥æ¨¡å¼
 
-			//1.³öÏÖABC
-			if (pSCoordInfo->bABC[ucTemp] == TRUE)
-			{
-				//¾ø¶Ô±à³Ì
-				if (bRelativeCoordinateProgramming == FALSE)
-				{
-					//¼ÆËãÄ¿±ê×ø±ê£º»úĞµ×ø±ê = ¹¤¼ş×ø±ê + ×ÜÆ«ÖÃÖµ
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = pSCoordInfo->dABC[ucTemp] + pSTotalOffset->dArray[AXIS_A + ucTemp];
-				}
-				//ÔöÁ¿±à³Ì
-				else
-				{
-					// zxr: ÔöÁ¿Ö»¼Óµ½»úĞµÆğµã£¬²»ÖØ¸´µş¼ÓÆ«ÒÆ¡£
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = pSStartPoint->dArray[AXIS_A + ucTemp] +
-						pSCoordInfo->dABC[ucTemp];
-				}
+                //æ™®é€šæ’è¡¥æ¨¡å¼
 
-				//¼«×ø±ê²å²¹Ä£Ê½
+                //ä¸»è½´ä½œä¸ºæ’è¡¥è”åŠ¨è½´æ—¶
+                //å½“å‰è½´å·ä¸ºä¸»è½´è½´å·
+                if ((AXIS_A + ucTemp) == g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)
+                {
+                    //ä¿®æ­£ä¸»è½´åæ ‡ä¸ºè„‰å†²å½“é‡çš„æ•´å€æ•°
+                    uint8* ucMapArray;                  //é€šé“æ˜ å°„
+                    double dSpindleAxisPulseEquivalent; //ä¸»è½´è„‰å†²å½“é‡   dSpindleAxisPulseEquivalent
+                    int32 nPulseRound;                  //è„‰å†²åœ†æ•´ç»“æœ
 
-				//ÆÕÍ¨²å²¹Ä£Ê½
+                    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //è·å–é€šé“æ˜ å°„
+                    dSpindleAxisPulseEquivalent =
+                        g_SSystemPara.SAxisPara[ucMapArray[AXIS_A + ucTemp]].dPulseToMm; //Cè½´è„‰å†²å½“é‡  åº¦/pulse
+                    nPulseRound = round(pSTargetPoint->dArray[AXIS_A + ucTemp] / dSpindleAxisPulseEquivalent);
 
-				//Ö÷Öá×÷Îª²å²¹Áª¶¯ÖáÊ±
-				//µ±Ç°ÖáºÅÎªÖ÷ÖáÖáºÅ
-				if ((AXIS_A + ucTemp) == g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)
-				{
-					//ĞŞÕıÖ÷Öá×ø±êÎªÂö³åµ±Á¿µÄÕû±¶Êı
-					uint8* ucMapArray;//Í¨µÀÓ³Éä
-					double  dSpindleAxisPulseEquivalent;//Ö÷ÖáÂö³åµ±Á¿   dSpindleAxisPulseEquivalent
-					int32 nPulseRound;//Âö³åÔ²Õû½á¹û
-
-					ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;//»ñÈ¡Í¨µÀÓ³Éä
-					dSpindleAxisPulseEquivalent = g_SSystemPara.SAxisPara[ucMapArray[AXIS_A + ucTemp]].dPulseToMm;//CÖáÂö³åµ±Á¿  ¶È/pulse
-					nPulseRound = round(pSTargetPoint->dArray[AXIS_A + ucTemp] / dSpindleAxisPulseEquivalent);
-
-					pSTargetPoint->dArray[AXIS_A + ucTemp] = nPulseRound * dSpindleAxisPulseEquivalent;
-				}
-			}
-
-
-		}
-
-	}
+                    pSTargetPoint->dArray[AXIS_A + ucTemp] = nPulseRound * dSpindleAxisPulseEquivalent;
+                }
+            }
+        }
+    }
 }
 
-//»ñÈ¡É¨Ãè½á¹¹ÌåÖĞÂİ¾àµÄµ¼³Ì
+//è·å–æ‰«æç»“æ„ä½“ä¸­èºè·çš„å¯¼ç¨‹
 void getLeadByCoordInfo(SScan* pSScanContainer, double* pLead)
 {
-	if (pSScanContainer == NULL || pLead == NULL)
-	{
-		return;
-	}
-	if (pSScanContainer->bF)
-	{
-		*pLead = pSScanContainer->dF;
-	}
-	else if (pSScanContainer->bRIJK[1])
-	{
-		if (pSScanContainer->dRIJK[1] == 0)
-		{
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM412);
-			return;
-		}
-		//1Ó¢´ç£¨25.4mm£©³¤¶ÈÉÏÂİÎÆµÄÑÀÊıÎªI
-		*pLead = 25.4 / pSScanContainer->dRIJK[1];
-	}
+    if (pSScanContainer == NULL || pLead == NULL)
+    {
+        return;
+    }
+    if (pSScanContainer->bF)
+    {
+        *pLead = pSScanContainer->dF;
+    }
+    else if (pSScanContainer->bRIJK[1])
+    {
+        if (pSScanContainer->dRIJK[1] == 0)
+        {
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM412);
+            return;
+        }
+        //1è‹±å¯¸ï¼ˆ25.4mmï¼‰é•¿åº¦ä¸Šèºçº¹çš„ç‰™æ•°ä¸ºI
+        *pLead = 25.4 / pSScanContainer->dRIJK[1];
+    }
 }
 
-//µ±Ç°×ø±ê±à³Ì·½Ê½ÊÇ·ñÎª¾ø¶Ô±à³Ì£¨ÊÇ¾ø¶Ô±à³Ì»¹ÊÇÏà¶Ô±à³Ì£©
+//å½“å‰åæ ‡ç¼–ç¨‹æ–¹å¼æ˜¯å¦ä¸ºç»å¯¹ç¼–ç¨‹ï¼ˆæ˜¯ç»å¯¹ç¼–ç¨‹è¿˜æ˜¯ç›¸å¯¹ç¼–ç¨‹ï¼‰
 bool isAbsProgrammingMethod(uint8 ucMod, uint8 ucChannelNum)
 {
 
-	struct SGCodeParse* pSGCodeBuffUnit = NULL;
-	SSyntaxConfiguration* pSSyntax = NULL;
-	SAssignConfiguration* pSAssign = NULL;
+    struct SGCodeParse* pSGCodeBuffUnit = NULL;
+    SSyntaxConfiguration* pSSyntax = NULL;
+    SAssignConfiguration* pSAssign = NULL;
 
-	//Óï·¨¼ì²é
-	if (ucMod== GC_SYNTAX)
-	{
-		//»ñÈ¡Í¨µÀµÄÓï·¨¼ì²é½á¹¹Ìå
-		pSSyntax = getSyntaxConfig(ucChannelNum);
-		//»ñÈ¡Óï·¨¼ì²éµÄ»º³åÇø
-		pSGCodeBuffUnit = &pSSyntax->SCurrRecord;
+    //è¯­æ³•æ£€æŸ¥
+    if (ucMod == GC_SYNTAX)
+    {
+        //è·å–é€šé“çš„è¯­æ³•æ£€æŸ¥ç»“æ„ä½“
+        pSSyntax = getSyntaxConfig(ucChannelNum);
+        //è·å–è¯­æ³•æ£€æŸ¥çš„ç¼“å†²åŒº
+        pSGCodeBuffUnit = &pSSyntax->SCurrRecord;
+    }
+    //è¯­æ³•èµ‹å€¼
+    else
+    {
+        //è·å–é€šé“çš„è¯­æ³•èµ‹å€¼ç»“æ„ä½“
+        pSAssign = getAssignConfig(ucChannelNum);
 
-	}
-	//Óï·¨¸³Öµ
-	else
-	{
-		//»ñÈ¡Í¨µÀµÄÓï·¨¸³Öµ½á¹¹Ìå
-		pSAssign = getAssignConfig(ucChannelNum);
+        //è·å–è¯­æ³•èµ‹å€¼çš„Gä»£ç è§£æåçš„ç¼“å†²åŒº
+        pSGCodeBuffUnit = &pSAssign->pGCodeBuf[getSGCodeParsePointerIndex(GCODE_WRITE, ucChannelNum)];
+    }
 
-		//»ñÈ¡Óï·¨¸³ÖµµÄG´úÂë½âÎöºóµÄ»º³åÇø
-		pSGCodeBuffUnit = &pSAssign->pGCodeBuf[getSGCodeParsePointerIndex(GCODE_WRITE, ucChannelNum)];
-
-	}
-
-	if (pSGCodeBuffUnit->SModalInfo.sGh == G90 * pow(10, GCOMMAND_DECIMAL_PLACE))
-	{
-		return TRUE;
-	}
-	else
-	{
-		return  FALSE;
-	}
-
+    if (pSGCodeBuffUnit->SModalInfo.sGh == G90 * pow(10, GCOMMAND_DECIMAL_PLACE))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
-
-
-//ÅĞ¶ÏÉ¨Ãè½á¹¹ÌåÖĞÊÇ·ñº¬ÓĞ×ø±êĞÅÏ¢
+//åˆ¤æ–­æ‰«æç»“æ„ä½“ä¸­æ˜¯å¦å«æœ‰åæ ‡ä¿¡æ¯
 bool isSegmentHaveCoordInfo(SScan* pSScanContainer)
 {
-	for (int8 i = 0; i < 3; i++)
-	{
-		if (pSScanContainer->bXYZ[i] == TRUE ||
-			pSScanContainer->bUVW[i] == TRUE ||
-			pSScanContainer->bABC[i] == TRUE)
-		{
-			return TRUE;
-		}
-	}
-	
-	return FALSE;
+    for (int8 i = 0; i < 3; i++)
+    {
+        if (pSScanContainer->bXYZ[i] == TRUE || pSScanContainer->bUVW[i] == TRUE || pSScanContainer->bABC[i] == TRUE)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 void getCoordInfoFromScanInfo(SCoord* pSCoordInfo, SScan* pSScanContainer)
 {
-	uint8 i;
-	for (i=0;i<3;i++)
-	{
-		if (pSScanContainer->bXYZ[i] == TRUE && pSScanContainer->bUVW[i])
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM309);
-			return;
-		}
-	}
+    uint8 i;
+    for (i = 0; i < 3; i++)
+    {
+        if (pSScanContainer->bXYZ[i] == TRUE && pSScanContainer->bUVW[i])
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM309);
+            return;
+        }
+    }
 
-	for (i = 0; i < 3; i++)
-	{
-		if (pSScanContainer->bABC[i] == TRUE)
-		{
-			pSCoordInfo->bABC[i] = pSScanContainer->bABC[i];
-			pSCoordInfo->dABC[i] = pSScanContainer->dABC[i];
-		}
-		if (pSScanContainer->bXYZ[i] == TRUE)
-		{
-			pSCoordInfo->bUVW[i] = FALSE;
-			pSCoordInfo->dUVW[i] = 0;
-			pSCoordInfo->bXYZ[i] = pSScanContainer->bXYZ[i];
-			pSCoordInfo->dXYZ[i] = pSScanContainer->dXYZ[i];
-		}
-		if (pSScanContainer->bUVW[i] == TRUE)
-		{
-			pSCoordInfo->bXYZ[i] = FALSE;
-			pSCoordInfo->dXYZ[i] = 0;
-			pSCoordInfo->bUVW[i] = pSScanContainer->bUVW[i];
-			pSCoordInfo->dUVW[i] = pSScanContainer->dUVW[i];
-		}
-	}	
+    for (i = 0; i < 3; i++)
+    {
+        if (pSScanContainer->bABC[i] == TRUE)
+        {
+            pSCoordInfo->bABC[i] = pSScanContainer->bABC[i];
+            pSCoordInfo->dABC[i] = pSScanContainer->dABC[i];
+        }
+        if (pSScanContainer->bXYZ[i] == TRUE)
+        {
+            pSCoordInfo->bUVW[i] = FALSE;
+            pSCoordInfo->dUVW[i] = 0;
+            pSCoordInfo->bXYZ[i] = pSScanContainer->bXYZ[i];
+            pSCoordInfo->dXYZ[i] = pSScanContainer->dXYZ[i];
+        }
+        if (pSScanContainer->bUVW[i] == TRUE)
+        {
+            pSCoordInfo->bXYZ[i] = FALSE;
+            pSCoordInfo->dXYZ[i] = 0;
+            pSCoordInfo->bUVW[i] = pSScanContainer->bUVW[i];
+            pSCoordInfo->dUVW[i] = pSScanContainer->dUVW[i];
+        }
+    }
 }
 
-
-
-//Ö¸ÁîÀàĞÍ¸³ÖµÔİÊ±ÕâÑùĞ´ËÀ
-//Î´ÔÚ¹æÔòÖĞÉùÃ÷Ö¸ÁîÀàĞÍ£¬ÔòĞ´²»»î£¬±ØĞë½øĞĞÇî¾Ù
+//æŒ‡ä»¤ç±»å‹èµ‹å€¼æš‚æ—¶è¿™æ ·å†™æ­»
+//æœªåœ¨è§„åˆ™ä¸­å£°æ˜æŒ‡ä»¤ç±»å‹ï¼Œåˆ™å†™ä¸æ´»ï¼Œå¿…é¡»è¿›è¡Œç©·ä¸¾
 void getCommandType(int16 sCommand, uint32* pCommandType)
 {
-	switch (sCommand)
-	{
-	case G00 * GCOMMAND_DECIMAL_PLACE * 10:
-		setBits(*pCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
-		break;
-	case G01 * GCOMMAND_DECIMAL_PLACE * 10:
-		setBits(*pCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
-		break;
-	case G02 * GCOMMAND_DECIMAL_PLACE * 10:
-		setBits(*pCommandType, CMD_MOTION_ARC, CMD_MOTION_ADDR);
-		break;
-	case G03 * GCOMMAND_DECIMAL_PLACE * 10:
-		setBits(*pCommandType, CMD_MOTION_ANTI_ARC, CMD_MOTION_ADDR);
-		break;
+    switch (sCommand)
+    {
+    case G00 * GCOMMAND_DECIMAL_PLACE * 10:
+        setBits(*pCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
+        break;
+    case G01 * GCOMMAND_DECIMAL_PLACE * 10:
+        setBits(*pCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
+        break;
+    case G02 * GCOMMAND_DECIMAL_PLACE * 10:
+        setBits(*pCommandType, CMD_MOTION_ARC, CMD_MOTION_ADDR);
+        break;
+    case G03 * GCOMMAND_DECIMAL_PLACE * 10:
+        setBits(*pCommandType, CMD_MOTION_ANTI_ARC, CMD_MOTION_ADDR);
+        break;
 
-	default: //Ä¬ÈÏG00
-		setBits(*pCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
-		break;
-	}
-	
+    default: //é»˜è®¤G00
+        setBits(*pCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  ¸³Öµ/¼ì²éÁ÷³ÌÖĞÕÒµ½Ä¿±ê³ÌĞò¶ÎN
-  ÊäÈë²ÎÊı£ºucMod				Ä£Ê½£¨¼ì²é/¸³Öµ£©
-			ucChannelNum		Í¨µÀºÅ
-			pSCurrProgram		³ÌĞò½á¹¹Ìå
-			unTargetN			Ä¿±ê³ÌĞò¶ÎºÅN
-			pReturnTextInfo		»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢£¨Êä³ö£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	ÒÑÕÒµ½
-			0	Î´ÕÒÍê
-			-1	Î´ÕÒµ½
-			-2	´íÎó
-  ±¸    ×¢£º´Óµ±Ç°³ÌĞòÎÄ±¾µÄsBeginLineNum¿ªÊ¼²éÕÒ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  èµ‹å€¼/æ£€æŸ¥æµç¨‹ä¸­æ‰¾åˆ°ç›®æ ‡ç¨‹åºæ®µN
+  è¾“å…¥å‚æ•°ï¼šucMod				æ¨¡å¼ï¼ˆæ£€æŸ¥/èµ‹å€¼ï¼‰
+			ucChannelNum		é€šé“å·
+			pSCurrProgram		ç¨‹åºç»“æ„ä½“
+			unTargetN			ç›®æ ‡ç¨‹åºæ®µå·N
+			pReturnTextInfo		è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯ï¼ˆè¾“å‡ºï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å·²æ‰¾åˆ°
+			0	æœªæ‰¾å®Œ
+			-1	æœªæ‰¾åˆ°
+			-2	é”™è¯¯
+  å¤‡    æ³¨ï¼šä»å½“å‰ç¨‹åºæ–‡æœ¬çš„sBeginLineNumå¼€å§‹æŸ¥æ‰¾
 **************************************************/
-int8 findTargetSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, uint32 unTargetN, SGetTextStateInfo* pSTargetTextInfo)
-{	
-	if (pSCurrProgram == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -2;
-	}
-
-	SGetTextStateInfo** ppSGetTextInfo;
-
-	ppSGetTextInfo = ucMod == GC_SYNTAX ? &g_pSTextInfoCheck[ucChannelNum] : &g_pSTextInfoAssign[ucChannelNum];
-	
-	//1.ÈôµÚÒ»´ÎÖ´ĞĞ£¬Ôò´Ó³ÌĞòµÄÆğÊ¼ĞĞ¿ªÊ¼
-	if ((*ppSGetTextInfo) == NULL)
-	{
-		(*ppSGetTextInfo) = mallocGCode(sizeof(SGetTextStateInfo), ORAM_NUM350);
-
-		if ((*ppSGetTextInfo) == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -2;
-		}
-
-		//³õÊ¼»¯»ñÈ¡ÎÄ±¾×´Ì¬½á¹¹Ìå
-		memset(*ppSGetTextInfo, 0, sizeof(SGetTextStateInfo));
-		//»ñÈ¡ĞĞºÅ
-		(*ppSGetTextInfo)->unGetLineNum = pSCurrProgram->sBeginLineNum;
-	}
-
-	//2.¼ÇÂ¼µ±Ç°»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢
-	if ((*ppSGetTextInfo)->ucStep == 0)
-	{
-		*pSTargetTextInfo = **ppSGetTextInfo;
-	}
-
-	//3.´¦ÀíÎÄ±¾
-	int8 cRet;
-	cRet = processProgramText(ucMod, *ppSGetTextInfo, ucChannelNum, pSCurrProgram);
-	
-	//3.1³ÌĞò¶ÎÎ´´¦ÀíÍê³É
-	if (cRet == 0)
-	{
-		return 0;
-	}
-	//3.2ÒÑµÃµ½ÆÕÍ¨³ÌĞò¶Î£¨Ìæ»»ºêÃû+È¥³ı¿Õ¸ñ£©
-	else if (cRet == 1)
-	{
-		if (*(*ppSGetTextInfo)->cStr == 'N'|| *(*ppSGetTextInfo)->cStr == 'n')
-		{
-			int8* pVal;
-			pVal = (*ppSGetTextInfo)->cStr + 1;
-			if (isZero(atof(pVal) - (int32)atof(pVal)))//NÖµÎªÕûÊı	//×¢Òâ£º´Ë´¦²»ÄÜÓÃatof£¬ÒªÓÃgetNumbers·ÀÖ¹N0X100³ö´í
-			{
-				if ((int32)atof(pVal) == unTargetN)//£¨ÒÑÕÒµ½£©
-				{
-					//ÊÍ·Å
-					freeGCode(*ppSGetTextInfo);
-					(*ppSGetTextInfo) = NULL;
-					return 1;
-				}
-				else//£¨Î´ÕÒÍê£©
-				{
-					return 0;
-				}
-			}
-
-		}
-	}
-	else if (cRet == 2 || cRet == 3)
-	{
-		//ÕÒÄ¿±ê³ÌĞò¶Î²»ÔÊĞí
-		parseGCodeErrorB((*ppSGetTextInfo)->unCurrLineNum, GCODE_ERROR_NUM448); //zxd :ÕÒ²»µ½ĞĞºÅ±¨´í
-		//ÊÍ·Å
-		freeGCode(*ppSGetTextInfo);
-		(*ppSGetTextInfo) = NULL;
-		return -1;
-	}
-	
-	return 0;
-}
-
-
-int8 findIfAndWhileSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, SGetTextStateInfo* pSGetTextStateInfo)
+int8 findTargetSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram, uint32 unTargetN,
+                       SGetTextStateInfo* pSTargetTextInfo)
 {
-	if (pSCurrProgram == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -2;
-	}
+    if (pSCurrProgram == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -2;
+    }
 
-	SGetTextStateInfo** ppSGetTextInfo;
+    SGetTextStateInfo** ppSGetTextInfo;
 
-	ppSGetTextInfo = ucMod == GC_SYNTAX ? &g_pSTextInfoCheck[ucChannelNum] : &g_pSTextInfoAssign[ucChannelNum];
+    ppSGetTextInfo = ucMod == GC_SYNTAX ? &g_pSTextInfoCheck[ucChannelNum] : &g_pSTextInfoAssign[ucChannelNum];
 
-	//1.ÈôµÚÒ»´ÎÖ´ĞĞ£¬Ôò´Ó³ÌĞòµÄÆğÊ¼ĞĞ¿ªÊ¼
-	if ((*ppSGetTextInfo) == NULL)
-	{
-		(*ppSGetTextInfo) = mallocGCode(sizeof(SGetTextStateInfo), ORAM_NUM350);
+    //1.è‹¥ç¬¬ä¸€æ¬¡æ‰§è¡Œï¼Œåˆ™ä»ç¨‹åºçš„èµ·å§‹è¡Œå¼€å§‹
+    if ((*ppSGetTextInfo) == NULL)
+    {
+        (*ppSGetTextInfo) = mallocGCode(sizeof(SGetTextStateInfo), ORAM_NUM350);
 
-		if ((*ppSGetTextInfo) == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -2;
-		}
+        if ((*ppSGetTextInfo) == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -2;
+        }
 
-		//³õÊ¼»¯»ñÈ¡ÎÄ±¾×´Ì¬½á¹¹Ìå
-		memset(*ppSGetTextInfo, 0, sizeof(SGetTextStateInfo));
+        //åˆå§‹åŒ–è·å–æ–‡æœ¬çŠ¶æ€ç»“æ„ä½“
+        memset(*ppSGetTextInfo, 0, sizeof(SGetTextStateInfo));
+        //è·å–è¡Œå·
+        (*ppSGetTextInfo)->unGetLineNum = pSCurrProgram->sBeginLineNum;
+    }
 
-		**ppSGetTextInfo = *pSGetTextStateInfo;
-		
-	}
+    //2.è®°å½•å½“å‰è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯
+    if ((*ppSGetTextInfo)->ucStep == 0)
+    {
+        *pSTargetTextInfo = **ppSGetTextInfo;
+    }
 
-	//2.¼ÇÂ¼µ±Ç°»ñÈ¡ÎÄ±¾×´Ì¬ĞÅÏ¢
-	if ((*ppSGetTextInfo)->ucStep == 0)
-	{
-		*pSGetTextStateInfo = **ppSGetTextInfo;
-	}
+    //3.å¤„ç†æ–‡æœ¬
+    int8 cRet;
+    cRet = processProgramText(ucMod, *ppSGetTextInfo, ucChannelNum, pSCurrProgram);
 
-	//3.´¦ÀíÎÄ±¾
-	int8 cRet;
-	cRet = processProgramText(ucMod, *ppSGetTextInfo, ucChannelNum, pSCurrProgram);
+    //3.1ç¨‹åºæ®µæœªå¤„ç†å®Œæˆ
+    if (cRet == 0)
+    {
+        return 0;
+    }
+    //3.2å·²å¾—åˆ°æ™®é€šç¨‹åºæ®µï¼ˆæ›¿æ¢å®å+å»é™¤ç©ºæ ¼ï¼‰
+    else if (cRet == 1)
+    {
+        if (*(*ppSGetTextInfo)->cStr == 'N' || *(*ppSGetTextInfo)->cStr == 'n')
+        {
+            int8* pVal;
+            pVal = (*ppSGetTextInfo)->cStr + 1;
+            if (isZero(atof(pVal) -
+                       (int32)atof(pVal))) //Nå€¼ä¸ºæ•´æ•°	//æ³¨æ„ï¼šæ­¤å¤„ä¸èƒ½ç”¨atofï¼Œè¦ç”¨getNumbersé˜²æ­¢N0X100å‡ºé”™
+            {
+                if ((int32)atof(pVal) == unTargetN) //ï¼ˆå·²æ‰¾åˆ°ï¼‰
+                {
+                    //é‡Šæ”¾
+                    freeGCode(*ppSGetTextInfo);
+                    (*ppSGetTextInfo) = NULL;
+                    return 1;
+                }
+                else //ï¼ˆæœªæ‰¾å®Œï¼‰
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    else if (cRet == 2 || cRet == 3)
+    {
+        //æ‰¾ç›®æ ‡ç¨‹åºæ®µä¸å…è®¸
+        parseGCodeErrorB((*ppSGetTextInfo)->unCurrLineNum, GCODE_ERROR_NUM448); //zxd :æ‰¾ä¸åˆ°è¡Œå·æŠ¥é”™
+        //é‡Šæ”¾
+        freeGCode(*ppSGetTextInfo);
+        (*ppSGetTextInfo) = NULL;
+        return -1;
+    }
 
-	//3.1³ÌĞò¶ÎÎ´´¦ÀíÍê³É
-	if (cRet == 0)
-	{
-		return 0;
-	}
-	//3.2ÒÑµÃµ½ÆÕÍ¨³ÌĞò¶Î£¨Ìæ»»ºêÃû+È¥³ı¿Õ¸ñ£©
-	else if (cRet == 1)
-	{
-		//3.2.1ÕÒµ½º¬ÓĞ¹Ø¼ü×ÖµÄ³ÌĞò¶Î
-		if (isTagetStr_B("IF", &(*ppSGetTextInfo)->cStr) ||
-			isTagetStr_B("ELSEIF", &(*ppSGetTextInfo)->cStr) ||
-			isTagetStr_B("ELSE", &(*ppSGetTextInfo)->cStr) ||
-			isTagetStr_B("ENDIF", &(*ppSGetTextInfo)->cStr) ||
-			isTagetStr_B("WHILE", &(*ppSGetTextInfo)->cStr) ||
-			isTagetStr_B("ENDWHILE", &(*ppSGetTextInfo)->cStr))
-		{
-			//ÊÍ·Å
-			freeGCode(*ppSGetTextInfo);
-			(*ppSGetTextInfo) = NULL;
-			return 1;
-
-		}
-		//3.2.2µ±Ç°³ÌĞò¶ÎÎŞ¹Ø¼ü×Ö
-		else
-		{
-			return 0;
-		}
-	}
-	 else if (cRet == 2 || cRet == 3)
-	{
-		// freeGCode(*ppSGetTextInfo);
-		// (*ppSGetTextInfo) = NULL;
-		// return -1;
-	}
-	else if (cRet < 0)
-	{
-		freeGCode(*ppSGetTextInfo);
-		(*ppSGetTextInfo) = NULL;
-		return -1;
-	}
-
+    return 0;
 }
 
+int8 findIfAndWhileSegment(uint8 ucMod, uint8 ucChannelNum, SProgram* pSCurrProgram,
+                           SGetTextStateInfo* pSGetTextStateInfo)
+{
+    if (pSCurrProgram == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -2;
+    }
 
+    SGetTextStateInfo** ppSGetTextInfo;
+
+    ppSGetTextInfo = ucMod == GC_SYNTAX ? &g_pSTextInfoCheck[ucChannelNum] : &g_pSTextInfoAssign[ucChannelNum];
+
+    //1.è‹¥ç¬¬ä¸€æ¬¡æ‰§è¡Œï¼Œåˆ™ä»ç¨‹åºçš„èµ·å§‹è¡Œå¼€å§‹
+    if ((*ppSGetTextInfo) == NULL)
+    {
+        (*ppSGetTextInfo) = mallocGCode(sizeof(SGetTextStateInfo), ORAM_NUM350);
+
+        if ((*ppSGetTextInfo) == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -2;
+        }
+
+        //åˆå§‹åŒ–è·å–æ–‡æœ¬çŠ¶æ€ç»“æ„ä½“
+        memset(*ppSGetTextInfo, 0, sizeof(SGetTextStateInfo));
+
+        **ppSGetTextInfo = *pSGetTextStateInfo;
+    }
+
+    //2.è®°å½•å½“å‰è·å–æ–‡æœ¬çŠ¶æ€ä¿¡æ¯
+    if ((*ppSGetTextInfo)->ucStep == 0)
+    {
+        *pSGetTextStateInfo = **ppSGetTextInfo;
+    }
+
+    //3.å¤„ç†æ–‡æœ¬
+    int8 cRet;
+    cRet = processProgramText(ucMod, *ppSGetTextInfo, ucChannelNum, pSCurrProgram);
+
+    //3.1ç¨‹åºæ®µæœªå¤„ç†å®Œæˆ
+    if (cRet == 0)
+    {
+        return 0;
+    }
+    //3.2å·²å¾—åˆ°æ™®é€šç¨‹åºæ®µï¼ˆæ›¿æ¢å®å+å»é™¤ç©ºæ ¼ï¼‰
+    else if (cRet == 1)
+    {
+        //3.2.1æ‰¾åˆ°å«æœ‰å…³é”®å­—çš„ç¨‹åºæ®µ
+        if (isTagetStr_B("IF", &(*ppSGetTextInfo)->cStr) || isTagetStr_B("ELSEIF", &(*ppSGetTextInfo)->cStr) ||
+            isTagetStr_B("ELSE", &(*ppSGetTextInfo)->cStr) || isTagetStr_B("ENDIF", &(*ppSGetTextInfo)->cStr) ||
+            isTagetStr_B("WHILE", &(*ppSGetTextInfo)->cStr) || isTagetStr_B("ENDWHILE", &(*ppSGetTextInfo)->cStr))
+        {
+            //é‡Šæ”¾
+            freeGCode(*ppSGetTextInfo);
+            (*ppSGetTextInfo) = NULL;
+            return 1;
+        }
+        //3.2.2å½“å‰ç¨‹åºæ®µæ— å…³é”®å­—
+        else
+        {
+            return 0;
+        }
+    }
+    else if (cRet == 2 || cRet == 3)
+    {
+        // freeGCode(*ppSGetTextInfo);
+        // (*ppSGetTextInfo) = NULL;
+        // return -1;
+    }
+    else if (cRet < 0)
+    {
+        freeGCode(*ppSGetTextInfo);
+        (*ppSGetTextInfo) = NULL;
+        return -1;
+    }
+}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum,int8 cNSMod, bool bXRequestMono, bool bZRequestMono)
-  º¯Êı¹¦ÄÜ  ¼ì²é¼Ó¹¤¹ì¼£µ¥µ÷ĞÔÓëÆğµ½µã×ø±ê
-  ÊäÈë²ÎÊı£ºucMod				Ä£Ê½£¨¼ì²é/¸³Öµ£©
-			pSCurrProgram		µ±Ç°³ÌĞòÎÄ±¾
-			unNS				ÆğÊ¼³ÌĞò¶Î
-			unNF				½áÊø³ÌĞò¶Î
-			cNSMod				NS½øµ¶·½Ê½£¨0£ºXZÖá¶¼ÒÆ¶¯ 1£º½öXÖáÒÆ¶¯ 2£º½öZÖáÒÆ¶¯£©
-			bXRequestMono		X·½Ïòµ¥µ÷ÒªÇó
-			bZRequestMono		Z·½Ïòµ¥µ÷ÒªÇó
-			pSPathList			¹ì¼£Á´±í£¨Êä³ö£©
-			pSTargetTextInfo	ÎÄ±¾»ñÈ¡×´Ì¬£¨Êä³ö£©
-			ucChannelNum		Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	ÒÑ»ñÈ¡ËùÓĞ¹ì¼£
-			0	¹ì¼£Î´»ñÈ¡Íê³É
-			-1	´íÎó
-  ±¸    ×¢£º¸Ãº¯Êı½ö±»¼ì²éÁ÷³ÌÊ¹ÓÃ
+  å‡½æ•°åç§°ï¼šint8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum,int8 cNSMod, bool bXRequestMono, bool bZRequestMono)
+  å‡½æ•°åŠŸèƒ½  æ£€æŸ¥åŠ å·¥è½¨è¿¹å•è°ƒæ€§ä¸èµ·åˆ°ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucMod				æ¨¡å¼ï¼ˆæ£€æŸ¥/èµ‹å€¼ï¼‰
+			pSCurrProgram		å½“å‰ç¨‹åºæ–‡æœ¬
+			unNS				èµ·å§‹ç¨‹åºæ®µ
+			unNF				ç»“æŸç¨‹åºæ®µ
+			cNSMod				NSè¿›åˆ€æ–¹å¼ï¼ˆ0ï¼šXZè½´éƒ½ç§»åŠ¨ 1ï¼šä»…Xè½´ç§»åŠ¨ 2ï¼šä»…Zè½´ç§»åŠ¨ï¼‰
+			bXRequestMono		Xæ–¹å‘å•è°ƒè¦æ±‚
+			bZRequestMono		Zæ–¹å‘å•è°ƒè¦æ±‚
+			pSPathList			è½¨è¿¹é“¾è¡¨ï¼ˆè¾“å‡ºï¼‰
+			pSTargetTextInfo	æ–‡æœ¬è·å–çŠ¶æ€ï¼ˆè¾“å‡ºï¼‰
+			ucChannelNum		é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å·²è·å–æ‰€æœ‰è½¨è¿¹
+			0	è½¨è¿¹æœªè·å–å®Œæˆ
+			-1	é”™è¯¯
+  å¤‡    æ³¨ï¼šè¯¥å‡½æ•°ä»…è¢«æ£€æŸ¥æµç¨‹ä½¿ç”¨
 **************************************************/
-int8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum,int8 cNSMod, bool bXRequestMono, bool bZRequestMono)
+int8 checkMachiningPathMonotonicity(SProgram* pSCurrProgram, uint32 unNS, uint32 unNF,
+                                    SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cNSMod,
+                                    bool bXRequestMono, bool bZRequestMono)
 {
-	if (pSCurrProgram == NULL)
-	{
-		//±¨´í
-	}
+    if (pSCurrProgram == NULL)
+    {
+        //æŠ¥é”™
+    }
 
-	SCheckPathInfo** ppSCheckPathInfo;
-	ppSCheckPathInfo = &g_pSCheckPathInfo[ucChannelNum];
-	SChannelConfiguration* pSGCodeChannelConfig = getChannelConfig(ucChannelNum);
-	SGCodeSysState* pSCurrGCodeSysState = &pSGCodeChannelConfig->SAssignConfig.SGCodeCurrSysState;
+    SCheckPathInfo** ppSCheckPathInfo;
+    ppSCheckPathInfo = &g_pSCheckPathInfo[ucChannelNum];
+    SChannelConfiguration* pSGCodeChannelConfig = getChannelConfig(ucChannelNum);
+    SGCodeSysState* pSCurrGCodeSysState = &pSGCodeChannelConfig->SAssignConfig.SGCodeCurrSysState;
 
-	//ÅĞ¶ÏÊÇ·ñĞèÒª³õÊ¼»¯SCheckPathInfo
-	if ((*ppSCheckPathInfo) == NULL)
-	{
-		//¿ª±Ù»ñÈ¡¹ì¼£ĞÅÏ¢½á¹¹Ìå
-		(*ppSCheckPathInfo) = mallocGCode(sizeof(SCheckPathInfo), ORAM_NUM351);
-		//»ñÈ¡¹ì¼£ĞÅÏ¢½á¹¹ÌåÖÃ0
-		memset(*ppSCheckPathInfo, 0, sizeof(SCheckPathInfo));
-		//³õÊ¼»¯»ñÈ¡¹ì¼£½á¹¹Ìå·Ç0±äÁ¿
-		(*ppSCheckPathInfo)->cPart = PART_1;
+    //åˆ¤æ–­æ˜¯å¦éœ€è¦åˆå§‹åŒ–SCheckPathInfo
+    if ((*ppSCheckPathInfo) == NULL)
+    {
+        //å¼€è¾Ÿè·å–è½¨è¿¹ä¿¡æ¯ç»“æ„ä½“
+        (*ppSCheckPathInfo) = mallocGCode(sizeof(SCheckPathInfo), ORAM_NUM351);
+        //è·å–è½¨è¿¹ä¿¡æ¯ç»“æ„ä½“ç½®0
+        memset(*ppSCheckPathInfo, 0, sizeof(SCheckPathInfo));
+        //åˆå§‹åŒ–è·å–è½¨è¿¹ç»“æ„ä½“é0å˜é‡
+        (*ppSCheckPathInfo)->cPart = PART_1;
 
+        (*ppSCheckPathInfo)->STotalOffset = pSCurrGCodeSysState->SAllOffsetOfCoord.STotalOffset;
+        (*ppSCheckPathInfo)->SCurrState.sGa = pSCurrGCodeSysState->SModalInfo.sGa;
+        (*ppSCheckPathInfo)->SCurrState.pSGaRegulation = pSCurrGCodeSysState->SModalInfo.pSGaRegulation;
+        (*ppSCheckPathInfo)->SCurrState.sGz = pSCurrGCodeSysState->SModalInfo.sGz;
+        (*ppSCheckPathInfo)->SCurrState.pSGzRegulation = pSCurrGCodeSysState->SModalInfo.pSGzRegulation;
+        (*ppSCheckPathInfo)->SCurrState.SCurrPoint = pSCurrGCodeSysState->SCurrPoint;
 
-	
+        (*ppSCheckPathInfo)->SPointA = pSCurrGCodeSysState->SCurrPoint; //èµ·åˆ€ç‚¹
 
-		(*ppSCheckPathInfo)->STotalOffset = pSCurrGCodeSysState->SAllOffsetOfCoord.STotalOffset;
-		(*ppSCheckPathInfo)->SCurrState.sGa = pSCurrGCodeSysState->SModalInfo.sGa;
-		(*ppSCheckPathInfo)->SCurrState.pSGaRegulation = pSCurrGCodeSysState->SModalInfo.pSGaRegulation;
-		(*ppSCheckPathInfo)->SCurrState.sGz = pSCurrGCodeSysState->SModalInfo.sGz;
-		(*ppSCheckPathInfo)->SCurrState.pSGzRegulation = pSCurrGCodeSysState->SModalInfo.pSGzRegulation;
-		(*ppSCheckPathInfo)->SCurrState.SCurrPoint = pSCurrGCodeSysState->SCurrPoint;
-		
-		(*ppSCheckPathInfo)->SPointA = pSCurrGCodeSysState->SCurrPoint;  //Æğµ¶µã
+        //(*ppSCheckPathInfo)->pSPathList = initList(0, 0);//æš‚æœªå¯¹åŠ¨æ€å†…å­˜ç¼–å·
+    }
 
-		//(*ppSCheckPathInfo)->pSPathList = initList(0, 0);//ÔİÎ´¶Ô¶¯Ì¬ÄÚ´æ±àºÅ
+    switch ((*ppSCheckPathInfo)->cStep)
+    {
+    //0.æ‰¾åˆ°ç›®æ ‡ç¨‹åºæ®µå·NS
+    case 0:
+    {
+        int8 cRet;
+        cRet = findTargetSegment(GC_SYNTAX, ucChannelNum, pSCurrProgram, unNS, &(*ppSCheckPathInfo)->SGetTextStateInfo);
+        if (cRet == 1)
+        {
+            (*ppSCheckPathInfo)->cStep = 1;
+        }
+        break;
+    }
 
-	}
+    //1.åˆ¤æ–­NS-NFæ•°æ®
+    case 1:
+    {
+        switch ((*ppSCheckPathInfo)->cPart)
+        {
+        //å¤„ç†æ–‡æœ¬
+        case SYNTAX_PART_1:
+        {
+            int8 cRet;
+            SProgram* pSCurrProgram = NULL; //å½“å‰ç¨‹åºç»“æ„ä½“
+            //1.è·å–å½“å‰ç¨‹åºç»“æ„ä½“
+            pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
+            if (pSCurrProgram == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+                return -1;
+            }
+            //2.å¤„ç†ç¨‹åºæ–‡æœ¬
+            cRet = processProgramText(GC_SYNTAX, &(*ppSCheckPathInfo)->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
+            if (cRet == 1)
+            {
+                (*ppSCheckPathInfo)->cCommandSegmentCnt++;
+                (*ppSCheckPathInfo)->cPart = PART_2;
+            }
+            break;
+        }
 
-	switch ((*ppSCheckPathInfo)->cStep)
-	{
-	//0.ÕÒµ½Ä¿±ê³ÌĞò¶ÎºÅNS
-	case 0:
-	{
-		int8 cRet;
-		cRet = findTargetSegment(GC_SYNTAX, ucChannelNum, pSCurrProgram, unNS, &(*ppSCheckPathInfo)->SGetTextStateInfo);
-		if (cRet == 1)
-		{
-			(*ppSCheckPathInfo)->cStep = 1;
-		}
-		break;
-	}
+        //åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+        case SYNTAX_PART_2:
+        {
+            //1.æ‰«æå‰éœ€è¦åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+            //1.1å½“å‰æ‰«æç¨‹åºæ®µä¸ºæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œéœ€è¦æ¸…ç©ºæ‰«æç»“æ„ä½“
+            if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1)
+            {
+                initScanContainer(&(*ppSCheckPathInfo)->SScanContainer, TRUE);
+            }
+            //1.2å½“å‰æ‰«æç¨‹åºæ®µéæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œä¸éœ€æ¸…ç©ºMFSTå€¼ï¼Œé˜²æ­¢å¤šç¨‹åºæ®µä¸¢å¤±MFSTçš„å€¼
+            else
+            {
+                initScanContainer(&(*ppSCheckPathInfo)->SScanContainer, FALSE);
+            }
 
-	//1.ÅĞ¶ÏNS-NFÊı¾İ
-	case 1:
-	{
-		switch ((*ppSCheckPathInfo)->cPart)
-		{
-		//´¦ÀíÎÄ±¾
-		case SYNTAX_PART_1:
-		{
-			int8 cRet;
-			SProgram* pSCurrProgram = NULL;   //µ±Ç°³ÌĞò½á¹¹Ìå
-			//1.»ñÈ¡µ±Ç°³ÌĞò½á¹¹Ìå
-			pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
-			if (pSCurrProgram == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-				return -1;
-			}
-			//2.´¦Àí³ÌĞòÎÄ±¾
-			cRet = processProgramText(GC_SYNTAX, &(*ppSCheckPathInfo)->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
-			if (cRet == 1)
-			{
-				(*ppSCheckPathInfo)->cCommandSegmentCnt++;
-				(*ppSCheckPathInfo)->cPart = PART_2;
-			}
-			break;
-		}
+            //2.pCurrPtréœ€è¦é‡æ–°æŒ‡å‘ç¨‹åºæ®µå­—ç¬¦ä¸²é¦–å­—ç¬¦
+            (*ppSCheckPathInfo)->SGetTextStateInfo.pCurrPtr = (*ppSCheckPathInfo)->SGetTextStateInfo.cStr;
 
-		//³õÊ¼»¯É¨Ãè½á¹¹Ìå
-		case SYNTAX_PART_2:
-		{
-			//1.É¨ÃèÇ°ĞèÒª³õÊ¼»¯É¨Ãè½á¹¹Ìå
-			//1.1µ±Ç°É¨Ãè³ÌĞò¶ÎÎªÖ¸ÁîµÄµÚÒ»¶Î£¬ĞèÒªÇå¿ÕÉ¨Ãè½á¹¹Ìå
-			if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1)
-			{
-				initScanContainer(&(*ppSCheckPathInfo)->SScanContainer, TRUE);
-			}
-			//1.2µ±Ç°É¨Ãè³ÌĞò¶Î·ÇÖ¸ÁîµÄµÚÒ»¶Î£¬²»ĞèÇå¿ÕMFSTÖµ£¬·ÀÖ¹¶à³ÌĞò¶Î¶ªÊ§MFSTµÄÖµ
-			else
-			{
-				initScanContainer(&(*ppSCheckPathInfo)->SScanContainer, FALSE);
-			}
+            //3.è¿›å…¥ä¸‹ä¸€åˆ‡ç‰‡
+            (*ppSCheckPathInfo)->cPart = PART_3;
 
-			//2.pCurrPtrĞèÒªÖØĞÂÖ¸Ïò³ÌĞò¶Î×Ö·û´®Ê××Ö·û
-			(*ppSCheckPathInfo)->SGetTextStateInfo.pCurrPtr = (*ppSCheckPathInfo)->SGetTextStateInfo.cStr;
+            break;
+        }
 
-			//3.½øÈëÏÂÒ»ÇĞÆ¬
-			(*ppSCheckPathInfo)->cPart = PART_3;
+        //æ‰«æ
+        case SYNTAX_PART_3:
+        {
+            int8 cRet;
 
-			break;
-		}
+            int16 sLastCommandVal;
+            int16 sCurrCommandVal;
+            const SGCommandRegulation* pSLastCommandRegulation;
+            const SGCommandRegulation* pSCurrCommandRegulation;
 
-		//É¨Ãè
-		case SYNTAX_PART_3:
-		{
-			int8 cRet;
+            SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+            if (pCurrProgram == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+                return -1;
+            }
 
-			int16 sLastCommandVal;
-			int16 sCurrCommandVal;
-			const SGCommandRegulation* pSLastCommandRegulation;
-			const SGCommandRegulation* pSCurrCommandRegulation;
+            //æ‰«æç¨‹åºæ®µ
+            cRet = scanSegment(GC_SYNTAX, &(*ppSCheckPathInfo)->SGetTextStateInfo, &(*ppSCheckPathInfo)->SScanContainer,
+                               pCurrProgram, ucChannelNum);
+            //å½“å‰ç¨‹åºæ®µå…¨éƒ¨æ‰«æå®Œæˆ
+            if (cRet == TRUE)
+            {
+                //1.è·å–ä¸Šä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤ï¼ˆGzç»„ä¼˜å…ˆçº§é«˜äºGaç»„ï¼‰
+                if ((*ppSCheckPathInfo)->SCurrState.sGz != 0)
+                {
+                    sLastCommandVal = (*ppSCheckPathInfo)->SCurrState.sGz;
+                    pSLastCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGzRegulation;
+                }
+                else
+                {
+                    sLastCommandVal = (*ppSCheckPathInfo)->SCurrState.sGa;
+                    pSLastCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
+                }
 
-			SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-			if (pCurrProgram == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-				return -1;
-			}
+                //2.è·å–å½“å‰ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤
+                //2.1å½“å‰ç¨‹åºæ®µå‡ºç°Gaç»„æŒ‡ä»¤
+                if ((*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
+                {
+                    sCurrCommandVal = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
+                    pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
+                    (*ppSCheckPathInfo)->pSCurrCommandRegulation =
+                        (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
+                }
+                //2.2å½“å‰ç¨‹åºæ®µå‡ºç°Gzç»„æŒ‡ä»¤
+                else if ((*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
+                {
+                    sCurrCommandVal = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
+                    pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
+                    (*ppSCheckPathInfo)->pSCurrCommandRegulation =
+                        (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
+                }
+                //2.3å½“å‰ç¨‹åºæ®µæœªå‡ºç°GaGzç»„æŒ‡ä»¤,åˆ™å–å½“å‰ç³»ç»ŸçŠ¶æ€Gaç»„æŒ‡ä»¤
+                else
+                {
+                    sCurrCommandVal = (*ppSCheckPathInfo)->SCurrState.sGa;
+                    pSCurrCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
+                    (*ppSCheckPathInfo)->pSCurrCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
+                }
 
-			//É¨Ãè³ÌĞò¶Î
-			cRet = scanSegment(GC_SYNTAX, &(*ppSCheckPathInfo)->SGetTextStateInfo, &(*ppSCheckPathInfo)->SScanContainer, pCurrProgram, ucChannelNum);
-			//µ±Ç°³ÌĞò¶ÎÈ«²¿É¨ÃèÍê³É
-			if (cRet == TRUE)
-			{
-				//1.»ñÈ¡ÉÏÒ»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî£¨Gz×éÓÅÏÈ¼¶¸ßÓÚGa×é£©
-				if ((*ppSCheckPathInfo)->SCurrState.sGz != 0)
-				{
-					sLastCommandVal = (*ppSCheckPathInfo)->SCurrState.sGz;
-					pSLastCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGzRegulation;
-				}
-				else
-				{
-					sLastCommandVal = (*ppSCheckPathInfo)->SCurrState.sGa;
-					pSLastCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
-				}
+                //3.åˆ¤æ–­å¤šç¨‹åºæ®µæŒ‡ä»¤çš„æ¯ä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤æ˜¯å¦ä¸€è‡´ï¼ˆèµ‹å€¼ä¸éœ€è¦åˆ¤æ–­ï¼‰
+                if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1)
+                {
+                    (*ppSCheckPathInfo)->sCurrCommandVal = sCurrCommandVal;
+                }
+                else
+                {
+                    if ((*ppSCheckPathInfo)->sCurrCommandVal != sCurrCommandVal)
+                    {
+                        //å¤šç¨‹åºæ®µæŒ‡ä»¤çš„ç¬¬ä¸€æ®µç¨‹åºæ®µçš„æŒ‡ä»¤ä¸åç»­ç¨‹åºæ®µæŒ‡ä»¤ä¸ä¸€è‡´ï¼Œå¦‚ï¼šç¬¬ä¸€æ®µä¸ºG71ï¼Œç¬¬äºŒæ®µéG71
+                        parseGCodeErrorB((*ppSCheckPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
+                        break;
+                    }
+                }
 
-				//2.»ñÈ¡µ±Ç°³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî
-				//2.1µ±Ç°³ÌĞò¶Î³öÏÖGa×éÖ¸Áî
-				if ((*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
-				{
-					sCurrCommandVal = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
-					pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
-					(*ppSCheckPathInfo)->pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
-				}
-				//2.2µ±Ç°³ÌĞò¶Î³öÏÖGz×éÖ¸Áî
-				else if ((*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
-				{
-					sCurrCommandVal = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
-					pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
-					(*ppSCheckPathInfo)->pSCurrCommandRegulation = (*ppSCheckPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
-				}
-				//2.3µ±Ç°³ÌĞò¶ÎÎ´³öÏÖGaGz×éÖ¸Áî,ÔòÈ¡µ±Ç°ÏµÍ³×´Ì¬Ga×éÖ¸Áî
-				else
-				{
-					sCurrCommandVal = (*ppSCheckPathInfo)->SCurrState.sGa;
-					pSCurrCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
-					(*ppSCheckPathInfo)->pSCurrCommandRegulation = (*ppSCheckPathInfo)->SCurrState.pSGaRegulation;
-				}
+                //4.åˆ¤æ–­æ˜¯å¦éœ€è¦é‡Šæ”¾å¼€è¾ŸæŒ‡ä»¤å‚æ•°ç»“æ„ä½“å†…å­˜ï¼ˆä»…è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¬¬ä¸€ç¨‹åºæ®µéœ€è¦åˆ¤æ–­ï¼‰
+                if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
+                {
+                    //4.1é‡Šæ”¾ä¸Šä¸€æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                    if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
+                    {
+                        pSLastCommandRegulation->pFreeParaStructAPI(GC_SYNTAX, ucChannelNum);
+                    }
+                    //4.2å¼€è¾Ÿå½“å‰æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                    {
+                        pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum);
+                    }
+                }
 
-				//3.ÅĞ¶Ï¶à³ÌĞò¶ÎÖ¸ÁîµÄÃ¿Ò»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸ÁîÊÇ·ñÒ»ÖÂ£¨¸³Öµ²»ĞèÒªÅĞ¶Ï£©
-				if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1)
-				{
-					(*ppSCheckPathInfo)->sCurrCommandVal = sCurrCommandVal;
-				}
-				else
-				{
-					if ((*ppSCheckPathInfo)->sCurrCommandVal != sCurrCommandVal)
-					{
-						//¶à³ÌĞò¶ÎÖ¸ÁîµÄµÚÒ»¶Î³ÌĞò¶ÎµÄÖ¸ÁîÓëºóĞø³ÌĞò¶ÎÖ¸Áî²»Ò»ÖÂ£¬Èç£ºµÚÒ»¶ÎÎªG71£¬µÚ¶ş¶Î·ÇG71
-						parseGCodeErrorB((*ppSCheckPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
-						break;
-					}
-				}
+                //5.åˆ¤æ–­å½“å‰æŒ‡ä»¤å­—æ˜¯å¦éœ€è¦å†™å‚æ•°ç»“æ„ä½“
+                if (pSCurrCommandRegulation->pGetParaAPI != NULL)
+                {
+                    pSCurrCommandRegulation->pGetParaAPI(GC_SYNTAX, &(*ppSCheckPathInfo)->SScanContainer, ucChannelNum,
+                                                         NULL);
+                }
 
+                //6.åˆ¤æ–­cGa,cGzæŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µæ˜¯å¦æ‰«æå®Œæˆ
+                if ((*ppSCheckPathInfo)->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
+                {
+                    //6.1è¿åŠ¨ç›¸å…³æŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µå·²å…¨éƒ¨æ‰«æ
+                    (*ppSCheckPathInfo)->cPart = PART_4;
+                }
+                else
+                {
+                    //6.2è¿˜éœ€ç»§ç»­è·å–è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¨‹åºæ®µ
+                    (*ppSCheckPathInfo)->cPart = PART_1;
+                }
+            }
 
-				//4.ÅĞ¶ÏÊÇ·ñĞèÒªÊÍ·Å¿ª±ÙÖ¸Áî²ÎÊı½á¹¹ÌåÄÚ´æ£¨½öÔË¶¯Ïà¹ØÖ¸ÁîµÚÒ»³ÌĞò¶ÎĞèÒªÅĞ¶Ï£©
-				if ((*ppSCheckPathInfo)->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
-				{
-					//4.1ÊÍ·ÅÉÏÒ»Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-					if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
-					{
-						pSLastCommandRegulation->pFreeParaStructAPI(GC_SYNTAX, ucChannelNum);
-					}
-					//4.2¿ª±Ùµ±Ç°Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-					if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-					{
-						pSCurrCommandRegulation->pMallocParaStructAPI(GC_SYNTAX, ucChannelNum);
-					}
-				}
+            break;
+        }
 
-				//5.ÅĞ¶Ïµ±Ç°Ö¸Áî×ÖÊÇ·ñĞèÒªĞ´²ÎÊı½á¹¹Ìå
-				if (pSCurrCommandRegulation->pGetParaAPI != NULL)
-				{
-					pSCurrCommandRegulation->pGetParaAPI(GC_SYNTAX, &(*ppSCheckPathInfo)->SScanContainer, ucChannelNum,NULL);
-				}
+        //æ£€æŸ¥è½¨è¿¹ä¸­çš„æŒ‡ä»¤
+        case SYNTAX_PART_4:
+        {
+            int8 cRet;
+            cRet = isAllowGCommandInPath(&(*ppSCheckPathInfo)->SScanContainer);
+            if (cRet == FALSE)
+            {
+                //æŠ¥é”™
+                parseGCodeErrorB((*ppSCheckPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
+                return -1;
+            }
+        }
 
-				//6.ÅĞ¶ÏcGa,cGzÖ¸ÁîËùÓĞ³ÌĞò¶ÎÊÇ·ñÉ¨ÃèÍê³É
-				if ((*ppSCheckPathInfo)->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
-				{
-					//6.1ÔË¶¯Ïà¹ØÖ¸ÁîËùÓĞ³ÌĞò¶ÎÒÑÈ«²¿É¨Ãè
-					(*ppSCheckPathInfo)->cPart = PART_4;
-				}
-				else
-				{
-					//6.2»¹Ğè¼ÌĞø»ñÈ¡ÔË¶¯Ïà¹ØÖ¸Áî³ÌĞò¶Î
-					(*ppSCheckPathInfo)->cPart = PART_1;
-				}
-			}
+        //åˆ¤æ–­å½“å‰ç¨‹åºæ®µè½¨è¿¹çš„å•è°ƒæ€§
+        case SYNTAX_PART_5:
+        {
+            //ä»…è®°å½•è½¨è¿¹ç§»åŠ¨çš„åº•å±‚è½¨è¿¹ !!!
+            SPointDouble SCurrStartPoint;
+            SPointDouble SCurrEndPoint;
+            SCurrEndPoint = SCurrStartPoint = (*ppSCheckPathInfo)->SCurrState.SCurrPoint;
 
-			break;
-		}
+            //NSç¨‹åºæ®µ
+            if ((*ppSCheckPathInfo)->SScanContainer.bN == TRUE && (*ppSCheckPathInfo)->SScanContainer.dN == unNS)
+            {
+                //1.NSç¨‹åºæ®µå½“å‰æŒ‡ä»¤å¿…é¡»ä¸ºG00/G01
+                if (((*ppSCheckPathInfo)->sCurrCommandVal != G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) &&
+                    ((*ppSCheckPathInfo)->sCurrCommandVal != G01 * pow(10, GCOMMAND_DECIMAL_PLACE)))
+                {
+                    //æŠ¥é”™
+                    parseGCodeErrorB(0, 0);
+                }
 
-		//¼ì²é¹ì¼£ÖĞµÄÖ¸Áî
-		case SYNTAX_PART_4:
-		{
-			int8 cRet;
-			cRet=isAllowGCommandInPath(&(*ppSCheckPathInfo)->SScanContainer);
-			if (cRet == FALSE)
-			{
-				//±¨´í
-				parseGCodeErrorB((*ppSCheckPathInfo)->SGetTextStateInfo.unCurrLineNum,GCODE_ERROR_NUM130);
-				return -1;
-			}
-		} 
+                //2.è·å–ç»ˆç‚¹åæ ‡
+                getMacCoordByScanInfo(ucChannelNum, &(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint,
+                                      &SCurrEndPoint, pSCurrGCodeSysState);
 
-		//ÅĞ¶Ïµ±Ç°³ÌĞò¶Î¹ì¼£µÄµ¥µ÷ĞÔ
-		case SYNTAX_PART_5:
-		{
-			//½ö¼ÇÂ¼¹ì¼£ÒÆ¶¯µÄµ×²ã¹ì¼£ !!!
-			SPointDouble SCurrStartPoint;
-			SPointDouble SCurrEndPoint;
-			SCurrEndPoint = SCurrStartPoint = (*ppSCheckPathInfo)->SCurrState.SCurrPoint;
+                //3.æ ¹æ®ç¨‹åºæ®µNSçš„åŠ å·¥æ–¹å‘ç¡®å®šå¯¹åº”æ–¹å‘çš„å•è°ƒæ€§
+                //3.1ç¨‹åºæ®µNSä¸ºXæ–¹å‘åŠ å·¥
+                if (!isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]))
+                {
+                    //æ ‡è®°Xè½´åœ¨ç¨‹åºæ®µNSä¸­å‘ç”Ÿç§»åŠ¨
+                    (*ppSCheckPathInfo)->bIsXMotionInNS = TRUE;
+                    //æ ‡è®°Xè½´åœ¨ç¨‹åºæ®µNSä¸­çš„å•è°ƒæ€§
+                    (*ppSCheckPathInfo)->cXMonotonicityInNS =
+                        SCurrEndPoint.dArray[AXIS_X] > SCurrStartPoint.dArray[AXIS_X] ? 1 : -1;
+                    //è¦æ±‚ä»…Xæ–¹å‘è¿›åˆ€ï¼Œåˆ™åç»­è½¨è¿¹ä¸­Xçš„å•è°ƒæ€§å–å†³äºNSä¸­Xçš„å•è°ƒæ€§
+                    if (cNSMod == 1)
+                    {
+                        //æ ‡è®°Xè½´åœ¨åç»­è½¨è¿¹ä¸­çš„å•è°ƒæ€§ï¼ˆè¯¦è§æ‰‹å†Œï¼‰
+                        (*ppSCheckPathInfo)->cXMonotonicityInPath = -(*ppSCheckPathInfo)->cXMonotonicityInNS;
+                    }
+                    //è¦æ±‚ä»…Zæ–¹å‘è¿›åˆ€ï¼Œä½†NSç¨‹åºæ®µXè½´å‘ç”Ÿç§»åŠ¨
+                    else if (cNSMod == 2)
+                    {
+                        parseGCodeErrorB(0, 0);
+                    }
+                }
+                //3.2ç¨‹åºæ®µNSä¸ºZæ–¹å‘åŠ å·¥
+                if (!isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
+                {
+                    //æ ‡è®°Xè½´åœ¨ç¨‹åºæ®µNSä¸­å‘ç”Ÿç§»åŠ¨
+                    (*ppSCheckPathInfo)->bIsZMotionInNS = TRUE;
+                    //æ ‡è®°ç¨‹åºæ®µNSçš„å•è°ƒæ€§
+                    (*ppSCheckPathInfo)->cZMonotonicityInNS =
+                        SCurrEndPoint.dArray[AXIS_Z] > SCurrStartPoint.dArray[AXIS_Z] ? 1 : -1;
+                    //è¦æ±‚ä»…Zæ–¹å‘è¿›åˆ€ï¼Œåˆ™åç»­è½¨è¿¹ä¸­Zçš„å•è°ƒæ€§å–å†³äºNSä¸­Zçš„å•è°ƒæ€§
+                    if (cNSMod == 2)
+                    {
+                        //åç»­åŠ å·¥è½¨è¿¹Zæ–¹å‘çš„å•è°ƒæ€§å–å†³äºNSï¼ˆè¯¦è§æ‰‹å†Œï¼‰
+                        (*ppSCheckPathInfo)->cZMonotonicityInPath = -(*ppSCheckPathInfo)->cZMonotonicityInNS;
+                    }
+                    //3.2.2è¦æ±‚ä»…Xæ–¹å‘è¿›åˆ€ï¼Œä½†NSç¨‹åºæ®µZè½´å‘ç”Ÿç§»åŠ¨
+                    else if (cNSMod == 1)
+                    {
+                        parseGCodeErrorB(0, 0);
+                    }
+                }
+                //3.3ç¨‹åºæ®µNSçš„XZæ–¹å‘å‡æœªç§»åŠ¨
+                if (isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]) &&
+                    isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
+                {
+                    //æŠ¥é”™
+                    parseGCodeErrorB(0, 0);
+                }
+            }
 
-			//NS³ÌĞò¶Î
-			if ((*ppSCheckPathInfo)->SScanContainer.bN == TRUE && (*ppSCheckPathInfo)->SScanContainer.dN == unNS)
-			{
-				//1.NS³ÌĞò¶Îµ±Ç°Ö¸Áî±ØĞëÎªG00/G01
-				if (((*ppSCheckPathInfo)->sCurrCommandVal != G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) &&
-					((*ppSCheckPathInfo)->sCurrCommandVal != G01 * pow(10, GCOMMAND_DECIMAL_PLACE)))
-				{
-					//±¨´í
-					parseGCodeErrorB(0, 0);
-				}
+            //éNSç¨‹åºæ®µ
+            else
+            {
+                //å½“å‰ä¸ºåº•å±‚è¿åŠ¨æŒ‡ä»¤ ä¸” ç¨‹åºæ®µä¸­å‡ºç°äº†åæ ‡ä¿¡æ¯
+                if (isBasicMotionCommand((*ppSCheckPathInfo)->sCurrCommandVal))
+                {
+                    bool bXIsMono = TRUE; //å½“å‰ç¨‹åºæ®µXæ–¹å‘æ˜¯å¦å•è°ƒ
+                    bool bZIsMono = TRUE; //å½“å‰ç¨‹åºæ®µZæ–¹å‘æ˜¯å¦å•è°ƒ
+                    int8 cXCurrMono;      //å½“å‰ç¨‹åºæ®µXæ–¹å‘å•è°ƒæ€§
+                    int8 cZCurrMono;      //å½“å‰ç¨‹åºæ®µZæ–¹å‘å•è°ƒæ€§
 
-				//2.»ñÈ¡ÖÕµã×ø±ê
-				getMacCoordByScanInfo(ucChannelNum,&(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint, &SCurrEndPoint, pSCurrGCodeSysState);
+                    //1.è·å–è½¨è¿¹çš„èµ·ç‚¹ä¸ç»ˆç‚¹
+                    getMacCoordByScanInfo(ucChannelNum, &(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint,
+                                          &SCurrEndPoint, pSCurrGCodeSysState);
 
-				//3.¸ù¾İ³ÌĞò¶ÎNSµÄ¼Ó¹¤·½ÏòÈ·¶¨¶ÔÓ¦·½ÏòµÄµ¥µ÷ĞÔ
-				//3.1³ÌĞò¶ÎNSÎªX·½Ïò¼Ó¹¤
-				if (!isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]))
-				{
-					//±ê¼ÇXÖáÔÚ³ÌĞò¶ÎNSÖĞ·¢ÉúÒÆ¶¯
-					(*ppSCheckPathInfo)->bIsXMotionInNS = TRUE;
-					//±ê¼ÇXÖáÔÚ³ÌĞò¶ÎNSÖĞµÄµ¥µ÷ĞÔ
-					(*ppSCheckPathInfo)->cXMonotonicityInNS = SCurrEndPoint.dArray[AXIS_X] > SCurrStartPoint.dArray[AXIS_X] ? 1 : -1;
-					//ÒªÇó½öX·½Ïò½øµ¶£¬ÔòºóĞø¹ì¼£ÖĞXµÄµ¥µ÷ĞÔÈ¡¾öÓÚNSÖĞXµÄµ¥µ÷ĞÔ
-					if (cNSMod == 1)
-					{
-						//±ê¼ÇXÖáÔÚºóĞø¹ì¼£ÖĞµÄµ¥µ÷ĞÔ£¨Ïê¼ûÊÖ²á£©
-						(*ppSCheckPathInfo)->cXMonotonicityInPath = -(*ppSCheckPathInfo)->cXMonotonicityInNS;
-					}
-					//ÒªÇó½öZ·½Ïò½øµ¶£¬µ«NS³ÌĞò¶ÎXÖá·¢ÉúÒÆ¶¯
-					else if (cNSMod == 2)
-					{
-						parseGCodeErrorB(0, 0);
-					} 
-				}
-				//3.2³ÌĞò¶ÎNSÎªZ·½Ïò¼Ó¹¤
-				if (!isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
-				{	
-					//±ê¼ÇXÖáÔÚ³ÌĞò¶ÎNSÖĞ·¢ÉúÒÆ¶¯
-					(*ppSCheckPathInfo)->bIsZMotionInNS = TRUE;
-					//±ê¼Ç³ÌĞò¶ÎNSµÄµ¥µ÷ĞÔ
-					(*ppSCheckPathInfo)->cZMonotonicityInNS = SCurrEndPoint.dArray[AXIS_Z] > SCurrStartPoint.dArray[AXIS_Z] ? 1 : -1;
-					//ÒªÇó½öZ·½Ïò½øµ¶£¬ÔòºóĞø¹ì¼£ÖĞZµÄµ¥µ÷ĞÔÈ¡¾öÓÚNSÖĞZµÄµ¥µ÷ĞÔ
-					if (cNSMod == 2)
-					{
-						//ºóĞø¼Ó¹¤¹ì¼£Z·½ÏòµÄµ¥µ÷ĞÔÈ¡¾öÓÚNS£¨Ïê¼ûÊÖ²á£©
-						(*ppSCheckPathInfo)->cZMonotonicityInPath = -(*ppSCheckPathInfo)->cZMonotonicityInNS;
-					}
-					//3.2.2ÒªÇó½öX·½Ïò½øµ¶£¬µ«NS³ÌĞò¶ÎZÖá·¢ÉúÒÆ¶¯
-					else if (cNSMod == 1)
-					{
-						parseGCodeErrorB(0, 0);
-					}		
-				}
-				//3.3³ÌĞò¶ÎNSµÄXZ·½Ïò¾ùÎ´ÒÆ¶¯
-				if (isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]) &&
-					isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
-				{
-					//±¨´í
-					parseGCodeErrorB(0, 0);
-				}
+                    //2.è·å–Xå½“å‰è½¨è¿¹å•è°ƒæ€§	æ³¨ï¼šï¼ˆä»…é€‚åˆçº¿æ€§è½¨è¿¹çš„å•è°ƒæ€§åˆ¤æ–­ï¼‰
+                    if (isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]))
+                    {
+                        cXCurrMono = 0;
+                    }
+                    else
+                    {
+                        cXCurrMono = SCurrEndPoint.dArray[AXIS_X] > SCurrStartPoint.dArray[AXIS_X] ? 1 : -1;
+                    }
 
-			}
-			
-			//·ÇNS³ÌĞò¶Î
-			else
-			{
-				//µ±Ç°Îªµ×²ãÔË¶¯Ö¸Áî ÇÒ ³ÌĞò¶ÎÖĞ³öÏÖÁË×ø±êĞÅÏ¢
-				if (isBasicMotionCommand((*ppSCheckPathInfo)->sCurrCommandVal))
-				{
-					bool bXIsMono = TRUE;		//µ±Ç°³ÌĞò¶ÎX·½ÏòÊÇ·ñµ¥µ÷
-					bool bZIsMono = TRUE;		//µ±Ç°³ÌĞò¶ÎZ·½ÏòÊÇ·ñµ¥µ÷
-					int8 cXCurrMono;		//µ±Ç°³ÌĞò¶ÎX·½Ïòµ¥µ÷ĞÔ
-					int8 cZCurrMono;		//µ±Ç°³ÌĞò¶ÎZ·½Ïòµ¥µ÷ĞÔ
+                    //3.è·å–Zå½“å‰è½¨è¿¹å•è°ƒæ€§	æ³¨ï¼šï¼ˆä»…é€‚åˆçº¿æ€§è½¨è¿¹çš„å•è°ƒæ€§åˆ¤æ–­ï¼‰
+                    if (isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
+                    {
+                        cZCurrMono = 0;
+                    }
+                    else
+                    {
+                        cZCurrMono = SCurrEndPoint.dArray[AXIS_Z] > SCurrStartPoint.dArray[AXIS_Z] ? 1 : -1;
+                    }
 
-					//1.»ñÈ¡¹ì¼£µÄÆğµãÓëÖÕµã
-					getMacCoordByScanInfo(ucChannelNum,&(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint, &SCurrEndPoint, pSCurrGCodeSysState);
+                    //3.è·å–éçº¿æ€§è½¨è¿¹å•è°ƒæ€§
+                    if ((*ppSCheckPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE) ||
+                        (*ppSCheckPathInfo)->sCurrCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE))
+                    {
+                        SPointDouble SCurrCenterPoint;
+                        memset(&SCurrCenterPoint, 0, sizeof(SPointDouble));
+                        int8 cArcDir = (*ppSCheckPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)
+                                           ? ARC_CW
+                                           : ARC_ANTI_CW;
+                        double dArcRadius;
 
-					//2.»ñÈ¡Xµ±Ç°¹ì¼£µ¥µ÷ĞÔ	×¢£º£¨½öÊÊºÏÏßĞÔ¹ì¼£µÄµ¥µ÷ĞÔÅĞ¶Ï£©
-					if (isZero(SCurrEndPoint.dArray[AXIS_X] - SCurrStartPoint.dArray[AXIS_X]))
-					{
-						cXCurrMono = 0;
-					}
-					else
-					{
-						cXCurrMono = SCurrEndPoint.dArray[AXIS_X] > SCurrStartPoint.dArray[AXIS_X] ? 1 : -1;
-					}
-				
-					//3.»ñÈ¡Zµ±Ç°¹ì¼£µ¥µ÷ĞÔ	×¢£º£¨½öÊÊºÏÏßĞÔ¹ì¼£µÄµ¥µ÷ĞÔÅĞ¶Ï£©
-					if (isZero(SCurrEndPoint.dArray[AXIS_Z] - SCurrStartPoint.dArray[AXIS_Z]))
-					{
-						cZCurrMono = 0;
-					}
-					else
-					{
-						cZCurrMono = SCurrEndPoint.dArray[AXIS_Z] > SCurrStartPoint.dArray[AXIS_Z] ? 1 : -1;
-					}
-				
-					//3.»ñÈ¡·ÇÏßĞÔ¹ì¼£µ¥µ÷ĞÔ
-					if ((*ppSCheckPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE) ||
-						(*ppSCheckPathInfo)->sCurrCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE))
-					{		
-						SPointDouble SCurrCenterPoint;
-						memset(&SCurrCenterPoint, 0, sizeof(SPointDouble));
-						int8 cArcDir = (*ppSCheckPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE) ? ARC_CW : ARC_ANTI_CW;
-						double dArcRadius;
-						
-						getArcCenterPointAndRadius(&(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint, &SCurrEndPoint, cArcDir, &SCurrCenterPoint, &dArcRadius, AXIS_Z, AXIS_X);
+                        getArcCenterPointAndRadius(&(*ppSCheckPathInfo)->SScanContainer, &SCurrStartPoint,
+                                                   &SCurrEndPoint, cArcDir, &SCurrCenterPoint, &dArcRadius, AXIS_Z,
+                                                   AXIS_X);
 
-						getArcMonotonicity(&SCurrStartPoint, &SCurrEndPoint, &SCurrCenterPoint, cArcDir, &bXIsMono, &bZIsMono, &cXCurrMono, &cZCurrMono);
-					}
+                        getArcMonotonicity(&SCurrStartPoint, &SCurrEndPoint, &SCurrCenterPoint, cArcDir, &bXIsMono,
+                                           &bZIsMono, &cXCurrMono, &cZCurrMono);
+                    }
 
-					//4.ÅĞ¶ÏXZµÄµ¥µ÷ĞÔÊÇ·ñÕıÈ·
-					//4.1ÅĞ¶ÏX·½Ïòµ¥µ÷ĞÔ
-					if (bXRequestMono)
-					{
-						//4.1.1µ±Ç°¹ì¼£²»µ¥µ÷
-						if (bXIsMono == FALSE)
-						{
-							//±¨´í
-							parseGCodeErrorB(0, 0);
-						}
-					
-						//4.1.2Î´¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ£¬¼ÇÂ¼£¨ÀíÓ¦²»´æÔÚ´ËÇé¿ö£¬NS¶ÎÒÑ¼ÇÂ¼£©
-						if ((*ppSCheckPathInfo)->cXMonotonicityInPath == 0)
-						{
-							(*ppSCheckPathInfo)->cXMonotonicityInPath = cXCurrMono;
-						}
-						
-						//4.1.3ÒÑ¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ£¬ÅĞ¶Ï
-						else
-						{
-							//¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ Óë µ±Ç°¹ì¼£µ¥µ÷ĞÔ²»Ò»ÖÂ
-							if (cXCurrMono != 0 && (*ppSCheckPathInfo)->cXMonotonicityInPath != cXCurrMono)
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
-					}
-					//4.2ÅĞ¶ÏZ·½Ïòµ¥µ÷ĞÔ
-					if (bZRequestMono)
-					{
-						//4.2.1µ±Ç°¹ì¼£²»µ¥µ÷
-						if (bZIsMono == FALSE)
-						{
-							//±¨´í
-							parseGCodeErrorB(0, 0);
-						}
+                    //4.åˆ¤æ–­XZçš„å•è°ƒæ€§æ˜¯å¦æ­£ç¡®
+                    //4.1åˆ¤æ–­Xæ–¹å‘å•è°ƒæ€§
+                    if (bXRequestMono)
+                    {
+                        //4.1.1å½“å‰è½¨è¿¹ä¸å•è°ƒ
+                        if (bXIsMono == FALSE)
+                        {
+                            //æŠ¥é”™
+                            parseGCodeErrorB(0, 0);
+                        }
 
-						//4.2.2Î´¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ£¬¼ÇÂ¼£¨ÀíÓ¦²»´æÔÚ´ËÇé¿ö£¬NS¶ÎÒÑ¼ÇÂ¼£©
-						if ((*ppSCheckPathInfo)->cZMonotonicityInPath == 0)
-						{
-							(*ppSCheckPathInfo)->cZMonotonicityInPath = cZCurrMono;
-						}
+                        //4.1.2æœªè®°å½•è½¨è¿¹å•è°ƒæ€§ï¼Œè®°å½•ï¼ˆç†åº”ä¸å­˜åœ¨æ­¤æƒ…å†µï¼ŒNSæ®µå·²è®°å½•ï¼‰
+                        if ((*ppSCheckPathInfo)->cXMonotonicityInPath == 0)
+                        {
+                            (*ppSCheckPathInfo)->cXMonotonicityInPath = cXCurrMono;
+                        }
 
-						//4.2.3ÒÑ¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ£¬ÅĞ¶Ï
-						else
-						{
-							//¼ÇÂ¼¹ì¼£µ¥µ÷ĞÔ Óë µ±Ç°¹ì¼£µ¥µ÷ĞÔ²»Ò»ÖÂ
-							if (cZCurrMono != 0 && (*ppSCheckPathInfo)->cZMonotonicityInPath != cZCurrMono)
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
-					}
+                        //4.1.3å·²è®°å½•è½¨è¿¹å•è°ƒæ€§ï¼Œåˆ¤æ–­
+                        else
+                        {
+                            //è®°å½•è½¨è¿¹å•è°ƒæ€§ ä¸ å½“å‰è½¨è¿¹å•è°ƒæ€§ä¸ä¸€è‡´
+                            if (cXCurrMono != 0 && (*ppSCheckPathInfo)->cXMonotonicityInPath != cXCurrMono)
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
+                    }
+                    //4.2åˆ¤æ–­Zæ–¹å‘å•è°ƒæ€§
+                    if (bZRequestMono)
+                    {
+                        //4.2.1å½“å‰è½¨è¿¹ä¸å•è°ƒ
+                        if (bZIsMono == FALSE)
+                        {
+                            //æŠ¥é”™
+                            parseGCodeErrorB(0, 0);
+                        }
 
-					//5.ÅĞ¶ÏÆğµ¶µãÊÇ·ñÕıÈ·
-					if (1)
-					{
-						//5.1±È½ÏÆğµ½µãX Óë µ±Ç°¹ì¼£ÖÕµãX
-						if ((*ppSCheckPathInfo)->cXMonotonicityInNS == 1)
-						{
-							if (!(isEqualOrGreaterThanZero(SCurrEndPoint.dArray[AXIS_X] - (*ppSCheckPathInfo)->SPointA.dArray[AXIS_X])))
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
-						else if ((*ppSCheckPathInfo)->cXMonotonicityInNS == -1)
-						{
-							if (!(isEqualOrGreaterThanZero((*ppSCheckPathInfo)->SPointA.dArray[AXIS_X] - SCurrEndPoint.dArray[AXIS_X])))
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
+                        //4.2.2æœªè®°å½•è½¨è¿¹å•è°ƒæ€§ï¼Œè®°å½•ï¼ˆç†åº”ä¸å­˜åœ¨æ­¤æƒ…å†µï¼ŒNSæ®µå·²è®°å½•ï¼‰
+                        if ((*ppSCheckPathInfo)->cZMonotonicityInPath == 0)
+                        {
+                            (*ppSCheckPathInfo)->cZMonotonicityInPath = cZCurrMono;
+                        }
 
-						//5.2±È½ÏÆğµ½µãZ Óë µ±Ç°¹ì¼£ÖÕµãZ
-						if ((*ppSCheckPathInfo)->cZMonotonicityInNS == 1)
-						{
-							if (!(isEqualOrGreaterThanZero(SCurrEndPoint.dArray[AXIS_Z] - (*ppSCheckPathInfo)->SPointA.dArray[AXIS_Z])))
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
-						else if ((*ppSCheckPathInfo)->cZMonotonicityInNS == -1)
-						{
-							if (!(isEqualOrGreaterThanZero((*ppSCheckPathInfo)->SPointA.dArray[AXIS_Z] - SCurrEndPoint.dArray[AXIS_Z])))
-							{
-								//±¨¾¯
-								parseGCodeErrorB(0, 0);
-							}
-						}
-					}
+                        //4.2.3å·²è®°å½•è½¨è¿¹å•è°ƒæ€§ï¼Œåˆ¤æ–­
+                        else
+                        {
+                            //è®°å½•è½¨è¿¹å•è°ƒæ€§ ä¸ å½“å‰è½¨è¿¹å•è°ƒæ€§ä¸ä¸€è‡´
+                            if (cZCurrMono != 0 && (*ppSCheckPathInfo)->cZMonotonicityInPath != cZCurrMono)
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
+                    }
 
-				}
+                    //5.åˆ¤æ–­èµ·åˆ€ç‚¹æ˜¯å¦æ­£ç¡®
+                    if (1)
+                    {
+                        //5.1æ¯”è¾ƒèµ·åˆ°ç‚¹X ä¸ å½“å‰è½¨è¿¹ç»ˆç‚¹X
+                        if ((*ppSCheckPathInfo)->cXMonotonicityInNS == 1)
+                        {
+                            if (!(isEqualOrGreaterThanZero(SCurrEndPoint.dArray[AXIS_X] -
+                                                           (*ppSCheckPathInfo)->SPointA.dArray[AXIS_X])))
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
+                        else if ((*ppSCheckPathInfo)->cXMonotonicityInNS == -1)
+                        {
+                            if (!(isEqualOrGreaterThanZero((*ppSCheckPathInfo)->SPointA.dArray[AXIS_X] -
+                                                           SCurrEndPoint.dArray[AXIS_X])))
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
 
-			}
-			
-			//¸üĞÂ×´Ì¬
-			(*ppSCheckPathInfo)->SCurrState.SCurrPoint = SCurrEndPoint;//¼ÇÂ¼Æ«ÒÆÇ°µÄÖÕµã×ø±ê
-			if ((*ppSCheckPathInfo)->pSCurrCommandRegulation->cGroup == sGa)
-			{
-				(*ppSCheckPathInfo)->SCurrState.sGa = (*ppSCheckPathInfo)->sCurrCommandVal;
-				(*ppSCheckPathInfo)->SCurrState.pSGaRegulation = (*ppSCheckPathInfo)->pSCurrCommandRegulation;
-				(*ppSCheckPathInfo)->SCurrState.sGz = 0;
-				(*ppSCheckPathInfo)->SCurrState.pSGzRegulation = NULL;
-			}
-			else if ((*ppSCheckPathInfo)->pSCurrCommandRegulation->cGroup == sGz)
-			{
-				(*ppSCheckPathInfo)->SCurrState.sGz = (*ppSCheckPathInfo)->sCurrCommandVal;
-				(*ppSCheckPathInfo)->SCurrState.pSGzRegulation = (*ppSCheckPathInfo)->pSCurrCommandRegulation;
-			}
+                        //5.2æ¯”è¾ƒèµ·åˆ°ç‚¹Z ä¸ å½“å‰è½¨è¿¹ç»ˆç‚¹Z
+                        if ((*ppSCheckPathInfo)->cZMonotonicityInNS == 1)
+                        {
+                            if (!(isEqualOrGreaterThanZero(SCurrEndPoint.dArray[AXIS_Z] -
+                                                           (*ppSCheckPathInfo)->SPointA.dArray[AXIS_Z])))
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
+                        else if ((*ppSCheckPathInfo)->cZMonotonicityInNS == -1)
+                        {
+                            if (!(isEqualOrGreaterThanZero((*ppSCheckPathInfo)->SPointA.dArray[AXIS_Z] -
+                                                           SCurrEndPoint.dArray[AXIS_Z])))
+                            {
+                                //æŠ¥è­¦
+                                parseGCodeErrorB(0, 0);
+                            }
+                        }
+                    }
+                }
+            }
 
-			(*ppSCheckPathInfo)->cPart = ASSIGN_PART_6;
+            //æ›´æ–°çŠ¶æ€
+            (*ppSCheckPathInfo)->SCurrState.SCurrPoint = SCurrEndPoint; //è®°å½•åç§»å‰çš„ç»ˆç‚¹åæ ‡
+            if ((*ppSCheckPathInfo)->pSCurrCommandRegulation->cGroup == sGa)
+            {
+                (*ppSCheckPathInfo)->SCurrState.sGa = (*ppSCheckPathInfo)->sCurrCommandVal;
+                (*ppSCheckPathInfo)->SCurrState.pSGaRegulation = (*ppSCheckPathInfo)->pSCurrCommandRegulation;
+                (*ppSCheckPathInfo)->SCurrState.sGz = 0;
+                (*ppSCheckPathInfo)->SCurrState.pSGzRegulation = NULL;
+            }
+            else if ((*ppSCheckPathInfo)->pSCurrCommandRegulation->cGroup == sGz)
+            {
+                (*ppSCheckPathInfo)->SCurrState.sGz = (*ppSCheckPathInfo)->sCurrCommandVal;
+                (*ppSCheckPathInfo)->SCurrState.pSGzRegulation = (*ppSCheckPathInfo)->pSCurrCommandRegulation;
+            }
 
-			break;
-		}
+            (*ppSCheckPathInfo)->cPart = ASSIGN_PART_6;
 
-		//ÅĞ¶ÏNSÖÁNF³ÌĞò¶ÎÊÇ·ñ»ñÈ¡Íê³É
-		case SYNTAX_PART_6:
-		{
-			//µ±Ç°³ÌĞò¶Î¶ÎºÅÎªNF£¬»ñÈ¡Íê³É
-			if ((*ppSCheckPathInfo)->SScanContainer.bN == TRUE && (*ppSCheckPathInfo)->SScanContainer.dN == unNF)
-			{
-				(*ppSCheckPathInfo)->cStep = 2;
-			}
-			else
-			{
-				(*ppSCheckPathInfo)->cCommandSegmentCnt = 0;
-				(*ppSCheckPathInfo)->cPart = PART_1;
-			}
-			break;
-		}
+            break;
+        }
 
-		default:
-			break;
-		}
-		break;
-	}
+        //åˆ¤æ–­NSè‡³NFç¨‹åºæ®µæ˜¯å¦è·å–å®Œæˆ
+        case SYNTAX_PART_6:
+        {
+            //å½“å‰ç¨‹åºæ®µæ®µå·ä¸ºNFï¼Œè·å–å®Œæˆ
+            if ((*ppSCheckPathInfo)->SScanContainer.bN == TRUE && (*ppSCheckPathInfo)->SScanContainer.dN == unNF)
+            {
+                (*ppSCheckPathInfo)->cStep = 2;
+            }
+            else
+            {
+                (*ppSCheckPathInfo)->cCommandSegmentCnt = 0;
+                (*ppSCheckPathInfo)->cPart = PART_1;
+            }
+            break;
+        }
 
-	//2.¹ì¼£µ¥µ÷ĞÔÒÑ¼ì²éÍê³É
-	case 2:
-	{
-		//1.Êä³öpSTargetTextInfo
-		*pSTargetTextInfo = (*ppSCheckPathInfo)->SGetTextStateInfo;
+        default:
+            break;
+        }
+        break;
+    }
 
-		//2.ÊÍ·Å(*ppSCheckPathInfo)
-		freeGCode(*ppSCheckPathInfo);
+    //2.è½¨è¿¹å•è°ƒæ€§å·²æ£€æŸ¥å®Œæˆ
+    case 2:
+    {
+        //1.è¾“å‡ºpSTargetTextInfo
+        *pSTargetTextInfo = (*ppSCheckPathInfo)->SGetTextStateInfo;
 
-		(*ppSCheckPathInfo) = NULL;
+        //2.é‡Šæ”¾(*ppSCheckPathInfo)
+        freeGCode(*ppSCheckPathInfo);
 
-		return 1;
+        (*ppSCheckPathInfo) = NULL;
 
-		break;
-	}
+        return 1;
 
-	default:
-		break;
-	}
-	return 0;
+        break;
+    }
+
+    default:
+        break;
+    }
+    return 0;
 }
 
 int8 checkPathMonotonicity(SList* pPathList)
 {
-	int8 cSign;
-	int i = 0;
-	SNode* pCurNode = pPathList->pHead->pNextNode;
+    int8 cSign;
+    int i = 0;
+    SNode* pCurNode = pPathList->pHead->pNextNode;
 
-	//»ñÈ¡µ¥µ÷ĞÔ
-	for (; i < pPathList->cSize; i++)
-	{
-		SLine* pSLine = pCurNode->pData;
-		cSign = sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]);
-		
-		if (cSign != 0)
-		{
-			break;
-		}
-		pCurNode = pCurNode->pNextNode;
-	}
-	//¼ì²é
-	for (; i < pPathList->cSize; i++)
-	{
-		SLine* pSLine = pCurNode->pData;
-		if (sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]) != 0 &&
-			cSign != sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]))
-		{
-			return -1;
-		}
-		pCurNode = pCurNode->pNextNode;
-	}
-	
-	return 1;
+    //è·å–å•è°ƒæ€§
+    for (; i < pPathList->cSize; i++)
+    {
+        SLine* pSLine = pCurNode->pData;
+        cSign = sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]);
+
+        if (cSign != 0)
+        {
+            break;
+        }
+        pCurNode = pCurNode->pNextNode;
+    }
+    //æ£€æŸ¥
+    for (; i < pPathList->cSize; i++)
+    {
+        SLine* pSLine = pCurNode->pData;
+        if (sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]) != 0 &&
+            cSign != sgn(pSLine->SEndPoint.dArray[AXIS_Z] - pSLine->SStartPoint.dArray[AXIS_Z]))
+        {
+            return -1;
+        }
+        pCurNode = pCurNode->pNextNode;
+    }
+
+    return 1;
 }
 int8 checkPathAxisMonotonicity(SList* pPathList, uint8 ucAxis)
 {
     int i = 0;
-    int8 cSign = 0;       /* ¼Ç×¡Ê×´Î³öÏÖµÄ·ÇÁã·½Ïò */
+    int8 cSign = 0; /* è®°ä½é¦–æ¬¡å‡ºç°çš„éé›¶æ–¹å‘ */
     int8 cCurSign = 0;
     SNode* pCurNode = pPathList->pHead->pNextNode;
 
-    //»ñÈ¡µ¥µ÷ĞÔ
+    //è·å–å•è°ƒæ€§
     for (; i < pPathList->cSize; i++)
     {
         SLine* pSLine = pCurNode->pData;
@@ -1584,7 +1557,7 @@ int8 checkPathAxisMonotonicity(SList* pPathList, uint8 ucAxis)
         pCurNode = pCurNode->pNextNode;
     }
 
-    //¼ì²é
+    //æ£€æŸ¥
     for (; i < pPathList->cSize; i++)
     {
         SLine* pSLine = pCurNode->pData;
@@ -1594,7 +1567,7 @@ int8 checkPathAxisMonotonicity(SList* pPathList, uint8 ucAxis)
         pCurNode = pCurNode->pNextNode;
     }
 
-    return 1;  
+    return 1;
 }
 int8 checkPathXZMonotonicity(SList* pPathList)
 {
@@ -1607,3932 +1580,3957 @@ int8 checkPathXZMonotonicity(SList* pPathList)
     return 1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  Éú³É¹ì¼£Á´±í
-  ÊäÈë²ÎÊı£ºucMod				Ä£Ê½£¨¼ì²é/¸³Öµ£©
-			pSCurrProgram		³ÌĞòÎÄ±¾
-			unNS				ÆğÊ¼ĞĞºÅ
-			unNF				½áÊøĞĞºÅ
-			dDeltaU				¹ì¼£X·½ÏòÆ«ÖÃ¾àÀë
-			dDeltaW				¹ì¼£Z·½ÏòÆ«ÖÃ¾àÀë
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  ç”Ÿæˆè½¨è¿¹é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼šucMod				æ¨¡å¼ï¼ˆæ£€æŸ¥/èµ‹å€¼ï¼‰
+			pSCurrProgram		ç¨‹åºæ–‡æœ¬
+			unNS				èµ·å§‹è¡Œå·
+			unNF				ç»“æŸè¡Œå·
+			dDeltaU				è½¨è¿¹Xæ–¹å‘åç½®è·ç¦»
+			dDeltaW				è½¨è¿¹Zæ–¹å‘åç½®è·ç¦»
 
-			pSPathList			¹ì¼£Á´±í£¨Êä³ö£©
-			pSTargetTextInfo	»ñÈ¡ÎÄ±¾×´Ì¬£¨Êä³ö£©
+			pSPathList			è½¨è¿¹é“¾è¡¨ï¼ˆè¾“å‡ºï¼‰
+			pSTargetTextInfo	è·å–æ–‡æœ¬çŠ¶æ€ï¼ˆè¾“å‡ºï¼‰
 
-			ucChannelNum		Í¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	ÒÑ»ñÈ¡ËùÓĞ¹ì¼£
-			0	¹ì¼£Î´»ñÈ¡Íê³É
-			-1	´íÎó
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö±»¸³ÖµÁ÷³ÌÊ¹ÓÃ
-			2.G70²»Ê¹ÓÃ¸Ãº¯Êı
-			//3.Èô¹ì¼£ÖÕµãXµÍÓÚÆğµ¶µãX£¬Ôò»á²¹³äÒ»¶ÎÊµÌåÊ¹ÖÕµãXµÈÓÚÆğµ¶µãX
+			ucChannelNum		é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å·²è·å–æ‰€æœ‰è½¨è¿¹
+			0	è½¨è¿¹æœªè·å–å®Œæˆ
+			-1	é”™è¯¯
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…è¢«èµ‹å€¼æµç¨‹ä½¿ç”¨
+			2.G70ä¸ä½¿ç”¨è¯¥å‡½æ•°
+			//3.è‹¥è½¨è¿¹ç»ˆç‚¹Xä½äºèµ·åˆ€ç‚¹Xï¼Œåˆ™ä¼šè¡¥å……ä¸€æ®µå®ä½“ä½¿ç»ˆç‚¹Xç­‰äºèµ·åˆ€ç‚¹X
 **************************************************/
-int8 getMachiningPath(uint8 ucMod, SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, double dDeltaU, double dDeltaW, SList** ppSPathList, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cG71orG72)
+int8 getMachiningPath(uint8 ucMod, SProgram* pSCurrProgram, uint32 unNS, uint32 unNF, double dDeltaU, double dDeltaW,
+                      SList** ppSPathList, SGetTextStateInfo* pSTargetTextInfo, uint8 ucChannelNum, int8 cG71orG72)
 {
-	if (pSCurrProgram == NULL)
-	{
-		return -1;
-	}
+    if (pSCurrProgram == NULL)
+    {
+        return -1;
+    }
 
-	SGetPathInfo** ppSGetPathInfo;
-	ppSGetPathInfo = &g_pSGetPathInfo[ucChannelNum];
-	
-	SGCodeSysState* pSCurrGCodeSysState = getCurrSystemState(ucChannelNum, ucMod);
-	int16 sCurGz = pSCurrGCodeSysState->SModalInfo.sGz;//»ñÈ¡ÏµÍ³×´Ì¬µÄcGzÖ¸Áî£¬ÓÃÓÚÅĞ±ğµ±Ç°ÊÇG71»¹ÊÇG72
-	//
-	if ((*ppSGetPathInfo) == NULL)
-	{	
-		//1.¿ª±Ù»ñÈ¡¹ì¼£ĞÅÏ¢½á¹¹Ìå
-		(*ppSGetPathInfo) = mallocGCode(sizeof(SGetPathInfo), ORAM_NUM352);
+    SGetPathInfo** ppSGetPathInfo;
+    ppSGetPathInfo = &g_pSGetPathInfo[ucChannelNum];
 
-		if ((*ppSGetPathInfo) == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    SGCodeSysState* pSCurrGCodeSysState = getCurrSystemState(ucChannelNum, ucMod);
+    int16 sCurGz = pSCurrGCodeSysState->SModalInfo.sGz; //è·å–ç³»ç»ŸçŠ¶æ€çš„cGzæŒ‡ä»¤ï¼Œç”¨äºåˆ¤åˆ«å½“å‰æ˜¯G71è¿˜æ˜¯G72
+    //
+    if ((*ppSGetPathInfo) == NULL)
+    {
+        //1.å¼€è¾Ÿè·å–è½¨è¿¹ä¿¡æ¯ç»“æ„ä½“
+        (*ppSGetPathInfo) = mallocGCode(sizeof(SGetPathInfo), ORAM_NUM352);
 
-		//2.»ñÈ¡¹ì¼£ĞÅÏ¢½á¹¹ÌåÖÃ0
-		memset(*ppSGetPathInfo, 0, sizeof(SGetPathInfo));
+        if ((*ppSGetPathInfo) == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//3.³õÊ¼»¯»ñÈ¡¹ì¼£½á¹¹Ìå·Ç0±äÁ¿
-		(*ppSGetPathInfo)->cPart = PART_1;
+        //2.è·å–è½¨è¿¹ä¿¡æ¯ç»“æ„ä½“ç½®0
+        memset(*ppSGetPathInfo, 0, sizeof(SGetPathInfo));
 
-		//¶ÁÈ¡µ±Ç°ÏµÍ³×´Ì¬
-		(*ppSGetPathInfo)->STotalOffset = pSCurrGCodeSysState->SAllOffsetOfCoord.STotalOffset;
-		(*ppSGetPathInfo)->SCurrState.sGa = pSCurrGCodeSysState->SModalInfo.sGa;
-		(*ppSGetPathInfo)->SCurrState.pSGaRegulation = pSCurrGCodeSysState->SModalInfo.pSGaRegulation;
-		(*ppSGetPathInfo)->SCurrState.sGz = pSCurrGCodeSysState->SModalInfo.sGz;
-		(*ppSGetPathInfo)->SCurrState.pSGzRegulation = pSCurrGCodeSysState->SModalInfo.pSGzRegulation;
-		(*ppSGetPathInfo)->SCurrState.SCurrPoint = pSCurrGCodeSysState->SCurrPoint;
+        //3.åˆå§‹åŒ–è·å–è½¨è¿¹ç»“æ„ä½“é0å˜é‡
+        (*ppSGetPathInfo)->cPart = PART_1;
 
-		(*ppSGetPathInfo)->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
+        //è¯»å–å½“å‰ç³»ç»ŸçŠ¶æ€
+        (*ppSGetPathInfo)->STotalOffset = pSCurrGCodeSysState->SAllOffsetOfCoord.STotalOffset;
+        (*ppSGetPathInfo)->SCurrState.sGa = pSCurrGCodeSysState->SModalInfo.sGa;
+        (*ppSGetPathInfo)->SCurrState.pSGaRegulation = pSCurrGCodeSysState->SModalInfo.pSGaRegulation;
+        (*ppSGetPathInfo)->SCurrState.sGz = pSCurrGCodeSysState->SModalInfo.sGz;
+        (*ppSGetPathInfo)->SCurrState.pSGzRegulation = pSCurrGCodeSysState->SModalInfo.pSGzRegulation;
+        (*ppSGetPathInfo)->SCurrState.SCurrPoint = pSCurrGCodeSysState->SCurrPoint;
 
-		(*ppSGetPathInfo)->pSPathList = initList(ORAM_NUM353, ORAM_NUM354);
-		if ((*ppSGetPathInfo)->pSPathList == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-			return -1;
-		}
-		
-	}
+        (*ppSGetPathInfo)->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
 
-	switch ((*ppSGetPathInfo)->cStep)
-	{
-	//0.ÕÒµ½Ä¿±ê³ÌĞò¶ÎºÅNS
-	case 0:
-	{
-		int8 cRet;
-		cRet = findTargetSegment(ucMod, ucChannelNum, pSCurrProgram, unNS, &(*ppSGetPathInfo)->SGetTextStateInfo);
+        (*ppSGetPathInfo)->pSPathList = initList(ORAM_NUM353, ORAM_NUM354);
+        if ((*ppSGetPathInfo)->pSPathList == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return -1;
+        }
+    }
 
-		if (cRet < 0)
-		{
-			freeList(&(*ppSGetPathInfo)->pSPathList);
-			freeGCode((*ppSGetPathInfo));
-			return -1;
-		}
-		else if (cRet == 1)
-		{
-			(*ppSGetPathInfo)->cStep = 1;
-		}
-		break;
-	}
+    switch ((*ppSGetPathInfo)->cStep)
+    {
+    //0.æ‰¾åˆ°ç›®æ ‡ç¨‹åºæ®µå·NS
+    case 0:
+    {
+        int8 cRet;
+        cRet = findTargetSegment(ucMod, ucChannelNum, pSCurrProgram, unNS, &(*ppSGetPathInfo)->SGetTextStateInfo);
 
-	//1.»ñÈ¡NS-NFÊı¾İ£¬Éú³É¹ì¼£Á´±í
-	case 1:
-	{
-		switch ((*ppSGetPathInfo)->cPart)
-		{
-		//´¦ÀíÎÄ±¾
-		case PART_1:
-		{
-			int8 cRet;
-			SProgram* pSCurrProgram = NULL;   //µ±Ç°³ÌĞò½á¹¹Ìå
-			//1.»ñÈ¡µ±Ç°³ÌĞò½á¹¹Ìå
-			pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
-			if (pSCurrProgram == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-				return -1;
-			}
-			//2.´¦Àí³ÌĞòÎÄ±¾
-			cRet = processProgramText(ucMod, &(*ppSGetPathInfo)->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
-			if (cRet == 1)
-			{
-				(*ppSGetPathInfo)->cCommandSegmentCnt++;
-				(*ppSGetPathInfo)->cPart = PART_2;
-			}
-			else if (cRet == 2)
-			{
-				//Î´ÕÒµ½¹ì¼£Á´±íµÄNF
-				return -1;
-			}
-			break;
-		}
+        if (cRet < 0)
+        {
+            freeList(&(*ppSGetPathInfo)->pSPathList);
+            freeGCode((*ppSGetPathInfo));
+            return -1;
+        }
+        else if (cRet == 1)
+        {
+            (*ppSGetPathInfo)->cStep = 1;
+        }
+        break;
+    }
 
-		//³õÊ¼»¯É¨Ãè½á¹¹Ìå
-		case PART_2:
-		{
-			//1.É¨ÃèÇ°ĞèÒª³õÊ¼»¯É¨Ãè½á¹¹Ìå
-			//1.1µ±Ç°É¨Ãè³ÌĞò¶ÎÎªÖ¸ÁîµÄµÚÒ»¶Î£¬ĞèÒªÇå¿ÕÉ¨Ãè½á¹¹Ìå
-			if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1)
-			{
-				initScanContainer(&(*ppSGetPathInfo)->SScanContainer, TRUE);
-			}
-			//1.2µ±Ç°É¨Ãè³ÌĞò¶Î·ÇÖ¸ÁîµÄµÚÒ»¶Î£¬²»ĞèÇå¿ÕMFSTÖµ£¬·ÀÖ¹¶à³ÌĞò¶Î¶ªÊ§MFSTµÄÖµ
-			else
-			{
-				initScanContainer(&(*ppSGetPathInfo)->SScanContainer, FALSE);
-			}
+    //1.è·å–NS-NFæ•°æ®ï¼Œç”Ÿæˆè½¨è¿¹é“¾è¡¨
+    case 1:
+    {
+        switch ((*ppSGetPathInfo)->cPart)
+        {
+        //å¤„ç†æ–‡æœ¬
+        case PART_1:
+        {
+            int8 cRet;
+            SProgram* pSCurrProgram = NULL; //å½“å‰ç¨‹åºç»“æ„ä½“
+            //1.è·å–å½“å‰ç¨‹åºç»“æ„ä½“
+            pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
+            if (pSCurrProgram == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+                return -1;
+            }
+            //2.å¤„ç†ç¨‹åºæ–‡æœ¬
+            cRet = processProgramText(ucMod, &(*ppSGetPathInfo)->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
+            if (cRet == 1)
+            {
+                (*ppSGetPathInfo)->cCommandSegmentCnt++;
+                (*ppSGetPathInfo)->cPart = PART_2;
+            }
+            else if (cRet == 2)
+            {
+                //æœªæ‰¾åˆ°è½¨è¿¹é“¾è¡¨çš„NF
+                return -1;
+            }
+            break;
+        }
 
-			//2.pCurrPtrĞèÒªÖØĞÂÖ¸Ïò³ÌĞò¶Î×Ö·û´®Ê××Ö·û
-			(*ppSGetPathInfo)->SGetTextStateInfo.pCurrPtr = (*ppSGetPathInfo)->SGetTextStateInfo.cStr;
+        //åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+        case PART_2:
+        {
+            //1.æ‰«æå‰éœ€è¦åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+            //1.1å½“å‰æ‰«æç¨‹åºæ®µä¸ºæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œéœ€è¦æ¸…ç©ºæ‰«æç»“æ„ä½“
+            if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1)
+            {
+                initScanContainer(&(*ppSGetPathInfo)->SScanContainer, TRUE);
+            }
+            //1.2å½“å‰æ‰«æç¨‹åºæ®µéæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œä¸éœ€æ¸…ç©ºMFSTå€¼ï¼Œé˜²æ­¢å¤šç¨‹åºæ®µä¸¢å¤±MFSTçš„å€¼
+            else
+            {
+                initScanContainer(&(*ppSGetPathInfo)->SScanContainer, FALSE);
+            }
 
-			//3.½øÈëÏÂÒ»ÇĞÆ¬
-			(*ppSGetPathInfo)->cPart = PART_3;
+            //2.pCurrPtréœ€è¦é‡æ–°æŒ‡å‘ç¨‹åºæ®µå­—ç¬¦ä¸²é¦–å­—ç¬¦
+            (*ppSGetPathInfo)->SGetTextStateInfo.pCurrPtr = (*ppSGetPathInfo)->SGetTextStateInfo.cStr;
 
-			break;
-		}
+            //3.è¿›å…¥ä¸‹ä¸€åˆ‡ç‰‡
+            (*ppSGetPathInfo)->cPart = PART_3;
 
-		//É¨Ãè
-		case PART_3:
-		{
-			int8 cRet;
+            break;
+        }
 
-			int16 sLastCommandVal;
-			int16 sCurrCommandVal;
-			const SGCommandRegulation* pSLastCommandRegulation;
-			const SGCommandRegulation* pSCurrCommandRegulation;
+        //æ‰«æ
+        case PART_3:
+        {
+            int8 cRet;
 
-			SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-			if (pCurrProgram == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-				return -1;
-			}
+            int16 sLastCommandVal;
+            int16 sCurrCommandVal;
+            const SGCommandRegulation* pSLastCommandRegulation;
+            const SGCommandRegulation* pSCurrCommandRegulation;
 
-			//É¨Ãè³ÌĞò¶Î
-			cRet = scanSegment(ucMod, &(*ppSGetPathInfo)->SGetTextStateInfo, &(*ppSGetPathInfo)->SScanContainer, pCurrProgram, ucChannelNum);
-			//µ±Ç°³ÌĞò¶ÎÈ«²¿É¨ÃèÍê³É
-			if (cRet == TRUE)
-			{
-				//1.»ñÈ¡ÉÏÒ»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî£¨Gz×éÓÅÏÈ¼¶¸ßÓÚGa×é£©
-				if ((*ppSGetPathInfo)->SCurrState.sGz != 0)
-				{
-					sLastCommandVal = (*ppSGetPathInfo)->SCurrState.sGz;
-					pSLastCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGzRegulation;
-				}
-				else
-				{
-					sLastCommandVal = (*ppSGetPathInfo)->SCurrState.sGa;
-					pSLastCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
-				}
+            SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+            if (pCurrProgram == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+                return -1;
+            }
 
-				//2.»ñÈ¡µ±Ç°³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî
-				//2.1µ±Ç°³ÌĞò¶Î³öÏÖGa×éÖ¸Áî
-				if ((*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
-				{
-					sCurrCommandVal = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
-					pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
-					(*ppSGetPathInfo)->pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
-				}
-				//2.2µ±Ç°³ÌĞò¶Î³öÏÖGz×éÖ¸Áî
-				else if ((*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
-				{
-					sCurrCommandVal = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
-					pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
-					(*ppSGetPathInfo)->pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
-				}
-				//2.3µ±Ç°³ÌĞò¶ÎÎ´³öÏÖGaGz×éÖ¸Áî,ÔòÈ¡µ±Ç°ÏµÍ³×´Ì¬Ga×éÖ¸Áî
-				else
-				{
-					sCurrCommandVal = (*ppSGetPathInfo)->SCurrState.sGa;
-					pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
-					(*ppSGetPathInfo)->pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
-	      }
- 
-				//3.ÅĞ¶Ï¶à³ÌĞò¶ÎÖ¸ÁîµÄÃ¿Ò»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸ÁîÊÇ·ñÒ»ÖÂ£¨¸³Öµ²»ĞèÒªÅĞ¶Ï£©
-				if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1)
-				{
-					(*ppSGetPathInfo)->sCurrCommandVal = sCurrCommandVal;
-				}
-				else
-				{
-					if ((*ppSGetPathInfo)->sCurrCommandVal != sCurrCommandVal)
-					{
-						//¶à³ÌĞò¶ÎÖ¸ÁîµÄµÚÒ»¶Î³ÌĞò¶ÎµÄÖ¸ÁîÓëºóĞø³ÌĞò¶ÎÖ¸Áî²»Ò»ÖÂ£¬Èç£ºµÚÒ»¶ÎÎªG71£¬µÚ¶ş¶Î·ÇG71
-						parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
-						break;
-					}
-				}
+            //æ‰«æç¨‹åºæ®µ
+            cRet = scanSegment(ucMod, &(*ppSGetPathInfo)->SGetTextStateInfo, &(*ppSGetPathInfo)->SScanContainer,
+                               pCurrProgram, ucChannelNum);
+            //å½“å‰ç¨‹åºæ®µå…¨éƒ¨æ‰«æå®Œæˆ
+            if (cRet == TRUE)
+            {
+                //1.è·å–ä¸Šä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤ï¼ˆGzç»„ä¼˜å…ˆçº§é«˜äºGaç»„ï¼‰
+                if ((*ppSGetPathInfo)->SCurrState.sGz != 0)
+                {
+                    sLastCommandVal = (*ppSGetPathInfo)->SCurrState.sGz;
+                    pSLastCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGzRegulation;
+                }
+                else
+                {
+                    sLastCommandVal = (*ppSGetPathInfo)->SCurrState.sGa;
+                    pSLastCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
+                }
 
+                //2.è·å–å½“å‰ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤
+                //2.1å½“å‰ç¨‹åºæ®µå‡ºç°Gaç»„æŒ‡ä»¤
+                if ((*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
+                {
+                    sCurrCommandVal = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
+                    pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
+                    (*ppSGetPathInfo)->pSCurrCommandRegulation =
+                        (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGaRegulation;
+                }
+                //2.2å½“å‰ç¨‹åºæ®µå‡ºç°Gzç»„æŒ‡ä»¤
+                else if ((*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
+                {
+                    sCurrCommandVal = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
+                    pSCurrCommandRegulation = (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
+                    (*ppSGetPathInfo)->pSCurrCommandRegulation =
+                        (*ppSGetPathInfo)->SScanContainer.SScanModalInfo.pSGzRegulation;
+                }
+                //2.3å½“å‰ç¨‹åºæ®µæœªå‡ºç°GaGzç»„æŒ‡ä»¤,åˆ™å–å½“å‰ç³»ç»ŸçŠ¶æ€Gaç»„æŒ‡ä»¤
+                else
+                {
+                    sCurrCommandVal = (*ppSGetPathInfo)->SCurrState.sGa;
+                    pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
+                    (*ppSGetPathInfo)->pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
+                }
 
-				//4.ÅĞ¶ÏÊÇ·ñĞèÒªÊÍ·Å¿ª±ÙÖ¸Áî²ÎÊı½á¹¹ÌåÄÚ´æ£¨½öÔË¶¯Ïà¹ØÖ¸ÁîµÚÒ»³ÌĞò¶ÎĞèÒªÅĞ¶Ï£©
-				if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
-				{
-					//4.1ÊÍ·ÅÉÏÒ»Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-					if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
-					{
-						pSLastCommandRegulation->pFreeParaStructAPI(ucMod, ucChannelNum);
-					}
-					//4.2¿ª±Ùµ±Ç°Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-					if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-					{
+                //3.åˆ¤æ–­å¤šç¨‹åºæ®µæŒ‡ä»¤çš„æ¯ä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤æ˜¯å¦ä¸€è‡´ï¼ˆèµ‹å€¼ä¸éœ€è¦åˆ¤æ–­ï¼‰
+                if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1)
+                {
+                    (*ppSGetPathInfo)->sCurrCommandVal = sCurrCommandVal;
+                }
+                else
+                {
+                    if ((*ppSGetPathInfo)->sCurrCommandVal != sCurrCommandVal)
+                    {
+                        //å¤šç¨‹åºæ®µæŒ‡ä»¤çš„ç¬¬ä¸€æ®µç¨‹åºæ®µçš„æŒ‡ä»¤ä¸åç»­ç¨‹åºæ®µæŒ‡ä»¤ä¸ä¸€è‡´ï¼Œå¦‚ï¼šç¬¬ä¸€æ®µä¸ºG71ï¼Œç¬¬äºŒæ®µéG71
+                        parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
+                        break;
+                    }
+                }
 
-						if (pSCurrCommandRegulation->pMallocParaStructAPI(ucMod, ucChannelNum) <= 0)
-						{
-							parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
-							break;
-						}
-					}
-				}
+                //4.åˆ¤æ–­æ˜¯å¦éœ€è¦é‡Šæ”¾å¼€è¾ŸæŒ‡ä»¤å‚æ•°ç»“æ„ä½“å†…å­˜ï¼ˆä»…è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¬¬ä¸€ç¨‹åºæ®µéœ€è¦åˆ¤æ–­ï¼‰
+                if ((*ppSGetPathInfo)->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
+                {
+                    //4.1é‡Šæ”¾ä¸Šä¸€æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                    if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
+                    {
+                        pSLastCommandRegulation->pFreeParaStructAPI(ucMod, ucChannelNum);
+                    }
+                    //4.2å¼€è¾Ÿå½“å‰æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                    {
 
-				//5.ÅĞ¶Ïµ±Ç°Ö¸Áî×ÖÊÇ·ñĞèÒªĞ´²ÎÊı½á¹¹Ìå
-				if (pSCurrCommandRegulation->pGetParaAPI != NULL)
-				{
-				    pSCurrCommandRegulation->pGetParaAPI(ucMod, &(*ppSGetPathInfo)->SScanContainer, ucChannelNum, NULL);
-				}
+                        if (pSCurrCommandRegulation->pMallocParaStructAPI(ucMod, ucChannelNum) <= 0)
+                        {
+                            parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
+                            break;
+                        }
+                    }
+                }
 
-				//6.ÅĞ¶ÏcGa,cGzÖ¸ÁîËùÓĞ³ÌĞò¶ÎÊÇ·ñÉ¨ÃèÍê³É
-				if ((*ppSGetPathInfo)->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
-				{
-					//6.1ÔË¶¯Ïà¹ØÖ¸ÁîËùÓĞ³ÌĞò¶ÎÒÑÈ«²¿É¨Ãè
-					(*ppSGetPathInfo)->cPart = PART_4;
-				}
-				else
-				{
-					//6.2»¹Ğè¼ÌĞø»ñÈ¡ÔË¶¯Ïà¹ØÖ¸Áî³ÌĞò¶Î
-					(*ppSGetPathInfo)->cPart = PART_1;
-				}
-			}
+                //5.åˆ¤æ–­å½“å‰æŒ‡ä»¤å­—æ˜¯å¦éœ€è¦å†™å‚æ•°ç»“æ„ä½“
+                if (pSCurrCommandRegulation->pGetParaAPI != NULL)
+                {
+                    pSCurrCommandRegulation->pGetParaAPI(ucMod, &(*ppSGetPathInfo)->SScanContainer, ucChannelNum, NULL);
+                }
 
-			break;
-		}
+                //6.åˆ¤æ–­cGa,cGzæŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µæ˜¯å¦æ‰«æå®Œæˆ
+                if ((*ppSGetPathInfo)->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
+                {
+                    //6.1è¿åŠ¨ç›¸å…³æŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µå·²å…¨éƒ¨æ‰«æ
+                    (*ppSGetPathInfo)->cPart = PART_4;
+                }
+                else
+                {
+                    //6.2è¿˜éœ€ç»§ç»­è·å–è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¨‹åºæ®µ
+                    (*ppSGetPathInfo)->cPart = PART_1;
+                }
+            }
 
-		//¼ÆËãµ±Ç°³ÌĞò¶Î¶ÔÓ¦µÄ´Ö¼Ó¹¤¹ì¼££¬²¢´æÈë¹ì¼£Á´±í
-		case PART_4:
-		{
-			//½ö¼ÇÂ¼¹ì¼£ÒÆ¶¯µÄµ×²ã¹ì¼£ !!!
-			SPointDouble SOriginalEndPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;//¼ÇÂ¼¹ì¼£Êı¾İÆ«ÒÆÇ°µÄÖÕµã£¬ÓÃÓÚ¼Ì³Ğ
+            break;
+        }
 
-			//µ×²ãÖ¸ÁîG01¡¢G01¡¢G02¡¢G03
-			//²»Îªµã
-			if (isBasicMotionCommand((*ppSGetPathInfo)->sCurrCommandVal) &&
-				isSegmentHaveCoordInfo(&(*ppSGetPathInfo)->SScanContainer))
-			{
-				//1.»ñÈ¡Æ«ÒÆºóµÄ¹ì¼£Êı¾İ£¬²¢´æÈë¹ì¼£Á´±í
-				//1.1µ×²ãÔË¶¯Ö¸ÁîÎªG0
-				if ((*ppSGetPathInfo)->sCurrCommandVal == G00 * pow(10, GCOMMAND_DECIMAL_PLACE))
-				{
-					//1.1.1¿ª±ÙÄÚ´æ
-					SLine* pSPathData;
-					pSPathData = mallocGCode(sizeof(SLine), ORAM_NUM355);//ÄÚ´æÎ´±àºÅ
-					if (pSPathData == NULL)
-					{
-						parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
-						return -1;
-					}
-					memset(pSPathData, 0, sizeof(SLine));
+        //è®¡ç®—å½“å‰ç¨‹åºæ®µå¯¹åº”çš„ç²—åŠ å·¥è½¨è¿¹ï¼Œå¹¶å­˜å…¥è½¨è¿¹é“¾è¡¨
+        case PART_4:
+        {
+            //ä»…è®°å½•è½¨è¿¹ç§»åŠ¨çš„åº•å±‚è½¨è¿¹ !!!
+            SPointDouble SOriginalEndPoint =
+                (*ppSGetPathInfo)->SCurrState.SCurrPoint; //è®°å½•è½¨è¿¹æ•°æ®åç§»å‰çš„ç»ˆç‚¹ï¼Œç”¨äºç»§æ‰¿
 
-					//1.1.2Ğ´Èë³ÌĞò¶ÎÔ­Ê¼¹ì¼£Êı¾İ
-					pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
-					getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint, &pSPathData->SEndPoint, pSCurrGCodeSysState);
-					//µ±Ç°³ÌĞò¶Î¶ÎºÅÎªNS
-					if ((*ppSGetPathInfo)->SScanContainer.bN == TRUE && (*ppSGetPathInfo)->SScanContainer.dN == unNS)
-					{
-						pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : OTHERTYPE;//»ñÈ¡¹ì¼£ÖĞ£¬G0ÊµÌåÀàĞÍÎªOTHERTYPE
-					}
-					else
-					{
-						pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : L1NE;//»ñÈ¡¹ì¼£ÖĞ£¬G0ÊµÌåÀàĞÍÎªL1NE
-					}
+            //åº•å±‚æŒ‡ä»¤G01ã€G01ã€G02ã€G03
+            //ä¸ä¸ºç‚¹
+            if (isBasicMotionCommand((*ppSGetPathInfo)->sCurrCommandVal) &&
+                isSegmentHaveCoordInfo(&(*ppSGetPathInfo)->SScanContainer))
+            {
+                //1.è·å–åç§»åçš„è½¨è¿¹æ•°æ®ï¼Œå¹¶å­˜å…¥è½¨è¿¹é“¾è¡¨
+                //1.1åº•å±‚è¿åŠ¨æŒ‡ä»¤ä¸ºG0
+                if ((*ppSGetPathInfo)->sCurrCommandVal == G00 * pow(10, GCOMMAND_DECIMAL_PLACE))
+                {
+                    //1.1.1å¼€è¾Ÿå†…å­˜
+                    SLine* pSPathData;
+                    pSPathData = mallocGCode(sizeof(SLine), ORAM_NUM355); //å†…å­˜æœªç¼–å·
+                    if (pSPathData == NULL)
+                    {
+                        parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                    memset(pSPathData, 0, sizeof(SLine));
 
+                    //1.1.2å†™å…¥ç¨‹åºæ®µåŸå§‹è½¨è¿¹æ•°æ®
+                    pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
+                    getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint,
+                                          &pSPathData->SEndPoint, pSCurrGCodeSysState);
+                    //å½“å‰ç¨‹åºæ®µæ®µå·ä¸ºNS
+                    if ((*ppSGetPathInfo)->SScanContainer.bN == TRUE && (*ppSGetPathInfo)->SScanContainer.dN == unNS)
+                    {
+                        pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint)
+                                                     ? DOT
+                                                     : OTHERTYPE; //è·å–è½¨è¿¹ä¸­ï¼ŒG0å®ä½“ç±»å‹ä¸ºOTHERTYPE
+                    }
+                    else
+                    {
+                        pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint)
+                                                     ? DOT
+                                                     : L1NE; //è·å–è½¨è¿¹ä¸­ï¼ŒG0å®ä½“ç±»å‹ä¸ºL1NE
+                    }
 
-					SOriginalEndPoint = pSPathData->SEndPoint;
+                    SOriginalEndPoint = pSPathData->SEndPoint;
 
-					//1.1.3½«Ô­Ê¼¹ì¼£Êı¾İ½øĞĞÆ«ÒÆ
-					offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
+                    //1.1.3å°†åŸå§‹è½¨è¿¹æ•°æ®è¿›è¡Œåç§»
+                    offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
 
-					//1.1.4½«Æ«ÒÆºóµÄ¹ì¼£Êı¾İ²åÈëÁ´±í
-					if(insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE)//ÄÚ´æÎ´±àºÅ
-					{
-						freeGCode(pSPathData);
-						freeList(&(*ppSGetPathInfo)->pSPathList);
-						freeGCode((*ppSGetPathInfo));
-						(*ppSGetPathInfo) = NULL;
-						parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						return -1;
-					}
+                    //1.1.4å°†åç§»åçš„è½¨è¿¹æ•°æ®æ’å…¥é“¾è¡¨
+                    if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE) //å†…å­˜æœªç¼–å·
+                    {
+                        freeGCode(pSPathData);
+                        freeList(&(*ppSGetPathInfo)->pSPathList);
+                        freeGCode((*ppSGetPathInfo));
+                        (*ppSGetPathInfo) = NULL;
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+                //1.2åº•å±‚è¿åŠ¨æŒ‡ä»¤ä¸ºG1
+                else if ((*ppSGetPathInfo)->sCurrCommandVal == G01 * pow(10, GCOMMAND_DECIMAL_PLACE))
+                {
+                    //1.2.1å¼€è¾Ÿå†…å­˜
+                    SLine* pSPathData;
+                    pSPathData = mallocGCode(sizeof(SLine), ORAM_NUM355); //å†…å­˜æœªç¼–å·
+                    if (pSPathData == NULL)
+                    {
+                        parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                    memset(pSPathData, 0, sizeof(SLine));
 
-				}
-				//1.2µ×²ãÔË¶¯Ö¸ÁîÎªG1
-				else if ((*ppSGetPathInfo)->sCurrCommandVal == G01 * pow(10, GCOMMAND_DECIMAL_PLACE))
-				{
-					//1.2.1¿ª±ÙÄÚ´æ
-					SLine* pSPathData;
-					pSPathData = mallocGCode(sizeof(SLine), ORAM_NUM355);//ÄÚ´æÎ´±àºÅ
-					if (pSPathData == NULL)
-					{
-						parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
-						return -1;
-					}
-					memset(pSPathData, 0, sizeof(SLine));
+                    //1.2.2å†™å…¥ç¨‹åºæ®µåŸå§‹è½¨è¿¹æ•°æ®
+                    pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
+                    getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint,
+                                          &pSPathData->SEndPoint, pSCurrGCodeSysState);
+                    pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : L1NE;
+                    SOriginalEndPoint = pSPathData->SEndPoint;
 
-					//1.2.2Ğ´Èë³ÌĞò¶ÎÔ­Ê¼¹ì¼£Êı¾İ
-					pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
-					getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint, &pSPathData->SEndPoint, pSCurrGCodeSysState);
-					pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : L1NE;
-					SOriginalEndPoint = pSPathData->SEndPoint;
+                    //1.2.3å°†åŸå§‹è½¨è¿¹æ•°æ®è¿›è¡Œåç§»
+                    offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
 
-					//1.2.3½«Ô­Ê¼¹ì¼£Êı¾İ½øĞĞÆ«ÒÆ
-					offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
+                    //1.2.4å°†åç§»åçš„è½¨è¿¹æ•°æ®æ’å…¥é“¾è¡¨
+                    if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE) //å†…å­˜æœªç¼–å·
+                    {
+                        freeGCode(pSPathData);
+                        freeList(&(*ppSGetPathInfo)->pSPathList);
+                        freeGCode((*ppSGetPathInfo));
+                        (*ppSGetPathInfo) = NULL;
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+                //1.3åº•å±‚è¿åŠ¨æŒ‡ä»¤ä¸ºG2
+                else if ((*ppSGetPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE) ||
+                         (*ppSGetPathInfo)->sCurrCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE))
+                {
+                    //1.3.1å¼€è¾Ÿå†…å­˜
+                    SArc* pSPathData;
+                    pSPathData = mallocGCode(sizeof(SArc), ORAM_NUM356); //å†…å­˜æœªç¼–å·
+                    if (pSPathData == NULL)
+                    {
+                        parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                    memset(pSPathData, 0, sizeof(SArc));
 
-					//1.2.4½«Æ«ÒÆºóµÄ¹ì¼£Êı¾İ²åÈëÁ´±í
-					if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE)//ÄÚ´æÎ´±àºÅ
-					{
-						freeGCode(pSPathData);
-						freeList(&(*ppSGetPathInfo)->pSPathList);
-						freeGCode((*ppSGetPathInfo));
-						(*ppSGetPathInfo) = NULL;
-						parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						return -1;
-					}
+                    //1.3.2å†™å…¥ç¨‹åºæ®µåŸå§‹è½¨è¿¹æ•°æ®
+                    pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
+                    pSPathData->cArcDir = (*ppSGetPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)
+                                              ? ARC_CW
+                                              : ARC_ANTI_CW;
+                    getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint,
+                                          &pSPathData->SEndPoint, pSCurrGCodeSysState);
+                    SOriginalEndPoint = pSPathData->SEndPoint;
 
-				}
-				//1.3µ×²ãÔË¶¯Ö¸ÁîÎªG2
-				else if ((*ppSGetPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)
-					|| (*ppSGetPathInfo)->sCurrCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE))
-				{
-					//1.3.1¿ª±ÙÄÚ´æ
-					SArc* pSPathData;
-					pSPathData = mallocGCode(sizeof(SArc), ORAM_NUM356);//ÄÚ´æÎ´±àºÅ
-					if (pSPathData == NULL)
-					{
-						parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
-						return -1;
-					}
-					memset(pSPathData, 0, sizeof(SArc));
+                    uint8 ucHor, ucVer;
 
-					//1.3.2Ğ´Èë³ÌĞò¶ÎÔ­Ê¼¹ì¼£Êı¾İ
-					pSPathData->SEndPoint = pSPathData->SStartPoint = (*ppSGetPathInfo)->SCurrState.SCurrPoint;
-					pSPathData->cArcDir = (*ppSGetPathInfo)->sCurrCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE) ? ARC_CW : ARC_ANTI_CW;
-					getMacCoordByScanInfo(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint, &pSPathData->SEndPoint, pSCurrGCodeSysState);
-					SOriginalEndPoint = pSPathData->SEndPoint;
+                    SGCodeSysState* pSCurrSysState = getCurrSystemState(ucChannelNum, ucMod);
+                    getHorAndVerAxis(&ucHor, &ucVer, pSCurrSysState->cInterpolationState,
+                                     pSCurrSysState->SModalInfo.sGc);
+                    getArcCenterPointAndRadius(&(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint,
+                                               &pSPathData->SEndPoint, pSPathData->cArcDir, &pSPathData->SCenterPoint,
+                                               &pSPathData->dRadius, ucHor, ucVer);
 
-					uint8 ucHor, ucVer;
+                    pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : ARC;
 
-					SGCodeSysState* pSCurrSysState = getCurrSystemState(ucChannelNum, ucMod);
-					getHorAndVerAxis(&ucHor, &ucVer, pSCurrSysState->cInterpolationState, pSCurrSysState->SModalInfo.sGc);
-					getArcCenterPointAndRadius(&(*ppSGetPathInfo)->SScanContainer, &pSPathData->SStartPoint, &pSPathData->SEndPoint,
-					pSPathData->cArcDir, &pSPathData->SCenterPoint, &pSPathData->dRadius, ucHor, ucVer);
+                    // 1.3.3 IIå‹çš„é¢å¤–å¤„ç†  è·¨è±¡é™åœ†å¼§å¤„ç†ï¼Œåˆ†å‰²è·¨è±¡é™åœ†å¼§
+                    int8 cResult = isArcIsGroove(&pSPathData->SStartPoint, &pSPathData->SEndPoint,
+                                                 &pSPathData->SCenterPoint, pSPathData->cArcDir, cG71orG72);
 
-					pSPathData->EntityType = isSamePoint(&pSPathData->SStartPoint, &pSPathData->SEndPoint) ? DOT : ARC;
+                    //1.3.3.1è·¨è±¡é™
+                    if (cResult == 1 || cResult == 2)
+                    {
+                        //1.æ±‚æ‹†åœ†æ—¶åéƒ¨åˆ†èµ·ç‚¹çš„åŠ å·¥æ–¹å‘ç³»æ•°
+                        //G71è·¨ä¸€äºŒè±¡é™æ—¶æˆ–G72è·¨ä¸€å››è±¡é™æ—¶ï¼Œç³»æ•°ä¸º1
+                        int8 cSign = (cResult == 1) ? 1 : -1;
+                        //2.åˆå§‹åŒ–å­˜æ”¾æ‹†åˆ†åœ†å¼§çš„åéƒ¨åˆ†æ•°æ®ç»“æ„ä½“
+                        SArc* pSLastPathData;
+                        pSLastPathData = mallocGCode(sizeof(SArc), ORAM_NUM356); //å†…å­˜æœªç¼–å·
+                        if (pSLastPathData == NULL)
+                        {
+                            parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                        memset(pSLastPathData, 0, sizeof(SArc));
+                        //å…ˆåˆå§‹åŒ–å’Œå‰éƒ¨åˆ†æ•°æ®ä¸€æ ·
+                        *pSLastPathData = *pSPathData;
+                        //3.è®¡ç®—æ‹†åœ†åçš„æ•°æ®
+                        //å½“å‰ä¸ºG71æŒ‡ä»¤
+                        if (cG71orG72 == G71)
+                        {
+                            //3.1è®¡ç®—åéƒ¨åˆ†çš„èµ·ç‚¹ä»¥åŠç»ˆç‚¹
+                            pSLastPathData->SStartPoint.dArray[AXIS_X] =
+                                pSPathData->SCenterPoint.dArray[AXIS_X] +
+                                cSign * pSPathData->dRadius; //æ ¹æ®è±¡é™ï¼Œåœ†å¿ƒXä¸åŠå¾„æ±‚å’Œ
 
-					// 1.3.3 IIĞÍµÄ¶îÍâ´¦Àí  ¿çÏóÏŞÔ²»¡´¦Àí£¬·Ö¸î¿çÏóÏŞÔ²»¡
-					int8 cResult = isArcIsGroove(&pSPathData->SStartPoint, &pSPathData->SEndPoint, &pSPathData ->SCenterPoint, pSPathData->cArcDir, cG71orG72);
+                            pSLastPathData->SStartPoint.dArray[AXIS_Z] = pSPathData->SCenterPoint.dArray[AXIS_Z];
+                            pSLastPathData->SEndPoint = pSPathData->SEndPoint;
+                            //3.2ä¿®æ”¹å‰éƒ¨åˆ†çš„ç»ˆç‚¹
+                            pSPathData->SEndPoint = pSLastPathData->SStartPoint;
+                        }
+                        //å½“å‰ä¸ºG72æŒ‡ä»¤
+                        else if (cG71orG72 == G72)
+                        {
+                            //3.1è®¡ç®—åéƒ¨åˆ†çš„èµ·ç‚¹ä»¥åŠç»ˆç‚¹
+                            pSLastPathData->SStartPoint.dArray[AXIS_Z] =
+                                pSPathData->SCenterPoint.dArray[AXIS_Z] +
+                                cSign * pSPathData->dRadius; //æ ¹æ®è±¡é™ï¼Œåœ†å¿ƒXä¸åŠå¾„æ±‚å’Œ
 
-					//1.3.3.1¿çÏóÏŞ
-					if (cResult == 1 || cResult == 2)
-					{
-						//1.Çó²ğÔ²Ê±ºó²¿·ÖÆğµãµÄ¼Ó¹¤·½ÏòÏµÊı
-						//G71¿çÒ»¶şÏóÏŞÊ±»òG72¿çÒ»ËÄÏóÏŞÊ±£¬ÏµÊıÎª1
-						int8 cSign = (cResult == 1) ? 1 : -1;
-						//2.³õÊ¼»¯´æ·Å²ğ·ÖÔ²»¡µÄºó²¿·ÖÊı¾İ½á¹¹Ìå
-						SArc* pSLastPathData;
-						pSLastPathData = mallocGCode(sizeof(SArc), ORAM_NUM356);//ÄÚ´æÎ´±àºÅ
-						if (pSLastPathData == NULL)
-						{
-							parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM406);
-							return -1;
-						}
-						memset(pSLastPathData, 0, sizeof(SArc));
-						//ÏÈ³õÊ¼»¯ºÍÇ°²¿·ÖÊı¾İÒ»Ñù
-						*pSLastPathData= *pSPathData;
-						//3.¼ÆËã²ğÔ²ºóµÄÊı¾İ
-						//µ±Ç°ÎªG71Ö¸Áî
-						if (cG71orG72 == G71)
-						{
-							//3.1¼ÆËãºó²¿·ÖµÄÆğµãÒÔ¼°ÖÕµã
-							pSLastPathData->SStartPoint.dArray[AXIS_X] = pSPathData->SCenterPoint.dArray[AXIS_X] + cSign * pSPathData->dRadius;     //¸ù¾İÏóÏŞ£¬Ô²ĞÄXÓë°ë¾¶ÇóºÍ
-								
-							pSLastPathData->SStartPoint.dArray[AXIS_Z] = pSPathData->SCenterPoint.dArray[AXIS_Z];
-							pSLastPathData->SEndPoint = pSPathData->SEndPoint;
-							//3.2ĞŞ¸ÄÇ°²¿·ÖµÄÖÕµã
-							pSPathData->SEndPoint = pSLastPathData->SStartPoint;
-						}
-						//µ±Ç°ÎªG72Ö¸Áî
-						else if (cG71orG72 == G72)
-						{
-							//3.1¼ÆËãºó²¿·ÖµÄÆğµãÒÔ¼°ÖÕµã
-							pSLastPathData->SStartPoint.dArray[AXIS_Z] = pSPathData->SCenterPoint.dArray[AXIS_Z] + cSign * pSPathData->dRadius;     //¸ù¾İÏóÏŞ£¬Ô²ĞÄXÓë°ë¾¶ÇóºÍ
+                            pSLastPathData->SStartPoint.dArray[AXIS_X] = pSPathData->SCenterPoint.dArray[AXIS_X];
+                            pSLastPathData->SEndPoint = pSPathData->SEndPoint;
+                            //3.2ä¿®æ”¹å‰éƒ¨åˆ†çš„ç»ˆç‚¹
+                            pSPathData->SEndPoint = pSLastPathData->SStartPoint;
+                        }
 
-							pSLastPathData->SStartPoint.dArray[AXIS_X] = pSPathData->SCenterPoint.dArray[AXIS_X];
-							pSLastPathData->SEndPoint = pSPathData->SEndPoint;
-							//3.2ĞŞ¸ÄÇ°²¿·ÖµÄÖÕµã
-							pSPathData->SEndPoint = pSLastPathData->SStartPoint;
-						}
+                        //4.å°†åŸå§‹è½¨è¿¹æ•°æ®è¿›è¡Œåç§»
+                        offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
+                        offsetEntity((enum ENTITY*)pSLastPathData, dDeltaU, dDeltaW);
+                        //5.å°†åç§»åçš„è½¨è¿¹æ•°æ®æ’å…¥é“¾è¡¨
+                        //å…ˆæ’å‰éƒ¨åˆ†æ•°æ®
+                        if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE) //å†…å­˜æœªç¼–å·
+                        {
+                            freeGCode(pSPathData);
+                            freeGCode(pSLastPathData);
+                            freeList(&(*ppSGetPathInfo)->pSPathList);
+                            freeGCode((*ppSGetPathInfo));
+                            (*ppSGetPathInfo) = NULL;
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                        //å†æ’åéƒ¨åˆ†çš„æ•°æ®
+                        if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSLastPathData, ORAM_NUM354) ==
+                            FALSE) //å†…å­˜æœªç¼–å·
+                        {
+                            freeGCode(pSLastPathData);
+                            freeList(&(*ppSGetPathInfo)->pSPathList);
+                            freeGCode((*ppSGetPathInfo));
+                            (*ppSGetPathInfo) = NULL;
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //1.3.3.2æ²¡æœ‰è·¨è±¡é™
+                    else
+                    {
+                        //3.å°†åŸå§‹è½¨è¿¹æ•°æ®è¿›è¡Œåç§»
+                        offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
 
+                        //4å°†åç§»åçš„è½¨è¿¹æ•°æ®æ’å…¥é“¾è¡¨
+                        if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE) //å†…å­˜æœªç¼–å·
+                        {
+                            freeGCode(pSPathData);
+                            freeList(&(*ppSGetPathInfo)->pSPathList);
+                            freeGCode((*ppSGetPathInfo));
+                            (*ppSGetPathInfo) = NULL;
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+            }
 
-						//4.½«Ô­Ê¼¹ì¼£Êı¾İ½øĞĞÆ«ÒÆ
-						offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
-						offsetEntity((enum ENTITY*)pSLastPathData, dDeltaU, dDeltaW);
-						//5.½«Æ«ÒÆºóµÄ¹ì¼£Êı¾İ²åÈëÁ´±í
-						//ÏÈ²åÇ°²¿·ÖÊı¾İ
-						if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE)//ÄÚ´æÎ´±àºÅ
-						{
-							freeGCode(pSPathData);
-							freeGCode(pSLastPathData);
-							freeList(&(*ppSGetPathInfo)->pSPathList);
-							freeGCode((*ppSGetPathInfo));
-							(*ppSGetPathInfo) = NULL;
-							parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-							return -1;
-						}
-						//ÔÙ²åºó²¿·ÖµÄÊı¾İ
-						if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSLastPathData, ORAM_NUM354) == FALSE)//ÄÚ´æÎ´±àºÅ
-						{
-							freeGCode(pSLastPathData);
-							freeList(&(*ppSGetPathInfo)->pSPathList);
-							freeGCode((*ppSGetPathInfo));
-							(*ppSGetPathInfo) = NULL;
-							parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-							return -1;
-						}
+            //2.æ›´æ–°çŠ¶æ€
+            (*ppSGetPathInfo)->SCurrState.SCurrPoint = SOriginalEndPoint; //è®°å½•åç§»å‰çš„ç»ˆç‚¹åæ ‡
+            if ((*ppSGetPathInfo)->pSCurrCommandRegulation->cGroup == sGa)
+            {
+                (*ppSGetPathInfo)->SCurrState.sGa = (*ppSGetPathInfo)->sCurrCommandVal;
+                (*ppSGetPathInfo)->SCurrState.pSGaRegulation = (*ppSGetPathInfo)->pSCurrCommandRegulation;
+                (*ppSGetPathInfo)->SCurrState.sGz = 0;
+                (*ppSGetPathInfo)->SCurrState.pSGzRegulation = NULL;
+            }
+            else if ((*ppSGetPathInfo)->pSCurrCommandRegulation->cGroup == sGz)
+            {
+                (*ppSGetPathInfo)->SCurrState.sGz = (*ppSGetPathInfo)->sCurrCommandVal;
+                (*ppSGetPathInfo)->SCurrState.pSGzRegulation = (*ppSGetPathInfo)->pSCurrCommandRegulation;
+            }
 
-					}
-					//1.3.3.2Ã»ÓĞ¿çÏóÏŞ
-					else
-					{
-						//3.½«Ô­Ê¼¹ì¼£Êı¾İ½øĞĞÆ«ÒÆ
-						offsetEntity((enum ENTITY*)pSPathData, dDeltaU, dDeltaW);
+            (*ppSGetPathInfo)->cPart = ASSIGN_PART_5;
 
-						//4½«Æ«ÒÆºóµÄ¹ì¼£Êı¾İ²åÈëÁ´±í
-						if (insertList((*ppSGetPathInfo)->pSPathList, 0, pSPathData, ORAM_NUM354) == FALSE)//ÄÚ´æÎ´±àºÅ
-						{
-							freeGCode(pSPathData);
-							freeList(&(*ppSGetPathInfo)->pSPathList);
-							freeGCode((*ppSGetPathInfo));
-							(*ppSGetPathInfo) = NULL;
-							parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-							return -1;
-						}
+            break;
+        }
 
-					}				
-				}
-			}
-			
-			//2.¸üĞÂ×´Ì¬
-			(*ppSGetPathInfo)->SCurrState.SCurrPoint = SOriginalEndPoint;//¼ÇÂ¼Æ«ÒÆÇ°µÄÖÕµã×ø±ê
-			if ((*ppSGetPathInfo)->pSCurrCommandRegulation->cGroup == sGa)
-			{
-				(*ppSGetPathInfo)->SCurrState.sGa = (*ppSGetPathInfo)->sCurrCommandVal;
-				(*ppSGetPathInfo)->SCurrState.pSGaRegulation = (*ppSGetPathInfo)->pSCurrCommandRegulation;
-				(*ppSGetPathInfo)->SCurrState.sGz = 0;
-				(*ppSGetPathInfo)->SCurrState.pSGzRegulation = NULL;
-			}
-			else if ((*ppSGetPathInfo)->pSCurrCommandRegulation->cGroup == sGz)
-			{
-				(*ppSGetPathInfo)->SCurrState.sGz = (*ppSGetPathInfo)->sCurrCommandVal;
-				(*ppSGetPathInfo)->SCurrState.pSGzRegulation = (*ppSGetPathInfo)->pSCurrCommandRegulation;
-			}
+        //IF/WHILE
+        case PART_5:
+        {
+            int8 cRet = 1;
+            //1.Bç±»å®å…³é”®å­—
+            if ((*ppSGetPathInfo)->SScanContainer.cMacroType != 0)
+            {
+                switch ((*ppSGetPathInfo)->SScanContainer.cMacroType)
+                {
+                //WHILE
+                case 6:
+                {
+                    cRet = assignWHILE(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer,
+                                       &(*ppSGetPathInfo)->SGetTextStateInfo);
+                    break;
+                }
+                //ENDWHILE
+                case 7:
+                {
+                    cRet = assignENDWHILE(ucChannelNum, &(*ppSGetPathInfo)->SGetTextStateInfo);
+                    break;
+                }
+                default:
+                    cRet = 1;
+                    break;
+                }
+            }
+            if (cRet == 1)
+            {
+                (*ppSGetPathInfo)->cPart = PART_6;
+            }
+            break;
+        }
 
-			(*ppSGetPathInfo)->cPart = ASSIGN_PART_5;
+        //åˆ¤æ–­NSè‡³NFç¨‹åºæ®µæ˜¯å¦è·å–å®Œæˆ
+        case PART_6:
+        {
+            //å½“å‰ç¨‹åºæ®µæ®µå·ä¸ºNFï¼Œè·å–å®Œæˆ
+            if ((*ppSGetPathInfo)->SScanContainer.bN == TRUE && (*ppSGetPathInfo)->SScanContainer.dN == unNF)
+            {
+                (*ppSGetPathInfo)->cStep = 2;
+            }
+            else
+            {
+                (*ppSGetPathInfo)->cCommandSegmentCnt = 0;
+                (*ppSGetPathInfo)->cPart = PART_1;
+            }
+            break;
+        }
 
-			break;
-		}
+        default:
+            break;
+        }
+        break;
+    }
 
-		//IF/WHILE
-		case PART_5:
-		{
-			int8 cRet = 1;
-			//1.BÀàºê¹Ø¼ü×Ö
-			if ((*ppSGetPathInfo)->SScanContainer.cMacroType != 0)
-			{
-				switch ((*ppSGetPathInfo)->SScanContainer.cMacroType)
-				{
-				//WHILE
-				case 6:
-				{
-					cRet = assignWHILE(ucChannelNum, &(*ppSGetPathInfo)->SScanContainer, &(*ppSGetPathInfo)->SGetTextStateInfo);
-					break;
+    //2.è½¨è¿¹é“¾è¡¨å·²ç”Ÿæˆ
+    case 2:
+    {
+        //1.è¾“å‡º
+        //1.1è¾“å‡ºpSPathList
+        *ppSPathList = (*ppSGetPathInfo)->pSPathList;
+        //1.2è¾“å‡ºpSTargetTextInfo
+        *pSTargetTextInfo = (*ppSGetPathInfo)->SGetTextStateInfo;
 
-				}
-				//ENDWHILE
-				case 7:
-				{
-					cRet = assignENDWHILE(ucChannelNum, &(*ppSGetPathInfo)->SGetTextStateInfo);
-					break;
-				}
-				default:
-					cRet = 1;
-					break;
-				}
+        //æ³¨æ„ï¼ï¼ï¼è½¨è¿¹é“¾è¡¨çš„èŠ‚ç‚¹å†…å­˜ä¸éœ€è¦é‡Šæ”¾ï¼Œæ­¤å†…å­˜åç»­è¢«pSPathListç»´æŠ¤
 
-			}
-			if (cRet == 1)
-			{
-				(*ppSGetPathInfo)->cPart = PART_6;
-			}
-			break;
-		}
+        //2.é‡Šæ”¾(*ppSGetPathInfo)
+        freeGCode(*ppSGetPathInfo);
 
-		//ÅĞ¶ÏNSÖÁNF³ÌĞò¶ÎÊÇ·ñ»ñÈ¡Íê³É
-		case PART_6:
-		{
-			//µ±Ç°³ÌĞò¶Î¶ÎºÅÎªNF£¬»ñÈ¡Íê³É
-			if ((*ppSGetPathInfo)->SScanContainer.bN == TRUE && (*ppSGetPathInfo)->SScanContainer.dN == unNF)
-			{
-				(*ppSGetPathInfo)->cStep = 2;
-			}
-			else
-			{
-				(*ppSGetPathInfo)->cCommandSegmentCnt = 0;
-				(*ppSGetPathInfo)->cPart = PART_1;
-			}
-			break;
-		}
-		
-		default:
-			break;
-		}
-		break;
-	}
-	
-	//2.¹ì¼£Á´±íÒÑÉú³É
-	case 2:
-	{
-		//1.Êä³ö
-		//1.1Êä³öpSPathList
-		*ppSPathList = (*ppSGetPathInfo)->pSPathList;
-		//1.2Êä³öpSTargetTextInfo
-		*pSTargetTextInfo = (*ppSGetPathInfo)->SGetTextStateInfo;
+        (*ppSGetPathInfo) = NULL;
 
-		//×¢Òâ£¡£¡£¡¹ì¼£Á´±íµÄ½ÚµãÄÚ´æ²»ĞèÒªÊÍ·Å£¬´ËÄÚ´æºóĞø±»pSPathListÎ¬»¤
-		
-		//2.ÊÍ·Å(*ppSGetPathInfo)
-		freeGCode(*ppSGetPathInfo);
+        return 1;
+        break;
+    }
 
-		(*ppSGetPathInfo) = NULL;
+    default:
+        break;
+    }
 
-		return 1;
-		break;
-	}
-
-	default:
-		break;
-	}
-
-	return 0;
-
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  Éú³É¹ì¼£Á´±í
-  ÊäÈë²ÎÊı£ºucMod				Ä£Ê½£¨¼ì²é/¸³Öµ£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	ÒÑ»ñÈ¡ËùÓĞ¹ì¼£
-			0	¹ì¼£Î´»ñÈ¡Íê³É
-			-1	´íÎó
-  ±¸    ×¢£º1.
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  ç”Ÿæˆè½¨è¿¹é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼šucMod				æ¨¡å¼ï¼ˆæ£€æŸ¥/èµ‹å€¼ï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å·²è·å–æ‰€æœ‰è½¨è¿¹
+			0	è½¨è¿¹æœªè·å–å®Œæˆ
+			-1	é”™è¯¯
+  å¤‡    æ³¨ï¼š1.
 **************************************************/
-void removeEntryAndExitPath(SList* pSPathList,int8 cAxis, bool bRemoveEntry, bool bRemoveExit)
-{		
-	SLine* pEntity;
-	//½øµ¶Öá
-	int8 cAxis1 = cAxis;
-	//·Ç½øµ¶Öá
-	int8 cAxis2 = cAxis == AXIS_X ? AXIS_Z : AXIS_X;
+void removeEntryAndExitPath(SList* pSPathList, int8 cAxis, bool bRemoveEntry, bool bRemoveExit)
+{
+    SLine* pEntity;
+    //è¿›åˆ€è½´
+    int8 cAxis1 = cAxis;
+    //éè¿›åˆ€è½´
+    int8 cAxis2 = cAxis == AXIS_X ? AXIS_Z : AXIS_X;
 
-	//È¥³ı½øµ¶¶Î
-	if (bRemoveEntry)
-	{
-		int16 sCurrPos = pSPathList->cSize - 1;
-		while (sCurrPos >= 0)
-		{
-			pEntity = FindNodeData(pSPathList, sCurrPos);
-			if ((pEntity->EntityType == L1NE || pEntity->EntityType == OTHERTYPE))
-			{
-				//ÅĞ¶ÏÊÇ·ñ½øµ¶£¨½ö½øµ¶Öá·¢ÉúÒÆ¶¯£©
-				if (!isZero(pEntity->SStartPoint.dArray[cAxis1] - pEntity->SEndPoint.dArray[cAxis1]) &&
-					isZero(pEntity->SStartPoint.dArray[cAxis2] - pEntity->SEndPoint.dArray[cAxis2]))
-				{
-					removeNode(pSPathList, sCurrPos, FALSE);
-				}
-				else
-					break;
-			}
-			sCurrPos--;
-		}
-	}
+    //å»é™¤è¿›åˆ€æ®µ
+    if (bRemoveEntry)
+    {
+        int16 sCurrPos = pSPathList->cSize - 1;
+        while (sCurrPos >= 0)
+        {
+            pEntity = FindNodeData(pSPathList, sCurrPos);
+            if ((pEntity->EntityType == L1NE || pEntity->EntityType == OTHERTYPE))
+            {
+                //åˆ¤æ–­æ˜¯å¦è¿›åˆ€ï¼ˆä»…è¿›åˆ€è½´å‘ç”Ÿç§»åŠ¨ï¼‰
+                if (!isZero(pEntity->SStartPoint.dArray[cAxis1] - pEntity->SEndPoint.dArray[cAxis1]) &&
+                    isZero(pEntity->SStartPoint.dArray[cAxis2] - pEntity->SEndPoint.dArray[cAxis2]))
+                {
+                    removeNode(pSPathList, sCurrPos, FALSE);
+                }
+                else
+                    break;
+            }
+            sCurrPos--;
+        }
+    }
 
-	//È¥³ıÍËµ¶¶Î
-	if (bRemoveExit)
-	{
-		int16 sCurrPos = 0;
-		while (sCurrPos <= pSPathList->cSize - 1)
-		{
-			pEntity = FindNodeData(pSPathList, sCurrPos);
-			if ((pEntity->EntityType == L1NE || pEntity->EntityType == OTHERTYPE))
-			{
-				//ÅĞ¶ÏÊÇ·ñ½øµ¶£¨½ö½øµ¶Öá·¢ÉúÒÆ¶¯£©
-				if (!isZero(pEntity->SStartPoint.dArray[cAxis1] - pEntity->SEndPoint.dArray[cAxis1]) &&
-					isZero(pEntity->SStartPoint.dArray[cAxis2] - pEntity->SEndPoint.dArray[cAxis2]))
-				{
-					removeNode(pSPathList, sCurrPos, FALSE);
-				}
-				else
-					break;
-			}
-			else
-			{
-				sCurrPos++;
-			}
-
-		}
-	}
-
+    //å»é™¤é€€åˆ€æ®µ
+    if (bRemoveExit)
+    {
+        int16 sCurrPos = 0;
+        while (sCurrPos <= pSPathList->cSize - 1)
+        {
+            pEntity = FindNodeData(pSPathList, sCurrPos);
+            if ((pEntity->EntityType == L1NE || pEntity->EntityType == OTHERTYPE))
+            {
+                //åˆ¤æ–­æ˜¯å¦è¿›åˆ€ï¼ˆä»…è¿›åˆ€è½´å‘ç”Ÿç§»åŠ¨ï¼‰
+                if (!isZero(pEntity->SStartPoint.dArray[cAxis1] - pEntity->SEndPoint.dArray[cAxis1]) &&
+                    isZero(pEntity->SStartPoint.dArray[cAxis2] - pEntity->SEndPoint.dArray[cAxis2]))
+                {
+                    removeNode(pSPathList, sCurrPos, FALSE);
+                }
+                else
+                    break;
+            }
+            else
+            {
+                sCurrPos++;
+            }
+        }
+    }
 }
 
 void offsetEntity(enum ENTITY* pEntity, double dDeltaX, double dDeltaZ)
 {
-	switch (*pEntity)
-	{
-	case OTHERTYPE:case L1NE:case DOT:
-		SLine* pSLine = (SLine*)pEntity;
-		pSLine->SStartPoint.dArray[AXIS_X] += dDeltaX;
-		pSLine->SStartPoint.dArray[AXIS_Z] += dDeltaZ;
-		pSLine->SEndPoint.dArray[AXIS_X] += dDeltaX;
-		pSLine->SEndPoint.dArray[AXIS_Z] += dDeltaZ;
+    switch (*pEntity)
+    {
+    case OTHERTYPE:
+    case L1NE:
+    case DOT:
+        SLine* pSLine = (SLine*)pEntity;
+        pSLine->SStartPoint.dArray[AXIS_X] += dDeltaX;
+        pSLine->SStartPoint.dArray[AXIS_Z] += dDeltaZ;
+        pSLine->SEndPoint.dArray[AXIS_X] += dDeltaX;
+        pSLine->SEndPoint.dArray[AXIS_Z] += dDeltaZ;
 
-		break;
-	case ARC:
-		SArc* pSArc = (SArc*)pEntity;
-		pSArc->SStartPoint.dArray[AXIS_X] += dDeltaX;
-		pSArc->SStartPoint.dArray[AXIS_Z] += dDeltaZ;
-		pSArc->SEndPoint.dArray[AXIS_X] += dDeltaX;
-		pSArc->SEndPoint.dArray[AXIS_Z] += dDeltaZ;
-		pSArc->SCenterPoint.dArray[AXIS_X] += dDeltaX;
-		pSArc->SCenterPoint.dArray[AXIS_Z] += dDeltaZ;
-		break;
-	default:
-		break;
-	}
+        break;
+    case ARC:
+        SArc* pSArc = (SArc*)pEntity;
+        pSArc->SStartPoint.dArray[AXIS_X] += dDeltaX;
+        pSArc->SStartPoint.dArray[AXIS_Z] += dDeltaZ;
+        pSArc->SEndPoint.dArray[AXIS_X] += dDeltaX;
+        pSArc->SEndPoint.dArray[AXIS_Z] += dDeltaZ;
+        pSArc->SCenterPoint.dArray[AXIS_X] += dDeltaX;
+        pSArc->SCenterPoint.dArray[AXIS_Z] += dDeltaZ;
+        break;
+    default:
+        break;
+    }
 }
-//ÔÚÔ­Ê¼¹ì¼£Á´±íÉÏĞŞ¸Ä
+//åœ¨åŸå§‹è½¨è¿¹é“¾è¡¨ä¸Šä¿®æ”¹
 void offsetPathList(SList** ppSPathList, double dDeltaX, double dDeltaZ)
 {
-	for (int i = 0; i < (*ppSPathList)->cSize; i++)
-	{
-		enum ENTITY* pEntity;
-		pEntity = FindNodeData(*ppSPathList, i);
-		offsetEntity(pEntity, dDeltaX, dDeltaZ);
-	}
+    for (int i = 0; i < (*ppSPathList)->cSize; i++)
+    {
+        enum ENTITY* pEntity;
+        pEntity = FindNodeData(*ppSPathList, i);
+        offsetEntity(pEntity, dDeltaX, dDeltaZ);
+    }
 }
-//²»ĞŞ¸ÄÔ­Ê¼¹ì¼£Á´±í
+//ä¸ä¿®æ”¹åŸå§‹è½¨è¿¹é“¾è¡¨
 int8 offsetPathList_2(SList* pSPathList, SList** ppSPathList_2, double dDeltaX, double dDeltaZ)
 {
-	SList* pSNewPathList;
-	pSNewPathList = initList(ORAM_NUM353, ORAM_NUM354);
+    SList* pSNewPathList;
+    pSNewPathList = initList(ORAM_NUM353, ORAM_NUM354);
     if (pSNewPathList == NULL)
     {
         *ppSPathList_2 = NULL;
         return -1;
     }
-	int16 sCurrPos;
-	sCurrPos = pSPathList->cSize - 1;
-	//¸´ÖÆ¹ì¼£ÖĞµÄÊµÌå
-	while (sCurrPos >= 0)
-	{
-		//¸´ÖÆµ±Ç°ÊµÌå½Úµã
-		SLine* pEntity;
-		SLine* pNewEntity = NULL;
-		pEntity = FindNodeData(pSPathList, sCurrPos);
-		switch (pEntity->EntityType)
-		{
-		case OTHERTYPE:case L1NE:case DOT:
-		{	
-			pNewEntity = mallocGCode(sizeof(SLine), ORAM_NUM355);
-		     if (pNewEntity == NULL)
-			{
-		    	 freeList(&pSNewPathList);
-				*ppSPathList_2 = NULL;
-				return -1;
-			}
-			*(SLine*)pNewEntity = *(SLine*)pEntity;
-			break;
-		}
-		case ARC:
-		{			
-			pNewEntity = mallocGCode(sizeof(SArc), ORAM_NUM356);
-		    if (pNewEntity == NULL)
-			{
-		    	freeList(&pSNewPathList);
-				*ppSPathList_2 = NULL;
-				return -1;
-			}
-			*(SArc*)pNewEntity = *(SArc*)pEntity;
-			break;
-		}
-		default:
-			break;
-		}
-		
-		//Æ«ÒÆ
-		offsetEntity(pNewEntity, dDeltaX, dDeltaZ);
+    int16 sCurrPos;
+    sCurrPos = pSPathList->cSize - 1;
+    //å¤åˆ¶è½¨è¿¹ä¸­çš„å®ä½“
+    while (sCurrPos >= 0)
+    {
+        //å¤åˆ¶å½“å‰å®ä½“èŠ‚ç‚¹
+        SLine* pEntity;
+        SLine* pNewEntity = NULL;
+        pEntity = FindNodeData(pSPathList, sCurrPos);
+        switch (pEntity->EntityType)
+        {
+        case OTHERTYPE:
+        case L1NE:
+        case DOT:
+        {
+            pNewEntity = mallocGCode(sizeof(SLine), ORAM_NUM355);
+            if (pNewEntity == NULL)
+            {
+                freeList(&pSNewPathList);
+                *ppSPathList_2 = NULL;
+                return -1;
+            }
+            *(SLine*)pNewEntity = *(SLine*)pEntity;
+            break;
+        }
+        case ARC:
+        {
+            pNewEntity = mallocGCode(sizeof(SArc), ORAM_NUM356);
+            if (pNewEntity == NULL)
+            {
+                freeList(&pSNewPathList);
+                *ppSPathList_2 = NULL;
+                return -1;
+            }
+            *(SArc*)pNewEntity = *(SArc*)pEntity;
+            break;
+        }
+        default:
+            break;
+        }
 
-		//½«ĞÂÊµÌå²åÈëĞÂ¹ì¼£Á´±í
-		if(insertList(pSNewPathList, 0, pNewEntity, ORAM_NUM354) == FALSE )
-	    {
-			     freeGCode(pNewEntity);       // ÊÍ·Å±¾ÌõÎ´ÈëÁ´µÄÊµÌå
-	            freeList(&pSNewPathList); // Ïú»ÙÁÙÊ±Á´±í
-	            *ppSPathList_2 = NULL;
-	            return -1;
-	     }
-		sCurrPos--;
-	}
+        //åç§»
+        offsetEntity(pNewEntity, dDeltaX, dDeltaZ);
 
-	*ppSPathList_2 = pSNewPathList;
-	return 0;
+        //å°†æ–°å®ä½“æ’å…¥æ–°è½¨è¿¹é“¾è¡¨
+        if (insertList(pSNewPathList, 0, pNewEntity, ORAM_NUM354) == FALSE)
+        {
+            freeGCode(pNewEntity);    // é‡Šæ”¾æœ¬æ¡æœªå…¥é“¾çš„å®ä½“
+            freeList(&pSNewPathList); // é”€æ¯ä¸´æ—¶é“¾è¡¨
+            *ppSPathList_2 = NULL;
+            return -1;
+        }
+        sCurrPos--;
+    }
+
+    *ppSPathList_2 = pSNewPathList;
+    return 0;
 }
-//¾µÏñÊµÌå
+//é•œåƒå®ä½“
 void mirrorEntity(enum ENTITY* pEntity)
 {
-	switch (*pEntity)
-	{
-	case OTHERTYPE:case L1NE:case DOT:
-		SLine* pSLine = (SLine*)pEntity;
-		pSLine->SStartPoint.dArray[AXIS_X] *= -1;
-		pSLine->SEndPoint.dArray[AXIS_X] *= -1;
+    switch (*pEntity)
+    {
+    case OTHERTYPE:
+    case L1NE:
+    case DOT:
+        SLine* pSLine = (SLine*)pEntity;
+        pSLine->SStartPoint.dArray[AXIS_X] *= -1;
+        pSLine->SEndPoint.dArray[AXIS_X] *= -1;
 
-		break;
-	case ARC:
-		SArc* pSArc = (SArc*)pEntity;
-		pSArc->SStartPoint.dArray[AXIS_X] *= -1;
-		pSArc->SEndPoint.dArray[AXIS_X] *= -1;
-		pSArc->SCenterPoint.dArray[AXIS_X] *= -1;
-		pSArc->cArcDir *= -1;
+        break;
+    case ARC:
+        SArc* pSArc = (SArc*)pEntity;
+        pSArc->SStartPoint.dArray[AXIS_X] *= -1;
+        pSArc->SEndPoint.dArray[AXIS_X] *= -1;
+        pSArc->SCenterPoint.dArray[AXIS_X] *= -1;
+        pSArc->cArcDir *= -1;
 
-		break;
-	default:
-		break;
-	}
+        break;
+    default:
+        break;
+    }
 }
-//¾µÏñ¹ì¼£Á´±í
+//é•œåƒè½¨è¿¹é“¾è¡¨
 void mirrorPathList(SList** ppSPathList)
 {
-	for (int i = 0; i < (*ppSPathList)->cSize; i++)
-	{
-		enum ENTITY* pEntity;
-		pEntity = FindNodeData(*ppSPathList, i);
-		mirrorEntity(pEntity);
-		
-	}
+    for (int i = 0; i < (*ppSPathList)->cSize; i++)
+    {
+        enum ENTITY* pEntity;
+        pEntity = FindNodeData(*ppSPathList, i);
+        mirrorEntity(pEntity);
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8  cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶ÏÊÇ·ñÎª»ù´¡¹ì¼£Ö¸Áî
-  ÊäÈë²ÎÊı£ºsCommandVal
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÄ¿Ç°»ù´¡¹ì¼£Ö¸ÁîÓĞ£ºG0,G1,G2,G3
+  å‡½æ•°åç§°ï¼švoid getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8  cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­æ˜¯å¦ä¸ºåŸºç¡€è½¨è¿¹æŒ‡ä»¤
+  è¾“å…¥å‚æ•°ï¼šsCommandVal
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šç›®å‰åŸºç¡€è½¨è¿¹æŒ‡ä»¤æœ‰ï¼šG0,G1,G2,G3
 **************************************************/
 bool isBasicMotionCommand(int16 sCommandVal)
 {
-	if ((sCommandVal == G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//¿ìËÙÔË¶¯
-		(sCommandVal == G01 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//Ö±Ïß²å²¹
-		(sCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//Ë³Ê±ÕëÔ²»¡
-		(sCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE)))		//ÄæÊ±ÕëÔ²»¡
-	{
-		return TRUE;
-	}
-	return FALSE;
+    if ((sCommandVal == G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //å¿«é€Ÿè¿åŠ¨
+        (sCommandVal == G01 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //ç›´çº¿æ’è¡¥
+        (sCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //é¡ºæ—¶é’ˆåœ†å¼§
+        (sCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE)))   //é€†æ—¶é’ˆåœ†å¼§
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 bool isAllowGCommandInPath(SScan* pSScanContainer)
 {
-	if (pSScanContainer->SScanModalInfo.pSGaRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal == G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//¿ìËÙÔË¶¯
-			(pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal == G01 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//Ö±Ïß²å²¹
-			(pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal == G02 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//Ë³Ê±ÕëÔ²»¡
-			(pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal == G03 * pow(10, GCOMMAND_DECIMAL_PLACE))))		//ÄæÊ±ÕëÔ²»¡
-		{
-			return FALSE;
-		}
-	}
-	if (pSScanContainer->SScanModalInfo.pSGbRegulation != NULL)
-	{
-		return FALSE;
-	}	
-	if (pSScanContainer->SScanModalInfo.pSGcRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal == G17 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//XYÆ½Ãæ
-			(pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal == G18 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//ZXÆ½Ãæ
-			(pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal == G19 * pow(10, GCOMMAND_DECIMAL_PLACE))))		//YZÆ½Ãæ
-		{
-			return FALSE;
-		}
-	}	
-	if (pSScanContainer->SScanModalInfo.pSGdRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal == G40 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//È¡Ïûµ¶²¹
-			(pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal == G41 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//×óµ¶²¹
-			(pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal == G42 * pow(10, GCOMMAND_DECIMAL_PLACE))))		//ÓÒµ¶²¹
-		{
-			return FALSE;
-		}
-	}	
-	if (pSScanContainer->SScanModalInfo.pSGeRegulation != NULL)
-	{
-		return FALSE;
-	}
-	if (pSScanContainer->SScanModalInfo.pSGfRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGfRegulation->nCommandVal == G96 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//ºãÏßËÙ
-			(pSScanContainer->SScanModalInfo.pSGfRegulation->nCommandVal == G97 * pow(10, GCOMMAND_DECIMAL_PLACE))))		//ºã×ªËÙ
-		{
-			return FALSE;
-		}
-	}
-	if (pSScanContainer->SScanModalInfo.pSGgRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGgRegulation->nCommandVal == G98 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||	//Ã¿·Ö½ø¸ø
-			(pSScanContainer->SScanModalInfo.pSGgRegulation->nCommandVal == G99 * pow(10, GCOMMAND_DECIMAL_PLACE))))		//Ã¿×ª½ø¸ø
-		{
-			return FALSE;
-		}
+    if (pSScanContainer->SScanModalInfo.pSGaRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal ==
+               G00 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //å¿«é€Ÿè¿åŠ¨
+              (pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal ==
+               G01 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //ç›´çº¿æ’è¡¥
+              (pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal ==
+               G02 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //é¡ºæ—¶é’ˆåœ†å¼§
+              (pSScanContainer->SScanModalInfo.pSGaRegulation->nCommandVal ==
+               G03 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //é€†æ—¶é’ˆåœ†å¼§
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanModalInfo.pSGbRegulation != NULL)
+    {
+        return FALSE;
+    }
+    if (pSScanContainer->SScanModalInfo.pSGcRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal ==
+               G17 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //XYå¹³é¢
+              (pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal ==
+               G18 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //ZXå¹³é¢
+              (pSScanContainer->SScanModalInfo.pSGcRegulation->nCommandVal ==
+               G19 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //YZå¹³é¢
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanModalInfo.pSGdRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal ==
+               G40 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //å–æ¶ˆåˆ€è¡¥
+              (pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal ==
+               G41 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //å·¦åˆ€è¡¥
+              (pSScanContainer->SScanModalInfo.pSGdRegulation->nCommandVal ==
+               G42 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //å³åˆ€è¡¥
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanModalInfo.pSGeRegulation != NULL)
+    {
+        return FALSE;
+    }
+    if (pSScanContainer->SScanModalInfo.pSGfRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGfRegulation->nCommandVal ==
+               G96 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //æ’çº¿é€Ÿ
+              (pSScanContainer->SScanModalInfo.pSGfRegulation->nCommandVal ==
+               G97 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //æ’è½¬é€Ÿ
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanModalInfo.pSGgRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGgRegulation->nCommandVal ==
+               G98 * pow(10, GCOMMAND_DECIMAL_PLACE)) || //æ¯åˆ†è¿›ç»™
+              (pSScanContainer->SScanModalInfo.pSGgRegulation->nCommandVal ==
+               G99 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //æ¯è½¬è¿›ç»™
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanModalInfo.pSGhRegulation != NULL)
+    {
+        return FALSE;
+    }
+    if (pSScanContainer->SScanModalInfo.pSGzRegulation != NULL)
+    {
+        if (!((pSScanContainer->SScanModalInfo.pSGzRegulation->nCommandVal ==
+               G04 * pow(10, GCOMMAND_DECIMAL_PLACE)))) //å»¶æ—¶
+        {
+            return FALSE;
+        }
+    }
+    if (pSScanContainer->SScanNonModalInfo.pSGxRegulation != NULL)
+    {
+        return FALSE;
+    }
 
-	}
-	if (pSScanContainer->SScanModalInfo.pSGhRegulation != NULL)
-	{
-		return FALSE;
-	}
-	if (pSScanContainer->SScanModalInfo.pSGzRegulation != NULL)
-	{
-		if (!((pSScanContainer->SScanModalInfo.pSGzRegulation->nCommandVal == G04 * pow(10, GCOMMAND_DECIMAL_PLACE))))	//ÑÓÊ±
-		{
-			return FALSE;
-		}
-	}
-	if (pSScanContainer->SScanNonModalInfo.pSGxRegulation != NULL)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8  cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ô²»¡µÄµ¥µ÷ĞÔ
-  ÊäÈë²ÎÊı£ºpSStartPoint			Æğµã×ø±ê
-			pSEndPoint				ÖÕµã×ø±ê
-			pSCenterPoint			Ô²ĞÄ×ø±ê
-			cArcDir					Ô²»¡·½Ïò
-			pXIsMono				XÖáÊÇ·ñµ¥µ÷£¨ÓÃÓÚÊä³ö£©
-			pZIsMono				ZÖáÊÇ·ñµ¥µ÷£¨ÓÃÓÚÊä³ö£©
-			pXCurrMono				XÖáµ¥µ÷Öµ£¨ÓÃÓÚÊä³ö£©
-			pZCurrMono				ZÖáµ¥µ÷Öµ£¨ÓÃÓÚÊä³ö£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º0.±¾º¯ÊıÎ´¶ÔÔ²»¡²ÎÊı½øĞĞ¼ì²é!!!
-			1.Èôµ¥µ÷Ôö£¬Ôòµ¥µ÷ÖµÎª1
-			2.Èôµ¥µ÷¼õ£¬Ôòµ¥µ÷ÖµÎª-1
+  å‡½æ•°åç§°ï¼švoid getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8  cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
+  å‡½æ•°åŠŸèƒ½  è·å–åœ†å¼§çš„å•è°ƒæ€§
+  è¾“å…¥å‚æ•°ï¼špSStartPoint			èµ·ç‚¹åæ ‡
+			pSEndPoint				ç»ˆç‚¹åæ ‡
+			pSCenterPoint			åœ†å¿ƒåæ ‡
+			cArcDir					åœ†å¼§æ–¹å‘
+			pXIsMono				Xè½´æ˜¯å¦å•è°ƒï¼ˆç”¨äºè¾“å‡ºï¼‰
+			pZIsMono				Zè½´æ˜¯å¦å•è°ƒï¼ˆç”¨äºè¾“å‡ºï¼‰
+			pXCurrMono				Xè½´å•è°ƒå€¼ï¼ˆç”¨äºè¾“å‡ºï¼‰
+			pZCurrMono				Zè½´å•è°ƒå€¼ï¼ˆç”¨äºè¾“å‡ºï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š0.æœ¬å‡½æ•°æœªå¯¹åœ†å¼§å‚æ•°è¿›è¡Œæ£€æŸ¥!!!
+			1.è‹¥å•è°ƒå¢ï¼Œåˆ™å•è°ƒå€¼ä¸º1
+			2.è‹¥å•è°ƒå‡ï¼Œåˆ™å•è°ƒå€¼ä¸º-1
 **************************************************/
-void getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8 cArcDir, bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
+void getArcMonotonicity(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, int8 cArcDir,
+                        bool* pXIsMono, bool* pZIsMono, int8* pXCurrMono, int8* pZCurrMono)
 {
-	// ¼ÆËãÆğµãºÍÖÕµãÏà¶ÔÓÚÔ²ĞÄµÄÏà¶ÔÎ»ÖÃ
-	double xStartRel = pSStartPoint->dArray[AXIS_X] - pSCenterPoint->dArray[AXIS_X];
-	double zStartRel = pSStartPoint->dArray[AXIS_Z] - pSCenterPoint->dArray[AXIS_Z];
-	double xEndRel = pSEndPoint->dArray[AXIS_X] - pSCenterPoint->dArray[AXIS_X];
-	double zEndRel = pSEndPoint->dArray[AXIS_Z] - pSCenterPoint->dArray[AXIS_Z];
+    // è®¡ç®—èµ·ç‚¹å’Œç»ˆç‚¹ç›¸å¯¹äºåœ†å¿ƒçš„ç›¸å¯¹ä½ç½®
+    double xStartRel = pSStartPoint->dArray[AXIS_X] - pSCenterPoint->dArray[AXIS_X];
+    double zStartRel = pSStartPoint->dArray[AXIS_Z] - pSCenterPoint->dArray[AXIS_Z];
+    double xEndRel = pSEndPoint->dArray[AXIS_X] - pSCenterPoint->dArray[AXIS_X];
+    double zEndRel = pSEndPoint->dArray[AXIS_Z] - pSCenterPoint->dArray[AXIS_Z];
 
-	//0.³õÊ¼»¯
-	*pXIsMono = *pZIsMono = FALSE;
-	*pXCurrMono = *pZCurrMono = 0;
+    //0.åˆå§‹åŒ–
+    *pXIsMono = *pZIsMono = FALSE;
+    *pXCurrMono = *pZCurrMono = 0;
 
-	//1.ÆğµãÖÕµãÖØºÏ£¬ÔòÎªµãorÕûÔ²
-	if (isZero(xStartRel - xEndRel) && isZero(zStartRel - zEndRel))  //ÆğµãÖÕµãÖØºÏ
-							
-	{	
-		//1.1ÆğµãÔ²ĞÄÖØºÏ£¬ÔòÎªµã
-		if (isZero(xStartRel) && isZero(zStartRel))
-		{
-			*pXIsMono = *pZIsMono = TRUE;	//XZÓĞµ¥µ÷ĞÔ
-			*pXCurrMono = *pZCurrMono = 0;	//XZµ¥µ÷ÖµÎª0
-		}
-		//1.2ÆğµãÔ²ĞÄ²»ÖØºÏ£¬ÔòÎªÕûÔ²
-		else
-		{
-			*pXIsMono = *pZIsMono = FALSE;	//XZÓĞµ¥µ÷ĞÔ
-			*pXCurrMono = *pZCurrMono = 0;	//XZµ¥µ÷ÖµÎª0
-		}
-	}
-	//2.ÆğµãÖÕµã²»ÖØºÏ£¬ÔòÎªÔ²»¡
-	else
-	{
-		//2.1ÈôZ1Z2>=0£¬ÔòÆğµãÖÕµãÎ»ÓÚXÖáµÄÍ¬Ò»²à£¬X·½Ïò¿ÉÄÜ´æÔÚµ¥µ÷ĞÔ
-		if (zStartRel * zEndRel >= 0)
-		{
-			//2.1.1ÆğµãX´óÓÚÖÕµãX
-			if (xStartRel > xEndRel)
-			{
-				if (isZero(zStartRel) && isZero(zEndRel))
-				{
-					//Çé¿ö1£ºXÖá°ëÔ² & ÆğµãX´óÓÚÖÕµãX & Ë³Ê±Õë -> X·½Ïòµ¥µ÷¼õ
-					if (cArcDir == ARC_CW)
-					{
-						*pXIsMono = TRUE;
-						*pXCurrMono = -1;
-					}
-					//Çé¿ö2£ºXÖá°ëÔ² & ÆğµãX´óÓÚÖÕµãX & ÄæÊ±Õë -> X·½Ïòµ¥µ÷¼õ
-					else
-					{
-						*pXIsMono = TRUE;
-						*pXCurrMono = -1;
-					}
-				}
-				else
-				{			
-					if (zStartRel > 0 || zEndRel > 0)
-					{							
-						//Çé¿ö3£ºXÖáÉÏ·Ç°ëÔ² & ÆğµãX´óÓÚÖÕµãX & Ë³Ê±Õë -> X·½Ïòµ¥µ÷¼õ
-						if (cArcDir == ARC_CW)
-						{
-							*pXIsMono = TRUE;
-							*pXCurrMono = -1;
-						}
-						//Çé¿ö4£ºXÖáÉÏ·Ç°ëÔ² & ÆğµãX´óÓÚÖÕµãX & ÄæÊ±Õë -> X·½ÏòÎŞµ¥µ÷
-						else
-						{
-							*pXIsMono = FALSE;
-							*pXCurrMono = 0;
-						}
-					}
-					else
-					{
-						//Çé¿ö5£ºXÖáÏÂ·Ç°ëÔ² & ÆğµãX´óÓÚÖÕµãX & Ë³Ê±Õë -> X·½ÏòÎŞµ¥µ÷
-						if (cArcDir == ARC_CW)
-						{
-							*pXIsMono = FALSE;
-							*pXCurrMono = 0;
-						}
-						//Çé¿ö6£ºXÖáÉÏ·Ç°ëÔ² & ÆğµãX´óÓÚÖÕµãX & ÄæÊ±Õë -> X·½Ïòµ¥µ÷¼õ
-						else
-						{
-							*pXIsMono = TRUE;
-							*pXCurrMono = -1;
-						}
-					}
+    //1.èµ·ç‚¹ç»ˆç‚¹é‡åˆï¼Œåˆ™ä¸ºç‚¹oræ•´åœ†
+    if (isZero(xStartRel - xEndRel) && isZero(zStartRel - zEndRel)) //èµ·ç‚¹ç»ˆç‚¹é‡åˆ
 
-				}
+    {
+        //1.1èµ·ç‚¹åœ†å¿ƒé‡åˆï¼Œåˆ™ä¸ºç‚¹
+        if (isZero(xStartRel) && isZero(zStartRel))
+        {
+            *pXIsMono = *pZIsMono = TRUE;  //XZæœ‰å•è°ƒæ€§
+            *pXCurrMono = *pZCurrMono = 0; //XZå•è°ƒå€¼ä¸º0
+        }
+        //1.2èµ·ç‚¹åœ†å¿ƒä¸é‡åˆï¼Œåˆ™ä¸ºæ•´åœ†
+        else
+        {
+            *pXIsMono = *pZIsMono = FALSE; //XZæœ‰å•è°ƒæ€§
+            *pXCurrMono = *pZCurrMono = 0; //XZå•è°ƒå€¼ä¸º0
+        }
+    }
+    //2.èµ·ç‚¹ç»ˆç‚¹ä¸é‡åˆï¼Œåˆ™ä¸ºåœ†å¼§
+    else
+    {
+        //2.1è‹¥Z1Z2>=0ï¼Œåˆ™èµ·ç‚¹ç»ˆç‚¹ä½äºXè½´çš„åŒä¸€ä¾§ï¼ŒXæ–¹å‘å¯èƒ½å­˜åœ¨å•è°ƒæ€§
+        if (zStartRel * zEndRel >= 0)
+        {
+            //2.1.1èµ·ç‚¹Xå¤§äºç»ˆç‚¹X
+            if (xStartRel > xEndRel)
+            {
+                if (isZero(zStartRel) && isZero(zEndRel))
+                {
+                    //æƒ…å†µ1ï¼šXè½´åŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå‡
+                    if (cArcDir == ARC_CW)
+                    {
+                        *pXIsMono = TRUE;
+                        *pXCurrMono = -1;
+                    }
+                    //æƒ…å†µ2ï¼šXè½´åŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå‡
+                    else
+                    {
+                        *pXIsMono = TRUE;
+                        *pXCurrMono = -1;
+                    }
+                }
+                else
+                {
+                    if (zStartRel > 0 || zEndRel > 0)
+                    {
+                        //æƒ…å†µ3ï¼šXè½´ä¸ŠéåŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå‡
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pXIsMono = TRUE;
+                            *pXCurrMono = -1;
+                        }
+                        //æƒ…å†µ4ï¼šXè½´ä¸ŠéåŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘æ— å•è°ƒ
+                        else
+                        {
+                            *pXIsMono = FALSE;
+                            *pXCurrMono = 0;
+                        }
+                    }
+                    else
+                    {
+                        //æƒ…å†µ5ï¼šXè½´ä¸‹éåŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘æ— å•è°ƒ
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pXIsMono = FALSE;
+                            *pXCurrMono = 0;
+                        }
+                        //æƒ…å†µ6ï¼šXè½´ä¸ŠéåŠåœ† & èµ·ç‚¹Xå¤§äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå‡
+                        else
+                        {
+                            *pXIsMono = TRUE;
+                            *pXCurrMono = -1;
+                        }
+                    }
+                }
+            }
+            //2.1.2èµ·ç‚¹Xå°äºç»ˆç‚¹X
+            else
+            {
+                if (isZero(zStartRel) && isZero(zEndRel))
+                {
+                    //æƒ…å†µ7ï¼šXè½´åŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå¢
+                    if (cArcDir == ARC_CW)
+                    {
+                        *pXIsMono = TRUE;
+                        *pXCurrMono = 1;
+                    }
+                    //æƒ…å†µ8ï¼šXè½´åŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå¢
+                    else
+                    {
+                        *pXIsMono = TRUE;
+                        *pXCurrMono = 1;
+                    }
+                }
+                else
+                {
+                    if (zStartRel > 0 || zEndRel > 0)
+                    {
+                        //æƒ…å†µ9ï¼šXè½´ä¸ŠéåŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘æ— å•è°ƒ
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pXIsMono = FALSE;
+                            *pXCurrMono = 0;
+                        }
+                        //æƒ…å†µ10ï¼šXè½´ä¸ŠéåŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå¢
+                        else
+                        {
+                            *pXIsMono = TRUE;
+                            *pXCurrMono = 1;
+                        }
+                    }
+                    else
+                    {
+                        //æƒ…å†µ11ï¼šXè½´ä¸‹éåŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é¡ºæ—¶é’ˆ -> Xæ–¹å‘å•è°ƒå¢
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pXIsMono = TRUE;
+                            *pXCurrMono = 1;
+                        }
+                        //æƒ…å†µ12ï¼šXè½´ä¸‹éåŠåœ† & èµ·ç‚¹Xå°äºç»ˆç‚¹X & é€†æ—¶é’ˆ -> Xæ–¹å‘æ— å•è°ƒ
+                        else
+                        {
+                            *pXIsMono = FALSE;
+                            *pXCurrMono = 0;
+                        }
+                    }
+                }
+            }
+        }
 
-			}
-			//2.1.2ÆğµãXĞ¡ÓÚÖÕµãX
-			else
-			{
-				if (isZero(zStartRel) && isZero(zEndRel))
-				{
-					//Çé¿ö7£ºXÖá°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & Ë³Ê±Õë -> X·½Ïòµ¥µ÷Ôö
-					if (cArcDir == ARC_CW)
-					{
-						*pXIsMono = TRUE;
-						*pXCurrMono = 1;
-					}
-					//Çé¿ö8£ºXÖá°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & ÄæÊ±Õë -> X·½Ïòµ¥µ÷Ôö
-					else
-					{
-						*pXIsMono = TRUE;
-						*pXCurrMono = 1;
-					}
-				}
-				else
-				{
-					if (zStartRel > 0 || zEndRel > 0)
-					{
-						//Çé¿ö9£ºXÖáÉÏ·Ç°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & Ë³Ê±Õë -> X·½ÏòÎŞµ¥µ÷
-						if (cArcDir == ARC_CW)
-						{
-							*pXIsMono = FALSE;
-							*pXCurrMono = 0;
-						}
-						//Çé¿ö10£ºXÖáÉÏ·Ç°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & ÄæÊ±Õë -> X·½Ïòµ¥µ÷Ôö
-						else
-						{
-							*pXIsMono = TRUE;
-							*pXCurrMono = 1;
-						}
-					}
-					else
-					{
-						//Çé¿ö11£ºXÖáÏÂ·Ç°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & Ë³Ê±Õë -> X·½Ïòµ¥µ÷Ôö
-						if (cArcDir == ARC_CW)
-						{
-							*pXIsMono = TRUE;
-							*pXCurrMono = 1;
-						}
-						//Çé¿ö12£ºXÖáÏÂ·Ç°ëÔ² & ÆğµãXĞ¡ÓÚÖÕµãX & ÄæÊ±Õë -> X·½ÏòÎŞµ¥µ÷
-						else
-						{
-							*pXIsMono = FALSE;
-							*pXCurrMono = 0;
-						}
-					}
-
-				}
-			}
-
-		}
-		
-		//2.2ÈôX1X2>=0£¬ÔòÆğµãÖÕµãÎ»ÓÚZÖáµÄÍ¬Ò»²à£¬Z·½Ïò¿ÉÄÜ´æÔÚµ¥µ÷ĞÔ
-		if (xStartRel * xEndRel >= 0)
-		{
-			if (zStartRel > zEndRel)
-			{
-				if (isZero(xStartRel) && isZero(xEndRel))
-				{
-					//Çé¿ö13£ºZÖá°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½Ïòµ¥µ÷¼õ
-					if (cArcDir == ARC_CW)
-					{
-						*pZIsMono = TRUE;
-						*pZCurrMono = -1;
-					}
-					//Çé¿ö14£ºZÖá°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½Ïòµ¥µ÷¼õ
-					else
-					{
-						*pZIsMono = TRUE;
-						*pZCurrMono = -1;
-					}
-				}
-				else
-				{
-					if (xStartRel > 0 || xEndRel > 0)
-					{
-						//Çé¿ö15£ºZÖáÓÒ·Ç°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½ÏòÎŞµ¥µ÷
-						if (cArcDir == ARC_CW)
-						{
-							*pZIsMono = FALSE;
-							*pZCurrMono = 0;
-						}
-						//Çé¿ö16£ºZÖáÓÒ·Ç°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½Ïòµ¥µ÷¼õ
-						else
-						{
-							*pZIsMono = TRUE;
-							*pZCurrMono = -1;
-						}
-					}
-					else
-					{
-						//Çé¿ö17£ºZÖá×ó·Ç°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½Ïòµ¥µ÷¼õ
-						if (cArcDir == ARC_CW)
-						{
-							*pZIsMono = TRUE;
-							*pZCurrMono = -1;
-						}
-						//Çé¿ö18£ºZÖá×ó·Ç°ëÔ² & ÆğµãZ´óÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½ÏòÎŞµ¥µ÷
-						else
-						{
-							*pZIsMono = FALSE;
-							*pZCurrMono = 0;
-						}
-					}
-
-				}
-
-			}
-			//2.1.2ÆğµãXĞ¡ÓÚÖÕµãX
-			else
-			{
-				if (isZero(xStartRel) && isZero(xEndRel))
-				{
-					//Çé¿ö19£ºZÖá°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½Ïòµ¥µ÷Ôö
-					if (cArcDir == ARC_CW)
-					{
-						*pZIsMono = TRUE;
-						*pZCurrMono = 1;
-					}
-					//Çé¿ö20£ºZÖá°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½Ïòµ¥µ÷Ôö
-					else
-					{
-						*pZIsMono = TRUE;
-						*pZCurrMono = 1;
-					}
-				}
-				else
-				{
-					if (xStartRel > 0 || xEndRel > 0)
-					{
-						//Çé¿ö21£ºZÖáÓÒ·Ç°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½Ïòµ¥µ÷Ôö
-						if (cArcDir == ARC_CW)
-						{
-							*pZIsMono = TRUE;
-							*pZCurrMono = 1;
-						}
-						//Çé¿ö22£ºZÖáÓÒ·Ç°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½ÏòÎŞµ¥µ÷
-						else
-						{
-							*pZIsMono = FALSE;
-							*pZCurrMono = 0;
-						}
-					}
-					else
-					{
-						//Çé¿ö23£ºZÖá×ó·Ç°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & Ë³Ê±Õë -> Z·½ÏòÎŞµ¥µ÷
-						if (cArcDir == ARC_CW)
-						{
-							*pZIsMono = FALSE;
-							*pZCurrMono = 0;	
-						}
-						//Çé¿ö24£ºZÖá×ó·Ç°ëÔ² & ÆğµãZĞ¡ÓÚÖÕµãZ & ÄæÊ±Õë -> Z·½Ïòµ¥µ÷Ôö
-						else
-						{
-							*pZIsMono = TRUE;
-							*pZCurrMono = 1;
-						}
-					}
-
-				}
-			}
-
-		}
-	}
+        //2.2è‹¥X1X2>=0ï¼Œåˆ™èµ·ç‚¹ç»ˆç‚¹ä½äºZè½´çš„åŒä¸€ä¾§ï¼ŒZæ–¹å‘å¯èƒ½å­˜åœ¨å•è°ƒæ€§
+        if (xStartRel * xEndRel >= 0)
+        {
+            if (zStartRel > zEndRel)
+            {
+                if (isZero(xStartRel) && isZero(xEndRel))
+                {
+                    //æƒ…å†µ13ï¼šZè½´åŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå‡
+                    if (cArcDir == ARC_CW)
+                    {
+                        *pZIsMono = TRUE;
+                        *pZCurrMono = -1;
+                    }
+                    //æƒ…å†µ14ï¼šZè½´åŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå‡
+                    else
+                    {
+                        *pZIsMono = TRUE;
+                        *pZCurrMono = -1;
+                    }
+                }
+                else
+                {
+                    if (xStartRel > 0 || xEndRel > 0)
+                    {
+                        //æƒ…å†µ15ï¼šZè½´å³éåŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘æ— å•è°ƒ
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pZIsMono = FALSE;
+                            *pZCurrMono = 0;
+                        }
+                        //æƒ…å†µ16ï¼šZè½´å³éåŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå‡
+                        else
+                        {
+                            *pZIsMono = TRUE;
+                            *pZCurrMono = -1;
+                        }
+                    }
+                    else
+                    {
+                        //æƒ…å†µ17ï¼šZè½´å·¦éåŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå‡
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pZIsMono = TRUE;
+                            *pZCurrMono = -1;
+                        }
+                        //æƒ…å†µ18ï¼šZè½´å·¦éåŠåœ† & èµ·ç‚¹Zå¤§äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘æ— å•è°ƒ
+                        else
+                        {
+                            *pZIsMono = FALSE;
+                            *pZCurrMono = 0;
+                        }
+                    }
+                }
+            }
+            //2.1.2èµ·ç‚¹Xå°äºç»ˆç‚¹X
+            else
+            {
+                if (isZero(xStartRel) && isZero(xEndRel))
+                {
+                    //æƒ…å†µ19ï¼šZè½´åŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå¢
+                    if (cArcDir == ARC_CW)
+                    {
+                        *pZIsMono = TRUE;
+                        *pZCurrMono = 1;
+                    }
+                    //æƒ…å†µ20ï¼šZè½´åŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå¢
+                    else
+                    {
+                        *pZIsMono = TRUE;
+                        *pZCurrMono = 1;
+                    }
+                }
+                else
+                {
+                    if (xStartRel > 0 || xEndRel > 0)
+                    {
+                        //æƒ…å†µ21ï¼šZè½´å³éåŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå¢
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pZIsMono = TRUE;
+                            *pZCurrMono = 1;
+                        }
+                        //æƒ…å†µ22ï¼šZè½´å³éåŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘æ— å•è°ƒ
+                        else
+                        {
+                            *pZIsMono = FALSE;
+                            *pZCurrMono = 0;
+                        }
+                    }
+                    else
+                    {
+                        //æƒ…å†µ23ï¼šZè½´å·¦éåŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é¡ºæ—¶é’ˆ -> Zæ–¹å‘æ— å•è°ƒ
+                        if (cArcDir == ARC_CW)
+                        {
+                            *pZIsMono = FALSE;
+                            *pZCurrMono = 0;
+                        }
+                        //æƒ…å†µ24ï¼šZè½´å·¦éåŠåœ† & èµ·ç‚¹Zå°äºç»ˆç‚¹Z & é€†æ—¶é’ˆ -> Zæ–¹å‘å•è°ƒå¢
+                        else
+                        {
+                            *pZIsMono = TRUE;
+                            *pZCurrMono = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 isArcGroove(SPointDouble SStart, SPointDouble SEnd, SPointDouble SCenter,int8 cGa)
-  º¯Êı¹¦ÄÜ: Ô²»¡ÊÇ·ñĞÎ³É²Û£¬ÓÃÓÚÅĞ¶ÏÔ²»¡¿çÔ½ÏóÏŞ
-  ÊäÈë²ÎÊı£ºSStartqiÆğµã£¬SEndÖÕµã£¬SCenterÔ²ĞÄ£¬cGa×é£¬ int8 cFlag£ºG71orG72
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1: ²»·ûºÏ
-			1 : ¿çÒ»¶şÏóÏŞ£¨G71£©¡¢¿çÒ»ËÄÏóÏŞ£¨G72£©
-			2 : ¿çÈıËÄÏóÏŞ£¨G71£©¡¢¿ç¶şÈıÏóÏŞ£¨G72£©
-			#define ARC_CW 1          //Ë³Ê±ÕëÔ²»¡
-         #define ARC_ANTI_CW -1    //ÄæÊ±ÕëÔ²»¡
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 isArcGroove(SPointDouble SStart, SPointDouble SEnd, SPointDouble SCenter,int8 cGa)
+  å‡½æ•°åŠŸèƒ½: åœ†å¼§æ˜¯å¦å½¢æˆæ§½ï¼Œç”¨äºåˆ¤æ–­åœ†å¼§è·¨è¶Šè±¡é™
+  è¾“å…¥å‚æ•°ï¼šSStartqièµ·ç‚¹ï¼ŒSEndç»ˆç‚¹ï¼ŒSCenteråœ†å¿ƒï¼ŒcGaç»„ï¼Œ int8 cFlagï¼šG71orG72
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1: ä¸ç¬¦åˆ
+			1 : è·¨ä¸€äºŒè±¡é™ï¼ˆG71ï¼‰ã€è·¨ä¸€å››è±¡é™ï¼ˆG72ï¼‰
+			2 : è·¨ä¸‰å››è±¡é™ï¼ˆG71ï¼‰ã€è·¨äºŒä¸‰è±¡é™ï¼ˆG72ï¼‰
+			#define ARC_CW 1          //é¡ºæ—¶é’ˆåœ†å¼§
+         #define ARC_ANTI_CW -1    //é€†æ—¶é’ˆåœ†å¼§
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 isArcIsGroove(SPointDouble* SStartPt, SPointDouble* SEndPt, SPointDouble* SCenterPt, int8  cArcDir, int8 cFlag)
+int8 isArcIsGroove(SPointDouble* SStartPt, SPointDouble* SEndPt, SPointDouble* SCenterPt, int8 cArcDir, int8 cFlag)
 {
-	bool bResultX1;//true£ºÆğµãºÍÔ²ĞÄµÄxÖ¸ÏàÍ¬£¬¼´ÆğµãºÍÔ²ĞÄÔÚÍ¬Ò»Ë®Æ½ÏßÉÏ
-	bool bResultX2;////true£ºÖÕµãµãºÍÔ²ĞÄµÄxÖ¸ÏàÍ¬£¬¼´ÖÕµãµãºÍÔ²ĞÄÔÚÍ¬Ò»Ë®Æ½ÏßÉÏ
-	SPoint SStart;
-	SPoint SEnd;
-	SPoint SCenter;
-	double dTemp;
-	if (cFlag == G71)
-	{
-		SStart.dX = SStartPt->dArray[AXIS_X];
-		SStart.dZ = SStartPt->dArray[AXIS_Z];
-		SEnd.dX = SEndPt->dArray[AXIS_X];
-		SEnd.dZ = SEndPt->dArray[AXIS_Z];
-		SCenter.dX = SCenterPt->dArray[AXIS_X];
-		SCenter.dZ = SCenterPt->dArray[AXIS_Z];
-	}
-	else
-	{   //G72 Ê±£¬ÒòÎª´úÂëÊÇ°´G71Ğ´µÄ£¬½«×ø±êµ÷×ª£¬ÖØÓÃ´úÂë
-		SStart.dX = SStartPt->dArray[AXIS_Z];
-		SStart.dZ = SStartPt->dArray[AXIS_X];
-		SEnd.dX = SEndPt->dArray[AXIS_Z];
-		SEnd.dZ = SEndPt->dArray[AXIS_X];
-		SCenter.dX = SCenterPt->dArray[AXIS_Z];
-		SCenter.dZ = SCenterPt->dArray[AXIS_X];
-		cArcDir = (cArcDir == ARC_CW) ? ARC_ANTI_CW : ARC_CW;//µ÷×ªºó£¬Ë³ÄæÒ²»á»¥»»
-	}
+    bool bResultX1; //trueï¼šèµ·ç‚¹å’Œåœ†å¿ƒçš„xæŒ‡ç›¸åŒï¼Œå³èµ·ç‚¹å’Œåœ†å¿ƒåœ¨åŒä¸€æ°´å¹³çº¿ä¸Š
+    bool bResultX2; ////trueï¼šç»ˆç‚¹ç‚¹å’Œåœ†å¿ƒçš„xæŒ‡ç›¸åŒï¼Œå³ç»ˆç‚¹ç‚¹å’Œåœ†å¿ƒåœ¨åŒä¸€æ°´å¹³çº¿ä¸Š
+    SPoint SStart;
+    SPoint SEnd;
+    SPoint SCenter;
+    double dTemp;
+    if (cFlag == G71)
+    {
+        SStart.dX = SStartPt->dArray[AXIS_X];
+        SStart.dZ = SStartPt->dArray[AXIS_Z];
+        SEnd.dX = SEndPt->dArray[AXIS_X];
+        SEnd.dZ = SEndPt->dArray[AXIS_Z];
+        SCenter.dX = SCenterPt->dArray[AXIS_X];
+        SCenter.dZ = SCenterPt->dArray[AXIS_Z];
+    }
+    else
+    { //G72 æ—¶ï¼Œå› ä¸ºä»£ç æ˜¯æŒ‰G71å†™çš„ï¼Œå°†åæ ‡è°ƒè½¬ï¼Œé‡ç”¨ä»£ç 
+        SStart.dX = SStartPt->dArray[AXIS_Z];
+        SStart.dZ = SStartPt->dArray[AXIS_X];
+        SEnd.dX = SEndPt->dArray[AXIS_Z];
+        SEnd.dZ = SEndPt->dArray[AXIS_X];
+        SCenter.dX = SCenterPt->dArray[AXIS_Z];
+        SCenter.dZ = SCenterPt->dArray[AXIS_X];
+        cArcDir = (cArcDir == ARC_CW) ? ARC_ANTI_CW : ARC_CW; //è°ƒè½¬åï¼Œé¡ºé€†ä¹Ÿä¼šäº’æ¢
+    }
 
-	dTemp = fabs(SEnd.dX - SCenter.dX);
-	if (dTemp < 0.0002)
-	{
-		bResultX2 = TRUE;
-	}
-	else
-	{
-		bResultX2 = FALSE;
-	}
-	dTemp = fabs(SStart.dX - SCenter.dX);
-	if (dTemp < 0.0002)
-	{
-		bResultX1 = TRUE;
-	}
-	else
-	{
-		bResultX1 = FALSE;
-	}
-	if (bResultX1)//ÆğµãÔÚZÖáÉÏ£¬Òª¸ù¾İË³ÄæÅĞ¶Ï  £¨ÆğµãºÍÔ²ĞÄÔÚÍ¬Ò»Ë®Æ½Ïß£©
-	{
-		if (SStart.dZ > SCenter.dZ && cArcDir == ARC_ANTI_CW )
-		{
-			if ((SEnd.dX > SCenter.dX && SEnd.dZ < SCenter.dZ) || (bResultX2 && SEnd.dZ < SCenter.dZ))                               //ÆğµãµÚÒ»ÏóÏŞ£¬ÖÕµãµÚ¶şÏóÏŞ
-			{
-				return 1;
-			}
-		}
-		else if (SStart.dZ < SCenter.dZ && cArcDir == ARC_CW )
-		{
-			if ((SEnd.dX > SCenter.dX && SEnd.dZ > SCenter.dZ) || (bResultX2 && SEnd.dZ > SCenter.dZ))                               //ÆğµãµÚ¶şÏóÏŞ£¬ÖÕµãµÚÒ»ÏóÏŞ
-			{
-				return 1;
-			}
-		}
-		else if (SStart.dZ < SCenter.dZ && cArcDir == ARC_ANTI_CW)
-		{
-			if ((SEnd.dX < SCenter.dX && SEnd.dZ > SCenter.dZ) || (bResultX2 && SEnd.dZ > SCenter.dZ))                               //ÆğµãµÚÈıÏóÏŞ£¬ÖÕµãµÚËÄÏóÏŞ
-			{
-				return 2;
-			}
-		}
-		else if (SStart.dZ > SCenter.dZ && cArcDir == ARC_CW)
-		{
-			if ((SEnd.dX < SCenter.dX && SEnd.dZ < SCenter.dZ) || (bResultX2 && SEnd.dZ < SCenter.dZ))                                //ÆğµãµÚËÄÏóÏŞ£¬ÖÕµãµÚÈıÏóÏŞ
-			{
-				return 2;
-			}
-		}
-	}
-	else if (SStart.dX > SCenter.dX)
-	{
-		if (SStart.dZ > SCenter.dZ && ((SEnd.dX > SCenter.dX && SEnd.dZ < SCenter.dZ) || (bResultX2 && SEnd.dZ < SCenter.dZ)))        //ÆğµãµÚÒ»ÏóÏŞ£¬ÖÕµãµÚ¶şÏóÏŞ
-		{
-			return 1;
-		}
-		else if (SStart.dZ < SCenter.dZ && ((SEnd.dX > SCenter.dX && SEnd.dZ > SCenter.dZ) || (bResultX2 && SEnd.dZ > SCenter.dZ)))   //ÆğµãµÚ¶şÏóÏŞ£¬ÖÕµãµÚÒ»ÏóÏŞ
-		{
-			return 1;
-		}
-	}
-	else //if (SStart.dX < SCenter.dX) 
-	{
-		if (SStart.dZ < SCenter.dZ && ((SEnd.dX < SCenter.dX && SEnd.dZ > SCenter.dZ) || (bResultX2 && SEnd.dZ > SCenter.dZ)))        //ÆğµãµÚÈıÏóÏŞ£¬ÖÕµãµÚËÄÏóÏŞ
-		{
-			return 2;
-		}
-		else if (SStart.dZ > SCenter.dZ && ((SEnd.dX < SCenter.dX && SEnd.dZ < SCenter.dZ) || (bResultX2 && SEnd.dZ < SCenter.dZ)))   //ÆğµãµÚËÄÏóÏŞ£¬ÖÕµãµÚÈıÏóÏŞ
-		{
-			return 2;
-		}
+    dTemp = fabs(SEnd.dX - SCenter.dX);
+    if (dTemp < 0.0002)
+    {
+        bResultX2 = TRUE;
+    }
+    else
+    {
+        bResultX2 = FALSE;
+    }
+    dTemp = fabs(SStart.dX - SCenter.dX);
+    if (dTemp < 0.0002)
+    {
+        bResultX1 = TRUE;
+    }
+    else
+    {
+        bResultX1 = FALSE;
+    }
+    if (bResultX1) //èµ·ç‚¹åœ¨Zè½´ä¸Šï¼Œè¦æ ¹æ®é¡ºé€†åˆ¤æ–­  ï¼ˆèµ·ç‚¹å’Œåœ†å¿ƒåœ¨åŒä¸€æ°´å¹³çº¿ï¼‰
+    {
+        if (SStart.dZ > SCenter.dZ && cArcDir == ARC_ANTI_CW)
+        {
+            if ((SEnd.dX > SCenter.dX && SEnd.dZ < SCenter.dZ) ||
+                (bResultX2 && SEnd.dZ < SCenter.dZ)) //èµ·ç‚¹ç¬¬ä¸€è±¡é™ï¼Œç»ˆç‚¹ç¬¬äºŒè±¡é™
+            {
+                return 1;
+            }
+        }
+        else if (SStart.dZ < SCenter.dZ && cArcDir == ARC_CW)
+        {
+            if ((SEnd.dX > SCenter.dX && SEnd.dZ > SCenter.dZ) ||
+                (bResultX2 && SEnd.dZ > SCenter.dZ)) //èµ·ç‚¹ç¬¬äºŒè±¡é™ï¼Œç»ˆç‚¹ç¬¬ä¸€è±¡é™
+            {
+                return 1;
+            }
+        }
+        else if (SStart.dZ < SCenter.dZ && cArcDir == ARC_ANTI_CW)
+        {
+            if ((SEnd.dX < SCenter.dX && SEnd.dZ > SCenter.dZ) ||
+                (bResultX2 && SEnd.dZ > SCenter.dZ)) //èµ·ç‚¹ç¬¬ä¸‰è±¡é™ï¼Œç»ˆç‚¹ç¬¬å››è±¡é™
+            {
+                return 2;
+            }
+        }
+        else if (SStart.dZ > SCenter.dZ && cArcDir == ARC_CW)
+        {
+            if ((SEnd.dX < SCenter.dX && SEnd.dZ < SCenter.dZ) ||
+                (bResultX2 && SEnd.dZ < SCenter.dZ)) //èµ·ç‚¹ç¬¬å››è±¡é™ï¼Œç»ˆç‚¹ç¬¬ä¸‰è±¡é™
+            {
+                return 2;
+            }
+        }
+    }
+    else if (SStart.dX > SCenter.dX)
+    {
+        if (SStart.dZ > SCenter.dZ && ((SEnd.dX > SCenter.dX && SEnd.dZ < SCenter.dZ) ||
+                                       (bResultX2 && SEnd.dZ < SCenter.dZ))) //èµ·ç‚¹ç¬¬ä¸€è±¡é™ï¼Œç»ˆç‚¹ç¬¬äºŒè±¡é™
+        {
+            return 1;
+        }
+        else if (SStart.dZ < SCenter.dZ && ((SEnd.dX > SCenter.dX && SEnd.dZ > SCenter.dZ) ||
+                                            (bResultX2 && SEnd.dZ > SCenter.dZ))) //èµ·ç‚¹ç¬¬äºŒè±¡é™ï¼Œç»ˆç‚¹ç¬¬ä¸€è±¡é™
+        {
+            return 1;
+        }
+    }
+    else //if (SStart.dX < SCenter.dX)
+    {
+        if (SStart.dZ < SCenter.dZ && ((SEnd.dX < SCenter.dX && SEnd.dZ > SCenter.dZ) ||
+                                       (bResultX2 && SEnd.dZ > SCenter.dZ))) //èµ·ç‚¹ç¬¬ä¸‰è±¡é™ï¼Œç»ˆç‚¹ç¬¬å››è±¡é™
+        {
+            return 2;
+        }
+        else if (SStart.dZ > SCenter.dZ && ((SEnd.dX < SCenter.dX && SEnd.dZ < SCenter.dZ) ||
+                                            (bResultX2 && SEnd.dZ < SCenter.dZ))) //èµ·ç‚¹ç¬¬å››è±¡é™ï¼Œç»ˆç‚¹ç¬¬ä¸‰è±¡é™
+        {
+            return 2;
+        }
+    }
 
-	}
-
-
-	return -1;
+    return -1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool divideGroove()
-  º¯Êı¹¦ÄÜ  ½«¹ì¼£Á´±í°´ÕÕÊäÈëµÄXorZµ¥µ÷±ä»¯À´Éú³É²ÛÁ´±í
-  ÊäÈë²ÎÊı£ºSList**pathList ¹ì¼£Á´±í,
-             SList**pGrooveList ²ÛÁ´±í,
-			 int8 cMonotonicity ÊäÈëµÄXorZµ¥µ÷±ä»¯
-			 cAxisXorZ		¸ù¾İXorZÖáµ¥µ÷ĞÔ»®·Ö²Û
-  Êä³ö²ÎÊı£º-1 ´íÎó
-			0 Î´Íê³É
-			1 Íê³É
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šbool divideGroove()
+  å‡½æ•°åŠŸèƒ½  å°†è½¨è¿¹é“¾è¡¨æŒ‰ç…§è¾“å…¥çš„XorZå•è°ƒå˜åŒ–æ¥ç”Ÿæˆæ§½é“¾è¡¨
+  è¾“å…¥å‚æ•°ï¼šSList**pathList è½¨è¿¹é“¾è¡¨,
+             SList**pGrooveList æ§½é“¾è¡¨,
+			 int8 cMonotonicity è¾“å…¥çš„XorZå•è°ƒå˜åŒ–
+			 cAxisXorZ		æ ¹æ®XorZè½´å•è°ƒæ€§åˆ’åˆ†æ§½
+  è¾“å‡ºå‚æ•°ï¼š-1 é”™è¯¯
+			0 æœªå®Œæˆ
+			1 å®Œæˆ
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 divideGroove(SList** ppPathList, SList** ppGrooveList, int8 cAxisXorZ, int8 cFeedDir)
 {
-	if (ppPathList == NULL || ppGrooveList == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
+    if (ppPathList == NULL || ppGrooveList == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    SLine* pCurrEntityData = NULL; //è½¨è¿¹é“¾è¡¨çš„å½“å‰æ•°æ®èŠ‚ç‚¹(ç”¨SLineæ¥æ‰€æœ‰å®ä½“æ•°æ®)
+    int8 cEntityMonotonicity;
 
-	}
-	SLine* pCurrEntityData = NULL;      //¹ì¼£Á´±íµÄµ±Ç°Êı¾İ½Úµã(ÓÃSLine½ÓËùÓĞÊµÌåÊı¾İ)
-	int8 cEntityMonotonicity;
+    SNode* pPathListNewTailNode = NULL; //è½¨è¿¹é“¾è¡¨æ–°çš„å°¾èŠ‚ç‚¹
+    SNode* pGrooveListHead = NULL;      //æ§½é“¾è¡¨å¤´èŠ‚ç‚¹
 
-	SNode* pPathListNewTailNode = NULL;		//¹ì¼£Á´±íĞÂµÄÎ²½Úµã
-	SNode* pGrooveListHead = NULL;			//²ÛÁ´±íÍ·½Úµã
+    //0.æ–°å¢æ§½æ•°æ®èŠ‚ç‚¹
+    //0.1å¼€è¾Ÿæ§½æ•°æ®ç»“æ„ä½“çš„å†…å­˜
+    SGrooveData* pSNewGrooveData = mallocGCode(sizeof(SGrooveData), ORAM_NUM359); //å†…å­˜æš‚æœªç¼–å·
+    if (pSNewGrooveData == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM302);
+        return -1;
+    }
+    //0.2åˆå§‹åŒ–æ§½æ•°æ®ç»“æ„ä½“
+    memset(pSNewGrooveData, 0, sizeof(SGrooveData));
+    pSNewGrooveData->ucGrooveNum = getListSize(*ppGrooveList) + 1;          //åˆå§‹åŒ–æ§½å·
+    pSNewGrooveData->pSGroovePathList = initList(ORAM_NUM360, ORAM_NUM361); //åˆå§‹åŒ–æ§½è½¨è¿¹é“¾è¡¨
+    if (pSNewGrooveData->pSGroovePathList == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM302);
+        return -1;
+    }
+    //0.3æ’å…¥æ§½é“¾è¡¨
+    if (insertList(*ppGrooveList, 0, pSNewGrooveData, ORAM_NUM358) == FALSE)
+    {
+        freeList(pSNewGrooveData->pSGroovePathList);
+        freeGCode(pSNewGrooveData);
+        parseGCodeErrorB(0, GCODE_ERROR_NUM302);
+        return -1;
+    }
 
-	//0.ĞÂÔö²ÛÊı¾İ½Úµã
-	//0.1¿ª±Ù²ÛÊı¾İ½á¹¹ÌåµÄÄÚ´æ
-	SGrooveData* pSNewGrooveData = mallocGCode(sizeof(SGrooveData), ORAM_NUM359);	//ÄÚ´æÔİÎ´±àºÅ
-	if (pSNewGrooveData == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM302);
-		return -1;
-	}
-	//0.2³õÊ¼»¯²ÛÊı¾İ½á¹¹Ìå
-	memset(pSNewGrooveData, 0, sizeof(SGrooveData));
-	pSNewGrooveData->ucGrooveNum = getListSize(*ppGrooveList) + 1;			//³õÊ¼»¯²ÛºÅ
-	pSNewGrooveData->pSGroovePathList= initList(ORAM_NUM360, ORAM_NUM361);  //³õÊ¼»¯²Û¹ì¼£Á´±í
-	if (pSNewGrooveData->pSGroovePathList == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM302);
-		return -1;
-	}
-	//0.3²åÈë²ÛÁ´±í
-	if (insertList(*ppGrooveList, 0, pSNewGrooveData, ORAM_NUM358) == FALSE)
-	{
-		freeList(pSNewGrooveData->pSGroovePathList);
-		freeGCode(pSNewGrooveData);
-		parseGCodeErrorB(0, GCODE_ERROR_NUM302);
-		return -1;
-	}
-	
-	//1.»ñÈ¡¹ì¼£Á´±íÎ²µÄÎ»ÖÃ
-	int16 sCurrPos;
-	sCurrPos = getListSize(*ppPathList) - 1;
+    //1.è·å–è½¨è¿¹é“¾è¡¨å°¾çš„ä½ç½®
+    int16 sCurrPos;
+    sCurrPos = getListSize(*ppPathList) - 1;
 
-	//2.¼ÇÂ¼²ÛÆğÊ¼±ß¶¥µã×ø±ê
-	pCurrEntityData = (SLine*)FindNodeData(*ppPathList, sCurrPos);
-	pSNewGrooveData->SPointA.dX = pCurrEntityData->SStartPoint.dArray[AXIS_X];
-	pSNewGrooveData->SPointA.dZ = pCurrEntityData->SStartPoint.dArray[AXIS_Z];
+    //2.è®°å½•æ§½èµ·å§‹è¾¹é¡¶ç‚¹åæ ‡
+    pCurrEntityData = (SLine*)FindNodeData(*ppPathList, sCurrPos);
+    pSNewGrooveData->SPointA.dX = pCurrEntityData->SStartPoint.dArray[AXIS_X];
+    pSNewGrooveData->SPointA.dZ = pCurrEntityData->SStartPoint.dArray[AXIS_Z];
 
-	//3.ÕÒµ½²ÛËùÓĞÆğÊ¼±ßÊµÌå
-	while (sCurrPos >= 0)
-	{
-		//»ñÈ¡¹ì¼£Á´±íÖĞsCurrPos½ÚµãµÄÊµÌåÊı¾İ
-		pCurrEntityData = (SLine*)FindNodeData(*ppPathList, sCurrPos);
+    //3.æ‰¾åˆ°æ§½æ‰€æœ‰èµ·å§‹è¾¹å®ä½“
+    while (sCurrPos >= 0)
+    {
+        //è·å–è½¨è¿¹é“¾è¡¨ä¸­sCurrPosèŠ‚ç‚¹çš„å®ä½“æ•°æ®
+        pCurrEntityData = (SLine*)FindNodeData(*ppPathList, sCurrPos);
 
-		//»ñÈ¡ÊµÌåµÄµ¥µ÷ĞÔ
-		cEntityMonotonicity = getPathDataMonotonicity((enum ENTITY*)pCurrEntityData, cAxisXorZ);
+        //è·å–å®ä½“çš„å•è°ƒæ€§
+        cEntityMonotonicity = getPathDataMonotonicity((enum ENTITY*)pCurrEntityData, cAxisXorZ);
 
-		//ÅĞ¶Ïµ¥µ÷ĞÔÊÇ·ñ¸Ä±ä
-		if (cEntityMonotonicity * cFeedDir < 0)
-		{
-			break;
-		}
+        //åˆ¤æ–­å•è°ƒæ€§æ˜¯å¦æ”¹å˜
+        if (cEntityMonotonicity * cFeedDir < 0)
+        {
+            break;
+        }
 
-		pSNewGrooveData->cTotalStartLineEntityNum++;
-		sCurrPos--;
-	}
+        pSNewGrooveData->cTotalStartLineEntityNum++;
+        sCurrPos--;
+    }
 
-	//4.¼ÇÂ¼²Ûµ×µã×ø±ê
-	pSNewGrooveData->SPointC.dX = pCurrEntityData->SStartPoint.dArray[AXIS_X];
-	pSNewGrooveData->SPointC.dZ = pCurrEntityData->SStartPoint.dArray[AXIS_Z];
+    //4.è®°å½•æ§½åº•ç‚¹åæ ‡
+    pSNewGrooveData->SPointC.dX = pCurrEntityData->SStartPoint.dArray[AXIS_X];
+    pSNewGrooveData->SPointC.dZ = pCurrEntityData->SStartPoint.dArray[AXIS_Z];
 
-	//5.ÕÒµ½²ÛËùÓĞÖÕÖ¹±ßÊµÌå
-	while (sCurrPos >= 0)
-	{
-		//»ñÈ¡¹ì¼£Á´±íÖĞsCurrPos½ÚµãµÄÊµÌåÊı¾İ
-		pCurrEntityData = (enum ENTITY*)FindNodeData(*ppPathList, sCurrPos);
+    //5.æ‰¾åˆ°æ§½æ‰€æœ‰ç»ˆæ­¢è¾¹å®ä½“
+    while (sCurrPos >= 0)
+    {
+        //è·å–è½¨è¿¹é“¾è¡¨ä¸­sCurrPosèŠ‚ç‚¹çš„å®ä½“æ•°æ®
+        pCurrEntityData = (enum ENTITY*)FindNodeData(*ppPathList, sCurrPos);
 
-		//»ñÈ¡ÊµÌåµÄµ¥µ÷ĞÔ
-		cEntityMonotonicity = getPathDataMonotonicity(pCurrEntityData, cAxisXorZ);
+        //è·å–å®ä½“çš„å•è°ƒæ€§
+        cEntityMonotonicity = getPathDataMonotonicity(pCurrEntityData, cAxisXorZ);
 
-		//ÅĞ¶Ïµ¥µ÷ĞÔÊÇ·ñ¸Ä±ä
-		if (cEntityMonotonicity * -cFeedDir < 0)
-		{
-			break;
-		}
+        //åˆ¤æ–­å•è°ƒæ€§æ˜¯å¦æ”¹å˜
+        if (cEntityMonotonicity * -cFeedDir < 0)
+        {
+            break;
+        }
 
-		pSNewGrooveData->cTotalEndLineEntityNum++;
-		sCurrPos--;
-	}
+        pSNewGrooveData->cTotalEndLineEntityNum++;
+        sCurrPos--;
+    }
 
-	//6.¼ÇÂ¼²ÛÖÕÖ¹±ß¶¥µã×ø±ê
-	pSNewGrooveData->SPointB.dX = sCurrPos < 0 ? pCurrEntityData->SEndPoint.dArray[AXIS_X] : pCurrEntityData->SStartPoint.dArray[AXIS_X];
-	pSNewGrooveData->SPointB.dZ = sCurrPos < 0 ? pCurrEntityData->SEndPoint.dArray[AXIS_Z] : pCurrEntityData->SStartPoint.dArray[AXIS_Z];
+    //6.è®°å½•æ§½ç»ˆæ­¢è¾¹é¡¶ç‚¹åæ ‡
+    pSNewGrooveData->SPointB.dX =
+        sCurrPos < 0 ? pCurrEntityData->SEndPoint.dArray[AXIS_X] : pCurrEntityData->SStartPoint.dArray[AXIS_X];
+    pSNewGrooveData->SPointB.dZ =
+        sCurrPos < 0 ? pCurrEntityData->SEndPoint.dArray[AXIS_Z] : pCurrEntityData->SStartPoint.dArray[AXIS_Z];
 
-	//7.´Ó¹ì¼£Á´±íÖĞÈ¡ÏÂ²Û¹ì¼£Á´±í
-	pPathListNewTailNode = sCurrPos < 0 ? (*ppPathList)->pHead : FindNode(*ppPathList, sCurrPos);
-	pGrooveListHead = pPathListNewTailNode->pNextNode;
-	pSNewGrooveData->pSGroovePathList->pHead->pNextNode = pGrooveListHead;
-	pSNewGrooveData->pSGroovePathList->cSize = pSNewGrooveData->cTotalStartLineEntityNum + pSNewGrooveData->cTotalEndLineEntityNum;
-	pPathListNewTailNode->pNextNode = NULL;
-	(*ppPathList)->cSize -= pSNewGrooveData->cTotalStartLineEntityNum + pSNewGrooveData->cTotalEndLineEntityNum;
+    //7.ä»è½¨è¿¹é“¾è¡¨ä¸­å–ä¸‹æ§½è½¨è¿¹é“¾è¡¨
+    pPathListNewTailNode = sCurrPos < 0 ? (*ppPathList)->pHead : FindNode(*ppPathList, sCurrPos);
+    pGrooveListHead = pPathListNewTailNode->pNextNode;
+    pSNewGrooveData->pSGroovePathList->pHead->pNextNode = pGrooveListHead;
+    pSNewGrooveData->pSGroovePathList->cSize =
+        pSNewGrooveData->cTotalStartLineEntityNum + pSNewGrooveData->cTotalEndLineEntityNum;
+    pPathListNewTailNode->pNextNode = NULL;
+    (*ppPathList)->cSize -= pSNewGrooveData->cTotalStartLineEntityNum + pSNewGrooveData->cTotalEndLineEntityNum;
 
-	//8.ÅĞ¶ÏËùÓĞ²ÛÊÇ·ñ»®·ÖÍê³É
-	if (sCurrPos < 0)
-	{
-		return 1;
-	}
-	return 0;
+    //8.åˆ¤æ–­æ‰€æœ‰æ§½æ˜¯å¦åˆ’åˆ†å®Œæˆ
+    if (sCurrPos < 0)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getPathDataMonotonicity(enum ENTITY* pSPath, int8 cAxisXorZ)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëÊÇXÖá»¹ÊÇZÖáÀ´»ñÈ¡¹ì¼£Êı¾İ½ÚµãÖĞÏàÓ¦µÄµ¥µ÷ĞÔ
-  ÊäÈë²ÎÊı£ºpSLineInfo		Ö±Ïß¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
+  å‡½æ•°åç§°ï¼šint8 getPathDataMonotonicity(enum ENTITY* pSPath, int8 cAxisXorZ)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥æ˜¯Xè½´è¿˜æ˜¯Zè½´æ¥è·å–è½¨è¿¹æ•°æ®èŠ‚ç‚¹ä¸­ç›¸åº”çš„å•è°ƒæ€§
+  è¾“å…¥å‚æ•°ï¼špSLineInfo		ç›´çº¿æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
 
-  Êä³ö²ÎÊı£º-2 ³ö´í
-            -1 µİ¼õ
-			0  Ã»ÓĞµ¥µ÷ĞÔ
-			1 µİÔö
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š-2 å‡ºé”™
+            -1 é€’å‡
+			0  æ²¡æœ‰å•è°ƒæ€§
+			1 é€’å¢
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getPathDataMonotonicity(enum ENTITY* pSPathData, int8 cAxisXorZ)
 {
-	if (pSPathData == NULL )
-	{
-		//±¨´í
-		return -2;
-	}
-	int8 Monotonicity = 0;//Çó³öµÄµ¥µ÷ĞÔ£¬×÷Îª·µ»ØÖµ
-	double res = 0;
-	//»ñÈ¡ÒªÇóµ¥µ÷ĞÔ±ä»¯·¢µÄÖá
-	int8 AXIS = (cAxisXorZ == AXIS_X) ? AXIS_X : AXIS_Z;
+    if (pSPathData == NULL)
+    {
+        //æŠ¥é”™
+        return -2;
+    }
+    int8 Monotonicity = 0; //æ±‚å‡ºçš„å•è°ƒæ€§ï¼Œä½œä¸ºè¿”å›å€¼
+    double res = 0;
+    //è·å–è¦æ±‚å•è°ƒæ€§å˜åŒ–å‘çš„è½´
+    int8 AXIS = (cAxisXorZ == AXIS_X) ? AXIS_X : AXIS_Z;
 
-	switch (*pSPathData)
-	{
-	case L1NE:case OTHERTYPE:case DOT:
-	{
-		SLine* pSLine = (SLine*)pSPathData;
-		res = pSLine->SEndPoint.dArray[AXIS] - pSLine->SStartPoint.dArray[AXIS];
-		break;
-	}
-	case ARC:
-	{
-		SArc* pArc = (SArc*)pSPathData;
-		res = pArc->SEndPoint.dArray[AXIS] - pArc->SStartPoint.dArray[AXIS];
-		break;
-	}
-	default:
-		break;
-	}
-	if (isZero(res))
-	{
-		Monotonicity = 0;
-	}
-	else if (res > 0)
-	{
-		Monotonicity = 1;
-	}
-	else
-	{
-		Monotonicity = -1;
-	}
+    switch (*pSPathData)
+    {
+    case L1NE:
+    case OTHERTYPE:
+    case DOT:
+    {
+        SLine* pSLine = (SLine*)pSPathData;
+        res = pSLine->SEndPoint.dArray[AXIS] - pSLine->SStartPoint.dArray[AXIS];
+        break;
+    }
+    case ARC:
+    {
+        SArc* pArc = (SArc*)pSPathData;
+        res = pArc->SEndPoint.dArray[AXIS] - pArc->SStartPoint.dArray[AXIS];
+        break;
+    }
+    default:
+        break;
+    }
+    if (isZero(res))
+    {
+        Monotonicity = 0;
+    }
+    else if (res > 0)
+    {
+        Monotonicity = 1;
+    }
+    else
+    {
+        Monotonicity = -1;
+    }
 
-	return Monotonicity;
-
+    return Monotonicity;
 }
 
-//´òÓ¡¹ì¼£Á´±íµÄ¹ì¼£µã
+//æ‰“å°è½¨è¿¹é“¾è¡¨çš„è½¨è¿¹ç‚¹
 void printDataG71G72I(void* data)
 {
-	if (data == NULL)
-	{
-		return;
-	}
+    if (data == NULL)
+    {
+        return;
+    }
 
-	enum ENTITY* pSPathData = (enum ENTITY*)data;
-	switch (*pSPathData)
-	{
-	case L1NE:case OTHERTYPE:case DOT:
-	{
-		SLine* pSLine = (SLine*)pSPathData;
-		printf("{ ÊµÌåÀàĞÍ%d,Æğµã:{%f,%f},ÖÕµã:{%f,%f} }\n", pSLine->EntityType, pSLine->SStartPoint.dArray[AXIS_X], pSLine->SStartPoint.dArray[AXIS_Z],
-			pSLine->SEndPoint.dArray[AXIS_X], pSLine->SEndPoint.dArray[AXIS_Z]);
-		break;
-	}
-	case ARC:
-	{
-		SArc* pArc = (SArc*)pSPathData;
-		printf("{ ÊµÌåÀàĞÍ%d,Æğµã:{%f,%f},ÖÕµã:{%f,%f},Ô²ĞÄ{%f,%f},°ë¾¶{%f}}\n", pArc->EntityType, pArc->SStartPoint.dArray[AXIS_X], pArc->SStartPoint.dArray[AXIS_Z],
-			pArc->SEndPoint.dArray[AXIS_X], pArc->SEndPoint.dArray[AXIS_Z], pArc->SCenterPoint.dArray[AXIS_X], pArc->SCenterPoint.dArray[AXIS_Z], pArc->dRadius);
-		break;
-		break;
-	}
-	default:
-		break;
-	}
-	
-
+    enum ENTITY* pSPathData = (enum ENTITY*)data;
+    switch (*pSPathData)
+    {
+    case L1NE:
+    case OTHERTYPE:
+    case DOT:
+    {
+        SLine* pSLine = (SLine*)pSPathData;
+        printf("{ å®ä½“ç±»å‹%d,èµ·ç‚¹:{%f,%f},ç»ˆç‚¹:{%f,%f} }\n", pSLine->EntityType, pSLine->SStartPoint.dArray[AXIS_X],
+               pSLine->SStartPoint.dArray[AXIS_Z], pSLine->SEndPoint.dArray[AXIS_X], pSLine->SEndPoint.dArray[AXIS_Z]);
+        break;
+    }
+    case ARC:
+    {
+        SArc* pArc = (SArc*)pSPathData;
+        printf("{ å®ä½“ç±»å‹%d,èµ·ç‚¹:{%f,%f},ç»ˆç‚¹:{%f,%f},åœ†å¿ƒ{%f,%f},åŠå¾„{%f}}\n", pArc->EntityType,
+               pArc->SStartPoint.dArray[AXIS_X], pArc->SStartPoint.dArray[AXIS_Z], pArc->SEndPoint.dArray[AXIS_X],
+               pArc->SEndPoint.dArray[AXIS_Z], pArc->SCenterPoint.dArray[AXIS_X], pArc->SCenterPoint.dArray[AXIS_Z],
+               pArc->dRadius);
+        break;
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 //
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid printDataG71G72II(void* data)
-  º¯Êı¹¦ÄÜ  ´òÓ¡²Û¹ì¼£µã
-  ÊäÈë²ÎÊı£ºvoid* data	²Û¹ì¼£Á´±íÖ¸Õë
+  å‡½æ•°åç§°ï¼švoid printDataG71G72II(void* data)
+  å‡½æ•°åŠŸèƒ½  æ‰“å°æ§½è½¨è¿¹ç‚¹
+  è¾“å…¥å‚æ•°ï¼švoid* data	æ§½è½¨è¿¹é“¾è¡¨æŒ‡é’ˆ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º  void* data	Îª²Û¹ì¼£Á´±íÖ¸Õë
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š  void* data	ä¸ºæ§½è½¨è¿¹é“¾è¡¨æŒ‡é’ˆ
 **************************************************/
 void printDataG71G72II(void* data)
 {
-	if (data == NULL)
-	{
-		return;
-	}
+    if (data == NULL)
+    {
+        return;
+    }
 
-	SList* plist = (SList*)data;//»ñÈ¡²Û¹ì¼£Á´±íµØÖ·
-	SNode* pCurr = plist->pHead->pNextNode;//Ö¸ÏòµÚÒ»¸ö½Úµã
-	while (1)
-	{
-		//È«²¿Á´±í½Úµã´òÓ¡Íê±Ï£¬ÍË³öº¯Êı
-		if (pCurr == NULL)
-		{
-			return;
-		}
-		//´òÓ¡²Û¹ì¼£Á´±íÊı¾İ
-		enum ENTITY* pSPathData = (enum ENTITY*)pCurr->pData;
-		switch (*pSPathData)
-		{
-		case L1NE:case OTHERTYPE:case DOT:
-		{
-			SLine* pSLine = (SLine*)pSPathData;
-			printf("{ ÊµÌåÀàĞÍ%d,Æğµã:{%f,%f},ÖÕµã:{%f,%f} }\n", pSLine->EntityType, pSLine->SStartPoint.dArray[AXIS_X], pSLine->SStartPoint.dArray[AXIS_Z],
-				pSLine->SEndPoint.dArray[AXIS_X], pSLine->SEndPoint.dArray[AXIS_Z]);
-			break;
-		}
-		//Ô²
-		case ARC:
-		{
-			SArc* pArc = (SArc*)pSPathData;
-			printf("{ ÊµÌåÀàĞÍ%d,Æğµã:{%f,%f},ÖÕµã:{%f,%f},Ô²ĞÄ{%f,%f},°ë¾¶{%f}}\n", pArc->EntityType, pArc->SStartPoint.dArray[AXIS_X], pArc->SStartPoint.dArray[AXIS_Z],
-				pArc->SEndPoint.dArray[AXIS_X], pArc->SEndPoint.dArray[AXIS_Z], pArc->SCenterPoint.dArray[AXIS_X], pArc->SCenterPoint.dArray[AXIS_Z],pArc->dRadius);
-			break;
-		}
-		default:
-			break;
-		}
-		//µ±Ç°Ö¸ÕëÖ¸ÏòÏÂÒ»¸ö½ÚµãµØÖ·
-		pCurr = pCurr->pNextNode;
-	}
-	
+    SList* plist = (SList*)data;            //è·å–æ§½è½¨è¿¹é“¾è¡¨åœ°å€
+    SNode* pCurr = plist->pHead->pNextNode; //æŒ‡å‘ç¬¬ä¸€ä¸ªèŠ‚ç‚¹
+    while (1)
+    {
+        //å…¨éƒ¨é“¾è¡¨èŠ‚ç‚¹æ‰“å°å®Œæ¯•ï¼Œé€€å‡ºå‡½æ•°
+        if (pCurr == NULL)
+        {
+            return;
+        }
+        //æ‰“å°æ§½è½¨è¿¹é“¾è¡¨æ•°æ®
+        enum ENTITY* pSPathData = (enum ENTITY*)pCurr->pData;
+        switch (*pSPathData)
+        {
+        case L1NE:
+        case OTHERTYPE:
+        case DOT:
+        {
+            SLine* pSLine = (SLine*)pSPathData;
+            printf("{ å®ä½“ç±»å‹%d,èµ·ç‚¹:{%f,%f},ç»ˆç‚¹:{%f,%f} }\n", pSLine->EntityType, pSLine->SStartPoint.dArray[AXIS_X],
+                   pSLine->SStartPoint.dArray[AXIS_Z], pSLine->SEndPoint.dArray[AXIS_X],
+                   pSLine->SEndPoint.dArray[AXIS_Z]);
+            break;
+        }
+        //åœ†
+        case ARC:
+        {
+            SArc* pArc = (SArc*)pSPathData;
+            printf("{ å®ä½“ç±»å‹%d,èµ·ç‚¹:{%f,%f},ç»ˆç‚¹:{%f,%f},åœ†å¿ƒ{%f,%f},åŠå¾„{%f}}\n", pArc->EntityType,
+                   pArc->SStartPoint.dArray[AXIS_X], pArc->SStartPoint.dArray[AXIS_Z], pArc->SEndPoint.dArray[AXIS_X],
+                   pArc->SEndPoint.dArray[AXIS_Z], pArc->SCenterPoint.dArray[AXIS_X], pArc->SCenterPoint.dArray[AXIS_Z],
+                   pArc->dRadius);
+            break;
+        }
+        default:
+            break;
+        }
+        //å½“å‰æŒ‡é’ˆæŒ‡å‘ä¸‹ä¸€ä¸ªèŠ‚ç‚¹åœ°å€
+        pCurr = pCurr->pNextNode;
+    }
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid printListII(SList* pList, PrintNode print)
-  º¯Êı¹¦ÄÜ  ´òÓ¡²ÛÁ´±íÖĞ¸÷¸ö²Û½á¹¹ÌåµÄ²Û¹ì¼£Êı¾İ
-  ÊäÈë²ÎÊı£ºSList* pList		²ÛÁ´±íµØÖ·
-			 PrintNode print	º¯ÊıÖ¸Õë£¬¸Ãº¯Êı¶¨ÒåÁË²Û½á¹¹ÌåÖĞµÄ²Û¹ì¼£Á´±íµÄ´òÓ¡·½Ê½
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid printListII(SList* pList, PrintNode print)
+  å‡½æ•°åŠŸèƒ½  æ‰“å°æ§½é“¾è¡¨ä¸­å„ä¸ªæ§½ç»“æ„ä½“çš„æ§½è½¨è¿¹æ•°æ®
+  è¾“å…¥å‚æ•°ï¼šSList* pList		æ§½é“¾è¡¨åœ°å€
+			 PrintNode print	å‡½æ•°æŒ‡é’ˆï¼Œè¯¥å‡½æ•°å®šä¹‰äº†æ§½ç»“æ„ä½“ä¸­çš„æ§½è½¨è¿¹é“¾è¡¨çš„æ‰“å°æ–¹å¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void printListII(SList* pList, PrintNode print)
 {
-	SNode* pCurr;  //µ±Ç°½Úµã
-	SGrooveData* SG71GrooveData;
+    SNode* pCurr; //å½“å‰èŠ‚ç‚¹
+    SGrooveData* SG71GrooveData;
 
-	if (pList == NULL)
-	{
-		return;
-	}
-	pCurr = pList->pHead->pNextNode;//Ö¸ÏòµÚÒ»¸ö½Úµã
+    if (pList == NULL)
+    {
+        return;
+    }
+    pCurr = pList->pHead->pNextNode; //æŒ‡å‘ç¬¬ä¸€ä¸ªèŠ‚ç‚¹
 
-	while (pCurr != NULL)
-	{
-		SG71GrooveData = (SGrooveData*)(pCurr->pData);//»ñÈ¡½ÚµãÊı¾İÓòµØÖ·£¬¼´²Û½á¹¹ÌåËùÔÚµÄÄÚ´æµØÖ·
-		//´òÓ¡²Û½á¹¹ÌåÖĞµÄÊı¾İ
-		printf("²ÛºÅ:%d Aµã:%f,%f Bµã:%f,%f ²Ûµ×Öµ:%f,%f ÖÕÖ¹±ßÊµÌåÊıÁ¿:%d\n", SG71GrooveData->ucGrooveNum,
-			SG71GrooveData->SPointA.dX, SG71GrooveData->SPointA.dZ,
-			SG71GrooveData->SPointB.dX, SG71GrooveData->SPointB.dZ,
-			SG71GrooveData->SPointC.dX, SG71GrooveData->SPointC.dZ,
-			SG71GrooveData->cTotalEndLineEntityNum);
-		//´òÓ¡²Û½á¹¹ÌåÖĞµÄ²Û¹ì¼£Á´±íÊı¾İ
-		print(SG71GrooveData->pSGroovePathList);
+    while (pCurr != NULL)
+    {
+        SG71GrooveData = (SGrooveData*)(pCurr->pData); //è·å–èŠ‚ç‚¹æ•°æ®åŸŸåœ°å€ï¼Œå³æ§½ç»“æ„ä½“æ‰€åœ¨çš„å†…å­˜åœ°å€
+        //æ‰“å°æ§½ç»“æ„ä½“ä¸­çš„æ•°æ®
+        printf("æ§½å·:%d Aç‚¹:%f,%f Bç‚¹:%f,%f æ§½åº•å€¼:%f,%f ç»ˆæ­¢è¾¹å®ä½“æ•°é‡:%d\n", SG71GrooveData->ucGrooveNum,
+               SG71GrooveData->SPointA.dX, SG71GrooveData->SPointA.dZ, SG71GrooveData->SPointB.dX,
+               SG71GrooveData->SPointB.dZ, SG71GrooveData->SPointC.dX, SG71GrooveData->SPointC.dZ,
+               SG71GrooveData->cTotalEndLineEntityNum);
+        //æ‰“å°æ§½ç»“æ„ä½“ä¸­çš„æ§½è½¨è¿¹é“¾è¡¨æ•°æ®
+        print(SG71GrooveData->pSGroovePathList);
 
-		printf("-------------------------------\n");
-		pCurr = pCurr->pNextNode;
-	}
+        printf("-------------------------------\n");
+        pCurr = pCurr->pNextNode;
+    }
 
-
-	if (pCurr == NULL)
-	{
-		printf("\n");
-	}
-
+    if (pCurr == NULL)
+    {
+        printf("\n");
+    }
 }
-
 
 int8 getPathMachineDir(SList* pPathList, int8* cMachineXDir, int8* cMachineZDir)
 {
-	int16 sLastEntityPos;
-	SLine* pSEntity = NULL;
-	bool bXDir = FALSE;
-	bool bZDir = FALSE;
+    int16 sLastEntityPos;
+    SLine* pSEntity = NULL;
+    bool bXDir = FALSE;
+    bool bZDir = FALSE;
 
-	sLastEntityPos = getListSize(pPathList) - 1;
-	while (sLastEntityPos > 0)
-	{
-		pSEntity = (SLine*)FindNodeData(pPathList, sLastEntityPos);
-		//»ñÈ¡X¼Ó¹¤·½Ïò
-		if (bXDir == FALSE)
-		{
-			if (pSEntity->SEndPoint.dArray[AXIS_X] - pSEntity->SStartPoint.dArray[AXIS_X] > 0)
-			{
-				*cMachineXDir = 1;
-				bXDir = TRUE;
-			}
-			else if(pSEntity->SEndPoint.dArray[AXIS_X] - pSEntity->SStartPoint.dArray[AXIS_X] < 0)
-			{
-				*cMachineXDir = -1;
-				bXDir = TRUE;
-			}
-		}
-		//»ñÈ¡Z¼Ó¹¤·½Ïò
-		if (bZDir == FALSE)
-		{
-			if (pSEntity->SEndPoint.dArray[AXIS_Z] - pSEntity->SStartPoint.dArray[AXIS_Z] > 0)
-			{
-				*cMachineZDir = 1;
-				bZDir = TRUE;
-			}
-			else if (pSEntity->SEndPoint.dArray[AXIS_Z] - pSEntity->SStartPoint.dArray[AXIS_Z] < 0)
-			{
-				*cMachineZDir = -1;
-				bZDir = TRUE;
-			}
-		}
-		if (bXDir == TRUE && bZDir == TRUE)
-		{
-			return 1;
-		}
-		sLastEntityPos--;
-	}
-	return -1;
+    sLastEntityPos = getListSize(pPathList) - 1;
+    while (sLastEntityPos > 0)
+    {
+        pSEntity = (SLine*)FindNodeData(pPathList, sLastEntityPos);
+        //è·å–XåŠ å·¥æ–¹å‘
+        if (bXDir == FALSE)
+        {
+            if (pSEntity->SEndPoint.dArray[AXIS_X] - pSEntity->SStartPoint.dArray[AXIS_X] > 0)
+            {
+                *cMachineXDir = 1;
+                bXDir = TRUE;
+            }
+            else if (pSEntity->SEndPoint.dArray[AXIS_X] - pSEntity->SStartPoint.dArray[AXIS_X] < 0)
+            {
+                *cMachineXDir = -1;
+                bXDir = TRUE;
+            }
+        }
+        //è·å–ZåŠ å·¥æ–¹å‘
+        if (bZDir == FALSE)
+        {
+            if (pSEntity->SEndPoint.dArray[AXIS_Z] - pSEntity->SStartPoint.dArray[AXIS_Z] > 0)
+            {
+                *cMachineZDir = 1;
+                bZDir = TRUE;
+            }
+            else if (pSEntity->SEndPoint.dArray[AXIS_Z] - pSEntity->SStartPoint.dArray[AXIS_Z] < 0)
+            {
+                *cMachineZDir = -1;
+                bZDir = TRUE;
+            }
+        }
+        if (bXDir == TRUE && bZDir == TRUE)
+        {
+            return 1;
+        }
+        sLastEntityPos--;
+    }
+    return -1;
 }
 
 SGrooveData* getGrooveDataByGrooveNum(SList* pGrooveList, int16 cGrooveNum)
 {
-	if (pGrooveList == NULL || cGrooveNum <= 0 || pGrooveList->cSize < cGrooveNum)
-	{
-	    // **²»ÒªĞ´»Ø cCurrPointGrooveNum**
-	    // **²»Òª¼ÌĞøÈ¡²Û**
-	    return 0; // »ò´íÎóÂë
-	}
+    if (pGrooveList == NULL || cGrooveNum <= 0 || pGrooveList->cSize < cGrooveNum)
+    {
+        // **ä¸è¦å†™å› cCurrPointGrooveNum**
+        // **ä¸è¦ç»§ç»­å–æ§½**
+        return 0; // æˆ–é”™è¯¯ç 
+    }
 
-	int16 cNodePos;
-	cNodePos = getListSize(pGrooveList) - cGrooveNum;
-	SGrooveData* pGrooveData = FindNodeData(pGrooveList, cNodePos);
-	return pGrooveData;
+    int16 cNodePos;
+    cNodePos = getListSize(pGrooveList) - cGrooveNum;
+    SGrooveData* pGrooveData = FindNodeData(pGrooveList, cNodePos);
+    return pGrooveData;
 }
 
-
-//²Ûµ×µã
+//æ§½åº•ç‚¹
 int16 findEntityPosInGroove(SGrooveData* pSGrooveData, bool bFeed, SPointDouble* pSTargetPoint, bool bStartLine)
 {
-	SLine* pSEntity = NULL;
-	int16 cEntityPos;
+    SLine* pSEntity = NULL;
+    int16 cEntityPos;
 
-	//1.½øµ¶
-	if (bFeed == TRUE)
-	{
-		//´Ó²Ûµ×ÏòÆğÊ¼±ß¶¥µãËÑË÷
-		if (bStartLine == TRUE)
-		{
-			for (int i = 0; i < pSGrooveData->cTotalStartLineEntityNum; i++)
-			{
-				cEntityPos = pSGrooveData->cTotalEndLineEntityNum + i;
-				pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
-				if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X], pSEntity->SEndPoint.dArray[AXIS_X]) &&
-					isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z], pSEntity->SEndPoint.dArray[AXIS_Z]))
-				{
-					//ÕÒµ½·µ»Ø½ÚµãPos
-					return cEntityPos;
-				}
-			}
-		}
-		//´Ó²Ûµ×ÏòÖÕÖ¹±ß¶¥µãËÑË÷
-		else
-		{
-			for (int i = 0; i < pSGrooveData->cTotalEndLineEntityNum; i++)
-			{
-				cEntityPos = pSGrooveData->cTotalEndLineEntityNum - 1 - i;
-				pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
-				if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X], pSEntity->SEndPoint.dArray[AXIS_X]) &&
-					isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z], pSEntity->SEndPoint.dArray[AXIS_Z]))
-				{
-					//ÕÒµ½·µ»Ø½ÚµãPos
-					return cEntityPos;
-				}
-			}
-		}
-	}
-	//2.ÍËµ¶
-	else if (bFeed == FALSE)
-	{
-		//´ÓÆğÊ¼±ß¶¥µãÏò²Ûµ×ËÑË÷
-		if (bStartLine == 1)
-		{
-			for (int i = 0; i < pSGrooveData->cTotalStartLineEntityNum; i++)
-			{
-				cEntityPos = pSGrooveData->cTotalStartLineEntityNum + pSGrooveData->cTotalEndLineEntityNum - 1 - i;
-				pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
-				if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X], pSEntity->SEndPoint.dArray[AXIS_X]) &&
-					isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z], pSEntity->SEndPoint.dArray[AXIS_Z]))
-				{
-					//ÕÒµ½·µ»Ø½ÚµãPos
-					return cEntityPos;
-				}
-			}
-		}
-		//´ÓÖÕÖ¹±ß¶¥µãÏò²Ûµ×ËÑË÷
-		else
-		{
-			for (int i = 0; i < pSGrooveData->cTotalEndLineEntityNum; i++)
-			{
-				cEntityPos = i;
-				pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
-				if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X], pSEntity->SEndPoint.dArray[AXIS_X]) &&
-					isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z], pSEntity->SEndPoint.dArray[AXIS_Z]))
-				{
-					//ÕÒµ½·µ»Ø½ÚµãPos
-					return cEntityPos;
-				}
-			}
-
-		}
-
-	}
-
+    //1.è¿›åˆ€
+    if (bFeed == TRUE)
+    {
+        //ä»æ§½åº•å‘èµ·å§‹è¾¹é¡¶ç‚¹æœç´¢
+        if (bStartLine == TRUE)
+        {
+            for (int i = 0; i < pSGrooveData->cTotalStartLineEntityNum; i++)
+            {
+                cEntityPos = pSGrooveData->cTotalEndLineEntityNum + i;
+                pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
+                if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X],
+                                 pSEntity->SEndPoint.dArray[AXIS_X]) &&
+                    isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z],
+                                 pSEntity->SEndPoint.dArray[AXIS_Z]))
+                {
+                    //æ‰¾åˆ°è¿”å›èŠ‚ç‚¹Pos
+                    return cEntityPos;
+                }
+            }
+        }
+        //ä»æ§½åº•å‘ç»ˆæ­¢è¾¹é¡¶ç‚¹æœç´¢
+        else
+        {
+            for (int i = 0; i < pSGrooveData->cTotalEndLineEntityNum; i++)
+            {
+                cEntityPos = pSGrooveData->cTotalEndLineEntityNum - 1 - i;
+                pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
+                if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X],
+                                 pSEntity->SEndPoint.dArray[AXIS_X]) &&
+                    isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z],
+                                 pSEntity->SEndPoint.dArray[AXIS_Z]))
+                {
+                    //æ‰¾åˆ°è¿”å›èŠ‚ç‚¹Pos
+                    return cEntityPos;
+                }
+            }
+        }
+    }
+    //2.é€€åˆ€
+    else if (bFeed == FALSE)
+    {
+        //ä»èµ·å§‹è¾¹é¡¶ç‚¹å‘æ§½åº•æœç´¢
+        if (bStartLine == 1)
+        {
+            for (int i = 0; i < pSGrooveData->cTotalStartLineEntityNum; i++)
+            {
+                cEntityPos = pSGrooveData->cTotalStartLineEntityNum + pSGrooveData->cTotalEndLineEntityNum - 1 - i;
+                pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
+                if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X],
+                                 pSEntity->SEndPoint.dArray[AXIS_X]) &&
+                    isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z],
+                                 pSEntity->SEndPoint.dArray[AXIS_Z]))
+                {
+                    //æ‰¾åˆ°è¿”å›èŠ‚ç‚¹Pos
+                    return cEntityPos;
+                }
+            }
+        }
+        //ä»ç»ˆæ­¢è¾¹é¡¶ç‚¹å‘æ§½åº•æœç´¢
+        else
+        {
+            for (int i = 0; i < pSGrooveData->cTotalEndLineEntityNum; i++)
+            {
+                cEntityPos = i;
+                pSEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cEntityPos);
+                if (isBetweenA2B(pSTargetPoint->dArray[AXIS_X], pSEntity->SStartPoint.dArray[AXIS_X],
+                                 pSEntity->SEndPoint.dArray[AXIS_X]) &&
+                    isBetweenA2B(pSTargetPoint->dArray[AXIS_Z], pSEntity->SStartPoint.dArray[AXIS_Z],
+                                 pSEntity->SEndPoint.dArray[AXIS_Z]))
+                {
+                    //æ‰¾åˆ°è¿”å›èŠ‚ç‚¹Pos
+                    return cEntityPos;
+                }
+            }
+        }
+    }
 }
 
-//ÊµÌå¸÷Öá±ØĞëµ¥µ÷ ·µ»Ø-1Î´ÕÒµ½·µ»Ø1ÕÒµ½
+//å®ä½“å„è½´å¿…é¡»å•è°ƒ è¿”å›-1æœªæ‰¾åˆ°è¿”å›1æ‰¾åˆ°
 int8 findTargetPointInEntity(enum ENTITY* pEntity, int8 cAixsXorZ, double dXorZVal, double* pTargetVal)
 {
-	switch (*pEntity)
-	{
-	case L1NE:case OTHERTYPE:case DOT:
-	{
-		SLine* pSLine = (SLine*)pEntity;
-		double dSX = pSLine->SStartPoint.dArray[AXIS_X];
-		double dSZ = pSLine->SStartPoint.dArray[AXIS_Z];
-		double dEX = pSLine->SEndPoint.dArray[AXIS_X];
-		double dEZ = pSLine->SEndPoint.dArray[AXIS_Z];
+    switch (*pEntity)
+    {
+    case L1NE:
+    case OTHERTYPE:
+    case DOT:
+    {
+        SLine* pSLine = (SLine*)pEntity;
+        double dSX = pSLine->SStartPoint.dArray[AXIS_X];
+        double dSZ = pSLine->SStartPoint.dArray[AXIS_Z];
+        double dEX = pSLine->SEndPoint.dArray[AXIS_X];
+        double dEZ = pSLine->SEndPoint.dArray[AXIS_Z];
 
-		//¸ù¾İXÇóZ
-		if (cAixsXorZ == AXIS_X)
-		{
-			//ÒÑÖªX³¬³ö·¶Î§
-			if (!isBetweenA2B(dXorZVal, dSX, dEX))
-			{
-				return -1;
-			}
-			////ÒÑÖªX¶ÔÓ¦¶à¸öZ£¨Ö±ÏßË®Æ½£©
-			//else if (isZero(dSZ, dEZ))
-			//{
+        //æ ¹æ®Xæ±‚Z
+        if (cAixsXorZ == AXIS_X)
+        {
+            //å·²çŸ¥Xè¶…å‡ºèŒƒå›´
+            if (!isBetweenA2B(dXorZVal, dSX, dEX))
+            {
+                return -1;
+            }
+            ////å·²çŸ¥Xå¯¹åº”å¤šä¸ªZï¼ˆç›´çº¿æ°´å¹³ï¼‰
+            //else if (isZero(dSZ, dEZ))
+            //{
 
-			//}
-			else
-			{
-				*pTargetVal = dSZ + (dEZ - dSZ) * (dXorZVal - dSX) / (dEX - dSX);
-			}
-		}
-		//¸ù¾İZÇóX
-		else if (cAixsXorZ == AXIS_Z)
-		{
-			//ÒÑÖªZ³¬³ö·¶Î§
-			if (!isBetweenA2B(dXorZVal, dSZ, dEZ))
-			{
-				return -1;
-			}
-			else
-			{
-				*pTargetVal = dSX + (dEX - dSX) * (dXorZVal - dSZ) / (dEZ - dSZ);
-			}
-		}
-		break;
-	}
-	case ARC:
-	{
-		SArc* pSArc = (SArc*)pEntity;
-		double dSX = pSArc->SStartPoint.dArray[AXIS_X];
-		double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
-		double dEX = pSArc->SEndPoint.dArray[AXIS_X];
-		double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
-		double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
-		double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
-		double dR = pSArc->dRadius;
+            //}
+            else
+            {
+                *pTargetVal = dSZ + (dEZ - dSZ) * (dXorZVal - dSX) / (dEX - dSX);
+            }
+        }
+        //æ ¹æ®Zæ±‚X
+        else if (cAixsXorZ == AXIS_Z)
+        {
+            //å·²çŸ¥Zè¶…å‡ºèŒƒå›´
+            if (!isBetweenA2B(dXorZVal, dSZ, dEZ))
+            {
+                return -1;
+            }
+            else
+            {
+                *pTargetVal = dSX + (dEX - dSX) * (dXorZVal - dSZ) / (dEZ - dSZ);
+            }
+        }
+        break;
+    }
+    case ARC:
+    {
+        SArc* pSArc = (SArc*)pEntity;
+        double dSX = pSArc->SStartPoint.dArray[AXIS_X];
+        double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
+        double dEX = pSArc->SEndPoint.dArray[AXIS_X];
+        double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
+        double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
+        double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
+        double dR = pSArc->dRadius;
 
-		//¸ù¾İXÇóZ
-		if (cAixsXorZ == AXIS_X)
-		{
-			//ÒÑÖªX³¬³ö·¶Î§
-			if (!isBetweenA2B(dXorZVal, dSX, dEX))
-			{
-				return -1;
-			}
-			else
-			{
-				double dTargetVal_1;
-				double dTargetVal_2;
-				dTargetVal_1 = dCZ + (sqrt(dR * dR - (dXorZVal - dCX) * (dXorZVal - dCX)));
-				dTargetVal_2 = dCZ - (sqrt(dR * dR - (dXorZVal - dCX) * (dXorZVal - dCX)));
+        //æ ¹æ®Xæ±‚Z
+        if (cAixsXorZ == AXIS_X)
+        {
+            //å·²çŸ¥Xè¶…å‡ºèŒƒå›´
+            if (!isBetweenA2B(dXorZVal, dSX, dEX))
+            {
+                return -1;
+            }
+            else
+            {
+                double dTargetVal_1;
+                double dTargetVal_2;
+                dTargetVal_1 = dCZ + (sqrt(dR * dR - (dXorZVal - dCX) * (dXorZVal - dCX)));
+                dTargetVal_2 = dCZ - (sqrt(dR * dR - (dXorZVal - dCX) * (dXorZVal - dCX)));
 
-				*pTargetVal = isBetweenA2B(dTargetVal_1, dSZ, dEZ) ? dTargetVal_1 : dTargetVal_2;
-			}
-		}
-		//¸ù¾İZÇóX
-		else if (cAixsXorZ == AXIS_Z)
-		{
-			//ÒÑÖªZ³¬³ö·¶Î§
-			if (!isBetweenA2B(dXorZVal, dSZ, dEZ))
-			{
-				return -1;
-			}
-			else
-			{
-				double dTargetVal_1;
-				double dTargetVal_2;
-				dTargetVal_1 = dCX + (sqrt(dR * dR - (dXorZVal - dCZ) * (dXorZVal - dCZ)));
-				dTargetVal_2 = dCX - (sqrt(dR * dR - (dXorZVal - dCZ) * (dXorZVal - dCZ)));
+                *pTargetVal = isBetweenA2B(dTargetVal_1, dSZ, dEZ) ? dTargetVal_1 : dTargetVal_2;
+            }
+        }
+        //æ ¹æ®Zæ±‚X
+        else if (cAixsXorZ == AXIS_Z)
+        {
+            //å·²çŸ¥Zè¶…å‡ºèŒƒå›´
+            if (!isBetweenA2B(dXorZVal, dSZ, dEZ))
+            {
+                return -1;
+            }
+            else
+            {
+                double dTargetVal_1;
+                double dTargetVal_2;
+                dTargetVal_1 = dCX + (sqrt(dR * dR - (dXorZVal - dCZ) * (dXorZVal - dCZ)));
+                dTargetVal_2 = dCX - (sqrt(dR * dR - (dXorZVal - dCZ) * (dXorZVal - dCZ)));
 
-				*pTargetVal = isBetweenA2B(dTargetVal_1, dSX, dEX) ? dTargetVal_1 : dTargetVal_2;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-
-	}
-	return 1;
+                *pTargetVal = isBetweenA2B(dTargetVal_1, dSX, dEX) ? dTargetVal_1 : dTargetVal_2;
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return 1;
 }
-int8 findTargetPointInGroove(SGrooveData* pSGrooveData, bool bStartPath, int8 cAixsXorZ, double dXorZVal, double* pTargetVal)
+int8 findTargetPointInGroove(SGrooveData* pSGrooveData, bool bStartPath, int8 cAixsXorZ, double dXorZVal,
+                             double* pTargetVal)
 {
-	//ÆğÊ¼±ßÊµÌåÊıÁ¿
-	int16 cTotalStartLineEntityNum = pSGrooveData->cTotalStartLineEntityNum;
-	//ÖÕÖ¹±ßÊµÌåÊıÁ¿
-	int16 cTotalEndLineEntityNum = pSGrooveData->cTotalEndLineEntityNum;
+    //èµ·å§‹è¾¹å®ä½“æ•°é‡
+    int16 cTotalStartLineEntityNum = pSGrooveData->cTotalStartLineEntityNum;
+    //ç»ˆæ­¢è¾¹å®ä½“æ•°é‡
+    int16 cTotalEndLineEntityNum = pSGrooveData->cTotalEndLineEntityNum;
 
-	//1.²ÛÆğÊ¼±ßÄÚ£¬ÕÒdXorZVal¶ÔÓ¦µÄÖµ£¨Á´±íÓ¦¸ÃÏò²Ûµ×·½ÏòËÑÑ°£©
-	if (bStartPath == 1)
-	{
-		
-		for (int16 i = 0; i < cTotalStartLineEntityNum; i++)
-		{
-			//»ñÈ¡µ±Ç°ÊµÌå
-			enum ENTITY* pEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cTotalEndLineEntityNum + i);
+    //1.æ§½èµ·å§‹è¾¹å†…ï¼Œæ‰¾dXorZValå¯¹åº”çš„å€¼ï¼ˆé“¾è¡¨åº”è¯¥å‘æ§½åº•æ–¹å‘æœå¯»ï¼‰
+    if (bStartPath == 1)
+    {
 
-			//µ±Ç°ÊµÌåÄÚ¸ù¾İXÖµÕÒµ½TargetVal
-			if (findTargetPointInEntity(pEntity, AXIS_X, dXorZVal, pTargetVal) > 0)
-			{
-				return cTotalEndLineEntityNum + i;
-			}
-		}
-	}
-	//2.²ÛÖÕÖ¹±ßÄÚ£¬ÕÒdXorZVal¶ÔÓ¦µÄÖµ£¨Á´±íÓ¦¸ÃÏò²Ûµ×·½ÏòËÑÑ°£©
-	else
-	{
-		for (int16 i = 0; i < cTotalEndLineEntityNum; i++)
-		{
-			//»ñÈ¡µ±Ç°ÊµÌå
-			enum ENTITY* pEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, i);
-			
-			//µ±Ç°ÊµÌåÄÚ¸ù¾İXÖµÕÒµ½TargetVal
-			if (findTargetPointInEntity(pEntity, AXIS_X, dXorZVal, pTargetVal) > 0)
-			{
-				return i;
-			}
-		}
-		
-	}
-	//²Û±ßÖĞÄÚ£¬Î´ÕÒµ½dXorZVal¶ÔÓ¦µÄÖµ
-	return -1;
+        for (int16 i = 0; i < cTotalStartLineEntityNum; i++)
+        {
+            //è·å–å½“å‰å®ä½“
+            enum ENTITY* pEntity =
+                (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, cTotalEndLineEntityNum + i);
+
+            //å½“å‰å®ä½“å†…æ ¹æ®Xå€¼æ‰¾åˆ°TargetVal
+            if (findTargetPointInEntity(pEntity, AXIS_X, dXorZVal, pTargetVal) > 0)
+            {
+                return cTotalEndLineEntityNum + i;
+            }
+        }
+    }
+    //2.æ§½ç»ˆæ­¢è¾¹å†…ï¼Œæ‰¾dXorZValå¯¹åº”çš„å€¼ï¼ˆé“¾è¡¨åº”è¯¥å‘æ§½åº•æ–¹å‘æœå¯»ï¼‰
+    else
+    {
+        for (int16 i = 0; i < cTotalEndLineEntityNum; i++)
+        {
+            //è·å–å½“å‰å®ä½“
+            enum ENTITY* pEntity = (enum ENTITY*)FindNodeData(pSGrooveData->pSGroovePathList, i);
+
+            //å½“å‰å®ä½“å†…æ ¹æ®Xå€¼æ‰¾åˆ°TargetVal
+            if (findTargetPointInEntity(pEntity, AXIS_X, dXorZVal, pTargetVal) > 0)
+            {
+                return i;
+            }
+        }
+    }
+    //æ§½è¾¹ä¸­å†…ï¼Œæœªæ‰¾åˆ°dXorZValå¯¹åº”çš„å€¼
+    return -1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 findCutEndPoint(SList* pGrooveList, int8 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir, SPoint* pSTargetPoint)
-  º¯Êı¹¦ÄÜ  ÕÒµ½½ø¸øÖÕµã×ø±ê
-  ÊäÈë²ÎÊı£ºpGrooveList			²ÛÁ´±í
-			cStartGrooveNum		ÆğÊ¼²ÛºÅ
-			cAxisXorZ			·½Ïò
-			dXorZVal			Öµ
-			cDir				²éÕÒ·½Ïò
-			pTargetVal			ÖÕµã×ø±ê
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0	Î´ÕÒµ½ÖÕµã×ø±ê
-			n	²ÛºÅ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 findCutEndPoint(SList* pGrooveList, int8 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir, SPoint* pSTargetPoint)
+  å‡½æ•°åŠŸèƒ½  æ‰¾åˆ°è¿›ç»™ç»ˆç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼špGrooveList			æ§½é“¾è¡¨
+			cStartGrooveNum		èµ·å§‹æ§½å·
+			cAxisXorZ			æ–¹å‘
+			dXorZVal			å€¼
+			cDir				æŸ¥æ‰¾æ–¹å‘
+			pTargetVal			ç»ˆç‚¹åæ ‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0	æœªæ‰¾åˆ°ç»ˆç‚¹åæ ‡
+			n	æ§½å·
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 findCutEndPoint(SList* pGrooveList, int16 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir, double* pTargetVal, int8 cMachineXDir)
+int8 findCutEndPoint(SList* pGrooveList, int16 cStartGrooveNum, int8 cAxisXorZ, double dXorZVal, int8 cDir,
+                     double* pTargetVal, int8 cMachineXDir)
 {
-	//×Ü²Û¸öÊı
-	int16 cTotalGrooveNum = getListSize(pGrooveList);
+    //æ€»æ§½ä¸ªæ•°
+    int16 cTotalGrooveNum = getListSize(pGrooveList);
 
-	//Ê£Óà²Û¸öÊı
-	int16 cRestGrooveNum = cDir == 1 ? cTotalGrooveNum - cStartGrooveNum + 1 : cStartGrooveNum;
+    //å‰©ä½™æ§½ä¸ªæ•°
+    int16 cRestGrooveNum = cDir == 1 ? cTotalGrooveNum - cStartGrooveNum + 1 : cStartGrooveNum;
 
-	//µ±Ç°²ÛºÅ
-	int16 cCurrGrooveNum = cStartGrooveNum;
-	SGrooveData* pSCurrGrooveData = NULL;
+    //å½“å‰æ§½å·
+    int16 cCurrGrooveNum = cStartGrooveNum;
+    SGrooveData* pSCurrGrooveData = NULL;
 
-	//ÅĞ¶ÏÊÇ·ñdXorZValÖµÂäÔÚÄÄ¸ö²ÛÄÚ
-	while (cRestGrooveNum > 0)
-	{
-		//1.»ñÈ¡µ±Ç°²ÛÊı¾İ½Úµã
-		pSCurrGrooveData = getGrooveDataByGrooveNum(pGrooveList, cCurrGrooveNum);
-		if (cMachineXDir == -1)
-		{
-			//2.ÅĞ¶ÏdXorZValÊÇ·ñÔÚµ±Ç°²Û±ß·¶Î§ÄÚ
-			//2.1·½ÏòÎªÕı£¬ÅĞ¶ÏdXorZValÊÇ·ñÔÚ²ÛÖÕÖ¹±ß·¶Î§ÄÚ
-			if (cDir == 1)
-			{
-				double dEndLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointB.dX : pSCurrGrooveData->SPointB.dZ;
-				double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
-				//dXorZValÔÚ²ÛÖÕÖ¹±ß·¶Î§ÄÚ£¨²Ûµ×µ× <= dXorZVal < ²ÛÖÕÖ¹±ß¶¥£©
-				if (isEqualOrGreaterThanZero(dXorZVal - dBottom) && isUnEqualAndLessThanZero(dXorZVal - dEndLineTop))
-				{
-					//¼ÆËãdXorZVal¶ÔÓ¦²Û±ßµÄ×ø±ê
-					findTargetPointInGroove(pSCurrGrooveData, FALSE, cAxisXorZ, dXorZVal, pTargetVal);
+    //åˆ¤æ–­æ˜¯å¦dXorZValå€¼è½åœ¨å“ªä¸ªæ§½å†…
+    while (cRestGrooveNum > 0)
+    {
+        //1.è·å–å½“å‰æ§½æ•°æ®èŠ‚ç‚¹
+        pSCurrGrooveData = getGrooveDataByGrooveNum(pGrooveList, cCurrGrooveNum);
+        if (cMachineXDir == -1)
+        {
+            //2.åˆ¤æ–­dXorZValæ˜¯å¦åœ¨å½“å‰æ§½è¾¹èŒƒå›´å†…
+            //2.1æ–¹å‘ä¸ºæ­£ï¼Œåˆ¤æ–­dXorZValæ˜¯å¦åœ¨æ§½ç»ˆæ­¢è¾¹èŒƒå›´å†…
+            if (cDir == 1)
+            {
+                double dEndLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointB.dX : pSCurrGrooveData->SPointB.dZ;
+                double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
+                //dXorZValåœ¨æ§½ç»ˆæ­¢è¾¹èŒƒå›´å†…ï¼ˆæ§½åº•åº• <= dXorZVal < æ§½ç»ˆæ­¢è¾¹é¡¶ï¼‰
+                if (isEqualOrGreaterThanZero(dXorZVal - dBottom) && isUnEqualAndLessThanZero(dXorZVal - dEndLineTop))
+                {
+                    //è®¡ç®—dXorZValå¯¹åº”æ§½è¾¹çš„åæ ‡
+                    findTargetPointInGroove(pSCurrGrooveData, FALSE, cAxisXorZ, dXorZVal, pTargetVal);
 
-					return cCurrGrooveNum;
-				}
-				cCurrGrooveNum++;
-			}
-			//2.2·½ÏòÎª¸º£¬ÅĞ¶ÏdXorZValÊÇ·ñÔÚ²ÛÆğÊ¼±ß·¶Î§ÄÚ
-			else if (cDir == -1)
-			{
-				double dStartLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointA.dX : pSCurrGrooveData->SPointA.dZ;
-				double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
-				//dXorZValÔÚ²ÛÆğÊ¼±ß·¶Î§ÄÚ£¨²Ûµ×µ× <= dXorZVal < ²ÛÆğÊ¼±ß¶¥£©
-				if (isEqualOrGreaterThanZero(dXorZVal - dBottom) && isUnEqualAndLessThanZero(dXorZVal - dStartLineTop))
-				{
-					//¼ÆËãdXorZVal¶ÔÓ¦²Û±ßµÄ×ø±ê
-					findTargetPointInGroove(pSCurrGrooveData, TRUE, cAxisXorZ, dXorZVal, pTargetVal);
+                    return cCurrGrooveNum;
+                }
+                cCurrGrooveNum++;
+            }
+            //2.2æ–¹å‘ä¸ºè´Ÿï¼Œåˆ¤æ–­dXorZValæ˜¯å¦åœ¨æ§½èµ·å§‹è¾¹èŒƒå›´å†…
+            else if (cDir == -1)
+            {
+                double dStartLineTop =
+                    cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointA.dX : pSCurrGrooveData->SPointA.dZ;
+                double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
+                //dXorZValåœ¨æ§½èµ·å§‹è¾¹èŒƒå›´å†…ï¼ˆæ§½åº•åº• <= dXorZVal < æ§½èµ·å§‹è¾¹é¡¶ï¼‰
+                if (isEqualOrGreaterThanZero(dXorZVal - dBottom) && isUnEqualAndLessThanZero(dXorZVal - dStartLineTop))
+                {
+                    //è®¡ç®—dXorZValå¯¹åº”æ§½è¾¹çš„åæ ‡
+                    findTargetPointInGroove(pSCurrGrooveData, TRUE, cAxisXorZ, dXorZVal, pTargetVal);
 
-					return cCurrGrooveNum;
-				}
-				cCurrGrooveNum--;
-			}
-		}
-		else 
-		{
-			//2.ÅĞ¶ÏdXorZValÊÇ·ñÔÚµ±Ç°²Û±ß·¶Î§ÄÚ
-			//2.1·½ÏòÎªÕı£¬ÅĞ¶ÏdXorZValÊÇ·ñÔÚ²ÛÖÕÖ¹±ß·¶Î§ÄÚ
-			if (cDir == 1)
-			{
-				double dEndLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointB.dX : pSCurrGrooveData->SPointB.dZ;
-				double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
-				//dXorZValÔÚ²ÛÖÕÖ¹±ß·¶Î§ÄÚ£¨²Ûµ×µ× <= dXorZVal < ²ÛÖÕÖ¹±ß¶¥£©
-				if (isEqualOrGreaterThanZero(dXorZVal - dEndLineTop) && isUnEqualAndLessThanZero(dXorZVal - dBottom))
-				{
-					//¼ÆËãdXorZVal¶ÔÓ¦²Û±ßµÄ×ø±ê
-					findTargetPointInGroove(pSCurrGrooveData, FALSE, cAxisXorZ, dXorZVal, pTargetVal);
+                    return cCurrGrooveNum;
+                }
+                cCurrGrooveNum--;
+            }
+        }
+        else
+        {
+            //2.åˆ¤æ–­dXorZValæ˜¯å¦åœ¨å½“å‰æ§½è¾¹èŒƒå›´å†…
+            //2.1æ–¹å‘ä¸ºæ­£ï¼Œåˆ¤æ–­dXorZValæ˜¯å¦åœ¨æ§½ç»ˆæ­¢è¾¹èŒƒå›´å†…
+            if (cDir == 1)
+            {
+                double dEndLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointB.dX : pSCurrGrooveData->SPointB.dZ;
+                double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
+                //dXorZValåœ¨æ§½ç»ˆæ­¢è¾¹èŒƒå›´å†…ï¼ˆæ§½åº•åº• <= dXorZVal < æ§½ç»ˆæ­¢è¾¹é¡¶ï¼‰
+                if (isEqualOrGreaterThanZero(dXorZVal - dEndLineTop) && isUnEqualAndLessThanZero(dXorZVal - dBottom))
+                {
+                    //è®¡ç®—dXorZValå¯¹åº”æ§½è¾¹çš„åæ ‡
+                    findTargetPointInGroove(pSCurrGrooveData, FALSE, cAxisXorZ, dXorZVal, pTargetVal);
 
-					return cCurrGrooveNum;
-				}
-				cCurrGrooveNum++;
-			}
-			//2.2·½ÏòÎª¸º£¬ÅĞ¶ÏdXorZValÊÇ·ñÔÚ²ÛÆğÊ¼±ß·¶Î§ÄÚ
-			else if (cDir == -1)
-			{
-				double dStartLineTop = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointA.dX : pSCurrGrooveData->SPointA.dZ;
-				double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
-				//dXorZValÔÚ²ÛÆğÊ¼±ß·¶Î§ÄÚ£¨²Ûµ×µ× <= dXorZVal < ²ÛÆğÊ¼±ß¶¥£©
-				if (isEqualOrGreaterThanZero(dXorZVal - dStartLineTop) && isUnEqualAndLessThanZero(dXorZVal - dBottom))
-				{
-					//¼ÆËãdXorZVal¶ÔÓ¦²Û±ßµÄ×ø±ê
-					findTargetPointInGroove(pSCurrGrooveData, TRUE, cAxisXorZ, dXorZVal, pTargetVal);
+                    return cCurrGrooveNum;
+                }
+                cCurrGrooveNum++;
+            }
+            //2.2æ–¹å‘ä¸ºè´Ÿï¼Œåˆ¤æ–­dXorZValæ˜¯å¦åœ¨æ§½èµ·å§‹è¾¹èŒƒå›´å†…
+            else if (cDir == -1)
+            {
+                double dStartLineTop =
+                    cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointA.dX : pSCurrGrooveData->SPointA.dZ;
+                double dBottom = cAxisXorZ == AXIS_X ? pSCurrGrooveData->SPointC.dX : pSCurrGrooveData->SPointC.dZ;
+                //dXorZValåœ¨æ§½èµ·å§‹è¾¹èŒƒå›´å†…ï¼ˆæ§½åº•åº• <= dXorZVal < æ§½èµ·å§‹è¾¹é¡¶ï¼‰
+                if (isEqualOrGreaterThanZero(dXorZVal - dStartLineTop) && isUnEqualAndLessThanZero(dXorZVal - dBottom))
+                {
+                    //è®¡ç®—dXorZValå¯¹åº”æ§½è¾¹çš„åæ ‡
+                    findTargetPointInGroove(pSCurrGrooveData, TRUE, cAxisXorZ, dXorZVal, pTargetVal);
 
-					return cCurrGrooveNum;
-				}
-				cCurrGrooveNum--;
-			}
-		}
+                    return cCurrGrooveNum;
+                }
+                cCurrGrooveNum--;
+            }
+        }
 
-
-		//3.Ê£Óà²ÛºÅ--
-		cRestGrooveNum--;
-	}
-	return 0;
+        //3.å‰©ä½™æ§½å·--
+        cRestGrooveNum--;
+    }
+    return 0;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  ½«Ö±Ïß¶ÎµÄÏà¹Ø²ÎÊıĞ´ÈëG´úÂë»º³åÇø
-  ÊäÈë²ÎÊı£ºpSLineInfo		Ö±Ïß¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  å°†ç›´çº¿æ®µçš„ç›¸å…³å‚æ•°å†™å…¥Gä»£ç ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼špSLineInfo		ç›´çº¿æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö¶Ô»º³åÇøµ¥ÔªĞ´Èë£¬Ğ´Íêºó²»ÒÆ¶¯Ö¸Õë
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…å¯¹ç¼“å†²åŒºå•å…ƒå†™å…¥ï¼Œå†™å®Œåä¸ç§»åŠ¨æŒ‡é’ˆ
 **************************************************/
 void writeDotIntoGCodeBuf(SDot* pSDotInfo, struct SGCodeParse* pSGCodeBufUnit)
 {
-	if (pSDotInfo == NULL || pSGCodeBufUnit == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSDotInfo == NULL || pSGCodeBufUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.Ğ´ÈëÆğµãÖÕµã×ø±ê
-	pSGCodeBufUnit->SEndPoint = pSGCodeBufUnit->SStartPoint = pSDotInfo->SPoint;
+    //1.å†™å…¥èµ·ç‚¹ç»ˆç‚¹åæ ‡
+    pSGCodeBufUnit->SEndPoint = pSGCodeBufUnit->SStartPoint = pSDotInfo->SPoint;
 
-	//3.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType = DOT;
+    //3.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = DOT;
 
-	//5.Ğ´ÈëÖ¸ÁîÀàĞÍ
-	getCommandType(pSDotInfo->sCommand, &pSGCodeBufUnit->unCommandType);
+    //5.å†™å…¥æŒ‡ä»¤ç±»å‹
+    getCommandType(pSDotInfo->sCommand, &pSGCodeBufUnit->unCommandType);
 
-	////3.Ğ´ÈëÓĞĞ§Öá
-	//getValStatus(&pSLineInfo->SStartPoint, &pSLineInfo->SEndPoint, TRUE, pSGCodeBufUnit->cInterpolationState, sGc, &pSGCodeBufUnit->ucValStatus);
+    ////3.å†™å…¥æœ‰æ•ˆè½´
+    //getValStatus(&pSLineInfo->SStartPoint, &pSLineInfo->SEndPoint, TRUE, pSGCodeBufUnit->cInterpolationState, sGc, &pSGCodeBufUnit->ucValStatus);
 
-	////4.Ğ´Èëµ¶ËşÖáÓëµ¶ËşºÅ
-	//getTurretNumAndTurretAxis(pSGCodeBufUnit->ucToolID, &pSGCodeBufUnit->ucTurretNum, &pSGCodeBufUnit->ucTurretAxis);
-
+    ////4.å†™å…¥åˆ€å¡”è½´ä¸åˆ€å¡”å·
+    //getTurretNumAndTurretAxis(pSGCodeBufUnit->ucToolID, &pSGCodeBufUnit->ucTurretNum, &pSGCodeBufUnit->ucTurretAxis);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid writeLineIntoGCodeBuf(SLine* pSLineInfo, struct SGCodeParse* pSGCodeBufUnit)
-  º¯Êı¹¦ÄÜ  ½«Ö±Ïß¶ÎµÄÏà¹Ø²ÎÊıĞ´ÈëG´úÂë»º³åÇø
-  ÊäÈë²ÎÊı£ºpSLineInfo		Ö±Ïß¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
+  å‡½æ•°åç§°ï¼švoid writeLineIntoGCodeBuf(SLine* pSLineInfo, struct SGCodeParse* pSGCodeBufUnit)
+  å‡½æ•°åŠŸèƒ½  å°†ç›´çº¿æ®µçš„ç›¸å…³å‚æ•°å†™å…¥Gä»£ç ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼špSLineInfo		ç›´çº¿æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö¶Ô»º³åÇøµ¥ÔªĞ´Èë£¬Ğ´Íêºó²»ÒÆ¶¯Ö¸Õë
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…å¯¹ç¼“å†²åŒºå•å…ƒå†™å…¥ï¼Œå†™å®Œåä¸ç§»åŠ¨æŒ‡é’ˆ
 **************************************************/
 void writeLineIntoGCodeBuf(SLine* pSLineInfo, struct SGCodeParse* pSGCodeBufUnit)
 {
-	if (pSLineInfo == NULL || pSGCodeBufUnit == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSLineInfo == NULL || pSGCodeBufUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.Ğ´ÈëÆğµã×ø±ê
-	pSGCodeBufUnit->SStartPoint = pSLineInfo->SStartPoint;
+    //1.å†™å…¥èµ·ç‚¹åæ ‡
+    pSGCodeBufUnit->SStartPoint = pSLineInfo->SStartPoint;
 
-	//2.Ğ´ÈëÖÕµã×ø±ê
-	pSGCodeBufUnit->SEndPoint = pSLineInfo->SEndPoint;
+    //2.å†™å…¥ç»ˆç‚¹åæ ‡
+    pSGCodeBufUnit->SEndPoint = pSLineInfo->SEndPoint;
 
-	//3.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType = pSLineInfo->EntityType;
-
+    //3.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = pSLineInfo->EntityType;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid writeArcIntoGCodeBuf(SArc* pSArcInfo, struct SGCodeParse* pSGCodeBufUnit)
-  º¯Êı¹¦ÄÜ  ½«Ô²»¡¶ÎµÄÏà¹Ø²ÎÊıĞ´ÈëG´úÂë»º³åÇø
-  ÊäÈë²ÎÊı£ºpSArcInfo		Ö±Ïß¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö¶Ô»º³åÇøµ¥ÔªĞ´Èë£¬Ğ´Íêºó²»ÒÆ¶¯Ö¸Õë
-			2.¸Ãº¯Êı½öĞ´ÈëÔ²»¡Êı¾İ£¬²»ÄÜĞ´ÈëÕûÔ²Êı¾İ
-			3.Ğ´ÈëÕûÔ²Êı¾İÊ±£¬±ØĞë²ğ·Ö³ÉÁ½¸ö°ëÔ²ºó£¬µ÷ÓÃÁ½´Î´Ëº¯Êı½øĞĞĞ´Èë
+  å‡½æ•°åç§°ï¼švoid writeArcIntoGCodeBuf(SArc* pSArcInfo, struct SGCodeParse* pSGCodeBufUnit)
+  å‡½æ•°åŠŸèƒ½  å°†åœ†å¼§æ®µçš„ç›¸å…³å‚æ•°å†™å…¥Gä»£ç ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼špSArcInfo		ç›´çº¿æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…å¯¹ç¼“å†²åŒºå•å…ƒå†™å…¥ï¼Œå†™å®Œåä¸ç§»åŠ¨æŒ‡é’ˆ
+			2.è¯¥å‡½æ•°ä»…å†™å…¥åœ†å¼§æ•°æ®ï¼Œä¸èƒ½å†™å…¥æ•´åœ†æ•°æ®
+			3.å†™å…¥æ•´åœ†æ•°æ®æ—¶ï¼Œå¿…é¡»æ‹†åˆ†æˆä¸¤ä¸ªåŠåœ†åï¼Œè°ƒç”¨ä¸¤æ¬¡æ­¤å‡½æ•°è¿›è¡Œå†™å…¥
 **************************************************/
 void writeArcIntoGCodeBuf(SArc* pSArcInfo, struct SGCodeParse* pSGCodeBufUnit)
 {
-	if (pSArcInfo == NULL || pSGCodeBufUnit == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSArcInfo == NULL || pSGCodeBufUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.Ğ´ÈëÆğµã×ø±ê
-	pSGCodeBufUnit->SStartPoint = pSArcInfo->SStartPoint;
+    //1.å†™å…¥èµ·ç‚¹åæ ‡
+    pSGCodeBufUnit->SStartPoint = pSArcInfo->SStartPoint;
 
-	//2.Ğ´ÈëÖÕµã×ø±ê
-	pSGCodeBufUnit->SEndPoint = pSArcInfo->SEndPoint;
+    //2.å†™å…¥ç»ˆç‚¹åæ ‡
+    pSGCodeBufUnit->SEndPoint = pSArcInfo->SEndPoint;
 
-	//3.Ğ´ÈëÔ²ĞÄµã×ø±ê
-	pSGCodeBufUnit->SCenterPoint = pSArcInfo->SCenterPoint;
+    //3.å†™å…¥åœ†å¿ƒç‚¹åæ ‡
+    pSGCodeBufUnit->SCenterPoint = pSArcInfo->SCenterPoint;
 
-	//4.Ğ´Èë°ë¾¶Öµ
-	pSGCodeBufUnit->dRadius = pSArcInfo->dRadius;
+    //4.å†™å…¥åŠå¾„å€¼
+    pSGCodeBufUnit->dRadius = pSArcInfo->dRadius;
 
-	//5.Ğ´ÈëÔ²»¡·½Ïò
-	pSGCodeBufUnit->cArcDir = pSArcInfo->cArcDir;
+    //5.å†™å…¥åœ†å¼§æ–¹å‘
+    pSGCodeBufUnit->cArcDir = pSArcInfo->cArcDir;
 
-	//8.Ğ´ÈëÖ¸ÁîÀàĞÍ
-	getCommandType(pSArcInfo->sCommand, &pSGCodeBufUnit->unCommandType);
+    //8.å†™å…¥æŒ‡ä»¤ç±»å‹
+    getCommandType(pSArcInfo->sCommand, &pSGCodeBufUnit->unCommandType);
 
-	//9.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType = ARC;	
+    //9.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = ARC;
 
-	//Ğ´Èë¼«Öµµã
+    //å†™å…¥æå€¼ç‚¹
 
-	////6.Ğ´ÈëÓĞĞ§Öá
-	//getValStatus(&pSArcInfo->SStartPoint, &pSArcInfo->SEndPoint, FALSE, pSGCodeBufUnit->cInterpolationState, sGc, &pSGCodeBufUnit->ucValStatus);
+    ////6.å†™å…¥æœ‰æ•ˆè½´
+    //getValStatus(&pSArcInfo->SStartPoint, &pSArcInfo->SEndPoint, FALSE, pSGCodeBufUnit->cInterpolationState, sGc, &pSGCodeBufUnit->ucValStatus);
 
-	////7.Ğ´Èëµ¶ËşÖáÓëµ¶ËşºÅ
-	//getTurretNumAndTurretAxis(pSGCodeBufUnit->ucToolID, &pSGCodeBufUnit->ucTurretNum, &pSGCodeBufUnit->ucTurretAxis);
-
+    ////7.å†™å…¥åˆ€å¡”è½´ä¸åˆ€å¡”å·
+    //getTurretNumAndTurretAxis(pSGCodeBufUnit->ucToolID, &pSGCodeBufUnit->ucTurretNum, &pSGCodeBufUnit->ucTurretAxis);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid writeThreadIntoGCodeBuf(SThread* pSThreadInfo, struct SGCodeParse* pSGCodeBufUnit)
-  º¯Êı¹¦ÄÜ  ½«ÂİÎÆ¶ÎµÄÏà¹Ø²ÎÊıĞ´ÈëG´úÂë»º³åÇø
-  ÊäÈë²ÎÊı£ºpSThreadInfo		ÂİÎÆ¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
+  å‡½æ•°åç§°ï¼švoid writeThreadIntoGCodeBuf(SThread* pSThreadInfo, struct SGCodeParse* pSGCodeBufUnit)
+  å‡½æ•°åŠŸèƒ½  å°†èºçº¹æ®µçš„ç›¸å…³å‚æ•°å†™å…¥Gä»£ç ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼špSThreadInfo		èºçº¹æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö¶Ô»º³åÇøµ¥ÔªĞ´Èë£¬Ğ´Íêºó²»ÒÆ¶¯Ö¸Õë
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…å¯¹ç¼“å†²åŒºå•å…ƒå†™å…¥ï¼Œå†™å®Œåä¸ç§»åŠ¨æŒ‡é’ˆ
 **************************************************/
 void writeThreadIntoGCodeBuf(SThread* pSThreadInfo, struct SGCodeParse* pSGCodeBufUnit)
 {
-	if (pSThreadInfo == NULL || pSGCodeBufUnit == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSThreadInfo == NULL || pSGCodeBufUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.Ğ´ÈëÆğµã×ø±ê
-	pSGCodeBufUnit->SStartPoint = pSThreadInfo->SStartPoint;
+    //1.å†™å…¥èµ·ç‚¹åæ ‡
+    pSGCodeBufUnit->SStartPoint = pSThreadInfo->SStartPoint;
 
-	//2.Ğ´ÈëÖÕµã×ø±ê
-	pSGCodeBufUnit->SEndPoint = pSThreadInfo->SEndPoint;
-	
-	pSGCodeBufUnit->dFeedrate = pSThreadInfo->dF;
-	pSGCodeBufUnit->dJ = pSThreadInfo->dJ;
-	pSGCodeBufUnit->dK = pSThreadInfo->dK;
-	pSGCodeBufUnit->dQ = pSThreadInfo->dQ;
-	pSGCodeBufUnit->usL = pSThreadInfo->usL;
+    //2.å†™å…¥ç»ˆç‚¹åæ ‡
+    pSGCodeBufUnit->SEndPoint = pSThreadInfo->SEndPoint;
 
-	pSGCodeBufUnit->bG32LetterQ = pSThreadInfo->bG32LetterQ;
-	pSGCodeBufUnit->bRepeatG32Flag = pSThreadInfo->bRepeatG32Flag;
-	pSGCodeBufUnit->ucG32SubMode = pSThreadInfo->ucG32SubMode;
-	pSGCodeBufUnit->cArcDir = pSThreadInfo->cArcDir;
-	pSGCodeBufUnit->SCenterPoint = pSThreadInfo->SCenterPoint;
-	pSGCodeBufUnit->dRadius = pSThreadInfo->dRadius;
+    pSGCodeBufUnit->dFeedrate = pSThreadInfo->dF;
+    pSGCodeBufUnit->dJ = pSThreadInfo->dJ;
+    pSGCodeBufUnit->dK = pSThreadInfo->dK;
+    pSGCodeBufUnit->dQ = pSThreadInfo->dQ;
+    pSGCodeBufUnit->usL = pSThreadInfo->usL;
 
+    pSGCodeBufUnit->bG32LetterQ = pSThreadInfo->bG32LetterQ;
+    pSGCodeBufUnit->bRepeatG32Flag = pSThreadInfo->bRepeatG32Flag;
+    pSGCodeBufUnit->ucG32SubMode = pSThreadInfo->ucG32SubMode;
+    pSGCodeBufUnit->cArcDir = pSThreadInfo->cArcDir;
+    pSGCodeBufUnit->SCenterPoint = pSThreadInfo->SCenterPoint;
+    pSGCodeBufUnit->dRadius = pSThreadInfo->dRadius;
 
-	//9.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType = pSThreadInfo->EntityType;
+    //9.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = pSThreadInfo->EntityType;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid writeTrappingIntoGCodeBuf(STapping* pSTappingInfo, struct SGCodeParse* pSGCodeBufUnit)
-  º¯Êı¹¦ÄÜ  ½«¹¥ÑÀ¶ÎµÄÏà¹Ø²ÎÊıĞ´ÈëG´úÂë»º³åÇø
-  ÊäÈë²ÎÊı£ºpSTappingInfo		¹¥ÑÀ¶ÎĞÅÏ¢
-			pSGCodeBufUnit	G´úÂë»º³åÇøµ¥Ôª
+  å‡½æ•°åç§°ï¼švoid writeTrappingIntoGCodeBuf(STapping* pSTappingInfo, struct SGCodeParse* pSGCodeBufUnit)
+  å‡½æ•°åŠŸèƒ½  å°†æ”»ç‰™æ®µçš„ç›¸å…³å‚æ•°å†™å…¥Gä»£ç ç¼“å†²åŒº
+  è¾“å…¥å‚æ•°ï¼špSTappingInfo		æ”»ç‰™æ®µä¿¡æ¯
+			pSGCodeBufUnit	Gä»£ç ç¼“å†²åŒºå•å…ƒ
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸Ãº¯Êı½ö¶Ô»º³åÇøµ¥ÔªĞ´Èë£¬Ğ´Íêºó²»ÒÆ¶¯Ö¸Õë
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.è¯¥å‡½æ•°ä»…å¯¹ç¼“å†²åŒºå•å…ƒå†™å…¥ï¼Œå†™å®Œåä¸ç§»åŠ¨æŒ‡é’ˆ
 **************************************************/
 void writeTrappingIntoGCodeBuf(STapping* pSTappingInfo, struct SGCodeParse* pSGCodeBufUnit)
 {
-	if (pSTappingInfo == NULL || pSGCodeBufUnit == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSTappingInfo == NULL || pSGCodeBufUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.Ğ´ÈëÆğµã×ø±ê
-	pSGCodeBufUnit->SStartPoint = pSTappingInfo->SStartPoint;
+    //1.å†™å…¥èµ·ç‚¹åæ ‡
+    pSGCodeBufUnit->SStartPoint = pSTappingInfo->SStartPoint;
 
-	//2.Ğ´ÈëÖÕµã×ø±ê
-	pSGCodeBufUnit->SEndPoint = pSTappingInfo->SEndPoint;
+    //2.å†™å…¥ç»ˆç‚¹åæ ‡
+    pSGCodeBufUnit->SEndPoint = pSTappingInfo->SEndPoint;
 
-	//3.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType = pSTappingInfo->EntityType;
+    //3.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = pSTappingInfo->EntityType;
 
-	//4.Ğ´ÈëÂİÎÆÍ·Êı
-	pSGCodeBufUnit->usL = pSTappingInfo->usL;
+    //4.å†™å…¥èºçº¹å¤´æ•°
+    pSGCodeBufUnit->usL = pSTappingInfo->usL;
 
-	//5.Ğ´Èëµ¼³Ì
-	pSGCodeBufUnit->dFeedrate = pSTappingInfo->dF;
+    //5.å†™å…¥å¯¼ç¨‹
+    pSGCodeBufUnit->dFeedrate = pSTappingInfo->dF;
 
-	//6.Ğ´ÈëG33Ğı×ªÖá
+    //6.å†™å…¥G33æ—‹è½¬è½´
 
-	pSGCodeBufUnit->G33RotateAxis = pSTappingInfo->G33RotateAxis;
+    pSGCodeBufUnit->G33RotateAxis = pSTappingInfo->G33RotateAxis;
 
-	//7.Ğ´Èë¹¥ÑÀÄ£Ê½
-	pSGCodeBufUnit->G33TappingMode = pSTappingInfo->G33TappingMode;
+    //7.å†™å…¥æ”»ç‰™æ¨¡å¼
+    pSGCodeBufUnit->G33TappingMode = pSTappingInfo->G33TappingMode;
 
-	//8.Ğ´ÈëÊµÌåÀàĞÍ
-	pSGCodeBufUnit->EntityType =TAPPING;
-
+    //8.å†™å…¥å®ä½“ç±»å‹
+    pSGCodeBufUnit->EntityType = TAPPING;
 }
 
-void writeEntityIntoGCodeBuf(enum ENTITY* pEntity, struct SGCodeParse* pSGCodeBufUnit, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, int8 cMachineDir)
+void writeEntityIntoGCodeBuf(enum ENTITY* pEntity, struct SGCodeParse* pSGCodeBufUnit, SPointDouble* pSStartPoint,
+                             SPointDouble* pSEndPoint, int8 cMachineDir)
 {
-	switch (*pEntity)
-	{
-	case L1NE:case OTHERTYPE:case DOT:
-	{
-		SLine SLineInfo;
-		SLineInfo = *(SLine*)pEntity;
-		SLineInfo.SStartPoint = *pSStartPoint;
-		SLineInfo.SEndPoint = *pSEndPoint;
-		writeLineIntoGCodeBuf(&SLineInfo, pSGCodeBufUnit);
-		break;
-	}
-	case ARC:
-	{
-		SArc SArcInfo;
-		SArcInfo = *(SArc*)pEntity;
-		SArcInfo.SStartPoint = *pSStartPoint;
-		SArcInfo.SEndPoint = *pSEndPoint;
-		SArcInfo.cArcDir = cMachineDir * SArcInfo.cArcDir;
-		writeArcIntoGCodeBuf(&SArcInfo, pSGCodeBufUnit);
-		break;
-	}
-	default:
-		break;
-	}
+    switch (*pEntity)
+    {
+    case L1NE:
+    case OTHERTYPE:
+    case DOT:
+    {
+        SLine SLineInfo;
+        SLineInfo = *(SLine*)pEntity;
+        SLineInfo.SStartPoint = *pSStartPoint;
+        SLineInfo.SEndPoint = *pSEndPoint;
+        writeLineIntoGCodeBuf(&SLineInfo, pSGCodeBufUnit);
+        break;
+    }
+    case ARC:
+    {
+        SArc SArcInfo;
+        SArcInfo = *(SArc*)pEntity;
+        SArcInfo.SStartPoint = *pSStartPoint;
+        SArcInfo.SEndPoint = *pSEndPoint;
+        SArcInfo.cArcDir = cMachineDir * SArcInfo.cArcDir;
+        writeArcIntoGCodeBuf(&SArcInfo, pSGCodeBufUnit);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-int8 writePathListIntoGCodeBuf(SList* pSPathList, uint16 usStartPos, uint16 usEndPos, uint16* pCurPos, struct SGCodeParse* pSGCodeBufUnit, int8 cMachineDir)
+int8 writePathListIntoGCodeBuf(SList* pSPathList, uint16 usStartPos, uint16 usEndPos, uint16* pCurPos,
+                               struct SGCodeParse* pSGCodeBufUnit, int8 cMachineDir)
 {
-	//¶ÁÈ¡¹ì¼£Á´±íÖĞusPosµÄÊµÌå
-	SLine* pEntity;
-	pEntity = (SLine*)FindNodeData(pSPathList, *pCurPos);
+    //è¯»å–è½¨è¿¹é“¾è¡¨ä¸­usPosçš„å®ä½“
+    SLine* pEntity;
+    pEntity = (SLine*)FindNodeData(pSPathList, *pCurPos);
 
-	if(pEntity == NULL) return -1;
-	//½«¸ÃÊµÌåĞ´Èë»º³åÇø
-	if (cMachineDir == 1)
-		writeEntityIntoGCodeBuf((enum ENTITY*)pEntity, pSGCodeBufUnit, &pEntity->SStartPoint, &pEntity->SEndPoint, cMachineDir);
-	else
-		writeEntityIntoGCodeBuf((enum ENTITY*)pEntity, pSGCodeBufUnit, &pEntity->SEndPoint, &pEntity->SStartPoint, cMachineDir);
+    if (pEntity == NULL)
+        return -1;
+    //å°†è¯¥å®ä½“å†™å…¥ç¼“å†²åŒº
+    if (cMachineDir == 1)
+        writeEntityIntoGCodeBuf((enum ENTITY*)pEntity, pSGCodeBufUnit, &pEntity->SStartPoint, &pEntity->SEndPoint,
+                                cMachineDir);
+    else
+        writeEntityIntoGCodeBuf((enum ENTITY*)pEntity, pSGCodeBufUnit, &pEntity->SEndPoint, &pEntity->SStartPoint,
+                                cMachineDir);
 
-	//ÅĞ¶Ï¹ì¼£Á´±íÖĞÄ¿±êÊµÌåÊÇ·ñÈ«²¿Ğ´Èë»º³åÇø
-	if (cMachineDir == 1 && (*pCurPos) == usStartPos ||
-		cMachineDir == -1 && (*pCurPos) == usEndPos)
-	{
-		return 1;
-	}
+    //åˆ¤æ–­è½¨è¿¹é“¾è¡¨ä¸­ç›®æ ‡å®ä½“æ˜¯å¦å…¨éƒ¨å†™å…¥ç¼“å†²åŒº
+    if (cMachineDir == 1 && (*pCurPos) == usStartPos || cMachineDir == -1 && (*pCurPos) == usEndPos)
+    {
+        return 1;
+    }
 
-	//¸üĞÂµ±Ç°Ğ´ÈëµÄÎ»ÖÃ
-	*pCurPos = cMachineDir == 1 ? *pCurPos - 1 : *pCurPos + 1;
+    //æ›´æ–°å½“å‰å†™å…¥çš„ä½ç½®
+    *pCurPos = cMachineDir == 1 ? *pCurPos - 1 : *pCurPos + 1;
 
-	return 0;
+    return 0;
 }
-
-
-
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 calculateTotalOffset(uint8 ucChannelNum, uint8 ucToolCompNum, int8 sWorkPieceNum, SPointDouble SWorkPieceOffsetByG50, SPointDouble* pSTotalOffset)
-  º¯Êı¹¦ÄÜ£º¸ù¾İµ¶²¹ºÅ¡¢¹¤¼ş×ø±êºÅ£¬G50Æ«ÖÃµÃµ½×ÜÆ«ÖÃ
-  ÊäÈë²ÎÊı£ºucChannelNum			Í¨µÀºÅ
-			ucToolCompNum			µ¶²¹ºÅ
-			sWorkPieceNum			¹¤¼ş×ø±êºÅ
-			SWorkPieceOffsetByG50	G50Æ«ÖÃÖµ
-			pSTotalOffset			×ÜÆ«ÖÃÖµ£¨Êä³ö£©
+  zxr: æ€»åç½®è¡¥å…¥å¤–éƒ¨åæ ‡åç§»ã€‚
+  å‡½æ•°åç§°ï¼šint8 calculateTotalOffset(uint8 ucChannelNum, uint8 ucToolCompNum, int8 sWorkPieceNum, SPointDouble SWorkPieceOffsetByG50, SPointDouble* pSTotalOffset)
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®åˆ€è¡¥å·ã€å·¥ä»¶åæ ‡å·ï¼ŒG50åç½®å¾—åˆ°æ€»åç½®
+  è¾“å…¥å‚æ•°ï¼šucChannelNum			é€šé“å·
+			ucToolCompNum			åˆ€è¡¥å·
+			sWorkPieceNum			å·¥ä»¶åæ ‡å·
+			SWorkPieceOffsetByG50	G50åç½®å€¼
+			pSTotalOffset			æ€»åç½®å€¼ï¼ˆè¾“å‡ºï¼‰
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 Ö¸ÕëÎª¿Õ
-			-2 µ¶²¹ºÅ´íÎó
-			 1 ´¦Àí³É¹¦
-  ±¸    ×¢£º×ÜÆ«ÖÃ =
-			µ¶¾ßÆ«ÖÃ£¨µ¶²¹ºÅµÃ³ö£©+
-			µ¶¾ßÄ¥ËğÆ«ÖÃ£¨µ¶²¹ºÅµÃ³ö£©+
-			Íâ²¿×ø±êÆ«ÒÆ +
-			¹¤¼ş×ø±êÆ«ÖÃ£¨¹¤¼ş×ø±êºÅµÃ³ö£©+
-			G50Æ«ÖÃ£¨G50Æ«ÖÃÖµµÃ³ö£©
-			SPointDoubleÕ¼ÓÃÄÚ´æ¹ı´ó£¬ÔÚ¼ÆËã×ÜÆ«ÖÃÊ±£¬Í¨¹ıµ¶²¹ºÅÓë¹¤¼ş×ø±êºÅ£¬ÔÚÏµÍ³²ÎÊıÖĞ»ñÈ¡¶ÔÓ¦Æ«ÖÃÖµ
-			£¨Ö»ÄÜG´úÂëÊ¹ÓÃ!!!£©
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 æŒ‡é’ˆä¸ºç©º
+			-2 åˆ€è¡¥å·é”™è¯¯
+			 1 å¤„ç†æˆåŠŸ
+  å¤‡    æ³¨ï¼šæ€»åç½® =
+			åˆ€å…·åç½®ï¼ˆåˆ€è¡¥å·å¾—å‡ºï¼‰+
+			åˆ€å…·ç£¨æŸåç½®ï¼ˆåˆ€è¡¥å·å¾—å‡ºï¼‰+
+			å¤–éƒ¨åæ ‡åç§» +
+			å·¥ä»¶åæ ‡åç½®ï¼ˆå·¥ä»¶åæ ‡å·å¾—å‡ºï¼‰+
+			G50åç½®ï¼ˆG50åç½®å€¼å¾—å‡ºï¼‰
+			SPointDoubleå ç”¨å†…å­˜è¿‡å¤§ï¼Œåœ¨è®¡ç®—æ€»åç½®æ—¶ï¼Œé€šè¿‡åˆ€è¡¥å·ä¸å·¥ä»¶åæ ‡å·ï¼Œåœ¨ç³»ç»Ÿå‚æ•°ä¸­è·å–å¯¹åº”åç½®å€¼
+			ï¼ˆåªèƒ½Gä»£ç ä½¿ç”¨!!!ï¼‰
 **************************************************/
 int8 calculateTotalOffset(SGCodeSysState* pSGCodeSysState)
 {
-	if (pSGCodeSysState == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSGCodeSysState == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SPointDouble SWorkPieceOffset = pSGCodeSysState->SAllOffsetOfCoord.SWorkPieceOffset;
+    SPointDouble SWorkPieceOffset = pSGCodeSysState->SAllOffsetOfCoord.SWorkPieceOffset;
 
-	SPointDouble SToolLengthOffset = pSGCodeSysState->SAllOffsetOfCoord.SToolLengthOffset;
-	SPointDouble SToolWearOffset = pSGCodeSysState->SAllOffsetOfCoord.SToolWearOffset;
+    SPointDouble SToolLengthOffset = pSGCodeSysState->SAllOffsetOfCoord.SToolLengthOffset;
+    SPointDouble SToolWearOffset = pSGCodeSysState->SAllOffsetOfCoord.SToolWearOffset;
 
-	SPointDouble SG50Offset = pSGCodeSysState->SAllOffsetOfCoord.SG50Offset;
+    SPointDouble SG50Offset = pSGCodeSysState->SAllOffsetOfCoord.SG50Offset;
 
-	SPointDouble* pSTotalOffset = &pSGCodeSysState->SAllOffsetOfCoord.STotalOffset;
+    SPointDouble* pSTotalOffset = &pSGCodeSysState->SAllOffsetOfCoord.STotalOffset;
 
-	//Ã¿¸öÍ¨µÀµÄ¶¼ÓĞÒ»¸ö¶ÀÁ¢µÄ×ø±êÏµ£¬µ«»ú´²µÄµ¶¿âÖ»ÓĞÒ»¸ö
-	for (uint8 ucTemp = 0; ucTemp < AXIS_NUM_MAX; ++ucTemp)  //YZABCÖá
-	{
-		if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter)	//Ö±¾¶ÏÔÊ¾	//³ÂÃô´Ï	2023/7/22
-		{
-			pSTotalOffset->dArray[ucTemp] = 
-				  SWorkPieceOffset.dArray[ucTemp] / 2
-				+ pSGCodeSysState->SAllOffsetOfCoord.SToolSettingOffset.dArray[ucTemp] / 2 // zxr: Íâ²¿Æ«ÒÆ°´Ö±¾¶ÕÛ°ë¡£
-				+ SToolLengthOffset.dArray[ucTemp]
-				+ SToolWearOffset.dArray[ucTemp]
-				+ SG50Offset.dArray[ucTemp];
-		}
-		else
-		{
-			pSTotalOffset->dArray[ucTemp] = 
-				  SWorkPieceOffset.dArray[ucTemp]
-				+ pSGCodeSysState->SAllOffsetOfCoord.SToolSettingOffset.dArray[ucTemp] // zxr: ¼ÆÈëÍâ²¿Æ«ÒÆ¡£
-				+ SToolLengthOffset.dArray[ucTemp]
-				+ SToolWearOffset.dArray[ucTemp]
-				+ SG50Offset.dArray[ucTemp];
-		}
-	}
+    //æ¯ä¸ªé€šé“çš„éƒ½æœ‰ä¸€ä¸ªç‹¬ç«‹çš„åæ ‡ç³»ï¼Œä½†æœºåºŠçš„åˆ€åº“åªæœ‰ä¸€ä¸ª
+    for (uint8 ucTemp = 0; ucTemp < AXIS_NUM_MAX; ++ucTemp) //YZABCè½´
+    {
+        if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter) //ç›´å¾„æ˜¾ç¤º	//é™ˆæ•èª	2023/7/22
+        {
+            pSTotalOffset->dArray[ucTemp] =
+                SWorkPieceOffset.dArray[ucTemp] / 2 +
+                pSGCodeSysState->SAllOffsetOfCoord.SToolSettingOffset.dArray[ucTemp] / 2 // zxr: å¤–éƒ¨åç§»æŒ‰ç›´å¾„æŠ˜åŠã€‚
+                + SToolLengthOffset.dArray[ucTemp] + SToolWearOffset.dArray[ucTemp] + SG50Offset.dArray[ucTemp];
+        }
+        else
+        {
+            pSTotalOffset->dArray[ucTemp] =
+                SWorkPieceOffset.dArray[ucTemp] +
+                pSGCodeSysState->SAllOffsetOfCoord.SToolSettingOffset.dArray[ucTemp] // zxr: è®¡å…¥å¤–éƒ¨åç§»ã€‚
+                + SToolLengthOffset.dArray[ucTemp] + SToolWearOffset.dArray[ucTemp] + SG50Offset.dArray[ucTemp];
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getHorAndVerAxis(uint8 *ucHor, uint8 *ucVer,struct SGCodeParse *SCurrRecord)
-  º¯Êı¹¦ÄÜ£º´Ó»º³åÇø½á¹¹ÌåÖĞ»ñÈ¡ºáÖá×İÖá
-  ÊäÈë²ÎÊı£ºucHorºáÖá£¬ucVer×İÖá£¬SCurrRecord»º³åÇø½á¹¹Ìå
-  Êä³ö²ÎÊı£ºucHorºáÖá£¬ucVer×İÖá
-  ·µ »Ø Öµ£º-1 ´«Èë±äÁ¿Îª¿Õ
-			0 Õı³£
-			-2 ²»Ö§³ÖµÄÖ¸Áî
-  ±¸    ×¢£º¸üĞÂÁËSCurrRecordºó£¬²ÅÄÜÊ¹ÓÃ´Ëº¯Êı£¿
+  å‡½æ•°åç§°ï¼šint8 getHorAndVerAxis(uint8 *ucHor, uint8 *ucVer,struct SGCodeParse *SCurrRecord)
+  å‡½æ•°åŠŸèƒ½ï¼šä»ç¼“å†²åŒºç»“æ„ä½“ä¸­è·å–æ¨ªè½´çºµè½´
+  è¾“å…¥å‚æ•°ï¼šucHoræ¨ªè½´ï¼ŒucVerçºµè½´ï¼ŒSCurrRecordç¼“å†²åŒºç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼šucHoræ¨ªè½´ï¼ŒucVerçºµè½´
+  è¿” å› å€¼ï¼š-1 ä¼ å…¥å˜é‡ä¸ºç©º
+			0 æ­£å¸¸
+			-2 ä¸æ”¯æŒçš„æŒ‡ä»¤
+  å¤‡    æ³¨ï¼šæ›´æ–°äº†SCurrRecordåï¼Œæ‰èƒ½ä½¿ç”¨æ­¤å‡½æ•°ï¼Ÿ
 **************************************************/
 int8 getHorAndVerAxis(uint8* pHor, uint8* pVer, int8 cInterpolationState, int16 sGc)
 {
-	if (pHor == NULL || pVer == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	//¼«×ø±êÄ£Ê½£º3
-	if (cInterpolationState == 3)
-	{
-		*pHor = g_SSystemPara.ucPolarInterpolationAxis[0];
-		*pVer = g_SSystemPara.ucPolarInterpolationAxis[1];
-	}
-	//Ô²Öù²å²¹£º5
-	else if (cInterpolationState == 5)
-	{
-		if (sGc == G17 * GCOMMAND_DECIMAL_PLACE * 10)  //XYÆ½Ãæ
-		{
-			*pHor = AXIS_X;
-			*pVer = AXIS_C;
-		}
-		else if (sGc == G18 * GCOMMAND_DECIMAL_PLACE * 10)    //ZXÆ½Ãæ
-		{
-			*pHor = AXIS_Z;
-			*pVer = AXIS_C;
-		}
-		else if (sGc == G19 * GCOMMAND_DECIMAL_PLACE * 10)  //YZÆ½Ãæ
-		{
-			*pHor = AXIS_C;
-			*pVer = AXIS_Z;
-		}
-		else
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM87);
-			return -2;
-		}
-	}
-	//ÆÕÍ¨²å²¹
-	else//ÆÕÍ¨²å²¹
-	{
-		if (sGc == G17 * GCOMMAND_DECIMAL_PLACE * 10)  //XYÆ½Ãæ
-		{
-			*pHor = AXIS_X;
-			*pVer = AXIS_Y;
-			//setbit(SCurrRecord->ucValStatus, AXIS_X);		//³ÂÃô´Ï2023.11.12×¢ÊÍ	Ö»ÄÜ¸ù¾İ±êÊ¶·ûÉèÖÃÓĞĞ§Öá£¬²»ÄÜÍ¨¹ı²å²¹Æ½ÃæÉèÖÃÓĞĞ§Öá
-			//setbit(SCurrRecord->ucValStatus, AXIS_Y);
-		}
-		else if (sGc == G18 * GCOMMAND_DECIMAL_PLACE * 10)    //ZXÆ½Ãæ
-		{
-			*pHor = AXIS_Z;
-			*pVer = AXIS_X;
-		}
-		else if (sGc == G19 * GCOMMAND_DECIMAL_PLACE * 10)  //YZÆ½Ãæ
-		{
-			*pHor = AXIS_Y;
-			*pVer = AXIS_Z;
-		}
-		else
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM87);
-			return -2;
-		}
-	}
+    if (pHor == NULL || pVer == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    //æåæ ‡æ¨¡å¼ï¼š3
+    if (cInterpolationState == 3)
+    {
+        *pHor = g_SSystemPara.ucPolarInterpolationAxis[0];
+        *pVer = g_SSystemPara.ucPolarInterpolationAxis[1];
+    }
+    //åœ†æŸ±æ’è¡¥ï¼š5
+    else if (cInterpolationState == 5)
+    {
+        if (sGc == G17 * GCOMMAND_DECIMAL_PLACE * 10) //XYå¹³é¢
+        {
+            *pHor = AXIS_X;
+            *pVer = AXIS_C;
+        }
+        else if (sGc == G18 * GCOMMAND_DECIMAL_PLACE * 10) //ZXå¹³é¢
+        {
+            *pHor = AXIS_Z;
+            *pVer = AXIS_C;
+        }
+        else if (sGc == G19 * GCOMMAND_DECIMAL_PLACE * 10) //YZå¹³é¢
+        {
+            *pHor = AXIS_C;
+            *pVer = AXIS_Z;
+        }
+        else
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM87);
+            return -2;
+        }
+    }
+    //æ™®é€šæ’è¡¥
+    else //æ™®é€šæ’è¡¥
+    {
+        if (sGc == G17 * GCOMMAND_DECIMAL_PLACE * 10) //XYå¹³é¢
+        {
+            *pHor = AXIS_X;
+            *pVer = AXIS_Y;
+            //setbit(SCurrRecord->ucValStatus, AXIS_X);		//é™ˆæ•èª2023.11.12æ³¨é‡Š	åªèƒ½æ ¹æ®æ ‡è¯†ç¬¦è®¾ç½®æœ‰æ•ˆè½´ï¼Œä¸èƒ½é€šè¿‡æ’è¡¥å¹³é¢è®¾ç½®æœ‰æ•ˆè½´
+            //setbit(SCurrRecord->ucValStatus, AXIS_Y);
+        }
+        else if (sGc == G18 * GCOMMAND_DECIMAL_PLACE * 10) //ZXå¹³é¢
+        {
+            *pHor = AXIS_Z;
+            *pVer = AXIS_X;
+        }
+        else if (sGc == G19 * GCOMMAND_DECIMAL_PLACE * 10) //YZå¹³é¢
+        {
+            *pHor = AXIS_Y;
+            *pVer = AXIS_Z;
+        }
+        else
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM87);
+            return -2;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint8 isSamePoint(SPointDouble* pSPoint1, SPointDouble* pSPoint2)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶ÏÁ½µã¸÷Öá×ø±êÊÇ·ñÏàÍ¬
-  ÊäÈë²ÎÊı£ºpSPoint1	µã1
-			pSPoint2	µã2
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	×ø±êÏàÍ¬
-			FALSE	×ø±ê²»Í¬
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šuint8 isSamePoint(SPointDouble* pSPoint1, SPointDouble* pSPoint2)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­ä¸¤ç‚¹å„è½´åæ ‡æ˜¯å¦ç›¸åŒ
+  è¾“å…¥å‚æ•°ï¼špSPoint1	ç‚¹1
+			pSPoint2	ç‚¹2
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	åæ ‡ç›¸åŒ
+			FALSE	åæ ‡ä¸åŒ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isSamePoint(SPointDouble* pSPoint1, SPointDouble* pSPoint2)
 {
-	uint8 ucTemp;
-	//»ñÈ¡ÒÆ¶¯Öá
-	for (ucTemp = 0; ucTemp < AXIS_NUM_MAX; ucTemp++)
-	{
-		if (!isZero(pSPoint1->dArray[ucTemp] - pSPoint2->dArray[ucTemp]))
-		{
-			return FALSE;
-		}
-	}
-	return TRUE;
+    uint8 ucTemp;
+    //è·å–ç§»åŠ¨è½´
+    for (ucTemp = 0; ucTemp < AXIS_NUM_MAX; ucTemp++)
+    {
+        if (!isZero(pSPoint1->dArray[ucTemp] - pSPoint2->dArray[ucTemp]))
+        {
+            return FALSE;
+        }
+    }
+    return TRUE;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint,
+  å‡½æ•°åç§°ï¼švoid getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint,
 			int8 cArcDir, SPointDouble* pSCenterPoint, double* pRadius, uint8 ucHorAxis, uint8 ucVerAxis)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡Ô²ĞÄ×ø±êÓë°ë¾¶
-  ÊäÈë²ÎÊı£ºpSScanContainer		Ìá¹© Ô²ĞÄ×ø±ê or °ë¾¶
-			pSStartPoint		Ô²»¡Æğµã×ø±ê
-			pSEndPoint			Ô²»¡ÖÕµã×ø±ê
-			cArcDir				Ô²»¡·½Ïò£¨ARC_CW¡¢ARC_ANTI_CW£©
-			pSCenterPoint		Ô²ĞÄ×ø±ê£¨Êä³ö£©
-			pRadius				°ë¾¶£¨Êä³ö£©
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–åœ†å¿ƒåæ ‡ä¸åŠå¾„
+  è¾“å…¥å‚æ•°ï¼špSScanContainer		æä¾› åœ†å¿ƒåæ ‡ or åŠå¾„
+			pSStartPoint		åœ†å¼§èµ·ç‚¹åæ ‡
+			pSEndPoint			åœ†å¼§ç»ˆç‚¹åæ ‡
+			cArcDir				åœ†å¼§æ–¹å‘ï¼ˆARC_CWã€ARC_ANTI_CWï¼‰
+			pSCenterPoint		åœ†å¿ƒåæ ‡ï¼ˆè¾“å‡ºï¼‰
+			pRadius				åŠå¾„ï¼ˆè¾“å‡ºï¼‰
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºlxw20241105¸üĞÂ
-			0.Ô²ĞÄ×ø±ê½öÊä³öºáÖá×İÖáÖµ
-			1.ÓÉÆğµã¡¢ÖÕµã¡¢°ë¾¶      µÃµ½ Ô²ĞÄ×ø±ê+°ë¾¶
-			2.ÓÉÆğµã¡¢ÖÕµã¡¢Ô²ĞÄ×ø±ê  µÃµ½ Ô²ĞÄ×ø±ê+°ë¾¶
-			3.²»ÂÛÓÅ»¡ÁÓ»¡£¬°ë¾¶ÖµÊä³öÎªÕı
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šlxw20241105æ›´æ–°
+			0.åœ†å¿ƒåæ ‡ä»…è¾“å‡ºæ¨ªè½´çºµè½´å€¼
+			1.ç”±èµ·ç‚¹ã€ç»ˆç‚¹ã€åŠå¾„      å¾—åˆ° åœ†å¿ƒåæ ‡+åŠå¾„
+			2.ç”±èµ·ç‚¹ã€ç»ˆç‚¹ã€åœ†å¿ƒåæ ‡  å¾—åˆ° åœ†å¿ƒåæ ‡+åŠå¾„
+			3.ä¸è®ºä¼˜å¼§åŠ£å¼§ï¼ŒåŠå¾„å€¼è¾“å‡ºä¸ºæ­£
 **************************************************/
-double getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, int8 cArcDir, SPointDouble* pSCenterPoint, double* pRadius, uint8 ucHorAxis, uint8 ucVerAxis)
+double getArcCenterPointAndRadius(SScan* pSScanContainer, SPointDouble* pSStartPoint, SPointDouble* pSEndPoint,
+                                  int8 cArcDir, SPointDouble* pSCenterPoint, double* pRadius, uint8 ucHorAxis,
+                                  uint8 ucVerAxis)
 {
-	double dRad = 0;		//Ô²»¡½Ç£¬Î´ÓÃµ½£¬²¹×ãº¯Êı´«²Î
-//	SPointDouble pS, pE;     //Ô²»¡Æğµã£¬ÖÕµã
-//	uint8 ucHorAxis, ucVerAxis;   //ºáÖá£¬×İÖá
-	int8 cRet;
-	uint8 ucArcG32Type;
+    double dRad = 0; //åœ†å¼§è§’ï¼Œæœªç”¨åˆ°ï¼Œè¡¥è¶³å‡½æ•°ä¼ å‚
+                     //	SPointDouble pS, pE;     //åœ†å¼§èµ·ç‚¹ï¼Œç»ˆç‚¹
+                     //	uint8 ucHorAxis, ucVerAxis;   //æ¨ªè½´ï¼Œçºµè½´
+    int8 cRet;
+    uint8 ucArcG32Type;
 
-	if (pSScanContainer == NULL || pSStartPoint == NULL || pSEndPoint == NULL || pSCenterPoint == NULL || pRadius == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSScanContainer == NULL || pSStartPoint == NULL || pSEndPoint == NULL || pSCenterPoint == NULL ||
+        pRadius == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	//1.ÆğµãÖÕµãÖØºÏ
-	if (isZero(pSStartPoint->dArray[ucHorAxis] - pSEndPoint->dArray[ucHorAxis]) &&
-		isZero(pSStartPoint->dArray[ucVerAxis] - pSEndPoint->dArray[ucVerAxis]))
-	{
-		// Validate an explicit R before the tolerant point/full-circle shortcut can hide an impossible arc.
-		if (pSScanContainer->bRIJK[0] == TRUE)
-		{
-			SPointDouble SCheckCenter = *pSStartPoint;
-			double dCheckRad;
-			if (radCalculateR(pSStartPoint->dArray, pSEndPoint->dArray, pSScanContainer->dRIJK[0],
-				SCheckCenter.dArray, cArcDir, &dCheckRad, ucHorAxis, ucVerAxis) == FALSE)
-			{
-				parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM99);
-				return -1;
-			}
-		}
-		//1.1Í¨¹ıIJKÖ¸¶¨Ô²ĞÄ
-		if (pSScanContainer->bRIJK[ucHorAxis + 1] == TRUE ||
-			pSScanContainer->bRIJK[ucVerAxis + 1] == TRUE)
-		{
-			//¼ÆËãÔ²ĞÄ×ø±ê
-			pSCenterPoint->dArray[ucHorAxis] = pSStartPoint->dArray[ucHorAxis] + pSScanContainer->dRIJK[ucHorAxis + 1];
-			pSCenterPoint->dArray[ucVerAxis] = pSStartPoint->dArray[ucVerAxis] + pSScanContainer->dRIJK[ucVerAxis + 1];
-			//¼ÆËã°ë¾¶Öµ
-			*pRadius = sqrt(pow(pSScanContainer->dRIJK[ucHorAxis + 1], 2)
-				+ pow(pSScanContainer->dRIJK[ucVerAxis + 1], 2));
+    //1.èµ·ç‚¹ç»ˆç‚¹é‡åˆ
+    if (isZero(pSStartPoint->dArray[ucHorAxis] - pSEndPoint->dArray[ucHorAxis]) &&
+        isZero(pSStartPoint->dArray[ucVerAxis] - pSEndPoint->dArray[ucVerAxis]))
+    {
+        // Validate an explicit R before the tolerant point/full-circle shortcut can hide an impossible arc.
+        if (pSScanContainer->bRIJK[0] == TRUE)
+        {
+            SPointDouble SCheckCenter = *pSStartPoint;
+            double dCheckRad;
+            if (radCalculateR(pSStartPoint->dArray, pSEndPoint->dArray, pSScanContainer->dRIJK[0], SCheckCenter.dArray,
+                              cArcDir, &dCheckRad, ucHorAxis, ucVerAxis) == FALSE)
+            {
+                parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM99);
+                return -1;
+            }
+        }
+        //1.1é€šè¿‡IJKæŒ‡å®šåœ†å¿ƒ
+        if (pSScanContainer->bRIJK[ucHorAxis + 1] == TRUE || pSScanContainer->bRIJK[ucVerAxis + 1] == TRUE)
+        {
+            //è®¡ç®—åœ†å¿ƒåæ ‡
+            pSCenterPoint->dArray[ucHorAxis] = pSStartPoint->dArray[ucHorAxis] + pSScanContainer->dRIJK[ucHorAxis + 1];
+            pSCenterPoint->dArray[ucVerAxis] = pSStartPoint->dArray[ucVerAxis] + pSScanContainer->dRIJK[ucVerAxis + 1];
+            //è®¡ç®—åŠå¾„å€¼
+            *pRadius =
+                sqrt(pow(pSScanContainer->dRIJK[ucHorAxis + 1], 2) + pow(pSScanContainer->dRIJK[ucVerAxis + 1], 2));
 
-			return 2 * PI;
-		}
-		//1.2Î´Í¨¹ıIJKÖ¸¶¨Ô²ĞÄ
-		else
-		{
-			*pSCenterPoint = *pSStartPoint;
-			*pRadius = 0;
-			return 0;
-		}
-		
-	}
+            return 2 * PI;
+        }
+        //1.2æœªé€šè¿‡IJKæŒ‡å®šåœ†å¿ƒ
+        else
+        {
+            *pSCenterPoint = *pSStartPoint;
+            *pRadius = 0;
+            return 0;
+        }
+    }
 
-	//2.RÖ¸¶¨µÄÔ²»¡
-	if (pSScanContainer->bRIJK[0] == TRUE)
-	{
-		//2.1¼ÆËã°ë¾¶
-		*pRadius = pSScanContainer->dRIJK[0] > 0 ? pSScanContainer->dRIJK[0] : -pSScanContainer->dRIJK[0];
-		//2.2¼ÆËãÔ²ĞÄ×ø±ê
-		cRet = radCalculateR((double*)pSStartPoint, (double*)pSEndPoint, pSScanContainer->dRIJK[0],
-			(double*)pSCenterPoint, cArcDir, &dRad, ucHorAxis, ucVerAxis);
-		//2.3ÊäÈë²ÎÊı´íÎó
-		if (cRet == FALSE)
-		{
-			/*Ô­À´Âß¼­
-			//Ô²»¡Á½¶ËµãÖµ¾àÀë´óÓÚÖ±¾¶Ê±£¬½«°ë¾¶ÖµĞŞ¸ÄÎªÁ½µã¾àÀëµÄÒ»°ë
+    //2.RæŒ‡å®šçš„åœ†å¼§
+    if (pSScanContainer->bRIJK[0] == TRUE)
+    {
+        //2.1è®¡ç®—åŠå¾„
+        *pRadius = pSScanContainer->dRIJK[0] > 0 ? pSScanContainer->dRIJK[0] : -pSScanContainer->dRIJK[0];
+        //2.2è®¡ç®—åœ†å¿ƒåæ ‡
+        cRet = radCalculateR((double*)pSStartPoint, (double*)pSEndPoint, pSScanContainer->dRIJK[0],
+                             (double*)pSCenterPoint, cArcDir, &dRad, ucHorAxis, ucVerAxis);
+        //2.3è¾“å…¥å‚æ•°é”™è¯¯
+        if (cRet == FALSE)
+        {
+            /*åŸæ¥é€»è¾‘
+			//åœ†å¼§ä¸¤ç«¯ç‚¹å€¼è·ç¦»å¤§äºç›´å¾„æ—¶ï¼Œå°†åŠå¾„å€¼ä¿®æ”¹ä¸ºä¸¤ç‚¹è·ç¦»çš„ä¸€åŠ
 			*pRadius = sqrt((pSEndPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis]) * (pSEndPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis]) +
 				(pSEndPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis]) * (pSEndPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis])) / 2;
 
-			//ÔÙ´Î¼ÆËãĞŞ¸ÄºóµÄÔ²ĞÄ½ÇºÍÔ²ĞÄ
+			//å†æ¬¡è®¡ç®—ä¿®æ”¹åçš„åœ†å¿ƒè§’å’Œåœ†å¿ƒ
 			radCalculateR((double*)pSStartPoint, (double*)pSEndPoint, *pRadius,
 				(double*)pSCenterPoint, cArcDir, &dRad, ucHorAxis, ucVerAxis);
 			*/
-			 // ¸ø¶¨°ë¾¶ÎŞ½âÊ±Ö±½Ó¾Ü¾ø£¬²»ÄÜ¸Ä³É°ëÏÒ³¤ºó¼ÌĞø¼Ó¹¤¡£
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM99);
-			return -1;
+            // ç»™å®šåŠå¾„æ— è§£æ—¶ç›´æ¥æ‹’ç»ï¼Œä¸èƒ½æ”¹æˆåŠå¼¦é•¿åç»§ç»­åŠ å·¥ã€‚
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM99);
+            return -1;
+        }
+    }
 
-		}
-		
-	}
+    //3.IJKæŒ‡å®šçš„åœ†å¼§
+    else if (pSScanContainer->bRIJK[ucHorAxis + 1] == TRUE || pSScanContainer->bRIJK[ucVerAxis + 1] == TRUE)
+    {
+        pSCenterPoint->dArray[ucHorAxis] = pSStartPoint->dArray[ucHorAxis] + pSScanContainer->dRIJK[ucHorAxis + 1];
+        pSCenterPoint->dArray[ucVerAxis] = pSStartPoint->dArray[ucVerAxis] + pSScanContainer->dRIJK[ucVerAxis + 1];
 
-	//3.IJKÖ¸¶¨µÄÔ²»¡
-	else if (pSScanContainer->bRIJK[ucHorAxis + 1] == TRUE || pSScanContainer->bRIJK[ucVerAxis + 1] == TRUE)
-	{
-		pSCenterPoint->dArray[ucHorAxis] = pSStartPoint->dArray[ucHorAxis] + pSScanContainer->dRIJK[ucHorAxis + 1];
-		pSCenterPoint->dArray[ucVerAxis] = pSStartPoint->dArray[ucVerAxis] + pSScanContainer->dRIJK[ucVerAxis + 1];
-			
-		double dR1;//Æğµã-Ô²ĞÄ¾àÀëÆ½·½
-		dR1 = pow(pSCenterPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis], 2) +
-			pow(pSCenterPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis], 2);
-		double dR2;//ÖÕµã-Ô²ĞÄ¾àÀëÆ½·½
-		dR2 = pow(pSCenterPoint->dArray[ucHorAxis] - pSEndPoint->dArray[ucHorAxis], 2) +
-			pow(pSCenterPoint->dArray[ucVerAxis] - pSEndPoint->dArray[ucVerAxis], 2);
-		//3.1IJKÖ¸¶¨µÄÔ²ĞÄ×ø±êÕıÈ·
-		if (isZero(dR1 - dR2))
-		{
-			*pRadius = sqrt(dR1);
-		}
-		//3.2ÊäÈë²ÎÊı´íÎó£¨Æğµã--Ô²ĞÄ--ÖÕµã¹¹³É²»ÁËÔ²»¡£©
-		else
-		{
-			/*
-			//Ô²»¡Á½¶ËµãÖµ¾àÀë´óÓÚÖ±¾¶Ê±£¬½«°ë¾¶ÖµĞŞ¸ÄÎªÁ½µã¾àÀëµÄÒ»°ë
+        double dR1; //èµ·ç‚¹-åœ†å¿ƒè·ç¦»å¹³æ–¹
+        dR1 = pow(pSCenterPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis], 2) +
+              pow(pSCenterPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis], 2);
+        double dR2; //ç»ˆç‚¹-åœ†å¿ƒè·ç¦»å¹³æ–¹
+        dR2 = pow(pSCenterPoint->dArray[ucHorAxis] - pSEndPoint->dArray[ucHorAxis], 2) +
+              pow(pSCenterPoint->dArray[ucVerAxis] - pSEndPoint->dArray[ucVerAxis], 2);
+        //3.1IJKæŒ‡å®šçš„åœ†å¿ƒåæ ‡æ­£ç¡®
+        if (isZero(dR1 - dR2))
+        {
+            *pRadius = sqrt(dR1);
+        }
+        //3.2è¾“å…¥å‚æ•°é”™è¯¯ï¼ˆèµ·ç‚¹--åœ†å¿ƒ--ç»ˆç‚¹æ„æˆä¸äº†åœ†å¼§ï¼‰
+        else
+        {
+            /*
+			//åœ†å¼§ä¸¤ç«¯ç‚¹å€¼è·ç¦»å¤§äºç›´å¾„æ—¶ï¼Œå°†åŠå¾„å€¼ä¿®æ”¹ä¸ºä¸¤ç‚¹è·ç¦»çš„ä¸€åŠ
 			*pRadius = sqrt((pSEndPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis]) * (pSEndPoint->dArray[ucHorAxis] - pSStartPoint->dArray[ucHorAxis]) +
 				(pSEndPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis]) * (pSEndPoint->dArray[ucVerAxis] - pSStartPoint->dArray[ucVerAxis])) / 2;
 
-			//ÔÙ´Î¼ÆËãĞŞ¸ÄºóµÄÔ²ĞÄ½ÇºÍÔ²ĞÄ
+			//å†æ¬¡è®¡ç®—ä¿®æ”¹åçš„åœ†å¿ƒè§’å’Œåœ†å¿ƒ
 			radCalculateR((double*)pSStartPoint, (double*)pSEndPoint, *pRadius,
 				(double*)pSCenterPoint, cArcDir, &dRad, ucHorAxis, ucVerAxis);
 				*/
-			parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM404);
-			return -1;
-		}
+            parseGCodeErrorB(pSScanContainer->unLineNum, GCODE_ERROR_NUM404);
+            return -1;
+        }
+    }
 
-	}
-
-	//4.Î´³öÏÖÔ²»¡ÈÎºÎ²ÎÊı
-	else
-	{
-		*pSCenterPoint = *pSStartPoint;
-		*pRadius = 0;
-		return 0;
-	}
-	return dRad;
-	//»ñÈ¡Ô²»¡¼«Öµµã£¨ºóĞøÓÃÓÚÈíÏŞÎ»£©
-	// 
-	//SAssignConfig->SGetAxisMaxAndMin.cArcDir = SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].cArcDir;
-	//SAssignConfig->SGetAxisMaxAndMin.dRadius = SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dRadius;
-	//SAssignConfig->SGetAxisMaxAndMin.SStartPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SStartPoint;
-	//SAssignConfig->SGetAxisMaxAndMin.SEndPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SEndPoint;
-	//SAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SCenterPoint;
-	//SAssignConfig->SGetAxisMaxAndMin.ucHor = ucHorAxis;
-	//SAssignConfig->SGetAxisMaxAndMin.ucVer = ucVerAxis;
-	//getAxisMaxAndMin(&SAssignConfig->SGetAxisMaxAndMin);
-	//SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dHorMax = SAssignConfig->SGetAxisMaxAndMin.dHorMax;
-	//SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dHorMin = SAssignConfig->SGetAxisMaxAndMin.dHorMin;
-	//SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dVerMax = SAssignConfig->SGetAxisMaxAndMin.dVerMax;
-	//SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dVerMin = SAssignConfig->SGetAxisMaxAndMin.dVerMin;
-
-
+    //4.æœªå‡ºç°åœ†å¼§ä»»ä½•å‚æ•°
+    else
+    {
+        *pSCenterPoint = *pSStartPoint;
+        *pRadius = 0;
+        return 0;
+    }
+    return dRad;
+    //è·å–åœ†å¼§æå€¼ç‚¹ï¼ˆåç»­ç”¨äºè½¯é™ä½ï¼‰
+    //
+    //SAssignConfig->SGetAxisMaxAndMin.cArcDir = SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].cArcDir;
+    //SAssignConfig->SGetAxisMaxAndMin.dRadius = SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dRadius;
+    //SAssignConfig->SGetAxisMaxAndMin.SStartPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SStartPoint;
+    //SAssignConfig->SGetAxisMaxAndMin.SEndPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SEndPoint;
+    //SAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].SCenterPoint;
+    //SAssignConfig->SGetAxisMaxAndMin.ucHor = ucHorAxis;
+    //SAssignConfig->SGetAxisMaxAndMin.ucVer = ucVerAxis;
+    //getAxisMaxAndMin(&SAssignConfig->SGetAxisMaxAndMin);
+    //SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dHorMax = SAssignConfig->SGetAxisMaxAndMin.dHorMax;
+    //SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dHorMin = SAssignConfig->SGetAxisMaxAndMin.dHorMin;
+    //SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dVerMax = SAssignConfig->SGetAxisMaxAndMin.dVerMax;
+    //SAssignConfig->pGCodeBuf[SAssignConfig->usIndex].dVerMin = SAssignConfig->SGetAxisMaxAndMin.dVerMin;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ£º»ñÈ¡Ô²»¡ÀàĞÍ
-  ÊäÈë²ÎÊı£ºpSScanContainer		Ìá¹© Ô²ĞÄ×ø±ê or °ë¾¶
-			pSStartPoint		Ô²»¡Æğµã×ø±ê
-			pSEndPoint			Ô²»¡ÖÕµã×ø±ê
-			cArcDir				Ô²»¡·½Ïò£¨ARC_CW¡¢ARC_ANTI_CW£©
-			pSCenterPoint		Ô²ĞÄ×ø±ê£¨Êä³ö£©
-			pRadius				°ë¾¶£¨Êä³ö£©
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–åœ†å¼§ç±»å‹
+  è¾“å…¥å‚æ•°ï¼špSScanContainer		æä¾› åœ†å¿ƒåæ ‡ or åŠå¾„
+			pSStartPoint		åœ†å¼§èµ·ç‚¹åæ ‡
+			pSEndPoint			åœ†å¼§ç»ˆç‚¹åæ ‡
+			cArcDir				åœ†å¼§æ–¹å‘ï¼ˆARC_CWã€ARC_ANTI_CWï¼‰
+			pSCenterPoint		åœ†å¿ƒåæ ‡ï¼ˆè¾“å‡ºï¼‰
+			pRadius				åŠå¾„ï¼ˆè¾“å‡ºï¼‰
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0	µã
-			1	Ô²»¡
-			2	ÕûÔ²
-  ±¸    ×¢£ºlxw20241105¸üĞÂ
-			0.Ô²ĞÄ×ø±ê½öÊä³öºáÖá×İÖáÖµ
-			1.ÓÉÆğµã¡¢ÖÕµã¡¢°ë¾¶      µÃµ½ Ô²ĞÄ×ø±ê+°ë¾¶
-			2.ÓÉÆğµã¡¢ÖÕµã¡¢Ô²ĞÄ×ø±ê  µÃµ½ Ô²ĞÄ×ø±ê+°ë¾¶
-			3.²»ÂÛÓÅ»¡ÁÓ»¡£¬°ë¾¶ÖµÊä³öÎªÕı
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0	ç‚¹
+			1	åœ†å¼§
+			2	æ•´åœ†
+  å¤‡    æ³¨ï¼šlxw20241105æ›´æ–°
+			0.åœ†å¿ƒåæ ‡ä»…è¾“å‡ºæ¨ªè½´çºµè½´å€¼
+			1.ç”±èµ·ç‚¹ã€ç»ˆç‚¹ã€åŠå¾„      å¾—åˆ° åœ†å¿ƒåæ ‡+åŠå¾„
+			2.ç”±èµ·ç‚¹ã€ç»ˆç‚¹ã€åœ†å¿ƒåæ ‡  å¾—åˆ° åœ†å¿ƒåæ ‡+åŠå¾„
+			3.ä¸è®ºä¼˜å¼§åŠ£å¼§ï¼ŒåŠå¾„å€¼è¾“å‡ºä¸ºæ­£
 **************************************************/
-int8 getArcType(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, double dRadius,uint8 ucHor,uint8 ucVer)
+int8 getArcType(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, SPointDouble* pSCenterPoint, double dRadius,
+                uint8 ucHor, uint8 ucVer)
 {
-	//1.ARCÎªµã
-	if (isSamePoint(pSStartPoint, pSEndPoint) && isZero(dRadius))
-	{
-		return 0;
-	}
-	//ARCÎªÕûÔ²
-	else if (isZero(pSStartPoint->dArray[ucHor] - pSEndPoint->dArray[ucHor]) &&
-		isZero(pSStartPoint->dArray[ucVer] - pSEndPoint->dArray[ucVer]) &&
-		!isZero(dRadius))
-	{
-		return 2;
-	}
-	//ARCÎªÔ²»¡
-	else
-	{
-		return 1;
-	}
+    //1.ARCä¸ºç‚¹
+    if (isSamePoint(pSStartPoint, pSEndPoint) && isZero(dRadius))
+    {
+        return 0;
+    }
+    //ARCä¸ºæ•´åœ†
+    else if (isZero(pSStartPoint->dArray[ucHor] - pSEndPoint->dArray[ucHor]) &&
+             isZero(pSStartPoint->dArray[ucVer] - pSEndPoint->dArray[ucVer]) && !isZero(dRadius))
+    {
+        return 2;
+    }
+    //ARCä¸ºåœ†å¼§
+    else
+    {
+        return 1;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ£º´Ó³ÌĞò¶ÎÖĞ»ñÈ¡¾Ö²¿ºê±äÁ¿µÄÖµ
-  ÊäÈë²ÎÊı£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½ï¼šä»ç¨‹åºæ®µä¸­è·å–å±€éƒ¨å®å˜é‡çš„å€¼
+  è¾“å…¥å‚æ•°ï¼š
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ
-  ±¸    ×¢£ºÓÉÓÚG65/G66³ÌĞò¶ÎÖĞ¿ÉÒÔÖØ¸´³öÏÖIJK£¬µ¼ÖÂÆÕÍ¨É¨Ãè±¨´í
-			ËùÒÔµ±É¨Ãèµ½G65/G66 P**Ê±£¬Í£Ö¹ÁËºóĞøÉ¨Ãè£¬ËùÒÔĞèÒªÖØĞÂÉ¨Ãè
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼
+  å¤‡    æ³¨ï¼šç”±äºG65/G66ç¨‹åºæ®µä¸­å¯ä»¥é‡å¤å‡ºç°IJKï¼Œå¯¼è‡´æ™®é€šæ‰«ææŠ¥é”™
+			æ‰€ä»¥å½“æ‰«æåˆ°G65/G66 P**æ—¶ï¼Œåœæ­¢äº†åç»­æ‰«æï¼Œæ‰€ä»¥éœ€è¦é‡æ–°æ‰«æ
 **************************************************/
 int8 getLocalMacroVarBySegment(SGetTextStateInfo* pSGetTextStateInfo, SScan* pScan, SLocalMacroVar* pSLocalMacroVar)
 {
-	uint8 ucLetterIJKCnt[3] = { 0 };    //IJK¼ÆÊıÆ÷£¬ÓëG65¡¢G66µÄIJK´«²Î·½Ê½ÓĞ¹Ø
+    uint8 ucLetterIJKCnt[3] = {0}; //IJKè®¡æ•°å™¨ï¼Œä¸G65ã€G66çš„IJKä¼ å‚æ–¹å¼æœ‰å…³
 
-	while (!isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) &&
-		!isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
-	{
-		//1.pStartPtrÖ¸ÏòÖ¸Áî×ÖµÄÊ××Ö·û
-		pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
-		pSGetTextStateInfo->pCurrPtr++;
+    while (!isSegmentFinishSign(pSGetTextStateInfo->pCurrPtr) && !isLineFinishSign(pSGetTextStateInfo->pCurrPtr))
+    {
+        //1.pStartPtræŒ‡å‘æŒ‡ä»¤å­—çš„é¦–å­—ç¬¦
+        pSGetTextStateInfo->pStartPtr = pSGetTextStateInfo->pCurrPtr;
+        pSGetTextStateInfo->pCurrPtr++;
 
-		int8* pTemp;
-		pTemp = pSGetTextStateInfo->pCurrPtr;//¼ÇÂ¼±í´ïÊ½Ê××Ö·û
+        int8* pTemp;
+        pTemp = pSGetTextStateInfo->pCurrPtr; //è®°å½•è¡¨è¾¾å¼é¦–å­—ç¬¦
 
-		//2.pCurrPtrÖ¸ÏòÖ¸Áî×Ö±í´ïÊ½µÄÊ××Ö·û£¬pEndPtrÖ¸ÏòÖ¸Áî×ÖµÄÄ©×Ö·ûºóÒ»Î»
-		int8 cRet = 0;
-		cRet = getWholeExpression(&pSGetTextStateInfo->pCurrPtr, pSGetTextStateInfo->unCurrLineNum);    //½ØÈ¡Õû¸öºêµ¥Ôª
-		if (cRet == 1)
-		{
-			//ÒÑ»ñÈ¡ÍêÕû±í´ïÊ½£¬pEndPtrÖ¸Ïò±í´ïÊ½ºóÒ»Î»
-			pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
-			//½«pCurrPtrÖØĞÂÒÆ¶¯µ½±í´ïÊ½¿ªÍ·
-			pSGetTextStateInfo->pCurrPtr = pTemp;
-			uint8 ucExpressionLen = pSGetTextStateInfo->pEndPtr - pSGetTextStateInfo->pCurrPtr;
-			if (isNeedCalculate(pSGetTextStateInfo->pCurrPtr, ucExpressionLen))
-			{
-				//G65/G66³ÌĞò¶Î²»Ö§³Ö¼ÆËã
-				setErrorType(GCODE_ERROR_NUM84);
-				findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
-			}
-		}
-		else
-		{
-			setErrorType(GCODE_ERROR_NUM84);
-			findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
-			return -1;
-		}
+        //2.pCurrPtræŒ‡å‘æŒ‡ä»¤å­—è¡¨è¾¾å¼çš„é¦–å­—ç¬¦ï¼ŒpEndPtræŒ‡å‘æŒ‡ä»¤å­—çš„æœ«å­—ç¬¦åä¸€ä½
+        int8 cRet = 0;
+        cRet = getWholeExpression(&pSGetTextStateInfo->pCurrPtr, pSGetTextStateInfo->unCurrLineNum); //æˆªå–æ•´ä¸ªå®å•å…ƒ
+        if (cRet == 1)
+        {
+            //å·²è·å–å®Œæ•´è¡¨è¾¾å¼ï¼ŒpEndPtræŒ‡å‘è¡¨è¾¾å¼åä¸€ä½
+            pSGetTextStateInfo->pEndPtr = pSGetTextStateInfo->pCurrPtr;
+            //å°†pCurrPtré‡æ–°ç§»åŠ¨åˆ°è¡¨è¾¾å¼å¼€å¤´
+            pSGetTextStateInfo->pCurrPtr = pTemp;
+            uint8 ucExpressionLen = pSGetTextStateInfo->pEndPtr - pSGetTextStateInfo->pCurrPtr;
+            if (isNeedCalculate(pSGetTextStateInfo->pCurrPtr, ucExpressionLen))
+            {
+                //G65/G66ç¨‹åºæ®µä¸æ”¯æŒè®¡ç®—
+                setErrorType(GCODE_ERROR_NUM84);
+                findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
+            }
+        }
+        else
+        {
+            setErrorType(GCODE_ERROR_NUM84);
+            findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
+            return -1;
+        }
 
-		//3.»ñÈ¡¶ÔÓ¦µÄÊıÖµ
-		uint8 ucPos = 0;
-		double dVal = 0.0;
-		if(getNumbers(pSGetTextStateInfo->pCurrPtr, &ucPos, &dVal, pSGetTextStateInfo->unCurrLineNum) != 0)
-		{
-			setErrorType(GCODE_ERROR_NUM84);
-			findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
-			return -1;
-		}
-		//4.¼ÇÂ¼µ½¾Ö²¿ºê±äÁ¿
-		switch (*pSGetTextStateInfo->pStartPtr)
-		{
-		case'P':case'p':
-		{
-			pScan->bP = TRUE;
-			pScan->dP = dVal;
-			break;
-		}
-		case'L':case'l':
-		{
-			pScan->bL = TRUE;
-			pScan->dL = dVal;
-			break;
-		}
+        //3.è·å–å¯¹åº”çš„æ•°å€¼
+        uint8 ucPos = 0;
+        double dVal = 0.0;
+        if (getNumbers(pSGetTextStateInfo->pCurrPtr, &ucPos, &dVal, pSGetTextStateInfo->unCurrLineNum) != 0)
+        {
+            setErrorType(GCODE_ERROR_NUM84);
+            findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
+            return -1;
+        }
+        //4.è®°å½•åˆ°å±€éƒ¨å®å˜é‡
+        switch (*pSGetTextStateInfo->pStartPtr)
+        {
+        case 'P':
+        case 'p':
+        {
+            pScan->bP = TRUE;
+            pScan->dP = dVal;
+            break;
+        }
+        case 'L':
+        case 'l':
+        {
+            pScan->bL = TRUE;
+            pScan->dL = dVal;
+            break;
+        }
 
-		case'A':case'a':
-		{
-			pSLocalMacroVar->dValArr[0] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 0);
-			break;
-		}
+        case 'A':
+        case 'a':
+        {
+            pSLocalMacroVar->dValArr[0] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 0);
+            break;
+        }
 
-		case'B':case'b':
-		{
-			pSLocalMacroVar->dValArr[1] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 1);
-			break;
-		}
+        case 'B':
+        case 'b':
+        {
+            pSLocalMacroVar->dValArr[1] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 1);
+            break;
+        }
 
-		case'C':case'c':
-		{
-			pSLocalMacroVar->dValArr[2] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 2);
-			break;
-		}
+        case 'C':
+        case 'c':
+        {
+            pSLocalMacroVar->dValArr[2] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 2);
+            break;
+        }
 
-		case'D':case'd':
-		{
-			pSLocalMacroVar->dValArr[6] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 6);
-			break;
-		}
+        case 'D':
+        case 'd':
+        {
+            pSLocalMacroVar->dValArr[6] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 6);
+            break;
+        }
 
-		case'E':case'e':
-		{
-			pSLocalMacroVar->dValArr[7] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 7);
-			break;
-		}
+        case 'E':
+        case 'e':
+        {
+            pSLocalMacroVar->dValArr[7] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 7);
+            break;
+        }
 
-		case'F':case'f':
-		{
-			pSLocalMacroVar->dValArr[8] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 8);
-			break;
-		}
+        case 'F':
+        case 'f':
+        {
+            pSLocalMacroVar->dValArr[8] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 8);
+            break;
+        }
 
-		case'H':case'h':
-		{
-			pSLocalMacroVar->dValArr[10] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 10);
-			break;
-		}
+        case 'H':
+        case 'h':
+        {
+            pSLocalMacroVar->dValArr[10] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 10);
+            break;
+        }
 
-		case'I':case'i':
-		{
-			pSLocalMacroVar->dValArr[ucLetterIJKCnt[0] * 3 + 3] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[0] * 3 + 3));
-			ucLetterIJKCnt[0] = ucLetterIJKCnt[0] < 9 ? ucLetterIJKCnt[0] + 1 : ucLetterIJKCnt[0];
-			break;
-		}
+        case 'I':
+        case 'i':
+        {
+            pSLocalMacroVar->dValArr[ucLetterIJKCnt[0] * 3 + 3] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[0] * 3 + 3));
+            ucLetterIJKCnt[0] = ucLetterIJKCnt[0] < 9 ? ucLetterIJKCnt[0] + 1 : ucLetterIJKCnt[0];
+            break;
+        }
 
-		case'J':case'j':
-		{
-			pSLocalMacroVar->dValArr[ucLetterIJKCnt[1] * 3 + 4] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[1] * 3 + 4));
-			ucLetterIJKCnt[1] = ucLetterIJKCnt[1] < 9 ? ucLetterIJKCnt[1] + 1 : ucLetterIJKCnt[1];
-			break;
-		}
+        case 'J':
+        case 'j':
+        {
+            pSLocalMacroVar->dValArr[ucLetterIJKCnt[1] * 3 + 4] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[1] * 3 + 4));
+            ucLetterIJKCnt[1] = ucLetterIJKCnt[1] < 9 ? ucLetterIJKCnt[1] + 1 : ucLetterIJKCnt[1];
+            break;
+        }
 
-		case'K':case'k':
-		{
-			pSLocalMacroVar->dValArr[ucLetterIJKCnt[2] * 3 + 5] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[2] * 3 + 5));
-			ucLetterIJKCnt[2] = ucLetterIJKCnt[2] < 9 ? ucLetterIJKCnt[2] + 1 : ucLetterIJKCnt[2];
-			break;
-		}
+        case 'K':
+        case 'k':
+        {
+            pSLocalMacroVar->dValArr[ucLetterIJKCnt[2] * 3 + 5] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, (ucLetterIJKCnt[2] * 3 + 5));
+            ucLetterIJKCnt[2] = ucLetterIJKCnt[2] < 9 ? ucLetterIJKCnt[2] + 1 : ucLetterIJKCnt[2];
+            break;
+        }
 
-		case'M':case'm':
-		{
-			pSLocalMacroVar->dValArr[12] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 12);
-			break;
-		}
+        case 'M':
+        case 'm':
+        {
+            pSLocalMacroVar->dValArr[12] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 12);
+            break;
+        }
 
-		case'Q':case'q':
-		{
-			pSLocalMacroVar->dValArr[16] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 16);
-			break;
-		}
-		case'R':case'r':
-		{
-			pSLocalMacroVar->dValArr[17] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 17);
-			break;
-		}
+        case 'Q':
+        case 'q':
+        {
+            pSLocalMacroVar->dValArr[16] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 16);
+            break;
+        }
+        case 'R':
+        case 'r':
+        {
+            pSLocalMacroVar->dValArr[17] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 17);
+            break;
+        }
 
+        case 'S':
+        case 's':
+        {
+            pSLocalMacroVar->dValArr[18] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 18);
+            break;
+        }
+        case 'T':
+        case 't':
+        {
+            pSLocalMacroVar->dValArr[19] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 19);
+            break;
+        }
 
-		case'S':case's':
-		{
-			pSLocalMacroVar->dValArr[18] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 18);
-			break;
-		}
-		case'T':case't':
-		{
-			pSLocalMacroVar->dValArr[19] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 19);
-			break;
-		}
+        case 'U':
+        case 'u':
+        {
+            pSLocalMacroVar->dValArr[20] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 20);
+            break;
+        }
 
-		case'U':case'u':
-		{
-			pSLocalMacroVar->dValArr[20] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 20);
-			break;
-		}
+        case 'V':
+        case 'v':
+        {
+            pSLocalMacroVar->dValArr[21] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 21);
+            break;
+        }
 
-		case'V':case'v':
-		{
-			pSLocalMacroVar->dValArr[21] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 21);
-			break;
-		}
+        case 'W':
+        case 'w':
+        {
+            pSLocalMacroVar->dValArr[22] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 22);
+            break;
+        }
 
-		case'W':case'w':
-		{
-			pSLocalMacroVar->dValArr[22] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 22);
-			break;
-		}
+        case 'X':
+        case 'x':
+        {
+            pSLocalMacroVar->dValArr[23] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 23);
+            break;
+        }
 
-		case'X':case'x':
-		{
-			pSLocalMacroVar->dValArr[23] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 23);
-			break;
-		}
+        case 'Y':
+        case 'y':
+        {
+            pSLocalMacroVar->dValArr[25] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 24);
+            break;
+        }
+        case 'Z':
+        case 'z':
+        {
+            pSLocalMacroVar->dValArr[25] = dVal;
+            clrbit(pSLocalMacroVar->ulIsNull, 25);
+            break;
+        }
+        default:
+            break;
+        }
 
-		case'Y':case'y':
-		{
-			pSLocalMacroVar->dValArr[25] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 24);
-			break;
-		}
-		case'Z':case'z':
-		{
-			pSLocalMacroVar->dValArr[25] = dVal;
-			clrbit(pSLocalMacroVar->ulIsNull, 25);
-			break;
-		}
-		default:
-			break;
-		}
-
-		//4.
-		pSGetTextStateInfo->pCurrPtr = pSGetTextStateInfo->pEndPtr;
-
-	}
-	return 1;
-
+        //4.
+        pSGetTextStateInfo->pCurrPtr = pSGetTextStateInfo->pEndPtr;
+    }
+    return 1;
 }
 
-
-//·Ö¸î¹ì¼£
+//åˆ†å‰²è½¨è¿¹
 int8 splitPathByBlank(SList* pSPathList, double dX, double dZ)
 {
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSPathList) - 1;
-	while (sCurrPos >= 0)
-	{
-		//1.ÕÒµ½µ±Ç°ÊµÌå
-		SLine* pCurrEntity;
-		pCurrEntity = FindNodeData(pSPathList, sCurrPos);
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSPathList) - 1;
+    while (sCurrPos >= 0)
+    {
+        //1.æ‰¾åˆ°å½“å‰å®ä½“
+        SLine* pCurrEntity;
+        pCurrEntity = FindNodeData(pSPathList, sCurrPos);
 
-		double dTargetX;
-		double dTargetZ;
-		//2.µ±Ç°ÊµÌå´©Ô½Ã«Å÷
-		if (entityCrossBlank(pCurrEntity, dX, dZ, &dTargetX, &dTargetZ))
-		{
-			switch (pCurrEntity->EntityType)
-			{
-			case OTHERTYPE:case L1NE:
-			{
-				SLine* pSLine;
-				pSLine = mallocGCode(sizeof(SLine), ORAM_NUM355);//ÄÚ´æÎ´±àºÅ
-				if (pSLine == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
+        double dTargetX;
+        double dTargetZ;
+        //2.å½“å‰å®ä½“ç©¿è¶Šæ¯›å¯
+        if (entityCrossBlank(pCurrEntity, dX, dZ, &dTargetX, &dTargetZ))
+        {
+            switch (pCurrEntity->EntityType)
+            {
+            case OTHERTYPE:
+            case L1NE:
+            {
+                SLine* pSLine;
+                pSLine = mallocGCode(sizeof(SLine), ORAM_NUM355); //å†…å­˜æœªç¼–å·
+                if (pSLine == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
 
-				*pSLine = *(SLine*)pCurrEntity;
+                *pSLine = *(SLine*)pCurrEntity;
 
-				pSLine->SEndPoint.dArray[AXIS_X] = pCurrEntity->SStartPoint.dArray[AXIS_X] = dTargetX;
-				pSLine->SEndPoint.dArray[AXIS_Z] = pCurrEntity->SStartPoint.dArray[AXIS_Z] = dTargetZ;
+                pSLine->SEndPoint.dArray[AXIS_X] = pCurrEntity->SStartPoint.dArray[AXIS_X] = dTargetX;
+                pSLine->SEndPoint.dArray[AXIS_Z] = pCurrEntity->SStartPoint.dArray[AXIS_Z] = dTargetZ;
 
-				int cRet = 0;
-				cRet = insertList(pSPathList, sCurrPos + 1, pSLine, ORAM_NUM354);//ÄÚ´æÎ´±àºÅ
-				if (cRet == FALSE)
-				{
-					freeGCode(pSLine);
-					pSLine = NULL;
-					parseGCodeErrorB(0, GCODE_ERROR_NUM303);
-					return -1;
-				}
+                int cRet = 0;
+                cRet = insertList(pSPathList, sCurrPos + 1, pSLine, ORAM_NUM354); //å†…å­˜æœªç¼–å·
+                if (cRet == FALSE)
+                {
+                    freeGCode(pSLine);
+                    pSLine = NULL;
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM303);
+                    return -1;
+                }
 
-				break;
-			}
-			case ARC:
-			{
-				SArc* pSArc;
-				pSArc = mallocGCode(sizeof(SArc), ORAM_NUM356);//ÄÚ´æÎ´±àºÅ
-				if (pSArc == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
+                break;
+            }
+            case ARC:
+            {
+                SArc* pSArc;
+                pSArc = mallocGCode(sizeof(SArc), ORAM_NUM356); //å†…å­˜æœªç¼–å·
+                if (pSArc == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
 
-				*pSArc = *(SArc*)pCurrEntity;
+                *pSArc = *(SArc*)pCurrEntity;
 
-				pSArc->SEndPoint.dArray[AXIS_X] = pCurrEntity->SStartPoint.dArray[AXIS_X] = dTargetX;
-				pSArc->SEndPoint.dArray[AXIS_Z] = pCurrEntity->SStartPoint.dArray[AXIS_Z] = dTargetZ;
+                pSArc->SEndPoint.dArray[AXIS_X] = pCurrEntity->SStartPoint.dArray[AXIS_X] = dTargetX;
+                pSArc->SEndPoint.dArray[AXIS_Z] = pCurrEntity->SStartPoint.dArray[AXIS_Z] = dTargetZ;
 
-				int cRet = 0;
+                int cRet = 0;
 
-				cRet = insertList(pSPathList, sCurrPos + 1, pSArc, ORAM_NUM354);//ÄÚ´æÎ´±àºÅ
-				if (cRet == FALSE)
-				{
-					freeGCode(pSArc);
-					pSArc = NULL;
-					parseGCodeErrorB(0, GCODE_ERROR_NUM303);
-					return -1;
-				}
+                cRet = insertList(pSPathList, sCurrPos + 1, pSArc, ORAM_NUM354); //å†…å­˜æœªç¼–å·
+                if (cRet == FALSE)
+                {
+                    freeGCode(pSArc);
+                    pSArc = NULL;
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM303);
+                    return -1;
+                }
 
-				break;
-			}
-			default:
-				break;
-			}
-		}
-		//µ±Ç°ÊµÌåÎ´´©Ô½Ã«Å÷
-		else
-		{
-			sCurrPos--;
-		}
-
-	}
-	return 0;
+                break;
+            }
+            default:
+                break;
+            }
+        }
+        //å½“å‰å®ä½“æœªç©¿è¶Šæ¯›å¯
+        else
+        {
+            sCurrPos--;
+        }
+    }
+    return 0;
 }
 
-//ÅĞ¶ÏÊµÌåÊÇ·ñ´©Ô½Ã«Å÷
+//åˆ¤æ–­å®ä½“æ˜¯å¦ç©¿è¶Šæ¯›å¯
 int8 entityCrossBlank(SLine* pEntity, double dX, double dZ, double* pTargetX, double* pTargetZ)
 {
-	bool bFlag_1 = FALSE;	//ÊµÌå´©Ô½¶ËÃæ±êÖ¾
-	bool bFlag_2 = FALSE;	//ÊµÌå´©Ô½ÖùÃæ±êÖ¾
-	double dTargetX;
-	double dTargetZ;
+    bool bFlag_1 = FALSE; //å®ä½“ç©¿è¶Šç«¯é¢æ ‡å¿—
+    bool bFlag_2 = FALSE; //å®ä½“ç©¿è¶ŠæŸ±é¢æ ‡å¿—
+    double dTargetX;
+    double dTargetZ;
 
-	//ÅĞ¶ÏÊµÌåÊÇ·ñ´©Ô½Ã«Å÷¶ËÃæ
-	if (isUnEqualAndLessThanZero((pEntity->SStartPoint.dArray[AXIS_Z] - dZ) * (pEntity->SEndPoint.dArray[AXIS_Z] - dZ)))
-	{
-		findTargetPointInEntity((enum ENTITY*)pEntity, AXIS_Z, dZ, &dTargetX);
-		if (dTargetX <= dX)
-			bFlag_1 = TRUE;
-	}
-	//ÅĞ¶ÏÊµÌåÊÇ·ñ´©Ô½Ã«Å÷ÖùÃæ
-	if (isUnEqualAndLessThanZero((pEntity->SStartPoint.dArray[AXIS_X] - dX) * (pEntity->SEndPoint.dArray[AXIS_X] - dX)))
-	{
-		findTargetPointInEntity((enum ENTITY*)pEntity, AXIS_X, dX, &dTargetZ);
-		if (dTargetZ <= dZ)
-			bFlag_2 = TRUE;
-	}
+    //åˆ¤æ–­å®ä½“æ˜¯å¦ç©¿è¶Šæ¯›å¯ç«¯é¢
+    if (isUnEqualAndLessThanZero((pEntity->SStartPoint.dArray[AXIS_Z] - dZ) * (pEntity->SEndPoint.dArray[AXIS_Z] - dZ)))
+    {
+        findTargetPointInEntity((enum ENTITY*)pEntity, AXIS_Z, dZ, &dTargetX);
+        if (dTargetX <= dX)
+            bFlag_1 = TRUE;
+    }
+    //åˆ¤æ–­å®ä½“æ˜¯å¦ç©¿è¶Šæ¯›å¯æŸ±é¢
+    if (isUnEqualAndLessThanZero((pEntity->SStartPoint.dArray[AXIS_X] - dX) * (pEntity->SEndPoint.dArray[AXIS_X] - dX)))
+    {
+        findTargetPointInEntity((enum ENTITY*)pEntity, AXIS_X, dX, &dTargetZ);
+        if (dTargetZ <= dZ)
+            bFlag_2 = TRUE;
+    }
 
-	if (bFlag_1 == FALSE && bFlag_2 == FALSE)
-		return 0;
-	if (bFlag_1 == TRUE && bFlag_2 == TRUE)
-	{
-		if (fabs(pEntity->SStartPoint.dArray[AXIS_Z] - dZ) < fabs(pEntity->SStartPoint.dArray[AXIS_Z] - dTargetZ))
-		{
-			*pTargetX = dTargetX;
-			*pTargetZ = dZ;
-		}
-		else
-		{
-			*pTargetX = dX;
-			*pTargetZ = dTargetZ;
-		}
-	}
-	else if (bFlag_1 == TRUE)
-	{
-		*pTargetX = dTargetX;
-		*pTargetZ = dZ;
-	}
-	else if (bFlag_2 == TRUE)
-	{
-		*pTargetX = dX;
-		*pTargetZ = dTargetZ;
-	}
-	return 1;
+    if (bFlag_1 == FALSE && bFlag_2 == FALSE)
+        return 0;
+    if (bFlag_1 == TRUE && bFlag_2 == TRUE)
+    {
+        if (fabs(pEntity->SStartPoint.dArray[AXIS_Z] - dZ) < fabs(pEntity->SStartPoint.dArray[AXIS_Z] - dTargetZ))
+        {
+            *pTargetX = dTargetX;
+            *pTargetZ = dZ;
+        }
+        else
+        {
+            *pTargetX = dX;
+            *pTargetZ = dTargetZ;
+        }
+    }
+    else if (bFlag_1 == TRUE)
+    {
+        *pTargetX = dTargetX;
+        *pTargetZ = dZ;
+    }
+    else if (bFlag_2 == TRUE)
+    {
+        *pTargetX = dX;
+        *pTargetZ = dTargetZ;
+    }
+    return 1;
 }
 
-//É¾³ı¹ì¼£ÖĞµÄÊµÌå£¨¸ù¾İÃ«Å÷XZÉ¾³ı£©
+//åˆ é™¤è½¨è¿¹ä¸­çš„å®ä½“ï¼ˆæ ¹æ®æ¯›å¯XZåˆ é™¤ï¼‰
 void deleteEntityInPath(SList* pSPathList, double dX, double dZ)
 {
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSPathList) - 1;
-	while (sCurrPos >= 0)
-	{
-		//1.ÕÒµ½µ±Ç°ÊµÌå
-		SLine* pCurrEntity;
-		pCurrEntity = FindNodeData(pSPathList, sCurrPos);
-		
-		//Æğµã»òÖÕµãÔÚÃ«Å÷Ö®Íâ£¬ÔòÉ¾³ıÊµÌå
-		if (isUnEqualAndGreaterThanZero(pCurrEntity->SStartPoint.dArray[AXIS_X] - dX) ||
-			isUnEqualAndGreaterThanZero(pCurrEntity->SStartPoint.dArray[AXIS_Z] - dZ) ||
-			isUnEqualAndGreaterThanZero(pCurrEntity->SEndPoint.dArray[AXIS_X] - dX) || 
-			isUnEqualAndGreaterThanZero(pCurrEntity->SEndPoint.dArray[AXIS_Z] - dZ))
-		{
-			//É¾³ıÊµÌå½Úµã
-			removeNode(pSPathList, sCurrPos, FALSE);
-		}
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSPathList) - 1;
+    while (sCurrPos >= 0)
+    {
+        //1.æ‰¾åˆ°å½“å‰å®ä½“
+        SLine* pCurrEntity;
+        pCurrEntity = FindNodeData(pSPathList, sCurrPos);
 
-		sCurrPos--;
-		
-	}
+        //èµ·ç‚¹æˆ–ç»ˆç‚¹åœ¨æ¯›å¯ä¹‹å¤–ï¼Œåˆ™åˆ é™¤å®ä½“
+        if (isUnEqualAndGreaterThanZero(pCurrEntity->SStartPoint.dArray[AXIS_X] - dX) ||
+            isUnEqualAndGreaterThanZero(pCurrEntity->SStartPoint.dArray[AXIS_Z] - dZ) ||
+            isUnEqualAndGreaterThanZero(pCurrEntity->SEndPoint.dArray[AXIS_X] - dX) ||
+            isUnEqualAndGreaterThanZero(pCurrEntity->SEndPoint.dArray[AXIS_Z] - dZ))
+        {
+            //åˆ é™¤å®ä½“èŠ‚ç‚¹
+            removeNode(pSPathList, sCurrPos, FALSE);
+        }
+
+        sCurrPos--;
+    }
 }
 
-//²¹³ä¹ì¼£ÖĞµÄÊµÌå
+//è¡¥å……è½¨è¿¹ä¸­çš„å®ä½“
 int8 addEntityInPath(SList* pSPathList)
 {
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSPathList) - 1;
-	while (sCurrPos >= 1)
-	{
-		//1.ÕÒµ½µ±Ç°ÊµÌå
-		SLine* pCurrEntity;
-		SLine* pNextEntity;
-		pCurrEntity = FindNodeData(pSPathList, sCurrPos);
-		pNextEntity = FindNodeData(pSPathList, sCurrPos - 1);
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSPathList) - 1;
+    while (sCurrPos >= 1)
+    {
+        //1.æ‰¾åˆ°å½“å‰å®ä½“
+        SLine* pCurrEntity;
+        SLine* pNextEntity;
+        pCurrEntity = FindNodeData(pSPathList, sCurrPos);
+        pNextEntity = FindNodeData(pSPathList, sCurrPos - 1);
 
-		//2.µ±Ç°ÊµÌåÖÕµã != ÏÂÒ»ÊµÌåÆğµã£¬ÔòĞèÒªÌí¼ÓÊµÌå
-		if (!isZero(pCurrEntity->SEndPoint.dArray[AXIS_X] - pNextEntity->SStartPoint.dArray[AXIS_X]) ||
-			!isZero(pCurrEntity->SEndPoint.dArray[AXIS_Z] - pNextEntity->SStartPoint.dArray[AXIS_Z]))
-		{
-			SLine* pSLine;
-			pSLine = mallocGCode(sizeof(SLine), ORAM_NUM355);
-			if (pSLine == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				return -1;
-			}
-			pSLine->EntityType = L1NE;
-			pSLine->SStartPoint.dArray[AXIS_X] = pCurrEntity->SEndPoint.dArray[AXIS_X];
-			pSLine->SStartPoint.dArray[AXIS_Z] = pCurrEntity->SEndPoint.dArray[AXIS_Z];
-			pSLine->SEndPoint.dArray[AXIS_X] = pNextEntity->SStartPoint.dArray[AXIS_X];
-			pSLine->SEndPoint.dArray[AXIS_Z] = pNextEntity->SStartPoint.dArray[AXIS_Z];
+        //2.å½“å‰å®ä½“ç»ˆç‚¹ != ä¸‹ä¸€å®ä½“èµ·ç‚¹ï¼Œåˆ™éœ€è¦æ·»åŠ å®ä½“
+        if (!isZero(pCurrEntity->SEndPoint.dArray[AXIS_X] - pNextEntity->SStartPoint.dArray[AXIS_X]) ||
+            !isZero(pCurrEntity->SEndPoint.dArray[AXIS_Z] - pNextEntity->SStartPoint.dArray[AXIS_Z]))
+        {
+            SLine* pSLine;
+            pSLine = mallocGCode(sizeof(SLine), ORAM_NUM355);
+            if (pSLine == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                return -1;
+            }
+            pSLine->EntityType = L1NE;
+            pSLine->SStartPoint.dArray[AXIS_X] = pCurrEntity->SEndPoint.dArray[AXIS_X];
+            pSLine->SStartPoint.dArray[AXIS_Z] = pCurrEntity->SEndPoint.dArray[AXIS_Z];
+            pSLine->SEndPoint.dArray[AXIS_X] = pNextEntity->SStartPoint.dArray[AXIS_X];
+            pSLine->SEndPoint.dArray[AXIS_Z] = pNextEntity->SStartPoint.dArray[AXIS_Z];
 
-			int cRet = 0;
-			cRet = insertList(pSPathList, sCurrPos, pSLine, ORAM_NUM354);//ÄÚ´æÎ´±àºÅ
-			if (cRet == FALSE)
-			{
-				freeGCode(pSLine);
-				pSLine = NULL;
-				parseGCodeErrorB(0, GCODE_ERROR_NUM303);
-				return -1;
-			}
-		}
-		else
-		{
-			sCurrPos--;
-		}
-	}
-	return 0;
+            int cRet = 0;
+            cRet = insertList(pSPathList, sCurrPos, pSLine, ORAM_NUM354); //å†…å­˜æœªç¼–å·
+            if (cRet == FALSE)
+            {
+                freeGCode(pSLine);
+                pSLine = NULL;
+                parseGCodeErrorB(0, GCODE_ERROR_NUM303);
+                return -1;
+            }
+        }
+        else
+        {
+            sCurrPos--;
+        }
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 isArcCrossQuadrant(SArc* pSArc, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶ÏÔ²»¡ÊÇ·ñ¿çÔ½ÏóÏŞ
-  ÊäÈë²ÎÊı£ºpSArc		Ô²»¡
-			pSPoint		µÚÒ»¿çÔ½µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	¿çÔ½
-			0	Î´¿çÔ½
-  ±¸    ×¢£ºÈôÔ²»¡¿çÔ½ÏóÏŞ£¬ÔòÍ¨¹ıpSPoint·µ»ØµÚÒ»¿çÔ½µã×ø±ê
+  å‡½æ•°åç§°ï¼šint8 isArcCrossQuadrant(SArc* pSArc, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­åœ†å¼§æ˜¯å¦è·¨è¶Šè±¡é™
+  è¾“å…¥å‚æ•°ï¼špSArc		åœ†å¼§
+			pSPoint		ç¬¬ä¸€è·¨è¶Šç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	è·¨è¶Š
+			0	æœªè·¨è¶Š
+  å¤‡    æ³¨ï¼šè‹¥åœ†å¼§è·¨è¶Šè±¡é™ï¼Œåˆ™é€šè¿‡pSPointè¿”å›ç¬¬ä¸€è·¨è¶Šç‚¹åæ ‡
 **************************************************/
 int8 isArcCrossQuadrant(SArc* pSArc, SPointDouble* pSPoint)
 {
-	//»¡¶ÎÖĞÍ¾¿çÔ½×ø±êÖá¿çÏóÏŞ
-	if (pSArc->dRadius < 0)
-	{
-		return 1;				
-	}
-	//Æğµã/ÖÕµãÏà¶ÔÓÚÔ²ĞÄ×ø±ê
-	double dSX;
-	double dSZ;
-	double dEX;
-	double dEZ;
-	dSX = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
-	dSZ = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
-	dEX = pSArc->SEndPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
-	dEZ = pSArc->SEndPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
-	
-	//ÅĞ¶ÏÔ­Àí£ºÈôÆğµãÖÕµãÎ»ÓÚXÖáÁ½²à »ò ÆğµãÖÕµãÎ»ÓÚZÖáÁ½²à£¬Ôò¿çÔ½ÏóÏŞ
-	if (isUnEqualAndLessThanZero(dSX * dEX) || isUnEqualAndLessThanZero(dSZ * dEZ))
-	{
-		//»ñÈ¡Ô²»¡ÆğµãÏóÏŞ
-		int8 cStart = 0;
-		//ÄæÊ±Õë£¨ZÖáÕı°ëÖáÊôÓÚµÚÒ»ÏóÏŞ£¬XÖáÕı°ëÖáÊôÓÚµÚ¶şÏóÏŞ£©
-		if (pSArc->cArcDir == ARC_ANTI_CW)
-		{
-			if (isEqualOrGreaterThanZero(dSX) && isUnEqualAndGreaterThanZero(dSZ))
-			{
-				//dSX >= 0 && dSZ > 0£¬µÚÒ»ÏóÏŞ
-				cStart = 1;
-			}
-			else if (isUnEqualAndGreaterThanZero(dSX) && isEqualOrLessThanZero(dSZ))
-			{
-				//dSX > 0 && dSZ <= 0£¬µÚ¶şÏóÏŞ
-				cStart = 2;
-			}
-			else if (isEqualOrLessThanZero(dSX) && isUnEqualAndLessThanZero(dSZ))
-			{
-				//dSX <= 0 && dSZ < 0£¬µÚÈıÏóÏŞ
-				cStart = 3;
-			}
-			else if (isUnEqualAndLessThanZero(dSX) && isEqualOrGreaterThanZero(dSZ)) 
-			{
-				//dSX < 0 && dSZ >= 0£¬µÚËÄÏóÏŞ
-				cStart = 4;
-			}
-		}
-		//Ë³Ê±Õë£¨ZÖáÕı°ëÖáÊôÓÚµÚËÄÏóÏŞ£¬XÖáÕı°ëÖáÊôÓÚµÚÒ»ÏóÏŞ£©
-		else
-		{
-			if (isUnEqualAndGreaterThanZero(dSX) && isEqualOrGreaterThanZero(dSZ))
-			{
-				//dSX > 0 && dSZ >= 0£¬µÚÒ»ÏóÏŞ
-				cStart = 1;
-			}
-			else if (isEqualOrGreaterThanZero(dSX) && isUnEqualAndLessThanZero(dSZ))
-			{
-				//dSX >= 0 && dSZ < 0£¬µÚ¶şÏóÏŞ
-				cStart = 2;
-			}
-			else if (isUnEqualAndLessThanZero(dSX) && isEqualOrLessThanZero(dSZ))
-			{
-				//dSX < 0 && dSZ <= 0£¬µÚÈıÏóÏŞ
-				cStart = 3;
-			}
-			else if (isEqualOrLessThanZero(dSX) && isUnEqualAndGreaterThanZero(dSZ))
-			{
-				//dSX <= 0 && dSZ > 0£¬µÚËÄÏóÏŞ
-				cStart = 4;
-			}
+    //å¼§æ®µä¸­é€”è·¨è¶Šåæ ‡è½´è·¨è±¡é™
+    if (pSArc->dRadius < 0)
+    {
+        return 1;
+    }
+    //èµ·ç‚¹/ç»ˆç‚¹ç›¸å¯¹äºåœ†å¿ƒåæ ‡
+    double dSX;
+    double dSZ;
+    double dEX;
+    double dEZ;
+    dSX = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
+    dSZ = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
+    dEX = pSArc->SEndPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
+    dEZ = pSArc->SEndPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
 
-		}
+    //åˆ¤æ–­åŸç†ï¼šè‹¥èµ·ç‚¹ç»ˆç‚¹ä½äºXè½´ä¸¤ä¾§ æˆ– èµ·ç‚¹ç»ˆç‚¹ä½äºZè½´ä¸¤ä¾§ï¼Œåˆ™è·¨è¶Šè±¡é™
+    if (isUnEqualAndLessThanZero(dSX * dEX) || isUnEqualAndLessThanZero(dSZ * dEZ))
+    {
+        //è·å–åœ†å¼§èµ·ç‚¹è±¡é™
+        int8 cStart = 0;
+        //é€†æ—¶é’ˆï¼ˆZè½´æ­£åŠè½´å±äºç¬¬ä¸€è±¡é™ï¼ŒXè½´æ­£åŠè½´å±äºç¬¬äºŒè±¡é™ï¼‰
+        if (pSArc->cArcDir == ARC_ANTI_CW)
+        {
+            if (isEqualOrGreaterThanZero(dSX) && isUnEqualAndGreaterThanZero(dSZ))
+            {
+                //dSX >= 0 && dSZ > 0ï¼Œç¬¬ä¸€è±¡é™
+                cStart = 1;
+            }
+            else if (isUnEqualAndGreaterThanZero(dSX) && isEqualOrLessThanZero(dSZ))
+            {
+                //dSX > 0 && dSZ <= 0ï¼Œç¬¬äºŒè±¡é™
+                cStart = 2;
+            }
+            else if (isEqualOrLessThanZero(dSX) && isUnEqualAndLessThanZero(dSZ))
+            {
+                //dSX <= 0 && dSZ < 0ï¼Œç¬¬ä¸‰è±¡é™
+                cStart = 3;
+            }
+            else if (isUnEqualAndLessThanZero(dSX) && isEqualOrGreaterThanZero(dSZ))
+            {
+                //dSX < 0 && dSZ >= 0ï¼Œç¬¬å››è±¡é™
+                cStart = 4;
+            }
+        }
+        //é¡ºæ—¶é’ˆï¼ˆZè½´æ­£åŠè½´å±äºç¬¬å››è±¡é™ï¼ŒXè½´æ­£åŠè½´å±äºç¬¬ä¸€è±¡é™ï¼‰
+        else
+        {
+            if (isUnEqualAndGreaterThanZero(dSX) && isEqualOrGreaterThanZero(dSZ))
+            {
+                //dSX > 0 && dSZ >= 0ï¼Œç¬¬ä¸€è±¡é™
+                cStart = 1;
+            }
+            else if (isEqualOrGreaterThanZero(dSX) && isUnEqualAndLessThanZero(dSZ))
+            {
+                //dSX >= 0 && dSZ < 0ï¼Œç¬¬äºŒè±¡é™
+                cStart = 2;
+            }
+            else if (isUnEqualAndLessThanZero(dSX) && isEqualOrLessThanZero(dSZ))
+            {
+                //dSX < 0 && dSZ <= 0ï¼Œç¬¬ä¸‰è±¡é™
+                cStart = 3;
+            }
+            else if (isEqualOrLessThanZero(dSX) && isUnEqualAndGreaterThanZero(dSZ))
+            {
+                //dSX <= 0 && dSZ > 0ï¼Œç¬¬å››è±¡é™
+                cStart = 4;
+            }
+        }
 
-		//¼ÆËãµÚÒ»¿çÔ½µã
-		if ((cStart == 1 && pSArc->cArcDir == ARC_ANTI_CW) ||
-			(cStart == 2 && pSArc->cArcDir == ARC_CW))
-		{
-			//¿çÔ½XÖáÕı°ëÖá
-			pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X] + pSArc->dRadius;
-			pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z];
-		}
-		else if ((cStart == 2 && pSArc->cArcDir == ARC_ANTI_CW) ||
-			(cStart == 3 && pSArc->cArcDir == ARC_CW))
-		{
-			//¿çÔ½ZÖá¸º°ëÖá
-			pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X];
-			pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z] - pSArc->dRadius;
-		}
-		else if ((cStart == 3 && pSArc->cArcDir == ARC_ANTI_CW) ||
-			(cStart == 4 && pSArc->cArcDir == ARC_CW))
-		{
-			//¿çÔ½XÖá¸º°ëÖá
-			pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X] - pSArc->dRadius;
-			pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z];
-		}
-		else if ((cStart == 4 && pSArc->cArcDir == ARC_ANTI_CW) ||
-			(cStart == 1 && pSArc->cArcDir == ARC_CW))
-		{
-			pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X];
-			pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z] + pSArc->dRadius;
-		}
+        //è®¡ç®—ç¬¬ä¸€è·¨è¶Šç‚¹
+        if ((cStart == 1 && pSArc->cArcDir == ARC_ANTI_CW) || (cStart == 2 && pSArc->cArcDir == ARC_CW))
+        {
+            //è·¨è¶ŠXè½´æ­£åŠè½´
+            pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X] + pSArc->dRadius;
+            pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z];
+        }
+        else if ((cStart == 2 && pSArc->cArcDir == ARC_ANTI_CW) || (cStart == 3 && pSArc->cArcDir == ARC_CW))
+        {
+            //è·¨è¶ŠZè½´è´ŸåŠè½´
+            pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X];
+            pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z] - pSArc->dRadius;
+        }
+        else if ((cStart == 3 && pSArc->cArcDir == ARC_ANTI_CW) || (cStart == 4 && pSArc->cArcDir == ARC_CW))
+        {
+            //è·¨è¶ŠXè½´è´ŸåŠè½´
+            pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X] - pSArc->dRadius;
+            pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z];
+        }
+        else if ((cStart == 4 && pSArc->cArcDir == ARC_ANTI_CW) || (cStart == 1 && pSArc->cArcDir == ARC_CW))
+        {
+            pSPoint->dArray[AXIS_X] = pSArc->SCenterPoint.dArray[AXIS_X];
+            pSPoint->dArray[AXIS_Z] = pSArc->SCenterPoint.dArray[AXIS_Z] + pSArc->dRadius;
+        }
 
-		return 1;
-	} 
+        return 1;
+    }
 
-
-	return 0;
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid divideArcInPath(SList* pSPathList)
-  º¯Êı¹¦ÄÜ£º·Ö¸î¹ì¼£ÖĞµÄÔ²»¡
-  ÊäÈë²ÎÊı£ºpSPathList		¹ì¼£Á´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º½«¹ì¼£ÖĞ¿çÔ½ÏóÏŞµÄÔ²»¡½øĞĞ²ğ·Ö
+  å‡½æ•°åç§°ï¼švoid divideArcInPath(SList* pSPathList)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ†å‰²è½¨è¿¹ä¸­çš„åœ†å¼§
+  è¾“å…¥å‚æ•°ï¼špSPathList		è½¨è¿¹é“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šå°†è½¨è¿¹ä¸­è·¨è¶Šè±¡é™çš„åœ†å¼§è¿›è¡Œæ‹†åˆ†
 **************************************************/
 void divideArcInPath(SList* pSPathList)
 {
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSPathList) - 1;
-	while (sCurrPos >= 1)
-	{
-		SArc* pCurrEntity;
-		pCurrEntity = FindNodeData(pSPathList, sCurrPos);
-		if (pCurrEntity->EntityType == ARC)
-		{
-			SPointDouble SPoint;
-			//¿çÏóÏŞ
-			if (isArcCrossQuadrant(pCurrEntity, &SPoint))
-			{
-				//´´½¨Ô²»¡ÊµÌå
-				SArc* pSNewArc;
-				pSNewArc = mallocGCode(sizeof(SArc), ORAM_NUM356);
-				if (pSNewArc == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return;
-				}
-				*pSNewArc = *pCurrEntity;
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSPathList) - 1;
+    while (sCurrPos >= 1)
+    {
+        SArc* pCurrEntity;
+        pCurrEntity = FindNodeData(pSPathList, sCurrPos);
+        if (pCurrEntity->EntityType == ARC)
+        {
+            SPointDouble SPoint;
+            //è·¨è±¡é™
+            if (isArcCrossQuadrant(pCurrEntity, &SPoint))
+            {
+                //åˆ›å»ºåœ†å¼§å®ä½“
+                SArc* pSNewArc;
+                pSNewArc = mallocGCode(sizeof(SArc), ORAM_NUM356);
+                if (pSNewArc == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return;
+                }
+                *pSNewArc = *pCurrEntity;
 
-				//ĞŞÕıÔ²»¡ÆğµãÖÕµã
-				pSNewArc->SStartPoint.dArray[AXIS_X] = SPoint.dArray[AXIS_X];
-				pSNewArc->SStartPoint.dArray[AXIS_Z] = SPoint.dArray[AXIS_Z];
-				pCurrEntity->SEndPoint.dArray[AXIS_X] = SPoint.dArray[AXIS_X];
-				pCurrEntity->SEndPoint.dArray[AXIS_Z] = SPoint.dArray[AXIS_Z];
+                //ä¿®æ­£åœ†å¼§èµ·ç‚¹ç»ˆç‚¹
+                pSNewArc->SStartPoint.dArray[AXIS_X] = SPoint.dArray[AXIS_X];
+                pSNewArc->SStartPoint.dArray[AXIS_Z] = SPoint.dArray[AXIS_Z];
+                pCurrEntity->SEndPoint.dArray[AXIS_X] = SPoint.dArray[AXIS_X];
+                pCurrEntity->SEndPoint.dArray[AXIS_Z] = SPoint.dArray[AXIS_Z];
 
-				//²åÈëÁ´±í
-				int cRet = 0;
+                //æ’å…¥é“¾è¡¨
+                int cRet = 0;
 
-				cRet = insertList(pSPathList, sCurrPos, pSNewArc, ORAM_NUM354);
-				if (cRet == FALSE)
-				{
-					freeGCode(pSNewArc);
-					pSNewArc == NULL;
-					parseGCodeErrorB(0, GCODE_ERROR_NUM303);
-					return;
-				}
-			}
-			else
-			{
-				sCurrPos--;
-			}
-		}
-		else
-		{
-			sCurrPos--;
-		}
-
-	}
+                cRet = insertList(pSPathList, sCurrPos, pSNewArc, ORAM_NUM354);
+                if (cRet == FALSE)
+                {
+                    freeGCode(pSNewArc);
+                    pSNewArc == NULL;
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM303);
+                    return;
+                }
+            }
+            else
+            {
+                sCurrPos--;
+            }
+        }
+        else
+        {
+            sCurrPos--;
+        }
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid equidistantEntity(enum ENTITY* pEntity, double dDist, int8 cDir)
-  º¯Êı¹¦ÄÜ£ºµÈ¾àÊµÌå
-  ÊäÈë²ÎÊı£ºpEntity		ÊµÌå
-			dDist		µÈ¾à¾àÀë
-			cDir		µÈ¾à·½Ïò
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºcDir = 1	ÊµÌåÏòÆğµã-ÖÕµã×ó²àµÈ¾à
-			cDir = -1	ÊµÌåÏòÆğµã-ÖÕµãÓÒ²àµÈ¾à
+  å‡½æ•°åç§°ï¼švoid equidistantEntity(enum ENTITY* pEntity, double dDist, int8 cDir)
+  å‡½æ•°åŠŸèƒ½ï¼šç­‰è·å®ä½“
+  è¾“å…¥å‚æ•°ï¼špEntity		å®ä½“
+			dDist		ç­‰è·è·ç¦»
+			cDir		ç­‰è·æ–¹å‘
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šcDir = 1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å·¦ä¾§ç­‰è·
+			cDir = -1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å³ä¾§ç­‰è·
 **************************************************/
 void equidistantEntity(enum ENTITY* pEntity, double dDist, int8 cDir)
 {
-	switch (*pEntity)
-	{
-	case OTHERTYPE:case L1NE:
-	{
-		SLine* pSLine = (SLine*)pEntity;
-		double SX = pSLine->SStartPoint.dArray[AXIS_X];
-		double SZ = pSLine->SStartPoint.dArray[AXIS_Z];
-		double EX = pSLine->SEndPoint.dArray[AXIS_X];
-		double EZ = pSLine->SEndPoint.dArray[AXIS_Z];
-		double dSE = sqrt((SX - EX) * (SX - EX) + (SZ - EZ) * (SZ - EZ));
+    switch (*pEntity)
+    {
+    case OTHERTYPE:
+    case L1NE:
+    {
+        SLine* pSLine = (SLine*)pEntity;
+        double SX = pSLine->SStartPoint.dArray[AXIS_X];
+        double SZ = pSLine->SStartPoint.dArray[AXIS_Z];
+        double EX = pSLine->SEndPoint.dArray[AXIS_X];
+        double EZ = pSLine->SEndPoint.dArray[AXIS_Z];
+        double dSE = sqrt((SX - EX) * (SX - EX) + (SZ - EZ) * (SZ - EZ));
 
-		//¼ÆËãµ¥Î»·¨ÏòÊ¸Á¿
-		double dN_Z = -(EX - SX) / dSE;
-		double dN_X = (EZ - SZ) / dSE;
+        //è®¡ç®—å•ä½æ³•å‘çŸ¢é‡
+        double dN_Z = -(EX - SX) / dSE;
+        double dN_X = (EZ - SZ) / dSE;
 
-		//¼ÆËãµÈ¾àºóµÄÆğµã
-		pSLine->SStartPoint.dArray[AXIS_X] += cDir * dDist * dN_X;
-		pSLine->SStartPoint.dArray[AXIS_Z] += cDir * dDist * dN_Z;
+        //è®¡ç®—ç­‰è·åçš„èµ·ç‚¹
+        pSLine->SStartPoint.dArray[AXIS_X] += cDir * dDist * dN_X;
+        pSLine->SStartPoint.dArray[AXIS_Z] += cDir * dDist * dN_Z;
 
-		//¼ÆËãµÈ¾àºóµÄÖÕµã
-		pSLine->SEndPoint.dArray[AXIS_X] += cDir * dDist * dN_X;
-		pSLine->SEndPoint.dArray[AXIS_Z] += cDir * dDist * dN_Z;		
-		
-		break;
-	}
-	case ARC:
-	{
-		SArc* pSArc = (SArc*)pEntity;
-		double SX = pSArc->SStartPoint.dArray[AXIS_X];
-		double SZ = pSArc->SStartPoint.dArray[AXIS_Z];
-		double EX = pSArc->SEndPoint.dArray[AXIS_X];
-		double EZ = pSArc->SEndPoint.dArray[AXIS_Z];
-		double CX = pSArc->SCenterPoint.dArray[AXIS_X];
-		double CZ = pSArc->SCenterPoint.dArray[AXIS_Z];
+        //è®¡ç®—ç­‰è·åçš„ç»ˆç‚¹
+        pSLine->SEndPoint.dArray[AXIS_X] += cDir * dDist * dN_X;
+        pSLine->SEndPoint.dArray[AXIS_Z] += cDir * dDist * dN_Z;
 
-		double r = pSArc->dRadius;
+        break;
+    }
+    case ARC:
+    {
+        SArc* pSArc = (SArc*)pEntity;
+        double SX = pSArc->SStartPoint.dArray[AXIS_X];
+        double SZ = pSArc->SStartPoint.dArray[AXIS_Z];
+        double EX = pSArc->SEndPoint.dArray[AXIS_X];
+        double EZ = pSArc->SEndPoint.dArray[AXIS_Z];
+        double CX = pSArc->SCenterPoint.dArray[AXIS_X];
+        double CZ = pSArc->SCenterPoint.dArray[AXIS_Z];
 
-		//¼ÆËãÆğµãµ¥Î»·¨ÏòÊ¸Á¿
-		double dN1_Z = (SZ - CZ) / r;
-		double dN1_X = (SX - CX) / r;
-		//¼ÆËãÖÕµãµ¥Î»·¨ÏòÊ¸Á¿
-		double dN2_Z = (EZ - CZ) / r;
-		double dN2_X = (EX - CX) / r;
+        double r = pSArc->dRadius;
 
-		//¼ÆËãµÈ¾àºóµÄÆğµã
-		if (pSArc->cArcDir == ARC_ANTI_CW)
-		{
-			pSArc->SStartPoint.dArray[AXIS_X] -= cDir * dDist * dN1_X;
-			pSArc->SStartPoint.dArray[AXIS_Z] -= cDir * dDist * dN1_Z;
-		}
-		else
-		{
-			pSArc->SStartPoint.dArray[AXIS_X] += cDir * dDist * dN1_X;
-			pSArc->SStartPoint.dArray[AXIS_Z] += cDir * dDist * dN1_Z;
-		}
-		//¼ÆËãµÈ¾àºóµÄÖÕµã
-		if (pSArc->cArcDir == ARC_ANTI_CW)
-		{
-			pSArc->SEndPoint.dArray[AXIS_X] -= cDir * dDist * dN2_X;
-			pSArc->SEndPoint.dArray[AXIS_Z] -= cDir * dDist * dN2_Z;
-		}
-		else
-		{
-			pSArc->SEndPoint.dArray[AXIS_X] += cDir * dDist * dN2_X;
-			pSArc->SEndPoint.dArray[AXIS_Z] += cDir * dDist * dN2_Z;
+        //è®¡ç®—èµ·ç‚¹å•ä½æ³•å‘çŸ¢é‡
+        double dN1_Z = (SZ - CZ) / r;
+        double dN1_X = (SX - CX) / r;
+        //è®¡ç®—ç»ˆç‚¹å•ä½æ³•å‘çŸ¢é‡
+        double dN2_Z = (EZ - CZ) / r;
+        double dN2_X = (EX - CX) / r;
 
-		}
-		//¼ÆËãµÈ¾àºóµÄ°ë¾¶
-		pSArc->dRadius = fabs(pSArc->dRadius + cDir * pSArc->cArcDir * dDist);
-		
-		break;
-	}
-	default:
-		break;
-	}
+        //è®¡ç®—ç­‰è·åçš„èµ·ç‚¹
+        if (pSArc->cArcDir == ARC_ANTI_CW)
+        {
+            pSArc->SStartPoint.dArray[AXIS_X] -= cDir * dDist * dN1_X;
+            pSArc->SStartPoint.dArray[AXIS_Z] -= cDir * dDist * dN1_Z;
+        }
+        else
+        {
+            pSArc->SStartPoint.dArray[AXIS_X] += cDir * dDist * dN1_X;
+            pSArc->SStartPoint.dArray[AXIS_Z] += cDir * dDist * dN1_Z;
+        }
+        //è®¡ç®—ç­‰è·åçš„ç»ˆç‚¹
+        if (pSArc->cArcDir == ARC_ANTI_CW)
+        {
+            pSArc->SEndPoint.dArray[AXIS_X] -= cDir * dDist * dN2_X;
+            pSArc->SEndPoint.dArray[AXIS_Z] -= cDir * dDist * dN2_Z;
+        }
+        else
+        {
+            pSArc->SEndPoint.dArray[AXIS_X] += cDir * dDist * dN2_X;
+            pSArc->SEndPoint.dArray[AXIS_Z] += cDir * dDist * dN2_Z;
+        }
+        //è®¡ç®—ç­‰è·åçš„åŠå¾„
+        pSArc->dRadius = fabs(pSArc->dRadius + cDir * pSArc->cArcDir * dDist);
+
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid equidistantPath(SList* pSOriPathList, SList** ppSNewPathList, double dDist, int8 cDir)
-  º¯Êı¹¦ÄÜ£ºµÈ¾à¹ì¼£
-  ÊäÈë²ÎÊı£ºpSOriPathList		Ô­Ê¼¹ì¼£
-			ppSNewPathList		µÈ¾àºóµÄ¹ì¼£
-			dDist		µÈ¾à¾àÀë
-			cDir		µÈ¾à·½Ïò
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºcDir = 1	ÊµÌåÏòÆğµã-ÖÕµã×ó²àµÈ¾à
-			cDir = -1	ÊµÌåÏòÆğµã-ÖÕµãÓÒ²àµÈ¾à
-			½ö¶Ô¹ì¼£ÖĞËùÓĞÊµÌå½øĞĞµÈ¾à£¬µÈ¾àºóµÄĞÂ¹ì¼£²»Ò»¶¨Á¬Ğø
-			½øĞĞµÈ¾àÊ±²»»áĞŞ¸ÄÔ­Ê¼¹ì¼£
-			*ppSNewPathList±ØĞë´«Èë¿ÕÖ¸Õë
+  å‡½æ•°åç§°ï¼švoid equidistantPath(SList* pSOriPathList, SList** ppSNewPathList, double dDist, int8 cDir)
+  å‡½æ•°åŠŸèƒ½ï¼šç­‰è·è½¨è¿¹
+  è¾“å…¥å‚æ•°ï¼špSOriPathList		åŸå§‹è½¨è¿¹
+			ppSNewPathList		ç­‰è·åçš„è½¨è¿¹
+			dDist		ç­‰è·è·ç¦»
+			cDir		ç­‰è·æ–¹å‘
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šcDir = 1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å·¦ä¾§ç­‰è·
+			cDir = -1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å³ä¾§ç­‰è·
+			ä»…å¯¹è½¨è¿¹ä¸­æ‰€æœ‰å®ä½“è¿›è¡Œç­‰è·ï¼Œç­‰è·åçš„æ–°è½¨è¿¹ä¸ä¸€å®šè¿ç»­
+			è¿›è¡Œç­‰è·æ—¶ä¸ä¼šä¿®æ”¹åŸå§‹è½¨è¿¹
+			*ppSNewPathListå¿…é¡»ä¼ å…¥ç©ºæŒ‡é’ˆ
 **************************************************/
 void equidistantPath(SList* pSOriPathList, SList** ppSNewPathList, double dDist, int8 cDir)
 {
-	if ((*ppSNewPathList) != NULL)
-		return;
+    if ((*ppSNewPathList) != NULL)
+        return;
 
-	SList* pSNewPathList;
-	pSNewPathList = initList(ORAM_NUM353, ORAM_NUM354);
-	
-	int16 sCurrPos;
-	sCurrPos = pSOriPathList->cSize - 1;
+    SList* pSNewPathList;
+    pSNewPathList = initList(ORAM_NUM353, ORAM_NUM354);
 
-	//¸´ÖÆ¹ì¼£ÖĞµÄÊµÌå
-	while (sCurrPos >= 0)
-	{
-		//¸´ÖÆµ±Ç°ÊµÌå½Úµã
-		SLine* pOriEntity;
-		SLine* pNewEntity = NULL;
-		pOriEntity = FindNodeData(pSOriPathList, sCurrPos);
-		switch (pOriEntity->EntityType)
-		{
-		case OTHERTYPE:case L1NE:case DOT:
-		{
-			pNewEntity = mallocGCode(sizeof(SLine), ORAM_NUM355);
-			*(SLine*)pNewEntity = *(SLine*)pOriEntity;
-			break;
-		}
-		case ARC:
-		{
-			pNewEntity = mallocGCode(sizeof(SArc), ORAM_NUM356);
-			*(SArc*)pNewEntity = *(SArc*)pOriEntity;
-			break;
-		}
-		default:
-			break;
-		}
+    int16 sCurrPos;
+    sCurrPos = pSOriPathList->cSize - 1;
 
-		//µÈ¾àµ±Ç°ÊµÌå
-		equidistantEntity(pNewEntity, dDist, cDir);
-		
-		//½«ĞÂÊµÌå²åÈëĞÂ¹ì¼£Á´±í
-		insertList(pSNewPathList, 0, pNewEntity, ORAM_NUM354);
+    //å¤åˆ¶è½¨è¿¹ä¸­çš„å®ä½“
+    while (sCurrPos >= 0)
+    {
+        //å¤åˆ¶å½“å‰å®ä½“èŠ‚ç‚¹
+        SLine* pOriEntity;
+        SLine* pNewEntity = NULL;
+        pOriEntity = FindNodeData(pSOriPathList, sCurrPos);
+        switch (pOriEntity->EntityType)
+        {
+        case OTHERTYPE:
+        case L1NE:
+        case DOT:
+        {
+            pNewEntity = mallocGCode(sizeof(SLine), ORAM_NUM355);
+            *(SLine*)pNewEntity = *(SLine*)pOriEntity;
+            break;
+        }
+        case ARC:
+        {
+            pNewEntity = mallocGCode(sizeof(SArc), ORAM_NUM356);
+            *(SArc*)pNewEntity = *(SArc*)pOriEntity;
+            break;
+        }
+        default:
+            break;
+        }
 
-		sCurrPos--;
-	}
+        //ç­‰è·å½“å‰å®ä½“
+        equidistantEntity(pNewEntity, dDist, cDir);
 
-	//·µ»ØÆ«ÖÃºóµÄ¹ì¼£Á´±í
-	*ppSNewPathList = pSNewPathList;
+        //å°†æ–°å®ä½“æ’å…¥æ–°è½¨è¿¹é“¾è¡¨
+        insertList(pSNewPathList, 0, pNewEntity, ORAM_NUM354);
 
+        sCurrPos--;
+    }
+
+    //è¿”å›åç½®åçš„è½¨è¿¹é“¾è¡¨
+    *ppSNewPathList = pSNewPathList;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid addArcInequidistanLine(SList* pSOriPathList, SList* pSNewPathList, double dDist)
-  º¯Êı¹¦ÄÜ£ºÔÚµÈ¾à¹ì¼£ÖĞÌí¼ÓÔ²»¡
-  ÊäÈë²ÎÊı£ºpSOriPathList		Ô­Ê¼¹ì¼£
-			pSNewPathList		µÈ¾àºóµÄ¹ì¼£
-			dDist		µÈ¾à¾àÀë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºcDir = 1	ÊµÌåÏòÆğµã-ÖÕµã×ó²àµÈ¾à
-			cDir = -1	ÊµÌåÏòÆğµã-ÖÕµãÓÒ²àµÈ¾à
-			Í¨¹ıº¯ÊıequidistantPathµÃµ½µÄµÈ¾à¹ì¼£²»Ò»¶¨Á¬Ğø£¬µ÷ÓÃ´Ëº¯Êı
-			Ìí¼ÓÔ²»¡Ê¹µÈ¾à¹ì¼£±äµÃÁ¬Ğø
+  å‡½æ•°åç§°ï¼švoid addArcInequidistanLine(SList* pSOriPathList, SList* pSNewPathList, double dDist)
+  å‡½æ•°åŠŸèƒ½ï¼šåœ¨ç­‰è·è½¨è¿¹ä¸­æ·»åŠ åœ†å¼§
+  è¾“å…¥å‚æ•°ï¼špSOriPathList		åŸå§‹è½¨è¿¹
+			pSNewPathList		ç­‰è·åçš„è½¨è¿¹
+			dDist		ç­‰è·è·ç¦»
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šcDir = 1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å·¦ä¾§ç­‰è·
+			cDir = -1	å®ä½“å‘èµ·ç‚¹-ç»ˆç‚¹å³ä¾§ç­‰è·
+			é€šè¿‡å‡½æ•°equidistantPathå¾—åˆ°çš„ç­‰è·è½¨è¿¹ä¸ä¸€å®šè¿ç»­ï¼Œè°ƒç”¨æ­¤å‡½æ•°
+			æ·»åŠ åœ†å¼§ä½¿ç­‰è·è½¨è¿¹å˜å¾—è¿ç»­
 **************************************************/
 void addArcInequidistanLine(SList* pSOriPathList, SList* pSNewPathList, double dDist)
 {
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSNewPathList) - 1;
-	while (sCurrPos >= 1)
-	{
-		//1.ÕÒµ½µ±Ç°ÊµÌåÓëÏÂÒ»ÊµÌå
-		SLine* pCurrOriEntity;
-		SLine* pNextOriEntity;
-		SLine* pCurrEntity;
-		SLine* pNextEntity;
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSNewPathList) - 1;
+    while (sCurrPos >= 1)
+    {
+        //1.æ‰¾åˆ°å½“å‰å®ä½“ä¸ä¸‹ä¸€å®ä½“
+        SLine* pCurrOriEntity;
+        SLine* pNextOriEntity;
+        SLine* pCurrEntity;
+        SLine* pNextEntity;
 
-		pCurrOriEntity = FindNodeData(pSOriPathList, sCurrPos);
-		pNextOriEntity = FindNodeData(pSOriPathList, sCurrPos - 1);
-		pCurrEntity= FindNodeData(pSNewPathList, sCurrPos);
-		pNextEntity = FindNodeData(pSNewPathList, sCurrPos - 1);
+        pCurrOriEntity = FindNodeData(pSOriPathList, sCurrPos);
+        pNextOriEntity = FindNodeData(pSOriPathList, sCurrPos - 1);
+        pCurrEntity = FindNodeData(pSNewPathList, sCurrPos);
+        pNextEntity = FindNodeData(pSNewPathList, sCurrPos - 1);
 
-		uint8 ucAxisNum[2];
-		ucAxisNum[0] = AXIS_Z;
-		ucAxisNum[1] = AXIS_X;
+        uint8 ucAxisNum[2];
+        ucAxisNum[0] = AXIS_Z;
+        ucAxisNum[1] = AXIS_X;
 
-		//¼ÆËãµ±Ç°ÊµÌåµÄÖÕµãÏòÁ¿
-		SVector SVector1 = { 0 };
-		if (pCurrOriEntity->EntityType == ARC)
-		{
-			SArc* pSArc = (SArc*)pCurrOriEntity;
-			double dI = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
-			double dK = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
-			getArcVectorAtEnd(pSArc->SStartPoint, pSArc->SEndPoint, dK, dI, &SVector1, pSArc->cArcDir, ucAxisNum);
-		}
-		else if (pCurrOriEntity->EntityType == OTHERTYPE || pCurrOriEntity->EntityType == L1NE)
-		{
-			getLineVector(pCurrOriEntity->SStartPoint, pCurrOriEntity->SEndPoint, &SVector1, ucAxisNum);
-		}
+        //è®¡ç®—å½“å‰å®ä½“çš„ç»ˆç‚¹å‘é‡
+        SVector SVector1 = {0};
+        if (pCurrOriEntity->EntityType == ARC)
+        {
+            SArc* pSArc = (SArc*)pCurrOriEntity;
+            double dI = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
+            double dK = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
+            getArcVectorAtEnd(pSArc->SStartPoint, pSArc->SEndPoint, dK, dI, &SVector1, pSArc->cArcDir, ucAxisNum);
+        }
+        else if (pCurrOriEntity->EntityType == OTHERTYPE || pCurrOriEntity->EntityType == L1NE)
+        {
+            getLineVector(pCurrOriEntity->SStartPoint, pCurrOriEntity->SEndPoint, &SVector1, ucAxisNum);
+        }
 
-		SVector SVector2 = { 0 };
-		//¼ÆËãÏÂÒ»ÊµÌåµÄÆğµãÏòÁ¿
-		if (pNextOriEntity->EntityType == ARC)
-		{
-			SArc* pSArc = (SArc*)pNextOriEntity;
-			double dI = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
-			double dK = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
-			getArcVectorAtStart(dK, dI, &SVector2, pSArc->cArcDir, ucAxisNum);
-		}
-		else if (pNextOriEntity->EntityType == OTHERTYPE || pNextOriEntity->EntityType == L1NE)
-		{
-			getLineVector(pNextOriEntity->SStartPoint, pNextOriEntity->SEndPoint, &SVector2, ucAxisNum);
-		}
+        SVector SVector2 = {0};
+        //è®¡ç®—ä¸‹ä¸€å®ä½“çš„èµ·ç‚¹å‘é‡
+        if (pNextOriEntity->EntityType == ARC)
+        {
+            SArc* pSArc = (SArc*)pNextOriEntity;
+            double dI = pSArc->SStartPoint.dArray[AXIS_X] - pSArc->SCenterPoint.dArray[AXIS_X];
+            double dK = pSArc->SStartPoint.dArray[AXIS_Z] - pSArc->SCenterPoint.dArray[AXIS_Z];
+            getArcVectorAtStart(dK, dI, &SVector2, pSArc->cArcDir, ucAxisNum);
+        }
+        else if (pNextOriEntity->EntityType == OTHERTYPE || pNextOriEntity->EntityType == L1NE)
+        {
+            getLineVector(pNextOriEntity->SStartPoint, pNextOriEntity->SEndPoint, &SVector2, ucAxisNum);
+        }
 
-		//Èô µ±Ç°ÊµÌå Óë ÏÂÒ»ÊµÌå ²»ÏàÇĞ
-		//¼´ µ±Ç°ÊµÌåµÄÖÕµãÏòÁ¿ != ÏÂÒ»ÊµÌåµÄÆğµãÏòÁ¿£¬Ôò²åÈëÔ²»¡
-		if (!isZero(SVector1.dArray[AXIS_X] - SVector2.dArray[AXIS_X]) || !isZero(SVector1.dArray[AXIS_Z] - SVector2.dArray[AXIS_Z]))
-		{
-			SArc* pSArc;
-			pSArc = mallocGCode(sizeof(SArc), ORAM_NUM356);
-			if (pSArc == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				return -1;
-			}
-			pSArc->EntityType = ARC;
-			pSArc->SStartPoint = pCurrEntity->SEndPoint;
-			pSArc->SEndPoint = pNextEntity->SStartPoint;
-			pSArc->SCenterPoint = pCurrOriEntity->SEndPoint;
-			pSArc->dRadius = dDist;
+        //è‹¥ å½“å‰å®ä½“ ä¸ ä¸‹ä¸€å®ä½“ ä¸ç›¸åˆ‡
+        //å³ å½“å‰å®ä½“çš„ç»ˆç‚¹å‘é‡ != ä¸‹ä¸€å®ä½“çš„èµ·ç‚¹å‘é‡ï¼Œåˆ™æ’å…¥åœ†å¼§
+        if (!isZero(SVector1.dArray[AXIS_X] - SVector2.dArray[AXIS_X]) ||
+            !isZero(SVector1.dArray[AXIS_Z] - SVector2.dArray[AXIS_Z]))
+        {
+            SArc* pSArc;
+            pSArc = mallocGCode(sizeof(SArc), ORAM_NUM356);
+            if (pSArc == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                return -1;
+            }
+            pSArc->EntityType = ARC;
+            pSArc->SStartPoint = pCurrEntity->SEndPoint;
+            pSArc->SEndPoint = pNextEntity->SStartPoint;
+            pSArc->SCenterPoint = pCurrOriEntity->SEndPoint;
+            pSArc->dRadius = dDist;
 
-			//ÒÑÖªÁÓ»¡Çó·½Ïò
-			//²æ³Ë dCross = Ux * Vy - Uy * Vx
-			//²æ³Ë dCross > 0 ÎªË³£»²æ³Ë dCross < 0 ÎªÄæ
-			//U (SZ - CZ ,SX - CX)
-			//V (EZ - CZ ,EX - CX)
-			double dSX = pSArc->SStartPoint.dArray[AXIS_X];
-			double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
-			double dEX = pSArc->SEndPoint.dArray[AXIS_X];
-			double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
-			double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
-			double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
-			double dCross;
-			dCross = (dSZ - dCZ) * (dEX - dCX) - (dSX - dCX) * (dEZ - dCZ);
+            //å·²çŸ¥åŠ£å¼§æ±‚æ–¹å‘
+            //å‰ä¹˜ dCross = Ux * Vy - Uy * Vx
+            //å‰ä¹˜ dCross > 0 ä¸ºé¡ºï¼›å‰ä¹˜ dCross < 0 ä¸ºé€†
+            //U (SZ - CZ ,SX - CX)
+            //V (EZ - CZ ,EX - CX)
+            double dSX = pSArc->SStartPoint.dArray[AXIS_X];
+            double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
+            double dEX = pSArc->SEndPoint.dArray[AXIS_X];
+            double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
+            double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
+            double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
+            double dCross;
+            dCross = (dSZ - dCZ) * (dEX - dCX) - (dSX - dCX) * (dEZ - dCZ);
 
-			//ÓÒµÈ¾à
-			pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_ANTI_CW : ARC_CW;
-			//×óµÈ¾à
-			//pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_CW : ARC_ANTI_CW;
+            //å³ç­‰è·
+            pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_ANTI_CW : ARC_CW;
+            //å·¦ç­‰è·
+            //pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_CW : ARC_ANTI_CW;
 
-			insertList(pSNewPathList, sCurrPos, pSArc, ORAM_NUM354);
-		}
+            insertList(pSNewPathList, sCurrPos, pSArc, ORAM_NUM354);
+        }
 
-		sCurrPos--;
-
-	}
-
-
+        sCurrPos--;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 deleteRings(SList* pSPathList)
-  º¯Êı¹¦ÄÜ£ºÉ¾³ı»·
-  ÊäÈë²ÎÊı£ºpSPathList		¹ì¼£Á´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÉ¾³ı¹ì¼£ÖĞµÄ»·
+  å‡½æ•°åç§°ï¼šint8 deleteRings(SList* pSPathList)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ é™¤ç¯
+  è¾“å…¥å‚æ•°ï¼špSPathList		è½¨è¿¹é“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šåˆ é™¤è½¨è¿¹ä¸­çš„ç¯
 **************************************************/
 void deleteRings(SList* pSPathList)
 {
-	//ÕÒµ½Á´±íµÄµÚÈı¶Î¹ì¼£
-	int16 sCurrPos;
-	sCurrPos = getListSize(pSPathList) - 3;
-	//´ÓÁ´±íµÄµÚÈı¶Î¹ì¼£¿ªÊ¼±éÀú
-	while (sCurrPos >= 0)
-	{
-		int16 sCheckPos;
-		sCheckPos = getListSize(pSPathList) - 1;
-		//¼ì²ésCurrPos¶ÔÓ¦ÊµÌåÊÇ·ñÓëÖ®Ç°µÄÊµÌåÏà½»
-		while (sCheckPos >= sCurrPos + 2)
-		{
-			//ÕÒµ½sCurrPosÊµÌå
-			SLine* pEntity1;
-			SLine* pEntity2;
-			SPointDouble SIntersectionPoint;
-			pEntity1 = FindNodeData(pSPathList, sCurrPos);
-			pEntity2 = FindNodeData(pSPathList, sCheckPos);
-			//ĞèÒª³õÊ¼»¯½»µã×ø±ê£¬·ÀÖ¹¶ªÊ§·ÇXZÖµ
-			SIntersectionPoint = pEntity1->SStartPoint;
+    //æ‰¾åˆ°é“¾è¡¨çš„ç¬¬ä¸‰æ®µè½¨è¿¹
+    int16 sCurrPos;
+    sCurrPos = getListSize(pSPathList) - 3;
+    //ä»é“¾è¡¨çš„ç¬¬ä¸‰æ®µè½¨è¿¹å¼€å§‹éå†
+    while (sCurrPos >= 0)
+    {
+        int16 sCheckPos;
+        sCheckPos = getListSize(pSPathList) - 1;
+        //æ£€æŸ¥sCurrPoså¯¹åº”å®ä½“æ˜¯å¦ä¸ä¹‹å‰çš„å®ä½“ç›¸äº¤
+        while (sCheckPos >= sCurrPos + 2)
+        {
+            //æ‰¾åˆ°sCurrPoså®ä½“
+            SLine* pEntity1;
+            SLine* pEntity2;
+            SPointDouble SIntersectionPoint;
+            pEntity1 = FindNodeData(pSPathList, sCurrPos);
+            pEntity2 = FindNodeData(pSPathList, sCheckPos);
+            //éœ€è¦åˆå§‹åŒ–äº¤ç‚¹åæ ‡ï¼Œé˜²æ­¢ä¸¢å¤±éXZå€¼
+            SIntersectionPoint = pEntity1->SStartPoint;
 
-			//ÅĞ¶ÏÊÇ·ñ´æÔÚ½»µã
-			if (calcIntersectionInTwoEntity((SLine*)pEntity1, (SLine*)pEntity2, &SIntersectionPoint))
-			{
-				//ÊÇ·ñÒªĞŞÕıÔ²»¡²ÎÊı£¿ÒòÎª¼ÆËã´æÔÚÎó²î£¬¿ÉÄÜµ¼ÖÂÔ²»¡²ÎÊı´íÎó£¨ÆğµãÖÕµãÔ²ĞÄ²»ÄÜ¹¹³ÉÔ²»¡£©
-				//ĞŞÕıpEntity1µÄÆğµã
-				pEntity1->SStartPoint = SIntersectionPoint;
-				//ĞŞÕıpEntity2µÄÖÕµã
-				pEntity2->SEndPoint = SIntersectionPoint;
-				//¼ÆËãÉ¾³ı½ÚµãÊıÁ¿
-				int8 cDeleteNum;
-				cDeleteNum = sCheckPos - sCurrPos - 1;
-				//É¾³ı½Úµã
-				while (cDeleteNum > 0)
-				{
-					removeNode(pSPathList, sCurrPos + 1, FALSE);
-					cDeleteNum--;
-				}
-				break;
-			}
-			else
-			{
-				sCheckPos--;
-			}
-				
-		
-		}
+            //åˆ¤æ–­æ˜¯å¦å­˜åœ¨äº¤ç‚¹
+            if (calcIntersectionInTwoEntity((SLine*)pEntity1, (SLine*)pEntity2, &SIntersectionPoint))
+            {
+                //æ˜¯å¦è¦ä¿®æ­£åœ†å¼§å‚æ•°ï¼Ÿå› ä¸ºè®¡ç®—å­˜åœ¨è¯¯å·®ï¼Œå¯èƒ½å¯¼è‡´åœ†å¼§å‚æ•°é”™è¯¯ï¼ˆèµ·ç‚¹ç»ˆç‚¹åœ†å¿ƒä¸èƒ½æ„æˆåœ†å¼§ï¼‰
+                //ä¿®æ­£pEntity1çš„èµ·ç‚¹
+                pEntity1->SStartPoint = SIntersectionPoint;
+                //ä¿®æ­£pEntity2çš„ç»ˆç‚¹
+                pEntity2->SEndPoint = SIntersectionPoint;
+                //è®¡ç®—åˆ é™¤èŠ‚ç‚¹æ•°é‡
+                int8 cDeleteNum;
+                cDeleteNum = sCheckPos - sCurrPos - 1;
+                //åˆ é™¤èŠ‚ç‚¹
+                while (cDeleteNum > 0)
+                {
+                    removeNode(pSPathList, sCurrPos + 1, FALSE);
+                    cDeleteNum--;
+                }
+                break;
+            }
+            else
+            {
+                sCheckPos--;
+            }
+        }
 
-		sCurrPos--;
-	}
-
+        sCurrPos--;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 calcIntersectionInLineAndLine(SLine* pSLine1, SLine* pSLine2, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÖ±Ïß¶ÎÓëÖ±Ïß¶Î½»µã×ø±ê
-  ÊäÈë²ÎÊı£ºpSLine1		Ö±Ïß¶Î1
-			pSLine2		Ö±Ïß¶Î2
-			pSPoint		½»µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ïà½»
-			0	²»Ïà½»
-  ±¸    ×¢£ºÎ´¶ÔÁ½Ö±ÏßÖØºÏÇé¿ö½øĞĞ¿¼ÂÇ£¿£¿
+  å‡½æ•°åç§°ï¼šint8 calcIntersectionInLineAndLine(SLine* pSLine1, SLine* pSLine2, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ç›´çº¿æ®µä¸ç›´çº¿æ®µäº¤ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼špSLine1		ç›´çº¿æ®µ1
+			pSLine2		ç›´çº¿æ®µ2
+			pSPoint		äº¤ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	ç›¸äº¤
+			0	ä¸ç›¸äº¤
+  å¤‡    æ³¨ï¼šæœªå¯¹ä¸¤ç›´çº¿é‡åˆæƒ…å†µè¿›è¡Œè€ƒè™‘ï¼Ÿï¼Ÿ
 **************************************************/
 int8 calcIntersectionInLineAndLine(SLine* pSLine1, SLine* pSLine2, SPointDouble* pSPoint)
 {
-	double dSX_1 = pSLine1->SStartPoint.dArray[AXIS_X]; // Line1ÆğµãX
-	double dSZ_1 = pSLine1->SStartPoint.dArray[AXIS_Z]; // Line1ÆğµãZ
-	double dEX_1 = pSLine1->SEndPoint.dArray[AXIS_X];   // Line1ÖÕµãX
-	double dEZ_1 = pSLine1->SEndPoint.dArray[AXIS_Z];   // Line1ÖÕµãZ
+    double dSX_1 = pSLine1->SStartPoint.dArray[AXIS_X]; // Line1èµ·ç‚¹X
+    double dSZ_1 = pSLine1->SStartPoint.dArray[AXIS_Z]; // Line1èµ·ç‚¹Z
+    double dEX_1 = pSLine1->SEndPoint.dArray[AXIS_X];   // Line1ç»ˆç‚¹X
+    double dEZ_1 = pSLine1->SEndPoint.dArray[AXIS_Z];   // Line1ç»ˆç‚¹Z
 
-	double dSX_2 = pSLine2->SStartPoint.dArray[AXIS_X]; // Line2ÆğµãX
-	double dSZ_2 = pSLine2->SStartPoint.dArray[AXIS_Z]; // Line2ÆğµãZ
-	double dEX_2 = pSLine2->SEndPoint.dArray[AXIS_X];   // Line2ÖÕµãX
-	double dEZ_2 = pSLine2->SEndPoint.dArray[AXIS_Z];   // Line2ÖÕµãZ
+    double dSX_2 = pSLine2->SStartPoint.dArray[AXIS_X]; // Line2èµ·ç‚¹X
+    double dSZ_2 = pSLine2->SStartPoint.dArray[AXIS_Z]; // Line2èµ·ç‚¹Z
+    double dEX_2 = pSLine2->SEndPoint.dArray[AXIS_X];   // Line2ç»ˆç‚¹X
+    double dEZ_2 = pSLine2->SEndPoint.dArray[AXIS_Z];   // Line2ç»ˆç‚¹Z
 
-	//¼ÆËã·ÖÄ¸£¨²æ»ı£©
-	double denominator = (dSX_1 - dEX_1) * (dSZ_2 - dEZ_2) - (dSZ_1 - dEZ_1) * (dSX_2 - dEX_2);
+    //è®¡ç®—åˆ†æ¯ï¼ˆå‰ç§¯ï¼‰
+    double denominator = (dSX_1 - dEX_1) * (dSZ_2 - dEZ_2) - (dSZ_1 - dEZ_1) * (dSX_2 - dEX_2);
 
-	//Æ½ĞĞ»òÖØºÏ£¬ÎŞ½»µã
-	if (isZero(denominator))
-	{
-		return 0; 
-	}
+    //å¹³è¡Œæˆ–é‡åˆï¼Œæ— äº¤ç‚¹
+    if (isZero(denominator))
+    {
+        return 0;
+    }
 
-	//¼ÆËã½»µã×ø±ê
-	double numeratorX = (dSX_1 * dEZ_1 - dSZ_1 * dEX_1) * (dSX_2 - dEX_2) -
-		(dSX_1 - dEX_1) * (dSX_2 * dEZ_2 - dSZ_2 * dEX_2);
-	double numeratorZ = (dSX_1 * dEZ_1 - dSZ_1 * dEX_1) * (dSZ_2 - dEZ_2) -
-		(dSZ_1 - dEZ_1) * (dSX_2 * dEZ_2 - dSZ_2 * dEX_2);
+    //è®¡ç®—äº¤ç‚¹åæ ‡
+    double numeratorX =
+        (dSX_1 * dEZ_1 - dSZ_1 * dEX_1) * (dSX_2 - dEX_2) - (dSX_1 - dEX_1) * (dSX_2 * dEZ_2 - dSZ_2 * dEX_2);
+    double numeratorZ =
+        (dSX_1 * dEZ_1 - dSZ_1 * dEX_1) * (dSZ_2 - dEZ_2) - (dSZ_1 - dEZ_1) * (dSX_2 * dEZ_2 - dSZ_2 * dEX_2);
 
-	//½»µã×ø±ê
-	double dPX = numeratorX / denominator;
-	double dPZ = numeratorZ / denominator;
+    //äº¤ç‚¹åæ ‡
+    double dPX = numeratorX / denominator;
+    double dPZ = numeratorZ / denominator;
 
-	//ÅĞ¶Ï½»µãÊÇ·ñÔÚÏß¶Î·¶Î§ÄÚ
-	if (!isBetweenA2B(dPX, dSX_1, dEX_1) || !isBetweenA2B(dPX, dSX_2, dEX_2) ||
-		!isBetweenA2B(dPZ, dSZ_1, dEZ_1) || !isBetweenA2B(dPZ, dSZ_2, dEZ_2))
-	{
-		return 0; // ½»µã²»ÔÚÏß¶Î·¶Î§ÄÚ
-	}
+    //åˆ¤æ–­äº¤ç‚¹æ˜¯å¦åœ¨çº¿æ®µèŒƒå›´å†…
+    if (!isBetweenA2B(dPX, dSX_1, dEX_1) || !isBetweenA2B(dPX, dSX_2, dEX_2) || !isBetweenA2B(dPZ, dSZ_1, dEZ_1) ||
+        !isBetweenA2B(dPZ, dSZ_2, dEZ_2))
+    {
+        return 0; // äº¤ç‚¹ä¸åœ¨çº¿æ®µèŒƒå›´å†…
+    }
 
-	// Ğ´Èë½»µã
-	pSPoint->dArray[AXIS_X] = dPX;
-	pSPoint->dArray[AXIS_Z] = dPZ;
+    // å†™å…¥äº¤ç‚¹
+    pSPoint->dArray[AXIS_X] = dPX;
+    pSPoint->dArray[AXIS_Z] = dPZ;
 
-	return 1; // ´æÔÚ½»µã£¬ÇÒÔÚÁ½ÌõÏß¶ÎÄÚ
+    return 1; // å­˜åœ¨äº¤ç‚¹ï¼Œä¸”åœ¨ä¸¤æ¡çº¿æ®µå†…
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 calcIntersectionInLineAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÖ±Ïß¶ÎÓëÔ²»¡¶Î½»µã×ø±ê
-  ÊäÈë²ÎÊı£ºpSLine		Ö±Ïß¶Î
-			pSArc		Ô²»¡¶Î
-			pSPoint		½»µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ïà½»
-			0	²»Ïà½»
-  ±¸    ×¢£ºÊäÈëµÄÔ²»¡²»ÄÜ¿çÏóÏŞ
+  å‡½æ•°åç§°ï¼šint8 calcIntersectionInLineAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ç›´çº¿æ®µä¸åœ†å¼§æ®µäº¤ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼špSLine		ç›´çº¿æ®µ
+			pSArc		åœ†å¼§æ®µ
+			pSPoint		äº¤ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	ç›¸äº¤
+			0	ä¸ç›¸äº¤
+  å¤‡    æ³¨ï¼šè¾“å…¥çš„åœ†å¼§ä¸èƒ½è·¨è±¡é™
 **************************************************/
 int8 calcIntersectionInLineAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint)
 {
-	// Ö±ÏßÆğÖÕµã×ø±ê
-	double dSX_1 = pSLine->SStartPoint.dArray[AXIS_X];
-	double dSZ_1 = pSLine->SStartPoint.dArray[AXIS_Z];
-	double dEX_1 = pSLine->SEndPoint.dArray[AXIS_X];
-	double dEZ_1 = pSLine->SEndPoint.dArray[AXIS_Z];
+    // ç›´çº¿èµ·ç»ˆç‚¹åæ ‡
+    double dSX_1 = pSLine->SStartPoint.dArray[AXIS_X];
+    double dSZ_1 = pSLine->SStartPoint.dArray[AXIS_Z];
+    double dEX_1 = pSLine->SEndPoint.dArray[AXIS_X];
+    double dEZ_1 = pSLine->SEndPoint.dArray[AXIS_Z];
 
-	// Ô²ĞÄ×ø±ê¼°»¡¶ÎÆğÖÕµã×ø±ê
-	double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
-	double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
-	double dSX_2 = pSArc->SStartPoint.dArray[AXIS_X];
-	double dSZ_2 = pSArc->SStartPoint.dArray[AXIS_Z];
-	double dEX_2 = pSArc->SEndPoint.dArray[AXIS_X];
-	double dEZ_2 = pSArc->SEndPoint.dArray[AXIS_Z];
+    // åœ†å¿ƒåæ ‡åŠå¼§æ®µèµ·ç»ˆç‚¹åæ ‡
+    double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
+    double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
+    double dSX_2 = pSArc->SStartPoint.dArray[AXIS_X];
+    double dSZ_2 = pSArc->SStartPoint.dArray[AXIS_Z];
+    double dEX_2 = pSArc->SEndPoint.dArray[AXIS_X];
+    double dEZ_2 = pSArc->SEndPoint.dArray[AXIS_Z];
 
-	// ¼ÆËã°ë¾¶
-	double r = pSArc->dRadius;
+    // è®¡ç®—åŠå¾„
+    double r = pSArc->dRadius;
 
-	// Ö±Ïß·½ÏòÏòÁ¿
-	double dx = dEX_1 - dSX_1;
-	double dz = dEZ_1 - dSZ_1;
+    // ç›´çº¿æ–¹å‘å‘é‡
+    double dx = dEX_1 - dSX_1;
+    double dz = dEZ_1 - dSZ_1;
 
-	// ¶ş´Î·½³ÌÏµÊı A t^2 + B t + C = 0
-	double A = dx * dx + dz * dz;
-	double B = 2 * (dx * (dSX_1 - dCX) + dz * (dSZ_1 - dCZ));
-	double C = (dSX_1 - dCX) * (dSX_1 - dCX) + (dSZ_1 - dCZ) * (dSZ_1 - dCZ) - r * r;
+    // äºŒæ¬¡æ–¹ç¨‹ç³»æ•° A t^2 + B t + C = 0
+    double A = dx * dx + dz * dz;
+    double B = 2 * (dx * (dSX_1 - dCX) + dz * (dSZ_1 - dCZ));
+    double C = (dSX_1 - dCX) * (dSX_1 - dCX) + (dSZ_1 - dCZ) * (dSZ_1 - dCZ) - r * r;
 
-	double discriminant = B * B - 4 * A * C;
-	if (discriminant < 0)
-	{
-		return 0; // ÎŞ½»µã
-	}
-	if (isZero(A))
-	{
-		return 0;
-	}
-	double sqrtDiscriminant = sqrt(discriminant);
-	double t1 = (-B - sqrtDiscriminant) / (2 * A);
-	double t2 = (-B + sqrtDiscriminant) / (2 * A);
+    double discriminant = B * B - 4 * A * C;
+    if (discriminant < 0)
+    {
+        return 0; // æ— äº¤ç‚¹
+    }
+    if (isZero(A))
+    {
+        return 0;
+    }
+    double sqrtDiscriminant = sqrt(discriminant);
+    double t1 = (-B - sqrtDiscriminant) / (2 * A);
+    double t2 = (-B + sqrtDiscriminant) / (2 * A);
 
-	double ts[2] = { t1, t2 };
+    double ts[2] = {t1, t2};
 
-	for (int i = 0; i < 2; i++)
-	{
-		double t = ts[i];
-		if (t >= 0 && t <= 1)
-		{
-			// ¼ÆËã½»µã×ø±ê
-			double ix = dSX_1 + t * dx;
-			double iz = dSZ_1 + t * dz;
+    for (int i = 0; i < 2; i++)
+    {
+        double t = ts[i];
+        if (t >= 0 && t <= 1)
+        {
+            // è®¡ç®—äº¤ç‚¹åæ ‡
+            double ix = dSX_1 + t * dx;
+            double iz = dSZ_1 + t * dz;
 
-			// ÅĞ¶Ï½»µãÊÇ·ñÔÚ»¡¶Î·¶Î§ÄÚ£¨x,zµ¥µ÷£©
-			if(isBetweenA2B(ix, dSX_2, dEX_2) && isBetweenA2B(iz, dSZ_2, dEZ_2))
-			{
-				// Ğ´Èë½»µã
-				pSPoint->dArray[AXIS_X] = ix;
-				pSPoint->dArray[AXIS_Z] = iz;
-				return 1; // ÕÒµ½½»µã
-			}
-		}
-	}
+            // åˆ¤æ–­äº¤ç‚¹æ˜¯å¦åœ¨å¼§æ®µèŒƒå›´å†…ï¼ˆx,zå•è°ƒï¼‰
+            if (isBetweenA2B(ix, dSX_2, dEX_2) && isBetweenA2B(iz, dSZ_2, dEZ_2))
+            {
+                // å†™å…¥äº¤ç‚¹
+                pSPoint->dArray[AXIS_X] = ix;
+                pSPoint->dArray[AXIS_Z] = iz;
+                return 1; // æ‰¾åˆ°äº¤ç‚¹
+            }
+        }
+    }
 
-	return 0; // ÎŞ½»µã
+    return 0; // æ— äº¤ç‚¹
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 calcIntersectionInArcAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÔ²»¡¶ÎÓëÔ²»¡¶Î½»µã×ø±ê
-  ÊäÈë²ÎÊı£ºpSArc1		Ô²»¡¶Î1
-			pSArc2		Ô²»¡¶Î2
-			pSPoint		½»µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ïà½»
-			0	²»Ïà½»
-  ±¸    ×¢£ºÊäÈëµÄÔ²»¡²»ÄÜ¿çÏóÏŞ
+  å‡½æ•°åç§°ï¼šint8 calcIntersectionInArcAndArc(SLine* pSLine, SArc* pSArc, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åœ†å¼§æ®µä¸åœ†å¼§æ®µäº¤ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼špSArc1		åœ†å¼§æ®µ1
+			pSArc2		åœ†å¼§æ®µ2
+			pSPoint		äº¤ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	ç›¸äº¤
+			0	ä¸ç›¸äº¤
+  å¤‡    æ³¨ï¼šè¾“å…¥çš„åœ†å¼§ä¸èƒ½è·¨è±¡é™
 **************************************************/
 int8 calcIntersectionInArcAndArc(SArc* pSArc1, SArc* pSArc2, SPointDouble* pSPoint)
 {
-	double dCX_1 = pSArc1->SCenterPoint.dArray[AXIS_X];
-	double dCZ_1 = pSArc1->SCenterPoint.dArray[AXIS_Z];
-	double dSX_1 = pSArc1->SStartPoint.dArray[AXIS_X];
-	double dSZ_1 = pSArc1->SStartPoint.dArray[AXIS_Z];
-	double dEX_1 = pSArc1->SEndPoint.dArray[AXIS_X];
-	double dEZ_1 = pSArc1->SEndPoint.dArray[AXIS_Z];
+    double dCX_1 = pSArc1->SCenterPoint.dArray[AXIS_X];
+    double dCZ_1 = pSArc1->SCenterPoint.dArray[AXIS_Z];
+    double dSX_1 = pSArc1->SStartPoint.dArray[AXIS_X];
+    double dSZ_1 = pSArc1->SStartPoint.dArray[AXIS_Z];
+    double dEX_1 = pSArc1->SEndPoint.dArray[AXIS_X];
+    double dEZ_1 = pSArc1->SEndPoint.dArray[AXIS_Z];
 
-	double dCX_2 = pSArc2->SCenterPoint.dArray[AXIS_X];
-	double dCZ_2 = pSArc2->SCenterPoint.dArray[AXIS_Z];
-	double dSX_2 = pSArc2->SStartPoint.dArray[AXIS_X];
-	double dSZ_2 = pSArc2->SStartPoint.dArray[AXIS_Z];
-	double dEX_2 = pSArc2->SEndPoint.dArray[AXIS_X];
-	double dEZ_2 = pSArc2->SEndPoint.dArray[AXIS_Z];
+    double dCX_2 = pSArc2->SCenterPoint.dArray[AXIS_X];
+    double dCZ_2 = pSArc2->SCenterPoint.dArray[AXIS_Z];
+    double dSX_2 = pSArc2->SStartPoint.dArray[AXIS_X];
+    double dSZ_2 = pSArc2->SStartPoint.dArray[AXIS_Z];
+    double dEX_2 = pSArc2->SEndPoint.dArray[AXIS_X];
+    double dEZ_2 = pSArc2->SEndPoint.dArray[AXIS_Z];
 
-	double dR_1 = pSArc1->dRadius;
-	double dR_2 = pSArc2->dRadius;
+    double dR_1 = pSArc1->dRadius;
+    double dR_2 = pSArc2->dRadius;
 
-	double dDX = dCX_2 - dCX_1;
-	double dDZ = dCZ_2 - dCZ_1;
-	double dDist = sqrt(dDX * dDX + dDZ * dDZ);
+    double dDX = dCX_2 - dCX_1;
+    double dDZ = dCZ_2 - dCZ_1;
+    double dDist = sqrt(dDX * dDX + dDZ * dDZ);
 
-	if (dDist > dR_1 + dR_2 || dDist < fabs(dR_1 - dR_2) || isZero(dDist))
-	{
-		return 0; // ÎŞ½»µã»òÍ¬ĞÄÔ²
-	}
+    if (dDist > dR_1 + dR_2 || dDist < fabs(dR_1 - dR_2) || isZero(dDist))
+    {
+        return 0; // æ— äº¤ç‚¹æˆ–åŒå¿ƒåœ†
+    }
 
-	double dA = (dR_1 * dR_1 - dR_2 * dR_2 + dDist * dDist) / (2 * dDist);
-	double dH = sqrt(dR_1 * dR_1 - dA * dA);
+    double dA = (dR_1 * dR_1 - dR_2 * dR_2 + dDist * dDist) / (2 * dDist);
+    double dH = sqrt(dR_1 * dR_1 - dA * dA);
 
-	double dVX = dDX / dDist;
-	double dVZ = dDZ / dDist;
+    double dVX = dDX / dDist;
+    double dVZ = dDZ / dDist;
 
-	double dPX_M = dCX_1 + dA * dVX;
-	double dPZ_M = dCZ_1 + dA * dVZ;
+    double dPX_M = dCX_1 + dA * dVX;
+    double dPZ_M = dCZ_1 + dA * dVZ;
 
-	double dInter1X = dPX_M + dH * (-dVZ);
-	double dInter1Z = dPZ_M + dH * dVX;
+    double dInter1X = dPX_M + dH * (-dVZ);
+    double dInter1Z = dPZ_M + dH * dVX;
 
-	double dInter2X = dPX_M - dH * (-dVZ);
-	double dInter2Z = dPZ_M - dH * dVX;
+    double dInter2X = dPX_M - dH * (-dVZ);
+    double dInter2Z = dPZ_M - dH * dVX;
 
+    if (isBetweenA2B(dInter1X, dSX_1, dEX_1) && isBetweenA2B(dInter1Z, dSZ_1, dEZ_1) &&
+        isBetweenA2B(dInter1X, dSX_2, dEX_2) && isBetweenA2B(dInter1Z, dSZ_2, dEZ_2))
+    {
+        pSPoint->dArray[AXIS_X] = dInter1X;
+        pSPoint->dArray[AXIS_Z] = dInter1Z;
+        return 1;
+    }
 
-	if (isBetweenA2B(dInter1X, dSX_1, dEX_1) && isBetweenA2B(dInter1Z, dSZ_1, dEZ_1) &&
-		isBetweenA2B(dInter1X, dSX_2, dEX_2) && isBetweenA2B(dInter1Z, dSZ_2, dEZ_2))
-	{
-		pSPoint->dArray[AXIS_X] = dInter1X;
-		pSPoint->dArray[AXIS_Z] = dInter1Z;
-		return 1;
-	}
+    if (isBetweenA2B(dInter2X, dSX_1, dEX_1) && isBetweenA2B(dInter2Z, dSZ_1, dEZ_1) &&
+        isBetweenA2B(dInter2X, dSX_2, dEX_2) && isBetweenA2B(dInter2Z, dSZ_2, dEZ_2))
 
+    {
+        pSPoint->dArray[AXIS_X] = dInter2X;
+        pSPoint->dArray[AXIS_Z] = dInter2Z;
+        return 1;
+    }
 
-	if (isBetweenA2B(dInter2X, dSX_1, dEX_1) && isBetweenA2B(dInter2Z, dSZ_1, dEZ_1) &&
-		isBetweenA2B(dInter2X, dSX_2, dEX_2) && isBetweenA2B(dInter2Z, dSZ_2, dEZ_2))
-
-	{
-		pSPoint->dArray[AXIS_X] = dInter2X;
-		pSPoint->dArray[AXIS_Z] = dInter2Z;
-		return 1;
-	}
-
-	return 0;
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 int8 calcIntersectionInTwoEntity(enum ENTITYTYPE* pEntity1, enum ENTITYTYPE* pEntity2, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÁ½ÊµÌåµÄ½»µã×ø±ê
-  ÊäÈë²ÎÊı£ºpEntity1		ÊµÌå1
-			pEntity2		ÊµÌå2
-			pSPoint		½»µã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ïà½»
-			0	²»Ïà½»
-  ±¸    ×¢£ºÊäÈëµÄÔ²»¡²»ÄÜ¿çÏóÏŞ
+  å‡½æ•°åç§°ï¼šint8 int8 calcIntersectionInTwoEntity(enum ENTITYTYPE* pEntity1, enum ENTITYTYPE* pEntity2, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤å®ä½“çš„äº¤ç‚¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼špEntity1		å®ä½“1
+			pEntity2		å®ä½“2
+			pSPoint		äº¤ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	ç›¸äº¤
+			0	ä¸ç›¸äº¤
+  å¤‡    æ³¨ï¼šè¾“å…¥çš„åœ†å¼§ä¸èƒ½è·¨è±¡é™
 **************************************************/
 int8 calcIntersectionInTwoEntity(void* pEntity1, void* pEntity2, SPointDouble* pSPoint)
 {
-	int8 cRet = 0;
-	enum ENTITY EntityType1 = *(enum ENTITY*)pEntity1;
-	enum ENTITY EntityType2 = *(enum ENTITY*)pEntity2;
+    int8 cRet = 0;
+    enum ENTITY EntityType1 = *(enum ENTITY*)pEntity1;
+    enum ENTITY EntityType2 = *(enum ENTITY*)pEntity2;
 
-	if (EntityType1 == L1NE && EntityType2 == L1NE)
-	{
-		SLine* pSLine1 = (SLine*)pEntity1;
-		SLine* pSLine2 = (SLine*)pEntity2;
-		cRet = calcIntersectionInLineAndLine(pSLine1, pSLine2, pSPoint);
-	}
-	else if (EntityType1 == L1NE && EntityType2 == ARC)
-	{
-		SLine* pSLine = (SLine*)pEntity1;
-		SArc* pSArc = (SArc*)pEntity2;
-		cRet = calcIntersectionInLineAndArc(pSLine, pSArc, pSPoint);
-	}
-	else if (EntityType1 == ARC && EntityType2 == L1NE)
-	{
-		SLine* pSLine = (SLine*)pEntity2;
-		SArc* pSArc = (SArc*)pEntity1;
-		cRet = calcIntersectionInLineAndArc(pSLine, pSArc, pSPoint);
-	}
-	else if (EntityType1 == ARC && EntityType2 == ARC)
-	{
-		SArc* pSArc1 = (SArc*)pEntity1;
-		SArc* pSArc2 = (SArc*)pEntity2;
-		cRet = calcIntersectionInArcAndArc(pSArc1, pSArc2, pSPoint);
-	}
-	return cRet;
+    if (EntityType1 == L1NE && EntityType2 == L1NE)
+    {
+        SLine* pSLine1 = (SLine*)pEntity1;
+        SLine* pSLine2 = (SLine*)pEntity2;
+        cRet = calcIntersectionInLineAndLine(pSLine1, pSLine2, pSPoint);
+    }
+    else if (EntityType1 == L1NE && EntityType2 == ARC)
+    {
+        SLine* pSLine = (SLine*)pEntity1;
+        SArc* pSArc = (SArc*)pEntity2;
+        cRet = calcIntersectionInLineAndArc(pSLine, pSArc, pSPoint);
+    }
+    else if (EntityType1 == ARC && EntityType2 == L1NE)
+    {
+        SLine* pSLine = (SLine*)pEntity2;
+        SArc* pSArc = (SArc*)pEntity1;
+        cRet = calcIntersectionInLineAndArc(pSLine, pSArc, pSPoint);
+    }
+    else if (EntityType1 == ARC && EntityType2 == ARC)
+    {
+        SArc* pSArc1 = (SArc*)pEntity1;
+        SArc* pSArc2 = (SArc*)pEntity2;
+        cRet = calcIntersectionInArcAndArc(pSArc1, pSArc2, pSPoint);
+    }
+    return cRet;
 }
 
-//¼ÆËã½»µã²âÊÔº¯Êı
+//è®¡ç®—äº¤ç‚¹æµ‹è¯•å‡½æ•°
 void calcIntersectionInLineAndLine_test()
 {
-	SLine SLine1;
-	SLine SLine2;
-	SPointDouble SPoint = { 0 };
+    SLine SLine1;
+    SLine SLine2;
+    SPointDouble SPoint = {0};
 
-	// Ïß¶Î1: (0,0) -> (4,4)
-	SLine1.SStartPoint.dArray[AXIS_X] = 0.0;
-	SLine1.SStartPoint.dArray[AXIS_Z] = 0.0;
-	SLine1.SEndPoint.dArray[AXIS_X] = 4.0;
-	SLine1.SEndPoint.dArray[AXIS_Z] = 4.0;
+    // çº¿æ®µ1: (0,0) -> (4,4)
+    SLine1.SStartPoint.dArray[AXIS_X] = 0.0;
+    SLine1.SStartPoint.dArray[AXIS_Z] = 0.0;
+    SLine1.SEndPoint.dArray[AXIS_X] = 4.0;
+    SLine1.SEndPoint.dArray[AXIS_Z] = 4.0;
 
-	// Ïß¶Î2: (4,4) -> (8,0)
-	SLine2.SStartPoint.dArray[AXIS_X] = 4.0;
-	SLine2.SStartPoint.dArray[AXIS_Z] = 4.0;
-	SLine2.SEndPoint.dArray[AXIS_X] = 8.0;
-	SLine2.SEndPoint.dArray[AXIS_Z] = 0.0;
+    // çº¿æ®µ2: (4,4) -> (8,0)
+    SLine2.SStartPoint.dArray[AXIS_X] = 4.0;
+    SLine2.SStartPoint.dArray[AXIS_Z] = 4.0;
+    SLine2.SEndPoint.dArray[AXIS_X] = 8.0;
+    SLine2.SEndPoint.dArray[AXIS_Z] = 0.0;
 
-	if (calcIntersectionInLineAndLine(&SLine1, &SLine2, &SPoint))
-	{
-		printf("Ïà½»\n");
-		printf("X: %f\n", SPoint.dArray[AXIS_X]);
-		printf("Z: %f", SPoint.dArray[AXIS_Z]);
-	}
-	else
-	{
-		printf("²»Ïà½»");
-	}
+    if (calcIntersectionInLineAndLine(&SLine1, &SLine2, &SPoint))
+    {
+        printf("ç›¸äº¤\n");
+        printf("X: %f\n", SPoint.dArray[AXIS_X]);
+        printf("Z: %f", SPoint.dArray[AXIS_Z]);
+    }
+    else
+    {
+        printf("ä¸ç›¸äº¤");
+    }
 }
 void calcIntersectionInLineAndArc_test()
 {
-	SLine SLine;
-	SArc SArc;
-	SPointDouble SPoint = { 0 };
+    SLine SLine;
+    SArc SArc;
+    SPointDouble SPoint = {0};
 
-	// Ö±Ïß¶Î: (0,2) -> (6,2)
-	SLine.SStartPoint.dArray[AXIS_X] = 10;
-	SLine.SStartPoint.dArray[AXIS_Z] = -15;
-	SLine.SEndPoint.dArray[AXIS_X] = 0;
-	SLine.SEndPoint.dArray[AXIS_Z] = 20;
+    // ç›´çº¿æ®µ: (0,2) -> (6,2)
+    SLine.SStartPoint.dArray[AXIS_X] = 10;
+    SLine.SStartPoint.dArray[AXIS_Z] = -15;
+    SLine.SEndPoint.dArray[AXIS_X] = 0;
+    SLine.SEndPoint.dArray[AXIS_Z] = 20;
 
-	// Ô²»¡¶Î£¨µ¥µ÷µİÔö£©
-	SArc.SStartPoint.dArray[AXIS_X] = 0;
-	SArc.SStartPoint.dArray[AXIS_Z] = 10;
-	SArc.SEndPoint.dArray[AXIS_X] = 10;
-	SArc.SEndPoint.dArray[AXIS_Z] = 0;
-	SArc.SCenterPoint.dArray[AXIS_X] = 0;
-	SArc.SCenterPoint.dArray[AXIS_Z] = 0;
-	SArc.dRadius = 10;
-	
-	if (calcIntersectionInLineAndArc(&SLine, &SArc, &SPoint))
-	{
-		printf("Ïà½»\n");
-		printf("X: %f\n", SPoint.dArray[AXIS_X]);
-		printf("Z: %f", SPoint.dArray[AXIS_Z]);
-	}
-	else
-	{
-		printf("²»Ïà½»");
-	}
+    // åœ†å¼§æ®µï¼ˆå•è°ƒé€’å¢ï¼‰
+    SArc.SStartPoint.dArray[AXIS_X] = 0;
+    SArc.SStartPoint.dArray[AXIS_Z] = 10;
+    SArc.SEndPoint.dArray[AXIS_X] = 10;
+    SArc.SEndPoint.dArray[AXIS_Z] = 0;
+    SArc.SCenterPoint.dArray[AXIS_X] = 0;
+    SArc.SCenterPoint.dArray[AXIS_Z] = 0;
+    SArc.dRadius = 10;
+
+    if (calcIntersectionInLineAndArc(&SLine, &SArc, &SPoint))
+    {
+        printf("ç›¸äº¤\n");
+        printf("X: %f\n", SPoint.dArray[AXIS_X]);
+        printf("Z: %f", SPoint.dArray[AXIS_Z]);
+    }
+    else
+    {
+        printf("ä¸ç›¸äº¤");
+    }
 }
 void calcIntersectionInArcAndArc_test()
 {
-	SArc SArc1;
-	SArc SArc2;
-	SPointDouble SPoint = { 0 };
+    SArc SArc1;
+    SArc SArc2;
+    SPointDouble SPoint = {0};
 
-	// Ô²»¡¶Î£¨µ¥µ÷µİÔö£©
-	SArc1.SStartPoint.dArray[AXIS_X] = 0;
-	SArc1.SStartPoint.dArray[AXIS_Z] = 1;
-	SArc1.SEndPoint.dArray[AXIS_X] = 1;
-	SArc1.SEndPoint.dArray[AXIS_Z] = 0;
-	SArc1.SCenterPoint.dArray[AXIS_X] = 0;
-	SArc1.SCenterPoint.dArray[AXIS_Z] = 0;
-	SArc1.dRadius = 1;
+    // åœ†å¼§æ®µï¼ˆå•è°ƒé€’å¢ï¼‰
+    SArc1.SStartPoint.dArray[AXIS_X] = 0;
+    SArc1.SStartPoint.dArray[AXIS_Z] = 1;
+    SArc1.SEndPoint.dArray[AXIS_X] = 1;
+    SArc1.SEndPoint.dArray[AXIS_Z] = 0;
+    SArc1.SCenterPoint.dArray[AXIS_X] = 0;
+    SArc1.SCenterPoint.dArray[AXIS_Z] = 0;
+    SArc1.dRadius = 1;
 
-	// Ô²»¡¶Î£¨µ¥µ÷µİÔö£©
-	SArc2.SStartPoint.dArray[AXIS_X] = 2;
-	SArc2.SStartPoint.dArray[AXIS_Z] = 2;
-	SArc2.SEndPoint.dArray[AXIS_X] = 0;
-	SArc2.SEndPoint.dArray[AXIS_Z] = 0;
-	SArc2.SCenterPoint.dArray[AXIS_X] = 0;
-	SArc2.SCenterPoint.dArray[AXIS_Z] = 2;
-	SArc2.dRadius = 2;
+    // åœ†å¼§æ®µï¼ˆå•è°ƒé€’å¢ï¼‰
+    SArc2.SStartPoint.dArray[AXIS_X] = 2;
+    SArc2.SStartPoint.dArray[AXIS_Z] = 2;
+    SArc2.SEndPoint.dArray[AXIS_X] = 0;
+    SArc2.SEndPoint.dArray[AXIS_Z] = 0;
+    SArc2.SCenterPoint.dArray[AXIS_X] = 0;
+    SArc2.SCenterPoint.dArray[AXIS_Z] = 2;
+    SArc2.dRadius = 2;
 
-	if (calcIntersectionInArcAndArc(&SArc1, &SArc2, &SPoint))
-	{
-		printf("Ïà½»\n");
-		printf("X: %f\n", SPoint.dArray[AXIS_X]);
-		printf("Z: %f", SPoint.dArray[AXIS_Z]);
-	}
-	else
-	{
-		printf("²»Ïà½»");
-	}
+    if (calcIntersectionInArcAndArc(&SArc1, &SArc2, &SPoint))
+    {
+        printf("ç›¸äº¤\n");
+        printf("X: %f\n", SPoint.dArray[AXIS_X]);
+        printf("Z: %f", SPoint.dArray[AXIS_Z]);
+    }
+    else
+    {
+        printf("ä¸ç›¸äº¤");
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid calIntersectionPointsInLineWithCircleCenter(SLine* pLine, SPointDouble* pSPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÖ±ÏßÓëÔ²ĞÄ½»µã
-  ÊäÈë²ÎÊı£ºpLine		Ïß¶Î
-			pSPoint		Ô²ĞÄ
+  å‡½æ•°åç§°ï¼švoid calIntersectionPointsInLineWithCircleCenter(SLine* pLine, SPointDouble* pSPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ç›´çº¿ä¸åœ†å¿ƒäº¤ç‚¹
+  è¾“å…¥å‚æ•°ï¼špLine		çº¿æ®µ
+			pSPoint		åœ†å¿ƒ
 
-  Êä³ö²ÎÊı£º
-			½»µã
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+			äº¤ç‚¹
+  å¤‡    æ³¨ï¼š
 **************************************************/
 //void calIntersectionPointsInLineWithCircleCenter(SLine* pLine, SPointDouble* pSPoint, SPointDouble*psPoint2)
 //{
@@ -5541,10 +5539,10 @@ void calcIntersectionInArcAndArc_test()
 //	double dSX_0 = SPoint.dArray[AXIS_X];
 //	double dSZ_0 = SPoint.dArray[AXIS_Z];
 //
-//	double dSX_1 = pLine->SStartPoint.dArray[AXIS_X]; // Line1ÆğµãX
-//	double dSZ_1 = pLine->SStartPoint.dArray[AXIS_Z]; // Line1ÆğµãZ
-//	double dEX_1 = pLine->SEndPoint.dArray[AXIS_X];   // Line1ÖÕµãX
-//	double dEZ_1 = pLine->SEndPoint.dArray[AXIS_Z];   // Line1ÖÕµãZ
+//	double dSX_1 = pLine->SStartPoint.dArray[AXIS_X]; // Line1èµ·ç‚¹X
+//	double dSZ_1 = pLine->SStartPoint.dArray[AXIS_Z]; // Line1èµ·ç‚¹Z
+//	double dEX_1 = pLine->SEndPoint.dArray[AXIS_X];   // Line1ç»ˆç‚¹X
+//	double dEZ_1 = pLine->SEndPoint.dArray[AXIS_Z];   // Line1ç»ˆç‚¹Z
 //
 //	double dT = -((dSX_1- dSX_0)*(dEX_1-dSX_1)+(dSZ_1- dSZ_0)*(dEZ_1-dSZ_1))/((dEX_1- dSX_1)* (dEX_1 - dSX_1)+ (dEZ_1- dSZ_1)* (dEZ_1 - dSZ_1));
 //	psPoint2->dArray[AXIS_X] = dSX_1 + dT * (dEX_1 - dSX_1);
@@ -5552,274 +5550,271 @@ void calcIntersectionInArcAndArc_test()
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getArcDir(SArc* pSArc)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡ÁÓ»¡µÄ·½Ïò
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 getArcDir(SArc* pSArc)
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–åŠ£å¼§çš„æ–¹å‘
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void getArcDir(SArc* pSArc)
 {
-	//ÒÑÖªÁÓ»¡Çó·½Ïò
-	//²æ³Ë dCross = Ux * Vy - Uy * Vx
-	//²æ³Ë dCross > 0 ÎªË³£»²æ³Ë dCross < 0 ÎªÄæ
-	//U (SZ - CZ ,SX - CX)
-	//V (EZ - CZ ,EX - CX)
-	double dSX = pSArc->SStartPoint.dArray[AXIS_X];
-	double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
-	double dEX = pSArc->SEndPoint.dArray[AXIS_X];
-	double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
-	double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
-	double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
-	double dCross;
-	dCross = (dSZ - dCZ) * (dEX - dCX) - (dSX - dCX) * (dEZ - dCZ);
+    //å·²çŸ¥åŠ£å¼§æ±‚æ–¹å‘
+    //å‰ä¹˜ dCross = Ux * Vy - Uy * Vx
+    //å‰ä¹˜ dCross > 0 ä¸ºé¡ºï¼›å‰ä¹˜ dCross < 0 ä¸ºé€†
+    //U (SZ - CZ ,SX - CX)
+    //V (EZ - CZ ,EX - CX)
+    double dSX = pSArc->SStartPoint.dArray[AXIS_X];
+    double dSZ = pSArc->SStartPoint.dArray[AXIS_Z];
+    double dEX = pSArc->SEndPoint.dArray[AXIS_X];
+    double dEZ = pSArc->SEndPoint.dArray[AXIS_Z];
+    double dCX = pSArc->SCenterPoint.dArray[AXIS_X];
+    double dCZ = pSArc->SCenterPoint.dArray[AXIS_Z];
+    double dCross;
+    dCross = (dSZ - dCZ) * (dEX - dCX) - (dSX - dCX) * (dEZ - dCZ);
 
-	//¼ÆËã·½Ïò
-	pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_ANTI_CW : ARC_CW;
-
+    //è®¡ç®—æ–¹å‘
+    pSArc->cArcDir = isEqualOrGreaterThanZero(dCross) ? ARC_ANTI_CW : ARC_CW;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter, SPointDouble* psPoint)
-  º¯Êı¹¦ÄÜ£º¼ÆËãÔ²½ÇÓëÖ±Ïß»òÕßÔ²»¡½»µã
-  ÊäÈë²ÎÊı£ºpEntity		        ÀàĞÍ
-			pSPointCenter		Ô²½ÇÔ²ĞÄ
-			dRadiusCenter		Ô²½Ç°ë¾¶
-            psPoint             ½»µã
-  Êä³ö²ÎÊı£º
-			½»µã
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter, SPointDouble* psPoint)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åœ†è§’ä¸ç›´çº¿æˆ–è€…åœ†å¼§äº¤ç‚¹
+  è¾“å…¥å‚æ•°ï¼špEntity		        ç±»å‹
+			pSPointCenter		åœ†è§’åœ†å¿ƒ
+			dRadiusCenter		åœ†è§’åŠå¾„
+            psPoint             äº¤ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+			äº¤ç‚¹
+  å¤‡    æ³¨ï¼š
 **************************************************/
-void calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter, SPointDouble* psPoint)
-{	
-	//Ô²½ÇÔ²ĞÄ
-	SPointDouble SPoint;
-	SPoint = *pSPointCenter;
-	double dSX_0 = SPoint.dArray[AXIS_X];
-	double dSZ_0 = SPoint.dArray[AXIS_Z];
-	switch (*pEntity)
-	{
-		case L1NE: 
-			SLine* pSLine = (SLine*)pEntity;
-			double dSX_1 = pSLine->SStartPoint.dArray[AXIS_X]; // Line1ÆğµãX
-			double dSZ_1 = pSLine->SStartPoint.dArray[AXIS_Z]; // Line1ÆğµãZ
-			double dEX_1 = pSLine->SEndPoint.dArray[AXIS_X];   // Line1ÖÕµãX
-			double dEZ_1 = pSLine->SEndPoint.dArray[AXIS_Z];   // Line1ÖÕµãZ
-
-			double dT = -((dSX_1- dSX_0)*(dEX_1-dSX_1)+(dSZ_1- dSZ_0)*(dEZ_1-dSZ_1))/((dEX_1- dSX_1)* (dEX_1 - dSX_1)+ (dEZ_1- dSZ_1)* (dEZ_1 - dSZ_1));
-			psPoint->dArray[AXIS_X] = dSX_1 + dT * (dEX_1 - dSX_1);
-			psPoint->dArray[AXIS_Z] = dSZ_1 + dT * (dEZ_1 - dSZ_1);
-            break;
-		case ARC:
-			SArc* pSArc = (SArc*)pEntity;
-			double dCX_1 = pSArc->SCenterPoint.dArray[AXIS_X]; // SArcÔ²ĞÄX
-			double dCZ_1 = pSArc->SCenterPoint.dArray[AXIS_Z]; // SArcÔ²ĞÄZ
-			double dx = dCX_1 - dSX_0;
-			double dz = dCZ_1 - dSZ_0;
-			double dRadius = pSArc->dRadius;                  // SArc°ë¾¶
-			double dRadio = dRadiusCenter / (dRadiusCenter + dRadius);  // Ô²ĞÄ°ë¾¶±È
-			psPoint->dArray[AXIS_X] = dSX_0 + dRadio * dx;
-			psPoint->dArray[AXIS_Z] = dSZ_0 + dRadio * dz;
-			break;
-		default:
-			break;
-	}
-}
-
-/*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÓĞĞ§ÖáµÄÖµ£¨ÆúÓÃ£©
-  ÊäÈë²ÎÊı£ºpSStartPoint		Æğµã×ø±êµØÖ·
-			pSEndPoint			ÖÕµã×ø±êµØÖ·
-			bIsLiner			¹ì¼£ÎªÏßĞÔ
-			cInterpolationState	²å²¹Ä£Ê½
-			sGc					²å²¹Æ½Ãæ
-			pValStatus			ÓĞĞ§ÖáµÄÖµ£¨Êä³ö£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÓĞĞ§Öá£¨½á¹¹ÌåÖá£©Îª¼Ó¹¤³ÌĞò¶ÎÊ±²úÉúÔË¶¯µÄÖá£¬¸ÃÖµÓÉÊµÌåÀàĞÍÔË¶¯¾ö¶¨
-			1.¼«×ø±ê²å²¹£¬²»¹ÜÊÇ·ñ·¢ÉúÔË¶¯£¬ºáÖá×İÖá¾ùÎªÓĞĞ§Öá
-			2.£¡£¡£¡ÓĞĞ§ÖáºóĞø²»ÔÚG´úÂë½âÎöÊ±±ê¼Ç
-**************************************************/
-void getValStatus(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, bool bIsLiner, int8 cInterpolationState, int16 sGc, VAL_STRUCT_TYPE* pValStatus)
+void calIntersectionPointsInRounded(enum ENTITY* pEntity, SPointDouble* pSPointCenter, double dRadiusCenter,
+                                    SPointDouble* psPoint)
 {
-	if (pSStartPoint == NULL || pSEndPoint == NULL || pValStatus == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    //åœ†è§’åœ†å¿ƒ
+    SPointDouble SPoint;
+    SPoint = *pSPointCenter;
+    double dSX_0 = SPoint.dArray[AXIS_X];
+    double dSZ_0 = SPoint.dArray[AXIS_Z];
+    switch (*pEntity)
+    {
+    case L1NE:
+        SLine* pSLine = (SLine*)pEntity;
+        double dSX_1 = pSLine->SStartPoint.dArray[AXIS_X]; // Line1èµ·ç‚¹X
+        double dSZ_1 = pSLine->SStartPoint.dArray[AXIS_Z]; // Line1èµ·ç‚¹Z
+        double dEX_1 = pSLine->SEndPoint.dArray[AXIS_X];   // Line1ç»ˆç‚¹X
+        double dEZ_1 = pSLine->SEndPoint.dArray[AXIS_Z];   // Line1ç»ˆç‚¹Z
 
-	//ÁÙÊ±±äÁ¿£¬ÓÃÓÚ±éÀú¸÷¸öÖáµÄ×ø±ê
-	uint8 ucTemp;
-	//ºáÖá£¬ÓÃÓÚ¸ù¾İ²å²¹Ä£Ê½»ñÈ¡ºáÖáÓÃ
-	uint8 ucHorAxis;
-	//×İÖá£¬ÓÃÓÚ¸ù¾İ²å²¹Ä£Ê½»ñÈ¡×İÖáÓÃ
-	uint8 ucVerAxis;
-
-	//1.¸ù¾İ²å²¹Ä£Ê½»ñÈ¡²å²¹Æ½ÃæµÄºáÖáºÍ×İÖá
-	int8 cRet = getHorAndVerAxis(&ucHorAxis, &ucVerAxis, cInterpolationState, sGc);   //»ñÈ¡ºáÖá£¬×İÖá
-	if (cRet < 0)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM301);
-		return;
-	}
-	//2.1¼«×ø±ê²å²¹Ä£Ê½
-	if (cInterpolationState == 3)
-	{
-		//ÉèÖÃºáÖáÎªÓĞĞ§Öá
-		setbit(*pValStatus, ucHorAxis);
-		//ÉèÖÃ×İÖáÎªÓĞĞ§Öá
-		setbit(*pValStatus, ucVerAxis);
-	}
-	//2.2Ô²Öù²å²¹Ä£Ê½
-	else if (cInterpolationState == 5)
-	{
-		//ÉèÖÃºáÖáÎªÓĞĞ§Öá
-		setbit(*pValStatus, ucHorAxis);
-		//ÉèÖÃ×İÖáÎªÓĞĞ§Öá
-		setbit(*pValStatus, ucVerAxis);
-	}
-	//2.3ÆÕÍ¨²å²¹Ä£Ê½
-	else
-	{
-		//»ñÈ¡ÒÆ¶¯Öá
-		for (ucTemp = 0; ucTemp < AXIS_NUM_MAX; ucTemp++)
-		{
-			if (!isZero(pSEndPoint->dArray[ucTemp] - pSStartPoint->dArray[ucTemp]))
-			{
-				setbit(*pValStatus, ucTemp);
-			}
-		}
-		//·ÇÏßĞÔÔË¶¯£¬ÓĞĞ§ÖáÎª¼Ó¹¤Æ½ÃæµÄÖáºÅ
-		if (!bIsLiner)
-		{
-			//ÉèÖÃºáÖáÎªÓĞĞ§Öá
-			setbit(*pValStatus, ucHorAxis);
-			//ÉèÖÃ×İÖáÎªÓĞĞ§Öá
-			setbit(*pValStatus, ucVerAxis);
-		}
-	}
+        double dT = -((dSX_1 - dSX_0) * (dEX_1 - dSX_1) + (dSZ_1 - dSZ_0) * (dEZ_1 - dSZ_1)) /
+                    ((dEX_1 - dSX_1) * (dEX_1 - dSX_1) + (dEZ_1 - dSZ_1) * (dEZ_1 - dSZ_1));
+        psPoint->dArray[AXIS_X] = dSX_1 + dT * (dEX_1 - dSX_1);
+        psPoint->dArray[AXIS_Z] = dSZ_1 + dT * (dEZ_1 - dSZ_1);
+        break;
+    case ARC:
+        SArc* pSArc = (SArc*)pEntity;
+        double dCX_1 = pSArc->SCenterPoint.dArray[AXIS_X]; // SArcåœ†å¿ƒX
+        double dCZ_1 = pSArc->SCenterPoint.dArray[AXIS_Z]; // SArcåœ†å¿ƒZ
+        double dx = dCX_1 - dSX_0;
+        double dz = dCZ_1 - dSZ_0;
+        double dRadius = pSArc->dRadius;                           // SArcåŠå¾„
+        double dRadio = dRadiusCenter / (dRadiusCenter + dRadius); // åœ†å¿ƒåŠå¾„æ¯”
+        psPoint->dArray[AXIS_X] = dSX_0 + dRadio * dx;
+        psPoint->dArray[AXIS_Z] = dSZ_0 + dRadio * dz;
+        break;
+    default:
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getTurretNumAndTurretAxis(int8 cToolNum, int8* pTurretNum, VAL_STRUCT_TYPE* pTurretAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡µ¶ËşºÅ¼°µ¶ËşÖá£¨ÆúÓÃ£©
-  ÊäÈë²ÎÊı£ºcToolNum		µ¶¾ßºÅ
-			pTurretNum		µ¶ËşºÅµØÖ·£¨Êä³ö£©
-			pTurretAxis		µ¶ËşÖáµØÖ·£¨Êä³ö£©
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	±¨´í
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½  è·å–æœ‰æ•ˆè½´çš„å€¼ï¼ˆå¼ƒç”¨ï¼‰
+  è¾“å…¥å‚æ•°ï¼špSStartPoint		èµ·ç‚¹åæ ‡åœ°å€
+			pSEndPoint			ç»ˆç‚¹åæ ‡åœ°å€
+			bIsLiner			è½¨è¿¹ä¸ºçº¿æ€§
+			cInterpolationState	æ’è¡¥æ¨¡å¼
+			sGc					æ’è¡¥å¹³é¢
+			pValStatus			æœ‰æ•ˆè½´çš„å€¼ï¼ˆè¾“å‡ºï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šæœ‰æ•ˆè½´ï¼ˆç»“æ„ä½“è½´ï¼‰ä¸ºåŠ å·¥ç¨‹åºæ®µæ—¶äº§ç”Ÿè¿åŠ¨çš„è½´ï¼Œè¯¥å€¼ç”±å®ä½“ç±»å‹è¿åŠ¨å†³å®š
+			1.æåæ ‡æ’è¡¥ï¼Œä¸ç®¡æ˜¯å¦å‘ç”Ÿè¿åŠ¨ï¼Œæ¨ªè½´çºµè½´å‡ä¸ºæœ‰æ•ˆè½´
+			2.ï¼ï¼ï¼æœ‰æ•ˆè½´åç»­ä¸åœ¨Gä»£ç è§£ææ—¶æ ‡è®°
+**************************************************/
+void getValStatus(SPointDouble* pSStartPoint, SPointDouble* pSEndPoint, bool bIsLiner, int8 cInterpolationState,
+                  int16 sGc, VAL_STRUCT_TYPE* pValStatus)
+{
+    if (pSStartPoint == NULL || pSEndPoint == NULL || pValStatus == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
+
+    //ä¸´æ—¶å˜é‡ï¼Œç”¨äºéå†å„ä¸ªè½´çš„åæ ‡
+    uint8 ucTemp;
+    //æ¨ªè½´ï¼Œç”¨äºæ ¹æ®æ’è¡¥æ¨¡å¼è·å–æ¨ªè½´ç”¨
+    uint8 ucHorAxis;
+    //çºµè½´ï¼Œç”¨äºæ ¹æ®æ’è¡¥æ¨¡å¼è·å–çºµè½´ç”¨
+    uint8 ucVerAxis;
+
+    //1.æ ¹æ®æ’è¡¥æ¨¡å¼è·å–æ’è¡¥å¹³é¢çš„æ¨ªè½´å’Œçºµè½´
+    int8 cRet = getHorAndVerAxis(&ucHorAxis, &ucVerAxis, cInterpolationState, sGc); //è·å–æ¨ªè½´ï¼Œçºµè½´
+    if (cRet < 0)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM301);
+        return;
+    }
+    //2.1æåæ ‡æ’è¡¥æ¨¡å¼
+    if (cInterpolationState == 3)
+    {
+        //è®¾ç½®æ¨ªè½´ä¸ºæœ‰æ•ˆè½´
+        setbit(*pValStatus, ucHorAxis);
+        //è®¾ç½®çºµè½´ä¸ºæœ‰æ•ˆè½´
+        setbit(*pValStatus, ucVerAxis);
+    }
+    //2.2åœ†æŸ±æ’è¡¥æ¨¡å¼
+    else if (cInterpolationState == 5)
+    {
+        //è®¾ç½®æ¨ªè½´ä¸ºæœ‰æ•ˆè½´
+        setbit(*pValStatus, ucHorAxis);
+        //è®¾ç½®çºµè½´ä¸ºæœ‰æ•ˆè½´
+        setbit(*pValStatus, ucVerAxis);
+    }
+    //2.3æ™®é€šæ’è¡¥æ¨¡å¼
+    else
+    {
+        //è·å–ç§»åŠ¨è½´
+        for (ucTemp = 0; ucTemp < AXIS_NUM_MAX; ucTemp++)
+        {
+            if (!isZero(pSEndPoint->dArray[ucTemp] - pSStartPoint->dArray[ucTemp]))
+            {
+                setbit(*pValStatus, ucTemp);
+            }
+        }
+        //éçº¿æ€§è¿åŠ¨ï¼Œæœ‰æ•ˆè½´ä¸ºåŠ å·¥å¹³é¢çš„è½´å·
+        if (!bIsLiner)
+        {
+            //è®¾ç½®æ¨ªè½´ä¸ºæœ‰æ•ˆè½´
+            setbit(*pValStatus, ucHorAxis);
+            //è®¾ç½®çºµè½´ä¸ºæœ‰æ•ˆè½´
+            setbit(*pValStatus, ucVerAxis);
+        }
+    }
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šint8 getTurretNumAndTurretAxis(int8 cToolNum, int8* pTurretNum, VAL_STRUCT_TYPE* pTurretAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–åˆ€å¡”å·åŠåˆ€å¡”è½´ï¼ˆå¼ƒç”¨ï¼‰
+  è¾“å…¥å‚æ•°ï¼šcToolNum		åˆ€å…·å·
+			pTurretNum		åˆ€å¡”å·åœ°å€ï¼ˆè¾“å‡ºï¼‰
+			pTurretAxis		åˆ€å¡”è½´åœ°å€ï¼ˆè¾“å‡ºï¼‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	æŠ¥é”™
 			1
-  ±¸    ×¢£ºµ¶ËşÖá£¨ÎïÀíÖá£©£º¼Ó¹¤³ÌĞò¶ÎÊ±»áÓ°Ïì¼Ó¹¤µÄÖá£¬¸ÃÖµÓÉ»ú´²½á¹¹¾ö¶¨
-			ÔİÊ±²»ÄÜÊ¹ÓÃ¸Ãº¯Êı
+  å¤‡    æ³¨ï¼šåˆ€å¡”è½´ï¼ˆç‰©ç†è½´ï¼‰ï¼šåŠ å·¥ç¨‹åºæ®µæ—¶ä¼šå½±å“åŠ å·¥çš„è½´ï¼Œè¯¥å€¼ç”±æœºåºŠç»“æ„å†³å®š
+			æš‚æ—¶ä¸èƒ½ä½¿ç”¨è¯¥å‡½æ•°
 **************************************************/
 int8 getTurretNumAndTurretAxis(int8 cToolNum, int8* pTurretNum, VAL_STRUCT_TYPE* pTurretAxis)
 {
-	//if (pTurretNum == NULL || pTurretAxis == NULL)
-	//{
-	//	//±¨´í
-	//	return -1;
-	//}
+    //if (pTurretNum == NULL || pTurretAxis == NULL)
+    //{
+    //	//æŠ¥é”™
+    //	return -1;
+    //}
 
-	////1.±éÀúÊı×éTurretToToolMap£¬ÕÒµ½µ±Ç°µ¶¾ßºÅËùÔÚµÄµ¶ËşºÅ
-	//int8 cTurretCount;
-	//int8 cToolCount;
-	//bool bFindTurret = 0;
-	//for (cTurretCount = 0; cTurretCount < TURRET_NUM_MAX; cTurretCount++)
-	//{
-	//	for (cToolCount = 0; cToolCount < TOOLPOS_NUM_MAX; cToolCount++)
-	//	{
-	//		if (g_SSystemPara.TurretToToolMap[cTurretCount][cToolCount] == cToolNum)
-	//		{
-	//			*pTurretNum = cTurretCount;
-	//			bFindTurret = TRUE;
-	//			break;
-	//		}
-	//	}
-	//	if (bFindTurret)
-	//	{
-	//		break;
-	//	}
-	//}
-	//if (bFindTurret == FALSE)
-	//{
-	//	//Î´ÕÒµ½µ¶¾ßºÅ
-	//	return -1;
-	//}
+    ////1.éå†æ•°ç»„TurretToToolMapï¼Œæ‰¾åˆ°å½“å‰åˆ€å…·å·æ‰€åœ¨çš„åˆ€å¡”å·
+    //int8 cTurretCount;
+    //int8 cToolCount;
+    //bool bFindTurret = 0;
+    //for (cTurretCount = 0; cTurretCount < TURRET_NUM_MAX; cTurretCount++)
+    //{
+    //	for (cToolCount = 0; cToolCount < TOOLPOS_NUM_MAX; cToolCount++)
+    //	{
+    //		if (g_SSystemPara.TurretToToolMap[cTurretCount][cToolCount] == cToolNum)
+    //		{
+    //			*pTurretNum = cTurretCount;
+    //			bFindTurret = TRUE;
+    //			break;
+    //		}
+    //	}
+    //	if (bFindTurret)
+    //	{
+    //		break;
+    //	}
+    //}
+    //if (bFindTurret == FALSE)
+    //{
+    //	//æœªæ‰¾åˆ°åˆ€å…·å·
+    //	return -1;
+    //}
 
-	////2.Í¨¹ıTurretToAxisMap¼°µ¶ËşºÅ£¬»ñÈ¡µ¶ËşÖá
-	//*pTurretAxis = g_SSystemPara.TurretToAxisMap[*pTurretNum];
-
+    ////2.é€šè¿‡TurretToAxisMapåŠåˆ€å¡”å·ï¼Œè·å–åˆ€å¡”è½´
+    //*pTurretAxis = g_SSystemPara.TurretToAxisMap[*pTurretNum];
 }
 
-
-
-
-
-
-
-
-
-//AIĞ´µÄ£¬´ı²âÊÔ
-double CalculateZAtX_LINE(SLine* pSLineInfo, double dX) 
+//AIå†™çš„ï¼Œå¾…æµ‹è¯•
+double CalculateZAtX_LINE(SLine* pSLineInfo, double dX)
 {
-	// »ñÈ¡ÆğµãºÍÖÕµãµÄxºÍz×ø±ê
-	double x1 = pSLineInfo->SStartPoint.dArray[0];
-	double z1 = pSLineInfo->SStartPoint.dArray[2];
-	double x2 = pSLineInfo->SEndPoint.dArray[0];
-	double z2 = pSLineInfo->SEndPoint.dArray[2];
+    // è·å–èµ·ç‚¹å’Œç»ˆç‚¹çš„xå’Œzåæ ‡
+    double x1 = pSLineInfo->SStartPoint.dArray[0];
+    double z1 = pSLineInfo->SStartPoint.dArray[2];
+    double x2 = pSLineInfo->SEndPoint.dArray[0];
+    double z2 = pSLineInfo->SEndPoint.dArray[2];
 
-	// ¼ì²éÏß¶ÎÊÇ·ñ´¹Ö±ÓÚxÖá
-	if (x2 - x1 == 0) {
-		// Èç¹ûÏß¶Î´¹Ö±ÓÚxÖá£¬Ôò·µ»ØÆğµãµÄzÖµ£¨ÒòÎªzÖµ²»Ëæx±ä»¯£©
-		return z1;
-	}
+    // æ£€æŸ¥çº¿æ®µæ˜¯å¦å‚ç›´äºxè½´
+    if (x2 - x1 == 0)
+    {
+        // å¦‚æœçº¿æ®µå‚ç›´äºxè½´ï¼Œåˆ™è¿”å›èµ·ç‚¹çš„zå€¼ï¼ˆå› ä¸ºzå€¼ä¸éšxå˜åŒ–ï¼‰
+        return z1;
+    }
 
-	// Ê¹ÓÃÏßĞÔ²åÖµ¹«Ê½¼ÆËãzÖµ
-	double z = z1 + (dX - x1) * (z2 - z1) / (x2 - x1);
-	return z;
+    // ä½¿ç”¨çº¿æ€§æ’å€¼å…¬å¼è®¡ç®—zå€¼
+    double z = z1 + (dX - x1) * (z2 - z1) / (x2 - x1);
+    return z;
 }
-//AIĞ´µÄ£¬´ı²âÊÔ
-double CalculateZAtX_ARC(SArc* pSArcInfo, double dX) 
+//AIå†™çš„ï¼Œå¾…æµ‹è¯•
+double CalculateZAtX_ARC(SArc* pSArcInfo, double dX)
 {
-	// »ñÈ¡Ô²ĞÄµÄxºÍz×ø±ê£¬ÒÔ¼°°ë¾¶
-	double xC = pSArcInfo->SCenterPoint.dArray[0];
-	double zC = pSArcInfo->SCenterPoint.dArray[2];
-	double radius = pSArcInfo->dRadius;
+    // è·å–åœ†å¿ƒçš„xå’Œzåæ ‡ï¼Œä»¥åŠåŠå¾„
+    double xC = pSArcInfo->SCenterPoint.dArray[0];
+    double zC = pSArcInfo->SCenterPoint.dArray[2];
+    double radius = pSArcInfo->dRadius;
 
-	// ¼ÆËãx·½ÏòÉÏÓëÔ²»¡¶ÔÓ¦µÄµãµ½Ô²ĞÄµÄË®Æ½¾àÀë
-	double dx = dX - xC;
+    // è®¡ç®—xæ–¹å‘ä¸Šä¸åœ†å¼§å¯¹åº”çš„ç‚¹åˆ°åœ†å¿ƒçš„æ°´å¹³è·ç¦»
+    double dx = dX - xC;
 
-	// ¼ì²é¸ø¶¨µÄxÊÇ·ñÔÚÔ²»¡µÄ·¶Î§ÄÚ
-	double startX = pSArcInfo->SStartPoint.dArray[0];
-	double endX = pSArcInfo->SEndPoint.dArray[0];
-	if ((dX < startX && dX < endX) || (dX > startX && dX > endX)) {
-		// Èç¹û¸ø¶¨µÄx²»ÔÚÆğµãºÍÖÕµã·¶Î§ÄÚ£¬Ôò·µ»Ø´íÎóÖµ
-		return NAN; // ·ÇÊıÖµ£¬±íÊ¾´íÎó
-	}
+    // æ£€æŸ¥ç»™å®šçš„xæ˜¯å¦åœ¨åœ†å¼§çš„èŒƒå›´å†…
+    double startX = pSArcInfo->SStartPoint.dArray[0];
+    double endX = pSArcInfo->SEndPoint.dArray[0];
+    if ((dX < startX && dX < endX) || (dX > startX && dX > endX))
+    {
+        // å¦‚æœç»™å®šçš„xä¸åœ¨èµ·ç‚¹å’Œç»ˆç‚¹èŒƒå›´å†…ï¼Œåˆ™è¿”å›é”™è¯¯å€¼
+        return NAN; // éæ•°å€¼ï¼Œè¡¨ç¤ºé”™è¯¯
+    }
 
-	// ¼ÆËãzÖµ£¨»ùÓÚÔ²µÄ·½³Ì£º(x - xC)^2 + (z - zC)^2 = radius^2£©
-	double dz_squared = radius * radius - dx * dx;
+    // è®¡ç®—zå€¼ï¼ˆåŸºäºåœ†çš„æ–¹ç¨‹ï¼š(x - xC)^2 + (z - zC)^2 = radius^2ï¼‰
+    double dz_squared = radius * radius - dx * dx;
 
-	// Èç¹û½á¹ûÎª¸ºÊı£¬±íÊ¾¸ø¶¨xÎŞ½â
-	if (dz_squared < 0) {
-		return NAN; // ÎŞ½â
-	}
+    // å¦‚æœç»“æœä¸ºè´Ÿæ•°ï¼Œè¡¨ç¤ºç»™å®šxæ— è§£
+    if (dz_squared < 0)
+    {
+        return NAN; // æ— è§£
+    }
 
-	// ¸ù¾İÔ²»¡·½ÏòÑ¡ÔñºÏÊÊµÄz½â
-	double dz = sqrt(dz_squared);
-	double z1 = zC + dz;
-	double z2 = zC - dz;
+    // æ ¹æ®åœ†å¼§æ–¹å‘é€‰æ‹©åˆé€‚çš„zè§£
+    double dz = sqrt(dz_squared);
+    double z1 = zC + dz;
+    double z2 = zC - dz;
 
-	// ÅĞ¶ÏÄÄ¸öz½â·ûºÏÔ²»¡µÄ·½ÏòºÍ·¶Î§
-	double startZ = pSArcInfo->SStartPoint.dArray[2];
-	double endZ = pSArcInfo->SEndPoint.dArray[2];
-	if (pSArcInfo->cArcDir > 0) {
-		// Ë³Ê±Õë·½Ïò£¬·µ»Ø½ÏĞ¡µÄzÖµ
-		return (z1 >= startZ && z1 <= endZ) ? z1 : z2;
-	}
-	else {
-		// ÄæÊ±Õë·½Ïò£¬·µ»Ø½Ï´óµÄzÖµ
-		return (z2 >= startZ && z2 <= endZ) ? z2 : z1;
-	}
+    // åˆ¤æ–­å“ªä¸ªzè§£ç¬¦åˆåœ†å¼§çš„æ–¹å‘å’ŒèŒƒå›´
+    double startZ = pSArcInfo->SStartPoint.dArray[2];
+    double endZ = pSArcInfo->SEndPoint.dArray[2];
+    if (pSArcInfo->cArcDir > 0)
+    {
+        // é¡ºæ—¶é’ˆæ–¹å‘ï¼Œè¿”å›è¾ƒå°çš„zå€¼
+        return (z1 >= startZ && z1 <= endZ) ? z1 : z2;
+    }
+    else
+    {
+        // é€†æ—¶é’ˆæ–¹å‘ï¼Œè¿”å›è¾ƒå¤§çš„zå€¼
+        return (z2 >= startZ && z2 <= endZ) ? z2 : z1;
+    }
 }
-

@@ -6,91 +6,90 @@
 //
 int8 toolInitAfterLoad();
 //
-////Çå³ıËùÓĞµ¶¾ßIDµÄÆ«ÒÆÖµ
+////æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åç§»å€¼
 //int8 clearAllToolOffset(SToolParaInfo *STargetPara,uint8 ucTargetParaSize);
 //
-////Çå³ıÒ»ĞĞµ¶¾ßIDµÄÆ«ÒÆÖµ
+////æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åç§»å€¼
 //int8 clearSingleToolOffset(uint8 ucToolID,SToolParaInfo* STargetPara,  uint8 ucTargetParaSize);
 //
-////ÉèÖÃÖ¸¶¨µ¶¾ßµÄÆ«ÒÆÖµ
+////è®¾ç½®æŒ‡å®šåˆ€å…·çš„åç§»å€¼
 //int8 setToolOffset(uint8 ucToolID,uint8 ucAxis ,double dOffsetVal,SToolParaInfo *STargetPara,uint8 ucTargetParaSize);
 //
-////ÊäÈëÆ«ÒÆÖµ
+////è¾“å…¥åç§»å€¼
 //int8 inputToolOffset( uint8 ucToolID,uint8 ucAxis ,double dOffsetVal,SToolParaInfo *STargetPara,uint8 ucTargetParaSize, bool bIsRelaVal);
 
-/*****************************************µ¶¾ßÆ«ÒÆ***********************************************/
-// 
-//Çå³ıËùÓĞµ¶¾ßIDµÄÆ«ÒÆÖµ
+/*****************************************åˆ€å…·åç§»***********************************************/
+//
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åç§»å€¼
 int8 clearAllToolOffset(uint8 ucChannelNum);
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄÆ«ÒÆÖµ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åç§»å€¼
 //int8 clearSingleToolOffset(uint8 ucChannelNum, uint8 ucToolID);
 
-//ÉèÖÃÖ¸¶¨µ¶¾ßµÄÆ«ÒÆÖµ
+//è®¾ç½®æŒ‡å®šåˆ€å…·çš„åç§»å€¼
 int8 setToolOffset(uint8 ucChannelNum, uint8 ucToolCompNum, uint8 ucAxis, double dOffsetVal);
 
-//ÊäÈëÆ«ÒÆÖµ
+//è¾“å…¥åç§»å€¼
 int8 inputToolOffset(uint8 ucChannelNum, uint8 ucToolCompNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal);
 
-//»ñÈ¡Æ«ÒÆÖµ
+//è·å–åç§»å€¼
 double getToolOffset(uint8 ucChannelNum, uint8 ucToolCompNum, uint8 ucAxis);
-/*****************************************µ¶¾ß°ë¾¶***********************************************/
+/*****************************************åˆ€å…·åŠå¾„***********************************************/
 //
-//Çå³ıËùÓĞµ¶¾ßIDµÄ°ë¾¶Öµ
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åŠå¾„å€¼
 int8 clearAllToolRadius(uint8 ucChannelNum);
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄ°ë¾¶Öµ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åŠå¾„å€¼
 int8 clearSingleToolRadius(uint8 ucChannelNum, uint8 ucToolID);
 
-//ÊäÈë°ë¾¶Öµ
+//è¾“å…¥åŠå¾„å€¼
 int8 inputToolRadius(uint8 ucChannelNum, uint8 ucToolID, double dToolRadius);
 
-//»ñÈ¡µ¶¾ß°ë¾¶
+//è·å–åˆ€å…·åŠå¾„
 double getToolRadius(uint8 ucChannelNum, uint8 ucToolID);
-/*****************************************µ¶¾ßÄ¥Ëğ***********************************************/
+/*****************************************åˆ€å…·ç£¨æŸ***********************************************/
 //
-//Çå³ıËùÓĞµ¶¾ßIDµÄÄ¥ËğÖµ
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„ç£¨æŸå€¼
 int8 clearAllToolWear(uint8 ucChannelNum);
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄÄ¥ËğÖµ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„ç£¨æŸå€¼
 //int8 clearSingleToolWear(uint8 ucChannelNum, uint8 ucToolID, uint8 ucToolCompNum);
 
-//ÊäÈëÄ¥ËğÖµ
+//è¾“å…¥ç£¨æŸå€¼
 int8 inputToolWear(uint8 ucChannelNum, uint8 ucToolCompNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal);
 
-//»ñÈ¡µ¶¾ßÄ¥ËğÖµ
+//è·å–åˆ€å…·ç£¨æŸå€¼
 double getToolWear(uint8 ucChannelNum, uint8 ucToolCompNum, uint8 ucAxis);
 
-//Çå³ıABCÖáµ¶¾ß²ÎÊı
+//æ¸…é™¤ABCè½´åˆ€å…·å‚æ•°
 int8 clearRotateAXISToolWear(uint8 ucChannelNum);
-/*****************************************¼ÙÏóµ¶¼âºÅ***********************************************/
-//Çå³ıËùÓĞµ¶¾ßIDµÄ¼ÙÏóµ¶¼âºÅ
+/*****************************************å‡è±¡åˆ€å°–å·***********************************************/
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„å‡è±¡åˆ€å°–å·
 int8 clearAllToolNoseNum(uint8 ucChannelNum);
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄ¼ÙÏóµ¶¼âºÅ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„å‡è±¡åˆ€å°–å·
 int8 clearSingleToolNoseNum(uint8 ucChannelNum, uint8 ucToolID);
 
-//ÊäÈë¼ÙÏóµ¶¼âºÅ
+//è¾“å…¥å‡è±¡åˆ€å°–å·
 int8 inputToolNoseNum(uint8 ucChannelNum, uint8 ucToolID, uint8 ucToolNoseNum);
 
-//»ñÈ¡µ¶¾ß¼ÙÏóµ¶¼âºÅ
+//è·å–åˆ€å…·å‡è±¡åˆ€å°–å·
 int8 getToolNoseNum(uint8 ucChannelNum, uint8 ucToolID);
 
-/*****************************************µ¶¼âÄ¥Ëğ***********************************************/
-//Çå³ıËùÓĞµ¶¾ßIDµÄµ¶¼âÄ¥Ëğ
+/*****************************************åˆ€å°–ç£¨æŸ***********************************************/
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åˆ€å°–ç£¨æŸ
 int8 clearAllToolNoseWear(uint8 ucChannelNum);
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄµ¶¼âÄ¥Ëğ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åˆ€å°–ç£¨æŸ
 int8 clearSingleToolNoseWear(uint8 ucChannelNum, uint8 ucToolID);
 
-//ÊäÈëµ¶¼âÄ¥Ëğ
+//è¾“å…¥åˆ€å°–ç£¨æŸ
 int8 inputToolNoseWear(uint8 ucChannelNum, uint8 ucToolID, double dToolNoseWear);
 
-//»ñÈ¡µ¶¾ß¼ÙÏóµ¶¼âÄ¥Ëğ
+//è·å–åˆ€å…·å‡è±¡åˆ€å°–ç£¨æŸ
 double getToolNoseWear(uint8 ucChannelNum, uint8 ucToolID);
 
-/**********¸üĞÂµ±Ç°Æ«ÒÆ***********/
+/**********æ›´æ–°å½“å‰åç§»***********/
 int8 updataTotalOffset(uint8 ucChannelNum, int8 cWorkpieceCoordNum, bool bForceUpdate);
-
 
 #endif

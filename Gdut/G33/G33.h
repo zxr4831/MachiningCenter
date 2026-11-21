@@ -6,258 +6,250 @@
 #include "Spindle.h"
 
 /**
-Copyright (c) ¹ã¶«¹¤Òµ´óÑ§
+Copyright (c) å¹¿ä¸œå·¥ä¸šå¤§å­¦
 @file G33.h
-@author ¹ùÇ¿
+@author éƒ­å¼º
 @version 22.0
 @date 2023-06-08
-@brief G33ZÏò¹¥ÑÀÑ­»·
+@brief G33Zå‘æ”»ç‰™å¾ªç¯
 */
 
-/*  ²å×®ĞÅÏ¢ºê  ÓÃÓÚG33µ÷ÊÔ´òÓ¡ÔËĞĞ×´Ì¬£»*/
-#define G33ProcLog_DEBUG                  0
+/*  æ’æ¡©ä¿¡æ¯å®  ç”¨äºG33è°ƒè¯•æ‰“å°è¿è¡ŒçŠ¶æ€ï¼›*/
+#define G33ProcLog_DEBUG 0
 
-/*  ²å×®ĞÅÏ¢ºê  ÓÃÓÚG33µ÷ÊÔ´òÓ¡ÔËĞĞÊı¾İ£¬¿ØÖÆÌ¨×î¶à´òÓ¡²»µ½10000ĞĞĞÅÏ¢*/
-#define G33_MOTION_DATA_DEBUG             0
+/*  æ’æ¡©ä¿¡æ¯å®  ç”¨äºG33è°ƒè¯•æ‰“å°è¿è¡Œæ•°æ®ï¼Œæ§åˆ¶å°æœ€å¤šæ‰“å°ä¸åˆ°10000è¡Œä¿¡æ¯*/
+#define G33_MOTION_DATA_DEBUG 0
 
-/*  Ä£Äâ±àÂëÆ÷ORÕæÊµ±àÂëÆ÷   */          //µ±ºêÎª"1"Ê±Ê¹ÓÃÕæÊµ±àÂëÆ÷ÉÏ»úÔËĞĞ
-										 //µ±ºêÎª"0"Ê±Ê¹ÓÃÄ£Äâ±àÂëÆ÷·ÂÕæ
-#define G33_USE_REAL_ENCODER              1
+/*  æ¨¡æ‹Ÿç¼–ç å™¨ORçœŸå®ç¼–ç å™¨   */ //å½“å®ä¸º"1"æ—¶ä½¿ç”¨çœŸå®ç¼–ç å™¨ä¸Šæœºè¿è¡Œ
+                                //å½“å®ä¸º"0"æ—¶ä½¿ç”¨æ¨¡æ‹Ÿç¼–ç å™¨ä»¿çœŸ
+#define G33_USE_REAL_ENCODER 1
 
-#define G33_TIMERANGE   10000  //³¬Ê±ãĞÖµ
+#define G33_TIMERANGE 10000 //è¶…æ—¶é˜ˆå€¼
 
-//±àÂëÆ÷ÊıÖµ£¨****Ä£Äâ±àÂëÆ÷ÓÃ****£©
+//ç¼–ç å™¨æ•°å€¼ï¼ˆ****æ¨¡æ‹Ÿç¼–ç å™¨ç”¨****ï¼‰
 extern int64 g_lSpindleEncoderValue;
 
-//²âÊÔ·ÂÕæÓÃZÖá¸¡¶¯Á¿£¨****Ä£Äâ·ÂÕæÓÃ****£©
+//æµ‹è¯•ä»¿çœŸç”¨Zè½´æµ®åŠ¨é‡ï¼ˆ****æ¨¡æ‹Ÿä»¿çœŸç”¨****ï¼‰
 extern double g_dZAxisFloatingLength;
 
-//Ö÷ÖáÊµ¼Ê×ªËÙ
+//ä¸»è½´å®é™…è½¬é€Ÿ
 extern double g_dActualSpindleSpeed;
 
-enum G33MotionStates//G33ÔËĞĞ×´Ì¬Ã¶¾ÙÀàĞÍ
+enum G33MotionStates //G33è¿è¡ŒçŠ¶æ€æšä¸¾ç±»å‹
 {
-	//ÕıÏò½×¶Î
-	SPINDLE_ACC_BEFORE_ZAXIS_FEEDING,     //ZÖá½øµ¶Ç°Ö÷Öá¼ÓËÙ£¨¶àÍ·£©
-	ZAXIS_ACC_BEFORE_FOL_UP,              //ZÖáËæ¶¯Ç°¼ÓËÙ£¨°üÀ¨¶àÍ·ÂİÎÆµÈ´ıºÏÊÊµÄ±àÂëÆ÷ÊıÖµ£©
-	ZAXIS_FOL_UP_TAPPING,                 //ZÖáËæ¶¯¹¥Ë¿£¨´Ë½×¶ÎÖ÷ÖáÔÈËÙ£¬ZÖáËæ¶¯£©
-	SPINDLE_DEC_TO_STOP_BEFORE_REV,       //Ö÷Öá·´×ªÇ°¼õËÙÍ£(2023.5.11 ¹ùÇ¿)
+    //æ­£å‘é˜¶æ®µ
+    SPINDLE_ACC_BEFORE_ZAXIS_FEEDING, //Zè½´è¿›åˆ€å‰ä¸»è½´åŠ é€Ÿï¼ˆå¤šå¤´ï¼‰
+    ZAXIS_ACC_BEFORE_FOL_UP,          //Zè½´éšåŠ¨å‰åŠ é€Ÿï¼ˆåŒ…æ‹¬å¤šå¤´èºçº¹ç­‰å¾…åˆé€‚çš„ç¼–ç å™¨æ•°å€¼ï¼‰
+    ZAXIS_FOL_UP_TAPPING,             //Zè½´éšåŠ¨æ”»ä¸ï¼ˆæ­¤é˜¶æ®µä¸»è½´åŒ€é€Ÿï¼ŒZè½´éšåŠ¨ï¼‰
+    SPINDLE_DEC_TO_STOP_BEFORE_REV,   //ä¸»è½´åè½¬å‰å‡é€Ÿåœ(2023.5.11 éƒ­å¼º)
 
-	//ÔİÍ£½×¶Î
-	PAUSE_BEFORE_REVERSAL,                //ÔİÍ£½×¶Î(2023.5.11 ¹ùÇ¿)
+    //æš‚åœé˜¶æ®µ
+    PAUSE_BEFORE_REVERSAL, //æš‚åœé˜¶æ®µ(2023.5.11 éƒ­å¼º)
 
-	//·´Ïò½×¶Î
-	SPINDLE_REVERSE_RETURN,               //Ö÷Öá·´×ªÍËµ¶(2023.5.11 ¹ùÇ¿)
+    //åå‘é˜¶æ®µ
+    SPINDLE_REVERSE_RETURN, //ä¸»è½´åè½¬é€€åˆ€(2023.5.11 éƒ­å¼º)
 
-	//Õı·´Ïò¾ùÓĞ(´ıÉ¾)
-	ZAXIS_FOL_UP_DEC_AND_RETURN,          //ZÖáËæ¶¯¼õËÙ¼°ÍËµ¶£¨ZÖá³¬¹ıÀíÂÛÖÕµãºóÖ÷Öá¼õËÙ£¬È»ºó·´Ïò¼ÓËÙ£¬ZÖáÒ»Ö±Ëæ¶¯×îÖÕµ½´ï±Ü¿Õ¾àÀëÄÚ¿ªÊ¼¼õËÙÖÁÆğµ¶µã£©
+    //æ­£åå‘å‡æœ‰(å¾…åˆ )
+    ZAXIS_FOL_UP_DEC_AND_RETURN, //Zè½´éšåŠ¨å‡é€ŸåŠé€€åˆ€ï¼ˆZè½´è¶…è¿‡ç†è®ºç»ˆç‚¹åä¸»è½´å‡é€Ÿï¼Œç„¶ååå‘åŠ é€Ÿï¼ŒZè½´ä¸€ç›´éšåŠ¨æœ€ç»ˆåˆ°è¾¾é¿ç©ºè·ç¦»å†…å¼€å§‹å‡é€Ÿè‡³èµ·åˆ€ç‚¹ï¼‰
 
-	//·´Ïò½×¶Î
-	SPINDLE_DEC_TO_STOP_AFTER_ZAXIS_RETURN    //ÍËµ¶Íê³ÉºóÖ÷Öá¼õËÙÍ£
+    //åå‘é˜¶æ®µ
+    SPINDLE_DEC_TO_STOP_AFTER_ZAXIS_RETURN //é€€åˆ€å®Œæˆåä¸»è½´å‡é€Ÿåœ
 };
-
 
 struct G33
 {
-	VAL_STRUCT_TYPE	ucRelaVal;      //Ïà¶ÔÖµ±êÊ¶±äÁ¿
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ
+    VAL_STRUCT_TYPE ucRelaVal;   //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹
 
-	uint8 ucAxis[2];            //Ö´ĞĞ²å²¹µÄÖáºÅ
-	struct SChannel* pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
-	struct SPlan SPlanData;	    //ËÙ¶È¹æ»®²ÎÊı£¬´Ë½á¹¹ÌåÓÃÓÚËÙ¶È¹æ»®
-	double dCurrentSpeed;		//µ±Ç°ËÙ¶È mm/ms
+    uint8 ucAxis[2];            //æ‰§è¡Œæ’è¡¥çš„è½´å·
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
+    struct SPlan SPlanData;     //é€Ÿåº¦è§„åˆ’å‚æ•°ï¼Œæ­¤ç»“æ„ä½“ç”¨äºé€Ÿåº¦è§„åˆ’
+    double dCurrentSpeed;       //å½“å‰é€Ÿåº¦ mm/ms
 
-	//G33 ÔËĞĞÊ±µÄ¹æ»®¶ÎÆğµãÖÕµãÏòÁ¿
-	SPointDouble SStartPoint;	  //Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;       //ÖÕµã£¬µ¥Î»£ºmm
-	SVector SStartVector;         //ÏòÁ¿
+    //G33 è¿è¡Œæ—¶çš„è§„åˆ’æ®µèµ·ç‚¹ç»ˆç‚¹å‘é‡
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    SVector SStartVector;     //å‘é‡
 
-	int8 G33RotateAxis;			//G33 Ğı×ªÖá  ¿ÉÑ¡AÖá»òCÖá
+    int8 G33RotateAxis; //G33 æ—‹è½¬è½´  å¯é€‰Aè½´æˆ–Cè½´
 
-	int8 G33TappingMode;		//G33¹¥ÑÀÄ£Ê½ 0:¸ÕĞÔ¹¥ÑÀ 1:ÈáĞÔ¹¥ÑÀ
+    int8 G33TappingMode; //G33æ”»ç‰™æ¨¡å¼ 0:åˆšæ€§æ”»ç‰™ 1:æŸ”æ€§æ”»ç‰™
 
-	//¼ÇÂ¼G33ÔËĞĞÊ±µÄÖ÷Öá×ªËÙ£¬ÒÔ±ãÍËµ¶Ê±·´Ïò¼Ó±¶×ªËÙÍË³ö£¨2023/3/23¹ùÇ¿£©
-	double dG33SpindleSpeed;//£¨r/min£©
+    //è®°å½•G33è¿è¡Œæ—¶çš„ä¸»è½´è½¬é€Ÿï¼Œä»¥ä¾¿é€€åˆ€æ—¶åå‘åŠ å€è½¬é€Ÿé€€å‡ºï¼ˆ2023/3/23éƒ­å¼ºï¼‰
+    double dG33SpindleSpeed; //ï¼ˆr/minï¼‰
 
-	uint8  ucL;        // ¶àÍ·ÂİÎÆÍ·Êı1-99
+    uint8 ucL; // å¤šå¤´èºçº¹å¤´æ•°1-99
 
-	uint8  ucAlreadyL; //ÒÑ¼Ó¹¤Í·Êı
+    uint8 ucAlreadyL; //å·²åŠ å·¥å¤´æ•°
 
-	double dF;         //ÂİÎÆÂİ¾à
+    double dF; //èºçº¹èºè·
 
-	enum G33MotionStates G33MotionState; //G33ÔËĞĞ×´Ì¬
+    enum G33MotionStates G33MotionState; //G33è¿è¡ŒçŠ¶æ€
 
-	int8 cTappingSpindleDir;             //¼ÇÂ¼¹¥Ë¿Ö÷Öá×ªÏò
+    int8 cTappingSpindleDir; //è®°å½•æ”»ä¸ä¸»è½´è½¬å‘
 
-	bool bPreFinishedFlag;               //¸÷½×¶ÎÔ¤´¦ÀíÍê³É±êÖ¾Î»
+    bool bPreFinishedFlag; //å„é˜¶æ®µé¢„å¤„ç†å®Œæˆæ ‡å¿—ä½
 
-	bool bZAxisFeedSignal;               //¶àÍ·ÂİÎÆ¹¥Ë¿Ê±ZÖá½ø¸øĞÅºÅ
+    bool bZAxisFeedSignal; //å¤šå¤´èºçº¹æ”»ä¸æ—¶Zè½´è¿›ç»™ä¿¡å·
 
-	double dZAxisStartEncoderRelValue;   //±£´æ¼ÆËã³öµÄZÖáÆô¶¯Ê±Ö÷Öá±àÂëÆ÷ÀíÂÛÏà¶ÔÖµ
+    double dZAxisStartEncoderRelValue; //ä¿å­˜è®¡ç®—å‡ºçš„Zè½´å¯åŠ¨æ—¶ä¸»è½´ç¼–ç å™¨ç†è®ºç›¸å¯¹å€¼
 
-	bool bG33AccPreFirstTime;            //G33¼ÓËÙ½×¶Î·´Ëã¼ÓËÙ¶ÈµÚÒ»´Î£¬ÓÃÓÚÌí¼Ó×î´óÆô¶¯Îó²î²¹³¥Î»ÒÆ
+    bool bG33AccPreFirstTime; //G33åŠ é€Ÿé˜¶æ®µåç®—åŠ é€Ÿåº¦ç¬¬ä¸€æ¬¡ï¼Œç”¨äºæ·»åŠ æœ€å¤§å¯åŠ¨è¯¯å·®è¡¥å¿ä½ç§»
 
-	double dSpindleDecPointPreDist;      //G33Ö÷Öá¼õËÙ²¢·´×ªÊ±µÄ¼õËÙµã¾àG´úÂëÆğµãµÄ³¤¶È
+    double dSpindleDecPointPreDist; //G33ä¸»è½´å‡é€Ÿå¹¶åè½¬æ—¶çš„å‡é€Ÿç‚¹è·Gä»£ç èµ·ç‚¹çš„é•¿åº¦
 
-	bool bSpindleRevBegin;               //Ö÷Öá·´×ª¿ªÊ¼
+    bool bSpindleRevBegin; //ä¸»è½´åè½¬å¼€å§‹
 
-	double dSpindleRevCompZAxisCumulaDis;       //Ö÷Öá·´×ª²¹³¥ÆÚ¼äZÖáÀÛ»ı¾àÀë
-	bool bSpindleRevCompEnd;                    //Ö÷Öá·´×ª²¹³¥½áÊø±êÖ¾Î»
-	bool bSpindleRevCompEndFirstTc;              //Ö÷Öá·´×ª²¹³¥½áÊøºóµÄµÚÒ»¸öÖÜÆÚ
+    double dSpindleRevCompZAxisCumulaDis; //ä¸»è½´åè½¬è¡¥å¿æœŸé—´Zè½´ç´¯ç§¯è·ç¦»
+    bool bSpindleRevCompEnd;              //ä¸»è½´åè½¬è¡¥å¿ç»“æŸæ ‡å¿—ä½
+    bool bSpindleRevCompEndFirstTc;       //ä¸»è½´åè½¬è¡¥å¿ç»“æŸåçš„ç¬¬ä¸€ä¸ªå‘¨æœŸ
 
-	//G33¼ÓËÙ½×¶Î×îÖÕ¼ÓËÙ¶È£¬¼õËÙ¶È
-	double dG33Acc, dG33Dec;
+    //G33åŠ é€Ÿé˜¶æ®µæœ€ç»ˆåŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    double dG33Acc, dG33Dec;
 
-	//G33 G´úÂëÆğµãÖÕµãĞÅÏ¢
-	SPointDouble G33StartPoint;	  //Æğµã£¬µ¥Î»£ºmm
-	SPointDouble G33EndPoint;     //ÖÕµã£¬µ¥Î»£ºmm
+    //G33 Gä»£ç èµ·ç‚¹ç»ˆç‚¹ä¿¡æ¯
+    SPointDouble G33StartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble G33EndPoint;   //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
 
-	//G33 G´úÂëÖĞµÄÆğµã·½ÏòÏòÁ¿ĞÅÏ¢ £¨ÓÃÓÚ·´×ª²¹³¥¹æ»®Ê±¸ü¸Ä·½ÏòÏòÁ¿£©
-	SVector G33StartVector;
+    //G33 Gä»£ç ä¸­çš„èµ·ç‚¹æ–¹å‘å‘é‡ä¿¡æ¯ ï¼ˆç”¨äºåè½¬è¡¥å¿è§„åˆ’æ—¶æ›´æ”¹æ–¹å‘å‘é‡ï¼‰
+    SVector G33StartVector;
 
-	//G33ZÖáÆô¶¯Ç°µÄÊµÊ±µã
-	SPointDouble G33StartRealTimePoint;
+    //G33Zè½´å¯åŠ¨å‰çš„å®æ—¶ç‚¹
+    SPointDouble G33StartRealTimePoint;
 
-	//G33Ä£ÄâÔËĞĞÊ±µÄ¹ı³ÌÊµÊ±µã
-	SPointDouble G33AnalogRealTimePoint;
+    //G33æ¨¡æ‹Ÿè¿è¡Œæ—¶çš„è¿‡ç¨‹å®æ—¶ç‚¹
+    SPointDouble G33AnalogRealTimePoint;
 
-	//G33Ö÷Öá·´×ªÇ°ÔİÍ£Ê±¼ä(ms)//2023.5.8 ¹ùÇ¿
-	uint32 unG33SpindlePauseTimeBeforeRev;
+    //G33ä¸»è½´åè½¬å‰æš‚åœæ—¶é—´(ms)//2023.5.8 éƒ­å¼º
+    uint32 unG33SpindlePauseTimeBeforeRev;
 
-	// zxr: ¸÷Í¨µÀ¶ÀÁ¢¼ÇÂ¼Ëæ¶¯½×¶ÎÁ¬ĞøÎŞ·´À¡´ÎÊı£¬¼Æ»®Í£Áô²»ÀÛ¼Æ
-	uint32 unFollowTimeOut;
-
-	// zxr: ±¾G33¶ÔÏóµÄÁ¬Ğø·½ÏòÒì³£¼ÆÊı£¬³õÊ¼»¯Óë¸´Î»Ê±ÇåÁã
+    // zxr: å„é€šé“ç‹¬ç«‹è®°å½•éšåŠ¨é˜¶æ®µè¿ç»­æ— åé¦ˆæ¬¡æ•°ï¼Œè®¡åˆ’åœç•™ä¸ç´¯è®¡
+    uint32 unFollowTimeOut;
 };
 
-
-
-// //³õÊ¼»¯G33È«¾Ö±äÁ¿
+// //åˆå§‹åŒ–G33å…¨å±€å˜é‡
 bool InitG33GlobalVariable(struct SChannel* pSChannel);
 
 int8 G33initStructByTool(struct SToolCompensation* pSToolCompPointer, struct SInterpolationPre* pSPrePointer);
 
-//³õÊ¼»¯G33²å²¹Æ½Ãæ
+//åˆå§‹åŒ–G33æ’è¡¥å¹³é¢
 int8 chooseInterpPlaneForG33(struct G33* pG33, struct SInterpolationPre* pSPrePointer);
 
-//¼ì²âÏòÁ¿ÏàÍ¬
+//æ£€æµ‹å‘é‡ç›¸åŒ
 bool checkSameVector(struct G33* pSG33, SVector SVector1, SVector Svector2);
 
-/*********************************Ä£Äâ±àÂëÆ÷ÓÃ*************************************/
-//»ñÈ¡±àÂëÆ÷ÊıÖµ£¨·ÖÎªÕæÊµ±àÂëÆ÷ºÍÄ£Äâ±àÂëÆ÷£©
+/*********************************æ¨¡æ‹Ÿç¼–ç å™¨ç”¨*************************************/
+//è·å–ç¼–ç å™¨æ•°å€¼ï¼ˆåˆ†ä¸ºçœŸå®ç¼–ç å™¨å’Œæ¨¡æ‹Ÿç¼–ç å™¨ï¼‰
 int64 getSpindleEncoderValue(struct SEncoder* pSpindleEncoder);
 
-//Ä£ÄâÖ÷Öá±àÂëÆ÷¼ÆÊı£¨****Ä£Äâ±àÂëÆ÷ÓÃ****£©
+//æ¨¡æ‹Ÿä¸»è½´ç¼–ç å™¨è®¡æ•°ï¼ˆ****æ¨¡æ‹Ÿç¼–ç å™¨ç”¨****ï¼‰
 void AnalogSpindleEncoderCount(struct G33* pSG33, int16 sSpindlePulseValue, struct SEncoder* pSpindleEncoder);
 
-//·ÂÕæ¼ÆËãZÖá¸¡¶¯Á¿
+//ä»¿çœŸè®¡ç®—Zè½´æµ®åŠ¨é‡
 bool calcZAxisFloatingLength(struct G33* pSG33, int32 nZAxisDeltaPulse, int32 nCAxisDeltaPulse);
 /***********************************************************************************/
 
-//G33Ö÷Öá³¬ËÙ¼ì²é£¨G33µ×²ãÔË¶¯ÄÚ²¿µ÷ÓÃ£©
+//G33ä¸»è½´è¶…é€Ÿæ£€æŸ¥ï¼ˆG33åº•å±‚è¿åŠ¨å†…éƒ¨è°ƒç”¨ï¼‰
 int8 G33SpindleOverSpeedCheck(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-
-//G33Ö÷Öá³¬ËÙ¼ì²é£¨Íâ²¿µ÷ÓÃ£©
+//G33ä¸»è½´è¶…é€Ÿæ£€æŸ¥ï¼ˆå¤–éƒ¨è°ƒç”¨ï¼‰
 int8 CheckG33SpindleOverSpeed(struct SChannel* pSChannel);
 
+//åˆå§‹åŒ–G33ç»“æ„ä½“
+int8 initSG33Data(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33,
+                  struct SEncoder* pSpindleEncoder);
 
-//³õÊ¼»¯G33½á¹¹Ìå
-int8 initSG33Data(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
-
-//»ñÈ¡Ö÷ÖáÕæÊµ×ªËÙ
+//è·å–ä¸»è½´çœŸå®è½¬é€Ÿ
 double getSpindleRealSpeed(struct G33* pSG33);
 
-//¼ÆËã¶àÍ·ÂİÎÆZÖáÆô¶¯Ê±±àÂëÆ÷Öµ
-double  calcZAxisStartEncoderRelValue(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
+//è®¡ç®—å¤šå¤´èºçº¹Zè½´å¯åŠ¨æ—¶ç¼–ç å™¨å€¼
+double calcZAxisStartEncoderRelValue(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//Ö÷Öá¼Ó¼õËÙÍê³Éºó¸Ä±äG33ÔËĞĞ×´Ì¬
-int8 changeG33StateAfterSpindleAccOrDec(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33);
+//ä¸»è½´åŠ å‡é€Ÿå®Œæˆåæ”¹å˜G33è¿è¡ŒçŠ¶æ€
+int8 changeG33StateAfterSpindleAccOrDec(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle,
+                                        struct G33* pSG33);
 
-//µ¥ÖáÖ¸¶¨ËÙ¶ÈºÍÎ»ÒÆ£¨Vs Vmax Ve£©ËÙ¶È¹æ»®,Ö¸¶¨ËÙ¶ÈÀàĞÍÎªS4(´ıÉ¾)
+//å•è½´æŒ‡å®šé€Ÿåº¦å’Œä½ç§»ï¼ˆVs Vmax Veï¼‰é€Ÿåº¦è§„åˆ’,æŒ‡å®šé€Ÿåº¦ç±»å‹ä¸ºS4(å¾…åˆ )
 int8 singleAxisInitAndPrePlanS4(uint8 ucAxis, double dDistance, double dVs, double dVmax, double dVe);
 
-//ZÖá½øµ¶Ç°Ö÷Öá¼ÓËÙ
+//Zè½´è¿›åˆ€å‰ä¸»è½´åŠ é€Ÿ
 void motionSpindleAccBeforeZAxisFeeding(struct G33* pSG33);
 
-//¼ÆËã¼ÓËÙ½×¶Î×î´ó²¹³¥Î»ÒÆ
+//è®¡ç®—åŠ é€Ÿé˜¶æ®µæœ€å¤§è¡¥å¿ä½ç§»
 double calcMaxStartErrCompenDis(struct G33* pSG33);
 
-
-//ZÖá¼ÓËÙÔ¤´¦Àí
+//Zè½´åŠ é€Ÿé¢„å¤„ç†
 int8 ZAxisAccPre(struct G33* pSG33, struct SEncoder* pSpindleEncoder, int8 cSpindleRevFlag);
 
-//¼ÆËãÖ÷Öá±àÂëÆ÷Ò»¸öÖÜÆÚÔöÁ¿¶ÔÓ¦ZÖáĞÂÔöÎ»ÒÆ
+//è®¡ç®—ä¸»è½´ç¼–ç å™¨ä¸€ä¸ªå‘¨æœŸå¢é‡å¯¹åº”Zè½´æ–°å¢ä½ç§»
 double calcZAxisNewAddDist(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//ÔË¶¯Êä³ö
+//è¿åŠ¨è¾“å‡º
 int8 newAddDistOutPut(struct G33* pSG33);
 
-
-//ZÖáËæ¶¯Ç°¼ÓËÙ
+//Zè½´éšåŠ¨å‰åŠ é€Ÿ
 int8 motionZAxisAccBeforeFolUp(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//¹ÀËãÖ÷Öá¼õËÙZÖá³¬³ö¾àÀë
+//ä¼°ç®—ä¸»è½´å‡é€ŸZè½´è¶…å‡ºè·ç¦»
 double calcSpindleDecZAxicSurpassLength(struct _SSpindle* pSSpindle, struct G33* pSG33);
 
-//¼ÆËãÖ÷Öá·´×ª¹æ»®Ê±Ïà¶ÔG33ÆğµãÒª×ßµÄ¾àÀë
+//è®¡ç®—ä¸»è½´åè½¬è§„åˆ’æ—¶ç›¸å¯¹G33èµ·ç‚¹è¦èµ°çš„è·ç¦»
 int8 calcSpindleDecPointPreDist(struct _SSpindle* pSSpindle, struct G33* pSG33);
 
-//ÅĞ¶ÏZÖáÔ½¹ıÖ÷Öá·´×ª¹æ»®±êÖ¾µã
+//åˆ¤æ–­Zè½´è¶Šè¿‡ä¸»è½´åè½¬è§„åˆ’æ ‡å¿—ç‚¹
 bool judgeZAxisAcrossEndPoint(struct G33* pSG33);
 
-//ZÖáËæ¶¯¹¥Ë¿£¨´Ë½×¶ÎÖ÷ÖáÔÈËÙ£¬ZÖáËæ¶¯£©
+//Zè½´éšåŠ¨æ”»ä¸ï¼ˆæ­¤é˜¶æ®µä¸»è½´åŒ€é€Ÿï¼ŒZè½´éšåŠ¨ï¼‰
 int8 motionZAxisFolUpTapping(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//Ö÷Öá·´×ªÇ°¼õËÙÍ££¨2023.6.8¹ùÇ¿£¬Ôö¼ÓÊäÈë²ÎÊı£©
+//ä¸»è½´åè½¬å‰å‡é€Ÿåœï¼ˆ2023.6.8éƒ­å¼ºï¼Œå¢åŠ è¾“å…¥å‚æ•°ï¼‰
 int8 motionSpindleDecToStopBeforeRev(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//Ö÷Öá·´×ªÇ°ÔİÍ£
+//ä¸»è½´åè½¬å‰æš‚åœ
 int8 motionPauseBeforeSpindleReversal(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//ZÖáËæ¶¯ÔË¶¯(Òì³£·´ÏòÖ±½Ó·´Ïò)
+//Zè½´éšåŠ¨è¿åŠ¨(å¼‚å¸¸åå‘ç›´æ¥åå‘)
 int32 ZAxisFolUpMove(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//ZÖá²»ÍêÈ«Ëæ¶¯ÔË¶¯£¨Òì³£·´Ïò²»Ö±½Ó·´Ïò£¬Òª×ßÍêÊ£Óà¾àÀë£©
+//Zè½´ä¸å®Œå…¨éšåŠ¨è¿åŠ¨ï¼ˆå¼‚å¸¸åå‘ä¸ç›´æ¥åå‘ï¼Œè¦èµ°å®Œå‰©ä½™è·ç¦»ï¼‰
 int32 ZAxisNotExactlyFolUpMove(struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-
-//¼ÆËãÖ÷Öá¼õËÙ¹ı³Ì¸¡¶¯Á¿
+//è®¡ç®—ä¸»è½´å‡é€Ÿè¿‡ç¨‹æµ®åŠ¨é‡
 //int8 calcSpindleDecCompenL();
 
-//Ö÷Öá·´×ª²¹³¥¹æ»®£¨³õÊ¼»¯½á¹¹Ìå+ËÙ¶È¹æ»®ºÍÆ½Ì¯£©
+//ä¸»è½´åè½¬è¡¥å¿è§„åˆ’ï¼ˆåˆå§‹åŒ–ç»“æ„ä½“+é€Ÿåº¦è§„åˆ’å’Œå¹³æ‘Šï¼‰
 int8 spindleRevCompPlan(struct G33* pSG33);
 
-//Ö÷Öá·´×ª²¹³¥ÔË¶¯
+//ä¸»è½´åè½¬è¡¥å¿è¿åŠ¨
 int8 spindleRevCompMoveOutPut(struct G33* pSG33);
 
-//·ÂÕæ¼ÆËãG33³¬³ö¾àÀë
+//ä»¿çœŸè®¡ç®—G33è¶…å‡ºè·ç¦»
 void calcG33SurpassLength(struct _SSpindle* pSSpindle, struct G33* pSG33);
 
-//¸ù¾İ³¤¶ÈÆğµã·½ÏòÏòÁ¿¼ÆËãÄ¿±êµã
+//æ ¹æ®é•¿åº¦èµ·ç‚¹æ–¹å‘å‘é‡è®¡ç®—ç›®æ ‡ç‚¹
 SPointDouble calcPoint(struct G33* pSG33, SPointDouble SStartPoint, SVector SStartVector, double dLength);
 
-//Ö÷Öá¼õËÙ¼°ÍËµ¶½×¶Î£¬·´×ªĞèÒª²¹³¥µÄÔË¶¯º¯Êı
+//ä¸»è½´å‡é€ŸåŠé€€åˆ€é˜¶æ®µï¼Œåè½¬éœ€è¦è¡¥å¿çš„è¿åŠ¨å‡½æ•°
 int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//ZÖáËæ¶¯¼õËÙºÍÍËµ¶(´ıÉ¾)
+//Zè½´éšåŠ¨å‡é€Ÿå’Œé€€åˆ€(å¾…åˆ )
 int8 motionZAxisFolUpDecAndReturn(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//Ö÷Öá·´×ªÍËµ¶
+//ä¸»è½´åè½¬é€€åˆ€
 int8 motionSpindleReverseAndReturn(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
 
-//ÍËµ¶Íê³ÉºóÖ÷Öá¼õËÙÍ£
+//é€€åˆ€å®Œæˆåä¸»è½´å‡é€Ÿåœ
 int8 motionSpindleDecToStopAfterZAxisReturn(struct G33* pSG33);
 
-//G33ÔËĞĞ¹ı³ÌÖĞµÄ¸´Î»³õÊ¼»¯
+//G33è¿è¡Œè¿‡ç¨‹ä¸­çš„å¤ä½åˆå§‹åŒ–
 int8 G33ResetInit(struct SChannel* pSChannel);
 
-//G33¶¯×÷
-int8 G33Action(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
+//G33åŠ¨ä½œ
+int8 G33Action(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33,
+               struct SEncoder* pSpindleEncoder);
 
-//G33ÔË¶¯½Ó¿Úº¯Êı
-int8 MotionG33(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEncoder* pSpindleEncoder);
-
+//G33è¿åŠ¨æ¥å£å‡½æ•°
+int8 MotionG33(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pSSpindle, struct G33* pSG33,
+               struct SEncoder* pSpindleEncoder);
 
 #endif
-

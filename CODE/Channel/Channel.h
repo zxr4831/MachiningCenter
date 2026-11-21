@@ -11,221 +11,221 @@
 #include "IOCommand.h"
 #include "TIOCommand.h"
 
-#define CHANNEL_ZERO 0 // ºê¶¨Òå  Í¨µÀ0  ·½±ã²éÕÒÌæ»»
+#define CHANNEL_ZERO 0 // å®å®šä¹‰  é€šé“0  æ–¹ä¾¿æŸ¥æ‰¾æ›¿æ¢
 
-#define CHANNEL_SIGNAL_WAIT		0 //Í¨µÀµÈ´ıÖ¸Áî
-#define CHANNEL_SIGNAL_START	1 //Í¨µÀÆô¶¯Ö¸Áî
-#define CHANNEL_SIGNAL_CHECK	2 //¼ì²âÍ¨µÀ×´Ì¬M96
+#define CHANNEL_SIGNAL_WAIT 0  //é€šé“ç­‰å¾…æŒ‡ä»¤
+#define CHANNEL_SIGNAL_START 1 //é€šé“å¯åŠ¨æŒ‡ä»¤
+#define CHANNEL_SIGNAL_CHECK 2 //æ£€æµ‹é€šé“çŠ¶æ€M96
 
-#define CHANNEL_BUFF_SIZE	10//ĞÅºÅµÄ»º³åÇø´óĞ¡
+#define CHANNEL_BUFF_SIZE 10 //ä¿¡å·çš„ç¼“å†²åŒºå¤§å°
 
-struct SChannel // Í¨µÀ½á¹¹Ìå
+struct SChannel // é€šé“ç»“æ„ä½“
 {
-	uint8 ucChannelNum;	//Í¨µÀºÅ  ¶ÔÓ¦»º³åÇø±àºÅ 0 1 2 3 
-	//uint8 ucChannelType;	// Í¨µÀÀàĞÍ  µ¼ÏòÍ¨µÀ/¸úËæÍ¨µÀ£¨Î´Ê¹ÓÃ£©
-	
-	uint8* pMapAxisArray;//¸ÃÍ¨µÀµÄÖáÓ³Éä
+    uint8 ucChannelNum; //é€šé“å·  å¯¹åº”ç¼“å†²åŒºç¼–å· 0 1 2 3
+    //uint8 ucChannelType;	// é€šé“ç±»å‹  å¯¼å‘é€šé“/è·Ÿéšé€šé“ï¼ˆæœªä½¿ç”¨ï¼‰
 
-	uint8* pPWMMapAxisArray;//¸ÃÍ¨µÀµÄÖáÓ³Éä 2025.10.31ĞÜ¿¥
+    uint8* pMapAxisArray; //è¯¥é€šé“çš„è½´æ˜ å°„
 
-#if(TURRET_AXIS_TEST == 1)
-	uint8* pChannelToTurretmap;//¸ÃÍ¨µÀ¶Ôµ¶ËşµÄÓ³Éä
+    uint8* pPWMMapAxisArray; //è¯¥é€šé“çš„è½´æ˜ å°„ 2025.10.31ç†Šéª
+
+#if (TURRET_AXIS_TEST == 1)
+    uint8* pChannelToTurretmap; //è¯¥é€šé“å¯¹åˆ€å¡”çš„æ˜ å°„
 #endif
 
-	//(Ô­ÏµÍ³×´Ì¬g_SystemStatus)  
-	enum SYSTEMSTATUS ucChannelStatus;// Í¨µÀ×´Ì¬¢Ù¿ÕÏĞ   ¢ÚÔËĞĞ(1ÔËĞĞ 2ÔİÍ£ 3¸´Î» 4 RUN2PAUSE 5 PAUSE2RUN
-	int8 cSubRunMode;//ÏµÍ³ÎªÔËĞĞ×´Ì¬ÏÂ·ÖÎªÁ½¸ö×ÓÄ£Ê½£º0 »­Í¼  1 ÔË¶¯ ÂŞÏéçâ20250528£ºÔÚÏµÍ³½øÈëÔËĞĞ×´Ì¬Ê±ĞèÒªÍ¬Ê±ÉèÖÃ×ÓÄ£Ê½
+    //(åŸç³»ç»ŸçŠ¶æ€g_SystemStatus)
+    enum SYSTEMSTATUS ucChannelStatus; // é€šé“çŠ¶æ€â‘ ç©ºé—²   â‘¡è¿è¡Œ(1è¿è¡Œ 2æš‚åœ 3å¤ä½ 4 RUN2PAUSE 5 PAUSE2RUN
+    int8
+        cSubRunMode; //ç³»ç»Ÿä¸ºè¿è¡ŒçŠ¶æ€ä¸‹åˆ†ä¸ºä¸¤ä¸ªå­æ¨¡å¼ï¼š0 ç”»å›¾  1 è¿åŠ¨ ç½—ç¥¥ç®20250528ï¼šåœ¨ç³»ç»Ÿè¿›å…¥è¿è¡ŒçŠ¶æ€æ—¶éœ€è¦åŒæ—¶è®¾ç½®å­æ¨¡å¼
 
-	SPointDouble SRelaCoorStartPoint;     //Ïà¶Ô×ø±êÆğÊ¼µã
+    SPointDouble SRelaCoorStartPoint; //ç›¸å¯¹åæ ‡èµ·å§‹ç‚¹
 
-	//¹«ÓÃ½á¹¹Ìå
-	struct _SRun SRun;//ÔËĞĞ½á¹¹Ìå
-	struct SInterpolationPre SPreProcess;//Ô¤´¦Àí½á¹¹Ìå
+    //å…¬ç”¨ç»“æ„ä½“
+    struct _SRun SRun;                    //è¿è¡Œç»“æ„ä½“
+    struct SInterpolationPre SPreProcess; //é¢„å¤„ç†ç»“æ„ä½“
 
-	//ÔË¶¯½á¹¹Ìå
-	struct SG0 SG00;	//G0½á¹¹Ìå
-	struct SSingleAxis SSingleAxisArray[AXIS_NUM_MAX];//µ¥Öá½á¹¹Ìå
-	struct SG1 SG01;	//G1½á¹¹Ìå
-	struct SG2 SG02;	//G2½á¹¹Ìå
-    //G33½á¹¹Ìå
-	struct G33 SG33;
-	struct _SG32 SG32;  //G32½á¹¹Ìå
+    //è¿åŠ¨ç»“æ„ä½“
+    struct SG0 SG00;                                   //G0ç»“æ„ä½“
+    struct SSingleAxis SSingleAxisArray[AXIS_NUM_MAX]; //å•è½´ç»“æ„ä½“
+    struct SG1 SG01;                                   //G1ç»“æ„ä½“
+    struct SG2 SG02;                                   //G2ç»“æ„ä½“
+                                                       //G33ç»“æ„ä½“
+    struct G33 SG33;
+    struct _SG32 SG32; //G32ç»“æ„ä½“
 
-	//Ö÷Öá
-	struct _SSpindle SSpindle;			//Ö÷Öá
-	struct _SEncoderTest SSpindleTest; //Ö÷Öá×ªËÙ¼ì²â
-	struct SEncoder* pSSpindleEncoder;	//Ö÷Öá±àÂëÆ÷
-	double dSpindleRealSpeed;//Ö÷ÖáÊµ¼Ê×ªËÙ
+    //ä¸»è½´
+    struct _SSpindle SSpindle;         //ä¸»è½´
+    struct _SEncoderTest SSpindleTest; //ä¸»è½´è½¬é€Ÿæ£€æµ‹
+    struct SEncoder* pSSpindleEncoder; //ä¸»è½´ç¼–ç å™¨
+    double dSpindleRealSpeed;          //ä¸»è½´å®é™…è½¬é€Ÿ
 
-	//¶¯Á¦µ¶
-	struct _SSpindle SSecondSpindle;			//AÖá£¬µÚ¶şĞı×ªÖá£¬¶¯Á¦µ¶
-	struct _SEncoderTest SSecondSpindleTest;	//AÖá×ªËÙ¼ì²â
-	struct SEncoder* pSSecondSpindleEncoder;	//AÖá±àÂëÆ÷
-	double dSecondSpindleAnalogSpeed;			//AÖáÀíÂÛ×ªËÙ
+    //åŠ¨åŠ›åˆ€
+    struct _SSpindle SSecondSpindle;         //Aè½´ï¼Œç¬¬äºŒæ—‹è½¬è½´ï¼ŒåŠ¨åŠ›åˆ€
+    struct _SEncoderTest SSecondSpindleTest; //Aè½´è½¬é€Ÿæ£€æµ‹
+    struct SEncoder* pSSecondSpindleEncoder; //Aè½´ç¼–ç å™¨
+    double dSecondSpindleAnalogSpeed;        //Aè½´ç†è®ºè½¬é€Ÿ
 
-	//Í¨ÓÃ±àÂëÆ÷
-	struct SEncoder* pSCommonEncoder;   //±àÂëÆ÷2
+    //é€šç”¨ç¼–ç å™¨
+    struct SEncoder* pSCommonEncoder; //ç¼–ç å™¨2
 
-	//ÊÖÂÖ
+    //æ‰‹è½®
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    struct SHandwheelSimGroup SHandwheelSim; /**< µ±Ç° G0 ×Ü¿Ø¼°¸÷Âß¼­Öá¶ÀÁ¢¾àÀëÕË±¾¡£ */
+    struct SHandwheelSimGroup SHandwheelSim; /**< å½“å‰ G0 æ€»æ§åŠå„é€»è¾‘è½´ç‹¬ç«‹è·ç¦»è´¦æœ¬ã€‚ */
 #endif
-	struct _SEncoderTest SHandWheelTest; //ÊÖÂÖ×ªËÙ¼ì²â
-	struct SEncoder* pSHandleWheelEncoder; // ÊÖÂÖ±àÂëÆ÷
+    struct _SEncoderTest SHandWheelTest;   //æ‰‹è½®è½¬é€Ÿæ£€æµ‹
+    struct SEncoder* pSHandleWheelEncoder; // æ‰‹è½®ç¼–ç å™¨
 
-	//IO
-	struct SRunTime SApplyTime;	//×÷ÓÃÊ±¼ä
-	struct _SIOCommand SIOCommand;//IOÖ´ĞĞ»º³åÇø
+    //IO
+    struct SRunTime SApplyTime;    //ä½œç”¨æ—¶é—´
+    struct _SIOCommand SIOCommand; //IOæ‰§è¡Œç¼“å†²åŒº
 
-	//TIO
-	struct _STIOCommand STIOCommand;//TIOÖ´ĞĞ»º³åÇø
+    //TIO
+    struct _STIOCommand STIOCommand; //TIOæ‰§è¡Œç¼“å†²åŒº
 
-	//±êÖ¾Î»	
-	bool bCalculateSpindleSpeedFlag;		//¼ÆËãÖ÷Öá×ªËÙ±êÖ¾Î»
-	bool bCalculateSecondSpindleSpeedFlag;  //¼ÆËãµÚ¶şÖ÷Öá×ªËÙ±êÖ¾Î»
-	bool bLookAheadNewBeginFlag;	//Ç°Õ°ĞÂ¿ªÊ¼
-	bool bGcodeWriteOverFlag;		//G´úÂëĞ´ÈëÍê³É±êÖ¾Î»
-	bool bToolWriteOverFlag;		//µ¶²¹Ğ´ÈëÍê³É±êÖ¾Î»
-	bool cHandWheelSimulaStatus;			//¿ªÆôÊÖÂÖÄ£Äâ???
+    //æ ‡å¿—ä½
+    bool bCalculateSpindleSpeedFlag;       //è®¡ç®—ä¸»è½´è½¬é€Ÿæ ‡å¿—ä½
+    bool bCalculateSecondSpindleSpeedFlag; //è®¡ç®—ç¬¬äºŒä¸»è½´è½¬é€Ÿæ ‡å¿—ä½
+    bool bLookAheadNewBeginFlag;           //å‰ç»æ–°å¼€å§‹
+    bool bGcodeWriteOverFlag;              //Gä»£ç å†™å…¥å®Œæˆæ ‡å¿—ä½
+    bool bToolWriteOverFlag;               //åˆ€è¡¥å†™å…¥å®Œæˆæ ‡å¿—ä½
+    bool cHandWheelSimulaStatus;           //å¼€å¯æ‰‹è½®æ¨¡æ‹Ÿ???
 
-	bool bG33SpindleOverSpeedWarningSigns;  //G33³¬ËÙ¾¯¸æ±êÖ¾Î»
+    bool bG33SpindleOverSpeedWarningSigns; //G33è¶…é€Ÿè­¦å‘Šæ ‡å¿—ä½
 
-	bool bSingleLineMode;//µ¥½ÚÍ£Ö¹×´Ì¬
-	bool bSelectableStop;//Ñ¡ÔñÍ£Ö¹×´Ì¬
-	bool bProgramStop;//³ÌĞòÔİÍ££¨M01µÈ´ıÆÚ¼äÓÃ£© ºé¹ÚÅô 2023/10/7 Ôö
-    bool bSkipMode;//Ìø¶ÎÄ£Ê½  
-	uint8 ucRunCounter; //ÔËĞĞ¼ÆÊı  Îª0Ê±  ÇÒµ¥½ÚÍ£Ö¹×´Ì¬  »òÑ¡ÔñÍ£Ö¹×´Ì¬ÏÂ ¶Î¼äÍ£
-	int64 lIdealSpindlePulse;  //·¢ËÍµÄÖ÷ÖáÂö³å×ÜÁ¿
+    bool bSingleLineMode;     //å•èŠ‚åœæ­¢çŠ¶æ€
+    bool bSelectableStop;     //é€‰æ‹©åœæ­¢çŠ¶æ€
+    bool bProgramStop;        //ç¨‹åºæš‚åœï¼ˆM01ç­‰å¾…æœŸé—´ç”¨ï¼‰ æ´ªå† é¹ 2023/10/7 å¢
+    bool bSkipMode;           //è·³æ®µæ¨¡å¼
+    uint8 ucRunCounter;       //è¿è¡Œè®¡æ•°  ä¸º0æ—¶  ä¸”å•èŠ‚åœæ­¢çŠ¶æ€  æˆ–é€‰æ‹©åœæ­¢çŠ¶æ€ä¸‹ æ®µé—´åœ
+    int64 lIdealSpindlePulse; //å‘é€çš„ä¸»è½´è„‰å†²æ€»é‡
 
-	bool bProgramNoFinished;	//ÅĞ¶Ï³ÌĞòÊÇ·ñ½áÊø£¬µ±³ÌĞòÎŞM30Ôò³ÌĞò»¹Ã»½áÊø
+    bool bProgramNoFinished; //åˆ¤æ–­ç¨‹åºæ˜¯å¦ç»“æŸï¼Œå½“ç¨‹åºæ— M30åˆ™ç¨‹åºè¿˜æ²¡ç»“æŸ
 
-	struct _SMachineTimer SMachineTimer;//¼Ó¹¤¼ÆÊ±
+    struct _SMachineTimer SMachineTimer; //åŠ å·¥è®¡æ—¶
 
-	//µ÷ÊÔ±äÁ¿
-	double dSpindleSpeedRatio;
+    //è°ƒè¯•å˜é‡
+    double dSpindleSpeedRatio;
 
-	int8 cRunChannelGcodeAgain;	//ÊÇ·ñÖØĞÂÔËĞĞG´úÂë	³ÂÃô´Ï	2023/8/28Ôö
-	int8 cG65SystemMacroRun;//G´úÂëG65ÏµÍ³ºê¼ÌĞø½âÎö ³ÂÓıéª 2023.10.31
+    int8 cRunChannelGcodeAgain; //æ˜¯å¦é‡æ–°è¿è¡ŒGä»£ç 	é™ˆæ•èª	2023/8/28å¢
+    int8 cG65SystemMacroRun;    //Gä»£ç G65ç³»ç»Ÿå®ç»§ç»­è§£æ é™ˆè‚²æ¥  2023.10.31
 
-	bool bChuckALoose;//ÔËĞĞ¹ı³ÌÖĞ£º 1-A¼ĞÍ·ËÉ¿ª 0-A¼ĞÍ·¼Ğ½ô ºé¹ÚÅô 2023/10/14
-	bool bChuckBLoose;//ÔËĞĞ¹ı³ÌÖĞ£º 1-B¼ĞÍ·ËÉ¿ª 0-B¼ĞÍ·¼Ğ½ô 
+    bool bChuckALoose; //è¿è¡Œè¿‡ç¨‹ä¸­ï¼š 1-Aå¤¹å¤´æ¾å¼€ 0-Aå¤¹å¤´å¤¹ç´§ æ´ªå† é¹ 2023/10/14
+    bool bChuckBLoose; //è¿è¡Œè¿‡ç¨‹ä¸­ï¼š 1-Bå¤¹å¤´æ¾å¼€ 0-Bå¤¹å¤´å¤¹ç´§
 
-	bool bSingleLineModeUnFinished;//µ¥½ÚÖ´ĞĞÏÂµ±Ç°ĞĞÎ´Ö´ĞĞÍê±Ï ºé¹ÚÅô 2024/5/19
-	
-	bool bIsStopSpindleAndCoolantwhileReset;// ¸´Î»Ö´ĞĞ¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´	 Ä¬ÈÏÎª0£¬¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´
-	bool bIsStopSpindleAndCoolantwhileM30;	// M30Ö´ĞĞ¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´	 Ä¬ÈÏÎª0£¬¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´	
+    bool bSingleLineModeUnFinished; //å•èŠ‚æ‰§è¡Œä¸‹å½“å‰è¡Œæœªæ‰§è¡Œå®Œæ¯• æ´ªå† é¹ 2024/5/19
 
-	double dLessChipBreakLPreDist;    //²»×ã¶ÏĞ¼¼ä¾àµ«ÒÑ×ßµÄ¾àÀë ºé¹ÚÅô2024/8/1
-	bool bChipBreakStart;             //¿ªÊ¼¶ÏĞ¼ ºé¹ÚÅô2024/8/1
+    bool bIsStopSpindleAndCoolantwhileReset; // å¤ä½æ‰§è¡Œå…³ä¸»è½´åŒæ—¶å…³å†·å´	 é»˜è®¤ä¸º0ï¼Œå…³ä¸»è½´åŒæ—¶å…³å†·å´
+    bool bIsStopSpindleAndCoolantwhileM30;   // M30æ‰§è¡Œå…³ä¸»è½´åŒæ—¶å…³å†·å´	 é»˜è®¤ä¸º0ï¼Œå…³ä¸»è½´åŒæ—¶å…³å†·å´
 
-	//ÇãĞ±YÖá»ú£ºĞéÄâYÖáÓëÇãĞ±Y1Öá¼äµÄ¼Ğ½Ç
-	double dCOSAngleYY1;//cos60¡ã= 0.5
-	double dSINAngleYY1;//sin60¡ã= 0.8660 2540378
-	double dTANAngleYY1;//tan60¡ã= 1.7320 5080757
-	bool bUseVirtualY;//ÊÇ·ñ¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ 
+    double dLessChipBreakLPreDist; //ä¸è¶³æ–­å±‘é—´è·ä½†å·²èµ°çš„è·ç¦» æ´ªå† é¹2024/8/1
+    bool bChipBreakStart;          //å¼€å§‹æ–­å±‘ æ´ªå† é¹2024/8/1
+
+    //å€¾æ–œYè½´æœºï¼šè™šæ‹ŸYè½´ä¸å€¾æ–œY1è½´é—´çš„å¤¹è§’
+    double dCOSAngleYY1; //cos60Â°= 0.5
+    double dSINAngleYY1; //sin60Â°= 0.8660 2540378
+    double dTANAngleYY1; //tan60Â°= 1.7320 5080757
+    bool bUseVirtualY;   //æ˜¯å¦å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½
 };
 
-struct SWaitSignal //Í¨µÀµÈ´ıĞÅºÅÊı¾İ
+struct SWaitSignal //é€šé“ç­‰å¾…ä¿¡å·æ•°æ®
 {
-	uint8 ucTag;			//±êÇ©
-	uint8 ucFinishedSign;	//Íê³É±ê¼Ç£¨ÒÔÎ»À´±íÊ¾ĞèÒªµÈ´ıµÄÍ¨µÀ£¬ÀıÈç 0000 0101 ±íÊ¾Í¨µÀ0ºÍÍ¨µÀ2£©
-	uint8 ucCurrentSign;	//µ±Ç°±ê¼Ç
-	bool bStatus;	//×´Ì¬
+    uint8 ucTag;          //æ ‡ç­¾
+    uint8 ucFinishedSign; //å®Œæˆæ ‡è®°ï¼ˆä»¥ä½æ¥è¡¨ç¤ºéœ€è¦ç­‰å¾…çš„é€šé“ï¼Œä¾‹å¦‚ 0000 0101 è¡¨ç¤ºé€šé“0å’Œé€šé“2ï¼‰
+    uint8 ucCurrentSign;  //å½“å‰æ ‡è®°
+    bool bStatus;         //çŠ¶æ€
 };
 
-struct SChannelBufElement//Í¨µÀĞÅºÅÊı×éÔªËØ
+struct SChannelBufElement //é€šé“ä¿¡å·æ•°ç»„å…ƒç´ 
 {
-	uint8 ucType;//ÀàĞÍ ¢ÙÍ¨µÀµÈ´ı  ¢ÚÍ¨µÀÆô¶¯  ¢Û¼ì²éÍ¨µÀ×´Ì¬M96
-	bool bOccupy;//ÊÇ·ñ±»Õ¼Áì
-	bool bApply;//ÊÇ·ñ¿ÉÖ´ĞĞ
-	
+    uint8 ucType; //ç±»å‹ â‘ é€šé“ç­‰å¾…  â‘¡é€šé“å¯åŠ¨  â‘¢æ£€æŸ¥é€šé“çŠ¶æ€M96
+    bool bOccupy; //æ˜¯å¦è¢«å é¢†
+    bool bApply;  //æ˜¯å¦å¯æ‰§è¡Œ
 
-	union SChannelSignal
-	{
-		uint8 ucChannelNum;//¢ÚÍ¨µÀÆô¶¯ ¢Û¼ì²éÍ¨µÀ×´Ì¬M96
-		struct SWaitSignal SWaitSignal;//¢ÙÍ¨µÀµÈ´ı
-	}UData;
+    union SChannelSignal
+    {
+        uint8 ucChannelNum;             //â‘¡é€šé“å¯åŠ¨ â‘¢æ£€æŸ¥é€šé“çŠ¶æ€M96
+        struct SWaitSignal SWaitSignal; //â‘ é€šé“ç­‰å¾…
+    } UData;
 };
 
-struct SChannelManager//Í¨µÀĞÅºÅ¹ÜÀí½á¹¹Ìå
+struct SChannelManager //é€šé“ä¿¡å·ç®¡ç†ç»“æ„ä½“
 {
-	//uint16 usStatus;//Êı×éµÄ×´Ì¬£¨ÒÔÎ»À´±íÊ¾ÓĞĞ§Êı×éÔªËØ£©  µÚ0Î»Îª1±íÊ¾Êı×éµÄ0ÔªËØÓĞĞ§
-	struct SChannelBufElement SBuff[CHANNEL_BUFF_SIZE];//µÈ´ıĞÅºÅÊı×é
+    //uint16 usStatus;//æ•°ç»„çš„çŠ¶æ€ï¼ˆä»¥ä½æ¥è¡¨ç¤ºæœ‰æ•ˆæ•°ç»„å…ƒç´ ï¼‰  ç¬¬0ä½ä¸º1è¡¨ç¤ºæ•°ç»„çš„0å…ƒç´ æœ‰æ•ˆ
+    struct SChannelBufElement SBuff[CHANNEL_BUFF_SIZE]; //ç­‰å¾…ä¿¡å·æ•°ç»„
 };
 
-//Í¨µÀµÈ´ıĞÅºÅĞÅÏ¢½á¹¹Ìå
+//é€šé“ç­‰å¾…ä¿¡å·ä¿¡æ¯ç»“æ„ä½“
 struct SChannelWaitSignalData
 {
-	bool bOccupied;    //ÊÇ·ñ±»Õ¼Áì     £¨±íÊ¾µ¥ÔªÊÇ·ñÓĞÊı¾İĞ´Èë£©
-	uint8 ucFinishedSign;	//Íê³É±ê¼Ç£¨ÒÔÎ»À´±íÊ¾ĞèÒªµÈ´ıµÄÍ¨µÀ£¬ÀıÈç 0000 0101 ±íÊ¾Í¨µÀ0ºÍÍ¨µÀ2£©
-	uint8 ucCurrentSign;	//µ±Ç°±ê¼Ç
-	bool bStatus;	//×´Ì¬
+    bool bOccupied;       //æ˜¯å¦è¢«å é¢†     ï¼ˆè¡¨ç¤ºå•å…ƒæ˜¯å¦æœ‰æ•°æ®å†™å…¥ï¼‰
+    uint8 ucFinishedSign; //å®Œæˆæ ‡è®°ï¼ˆä»¥ä½æ¥è¡¨ç¤ºéœ€è¦ç­‰å¾…çš„é€šé“ï¼Œä¾‹å¦‚ 0000 0101 è¡¨ç¤ºé€šé“0å’Œé€šé“2ï¼‰
+    uint8 ucCurrentSign;  //å½“å‰æ ‡è®°
+    bool bStatus;         //çŠ¶æ€
 };
 
-//Í¨µÀµÈ´ıĞÅºÅ¹ÜÀí½á¹¹Ìå
+//é€šé“ç­‰å¾…ä¿¡å·ç®¡ç†ç»“æ„ä½“
 struct SChannelWaitSignalMannager
 {
-	struct SChannelWaitSignalData  SBuff[CHANNEL_BUFF_SIZE];//µÈ´ıĞÅºÅĞÅÏ¢Êı×é
+    struct SChannelWaitSignalData SBuff[CHANNEL_BUFF_SIZE]; //ç­‰å¾…ä¿¡å·ä¿¡æ¯æ•°ç»„
 };
 
-//extern struct SChannel g_SChannel[CHANNEL_NUM_MAX];//Í¨µÀ½á¹¹ÌåÊı×é
-extern struct SChannel* g_SChannel;///Í¨µÀ½á¹¹ÌåÖ¸Õë
-//extern struct SChannelManager* g_SChannelManager;//Í¨µÀĞÅºÅ¹ÜÀí½á¹¹ÌåÖ¸Õë
-extern  struct SChannelWaitSignalMannager* g_pChannelWaitSignalMannager;//Í¨µÀµÈ´ıĞÅºÅ¹ÜÀí½á¹¹ÌåÖ¸Õë
-//extern struct SChannelManager g_SChannelManager->//Í¨µÀĞÅºÅ¹ÜÀí
+//extern struct SChannel g_SChannel[CHANNEL_NUM_MAX];//é€šé“ç»“æ„ä½“æ•°ç»„
+extern struct SChannel* g_SChannel; ///é€šé“ç»“æ„ä½“æŒ‡é’ˆ
+//extern struct SChannelManager* g_SChannelManager;//é€šé“ä¿¡å·ç®¡ç†ç»“æ„ä½“æŒ‡é’ˆ
+extern struct SChannelWaitSignalMannager* g_pChannelWaitSignalMannager; //é€šé“ç­‰å¾…ä¿¡å·ç®¡ç†ç»“æ„ä½“æŒ‡é’ˆ
+//extern struct SChannelManager g_SChannelManager->//é€šé“ä¿¡å·ç®¡ç†
 
-extern bool g_bSChannelManagerApplyByMain;//Í¨µÀĞÅºÅ¹ÜÀíÆ÷Ö»ÄÜÔÚMainÖĞÔËĞĞ 
+extern bool g_bSChannelManagerApplyByMain; //é€šé“ä¿¡å·ç®¡ç†å™¨åªèƒ½åœ¨Mainä¸­è¿è¡Œ
 
-//ÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±ÙÍ¨µÀ½á¹¹Ìå
+//åœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾Ÿé€šé“ç»“æ„ä½“
 struct SChannel* initSChannel();
 
-////ÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±ÙÍ¨µÀĞÅºÅ¹ÜÀí½á¹¹Ìå
+////åœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾Ÿé€šé“ä¿¡å·ç®¡ç†ç»“æ„ä½“
 //struct SChannelManager* initChannelManager();
 
-//ÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±ÙÍ¨µÀµÈ´ıĞÅºÅ¹ÜÀí½á¹¹Ìå
+//åœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾Ÿé€šé“ç­‰å¾…ä¿¡å·ç®¡ç†ç»“æ„ä½“
 struct SChannelWaitSignalMannager* initChannelWaitSignalManager();
-//	Í¨µÀ³õÊ¼»¯º¯Êı
-void initChannel(struct SChannel* pSChannel, uint8 ucChannelNum, uint8* ucAxisMapArray, uint8* ucPWMAxisMapArray, struct SEncoder**pEncoderArrays);
-//	»ñÈ¡Í¨µÀ×´Ì¬
+//	é€šé“åˆå§‹åŒ–å‡½æ•°
+void initChannel(struct SChannel* pSChannel, uint8 ucChannelNum, uint8* ucAxisMapArray, uint8* ucPWMAxisMapArray,
+                 struct SEncoder** pEncoderArrays);
+//	è·å–é€šé“çŠ¶æ€
 enum SYSTEMSTATUS getChannelStatus(uint8 ucChannelNum);
 
-//Í¨µÀÄÚÖáÊ¹ÄÜ
+//é€šé“å†…è½´ä½¿èƒ½
 int8 channelAxisEnable(uint8 ucChannelNum);
 
-////	µÈ´ıĞÅºÅĞ´Èëº¯Êı
+////	ç­‰å¾…ä¿¡å·å†™å…¥å‡½æ•°
 //int8 waitSignalWrite(uint8 ucTag, uint8 ucFinishedSign);
 
-////	Æô¶¯Í¨µÀĞÅºÅĞ´Èëº¯Êı
+////	å¯åŠ¨é€šé“ä¿¡å·å†™å…¥å‡½æ•°
 //int8 startSignalWrite(uint8 ucTargetChannelNum, int8 cFileNameVal);
 //
-////	¼ì²âÍ¨µÀ×´Ì¬ĞÅºÅĞ´Èëº¯Êı
+////	æ£€æµ‹é€šé“çŠ¶æ€ä¿¡å·å†™å…¥å‡½æ•°
 //int8 checkSignalWrite(uint8 ucTargetChannelNum);
 
-////	Ö´ĞĞÍ¨µÀĞÅºÅ
+////	æ‰§è¡Œé€šé“ä¿¡å·
 //int8 channelSignalApply(int8 cSignalBufNum, uint8 ucChannelNum);
 
-//Ë½ÓĞº¯Êı
+//ç§æœ‰å‡½æ•°
 //
-////Í¨µÀµÈ´ıĞÅºÅ
+////é€šé“ç­‰å¾…ä¿¡å·
 //int8 waitSignalApply(int8 cSignalBufNum, uint8 ucChannelNum);
 //
-////Æô¶¯Í¨µÀĞÅºÅ
+////å¯åŠ¨é€šé“ä¿¡å·
 //int8 startSignalApply(int8 cSignalBufNum);
 //
-////¼ì²âÍ¨µÀĞÅºÅ
+////æ£€æµ‹é€šé“ä¿¡å·
 //int8 checkSignalApply(int8 cSignalBufNum);
 
-//	µÈ´ıĞÅºÅĞ´Èëº¯Êı
+//	ç­‰å¾…ä¿¡å·å†™å…¥å‡½æ•°
 int8 waitSignalWrite(uint8 ucFinishedSign);
-//	Ö´ĞĞÍ¨µÀĞÅºÅ
+//	æ‰§è¡Œé€šé“ä¿¡å·
 int8 channelSignalApply(int8* cSignalBufNum, uint8 ucChannelNum, struct SChannelCommand* psChannelCommand);
-//Ë½ÓĞº¯Êı
+//ç§æœ‰å‡½æ•°
 int8 waitSignalApply(int8* cSignalBufNum, uint8 ucTargetChannelNum, uint8 ucChannelNum);
-//¼ì²âÍ¨µÀĞÅºÅÖ´ĞĞ
+//æ£€æµ‹é€šé“ä¿¡å·æ‰§è¡Œ
 int8 checkSignalApply(uint8 ucTargetChannelNum);
-//Æô¶¯Í¨µÀĞÅºÅÖ´ĞĞ
+//å¯åŠ¨é€šé“ä¿¡å·æ‰§è¡Œ
 int8 startSignalApply(uint8 ucTargetChannelNum, int32 cTargetFileNameVal);
-//³õÊ¼»¯ÇãĞ±YÖá»úµÄ²ÎÊı
+//åˆå§‹åŒ–å€¾æ–œYè½´æœºçš„å‚æ•°
 int8 initInclinedYMachinePara(struct SChannel* pSChannel, double dAngleYY1);
 #endif // !__CHANNEL_H
-

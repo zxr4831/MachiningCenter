@@ -1,17 +1,15 @@
 #ifndef __GCODE_G80_H
 #define __GCODE_G80_H
 
-
-
 void addG80RegulationAPI();
-//¼ÇÂ¼Ö´ĞĞ×ê¿×Ö¸ÁîÇ°µÄÔË¶¯Ä£Ì¬Ö¸Áî
+//è®°å½•æ‰§è¡Œé’»å­”æŒ‡ä»¤å‰çš„è¿åŠ¨æ¨¡æ€æŒ‡ä»¤
 void setGaBeforeG8x(uint8 ucMode, uint8 ucChannelNum, int16 sGaBeforeG8x, SGCommandRegulation* pGaBeforeG8xRegulation);
-//»ñÈ¡Ö´ĞĞ×ê¿×Ö¸ÁîÇ°µÄÔË¶¯Ä£Ì¬Ö¸Áî
+//è·å–æ‰§è¡Œé’»å­”æŒ‡ä»¤å‰çš„è¿åŠ¨æ¨¡æ€æŒ‡ä»¤
 void getGaBeforeG8x(uint8 ucMode, int16* sBeforeG8x, SGCommandRegulation** pGaBeforeG8xRegulation);
 
-//¸³ÖµG80
+//èµ‹å€¼G80
 int8 AssignG80(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-//Óï·¨´¦ÀíG80
+//è¯­æ³•å¤„ç†G80
 int8 CheckG80(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif

@@ -1,8 +1,7 @@
 #ifndef _NCDATAPARA_H
 #define _NCDATAPARA_H
 
-
-//Àµ√˜ È212“≥ ˝æ›≤Œ ˝
+//ËØ¥Êòé‰π¶212È°µÊï∞ÊçÆÂèÇÊï∞
 #define NC_DATA_PARAMETER_026 5
 #define NC_DATA_PARAMETER_037 1
 #define NC_DATA_PARAMETER_038 0
@@ -10,8 +9,8 @@
 #define NC_DATA_PARAMETER_040 0
 #define NC_DATA_PARAMETER_041 1
 #define NC_DATA_PARAMETER_042 0
-#define NC_DATA_PARAMETER_043 1  
-#define NC_DATA_PARAMETER_044 0  
-#define NC_DATA_PARAMETER_045 0  
-#define NC_DATA_PARAMETER_046 0  
+#define NC_DATA_PARAMETER_043 1
+#define NC_DATA_PARAMETER_044 0
+#define NC_DATA_PARAMETER_045 0
+#define NC_DATA_PARAMETER_046 0
 #endif // !_NCDATAPARA_H

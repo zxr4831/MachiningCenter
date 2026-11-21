@@ -4,83 +4,90 @@
 #include "common.h"
 #include <stdio.h>
 /**
-Copyright (c) ¹ã¶«¹¤Òµ´óÑ§
+Copyright (c) å¹¿ä¸œå·¥ä¸šå¤§å­¦
 @file lookAhead.h
-@author ¹ùÇ¿
+@author éƒ­å¼º
 @version 24.0
 @date  2023/06/23
-@brief ËÙ¶ÈÇ°Õ°³ÌĞò£¨»º³åÇø£©
+@brief é€Ÿåº¦å‰ç»ç¨‹åºï¼ˆç¼“å†²åŒºï¼‰
 */
 
-//Äâ¶¨Òå¸´ºÏÔË¶¯×î´óËÙ¶È¡¢ÆğÌøËÙ¶È×î´ó¼ÓËÙ¶ÈºÍ×îĞ¡¼ÓËÙ¶ÈÀ´Ô´ ºê¶¨Òå
-#define COMMON_MOTION_PARA_SOURCE_MODE   1      // 0:Ö±½ÓÓÉÏµÍ³Ö¸¶¨¹Ì¶¨²ÎÊı   
-												// 1£ºÓÉ¸÷ÔË¶¯Öá²ÎÊı¼ÆËãµÃµ½£¨Ã¿¶Î¸´ºÏÔË¶¯Ö¸Áî²ÎÊı²»ÔÙÏàÍ¬£©
+//æ‹Ÿå®šä¹‰å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ã€èµ·è·³é€Ÿåº¦æœ€å¤§åŠ é€Ÿåº¦å’Œæœ€å°åŠ é€Ÿåº¦æ¥æº å®å®šä¹‰
+#define COMMON_MOTION_PARA_SOURCE_MODE                                                                                 \
+    1 // 0:ç›´æ¥ç”±ç³»ç»ŸæŒ‡å®šå›ºå®šå‚æ•°                                                                                    \
+        // 1ï¼šç”±å„è¿åŠ¨è½´å‚æ•°è®¡ç®—å¾—åˆ°ï¼ˆæ¯æ®µå¤åˆè¿åŠ¨æŒ‡ä»¤å‚æ•°ä¸å†ç›¸åŒï¼‰
 
-#define LINEARAXIS_NUM_MAX	3					//ÏßĞÔÖá×ÜÊı
+#define LINEARAXIS_NUM_MAX 3 //çº¿æ€§è½´æ€»æ•°
 
-//Èı¸öºê¶¨Òå·Ö±ğÓÃÓÚ¼Ğ½ÇÔ¼ÊøËÙ¶È¼ÆËã
-#define VECTOR_N1   0
-#define VECTOR_N2   1
-#define VECTOR_N3   2
+//ä¸‰ä¸ªå®å®šä¹‰åˆ†åˆ«ç”¨äºå¤¹è§’çº¦æŸé€Ÿåº¦è®¡ç®—
+#define VECTOR_N1 0
+#define VECTOR_N2 1
+#define VECTOR_N3 2
 
-//Ç°Õ°¹¦ÄÜ¿ªÆô±êÖ¾Î» (ÔÚlookAhead.c´ÓÖĞ¶¨Òå)
+//å‰ç»åŠŸèƒ½å¼€å¯æ ‡å¿—ä½ (åœ¨lookAhead.cä»ä¸­å®šä¹‰)
 extern bool g_bLookAheadFunctionOpenFlag;
 
-//¶¨ÒåÇ°Õ°µÄÈı¸öÖá
+//å®šä¹‰å‰ç»çš„ä¸‰ä¸ªè½´
 extern uint8 g_ucLookAheadAxisArray[3];
 
-//Ç°Õ°ĞèÒª³õÊ¼»¯µÄ±äÁ¿£¨Ôİ£©
+//å‰ç»éœ€è¦åˆå§‹åŒ–çš„å˜é‡ï¼ˆæš‚ï¼‰
 int8 lookAheadInit(struct SChannel* pSChannel);
 
-//ÅĞ¶ÏÊÇ·ñÎª¿ÉÇ°Õ°µÄG0 ºé¹ÚÅô 2024/5/27
+//åˆ¤æ–­æ˜¯å¦ä¸ºå¯å‰ç»çš„G0 æ´ªå† é¹ 2024/5/27
 bool judgeG0(struct SToolCompensation* pToolElement, uint8 ucChannelNum, int16 sIndex);
 
-//ÅĞ¶ÏÊÇ·ñÎªÆ½ÃæÔ²»¡
+//åˆ¤æ–­æ˜¯å¦ä¸ºå¹³é¢åœ†å¼§
 bool judgePlanarArc(struct SToolCompensation* pToolElement, int nArraySize);
 
-//ÅĞ¶Ï¸Ã¶ÎÊÇ·ñĞèÒªËÙ¶ÈÇ°Õ°
+//åˆ¤æ–­è¯¥æ®µæ˜¯å¦éœ€è¦é€Ÿåº¦å‰ç»
 int8 judgeG00G01G02G03(struct SToolCompensation* pToolElement, uint8 ucChannelNum);
 
-//¶àÖáÄ£Ê½ÏÂĞŞÕı½ø¸øËÙ¶ÈºÍµÍËÙÏÂÏŞÖµ
-void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int nArraySize, bool bPlanarArcFlag, uint8 ucChannelNum);
+//å¤šè½´æ¨¡å¼ä¸‹ä¿®æ­£è¿›ç»™é€Ÿåº¦å’Œä½é€Ÿä¸‹é™å€¼
+void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int nArraySize, bool bPlanarArcFlag,
+                                       uint8 ucChannelNum);
 
-//Ïòµ¶²¹½á¹¹ÌåÖĞÌí¼Ó¼ÓËÙ¶ÈËÙ¶ÈÒÔ¼°¼Ó¼õËÙÀàĞÍĞÅÏ¢
+//å‘åˆ€è¡¥ç»“æ„ä½“ä¸­æ·»åŠ åŠ é€Ÿåº¦é€Ÿåº¦ä»¥åŠåŠ å‡é€Ÿç±»å‹ä¿¡æ¯
 int8 calcVAndAPara(struct SToolCompensation* pToolElement, struct SChannel* pSChannel, bool bPlanarArcFlag);
 
-//¼ÆËã½ø¸øËÙ¶È¶Ô±ÈÏµÊı(·ÀÖ¹G99Ä£Ê½ÏÂ½ø¸øËÙ¶Èµ¥Î»Îªmm/RÖ±½ÓÓëmm/msËÙ¶ÈÁ¿¶¼±È½Ï)
+//è®¡ç®—è¿›ç»™é€Ÿåº¦å¯¹æ¯”ç³»æ•°(é˜²æ­¢G99æ¨¡å¼ä¸‹è¿›ç»™é€Ÿåº¦å•ä½ä¸ºmm/Rç›´æ¥ä¸mm/msé€Ÿåº¦é‡éƒ½æ¯”è¾ƒ)
 double calcCoefOfFeedrate(struct SToolCompensation* pToolElement, uint8 ucChannelNum);
 
-//calcVAndAParaº¯Êıµ÷ÓÃÍê±ÏºóÔÙ´ÎĞŞÕıÇĞÏ÷ËÙ¶ÈºÍµÍËÙÏÂÏŞÖµ
+//calcVAndAParaå‡½æ•°è°ƒç”¨å®Œæ¯•åå†æ¬¡ä¿®æ­£åˆ‡å‰Šé€Ÿåº¦å’Œä½é€Ÿä¸‹é™å€¼
 void correctFeedrateAndLowerLimitSpeedAgain(struct SToolCompensation* pToolElement, uint8 ucChannelNum);
 
-//ÔÚÇ°Õ°¿É¶ÁÇø¼äÄÚ½«Ç°Õ°¶ÁĞ´Ö¸ÕëÒÆ¶¯ÖÁG00G01G02G03µ¥Ôª
+//åœ¨å‰ç»å¯è¯»åŒºé—´å†…å°†å‰ç»è¯»å†™æŒ‡é’ˆç§»åŠ¨è‡³G00G01G02G03å•å…ƒ
 bool moveToG00G01G02G03(int16 sLookAheadRes, uint8 ucChannelNum);
 
-//¼ÆËãÔ²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøÏÂµÄ×î´óËÙ¶È
+//è®¡ç®—åœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦
 double calcArcMaxNormalAccVmax(double dR);
 
-//¼ÆËãÔ²»¡¹­¸ßÎó²îÔ¼ÊøÏÂµÄ×î´óËÙ¶È
+//è®¡ç®—åœ†å¼§å¼“é«˜è¯¯å·®çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦
 double calcArcMaxChordErrorVmax(double dR, double dF);
 
-//µ¥Öá·´ÏòÊ±VEER¼ÆËã
-bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum, double* dES_Vector_MultiArray, double* dES_Vector_SubArray, const uint8* ucMapArray);
+//å•è½´åå‘æ—¶VEERè®¡ç®—
+bool calcVeerWhenAxisRev(struct SToolCompensation* pPreTraj, uint8 ucChannelNum, double* dES_Vector_MultiArray,
+                         double* dES_Vector_SubArray, const uint8* ucMapArray);
 
-//´¿¼¸ºÎVeer¼ÆËãºó£¬¶ÔVeer½øĞĞĞŞÕı
-void correctVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj);
+//çº¯å‡ ä½•Veerè®¡ç®—åï¼Œå¯¹Veerè¿›è¡Œä¿®æ­£
+void correctVeerAfterCalcVeer(uint8 ucChannelNum, struct SToolCompensation* pPreTraj,
+                              struct SToolCompensation* pLaterTraj);
 
-//¼ÆËãÇ°ºó¶Î¹ì¼£½ø¸øËÙ¶È×îĞ¡Öµ  2023.6.23
-double calcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj);
+//è®¡ç®—å‰åæ®µè½¨è¿¹è¿›ç»™é€Ÿåº¦æœ€å°å€¼  2023.6.23
+double calcMinFeedrateBtnPreAndLaterTraj(uint8 ucChannelNum, struct SToolCompensation* pPreTraj,
+                                         struct SToolCompensation* pLaterTraj);
 
-//¼ÆËãÁ½ÏàÁÚ¹ì¼£ÏÎ½Óµã½Ç¶ÈÔ¼ÊøËÙ¶È£¨¶àÖáÄ£Ê½£©
-bool calcVeerMultiAxisMode(struct SChannel* pSChannel, int nArraySize, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj);
+//è®¡ç®—ä¸¤ç›¸é‚»è½¨è¿¹è¡”æ¥ç‚¹è§’åº¦çº¦æŸé€Ÿåº¦ï¼ˆå¤šè½´æ¨¡å¼ï¼‰
+bool calcVeerMultiAxisMode(struct SChannel* pSChannel, int nArraySize, struct SToolCompensation* pPreTraj,
+                           struct SToolCompensation* pLaterTraj);
 
-//¼ÆËãÁ½ÏàÁÚ¹ì¼£ÏÎ½Óµã½Ç¶ÈÔ¼ÊøËÙ¶È£¨ÈıÏßĞÔÖáÄ£Ê½£©
-bool calcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj);
+//è®¡ç®—ä¸¤ç›¸é‚»è½¨è¿¹è¡”æ¥ç‚¹è§’åº¦çº¦æŸé€Ÿåº¦ï¼ˆä¸‰çº¿æ€§è½´æ¨¡å¼ï¼‰
+bool calcVeerLinearAxisMode(struct SChannel* pSChannel, struct SToolCompensation* pPreTraj,
+                            struct SToolCompensation* pLaterTraj);
 
-//ÇóÁ½Êı×é±ÈÖµ½á¹û×îĞ¡Öµ
+//æ±‚ä¸¤æ•°ç»„æ¯”å€¼ç»“æœæœ€å°å€¼
 double calcMinTwoArrays(double* dArray1, double* dArray2);
 
-//»ñÈ¡Î»ÒÆËÙ¶È¼ÆËãÏµÊı
+//è·å–ä½ç§»é€Ÿåº¦è®¡ç®—ç³»æ•°
 double getCoef(uint8 ucVelType);
 
 double getSingleAxisMaxAcc(int i, uint8 ucVelType, uint8* ucMapArray);
@@ -90,38 +97,37 @@ double getMaxAcc(uint8 ucVelType);
 
 double getMaxDec(uint8 ucVelType);
 
-//¼ÆËãÏÎ½ÓµãÇ°¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
+//è®¡ç®—è¡”æ¥ç‚¹å‰æ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
 double calcVac(struct SToolCompensation* p, struct SChannel* pSChannel);
 
-//¼ÆËãÏÎ½Óµãºó¶Î¹ì¼£³¤¶ÈÔ¼ÊøËÙ¶È
+//è®¡ç®—è¡”æ¥ç‚¹åæ®µè½¨è¿¹é•¿åº¦çº¦æŸé€Ÿåº¦
 double calcVde(struct SToolCompensation* p, struct SChannel* pSChannel);
 
-//¼ÆËãĞèÒªÇ°Õ°µÄÁ¬Ğø¹ì¼£¶ÎÊı
+//è®¡ç®—éœ€è¦å‰ç»çš„è¿ç»­è½¨è¿¹æ®µæ•°
 int16 calcNeedLookAheadNum(int16 sLookAheadWIndex, int16 sLookAheadRes, uint8 ucChannelNum);
 
-//¼ÆËãÇ°Õ°Çø¼äÊ×¶Î³õËÙ¶È
+//è®¡ç®—å‰ç»åŒºé—´é¦–æ®µåˆé€Ÿåº¦
 double calcFirstElementVs(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum);
 
-//¼ÆËãÇ°Õ°Çø¼äÎ²¶ÎÄ©ËÙ¶È
+//è®¡ç®—å‰ç»åŒºé—´å°¾æ®µæœ«é€Ÿåº¦
 double calcLastElementVe(struct SToolCompensation* pToolElement, uint8* ucMapArray, uint8 ucChannelNum);
 
-//Ç°Õ°¼ÆËãº¯Êı
+//å‰ç»è®¡ç®—å‡½æ•°
 uint8 calcVsVe(int16 sNeedLookAheadNum, struct SChannel* pSChannel);
 
-//ÎŞÇ°Õ°Ä£Ê½
+//æ— å‰ç»æ¨¡å¼
 bool noLookAheadMode(uint8 ucChannelNum);
 
-//ÓĞÇ°Õ°Ä£Ê½
+//æœ‰å‰ç»æ¨¡å¼
 int8 lookAheadMode(int16 sLookAheadRes, struct SChannel* pSChannel);
 
-//ËÙ¶È²»Ç°Õ°
+//é€Ÿåº¦ä¸å‰ç»
 bool lookAheadForbidden(struct SChannel* pSChannel);
 
-//ËÙ¶ÈÇ°Õ°
+//é€Ÿåº¦å‰ç»
 bool velocityLookAhead(struct SChannel* pSChannel);
 
-//²âÊÔÓÃÇóÏÎµã½Ç¶È
+//æµ‹è¯•ç”¨æ±‚è¡”ç‚¹è§’åº¦
 double calcAngle(struct SToolCompensation* pPreTraj, struct SToolCompensation* pLaterTraj);
-
 
 #endif

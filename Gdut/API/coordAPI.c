@@ -11,288 +11,286 @@
 #include "ToolChanger.h"
 #include "Spindle.h"
 #include "G32.h"
-#include "G1.h" 
-#include "G0.h"  
-#include "Motion.h"	
+#include "G1.h"
+#include "G0.h"
+#include "Motion.h"
 #include <string.h>
 #include "G2.h"
 #include "Channel.h"
 #include "Config.h"
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡»úĞµ×ø±ê Double
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šgetMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–æœºæ¢°åæ ‡ Double
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucAxis			AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºDouble XYZÖá:mm  CÖá:¡ã  XÖáÎªÖ±¾¶Öµ
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šDouble XYZè½´:mm  Cè½´:Â°  Xè½´ä¸ºç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double	getMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+double getMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
 {
-	double dTargetPoint = 0.0;
-	const uint8* ucMapArray;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return dTargetPoint;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
-	if (ucMapArray[ucAxis]>= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0;
-	}
-	getSingleAxisRealTimePoint(&dTargetPoint, ucAxis, ucMapArray);//»ñÈ¡µ¥Öá×ø±ê
+    double dTargetPoint = 0.0;
+    const uint8* ucMapArray;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return dTargetPoint;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0;
+    }
+    getSingleAxisRealTimePoint(&dTargetPoint, ucAxis, ucMapArray); //è·å–å•è½´åæ ‡
 
-	if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)//»ñÈ¡µÄÖáÎªĞı×ªÖá
-	{
-		dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360);//È¡ÓàÈ¡Õı
-	}
-	else if(g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter ==TRUE)
-	{
-		dTargetPoint *= 2;
-	}
-	return dTargetPoint;
+    if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS) //è·å–çš„è½´ä¸ºæ—‹è½¬è½´
+    {
+        dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360); //å–ä½™å–æ­£
+    }
+    else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
+    {
+        dTargetPoint *= 2;
+    }
+    return dTargetPoint;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMachCoordInt(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡»úĞµ×ø±êInt
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºInt XYZÖá:um  CÖá:¡ã*1000   XÖáÊÇÖ±¾¶Öµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetMachCoordInt(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–æœºæ¢°åæ ‡Int
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å· AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šInt XYZè½´:um  Cè½´:Â°*1000   Xè½´æ˜¯ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int getMachCoordInt(uint8 ucChannelNum, uint8 ucAxis)
 {
-	return round(getMachCoordDouble(ucChannelNum, ucAxis) * 1000.0);
+    return round(getMachCoordDouble(ucChannelNum, ucAxis) * 1000.0);
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
-  º¯Êı¹¦ÄÜ  ÉèÖÃ»úĞµ×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis	£ºAXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-			val		£ºÄ¿±êÖµ  XYZÖá£ºmm  CÖá£º½Ç¶È   XÖáÊÇÖ±¾¶Öµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º- 1 ÖáºÅ´íÎó
-			- 2 ¿ÕÖ¸Õë
-			- 3 ÎŞÓ³Éä
-			- 4 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®æœºæ¢°åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis	ï¼šAXIS_X,AXIS_Y,AXIS_Z,AXIS_C
+			val		ï¼šç›®æ ‡å€¼  XYZè½´ï¼šmm  Cè½´ï¼šè§’åº¦   Xè½´æ˜¯ç›´å¾„å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š- 1 è½´å·é”™è¯¯
+			- 2 ç©ºæŒ‡é’ˆ
+			- 3 æ— æ˜ å°„
+			- 4 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8	setMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
+int8 setMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
 {
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -4;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -4;
+    }
 
-	return updateSingleAxisRealTimePoint(&val, ucAxis, g_SChannel[ucChannelNum].pMapAxisArray); // ¸üĞÂÄ¿±êÖáµ±Ç°µã×ø±ê
+    return updateSingleAxisRealTimePoint(&val, ucAxis, g_SChannel[ucChannelNum].pMapAxisArray); // æ›´æ–°ç›®æ ‡è½´å½“å‰ç‚¹åæ ‡
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡¾ø¶Ô×ø±ê Double
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ	AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºDouble XYZÖá:mm  CÖá:¡ãXÖáÊÇÖ±¾¶Öµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–ç»å¯¹åæ ‡ Double
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·	AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šDouble XYZè½´:mm  Cè½´:Â°Xè½´æ˜¯ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double	getAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+double getAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
 {
-	double dMachPoint = 0.0;
-	double dTargetPoint = 0.0;
-	const uint8* ucMapArray;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return dMachPoint;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;//»ñÈ¡Ó³Éä
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0;
-	}
-	getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);//»ñÈ¡µ¥Öá»úĞµ×ø±ê
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-	if (g_SSystemPara.bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê ´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-	{
-		if (ucAxis == AXIS_X)
-		{
-			double dY1Mach = 0;
-			double dYAbs = 0;
-			getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, ucMapArray);//Y1Öá×ø±ê(°ë¾¶Öµ)
-			dYAbs = dY1Mach * g_SChannel[ucChannelNum].dCOSAngleYY1;//YÖá×ø±ê
-			dTargetPoint = dMachPoint - 1.0 * dYAbs * g_SChannel[ucChannelNum].dTANAngleYY1 - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
-		}
-		else if (ucAxis == AXIS_Y)
-		{
-			dTargetPoint = dMachPoint * g_SChannel[ucChannelNum].dCOSAngleYY1 - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
-		}
-		else
-		{
-			dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
-		}
-	}
-	else
-	{
-		dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
-	}
-	if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
-	{
-		dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360);//»úĞµ×ø±ê¼õÈ¥×ÜÆ«ÒÆ×ø±ê  È¡ÓàÈ¡Õı
-	}
-	else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
-	{
-		dTargetPoint *= 2;
-	}
+    double dMachPoint = 0.0;
+    double dTargetPoint = 0.0;
+    const uint8* ucMapArray;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return dMachPoint;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //è·å–æ˜ å°„
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0;
+    }
+    getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);           //è·å–å•è½´æœºæ¢°åæ ‡
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (g_SSystemPara.bUseVirtualY == TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+    {
+        if (ucAxis == AXIS_X)
+        {
+            double dY1Mach = 0;
+            double dYAbs = 0;
+            getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, ucMapArray); //Y1è½´åæ ‡(åŠå¾„å€¼)
+            dYAbs = dY1Mach * g_SChannel[ucChannelNum].dCOSAngleYY1;  //Yè½´åæ ‡
+            dTargetPoint = dMachPoint - 1.0 * dYAbs * g_SChannel[ucChannelNum].dTANAngleYY1 -
+                           g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+        }
+        else if (ucAxis == AXIS_Y)
+        {
+            dTargetPoint = dMachPoint * g_SChannel[ucChannelNum].dCOSAngleYY1 -
+                           g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+        }
+        else
+        {
+            dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+        }
+    }
+    else
+    {
+        dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+    }
+    if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
+    {
+        dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360); //æœºæ¢°åæ ‡å‡å»æ€»åç§»åæ ‡  å–ä½™å–æ­£
+    }
+    else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
+    {
+        dTargetPoint *= 2;
+    }
 #else
-	dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+    dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
 
-	if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
-	{
-		dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360);//»úĞµ×ø±ê¼õÈ¥×ÜÆ«ÒÆ×ø±ê  È¡ÓàÈ¡Õı
-	}
-	else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
-	{
-		dTargetPoint *= 2;
-	}
+    if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
+    {
+        dTargetPoint = surplusDoubleToPositive(dTargetPoint, 360); //æœºæ¢°åæ ‡å‡å»æ€»åç§»åæ ‡  å–ä½™å–æ­£
+    }
+    else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
+    {
+        dTargetPoint *= 2;
+    }
 #endif
-	return  dTargetPoint;
+    return dTargetPoint;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡¾ø¶Ô×ø±êInt
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ  AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºInt XYZÖá:um  CÖá:¡ã*1000   XÖáÊÇÖ±¾¶Öµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–ç»å¯¹åæ ‡Int
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·  AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šInt XYZè½´:um  Cè½´:Â°*1000   Xè½´æ˜¯ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int		getAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis)
+int getAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis)
 {
-	return round(getAbsCoordDouble(ucChannelNum, ucAxis) * 1000.0);
+    return round(getAbsCoordDouble(ucChannelNum, ucAxis) * 1000.0);
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ïà¶Ô×ø±ê Double
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ  AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºDouble XYZÖá:mm  CÖá:¡ã  XÖáÊÇÖ±¾¶Öµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–ç›¸å¯¹åæ ‡ Double
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·  AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šDouble XYZè½´:mm  Cè½´:Â°  Xè½´æ˜¯ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
-double	getRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
+double getRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis)
 {
-	double dMachPoint = 0.0;
-	double dTargetPoint = 0.0;
-	const uint8* ucMapArray;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return dMachPoint;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //»ñÈ¡Ó³Éä
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0;
-	}
-	//getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);//»ñÈ¡µ¥Öá»úĞµ×ø±ê
-	//dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis];//»úĞµ×ø±ê¼õÈ¥Ïà¶Ô×ø±êÆğµã 
+    double dMachPoint = 0.0;
+    double dTargetPoint = 0.0;
+    const uint8* ucMapArray;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return dMachPoint;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //è·å–æ˜ å°„
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0;
+    }
+    //getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);//è·å–å•è½´æœºæ¢°åæ ‡
+    //dTargetPoint = dMachPoint - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis];//æœºæ¢°åæ ‡å‡å»ç›¸å¯¹åæ ‡èµ·ç‚¹
 
-	dTargetPoint = getAbsCoordDouble(ucChannelNum, ucAxis) - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis];	//³ÂÃô´Ï 2023/5/27	Ïà¶Ô×ø±ê¶ÁÈ¡¸ÄÎªµ±Ç°µãµÄ¾ø¶Ô×ø±ê¼õÏà¶Ô×ø±êÏµÆğµã
+    dTargetPoint =
+        getAbsCoordDouble(ucChannelNum, ucAxis) -
+        g_SChannel[ucChannelNum]
+            .SRelaCoorStartPoint.dArray[ucAxis]; //é™ˆæ•èª 2023/5/27	ç›¸å¯¹åæ ‡è¯»å–æ”¹ä¸ºå½“å‰ç‚¹çš„ç»å¯¹åæ ‡å‡ç›¸å¯¹åæ ‡ç³»èµ·ç‚¹
 
-	if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)//»ñÈ¡µÄÖáÎªĞı×ªÖá
-	{ //È¡ÓàÈ¡Õı
-		dTargetPoint = surplusDoubleToPositive(getAbsCoordDouble(ucChannelNum, ucAxis) - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis], 360);
-	}
+    if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS) //è·å–çš„è½´ä¸ºæ—‹è½¬è½´
+    {                                                                            //å–ä½™å–æ­£
+        dTargetPoint = surplusDoubleToPositive(
+            getAbsCoordDouble(ucChannelNum, ucAxis) - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis], 360);
+    }
 
-	//if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)//»ñÈ¡µÄÖáÎªĞı×ªÖá?  //ºé¹ÚÅô 2024/5/21×¢ÊÍÔ­Òò£º¶ÁÈ¡¾ø¶Ô×ø±êÒÑ¾­¶ÔĞı×ªÖáºÍÖ±¾¶ÏÔÊ¾½øĞĞ´¦Àí
-	//{ //È¡ÓàÈ¡Õı
-	//	dTargetPoint = surplusDoubleToPositive(getAbsCoordDouble(ucChannelNum, ucAxis) - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis], 360);
-	//}
-	//else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
-	//{
-	//	dTargetPoint *= 2;
-	//}
+    //if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)//è·å–çš„è½´ä¸ºæ—‹è½¬è½´?  //æ´ªå† é¹ 2024/5/21æ³¨é‡ŠåŸå› ï¼šè¯»å–ç»å¯¹åæ ‡å·²ç»å¯¹æ—‹è½¬è½´å’Œç›´å¾„æ˜¾ç¤ºè¿›è¡Œå¤„ç†
+    //{ //å–ä½™å–æ­£
+    //	dTargetPoint = surplusDoubleToPositive(getAbsCoordDouble(ucChannelNum, ucAxis) - g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis], 360);
+    //}
+    //else if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
+    //{
+    //	dTargetPoint *= 2;
+    //}
 
-	return  dTargetPoint;
-
+    return dTargetPoint;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ïà¶Ô×ø±ê Double
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šgetRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–ç›¸å¯¹åæ ‡ Double
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucAxis			AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºInt XYZÖá:mm  CÖá:¡ã  XÖáÊÇÖ±¾¶Öµ
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šInt XYZè½´:mm  Cè½´:Â°  Xè½´æ˜¯ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int		getRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis)
+int getRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis)
 {
-	return round(getRelaCoordDouble(ucChannelNum, ucAxis) * 1000.0);
+    return round(getRelaCoordDouble(ucChannelNum, ucAxis) * 1000.0);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
-  º¯Êı¹¦ÄÜ  ÉèÖÃµ±Ç°Ïà¶Ô×ø±ê
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šsetRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®å½“å‰ç›¸å¯¹åæ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucAxis			AXIS_X,AXIS_Y,AXIS_Z,AXIS_C
-			val				Ä¿±êÖµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1  ³É¹¦
-			-1 Ê§°Ü
-  ±¸    ×¢£º
+			val				ç›®æ ‡å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1  æˆåŠŸ
+			-1 å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8	setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val)//ÉèÖÃÏà¶Ô×ø±ê
+int8 setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val) //è®¾ç½®ç›¸å¯¹åæ ‡
 {
-	double dAbsPoint;
-	double dMachPoint = 0.0;
-	const uint8* ucMapArray;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;//»ñÈ¡Ó³Éä
-	if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		return 0;
-	}
-	//getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);//»ñÈ¡µ¥Öá»úĞµ×ø±ê
-	//dAbsPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
-	dAbsPoint = getAbsCoordDouble(ucChannelNum, ucAxis);	
+    double dAbsPoint;
+    double dMachPoint = 0.0;
+    const uint8* ucMapArray;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray; //è·å–æ˜ å°„
+    if (ucMapArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        return 0;
+    }
+    //getSingleAxisRealTimePoint(&dMachPoint, ucAxis, ucMapArray);//è·å–å•è½´æœºæ¢°åæ ‡
+    //dAbsPoint = dMachPoint - g_SChannel[ucChannelNum].SRun.SCurrentOffset.dArray[ucAxis];
+    dAbsPoint = getAbsCoordDouble(ucChannelNum, ucAxis);
 
-	if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
-	{
-		dAbsPoint = surplusDoubleToPositive(dAbsPoint, 360);//»úĞµ×ø±ê¼õÈ¥×ÜÆ«ÒÆ×ø±ê  È¡ÓàÈ¡Õı
-	}
+    if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].ucAxisType == ROTATION_AXIS)
+    {
+        dAbsPoint = surplusDoubleToPositive(dAbsPoint, 360); //æœºæ¢°åæ ‡å‡å»æ€»åç§»åæ ‡  å–ä½™å–æ­£
+    }
 
-	g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis] = dAbsPoint - val;	//Ïà¶Ô×ø±ê = µ±Ç°µãµÄ¾ø¶Ô×ø±ê - Ä¿±êÖµ ³ÂÃô´Ï 2023/5/27
+    g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray[ucAxis] =
+        dAbsPoint - val; //ç›¸å¯¹åæ ‡ = å½“å‰ç‚¹çš„ç»å¯¹åæ ‡ - ç›®æ ‡å€¼ é™ˆæ•èª 2023/5/27
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearRalaCoor(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  ½«Ïà¶Ô×ø±êÇåÁã
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis		 ÖáºÅ  AXIS_X(0) AXIS_Y(1) AXIS_Z(2)  ...  AXIS_ALL(ËùÓĞÖá)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearRalaCoor(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  å°†ç›¸å¯¹åæ ‡æ¸…é›¶
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis		 è½´å·  AXIS_X(0) AXIS_Y(1) AXIS_Z(2)  ...  AXIS_ALL(æ‰€æœ‰è½´)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
 //int8 clearRalaCoor(uint8 ucChannelNum, uint8 ucAxis)
 //{
@@ -301,7 +299,7 @@ int8	setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val)//ÉèÖÃÏà¶Ô×ø±ê
 //		return -1;
 //	}
 //
-//	if (ucAxis == AXIS_ALL)//½«Ïà¶Ô×ø±êÆğµãÉèÖÃÎªµ±Ç°µã
+//	if (ucAxis == AXIS_ALL)//å°†ç›¸å¯¹åæ ‡èµ·ç‚¹è®¾ç½®ä¸ºå½“å‰ç‚¹
 //	{
 //		getRealTimePoint((double*)&g_SChannel[ucChannelNum].SRelaCoorStartPoint.dArray, AXIS_NUM_MAX, g_SChannel[0].pMapAxisArray, NULL);
 //	}
@@ -312,289 +310,290 @@ int8	setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val)//ÉèÖÃÏà¶Ô×ø±ê
 //	return 1;
 //}
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmodifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
-  º¯Êı¹¦ÄÜ ĞŞ¸Ä×ø±êÏµ ¡¶+ÊäÈë¡·
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šmodifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
+  å‡½æ•°åŠŸèƒ½ ä¿®æ”¹åæ ‡ç³» ã€Š+è¾“å…¥ã€‹
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucNum 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
-			ucAxis ÖáºÅ  ½öÎªXYZ
-			dOffset ÊäÈëÖµ µ¥Î»mm
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀºÅ´íÎó
-			-2 ucNum ´íÎó
-			-3 ÖáºÅ´íÎó
-  ±¸    ×¢£º
+			ucAxis è½´å·  ä»…ä¸ºXYZ
+			dOffset è¾“å…¥å€¼ å•ä½mm
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“å·é”™è¯¯
+			-2 ucNum é”™è¯¯
+			-3 è½´å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
-int8 modifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)// ucNum : 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
+int8 modifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
+                      double dOffset) // ucNum : 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
 {
-	SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //Íâ²¿¹¤¼ş×ø±êÁãµãEXT 
-	double* pdTargetCoor;
-	double* pdEXTCoor = pSCoorOffset->dArray;
+    SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //å¤–éƒ¨å·¥ä»¶åæ ‡é›¶ç‚¹EXT
+    double* pdTargetCoor;
+    double* pdEXTCoor = pSCoorOffset->dArray;
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucNum > WORKPIECE_OFFSET_NUM)  //³¬¹ıÆ«ÒÆ×ÜÊı
-	{
-		return -2;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A)//ÖáºÅ´íÎó
-	{
-		return -3;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucNum > WORKPIECE_OFFSET_NUM) //è¶…è¿‡åç§»æ€»æ•°
+    {
+        return -2;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A) //è½´å·é”™è¯¯
+    {
+        return -3;
+    }
 
+    pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray; //æŒ‡å‘ç›®æ ‡åç§»
 
-	pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray;//Ö¸ÏòÄ¿±êÆ«ÒÆ
-
-	pdTargetCoor[ucAxis] += dOffset;  //ĞŞ¸ÄÄ¿±êÖáºÅµÄÖµ
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    pdTargetCoor[ucAxis] += dOffset;          //ä¿®æ”¹ç›®æ ‡è½´å·çš„å€¼
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÍâ²¿/¹¤¼ş×ø±êÏµ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šsetCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucNum 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
-			ucAxis ÖáºÅ  ½öÎªXYZ
-			dOffset ÊäÈëÖµ µ¥Î»mm
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ucNum ´íÎó
-			-2 ÖáºÅ´íÎó
-			 1 ÉèÖÃÍê³É
-  ±¸    ×¢£º
+			ucAxis è½´å·  ä»…ä¸ºXYZ
+			dOffset è¾“å…¥å€¼ å•ä½mm
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 ucNum é”™è¯¯
+			-2 è½´å·é”™è¯¯
+			 1 è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
 ****************************************/
-int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)// ucNum : 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
+int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
+                   double dOffset) // ucNum : 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
 {
-	SPointDouble* pSCoorOffset = (SPointDouble*)&g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //Íâ²¿¹¤¼ş×ø±êÁãµãEXT 
-	double* pdTargetCoor;
-	double* pdEXTCoor = (double*)&pSCoorOffset[0].dArray;
-	double dRealTimeValue;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucNum > WORKPIECE_OFFSET_NUM)  //³¬¹ıÆ«ÒÆ×ÜÊı
-	{
-		return -2;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A)//ÖáºÅ´íÎó
-	{
-		return -3;
-	}
+    SPointDouble* pSCoorOffset =
+        (SPointDouble*)&g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //å¤–éƒ¨å·¥ä»¶åæ ‡é›¶ç‚¹EXT
+    double* pdTargetCoor;
+    double* pdEXTCoor = (double*)&pSCoorOffset[0].dArray;
+    double dRealTimeValue;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucNum > WORKPIECE_OFFSET_NUM) //è¶…è¿‡åç§»æ€»æ•°
+    {
+        return -2;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A) //è½´å·é”™è¯¯
+    {
+        return -3;
+    }
 
-	getSingleAxisRealTimePointByChannel(ucChannelNum, &dRealTimeValue, ucAxis);
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //ÇãĞ±YÖá»ú
-	if (g_SSystemPara.bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º»ñÈ¡µÄÎïÀíÖá×ø±êÊÇ»ùÓÚÇãĞ±×ø±êÏµ£¬Æ«ÒÆÖµÓ¦»ùÓÚÖ±½Ç×ø±êÏµÏÔÊ¾¡£Òò´Ë£¬ÇãĞ±×ø±êÏµ -> Ö±½Ç×ø±êÏµ
-	{
-		if (ucAxis == AXIS_X)
-		{
-			double dY1RealTimeValue = 0.0;
-			getSingleAxisRealTimePointByChannel(ucChannelNum, &dY1RealTimeValue, AXIS_Y);//»ñÈ¡Y1Öá×ø±ê
-			dRealTimeValue -= 1.0 * dY1RealTimeValue * g_SChannel[ucChannelNum].dSINAngleYY1;
-		}
-		if (ucAxis == AXIS_Y)
-		{
-			dRealTimeValue *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-		}
-	}
+    getSingleAxisRealTimePointByChannel(ucChannelNum, &dRealTimeValue, ucAxis);
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (g_SSystemPara.bUseVirtualY ==
+        TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šè·å–çš„ç‰©ç†è½´åæ ‡æ˜¯åŸºäºå€¾æ–œåæ ‡ç³»ï¼Œåç§»å€¼åº”åŸºäºç›´è§’åæ ‡ç³»æ˜¾ç¤ºã€‚å› æ­¤ï¼Œå€¾æ–œåæ ‡ç³» -> ç›´è§’åæ ‡ç³»
+    {
+        if (ucAxis == AXIS_X)
+        {
+            double dY1RealTimeValue = 0.0;
+            getSingleAxisRealTimePointByChannel(ucChannelNum, &dY1RealTimeValue, AXIS_Y); //è·å–Y1è½´åæ ‡
+            dRealTimeValue -= 1.0 * dY1RealTimeValue * g_SChannel[ucChannelNum].dSINAngleYY1;
+        }
+        if (ucAxis == AXIS_Y)
+        {
+            dRealTimeValue *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+        }
+    }
 #endif
-	dRealTimeValue = ucAxis == AXIS_X ? 2.0 * dRealTimeValue : dRealTimeValue;//XÖáÊµÊ±µãÒª³Ë2
+    dRealTimeValue = ucAxis == AXIS_X ? 2.0 * dRealTimeValue : dRealTimeValue; //Xè½´å®æ—¶ç‚¹è¦ä¹˜2
 
-	pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray;//Ö¸ÏòÄ¿±êÆ«ÒÆ
+    pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray; //æŒ‡å‘ç›®æ ‡åç§»
 
-	if (ucNum == 0)//EXT?
-	{
-		pdTargetCoor[ucAxis] = dRealTimeValue + dOffset;
-	}
-	else
-	{
-		pdTargetCoor[ucAxis] = dRealTimeValue - pdEXTCoor[ucAxis] + dOffset;
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    if (ucNum == 0) //EXT?
+    {
+        pdTargetCoor[ucAxis] = dRealTimeValue + dOffset;
+    }
+    else
+    {
+        pdTargetCoor[ucAxis] = dRealTimeValue - pdEXTCoor[ucAxis] + dOffset;
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
-  º¯Êı¹¦ÄÜ  Ö±½ÓÊäÈëÍâ²¿/¹¤¼ş×ø±êÏµÆ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
+  å‡½æ•°åç§°ï¼šinputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
+  å‡½æ•°åŠŸèƒ½  ç›´æ¥è¾“å…¥å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
 			ucNum 0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
-			ucAxis ÖáºÅ  ½öÎªXYZ
-			dOffset ÊäÈëÖµ µ¥Î»mm
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1 ÉèÖÃÍê³É
-			-1 Í¨µÀºÅ´íÎó
-			-2 ucNum ´íÎó
-			-3 ÖáºÅ´íÎó
-  ±¸    ×¢£º
+			ucAxis è½´å·  ä»…ä¸ºXYZ
+			dOffset è¾“å…¥å€¼ å•ä½mm
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1 è®¾ç½®å®Œæˆ
+			-1 é€šé“å·é”™è¯¯
+			-2 ucNum é”™è¯¯
+			-3 è½´å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 inputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset)
 {
-	SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //Íâ²¿¹¤¼ş×ø±êÁãµãEXT 
-	double* pdTargetCoor;
+    SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //å¤–éƒ¨å·¥ä»¶åæ ‡é›¶ç‚¹EXT
+    double* pdTargetCoor;
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucNum > WORKPIECE_OFFSET_NUM)  //³¬¹ıÆ«ÒÆ×ÜÊı
-	{
-		return -2;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A)//ÖáºÅ´íÎó
-	{
-		return -3;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucNum > WORKPIECE_OFFSET_NUM) //è¶…è¿‡åç§»æ€»æ•°
+    {
+        return -2;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A) //è½´å·é”™è¯¯
+    {
+        return -3;
+    }
 
-	pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray;//Ö¸ÏòÄ¿±êÆ«ÒÆ
+    pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray; //æŒ‡å‘ç›®æ ‡åç§»
 
-	pdTargetCoor[ucAxis] = dOffset;//ĞŞ¸ÄÄ¿±êÆ«ÒÆ
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    pdTargetCoor[ucAxis] = dOffset;           //ä¿®æ”¹ç›®æ ‡åç§»
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Íâ²¿/¹¤¼ş×ø±êÏµÆ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucChannel	Í¨µÀºÅ 0~CHANNEL_NUM_MAX - 1
+  å‡½æ•°åç§°ï¼šgetCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucChannel	é€šé“å· 0~CHANNEL_NUM_MAX - 1
 			ucNum		0 EXT; 1 G54; 2 G55 ; 3 G56 ; 4 G57 ; 5 G58 ; 6 G59
-			ucAxis		ÖáºÅ  ½öÎªXYZ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¶ÔÓ¦Æ«ÒÆÖµ  µ¥Î» £ºmm    XÖáÖ±¾¶Öµ
-  ±¸    ×¢£º
+			ucAxis		è½´å·  ä»…ä¸ºXYZ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šå¯¹åº”åç§»å€¼  å•ä½ ï¼šmm    Xè½´ç›´å¾„å€¼
+  å¤‡    æ³¨ï¼š
 ****************************************/
 double getCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
 {
-	SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //Íâ²¿¹¤¼ş×ø±êÁãµãEXT 
-	double* pdTargetCoor;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return 0.0;
-	}
-	if (ucNum > WORKPIECE_OFFSET_NUM)  //³¬¹ıÆ«ÒÆ×ÜÊı
-	{
-		return 0.0;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A)//ÖáºÅ´íÎó
-	{
-		return 0.0;
-	}
-	pdTargetCoor = pSCoorOffset[ucNum].dArray;//Ö¸ÏòÄ¿±ê
-	return pdTargetCoor[ucAxis];
+    SPointDouble* pSCoorOffset = &g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset; //å¤–éƒ¨å·¥ä»¶åæ ‡é›¶ç‚¹EXT
+    double* pdTargetCoor;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return 0.0;
+    }
+    if (ucNum > WORKPIECE_OFFSET_NUM) //è¶…è¿‡åç§»æ€»æ•°
+    {
+        return 0.0;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Y && ucAxis != AXIS_Z && ucAxis != AXIS_C && ucAxis != AXIS_A) //è½´å·é”™è¯¯
+    {
+        return 0.0;
+    }
+    pdTargetCoor = pSCoorOffset[ucNum].dArray; //æŒ‡å‘ç›®æ ‡
+    return pdTargetCoor[ucAxis];
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCoorOffsetByG50(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÏµÍ³G50ÁÙÊ±×ø±êÏµÆ«ÒÆAPI
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ  ½öÎªXZ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º¶ÔÓ¦Æ«ÒÆÖµ  µ¥Î» £ºmm    XÖá°ë¾¶Öµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCoorOffsetByG50(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–ç³»ç»ŸG50ä¸´æ—¶åæ ‡ç³»åç§»API
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·  ä»…ä¸ºXZ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šå¯¹åº”åç§»å€¼  å•ä½ ï¼šmm    Xè½´åŠå¾„å€¼
+  å¤‡    æ³¨ï¼š
 ****************************************/
 double getCoorOffsetByG50(uint8 ucChannelNum, uint8 ucAxis)
 {
-	double pSCoorOffsetByG50 = g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis]; //»ñÈ¡ÏµÍ³G50ÁÙÊ±×ø±êÏµÆ«ÒÆÖµ 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return 0.0;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//ÖáºÅ´íÎó
-	{
-		return 0.0;
-	}
-	if (ucAxis == AXIS_X)
-	{
-		pSCoorOffsetByG50 = pSCoorOffsetByG50 * 2.0;
-	}
-	return pSCoorOffsetByG50;
+    double pSCoorOffsetByG50 =
+        g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis]; //è·å–ç³»ç»ŸG50ä¸´æ—¶åæ ‡ç³»åç§»å€¼
+    if (ucChannelNum >= CHANNEL_NUM_MAX)                                        //é€šé“å·é”™è¯¯
+    {
+        return 0.0;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z) //è½´å·é”™è¯¯
+    {
+        return 0.0;
+    }
+    if (ucAxis == AXIS_X)
+    {
+        pSCoorOffsetByG50 = pSCoorOffsetByG50 * 2.0;
+    }
+    return pSCoorOffsetByG50;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetCoorOffsetByG50(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  ÉèÖÃG50ÁÙÊ±×ø±êÏµÆ«ÒÆAPI
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ  ½öÎªXZ
-			dOffset ÊäÈëÖµ µ¥Î»mm
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 Í¨µÀºÅ´íÎó
-			-2 ÖáºÅ´íÎó
-			 1 ÉèÖÃÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetCoorOffsetByG50(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®G50ä¸´æ—¶åæ ‡ç³»åç§»API
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·  ä»…ä¸ºXZ
+			dOffset è¾“å…¥å€¼ å•ä½mm
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 é€šé“å·é”™è¯¯
+			-2 è½´å·é”™è¯¯
+			 1 è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 setCoorOffsetByG50(uint8 ucChannelNum, uint8 ucAxis, double dOffset)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//ÖáºÅ´íÎó
-	{
-		return -2;
-	}
-	if (ucAxis == AXIS_X)
-	{
-		g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis] = dOffset / 2;
-	}
-	else
-	{
-		g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis] = dOffset;
-	}
-	g_SChannel[ucChannelNum].SRun.SWorkPieceOffsetByG50 = g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50;	//½«ÏµÍ³²ÎÊı·ÅÔÚÔËĞĞ½á¹¹ÌåÖĞ		³ÂÃô´Ï	2023/11/11
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z) //è½´å·é”™è¯¯
+    {
+        return -2;
+    }
+    if (ucAxis == AXIS_X)
+    {
+        g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis] = dOffset / 2;
+    }
+    else
+    {
+        g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucAxis] = dOffset;
+    }
+    g_SChannel[ucChannelNum].SRun.SWorkPieceOffsetByG50 =
+        g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50; //å°†ç³»ç»Ÿå‚æ•°æ”¾åœ¨è¿è¡Œç»“æ„ä½“ä¸­		é™ˆæ•èª	2023/11/11
+    updataTotalOffset(ucChannelNum, 0, TRUE);                    // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearToolOffset(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÇå³ıG50×ø±êÏµÆ«ÒÆAPI
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearToolOffset(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤G50åæ ‡ç³»åç§»API
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearCoorOffset(uint8 ucChannelNum)
 {
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
-	{
-		g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucCounter] = 0.0;//Æ«ÒÆ×ø±êÖÃ0
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
+    {
+        g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffsetByG50.dArray[ucCounter] = 0.0; //åç§»åæ ‡ç½®0
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearTotalToolOffset(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÇå³ı×ø±êÏµ×ÜÆ«ÒÆAPI
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearTotalToolOffset(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤åæ ‡ç³»æ€»åç§»API
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearTotalCoorOffset(uint8 ucChannelNum)
 {
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
-	{
-		g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset.dArray[ucCounter] = 0.0;//Æ«ÒÆ×ø±êÖÃ0
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    for (ucCounter = 0; ucCounter < AXIS_PHYSICS_NUM_MAX; ucCounter++)
+    {
+        g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset.dArray[ucCounter] = 0.0; //åç§»åæ ‡ç½®0
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }

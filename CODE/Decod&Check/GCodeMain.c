@@ -1,25 +1,25 @@
 /*
-G´úÂë.cÎÄ¼ş½éÉÜ
-GCodeCheck.c		¼ì²é¿ò¼ÜÄ£¿é
-GCodeAssign.c		¸³Öµ¿ò¼ÜÄ£¿é
-GCodeRegulation.c	Ö¸Áî¹æÔòÄ£¿é
+Gä»£ç .cæ–‡ä»¶ä»‹ç»
+GCodeCheck.c		æ£€æŸ¥æ¡†æ¶æ¨¡å—
+GCodeAssign.c		èµ‹å€¼æ¡†æ¶æ¨¡å—
+GCodeRegulation.c	æŒ‡ä»¤è§„åˆ™æ¨¡å—
 
 
-GCodeG**.c          G**Ö¸ÁîÄ£¿é
+GCodeG**.c          G**æŒ‡ä»¤æ¨¡å—
 
 
 */
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "Config.h"
-#include"Gcode.h"
-#include"GeneralFunctions.h"
-#include"ErrorFunction.h"
-#include"NCDataPara.h"
-#include"Channel.h"
+#include "Gcode.h"
+#include "GeneralFunctions.h"
+#include "ErrorFunction.h"
+#include "NCDataPara.h"
+#include "Channel.h"
 #include "ringbuff.h"
 
 #if STM32_MODE
@@ -28,123 +28,105 @@ GCodeG**.c          G**Ö¸ÁîÄ£¿é
 #include "menu_app.h"
 #endif
 
-
-//const double EPSINON2 = 0.001;//ÓÃÓÚ±äÁ¿ÊıÖµ±È½Ï
+//const double EPSINON2 = 0.001;//ç”¨äºå˜é‡æ•°å€¼æ¯”è¾ƒ
 //static SChannelConfiguration s_pSChannelConfig[CHANNEL_NUM_MAX];
 
-Tree* g_pSGCommandRegulationTree = NULL;//GÖ¸Áî¹æÔò½á¹¹ÌåÊ÷
-Tree* g_pSMCommandRegulationTree = NULL;//MÖ¸Áî¹æÔò½á¹¹ÌåÊ÷
+Tree* g_pSGCommandRegulationTree = NULL; //GæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘
+Tree* g_pSMCommandRegulationTree = NULL; //MæŒ‡ä»¤è§„åˆ™ç»“æ„ä½“æ ‘
 
-SChannelConfiguration* s_pSChannelConfig[CHANNEL_NUM_MAX];//G´úÂëÍ¨µÀ½á¹¹ÌåÖ¸Õë
-struct _SystemMacro g_SystemMacro;//ÏµÍ³ºê
+SChannelConfiguration* s_pSChannelConfig[CHANNEL_NUM_MAX]; //Gä»£ç é€šé“ç»“æ„ä½“æŒ‡é’ˆ
+struct _SystemMacro g_SystemMacro;                         //ç³»ç»Ÿå®
 
-bool g_bGCodeDraw[CHANNEL_NUM_MAX] = { 0 };//G´úÂë»æÍ¼±äÁ¿£¬ÎªTUREÊ±£¬ÔËĞĞG´úÂë£¬²¢»æÍ¼
+bool g_bGCodeDraw[CHANNEL_NUM_MAX] = {0}; //Gä»£ç ç»˜å›¾å˜é‡ï¼Œä¸ºTUREæ—¶ï¼Œè¿è¡ŒGä»£ç ï¼Œå¹¶ç»˜å›¾
 
-///***********************************************************  ·Ï³ıÒÔÏÂ±äÁ¿  **************************************************************************/
-//VAL_STRUCT_TYPE g_ucGcodeAxisOccupation;//G´úÂë½âÎöÖáÕ¼ÓÃ±äÁ¿
-//struct SInheritPointContainer  g_InheritPointContainer; // Í¨µÀ¼ä¼Ì³ĞµãÈİÆ÷
-//struct SToolInfoContainer g_ToolInfoContainer;//Í¨µÀ¼äµ¶¾ßĞÅÏ¢ÈİÆ÷
-//struct SChannelToolAxisOccupy g_ChannelToolAxisOccupy;//Í¨µÀµ¶²¹ÖáÕ¼ÓÃ
+///***********************************************************  åºŸé™¤ä»¥ä¸‹å˜é‡  **************************************************************************/
+//VAL_STRUCT_TYPE g_ucGcodeAxisOccupation;//Gä»£ç è§£æè½´å ç”¨å˜é‡
+//struct SInheritPointContainer  g_InheritPointContainer; // é€šé“é—´ç»§æ‰¿ç‚¹å®¹å™¨
+//struct SToolInfoContainer g_ToolInfoContainer;//é€šé“é—´åˆ€å…·ä¿¡æ¯å®¹å™¨
+//struct SChannelToolAxisOccupy g_ChannelToolAxisOccupy;//é€šé“åˆ€è¡¥è½´å ç”¨
 
-#if ((MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)&&( CHANNEL_NUM_MAX > 1))//×¨»úÄ£Ê½ÏÂµÄµ¶¾ßºÅ£¬Ä¥ËğºÅ
-int8 g_cToolNumAssiagn = 0;//×¨»úÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßºÅ(Óï·¨¸³ÖµµÄ)
-int8 g_cToolCompNumAssiagn = 0;//×¨»úÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßÄ¥ËğºÅ
-int8 g_cToolNumSyntax = 0;//×¨»úÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßºÅ£¨Óï·¨¼ì²éµÄ£©
-int8 g_cToolCompNumSyntax = 0;//×¨»úÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄµ¶¾ßÄ¥ËğºÅ
+#if ((MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE) && (CHANNEL_NUM_MAX > 1)) //ä¸“æœºæ¨¡å¼ä¸‹çš„åˆ€å…·å·ï¼Œç£¨æŸå·
+int8 g_cToolNumAssiagn = 0;     //ä¸“æœºæ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·å·(è¯­æ³•èµ‹å€¼çš„)
+int8 g_cToolCompNumAssiagn = 0; //ä¸“æœºæ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·ç£¨æŸå·
+int8 g_cToolNumSyntax = 0;      //ä¸“æœºæ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·å·ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+int8 g_cToolCompNumSyntax = 0;  //ä¸“æœºæ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„åˆ€å…·ç£¨æŸå·
 
-int8 g_cWorkPieceOffsetNumSyntax = 0;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄ¹¤¼ş×ø±êºÅ G54-G59£¨Óï·¨¼ì²éµÄ£©
-int8 g_cWorkPieceOffsetNumAssiagn = 0;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄ¹¤¼ş×ø±êºÅ G54-G59£¨Óï·¨¸³ÖµµÄ£©
+int8 g_cWorkPieceOffsetNumSyntax = 0;  //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„å·¥ä»¶åæ ‡å· G54-G59ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+int8 g_cWorkPieceOffsetNumAssiagn = 0; //åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„å·¥ä»¶åæ ‡å· G54-G59ï¼ˆè¯­æ³•èµ‹å€¼çš„ï¼‰
 //
-//SPointDouble g_SWorkPieceOffsetByG50Syntax=0;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄG50Æ«ÒÆÖµ£¨Óï·¨¼ì²éµÄ£©
-//SPointDouble g_SWorkPieceOffsetByG50Assiagn=0;//Ë«Ö÷ÖáÄ£Ê½ÏÂ£¬Ë«Í¨µÀµÄG50Æ«ÒÆÖµ£¨Óï·¨¼ì²éµÄ£©
+//SPointDouble g_SWorkPieceOffsetByG50Syntax=0;//åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„G50åç§»å€¼ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
+//SPointDouble g_SWorkPieceOffsetByG50Assiagn=0;//åŒä¸»è½´æ¨¡å¼ä¸‹ï¼ŒåŒé€šé“çš„G50åç§»å€¼ï¼ˆè¯­æ³•æ£€æŸ¥çš„ï¼‰
 SPointDouble g_SWorkPieceOffsetByG50Syntax;
 SPointDouble g_SWorkPieceOffsetByG50Assiagn;
 
-
-
 #endif
 
-
-
-
-
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid gcodeInit(uint8 ucChannelNum, uint8 ucIsAllowGodeRun, uint8 ucIsGetBeforeProgram)
-  º¯Êı¹¦ÄÜ£ºG´úÂë³õÊ¼»¯º¯Êı£¨¶ÔG´úÂëËùÓĞÄ£¿é³õÊ¼»¯£©
-  ÊäÈë²ÎÊı£ºucIsGetBeforeProgram     ÊÇ·ñ¼Ì³ĞÔ­À´µÄ³ÌĞòÁ´±í
-            ucIsAllowGodeRun        ÊÇ·ñ¿ªÆô½âÎö
-            ucIsGetBeforeProgram    ÊÇ·ñ±£Áô³ÌĞòÁ´±í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼švoid gcodeInit(uint8 ucChannelNum, uint8 ucIsAllowGodeRun, uint8 ucIsGetBeforeProgram)
+  å‡½æ•°åŠŸèƒ½ï¼šGä»£ç åˆå§‹åŒ–å‡½æ•°ï¼ˆå¯¹Gä»£ç æ‰€æœ‰æ¨¡å—åˆå§‹åŒ–ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucIsGetBeforeProgram     æ˜¯å¦ç»§æ‰¿åŸæ¥çš„ç¨‹åºé“¾è¡¨
+            ucIsAllowGodeRun        æ˜¯å¦å¼€å¯è§£æ
+            ucIsGetBeforeProgram    æ˜¯å¦ä¿ç•™ç¨‹åºé“¾è¡¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º°´ÔËĞĞ¼ü´¥·¢£¬³õÊ¼»¯È«²¿Í¨µÀ
-            ÉÏÒ»Ö´ĞĞµÄ³ÌĞòÖĞÎŞM30£¬Ôò¼Ì³ĞÉÏÒ»³ÌĞòĞÅÏ¢???
-            ÊÇ·ñĞèÒª½« Ö÷³ÌĞò½ÚµãµÄÌí¼Ó Ğ´ÔÚ ³ÌĞòÁ´±í³õÊ¼»¯ ÖĞ
-            ºê±äÁ¿³õÊ¼»¯·ÅÄÄ£¿£¿£¿
+  å¤‡    æ³¨ï¼šæŒ‰è¿è¡Œé”®è§¦å‘ï¼Œåˆå§‹åŒ–å…¨éƒ¨é€šé“
+            ä¸Šä¸€æ‰§è¡Œçš„ç¨‹åºä¸­æ— M30ï¼Œåˆ™ç»§æ‰¿ä¸Šä¸€ç¨‹åºä¿¡æ¯???
+            æ˜¯å¦éœ€è¦å°† ä¸»ç¨‹åºèŠ‚ç‚¹çš„æ·»åŠ  å†™åœ¨ ç¨‹åºé“¾è¡¨åˆå§‹åŒ– ä¸­
+            å®å˜é‡åˆå§‹åŒ–æ”¾å“ªï¼Ÿï¼Ÿï¼Ÿ
             
 **************************************************/
 void gcodeInit(uint8 ucChannelNum, uint8 ucIsAllowGodeRun, uint8 ucIsGetBeforeProgram)
 {
-    SChannelConfiguration* pChannelConfig = NULL; //= getChannelConfig(0);  //»ñÈ¡Ê×µØÖ·
+    SChannelConfiguration* pChannelConfig = NULL; //= getChannelConfig(0);  //è·å–é¦–åœ°å€
 
-    SList* pLastProgramList = NULL; //ÓÃÓÚ±£Áô³ÌĞòÁ´±í 2023/8/26 ³ÂÃô´ÏÔö
-    
+    SList* pLastProgramList = NULL; //ç”¨äºä¿ç•™ç¨‹åºé“¾è¡¨ 2023/8/26 é™ˆæ•èªå¢
+
     if (ucChannelNum > CHANNEL_NUM_MAX - 1)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM301);
         return;
     }
 
-    //1.G´úÂëÖ¸ÁîÄ£¿é³õÊ¼»¯
+    //1.Gä»£ç æŒ‡ä»¤æ¨¡å—åˆå§‹åŒ–
     initGCodeCommand(ucChannelNum);
 
-    //2.G´úÂë½âÎö¿ò¼ÜÄ£¿é³õÊ¼»¯
-    //2.1³õÊ¼»¯Í¨µÀ½á¹¹Ìå£¨¼ì²éÄ£¿é¡¢¸³ÖµÄ£¿é¡¢³ÌĞòÄ£¿é£©
+    //2.Gä»£ç è§£ææ¡†æ¶æ¨¡å—åˆå§‹åŒ–
+    //2.1åˆå§‹åŒ–é€šé“ç»“æ„ä½“ï¼ˆæ£€æŸ¥æ¨¡å—ã€èµ‹å€¼æ¨¡å—ã€ç¨‹åºæ¨¡å—ï¼‰
     initGCodeChannelConfig(ucChannelNum);
 
-    //2.2³õÊ¼»¯ËùÓĞ¼ÆËã½á¹¹Ìå£¨¼ÆËãÄ£¿é£©
+    //2.2åˆå§‹åŒ–æ‰€æœ‰è®¡ç®—ç»“æ„ä½“ï¼ˆè®¡ç®—æ¨¡å—ï¼‰
     initAllCalculate(ucChannelNum);
 
 #if !STM32_MODE
-    //2.3³õÊ¼»¯ÎÄ±¾»º³åÇø£¨ÎÄ±¾²âÊÔÄ£¿é£©
-    initTextBuf();  //³õÊ¼»¯²âÊÔÎÄ±¾»º³åÇø£¨ÎÄ±¾µ÷ÊÔÄ£¿é£©
-#endif 
+    //2.3åˆå§‹åŒ–æ–‡æœ¬ç¼“å†²åŒºï¼ˆæ–‡æœ¬æµ‹è¯•æ¨¡å—ï¼‰
+    initTextBuf(); //åˆå§‹åŒ–æµ‹è¯•æ–‡æœ¬ç¼“å†²åŒºï¼ˆæ–‡æœ¬è°ƒè¯•æ¨¡å—ï¼‰
+#endif
 
-    //³õÊ¼»¯G´úÂë½âÎöÍê³É±êÖ¾
+    //åˆå§‹åŒ–Gä»£ç è§£æå®Œæˆæ ‡å¿—
     g_SChannel[ucChannelNum].bGcodeWriteOverFlag = FALSE;
 
-
-
-
 #if TEMP_ACTIVATIVE_CHANNEL_ONE
-    if (getRunMode() == AUTOMATIC_MODE && ucChannelNum == 0)   ///ÔİÊ±ÔÚ´Ë´¦Æô¶¯Í¨µÀ0
+    if (getRunMode() == AUTOMATIC_MODE && ucChannelNum == 0) ///æš‚æ—¶åœ¨æ­¤å¤„å¯åŠ¨é€šé“0
     {
         changeGCodeStatus(GC_SYNTAX, 0, GCODE_RUN, FALSE, 0);
     }
 
     if (getRunMode() == AUTOMATIC_MODE && ucChannelNum == 1)
     {
-        changeGCodeStatus(GC_SYNTAX, 1, GCODE_RUN, FALSE, 0);   //Ö÷¶¯Æô¶¯Í¨µÀ1
+        changeGCodeStatus(GC_SYNTAX, 1, GCODE_RUN, FALSE, 0); //ä¸»åŠ¨å¯åŠ¨é€šé“1
     }
 #endif
-
-
-
-
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 mallocGCodeChannelConfig()
-  º¯Êı¹¦ÄÜ£ºÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±ÙG´úÂëÍ¨µÀ½á¹¹Ìå
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šint8 mallocGCodeChannelConfig()
+  å‡½æ•°åŠŸèƒ½ï¼šåœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾ŸGä»£ç é€šé“ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SChannelConfiguration* mallocGCodeChannelConfig()
 {
@@ -159,18 +141,18 @@ SChannelConfiguration* mallocGCodeChannelConfig()
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 mainFuncGCode()
-  º¯Êı¹¦ÄÜ£º³õÊ¼»¯G´úÂëÍ¨µÀ½á¹¹Ìå
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºÕı³£
-            1£ºÔÊĞí±¨´í
-            2£ºMDIÍê³É
-            3£º
-  ±¸    ×¢£º³õÊ¼»¯½á¹¹Ìå±äÁ¿µÄ²½ÖèÈçÏÂ
-            1.ÊÍ·Å½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-            2.½á¹¹ÌåÄÚÈ«²¿ÖÃ0
-            3.¶Ô³õÊ¼Öµ·Ç0µÄ±äÁ¿¸³Öµ
+  å‡½æ•°åç§°ï¼šint8 mainFuncGCode()
+  å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–Gä»£ç é€šé“ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šæ­£å¸¸
+            1ï¼šå…è®¸æŠ¥é”™
+            2ï¼šMDIå®Œæˆ
+            3ï¼š
+  å¤‡    æ³¨ï¼šåˆå§‹åŒ–ç»“æ„ä½“å˜é‡çš„æ­¥éª¤å¦‚ä¸‹
+            1.é‡Šæ”¾ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+            2.ç»“æ„ä½“å†…å…¨éƒ¨ç½®0
+            3.å¯¹åˆå§‹å€¼é0çš„å˜é‡èµ‹å€¼
 **************************************************/
 void initGCodeChannelConfig(uint8 ucChannelNum)
 {
@@ -180,22 +162,22 @@ void initGCodeChannelConfig(uint8 ucChannelNum)
         parseGCodeErrorB(0, GCODE_ERROR_NUM300);
         return;
     }
-    //1.ÊÍ·ÅG´úÂëÍ¨µÀ½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
+    //1.é‡Šæ”¾Gä»£ç é€šé“ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
     freeGCodeChannelConfig(pSGCodeChannelConfig);
 
-    //2.G´úÂëÍ¨µÀ½á¹¹ÌåÖÃ0
+    //2.Gä»£ç é€šé“ç»“æ„ä½“ç½®0
     memset(pSGCodeChannelConfig, 0, sizeof(SChannelConfiguration));
 
     pSGCodeChannelConfig->bSkipMode = g_SChannel[ucChannelNum].bSkipMode;
 
-    //3.³õÊ¼»¯½á¹¹Ìå±äÁ¿
-    //3.1³õÊ¼»¯¼ì²é½á¹¹Ìå
+    //3.åˆå§‹åŒ–ç»“æ„ä½“å˜é‡
+    //3.1åˆå§‹åŒ–æ£€æŸ¥ç»“æ„ä½“
     initSyntaxConfig(&pSGCodeChannelConfig->SSyntaxConfig, ucChannelNum);
-    
-    //3.2³õÊ¼»¯¸³Öµ½á¹¹Ìå
+
+    //3.2åˆå§‹åŒ–èµ‹å€¼ç»“æ„ä½“
     initAssignConfig(&pSGCodeChannelConfig->SAssignConfig, ucChannelNum);
 
-    //3.3³õÊ¼»¯³ÌĞòÁ´±í
+    //3.3åˆå§‹åŒ–ç¨‹åºé“¾è¡¨
     if (pSGCodeChannelConfig->pProgramList == NULL)
     {
         pSGCodeChannelConfig->pProgramList = initList(ORAM_NUM301, ORAM_NUM302);
@@ -206,75 +188,74 @@ void initGCodeChannelConfig(uint8 ucChannelNum)
         }
     }
 
-    //4.³õÊ¼»¯·Ç½á¹¹Ìå±äÁ¿
-    //4.1³õÊ¼»¯UserID
+    //4.åˆå§‹åŒ–éç»“æ„ä½“å˜é‡
+    //4.1åˆå§‹åŒ–UserID
     pSGCodeChannelConfig->cUserID;
 
-    //4.2³õÊ¼»¯Í¨µÀºÅ
+    //4.2åˆå§‹åŒ–é€šé“å·
     pSGCodeChannelConfig->ucChannelNum = ucChannelNum;
-   
-    //4.3³õÊ¼»¯G´úÂëÍ¨µÀ×´Ì¬
-    pSGCodeChannelConfig->ucStatus = GCODE_IDLE;
-   
-    //....
 
+    //4.3åˆå§‹åŒ–Gä»£ç é€šé“çŠ¶æ€
+    pSGCodeChannelConfig->ucStatus = GCODE_IDLE;
+
+    //....
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºfreeAllGcode()
-  º¯Êı¹¦ÄÜ£ºG´úÂëÊÍ·ÅÄÚ´æ£¬¸øÆóÒµ°´ÏÂ¸´Î»°´Å¥Ê±µ÷ÓÃ
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šfreeAllGcode()
+  å‡½æ•°åŠŸèƒ½ï¼šGä»£ç é‡Šæ”¾å†…å­˜ï¼Œç»™ä¼ä¸šæŒ‰ä¸‹å¤ä½æŒ‰é’®æ—¶è°ƒç”¨
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void freeAllGcode()
 {
-    //1.ÊÍ·ÅG´úÂë½âÎö¿ò¼ÜÄÚ´æ
-    //1.1ÊÍ·ÅËùÓĞG´úÂëÍ¨µÀ½á¹¹ÌåÄÚ´æ
+    //1.é‡Šæ”¾Gä»£ç è§£ææ¡†æ¶å†…å­˜
+    //1.1é‡Šæ”¾æ‰€æœ‰Gä»£ç é€šé“ç»“æ„ä½“å†…å­˜
     for (uint8 unChannelNum = 0; unChannelNum < CHANNEL_NUM_MAX; unChannelNum++)
     {
-        SChannelConfiguration* pSGCodeChannelConfig = NULL; //= getChannelConfig(0);  //»ñÈ¡Ê×µØÖ·
-        pSGCodeChannelConfig = getChannelConfig(unChannelNum);    //»ñÈ¡Ä³¸öÍ¨µÀ½á¹¹Ìå
+        SChannelConfiguration* pSGCodeChannelConfig = NULL;    //= getChannelConfig(0);  //è·å–é¦–åœ°å€
+        pSGCodeChannelConfig = getChannelConfig(unChannelNum); //è·å–æŸä¸ªé€šé“ç»“æ„ä½“
 
         freeGCodeChannelConfig(pSGCodeChannelConfig);
 
-        pSGCodeChannelConfig->ucStatus = GCODE_IDLE;//Í¨µÀ×´Ì¬ÖÃÎª¿ÕÏĞ ÒÔ·À¸´Î»ºóÍ¨µÀ0µÄM97Æô¶¯Í¨µÀ1Ê±Ã»ÓĞ¸øÍ¨µÀ1µÄ³ÌĞòÁ´±í¿ª±ÙÄÚ´æ 2024.5.22³ÂÓıéª //2441004 ÂŞÏéçâ£º·ÅÈëG´úÂë³õÊ¼»¯ÖĞ×ö
+        pSGCodeChannelConfig->ucStatus =
+            GCODE_IDLE; //é€šé“çŠ¶æ€ç½®ä¸ºç©ºé—² ä»¥é˜²å¤ä½åé€šé“0çš„M97å¯åŠ¨é€šé“1æ—¶æ²¡æœ‰ç»™é€šé“1çš„ç¨‹åºé“¾è¡¨å¼€è¾Ÿå†…å­˜ 2024.5.22é™ˆè‚²æ¥  //2441004 ç½—ç¥¥ç®ï¼šæ”¾å…¥Gä»£ç åˆå§‹åŒ–ä¸­åš
     }
 
-    //2.ÊÍ·ÅG´úÂëÖ¸ÁîÄÚ´æ
+    //2.é‡Šæ”¾Gä»£ç æŒ‡ä»¤å†…å­˜
     for (uint8 unChannelNum = 0; unChannelNum < CHANNEL_NUM_MAX; unChannelNum++)
-    {   
+    {
         freeAllCommandParaStruct(unChannelNum);
     }
-
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºSChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ: ÊÍ·ÅG´úÂëÍ¨µÀ½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-  ÊäÈë²ÎÊı£ºpSGCodeChannelConfig     G´úÂëÍ¨µÀ½á¹¹Ìå
+  å‡½æ•°åç§°ï¼šSChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾Gä»£ç é€šé“ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+  è¾“å…¥å‚æ•°ï¼špSGCodeChannelConfig     Gä»£ç é€šé“ç»“æ„ä½“
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.ÊÍ·Å¼ì²é½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-            2.ÊÍ·Å¸³Öµ½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-            3.ÊÍ·Å³ÌĞòÁ´±í
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.é‡Šæ”¾æ£€æŸ¥ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+            2.é‡Šæ”¾èµ‹å€¼ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+            3.é‡Šæ”¾ç¨‹åºé“¾è¡¨
 **************************************************/
 void freeGCodeChannelConfig(SChannelConfiguration* pSGCodeChannelConfig)
 {
-    //pSGCodeChannelConfig²»ÄÜÎª¿Õ
+    //pSGCodeChannelConfigä¸èƒ½ä¸ºç©º
     if (pSGCodeChannelConfig == NULL)
     {
         parseGCodeErrorB(0, GCODE_ERROR_NUM300);
         return;
     }
 
-    //1.ÊÍ·Å³ÌĞò±í
-    freeList_2(&pSGCodeChannelConfig->pProgramList, freeProgramData);   
+    //1.é‡Šæ”¾ç¨‹åºè¡¨
+    freeList_2(&pSGCodeChannelConfig->pProgramList, freeProgramData);
 
-    //2.ÊÍ·ÅG66ĞÅÏ¢½á¹¹Ìå
+    //2.é‡Šæ”¾G66ä¿¡æ¯ç»“æ„ä½“
     for (int8 cTemp = 0; cTemp < NESTING_LIMIT; cTemp++)
     {
         freeGCode(pSGCodeChannelConfig->pSG66InfoArr[cTemp]);
@@ -282,15 +263,14 @@ void freeGCodeChannelConfig(SChannelConfiguration* pSGCodeChannelConfig)
     }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºSChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ: »ñÈ¡Ä³¸öÍ¨µÀµÄG´úÂë½âÎöÍ¨µÀ½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºucChannelNum     Í¨µÀºÅ
+  å‡½æ•°åç§°ï¼šSChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: è·å–æŸä¸ªé€šé“çš„Gä»£ç è§£æé€šé“ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šucChannelNum     é€šé“å·
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºG´úÂë½âÎöÍ¨µÀ½á¹¹Ìå
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šGä»£ç è§£æé€šé“ç»“æ„ä½“
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
 {
@@ -302,17 +282,16 @@ SChannelConfiguration* getChannelConfig(uint8 ucChannelNum)
     return s_pSChannelConfig[ucChannelNum];
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 mainFuncGCode()
-  º¯Êı¹¦ÄÜ£ºG´úÂëÖ÷º¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºÕı³£
-            1£ºÔÊĞí±¨´í
-            2£ºMDIÍê³É
-            3£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 mainFuncGCode()
+  å‡½æ•°åŠŸèƒ½ï¼šGä»£ç ä¸»å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šæ­£å¸¸
+            1ï¼šå…è®¸æŠ¥é”™
+            2ï¼šMDIå®Œæˆ
+            3ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 mainFuncGCode(uint8 ucChannelNum)
 {
@@ -320,27 +299,25 @@ int8 mainFuncGCode(uint8 ucChannelNum)
     int8 cRet = 0;
     if (ECurrRunMode == AUTOMATIC_MODE || ECurrRunMode == MDI_MODE || ECurrRunMode == HAND_MODE)
     {
-        cRet = mainFuncGCodeAuto(ucChannelNum);    //×Ô¶¯ÔËĞĞÄ£Ê½
+        cRet = mainFuncGCodeAuto(ucChannelNum); //è‡ªåŠ¨è¿è¡Œæ¨¡å¼
     }
     //else if (ECurrRunMode == MDI_MODE)
     //{
-    //    cRet = mainFuncGCodeMDI(ucChannelNum);    //MDIÄ£Ê½
+    //    cRet = mainFuncGCodeMDI(ucChannelNum);    //MDIæ¨¡å¼
     //}
     return cRet;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 mainFuncGCodeAuto()
-  º¯Êı¹¦ÄÜ£ºG´úÂë×Ô¶¯ÔËĞĞÄ£Ê½Á÷³Ìº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºÕı³£
-            1£ºÓï·¨³ö´í
-            2£º¸³ÖµÍê³É£¨²âÊÔÓÃ£©
-            3£ºÉ¨Ãèµ½×îºóÒ»ĞĞ£¨²âÊÔÓÃ£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 mainFuncGCodeAuto()
+  å‡½æ•°åŠŸèƒ½ï¼šGä»£ç è‡ªåŠ¨è¿è¡Œæ¨¡å¼æµç¨‹å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šæ­£å¸¸
+            1ï¼šè¯­æ³•å‡ºé”™
+            2ï¼šèµ‹å€¼å®Œæˆï¼ˆæµ‹è¯•ç”¨ï¼‰
+            3ï¼šæ‰«æåˆ°æœ€åä¸€è¡Œï¼ˆæµ‹è¯•ç”¨ï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 mainFuncGCodeAuto(uint8 ucChannelNum)
 {
@@ -352,153 +329,153 @@ int8 mainFuncGCodeAuto(uint8 ucChannelNum)
         return 1;
     }
 
-    memset(&pAssign->SQuickHandleFlag, 0, sizeof(pAssign->SQuickHandleFlag));  //Çå¿Õ¿ìËÙ´¦Àí±êÖ¾Î»
+    memset(&pAssign->SQuickHandleFlag, 0, sizeof(pAssign->SQuickHandleFlag)); //æ¸…ç©ºå¿«é€Ÿå¤„ç†æ ‡å¿—ä½
 
-    do {
+    do
+    {
 
-        syntaxStatusMachine(pSyntax, ucChannelNum);   //Óï·¨¼ì²é×´Ì¬»ú
+        syntaxStatusMachine(pSyntax, ucChannelNum); //è¯­æ³•æ£€æŸ¥çŠ¶æ€æœº
 
-        assignStatusMachine(pAssign, ucChannelNum);   //¸³Öµ×´Ì¬»ú
+        assignStatusMachine(pAssign, ucChannelNum); //èµ‹å€¼çŠ¶æ€æœº
 
-        //if (pSyntax->bFinshed && pAssign->bFinshed)  //Á½ÕßÎªÕæÊ±£¬Áî±êÖ¾Î»ÎªFALSE£¬Í¬²½¿ªÆô
+        //if (pSyntax->bFinshed && pAssign->bFinshed)  //ä¸¤è€…ä¸ºçœŸæ—¶ï¼Œä»¤æ ‡å¿—ä½ä¸ºFALSEï¼ŒåŒæ­¥å¼€å¯
         //{
         //    pSyntax->bFinshed = FALSE;
         //    pAssign->bFinshed = FALSE;
         //}
 
     }
-    //G´úÂëÑ­»·´¦Àí¹¦ÄÜ¿ª ÒÔ¼° µ±Ç°G´úÂëĞĞ¿ÉÒÔÑ­»·´¦Àí
-    while (g_SSystemPara.bGcodeQuickHandleModeEnabled && (pAssign->SQuickHandleFlag.cCycleCounter < g_SSystemPara.sGcode_MultiLineHandleMaxNum && pAssign->SQuickHandleFlag.cNeedQuickHandleFlag != FALSE) && (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) > 1));
+    //Gä»£ç å¾ªç¯å¤„ç†åŠŸèƒ½å¼€ ä»¥åŠ å½“å‰Gä»£ç è¡Œå¯ä»¥å¾ªç¯å¤„ç†
+    while (g_SSystemPara.bGcodeQuickHandleModeEnabled &&
+           (pAssign->SQuickHandleFlag.cCycleCounter < g_SSystemPara.sGcode_MultiLineHandleMaxNum &&
+            pAssign->SQuickHandleFlag.cNeedQuickHandleFlag != FALSE) &&
+           (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) > 1));
 
     return 0;
-
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 mainFuncGCodeMDI()
-  º¯Êı¹¦ÄÜ£ºG´úÂëMDIÄ£Ê½Á÷³Ìº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0£ºÕı³£
-            1£ºÔÊĞí±¨´í
-            2£º¸³ÖµÍê³É
-            3£º´«ÈëÖ¸ÕëÎª¿Õ
-  ±¸    ×¢£º(lxwÔİÊ±×¢ÊÍ£¬autoÄ£Ê½Íê³Éºó£¬ÔÚĞ´´Ëº¯Êı)
+  å‡½æ•°åç§°ï¼šint8 mainFuncGCodeMDI()
+  å‡½æ•°åŠŸèƒ½ï¼šGä»£ç MDIæ¨¡å¼æµç¨‹å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0ï¼šæ­£å¸¸
+            1ï¼šå…è®¸æŠ¥é”™
+            2ï¼šèµ‹å€¼å®Œæˆ
+            3ï¼šä¼ å…¥æŒ‡é’ˆä¸ºç©º
+  å¤‡    æ³¨ï¼š(lxwæš‚æ—¶æ³¨é‡Šï¼Œautoæ¨¡å¼å®Œæˆåï¼Œåœ¨å†™æ­¤å‡½æ•°)
 **************************************************/
 int8 mainFuncGCodeMDI(uint8 ucChannelNum)
 {
-    //0.¶ÁÈ¡µ±Ç°MDI²½Öè
+    //0.è¯»å–å½“å‰MDIæ­¥éª¤
     SChannelConfiguration* pChannelConfig = getChannelConfig(ucChannelNum);
     if (pChannelConfig == NULL)
     {
         return 3;
     }
 
-    //1.Ö´ĞĞMDI¶ÔÓ¦²½Öè
+    //1.æ‰§è¡ŒMDIå¯¹åº”æ­¥éª¤
     switch (pChannelConfig->s_cMDIStep)
     {
-        //1.1¼ì²é³ÌĞòÎÄ±¾
+        //1.1æ£€æŸ¥ç¨‹åºæ–‡æœ¬
     case 0:
     {
-        //¼ì²é³ÌĞò¶Î
+        //æ£€æŸ¥ç¨‹åºæ®µ
         checkSegments(&pChannelConfig->SSyntaxConfig, ucChannelNum);
-        //³ÌĞòÎÄ±¾¼ì²éÍê³É
-        if (pChannelConfig->SSyntaxConfig.bCheckFinished)  //µÃµ½½áÊøĞĞºÅ ¿ªÊ¼¸³Öµ
+        //ç¨‹åºæ–‡æœ¬æ£€æŸ¥å®Œæˆ
+        if (pChannelConfig->SSyntaxConfig.bCheckFinished) //å¾—åˆ°ç»“æŸè¡Œå· å¼€å§‹èµ‹å€¼
         {
             pChannelConfig->s_cMDIStep = 1;
         }
         break;
     }
-    //1.2¸³Öµ³ÌĞòÎÄ±¾
+    //1.2èµ‹å€¼ç¨‹åºæ–‡æœ¬
     case 1:
     {
-        //¸³Öµ³ÌĞò¶Î
+        //èµ‹å€¼ç¨‹åºæ®µ
         assignSegments(&pChannelConfig->SAssignConfig, ucChannelNum);
-        //³ÌĞòÎÄ±¾¸³ÖµÍê³É
+        //ç¨‹åºæ–‡æœ¬èµ‹å€¼å®Œæˆ
         if (pChannelConfig->SAssignConfig.cPart == 1 && pChannelConfig->SAssignConfig.bAssignFinished)
         {
             pChannelConfig->s_cMDIStep = 2;
         }
         break;
     }
-    //1.3½âÎö½áÊø£¬ÊÍ·ÅÄÚ´æ
+    //1.3è§£æç»“æŸï¼Œé‡Šæ”¾å†…å­˜
     case 2:
     {
-        assignRun2Finished(&pChannelConfig->SAssignConfig, pChannelConfig->ucChannelNum);//¸³ÖµÍê³ÉÇ°µÄ²Ù×÷
+        assignRun2Finished(&pChannelConfig->SAssignConfig, pChannelConfig->ucChannelNum); //èµ‹å€¼å®Œæˆå‰çš„æ“ä½œ
         pChannelConfig->s_cMDIStep = 3;
         break;
     }
-
-
     }
 
-    //2.ÅĞ¶ÏÊÇ·ñĞ´Èë´íÎó
-    if (isErrorFull()                                         //´íÎóÂú
-        || (isErrorHasBeenWritten() && pChannelConfig->s_cMDIStep == 1))     //¸³Öµ¹ı³ÌÖĞ³ö´í  »ò  Óï·¨¼ì²éÍê³ÉÓĞ´í
+    //2.åˆ¤æ–­æ˜¯å¦å†™å…¥é”™è¯¯
+    if (isErrorFull()                                                    //é”™è¯¯æ»¡
+        || (isErrorHasBeenWritten() && pChannelConfig->s_cMDIStep == 1)) //èµ‹å€¼è¿‡ç¨‹ä¸­å‡ºé”™  æˆ–  è¯­æ³•æ£€æŸ¥å®Œæˆæœ‰é”™
     {
-        return 1;  //±¨´í
+        return 1; //æŠ¥é”™
     }
 
     return 0;
-    //if (pChannelConfig->s_cMDIStep == 0)//³õÊ¼»¯£¬Ä¿Ç°ÒòÎª°´ÔËĞĞ¼ü»á´¥·¢gcodeInit£¬ËùÒÔ²»ÔÙ³õÊ¼»¯
+    //if (pChannelConfig->s_cMDIStep == 0)//åˆå§‹åŒ–ï¼Œç›®å‰å› ä¸ºæŒ‰è¿è¡Œé”®ä¼šè§¦å‘gcodeInitï¼Œæ‰€ä»¥ä¸å†åˆå§‹åŒ–
     //{
-    //	//gcodeInitMDI(ucChannelNum);  
+    //	//gcodeInitMDI(ucChannelNum);
     //	pChannelConfig->s_cMDIStep = 1;
     //}
-    //else if (pChannelConfig->s_cMDIStep == 1)//Óï·¨¼ì²é
+    //else if (pChannelConfig->s_cMDIStep == 1)//è¯­æ³•æ£€æŸ¥
     //{
-    //	//ÔİÊ±×¢ÊÍ L
-    //	//checkSyntax(&pChannelConfig->SSyntaxConfig, pChannelConfig->ucChannelNum);    
+    //	//æš‚æ—¶æ³¨é‡Š L
+    //	//checkSyntax(&pChannelConfig->SSyntaxConfig, pChannelConfig->ucChannelNum);
 
     //}
-    //else if (pChannelConfig->s_cMDIStep == 2)//¸³Öµ
+    //else if (pChannelConfig->s_cMDIStep == 2)//èµ‹å€¼
     //{
-    //	assignSegments(&pChannelConfig->SAssignConfig, pChannelConfig->ucChannelNum);   
+    //	assignSegments(&pChannelConfig->SAssignConfig, pChannelConfig->ucChannelNum);
 
-    //	if (pChannelConfig->SAssignConfig.SGetTextStateInfo.nEndLineNum != UNASSIGNED_VALUE)  //µÃµ½½áÊøĞĞºÅ ¸³ÖµÍê³É
+    //	if (pChannelConfig->SAssignConfig.SGetTextStateInfo.nEndLineNum != UNASSIGNED_VALUE)  //å¾—åˆ°ç»“æŸè¡Œå· èµ‹å€¼å®Œæˆ
     //	{
     //		pChannelConfig->s_cMDIStep = 3;
     //		//return 2;
     //	}
 
     //}
- //   else if (pChannelConfig->s_cMDIStep == 3)
- //   {
- //       ///¼Ó²»¼ÓÍ£Ö¹Ö¸Áî£¿ ÔİÊ±²»¼Ó  motion.cÒÑ¾­¸ù¾İbGcodeWriteOverFlag Ê¹ÏµÍ³×´Ì¬±ä³ÉÏĞÖÃ
+    //   else if (pChannelConfig->s_cMDIStep == 3)
+    //   {
+    //       ///åŠ ä¸åŠ åœæ­¢æŒ‡ä»¤ï¼Ÿ æš‚æ—¶ä¸åŠ   motion.cå·²ç»æ ¹æ®bGcodeWriteOverFlag ä½¿ç³»ç»ŸçŠ¶æ€å˜æˆé—²ç½®
 
- //       
- //   }
-
+    //
+    //   }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid runbuttonAPI_GCode(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÔËĞĞ°´Å¥½Ó¿Ú_G´úÂë
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÔËĞĞ°´Å¥½Ó¿ÚÖĞ£¬G´úÂëÄ£¿éÖ´ĞĞÄÚÈİ
+  å‡½æ•°åç§°ï¼švoid runbuttonAPI_GCode(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šè¿è¡ŒæŒ‰é’®æ¥å£_Gä»£ç 
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šè¿è¡ŒæŒ‰é’®æ¥å£ä¸­ï¼ŒGä»£ç æ¨¡å—æ‰§è¡Œå†…å®¹
 **************************************************/
 void runbuttonAPI_GCode(uint8 ucChannelNum)
 {
-    //1.G´úÂë½âÎö³õÊ¼»¯
+    //1.Gä»£ç è§£æåˆå§‹åŒ–
     gcodeInit(ucChannelNum, TRUE, 0);
 
-    //1.ËùÓĞÍ¨µÀµÄÍ¨µÀ½á¹¹ÌåÖĞÌí¼ÓÖ÷ÔËĞĞ³ÌĞò
+    //1.æ‰€æœ‰é€šé“çš„é€šé“ç»“æ„ä½“ä¸­æ·»åŠ ä¸»è¿è¡Œç¨‹åº
     addMainProgramNode(ucChannelNum);
 
-    //1.G´úÂë½âÎö×´Ì¬ÖÃÎªGCODE_RUN
-    changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
-    changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
+    //1.Gä»£ç è§£æçŠ¶æ€ç½®ä¸ºGCODE_RUN
+    changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
+    changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºuint32 getSRunLine(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ: »ñÈ¡SRunÖĞµÄĞĞºÅ
-  ÊäÈë²ÎÊı£ºvalueÊı×Ö£¬strÄ¿±ê×Ö·û´®£¬radix½øÖÆ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstrÄ¿±ê×Ö·û´®
-  ±¸    ×¢£ºSTM32_MODEÏÔÊ¾µ±Ç°ÔËĞĞµÄĞĞºÅ
+  å‡½æ•°åç§°ï¼šuint32 getSRunLine(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: è·å–SRunä¸­çš„è¡Œå·
+  è¾“å…¥å‚æ•°ï¼švalueæ•°å­—ï¼Œstrç›®æ ‡å­—ç¬¦ä¸²ï¼Œradixè¿›åˆ¶
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstrç›®æ ‡å­—ç¬¦ä¸²
+  å¤‡    æ³¨ï¼šSTM32_MODEæ˜¾ç¤ºå½“å‰è¿è¡Œçš„è¡Œå·
 **************************************************/
 uint32 getSRunLine(uint8 ucChannelNum)
 {
@@ -507,13 +484,14 @@ uint32 getSRunLine(uint8 ucChannelNum)
     {
         return 0;
     }
-    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE||g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET
-    		||g_SChannel[ucChannelNum].ucChannelStatus == SYS_EMERGENCY_STOP 	)//ºé¹ÚÅô 2024/5/29 ¿ÕÏĞÊ±·µ»ØÊ×ĞĞ
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE || g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET ||
+        g_SChannel[ucChannelNum].ucChannelStatus == SYS_EMERGENCY_STOP) //æ´ªå† é¹ 2024/5/29 ç©ºé—²æ—¶è¿”å›é¦–è¡Œ
     {
         return 0;
     }
-    unGCodeLineNum = g_SChannel[ucChannelNum].SRun.unGCodeLineNum;//·Çµ¥½ÚÖ´ĞĞÊ±£¬ĞĞºÅÎªµ±Ç°Ö´ĞĞ
-    if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE && g_SChannel[ucChannelNum].bSingleLineModeUnFinished == FALSE)//µ¥½ÚÖ´ĞĞÊ±£¬µ±Ç°ĞĞÖ´ĞĞÍê£¬Ö´ÏòÏÂÒ»ĞĞ
+    unGCodeLineNum = g_SChannel[ucChannelNum].SRun.unGCodeLineNum; //éå•èŠ‚æ‰§è¡Œæ—¶ï¼Œè¡Œå·ä¸ºå½“å‰æ‰§è¡Œ
+    if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE &&
+        g_SChannel[ucChannelNum].bSingleLineModeUnFinished == FALSE) //å•èŠ‚æ‰§è¡Œæ—¶ï¼Œå½“å‰è¡Œæ‰§è¡Œå®Œï¼Œæ‰§å‘ä¸‹ä¸€è¡Œ
     {
         unGCodeLineNum += 1;
     }

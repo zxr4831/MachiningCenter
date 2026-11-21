@@ -1,17 +1,16 @@
-#ifndef   GCODE_Mc_H
-#define   GCODE_Mc_H
+#ifndef GCODE_Mc_H
+#define GCODE_Mc_H
 
 //************************M08**************************************
 void addM08RegulationAPI();
 
-//¸³ÖµM08
+//èµ‹å€¼M08
 int8 AssignM08(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 //************************M09**************************************
 void addM09RegulationAPI();
 
-//¸³ÖµM09
+//èµ‹å€¼M09
 int8 AssignM09(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif

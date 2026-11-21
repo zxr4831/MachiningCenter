@@ -4,47 +4,45 @@
 #include "common.h"
 #include "GCodeCommon.h"
 
-
 typedef struct _SG87_2Para
 {
-	int8 cG87_2Step;//G87_2¸³Öµ²½Öè
+    int8 cG87_2Step; //G87_2èµ‹å€¼æ­¥éª¤
 
-	double dR;//RÖµ£¨³õÊ¼µãµ½RµãµÄÔöÁ¿Öµ(Õı¸ººÅÎŞĞ§£¬ÎŞÂÛ×ê¿×·½ÏòÖ®ÖáÏòÎªÖ±/°ë¾¶Öá£¬RÒıÊı´øÈë°ë¾¶Á¿¼´¿É)£©
-	double dQ;//QÖµ £¨Ã¿´Î½ø¸øÉî¶È(Õı¸ººÅÎŞĞ§) £©
-	uint32 unDelaytime;		//¶´µ×ÔİÍ£Ê±¼ä(ÓĞĞ¡Êıµã£¬ÒÔÃëÎªµ¥Î»£»ÎŞĞ¡Êıµã£¬²Î¿¼Pr17ÓëPr3241)
-	int8 cK;				//ÖØ¸´´ÎÊı
-	int8 cFeedAxis;			//½ø¸øÖá
-	int8 cFeedDir;			//½ø¸ø·½Ïò
+    double dR;          //Rå€¼ï¼ˆåˆå§‹ç‚¹åˆ°Rç‚¹çš„å¢é‡å€¼(æ­£è´Ÿå·æ— æ•ˆï¼Œæ— è®ºé’»å­”æ–¹å‘ä¹‹è½´å‘ä¸ºç›´/åŠå¾„è½´ï¼ŒRå¼•æ•°å¸¦å…¥åŠå¾„é‡å³å¯)ï¼‰
+    double dQ;          //Qå€¼ ï¼ˆæ¯æ¬¡è¿›ç»™æ·±åº¦(æ­£è´Ÿå·æ— æ•ˆ) ï¼‰
+    uint32 unDelaytime; //æ´åº•æš‚åœæ—¶é—´(æœ‰å°æ•°ç‚¹ï¼Œä»¥ç§’ä¸ºå•ä½ï¼›æ— å°æ•°ç‚¹ï¼Œå‚è€ƒPr17ä¸Pr3241)
+    int8 cK;            //é‡å¤æ¬¡æ•°
+    int8 cFeedAxis;     //è¿›ç»™è½´
+    int8 cFeedDir;      //è¿›ç»™æ–¹å‘
 
-	SCoord SCoordInfo;		//³ÌĞò¶Î×ø±êĞÅÏ¢(Î´¼Ó×ÜÆ«ÒÆÖµ)
-	SPointDouble SFinalPoint;//¿×µ××ø±ê
-	SPointDouble  SFirstPoint;//³õÊ¼µã
-	SPointDouble  SRPoint;//Rµã
-	SPointDouble SCuttingStartPoint;//ÇĞÏ÷ÆğÊ¼µã
+    SCoord SCoordInfo;               //ç¨‹åºæ®µåæ ‡ä¿¡æ¯(æœªåŠ æ€»åç§»å€¼)
+    SPointDouble SFinalPoint;        //å­”åº•åæ ‡
+    SPointDouble SFirstPoint;        //åˆå§‹ç‚¹
+    SPointDouble SRPoint;            //Rç‚¹
+    SPointDouble SCuttingStartPoint; //åˆ‡å‰Šèµ·å§‹ç‚¹
 
-	bool bIsFirstFeed;//ÊÇ·ñÎªµÚÒ»´Î½ø¸ø
-	bool bIsFirstHole;//ÊÇ·ñÎªµÚÒ»¸ö¿×
+    bool bIsFirstFeed; //æ˜¯å¦ä¸ºç¬¬ä¸€æ¬¡è¿›ç»™
+    bool bIsFirstHole; //æ˜¯å¦ä¸ºç¬¬ä¸€ä¸ªå­”
 
-	int8 cGaBeforeG87_2;		//±£´æÔËĞĞÇ°µÄÄ£Ì¬
-	SGCommandRegulation* pGaBeforeG87_2Regulation;//±£´æÔËĞĞÇ°µÄÄ£Ì¬¹æÔòµØÖ·
+    int8 cGaBeforeG87_2;                           //ä¿å­˜è¿è¡Œå‰çš„æ¨¡æ€
+    SGCommandRegulation* pGaBeforeG87_2Regulation; //ä¿å­˜è¿è¡Œå‰çš„æ¨¡æ€è§„åˆ™åœ°å€
 
-}SG87_2Para;
+} SG87_2Para;
 
-//Ìí¼ÓG87_2¹æÔò½á¹¹Ìå
+//æ·»åŠ G87_2è§„åˆ™ç»“æ„ä½“
 void addG87_2RegulationAPI();
 
-//¿ª±ÙG87_2²ÎÊı½á¹¹Ìå
+//å¼€è¾ŸG87_2å‚æ•°ç»“æ„ä½“
 int8 mallocG87_2ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 
-//ÊÍ·ÅG87_2²ÎÊı½á¹¹Ìå
+//é‡Šæ”¾G87_2å‚æ•°ç»“æ„ä½“
 int8 freeG87_2ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 
-//  »ñÈ¡G87_2²ÎÊı
+//  è·å–G87_2å‚æ•°
 int8 getG87_2Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* pSGCodeCurrSysState);
 
-// ¸³ÖµG87_2
+// èµ‹å€¼G87_2
 int8 AssignG87_2(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 int8 CheckG87_2(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 #endif // !_GCODE_G87_2_H
-

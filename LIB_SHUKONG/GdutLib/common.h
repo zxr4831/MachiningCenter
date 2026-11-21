@@ -1,1593 +1,1535 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-
 #include "Config.h"
 //#include "libCommand.h"
 
 #if STM32_MODE
 #include "sys.h"
 #endif
-/***********************************************²»¿ÉĞŞ¸Ä¶¨Òå**********************************************************************************/
-typedef signed char bool;  //²¼¶ûÀàĞÍ£¬±äÁ¿ÃüÃûÊ¾ÀıbVar   //ÔİÊ±¸Ä³Ébool  boolÔÚ<windows.h>ÄÚÖØ¶¨Òå
-typedef signed char int8;  // -128~127£¬±äÁ¿ÃüÃûÊ¾ÀıcVar
-typedef unsigned char uint8;  // 0~255£¬±äÁ¿ÃüÃûÊ¾ÀıucVar
-typedef signed short int int16;  // -32768~32767£¬±äÁ¿ÃüÃûÊ¾ÀısVar
-typedef unsigned short int uint16;  //0~65535£¬±äÁ¿ÃüÃûÊ¾ÀıusVar
-typedef signed int int32;  // -2147483648~2147483647£¬±äÁ¿ÃüÃûÊ¾ÀınVar
-typedef unsigned int uint32;  //0~4294967295£¬±äÁ¿ÃüÃûÊ¾ÀıunVar
-typedef signed long long int     int64;  //......£¬±äÁ¿ÃüÃûÊ¾ÀılVar  long long int Îª8×Ö½Ú ĞŞ¸Ä2026.2.3
-typedef unsigned long long int   uint64;  //......£¬±äÁ¿ÃüÃûÊ¾ÀıulVar
+/***********************************************ä¸å¯ä¿®æ”¹å®šä¹‰**********************************************************************************/
+typedef signed char bool;              //å¸ƒå°”ç±»å‹ï¼Œå˜é‡å‘½åç¤ºä¾‹bVar   //æš‚æ—¶æ”¹æˆbool  boolåœ¨<windows.h>å†…é‡å®šä¹‰
+typedef signed char int8;              // -128~127ï¼Œå˜é‡å‘½åç¤ºä¾‹cVar
+typedef unsigned char uint8;           // 0~255ï¼Œå˜é‡å‘½åç¤ºä¾‹ucVar
+typedef signed short int int16;        // -32768~32767ï¼Œå˜é‡å‘½åç¤ºä¾‹sVar
+typedef unsigned short int uint16;     //0~65535ï¼Œå˜é‡å‘½åç¤ºä¾‹usVar
+typedef signed int int32;              // -2147483648~2147483647ï¼Œå˜é‡å‘½åç¤ºä¾‹nVar
+typedef unsigned int uint32;           //0~4294967295ï¼Œå˜é‡å‘½åç¤ºä¾‹unVar
+typedef signed long long int int64;    //......ï¼Œå˜é‡å‘½åç¤ºä¾‹lVar  long long int ä¸º8å­—èŠ‚ ä¿®æ”¹2026.2.3
+typedef unsigned long long int uint64; //......ï¼Œå˜é‡å‘½åç¤ºä¾‹ulVar
 
+#define TURRET_AXIS_TEST 1 //åˆ€å¡”è½´æµ‹è¯•
 
-
-
-
-#define TURRET_AXIS_TEST 1  //µ¶ËşÖá²âÊÔ
-
-#if(TURRET_AXIS_TEST == 1)
-#define TURRET_MAX_NUM 1         //¼Ó¹¤ÖĞĞÄ±£Áôµ¥¸öµ¶¾ß×ÊÔ´×é£¬¹©¾ÉÄÚºËÆ«ÖÃ/×ÊÔ´¹ÜÀíÊ¹ÓÃ
-#define TOOl_LOCATION_MAX_NUM  15//µ¶ËşµÄµ¶Î»Êı
-#define	 TURRET_NULL 0//¶¨Òå¿ÕµÄµ¶Ëş
+#if (TURRET_AXIS_TEST == 1)
+#define TURRET_MAX_NUM 1         //åŠ å·¥ä¸­å¿ƒä¿ç•™å•ä¸ªåˆ€å…·èµ„æºç»„ï¼Œä¾›æ—§å†…æ ¸åç½®/èµ„æºç®¡ç†ä½¿ç”¨
+#define TOOl_LOCATION_MAX_NUM 15 //åˆ€å¡”çš„åˆ€ä½æ•°
+#define TURRET_NULL 0            //å®šä¹‰ç©ºçš„åˆ€å¡”
 
 #endif
-#define POLAR_COORD_TEST 0 //¼Ó¹¤ÖĞĞÄ¿ª·¢»ùÏß¹Ø±Õ³µÏ³¼«×ø±êÀ©Õ¹
+#define POLAR_COORD_TEST 0 //åŠ å·¥ä¸­å¿ƒå¼€å‘åŸºçº¿å…³é—­è½¦é“£æåæ ‡æ‰©å±•
 
-#define DRAW_TEST		0	//»­Í¼²âÊÔ	³ÂÃô´Ï
-#define MINIMUM_OF_INT8 -128   //8ÔÂ18 Ó¢»ª
+#define DRAW_TEST 0          //ç”»å›¾æµ‹è¯•	é™ˆæ•èª
+#define MINIMUM_OF_INT8 -128 //8æœˆ18 è‹±å
 #define MAXIMUM_OF_INT8 127
-#define MINIMUM_OF_UINT8 0 
+#define MINIMUM_OF_UINT8 0
 #define MAXIMUM_OF_UINT8 255
 #define MAXIMUM_OF_INT16 32767
 #define MAXIMUM_OF_UINT16 65535
 
 #define FILENAME_LENGTH_LIMIT 16
 
-#define ARC_CW 1          //Ë³Ê±ÕëÔ²»¡
-#define ARC_ANTI_CW -1    //ÄæÊ±ÕëÔ²»¡
+#define ARC_CW 1       //é¡ºæ—¶é’ˆåœ†å¼§
+#define ARC_ANTI_CW -1 //é€†æ—¶é’ˆåœ†å¼§
 
-#define FALSE	0
-#define TRUE	1
+#define FALSE 0
+#define TRUE 1
 
 #if !STM32_MODE
-#define SET     1
-#define RESET   0
+#define SET 1
+#define RESET 0
 #endif // !STM32_MODE
 #define XSET 1
 #define XRESET 0
 
+#define IO_SET SET
+#define IO_RESET RESET
 
-#define IO_SET		SET
-#define IO_RESET	RESET
+#define HIGHLEVEL 1  //é«˜ç”µå¹³	//é™ˆæ•èª	2023/7/10
+#define LOWLEVEL 0   //ä½ç”µå¹³
+#define PULSE_TYPE 2 //è„‰å†²è¾“å‡º
 
-#define HIGHLEVEL	1	//¸ßµçÆ½	//³ÂÃô´Ï	2023/7/10
-#define LOWLEVEL	0	//µÍµçÆ½
-#define PULSE_TYPE	2	//Âö³åÊä³ö
+#define HIGHLEVEL_VALID 1 //é«˜ç”µå¹³æœ‰æ•ˆ	//é™ˆæ•èª	2023/7/10
+#define LOWLEVEL_VALID 0  //ä½ç”µå¹³æœ‰æ•ˆ
 
-#define HIGHLEVEL_VALID	1	//¸ßµçÆ½ÓĞĞ§	//³ÂÃô´Ï	2023/7/10
-#define LOWLEVEL_VALID	0	//µÍµçÆ½ÓĞĞ§
+#define PI 3.1415926535
 
+#define SERIALCOM_NUM_MAX 2 //ç³»ç»Ÿä¸²å£é€šè®¯çš„æ€»æ•°
 
+#define AXIS_NUM_MAX 6 //ç³»ç»Ÿçš„è¿åŠ¨è½´æ€»æ•°(ç»“æ„ä½“)  //2021-09-15 æœ±ç¨³ä¸­
 
+#define AXIS_PHYSICS_NUM_MAX 6 //ç‰©ç†è½´æ€»æ•°   2022-4-7 æœ±ç¨³ä¸­
 
-#define	PI	3.1415926535
+#define TOOL_NUM_MAX 20 //ç³»ç»Ÿçš„åˆ€å…·æ€»æ•°
 
-#define SERIALCOM_NUM_MAX  2  //ÏµÍ³´®¿ÚÍ¨Ñ¶µÄ×ÜÊı
+#define TOOLNOSE_NUM_MAX 10 //å‡è±¡åˆ€å°–å·ç 
 
-#define AXIS_NUM_MAX  6		//ÏµÍ³µÄÔË¶¯Öá×ÜÊı(½á¹¹Ìå)  //2021-09-15 ÖìÎÈÖĞ
+#define ENCODER_NUM_MAX 4 //ç¼–ç å™¨çš„æœ€å¤§æ•°ç›®  //2021-10-21 åˆ˜æ³“æº
 
-#define AXIS_PHYSICS_NUM_MAX 6	//ÎïÀíÖá×ÜÊı   2022-4-7 ÖìÎÈÖĞ
+#define WORKPIECE_OFFSET_NUM 6 //åˆ€å…·åç§»æ•°ç›®
 
-#define TOOL_NUM_MAX  20  //ÏµÍ³µÄµ¶¾ß×ÜÊı
+#define CHANNEL_NUM_MAX 1 //é€šé“æ•°
 
-#define TOOLNOSE_NUM_MAX   10//¼ÙÏóµ¶¼âºÅÂë
+#define SMACHINE_REFPOT_NUM 4 //æœºæ¢°å‚è€ƒç‚¹æ•°ç›®
 
-#define ENCODER_NUM_MAX  4		//±àÂëÆ÷µÄ×î´óÊıÄ¿  //2021-10-21 Áõãüâı
+//2022-04-08 æœ±ç¨³ä¸­
+/**********è½´å·å®šä¹‰(ç¬¬ä¸€å±‚ æ˜ å°„)***********/
+#define AXIS_ALL 254  //å®šä¹‰æ‰€æœ‰è½´ä¸º255
+#define AXIS_NULL 255 //å®šä¹‰ç©ºçš„è½´
 
-#define WORKPIECE_OFFSET_NUM	6 //µ¶¾ßÆ«ÒÆÊıÄ¿
+#define ENCODER_NULL 255 //å®šä¹‰ç©ºçš„è½´
 
-#define CHANNEL_NUM_MAX 1//Í¨µÀÊı
+#define AXIS_X 0 //å®šä¹‰Xè½´ä¸º0
+#define AXIS_Y 1 //å®šä¹‰Yè½´ä¸º1
+#define AXIS_Z 2 //å®šä¹‰Zè½´ä¸º2
+#define AXIS_A 3 //å®šä¹‰Aè½´ä¸º3
+#define AXIS_B 4 //å®šä¹‰Bè½´ä¸º4
+#define AXIS_C 5 //å®šä¹‰ä¸»è½´ï¼ˆCè½´ï¼‰ä¸º5
 
-#define SMACHINE_REFPOT_NUM 4 //»úĞµ²Î¿¼µãÊıÄ¿
+#define AXIS_HORIZONTAL 0 //æ¨ªè½´
+#define AXIS_VERTICAL 1   //çºµè½´
+/***************************************************æŒ‡ä»¤ç±»å‹å®šä¹‰*************************************************************/ //2021-09-16  æœ±ç¨³ä¸­
+//		é…åˆgetBits  setBits(å®šä¹‰åœ¨GeneralFunctions.h)ä½¿ç”¨   æ³¨æ„unCommandTypeç›®å‰ä¸º16ä½ï¼Œè¶…è¿‡éœ€æ‰©å®¹
+// ä¾‹:                               å˜é‡               æŒ‡ä»¤å€¼              æŒ‡ä»¤åœ°å€
+//		è®¾ç½®G00			setBits(unCommandType,  CMD_MOCTION_QUICKMOVE  ,CMD_MOCTION_ADDR)
+//      è¯»è¿åŠ¨ç±»æŒ‡ä»¤	getBits(unCommandType ,							CMD_MOCTION_ADDR)
 
- //2022-04-08 ÖìÎÈÖĞ
-/**********ÖáºÅ¶¨Òå(µÚÒ»²ã Ó³Éä)***********/
-#define  AXIS_ALL 254 //¶¨ÒåËùÓĞÖáÎª255
-#define	 AXIS_NULL 255 //¶¨Òå¿ÕµÄÖá
+#define CMD_MOTION_ADDR 0x001F             // è¿åŠ¨ç±»åœ°å€ï¼ˆG00~G03ç­‰ç­‰)     ä½å…«ä½0001 1111
+#define CMD_MOTION_QUICKMOVE 0x0000        // å¿«é€Ÿè¿åŠ¨G00(é»˜è®¤)            ä½å…«ä½0000 0000
+#define CMD_MOTION_LINE 0x0001             // ç›´çº¿æ’è¡¥G01                  ä½å…«ä½0000 0001
+#define CMD_MOTION_ARC 0x0002              // åœ†å¼§æ’è¡¥G02                  ä½å…«ä½0000 0010
+#define CMD_MOTION_ANTI_ARC 0x0006         // åœ†å¼§æ’è¡¥G03                  ä½å…«ä½0000 0110
+#define CMD_MOTION_SCREWCUT 0x0003         // èºç‰™åˆ‡å‰Šï¼ˆG32ï¼‰              ä½å…«ä½0000 0011
+#define CMD_MOTION_SCREWCUT_LOOP 0x0004    // èºç‰™åˆ‡å‰Šå¾ªç¯ï¼ˆG92ï¼‰          ä½å…«ä½0000 0100
+#define CMD_MOTION_G33 0x0005              // G33Zå‘æ”»ç‰™å¾ªç¯ï¼ˆG33ï¼‰        ä½å…«ä½0000 0101  //éƒ­å¼º9.17
+#define CMD_MOTION_SCREWCUT_VP 0x0007      // å˜èºè·èºçº¹ï¼ˆG34ï¼‰            ä½å…«ä½0000 0111
+#define CMD_MOTION_G10 0x0008              // è‡ªåŠ¨è¡¥å¿åˆ€è¡¥åŠŸèƒ½             ä½å…«ä½0000 1000
+#define CMD_MOTION_ELLIPSE_ARC 0x0009      // æ¤­åœ†æ’è¡¥æŒ‡ä»¤G6.2             ä½å…«ä½0000 1001
+#define CMD_MOTION_ELLIPSE_ANTI_ARC 0x000A // æ¤­åœ†æ’è¡¥æŒ‡ä»¤G6.3             ä½å…«ä½0000 1010
 
-#define	 ENCODER_NULL 255 //¶¨Òå¿ÕµÄÖá
+#define CMD_PLANE_ADDR 0x0060 // æ’è¡¥å¹³é¢æŒ‡å®š åœ°å€            ä½å…«ä½0110 0000
+#define CMD_PLANE_G17 0x0020  // G17 æŒ‡å®šæ’è¡¥å¹³é¢XY(æ¨ª:X çºµ:Y)ä½å…«ä½0010 0000
+#define CMD_PLANE_G18 0x0000  // G18 æŒ‡å®šæ’è¡¥å¹³é¢ZX(æ¨ª:Z çºµ:X)ä½å…«ä½0000 0000 (é»˜è®¤)
+#define CMD_PLANE_G19 0x0040  // G19 æŒ‡å®šæ’è¡¥å¹³é¢YZ(æ¨ª:Y çºµ:Z)ä½å…«ä½0100 0000
 
-#define  AXIS_X  0  //¶¨ÒåXÖáÎª0
-#define  AXIS_Y  1  //¶¨ÒåYÖáÎª1
-#define  AXIS_Z  2  //¶¨ÒåZÖáÎª2
-#define  AXIS_A  3  //¶¨ÒåAÖáÎª3
-#define  AXIS_B  4  //¶¨ÒåBÖáÎª4
-#define	 AXIS_C	 5  //¶¨ÒåÖ÷Öá£¨CÖá£©Îª5
+#define CMD_SPINDLE_SPEED_ADDR 0x0080 // ä¸»è½´è½¬é€Ÿåœ°å€(G97 G96)        ä½å…«ä½1000 0000
+#define CMD_SPINDLE_SPEED_CV 0x0000   // æ’è½¬é€Ÿåº¦æ§åˆ¶G97              ä½å…«ä½0000 0000  Const Vel
+#define CMD_SPINDLE_SPEED_CLV 0x0080  // æ’çº¿é€Ÿåº¦æ§åˆ¶G96              ä½å…«ä½1000 0000  Const Line Vel
 
-#define AXIS_HORIZONTAL		0 //ºáÖá
-#define AXIS_VERTICAL		1 //×İÖá
-/***************************************************Ö¸ÁîÀàĞÍ¶¨Òå*************************************************************/ //2021-09-16  ÖìÎÈÖĞ
-//		ÅäºÏgetBits  setBits(¶¨ÒåÔÚGeneralFunctions.h)Ê¹ÓÃ   ×¢ÒâunCommandTypeÄ¿Ç°Îª16Î»£¬³¬¹ıĞèÀ©Èİ
-// Àı:                               ±äÁ¿               Ö¸ÁîÖµ              Ö¸ÁîµØÖ·
-//		ÉèÖÃG00			setBits(unCommandType,  CMD_MOCTION_QUICKMOVE  ,CMD_MOCTION_ADDR)
-//      ¶ÁÔË¶¯ÀàÖ¸Áî	getBits(unCommandType ,							CMD_MOCTION_ADDR)
+#define CMD_FEED_ADDR 0x0100    // è¿›ç»™åœ°å€(G98ã€G99)           é«˜å…«ä½0000 0001
+#define CMD_FEED_PER_MIN 0x0000 // è½¬åˆ†é’Ÿè¿›ç»™G98                é«˜å…«ä½0000 0000
+#define CMD_FEED_PER_R 0x0100   // æ¯è½¬è¿›ç»™G99                  é«˜å…«ä½0000 0001
 
-#define CMD_MOTION_ADDR					0x001F  // ÔË¶¯ÀàµØÖ·£¨G00~G03µÈµÈ)     µÍ°ËÎ»0001 1111
-#define CMD_MOTION_QUICKMOVE			0x0000	// ¿ìËÙÔË¶¯G00(Ä¬ÈÏ)            µÍ°ËÎ»0000 0000
-#define CMD_MOTION_LINE					0x0001	// Ö±Ïß²å²¹G01                  µÍ°ËÎ»0000 0001
-#define CMD_MOTION_ARC					0x0002	// Ô²»¡²å²¹G02                  µÍ°ËÎ»0000 0010
-#define CMD_MOTION_ANTI_ARC				0x0006  // Ô²»¡²å²¹G03                  µÍ°ËÎ»0000 0110
-#define CMD_MOTION_SCREWCUT				0x0003  // ÂİÑÀÇĞÏ÷£¨G32£©              µÍ°ËÎ»0000 0011
-#define CMD_MOTION_SCREWCUT_LOOP		0x0004  // ÂİÑÀÇĞÏ÷Ñ­»·£¨G92£©          µÍ°ËÎ»0000 0100
-#define CMD_MOTION_G33                  0x0005  // G33ZÏò¹¥ÑÀÑ­»·£¨G33£©        µÍ°ËÎ»0000 0101  //¹ùÇ¿9.17
-#define CMD_MOTION_SCREWCUT_VP			0x0007  // ±äÂİ¾àÂİÎÆ£¨G34£©            µÍ°ËÎ»0000 0111
-#define CMD_MOTION_G10					0x0008	// ×Ô¶¯²¹³¥µ¶²¹¹¦ÄÜ             µÍ°ËÎ»0000 1000
-#define CMD_MOTION_ELLIPSE_ARC			0x0009  // ÍÖÔ²²å²¹Ö¸ÁîG6.2             µÍ°ËÎ»0000 1001
-#define CMD_MOTION_ELLIPSE_ANTI_ARC		0x000A  // ÍÖÔ²²å²¹Ö¸ÁîG6.3             µÍ°ËÎ»0000 1010
+#define CMD_PROGRAM_ADDR 0x0E00         // ç¨‹åºçŠ¶æ€åœ°å€M0/M1/M2/M30     é«˜å…«ä½0000 1110
+#define CMD_PROGRAM_CONTINUE 0x0000     // ç¨‹åºç»§ç»­  éM0/M1/M2/M30     é«˜å…«ä½0000 0000
+#define CMD_PROGRAM_STOP 0x0200         // ç¨‹åºç»“æŸ  M2 M30             é«˜å…«ä½0000 0010
+#define CMD_PROGRAM_STOP_M02 0x0A00     // ç¨‹åºç»“æŸ  M2                 é«˜å…«ä½0000 1010  //2025.11.27
+#define CMD_PROGRAM_OPTION_PAUSE 0x0400 // æ¡ä»¶æš‚åœM1                   é«˜å…«ä½0000 0100  //é™ˆæ•èª 2023/8/5
+#define CMD_PROGRAM_PAUSE 0x0600        // ç¨‹åºæš‚åœ  M0                 é«˜å…«ä½0000 0110
+#define CMD_PROGRAM_FINISH 0x0800       // æ‰‹åŠ¨å®Œæˆ                     é«˜å…«ä½0000 1000
 
+#define CMD_G90G91_ADDR 0x1000 // G90G91åœ°å€                   é«˜å…«ä½0001 0000
+#define CMD_G90G91_G90 0x0000  // ç»å¯¹ç¼–ç¨‹G90                  é«˜å…«ä½0000 0000
+#define CMD_G90G91_G91 0x1000  // å¢é‡ç¼–ç¨‹G91                  é«˜å…«ä½0001 0000
 
-#define CMD_PLANE_ADDR					0x0060  // ²å²¹Æ½ÃæÖ¸¶¨ µØÖ·            µÍ°ËÎ»0110 0000
-#define CMD_PLANE_G17					0x0020  // G17 Ö¸¶¨²å²¹Æ½ÃæXY(ºá:X ×İ:Y)µÍ°ËÎ»0010 0000
-#define CMD_PLANE_G18					0x0000  // G18 Ö¸¶¨²å²¹Æ½ÃæZX(ºá:Z ×İ:X)µÍ°ËÎ»0000 0000 (Ä¬ÈÏ)
-#define CMD_PLANE_G19					0x0040  // G19 Ö¸¶¨²å²¹Æ½ÃæYZ(ºá:Y ×İ:Z)µÍ°ËÎ»0100 0000
+//åˆ é™¤  ä¸å±äºæŒ‡ä»¤ç±»å‹  å±äºæœ‰æ•ˆå€¼å®šä¹‰
+//#define CMD_IS_G50_ADDR				0x0800  // ä¸»è½´è½¬é€ŸSpindleSpeedæ˜¯å¦ä¸ºG50 Sxxx é«˜å…«ä½0000 1000
+//#define CMD_IS_G50_FALSE				0x0000  // ä¸»è½´è½¬é€Ÿï¼Œç”±G96G97æŒ‡å®š             é«˜å…«ä½0000 0000
+//#define CMD_IS_G50_TRUE				0x0800  // ä¸»è½´è½¬é€Ÿé™åˆ¶çš„é€Ÿåº¦ï¼Œç”±G50æŒ‡å®š      é«˜å…«ä½0000 1000
 
-#define CMD_SPINDLE_SPEED_ADDR			0x0080  // Ö÷Öá×ªËÙµØÖ·(G97 G96)        µÍ°ËÎ»1000 0000
-#define CMD_SPINDLE_SPEED_CV			0x0000  // ºã×ªËÙ¶È¿ØÖÆG97              µÍ°ËÎ»0000 0000  Const Vel
-#define CMD_SPINDLE_SPEED_CLV			0x0080	// ºãÏßËÙ¶È¿ØÖÆG96              µÍ°ËÎ»1000 0000  Const Line Vel
+#define CMD_TOOLCOMP_ADDR 0x6000   // åˆ€è¡¥åœ°å€                     é«˜å…«ä½0110 0000
+#define CMD_TOOLCOMP_CANCEL 0x0000 // å–æ¶ˆåˆ€è¡¥G40(é»˜è®¤)            é«˜å…«ä½0000 0000
+#define CMD_TOOLCOMP_LEFT 0x2000   // å·¦åˆ€è¡¥  G41                  é«˜å…«ä½0010 0000
+#define CMD_TOOLCOMP_RIGHT 0x4000  // å³åˆ€è¡¥  G42                  é«˜å…«ä½0100 0000
 
-#define CMD_FEED_ADDR					0x0100	// ½ø¸øµØÖ·(G98¡¢G99)           ¸ß°ËÎ»0000 0001
-#define	CMD_FEED_PER_MIN				0x0000	// ×ª·ÖÖÓ½ø¸øG98                ¸ß°ËÎ»0000 0000
-#define CMD_FEED_PER_R					0x0100	// Ã¿×ª½ø¸øG99                  ¸ß°ËÎ»0000 0001
+#define CMD_INTERPOLATION_MODE_ADDR 0x18000   // æ’è¡¥åœ°å€                     é«˜å…«ä½1000 0000  //2023.3.24 æœ±ç¨³ä¸­
+#define CMD_INTERPOLATION_COMMON 0x00000      // æ™®é€šæ’è¡¥                     é«˜å…«ä½0000 0000
+#define CMD_INTERPOLATION_CYLINDRICAL 0x08000 // åœ†æŸ±æ’è¡¥                     é«˜16ä½ 0000 0000 0000 0001
+#define CMD_INTERPOLATION_POLAR 0x10000       // æåæ ‡æ’è¡¥                   é«˜å…«ä½1000 0000
+#define CMD_INTERPOLATION_POLAR_START 0x18000 // æåæ ‡æ’è¡¥å¼€å§‹               //éš¶å±äºæåæ ‡æ’è¡¥ è¯¥å®è¡¨ç¤ºG12.1é‚£ä¸€è¡Œ
 
-#define CMD_PROGRAM_ADDR				0x0E00	// ³ÌĞò×´Ì¬µØÖ·M0/M1/M2/M30     ¸ß°ËÎ»0000 1110
-#define CMD_PROGRAM_CONTINUE			0x0000  // ³ÌĞò¼ÌĞø  ·ÇM0/M1/M2/M30     ¸ß°ËÎ»0000 0000
-#define CMD_PROGRAM_STOP				0x0200	// ³ÌĞò½áÊø  M2 M30             ¸ß°ËÎ»0000 0010
-#define CMD_PROGRAM_STOP_M02			0x0A00	// ³ÌĞò½áÊø  M2                 ¸ß°ËÎ»0000 1010  //2025.11.27
-#define CMD_PROGRAM_OPTION_PAUSE		0x0400	// Ìõ¼şÔİÍ£M1                   ¸ß°ËÎ»0000 0100  //³ÂÃô´Ï 2023/8/5
-#define CMD_PROGRAM_PAUSE				0x0600	// ³ÌĞòÔİÍ£  M0                 ¸ß°ËÎ»0000 0110
-#define CMD_PROGRAM_FINISH				0x0800  // ÊÖ¶¯Íê³É                     ¸ß°ËÎ»0000 1000
+#define CMD_POLAR_DIR_ADDR 0x20000     // æåæ ‡æ’è¡¥æ–¹å‘
+#define CMD_POLAR_DIR_POSITIVE 0x00000 // æåæ ‡æ’è¡¥æ–¹å‘+
+#define CMD_POLAR_DIR_NEGATIVE 0x20000 // æåæ ‡æ’è¡¥æ–¹å‘-
 
+//#define CMD_WORKPIECE_ADDR      0x3800  //å·¥ä»¶åæ ‡       é«˜å…«ä½0011 1000
+//#define CMD_WORKPIECE_EXT		0x0000  //å¤–éƒ¨å·¥ä»¶åæ ‡ç³» é«˜å…«ä½0000 0000
+//#define CMD_WORKPIECE_G54       0x0800	//G54å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0000 1000
+//#define CMD_WORKPIECE_G55       0x1000	//G55å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0001 0000
+//#define CMD_WORKPIECE_G56       0x1800	//G56å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0001 1000
+//#define CMD_WORKPIECE_G57       0x2000	//G57å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0010 0000
+//#define CMD_WORKPIECE_G58       0x2800	//G58å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0010 1000
+//#define CMD_WORKPIECE_G59       0x3000	//G59å·¥ä»¶åæ ‡ç³»  é«˜å…«ä½0011 0000
 
+/*******************************************************æœ‰æ•ˆå€¼(è½´)å®šä¹‰*********************************************************/ //2022-4-12 æœ±ç¨³ä¸­
+//(éœ€è¦æ ¹æ®ç‰©ç†è½´çš„æ•°é‡æˆ–ç»“æ„ä½“è½´çš„æ•°é‡è°ƒæ•´æ•°æ®ç±»å‹)
+#define VAL_STRUCT_TYPE uint8       //ç»“æ„ä½“æœ‰æ•ˆå€¼çš„æ•°æ®ç±»å‹    å½“å‰ï¼šæ— ç¬¦å·å­—ç¬¦å‹
+#define VAL_PHYSICIAL_TYPE uint8    //ç‰©ç†è½´çš„æ•°æ®ç±»å‹			å½“å‰ï¼šæ— ç¬¦å·å­—ç¬¦å‹
+#define PHYSICIAL_TYPE_MAX_VAL 0xFF //ç‰©ç†è½´æ•°æ®ç±»å‹å¯¹åº”æœ€å¤§å€¼
+#define VAL_VALID 1                 //æœ‰æ•ˆå€¼
 
-#define CMD_G90G91_ADDR					0x1000	// G90G91µØÖ·                   ¸ß°ËÎ»0001 0000
-#define	CMD_G90G91_G90				    0x0000	// ¾ø¶Ô±à³ÌG90                  ¸ß°ËÎ»0000 0000
-#define CMD_G90G91_G91					0x1000	// ÔöÁ¿±à³ÌG91                  ¸ß°ËÎ»0001 0000
-
-//É¾³ı  ²»ÊôÓÚÖ¸ÁîÀàĞÍ  ÊôÓÚÓĞĞ§Öµ¶¨Òå
-//#define CMD_IS_G50_ADDR				0x0800  // Ö÷Öá×ªËÙSpindleSpeedÊÇ·ñÎªG50 Sxxx ¸ß°ËÎ»0000 1000
-//#define CMD_IS_G50_FALSE				0x0000  // Ö÷Öá×ªËÙ£¬ÓÉG96G97Ö¸¶¨             ¸ß°ËÎ»0000 0000
-//#define CMD_IS_G50_TRUE				0x0800  // Ö÷Öá×ªËÙÏŞÖÆµÄËÙ¶È£¬ÓÉG50Ö¸¶¨      ¸ß°ËÎ»0000 1000
-
-#define CMD_TOOLCOMP_ADDR				0x6000  // µ¶²¹µØÖ·                     ¸ß°ËÎ»0110 0000
-#define CMD_TOOLCOMP_CANCEL				0x0000  // È¡Ïûµ¶²¹G40(Ä¬ÈÏ)            ¸ß°ËÎ»0000 0000
-#define CMD_TOOLCOMP_LEFT				0x2000	// ×óµ¶²¹  G41                  ¸ß°ËÎ»0010 0000
-#define CMD_TOOLCOMP_RIGHT				0x4000	// ÓÒµ¶²¹  G42                  ¸ß°ËÎ»0100 0000
-
-
-#define CMD_INTERPOLATION_MODE_ADDR		0x18000	// ²å²¹µØÖ·                     ¸ß°ËÎ»1000 0000  //2023.3.24 ÖìÎÈÖĞ
-#define CMD_INTERPOLATION_COMMON		0x00000	// ÆÕÍ¨²å²¹                     ¸ß°ËÎ»0000 0000
-#define CMD_INTERPOLATION_CYLINDRICAL	0x08000 // Ô²Öù²å²¹                     ¸ß16Î» 0000 0000 0000 0001
-#define CMD_INTERPOLATION_POLAR			0x10000	// ¼«×ø±ê²å²¹                   ¸ß°ËÎ»1000 0000
-#define CMD_INTERPOLATION_POLAR_START	0x18000 // ¼«×ø±ê²å²¹¿ªÊ¼               //Á¥ÊôÓÚ¼«×ø±ê²å²¹ ¸Ãºê±íÊ¾G12.1ÄÇÒ»ĞĞ
-
-#define CMD_POLAR_DIR_ADDR				0x20000 // ¼«×ø±ê²å²¹·½Ïò
-#define CMD_POLAR_DIR_POSITIVE			0x00000 // ¼«×ø±ê²å²¹·½Ïò+
-#define CMD_POLAR_DIR_NEGATIVE			0x20000 // ¼«×ø±ê²å²¹·½Ïò-
-
-
-//#define CMD_WORKPIECE_ADDR      0x3800  //¹¤¼ş×ø±ê       ¸ß°ËÎ»0011 1000
-//#define CMD_WORKPIECE_EXT		0x0000  //Íâ²¿¹¤¼ş×ø±êÏµ ¸ß°ËÎ»0000 0000
-//#define CMD_WORKPIECE_G54       0x0800	//G54¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0000 1000
-//#define CMD_WORKPIECE_G55       0x1000	//G55¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0001 0000
-//#define CMD_WORKPIECE_G56       0x1800	//G56¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0001 1000
-//#define CMD_WORKPIECE_G57       0x2000	//G57¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0010 0000
-//#define CMD_WORKPIECE_G58       0x2800	//G58¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0010 1000
-//#define CMD_WORKPIECE_G59       0x3000	//G59¹¤¼ş×ø±êÏµ  ¸ß°ËÎ»0011 0000
-
-/*******************************************************ÓĞĞ§Öµ(Öá)¶¨Òå*********************************************************/ //2022-4-12 ÖìÎÈÖĞ
-//(ĞèÒª¸ù¾İÎïÀíÖáµÄÊıÁ¿»ò½á¹¹ÌåÖáµÄÊıÁ¿µ÷ÕûÊı¾İÀàĞÍ)
-#define VAL_STRUCT_TYPE			uint8   //½á¹¹ÌåÓĞĞ§ÖµµÄÊı¾İÀàĞÍ    µ±Ç°£ºÎŞ·ûºÅ×Ö·ûĞÍ
-#define VAL_PHYSICIAL_TYPE		uint8	//ÎïÀíÖáµÄÊı¾İÀàĞÍ			µ±Ç°£ºÎŞ·ûºÅ×Ö·ûĞÍ
-#define PHYSICIAL_TYPE_MAX_VAL	0xFF	//ÎïÀíÖáÊı¾İÀàĞÍ¶ÔÓ¦×î´óÖµ
-#define VAL_VALID				1		//ÓĞĞ§Öµ
-
-#if(TURRET_AXIS_TEST == 1)
-#define VAL_TURRET_TYPE		uint8	//µ¶ËşÊı¾İÀàĞÍ			µ±Ç°£ºÎŞ·ûºÅ×Ö·ûĞÍ
+#if (TURRET_AXIS_TEST == 1)
+#define VAL_TURRET_TYPE uint8 //åˆ€å¡”æ•°æ®ç±»å‹			å½“å‰ï¼šæ— ç¬¦å·å­—ç¬¦å‹
 #endif
 
-//XYZABC Óë½á¹¹ÌåÊı×éµÄ¶¨ÒåÏàÍ¬
-//#define  AXIS_X  0  //¶¨ÒåXÖáÎª0
-//#define  AXIS_Y  1  //¶¨ÒåYÖáÎª1
-//#define  AXIS_Z  2  //¶¨ÒåZÖáÎª2
-//#define  AXIS_A  3  //¶¨ÒåAÖáÎª3
-//#define  AXIS_B  4  //¶¨ÒåBÖáÎª4
-//#define  AXIS_C  5  //¶¨ÒåÖ÷Öá£¨CÖá£©Îª5
-#define VAL_STATUS_G50	AXIS_NUM_MAX  //×î´óÖáºÅÖµµÄºóÒ»Î»
-#define VAL_ABS_POINT	0x0
+//XYZABC ä¸ç»“æ„ä½“æ•°ç»„çš„å®šä¹‰ç›¸åŒ
+//#define  AXIS_X  0  //å®šä¹‰Xè½´ä¸º0
+//#define  AXIS_Y  1  //å®šä¹‰Yè½´ä¸º1
+//#define  AXIS_Z  2  //å®šä¹‰Zè½´ä¸º2
+//#define  AXIS_A  3  //å®šä¹‰Aè½´ä¸º3
+//#define  AXIS_B  4  //å®šä¹‰Bè½´ä¸º4
+//#define  AXIS_C  5  //å®šä¹‰ä¸»è½´ï¼ˆCè½´ï¼‰ä¸º5
+#define VAL_STATUS_G50 AXIS_NUM_MAX //æœ€å¤§è½´å·å€¼çš„åä¸€ä½
+#define VAL_ABS_POINT 0x0
 
+//ç”¨æ³•ï¼š	setbit(ucValStatus,AXIS_X);
+//			Ã—Ã—Ã—   getbit(ucValStatus,AXIS_X) == VAL_VALID ;
+//			âˆšâˆšâˆš	VAL_VALID == getbit(ucValStatus,AXIS_X) ;
+//			getRealTimePoint(xxx,xxx,xxx,&ucValStatus);//æ ¹æ®æœ‰æ•ˆè½´è¯»å–å®æ—¶ç‚¹
+//			updateRealTimePoint(xxx,xxx,xxx,&ucValStatus);//æ ¹æ®æœ‰æ•ˆè½´æ›´æ–°å®æ—¶ç‚¹
 
+/*******************************************************IOç±»å‹å®šä¹‰*********************************************************/ //2021-10-26 æœ±ç¨³ä¸­
+//	uint32 unIOCommand;
 
-//ÓÃ·¨£º	setbit(ucValStatus,AXIS_X);
-//			¡Á¡Á¡Á   getbit(ucValStatus,AXIS_X) == VAL_VALID ;
-//			¡Ì¡Ì¡Ì	VAL_VALID == getbit(ucValStatus,AXIS_X) ;
-//			getRealTimePoint(xxx,xxx,xxx,&ucValStatus);//¸ù¾İÓĞĞ§Öá¶ÁÈ¡ÊµÊ±µã
-//			updateRealTimePoint(xxx,xxx,xxx,&ucValStatus);//¸ù¾İÓĞĞ§Öá¸üĞÂÊµÊ±µã
+#define IO_PRE_ACTION 0              //å‰ä½œç”¨
+#define IO_POST_ACTION 1             //åä½œç”¨
+#define IO_ALL_ACTION 2              //å‰åä½œç”¨
+#define IO_MAXGROUP_IN_SINGLE_LINE 6 //åœ¨ä¸€è¡ŒGä»£ç ä¸­Mä»£ç çš„æœ€å¤šä¸ªæ•°
 
-
-/*******************************************************IOÀàĞÍ¶¨Òå*********************************************************/ //2021-10-26 ÖìÎÈÖĞ
-//	uint32 unIOCommand; 
-
-#define IO_PRE_ACTION					0	//Ç°×÷ÓÃ
-#define IO_POST_ACTION					1	//ºó×÷ÓÃ
-#define IO_ALL_ACTION					2	//Ç°ºó×÷ÓÃ
-#define IO_MAXGROUP_IN_SINGLE_LINE		6	//ÔÚÒ»ĞĞG´úÂëÖĞM´úÂëµÄ×î¶à¸öÊı
-
-#define IO_NUM_ADDR						0x7F        //M´úÂëºÅÂëµØÖ·  0111 1111
-#define IO_TYPE_ADDR					0x80		//M´úÂë×÷ÓÃÀàĞÍµØÖ· 1000 0000
+#define IO_NUM_ADDR 0x7F  //Mä»£ç å·ç åœ°å€  0111 1111
+#define IO_TYPE_ADDR 0x80 //Mä»£ç ä½œç”¨ç±»å‹åœ°å€ 1000 0000
 
 typedef struct _SIOContrlInfo
 {
-	int8	cOutputIOIndex;			//Íâ²¿Êä³öIO
-	int8	cInputIOIndex;			//Íâ²¿ÊäÈëIO
-	int8	cOutputControlType;	//Íâ²¿Êä³öIO¿ØÖÆµÄµçÆ½ÀàĞÍ	1ÎªÊä³ö¸ßµçÆ½£¬0ÎªÊä³öµÍµçÆ½
-	int32   nOutputRunTims;		//Íâ²¿Êä³ö³ÖĞøÊ±¼ä	µ¥Î»:S
-	int8	cInputValidType;	//Íâ²¿ÊäÈëIOµçÆ½ÓĞĞ§ÀàĞÍ	1Îª¸ßµçÆ½ÓĞĞ§£¬0ÎªµÍµçÆ½ÓĞĞ§
-	int32	nInputDetectTime;	//ÊäÈëµÈ´ı¼ì²âÊ±¼ä	µ¥Î»£ºS
-	int32	nFeedingBackTime;	//ÉÏÁÏÍË»ØÑÓ³¤Ê±¼ä	µ¥Î»£ºS
-	int8	ucFeeding_RepeatTimes;		//ÉÏÁÏÊ§°ÜºóÖØ¸´Ö´ĞĞ´ÎÊı
-}SIOContrlInfo;		//IO¿ØÖÆĞÅÏ¢½á¹¹Ìå
+    int8 cOutputIOIndex;        //å¤–éƒ¨è¾“å‡ºIO
+    int8 cInputIOIndex;         //å¤–éƒ¨è¾“å…¥IO
+    int8 cOutputControlType;    //å¤–éƒ¨è¾“å‡ºIOæ§åˆ¶çš„ç”µå¹³ç±»å‹	1ä¸ºè¾“å‡ºé«˜ç”µå¹³ï¼Œ0ä¸ºè¾“å‡ºä½ç”µå¹³
+    int32 nOutputRunTims;       //å¤–éƒ¨è¾“å‡ºæŒç»­æ—¶é—´	å•ä½:S
+    int8 cInputValidType;       //å¤–éƒ¨è¾“å…¥IOç”µå¹³æœ‰æ•ˆç±»å‹	1ä¸ºé«˜ç”µå¹³æœ‰æ•ˆï¼Œ0ä¸ºä½ç”µå¹³æœ‰æ•ˆ
+    int32 nInputDetectTime;     //è¾“å…¥ç­‰å¾…æ£€æµ‹æ—¶é—´	å•ä½ï¼šS
+    int32 nFeedingBackTime;     //ä¸Šæ–™é€€å›å»¶é•¿æ—¶é—´	å•ä½ï¼šS
+    int8 ucFeeding_RepeatTimes; //ä¸Šæ–™å¤±è´¥åé‡å¤æ‰§è¡Œæ¬¡æ•°
+} SIOContrlInfo;                //IOæ§åˆ¶ä¿¡æ¯ç»“æ„ä½“
 
+/*************æ’è¡¥é¢„å¤„ç†ç»“æ„ä½“çŠ¶æ€å®šä¹‰************/ //2022-03-18  æœ±ç¨³ä¸­
+#define INP_FINISHED 0                              //æ’è¡¥å®Œæˆ
+#define INP_OCCUPATION 8                            //è½´å ç”¨é˜¶æ®µ(åˆ€è¡¥çš„è½´å ç”¨)
+#define INP_BLOCKED 3                               //é˜»å¡	   G1+ ç­‰å¾…ä¸»è½´åŠ é€Ÿå®Œæˆ
+#define INP_RUNNING 4                               //è¿è¡Œ
 
+/*********************è¿åŠ¨çŠ¶æ€å®šä¹‰********************/
+//#define INP_FINISHED			0		//æ’è¡¥å®Œæˆ
+//#define INP_OCCUPATION		8		//è½´å ç”¨é˜¶æ®µ(è½´å ç”¨)
+#define INP_INITIATION 1       //åˆå§‹åŒ–
+#define INP_ASSIGNMENT_START 2 //å¼€å§‹èµ‹å€¼
+//#define INP_RUNNING			4		//è¿è¡Œ
+#define INP_PAUSING 5    //æ­£åœ¨æš‚åœ
+#define INP_DECELERATE 6 //å‡é€Ÿ
+#define INP_STOP 7       //ç«‹å³åœ
 
-/*************²å²¹Ô¤´¦Àí½á¹¹Ìå×´Ì¬¶¨Òå************/  //2022-03-18  ÖìÎÈÖĞ
-#define INP_FINISHED			0		//²å²¹Íê³É
-#define INP_OCCUPATION			8		//ÖáÕ¼ÓÃ½×¶Î(µ¶²¹µÄÖáÕ¼ÓÃ)
-#define INP_BLOCKED				3		//×èÈû	   G1+ µÈ´ıÖ÷Öá¼ÓËÙÍê³É
-#define INP_RUNNING				4		//ÔËĞĞ
+/******************æ›²çº¿ç±»å‹å®šä¹‰*********************/ //æœ±ç¨³ä¸­  2021-08-30
+#define VEL_PLAN_T_CURVE 1                            //æ¢¯å½¢é€Ÿåº¦è§„åˆ’
+#define VEL_PLAN_S3_CURVE 2                           //S3å½¢é€Ÿåº¦è§„åˆ’
+#define VEL_PLAN_S4_CURVE 3                           //S4å½¢é€Ÿåº¦è§„åˆ’
 
-/*********************ÔË¶¯×´Ì¬¶¨Òå********************/
-//#define INP_FINISHED			0		//²å²¹Íê³É
-//#define INP_OCCUPATION		8		//ÖáÕ¼ÓÃ½×¶Î(ÖáÕ¼ÓÃ)
-#define INP_INITIATION			1		//³õÊ¼»¯
-#define INP_ASSIGNMENT_START	2		//¿ªÊ¼¸³Öµ
-//#define INP_RUNNING			4		//ÔËĞĞ
-#define INP_PAUSING				5		//ÕıÔÚÔİÍ£
-#define INP_DECELERATE			6		//¼õËÙ
-#define INP_STOP				7		//Á¢¼´Í£
+#define VEL_PLAN_V1_CURVE 1 //æ¢¯å½¢é€Ÿåº¦è§„åˆ’
+#define VEL_PLAN_V2_CURVE 2 //S3å½¢é€Ÿåº¦è§„åˆ’
+#define VEL_PLAN_V3_CURVE 3 //S4å½¢é€Ÿåº¦è§„åˆ’
 
+#define DIST_REAVG_T_CURVE 1  //æ¢¯å½¢å‡æ‘Š
+#define DIST_REAVG_S5_CURVE 2 //5æ¬¡å‡æ‘Š
+#define DIST_REAVG_RATIO 3    //æ¯”ä¾‹å‡æ‘Š
 
-/******************ÇúÏßÀàĞÍ¶¨Òå*********************/                  //ÖìÎÈÖĞ  2021-08-30
-#define VEL_PLAN_T_CURVE		1	//ÌİĞÎËÙ¶È¹æ»®
-#define VEL_PLAN_S3_CURVE		2	//S3ĞÎËÙ¶È¹æ»®
-#define VEL_PLAN_S4_CURVE		3	//S4ĞÎËÙ¶È¹æ»®
+/*********************æ’è¡¥æ–¹å‘***********************/ //æœ±ç¨³ä¸­  2022-01-3
+#define INP_GO_AHEAD 1                                 //æ’è¡¥æ­£æ–¹å‘
+#define INP_GO_BACK -1                                 //æ’è¡¥è´Ÿæ–¹å‘
 
-#define VEL_PLAN_V1_CURVE		1	//ÌİĞÎËÙ¶È¹æ»®
-#define VEL_PLAN_V2_CURVE		2	//S3ĞÎËÙ¶È¹æ»®
-#define VEL_PLAN_V3_CURVE		3	//S4ĞÎËÙ¶È¹æ»®
+/*************************************************************å¯ä¿®æ”¹å®šä¹‰***************************************************************************/
 
-#define DIST_REAVG_T_CURVE		1	//ÌİĞÎ¾ùÌ¯
-#define DIST_REAVG_S5_CURVE		2	//5´Î¾ùÌ¯
-#define DIST_REAVG_RATIO		3	//±ÈÀı¾ùÌ¯
+#define SPINDLE_TYPE SPINDLE_SIMULA // å®šä¹‰ä¸»è½´ç±»å‹
+#define SPINDLE_SIMULA 0x1          //æ¨¡æ‹Ÿä¸»è½´
+#define SPINDLE_SERVO 0x0           //ä¼ºæœä¸»è½´
 
-/*********************²å²¹·½Ïò***********************/                  //ÖìÎÈÖĞ  2022-01-3
-#define INP_GO_AHEAD	  1   //²å²¹Õı·½Ïò
-#define INP_GO_BACK		 -1	  //²å²¹¸º·½Ïò
+#define MAX_FEED_RATIO 1.5 // è¿›ç»™å€ç‡çš„æœ€å¤§å€¼
+#define MIN_FEED_RATIO 0   // è¿›ç»™å€ç‡çš„æœ€å°å€¼
 
-/*************************************************************¿ÉĞŞ¸Ä¶¨Òå***************************************************************************/
+#define MAX_SPINDLE_RATIO 1.2 // ä¸»è½´å€ç‡çš„æœ€å¤§å€¼
+#define MIN_SPINDLE_RATIO 0.1 // ä¸»è½´å€ç‡çš„æœ€å°å€¼
 
-#define SPINDLE_TYPE	SPINDLE_SIMULA  // ¶¨ÒåÖ÷ÖáÀàĞÍ
-#define SPINDLE_SIMULA	0x1				//Ä£ÄâÖ÷Öá
-#define SPINDLE_SERVO   0x0				//ËÅ·şÖ÷Öá
+#define MAX_HANDWHEEL_RATIO 1.0 //æ‰‹è½®æ¨¡æ‹Ÿå€ç‡æœ€å¤§å€¼
 
-#define MAX_FEED_RATIO	  1.5  // ½ø¸ø±¶ÂÊµÄ×î´óÖµ
-#define MIN_FEED_RATIO	  0    // ½ø¸ø±¶ÂÊµÄ×îĞ¡Öµ
+/**************************************ç¼–ç å™¨ç±»å‹å®šä¹‰**************************************************/
+#define SPINDLE_ENCODER 1             //ä¸»è½´ç¼–ç å™¨
+#define COMMON_ENCODER 2              //é€šç”¨ç¼–ç å™¨
+#define HANDEWHEEL_ENCODER 3          //æ‰‹è½®ç¼–ç å™¨
+#define SECONDSPINDLE_ANALOGENCODER 4 //Aè½´æ¨¡æ‹Ÿç¼–ç å™¨
 
-#define MAX_SPINDLE_RATIO 1.2  // Ö÷Öá±¶ÂÊµÄ×î´óÖµ
-#define MIN_SPINDLE_RATIO 0.1  // Ö÷Öá±¶ÂÊµÄ×îĞ¡Öµ
+/*********************************åˆ€è¡¥çš„çŠ¶æ€//ä¸åº•å±‚è½´å ç”¨æœ‰å…³***************************************/
+#define TOOL_COMPENSATION_IDLE 0    //æ²¡æœ‰åˆ€è¡¥
+#define TOOL_COMPENSATION_BUILD 1   //åˆ€è¡¥å»ºç«‹
+#define TOOL_COMPENSATION_PROCEED 2 //åˆ€è¡¥è¿›è¡Œ
+#define TOOL_COMPENSATION_CANCEL 3  //åˆ€è¡¥å–æ¶ˆ
 
-#define MAX_HANDWHEEL_RATIO 1.0 //ÊÖÂÖÄ£Äâ±¶ÂÊ×î´óÖµ
+/*************************************æ—‹è½¬è½´ ç›´çº¿è½´å®šä¹‰********************************************/
+#define LINEAR_AXIS 0   //ç›´çº¿è½´
+#define ROTATION_AXIS 1 //æ—‹è½¬è½´
 
-/**************************************±àÂëÆ÷ÀàĞÍ¶¨Òå**************************************************/
-#define SPINDLE_ENCODER				1     //Ö÷Öá±àÂëÆ÷
-#define COMMON_ENCODER				2     //Í¨ÓÃ±àÂëÆ÷
-#define HANDEWHEEL_ENCODER			3     //ÊÖÂÖ±àÂëÆ÷
-#define SECONDSPINDLE_ANALOGENCODER	4	  //AÖáÄ£Äâ±àÂëÆ÷
+/********************************å¤„ç†æ–¹å¼å®šä¹‰****************************************/
+#define DEALTYPE_RECAL 0           //æ“ä½œï¼šä¿®æ­£  ä¸å›å†™
+#define DEALTYPE_RECAL_WRITEBACK 1 //æ“ä½œï¼šä¿®æ­£  å›å†™
+#define DEALTYPE_NO_PROCESS 2      //æ“ä½œï¼šä¸ä¿®æ­£
+#define DEALTYPE_USER_INPUT 3      //æ“ä½œï¼šç”¨æˆ·è¾“å…¥
 
-/*********************************µ¶²¹µÄ×´Ì¬//Óëµ×²ãÖáÕ¼ÓÃÓĞ¹Ø***************************************/
-#define TOOL_COMPENSATION_IDLE			0		//Ã»ÓĞµ¶²¹
-#define TOOL_COMPENSATION_BUILD			1		//µ¶²¹½¨Á¢
-#define TOOL_COMPENSATION_PROCEED		2		//µ¶²¹½øĞĞ
-#define TOOL_COMPENSATION_CANCEL		3		//µ¶²¹È¡Ïû
+/********************************ç”µæœºç›¸ä½é€‰æ‹©****************************************/
+#define MOTOR_NEGATIVE_PHASE -1 //ç”µæœºåå‘
+#define MOTOR_POSITIVE_PHASE 1  //ç”µæœºæ­£å‘
 
-/*************************************Ğı×ªÖá Ö±ÏßÖá¶¨Òå********************************************/
-#define LINEAR_AXIS		0	//Ö±ÏßÖá
-#define ROTATION_AXIS	1	//Ğı×ªÖá
+/********************************ç¼–ç å™¨ç›¸ä½é€‰æ‹©****************************************/
+#define ENCODER_NEGATIVE_PHASE -1 //ç¼–ç å™¨åå‘
+#define ENCODER_POSITIVE_PHASE 1  //ç¼–ç å™¨æ­£å‘
 
-/********************************´¦Àí·½Ê½¶¨Òå****************************************/
-#define DEALTYPE_RECAL					0	//²Ù×÷£ºĞŞÕı  ²»»ØĞ´
-#define DEALTYPE_RECAL_WRITEBACK		1	//²Ù×÷£ºĞŞÕı  »ØĞ´
-#define DEALTYPE_NO_PROCESS				2	//²Ù×÷£º²»ĞŞÕı
-#define DEALTYPE_USER_INPUT				3   //²Ù×÷£ºÓÃ»§ÊäÈë
+/********************************ä¸»è½´é”ç´§å®šä¹‰****************************************/
+#define STATUS_GET_CLAMP_INSTRUCTION 16   //çŠ¶æ€ï¼Œå·²è·å–ä¸»è½´åˆ¹è½¦å¤¹ç´§ä¿¡å·ï¼Œæœªæ‰§è¡Œ
+#define STATUS_GET_UNCLAMP_INSTRUCTION 17 //çŠ¶æ€ï¼Œå·²è·å–ä¸»è½´åˆ¹è½¦æ¾å¼€ä¿¡å·ï¼Œæœªæ‰§è¡Œ
 
-/********************************µç»úÏàÎ»Ñ¡Ôñ****************************************/
-#define MOTOR_NEGATIVE_PHASE -1  //µç»ú·´Ïò
-#define MOTOR_POSITIVE_PHASE 1   //µç»úÕıÏò
+#define STATUS_CLAMP_EXECUTING 18  //çŠ¶æ€ï¼Œå·²è·å–ä¸»è½´åˆ¹è½¦å¤¹ç´§ä¿¡å·ï¼Œæ­£åœ¨æ‰§è¡Œ
+#define STATUS_UNCLAMPEXECUTING 19 //çŠ¶æ€ï¼Œå·²è·å–ä¸»è½´åˆ¹è½¦æ¾å¼€ä¿¡å·ï¼Œæ­£åœ¨æ‰§è¡Œ
 
-/********************************±àÂëÆ÷ÏàÎ»Ñ¡Ôñ****************************************/
-#define ENCODER_NEGATIVE_PHASE -1  //±àÂëÆ÷·´Ïò
-#define ENCODER_POSITIVE_PHASE 1   //±àÂëÆ÷ÕıÏò
+#define STATUS_CLAMPED 20   //çŠ¶æ€ï¼Œä¸»è½´åˆ¹è½¦å·²å¤¹ç´§  åä½œç”¨
+#define STATUS_UNCLAMPED 21 //çŠ¶æ€ï¼Œä¸»è½´åˆ¹è½¦å·²æ¾å¼€  å‰ä½œç”¨
 
-/********************************Ö÷ÖáËø½ô¶¨Òå****************************************/
-#define STATUS_GET_CLAMP_INSTRUCTION  16	//×´Ì¬£¬ÒÑ»ñÈ¡Ö÷ÖáÉ²³µ¼Ğ½ôĞÅºÅ£¬Î´Ö´ĞĞ
-#define STATUS_GET_UNCLAMP_INSTRUCTION  17	//×´Ì¬£¬ÒÑ»ñÈ¡Ö÷ÖáÉ²³µËÉ¿ªĞÅºÅ£¬Î´Ö´ĞĞ
-
-#define STATUS_CLAMP_EXECUTING  18		//×´Ì¬£¬ÒÑ»ñÈ¡Ö÷ÖáÉ²³µ¼Ğ½ôĞÅºÅ£¬ÕıÔÚÖ´ĞĞ
-#define STATUS_UNCLAMPEXECUTING 19	//×´Ì¬£¬ÒÑ»ñÈ¡Ö÷ÖáÉ²³µËÉ¿ªĞÅºÅ£¬ÕıÔÚÖ´ĞĞ
-
-#define STATUS_CLAMPED	  20	//×´Ì¬£¬Ö÷ÖáÉ²³µÒÑ¼Ğ½ô  ºó×÷ÓÃ
-#define STATUS_UNCLAMPED  21	//×´Ì¬£¬Ö÷ÖáÉ²³µÒÑËÉ¿ª  Ç°×÷ÓÃ
-
-/********************************Âİ¾à²¹³¥±í¶¨Òå****************************************/
+/********************************èºè·è¡¥å¿è¡¨å®šä¹‰****************************************/
 #define SCREWDEVIATION_NUM_MAX 100
 
-/********************************Ç°Õ°Ä£Ê½¶¨Òå****************************************/
-#define	LOOKAHEAD_LINEAR_AXIS_PRECISION_MODE	1		//1:Ö±ÏßÖá¾«¶ÈÄ£Ê½
-//#define LOOKAHEAD_OPTIMIZE_TRANSITION_MODE	2	    //2:Ö±ÏßÖá¶Î¼äÓÅ»¯¹ı¶ÉÄ£Ê½    ÓëÆóÒµÌÖÂÛ¹ı¶ÉÄ£Ê½ÓÉG´úÂë´¦´¦Àí,Òò´ËÉ¾µô´ËÄ£Ê½£¬½«¶àÖáÄ£Ê½¸ÄÎª2  (2023/05/19¹ùÇ¿)
-#define	LOOKAHEAD_MULTI_AXIS_MODE				2		//2:¶àÖá(º¬Ğı×ªÖá)Ä£Ê½
+/********************************å‰ç»æ¨¡å¼å®šä¹‰****************************************/
+#define LOOKAHEAD_LINEAR_AXIS_PRECISION_MODE 1 //1:ç›´çº¿è½´ç²¾åº¦æ¨¡å¼
+//#define LOOKAHEAD_OPTIMIZE_TRANSITION_MODE	2	    //2:ç›´çº¿è½´æ®µé—´ä¼˜åŒ–è¿‡æ¸¡æ¨¡å¼    ä¸ä¼ä¸šè®¨è®ºè¿‡æ¸¡æ¨¡å¼ç”±Gä»£ç å¤„å¤„ç†,å› æ­¤åˆ æ‰æ­¤æ¨¡å¼ï¼Œå°†å¤šè½´æ¨¡å¼æ”¹ä¸º2  (2023/05/19éƒ­å¼º)
+#define LOOKAHEAD_MULTI_AXIS_MODE 2 //2:å¤šè½´(å«æ—‹è½¬è½´)æ¨¡å¼
 
-/********************************²å²¹Ä£Ê½¶¨Òå****************************************/
-#define	INTERPOLATION_LONGAXIS_MODE					1	//1£º	³¤Öá²å²¹
-#define INTERPOLATION_FIXED_PARAMETER_MODE			2	//2:	¹Ì¶¨²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹
-#define	INTERPOLATION_ADAPTIVE_PARAMETER_MODE		3	//3:	×ÔÊÊÓ¦²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹
-/***********************************µ¶¾ßÉè±¸*******************************************/
-#define	TOOL_RAWTOOL_MODE	0//ÅÅµ¶»ú
-#define TOOL_TURRET_MODE	1//µ¶ËşÄ£Ê½
+/********************************æ’è¡¥æ¨¡å¼å®šä¹‰****************************************/
+#define INTERPOLATION_LONGAXIS_MODE 1           //1ï¼š	é•¿è½´æ’è¡¥
+#define INTERPOLATION_FIXED_PARAMETER_MODE 2    //2:	å›ºå®šå‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥
+#define INTERPOLATION_ADAPTIVE_PARAMETER_MODE 3 //3:	è‡ªé€‚åº”å‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥
+/***********************************åˆ€å…·è®¾å¤‡*******************************************/
+#define TOOL_RAWTOOL_MODE 0 //æ’åˆ€æœº
+#define TOOL_TURRET_MODE 1  //åˆ€å¡”æ¨¡å¼
 
-/***********************************Ğı×ªÖá²å²¹·½Ê½*******************************************/ //ÖìÎÈÖĞ 2023.5.19
-#define ROTATION_INTERPOLATION_SHORT_DISTANCE		0   //¶Ì¾àÀëÓÅÏÈ
-#define ROTATION_INTERPOLATION_ACCORDING_DIRECTION	1   //¸ù¾İ²å²¹·½Ïò¾ö¶¨
+/***********************************æ—‹è½¬è½´æ’è¡¥æ–¹å¼*******************************************/ //æœ±ç¨³ä¸­ 2023.5.19
+#define ROTATION_INTERPOLATION_SHORT_DISTANCE 0                                                //çŸ­è·ç¦»ä¼˜å…ˆ
+#define ROTATION_INTERPOLATION_ACCORDING_DIRECTION 1                                           //æ ¹æ®æ’è¡¥æ–¹å‘å†³å®š
 
-/***********************************Ö÷ÖáÍ£Ä£Ê½*******************************************/ //ÖìÎÈÖĞ 2023.5.19
-//ÏµÍ³Ö÷Öá Í£Ö¹Ä£Ê½
-#define SPINDLE_STOP_MODE_PRECISESTOP_MODE	0   //   ×¼Í£Ä£Ê½
-#define SPINDLE_STOP_MODE_COMMONSTOP_MODE	1   //   ¼õËÙÍ£Ä£Ê½
-
+/***********************************ä¸»è½´åœæ¨¡å¼*******************************************/ //æœ±ç¨³ä¸­ 2023.5.19
+//ç³»ç»Ÿä¸»è½´ åœæ­¢æ¨¡å¼
+#define SPINDLE_STOP_MODE_PRECISESTOP_MODE 0 //   å‡†åœæ¨¡å¼
+#define SPINDLE_STOP_MODE_COMMONSTOP_MODE 1  //   å‡é€Ÿåœæ¨¡å¼
 
 /*
---------------------------------------------------½á¹¹Ìå¶¨Òå--------------------------------------------------------------
+--------------------------------------------------ç»“æ„ä½“å®šä¹‰--------------------------------------------------------------
 */
-enum ENTITY  //ÊµÌåÀàĞÍ£¬DOT:0,L1NE:1, CIRCLE:2, ARC:3
+enum ENTITY //å®ä½“ç±»å‹ï¼ŒDOT:0,L1NE:1, CIRCLE:2, ARC:3
 {
-	DOT = 0,
-	L1NE = 1,  //×¢ÒâÊÇ1²»ÊÇI
-	CIRCLE = 2,
-	ARC = 3,
-	THREAD = 4,
-	TAPPING=5,
-	OTHERTYPE = 255
+    DOT = 0,
+    L1NE = 1, //æ³¨æ„æ˜¯1ä¸æ˜¯I
+    CIRCLE = 2,
+    ARC = 3,
+    THREAD = 4,
+    TAPPING = 5,
+    OTHERTYPE = 255
 };
 
-//  2021-08-20			ÖìÎÈÖĞ
-enum SYSTEMSTATUS  //ÏµÍ³×´Ì¬
+//  2021-08-20			æœ±ç¨³ä¸­
+enum SYSTEMSTATUS //ç³»ç»ŸçŠ¶æ€
 {
-	SYS_IDLE,			//¿ÕÏĞ:0
-//	SYS_PREPARE,		//ÏµÍ³×¼±¸×´Ì¬ 1   2023.4.3 ÖìÎÈÖĞ
-	SYS_RUN,			//ÔËĞĞ:1
-	SYS_PAUSE,			//ÔİÍ£:2
-	SYS_PAUSE_TO_RUN,	//´ÓÔİÍ£µ½ÔËĞĞ:3
-	SYS_RUN_TO_PAUSE,	//´ÓÔËĞĞµ½ÔİÍ£:4
-	SYS_RESET,			//¸´Î»×´Ì¬:5        2021-11-09			ÖìÎÈÖĞ
-	SYS_EMERGENCY_STOP  //¼±Í£:6
+    SYS_IDLE,          //ç©ºé—²:0
+                       //	SYS_PREPARE,		//ç³»ç»Ÿå‡†å¤‡çŠ¶æ€ 1   2023.4.3 æœ±ç¨³ä¸­
+    SYS_RUN,           //è¿è¡Œ:1
+    SYS_PAUSE,         //æš‚åœ:2
+    SYS_PAUSE_TO_RUN,  //ä»æš‚åœåˆ°è¿è¡Œ:3
+    SYS_RUN_TO_PAUSE,  //ä»è¿è¡Œåˆ°æš‚åœ:4
+    SYS_RESET,         //å¤ä½çŠ¶æ€:5        2021-11-09			æœ±ç¨³ä¸­
+    SYS_EMERGENCY_STOP //æ€¥åœ:6
 };
 
 enum RUNMODE
 {
-    EDIT_MODE,      // ±à¼­Ä£Ê½£ºNC³ÌĞòµÄ±àĞ´ÓëĞŞ¸Ä
-    AUTOMATIC_MODE, // ×Ô¶¯¼Ó¹¤Ä£Ê½£ºÁ¬ĞøÖ´ĞĞNC¼Ó¹¤×÷Òµ
-    MDI_MODE,       // ÊÖ¶¯Êı¾İÊäÈëÄ£Ê½(MDI)£º¼´Ê±Ö´ĞĞµ¥¶ÎÖ¸Áî
-    HANDWHEEL_MODE, // ÊÖÂÖÄ£Ê½(MPG)£ºĞı×ªÊÖÒ¡Âö³å·¢ÉúÆ÷¾«ÃÜ¶Ôµ¶
-    HAND_MODE,      // µã¶¯Ä£Ê½(JOG)£ºÃæ°å°´¼ü¿ØÖÆÖáÁ¬Ğø/²½½ø½ø¸ø
-    RE0_MODE        // »ØÁãÄ£Ê½(HOME/REF)£º¸÷Öá·µ»Ø»ú´²»úĞµÔ­µã
+    EDIT_MODE,      // ç¼–è¾‘æ¨¡å¼ï¼šNCç¨‹åºçš„ç¼–å†™ä¸ä¿®æ”¹
+    AUTOMATIC_MODE, // è‡ªåŠ¨åŠ å·¥æ¨¡å¼ï¼šè¿ç»­æ‰§è¡ŒNCåŠ å·¥ä½œä¸š
+    MDI_MODE,       // æ‰‹åŠ¨æ•°æ®è¾“å…¥æ¨¡å¼(MDI)ï¼šå³æ—¶æ‰§è¡Œå•æ®µæŒ‡ä»¤
+    HANDWHEEL_MODE, // æ‰‹è½®æ¨¡å¼(MPG)ï¼šæ—‹è½¬æ‰‹æ‘‡è„‰å†²å‘ç”Ÿå™¨ç²¾å¯†å¯¹åˆ€
+    HAND_MODE,      // ç‚¹åŠ¨æ¨¡å¼(JOG)ï¼šé¢æ¿æŒ‰é”®æ§åˆ¶è½´è¿ç»­/æ­¥è¿›è¿›ç»™
+    RE0_MODE        // å›é›¶æ¨¡å¼(HOME/REF)ï¼šå„è½´è¿”å›æœºåºŠæœºæ¢°åŸç‚¹
 };
 
 typedef struct
 {
-	//double dIX;
-	//double dIY;
-	//double dIZ;
-	//double dIC;
+    //double dIX;
+    //double dIY;
+    //double dIZ;
+    //double dIC;
 
-	double dArray[AXIS_NUM_MAX];
-}SVector;     //µ¥Î»Ê¸Á¿£¬doubleÃèÊöÀàĞÍ
-
+    double dArray[AXIS_NUM_MAX];
+} SVector; //å•ä½çŸ¢é‡ï¼Œdoubleæè¿°ç±»å‹
 
 typedef struct
 {
-	//double dX;
-	//double dY;
-	//double dZ;
-	//double dC; //CÖá (ÊıÖµ´Ó0 - 359.9999...)
+    //double dX;
+    //double dY;
+    //double dZ;
+    //double dC; //Cè½´ (æ•°å€¼ä»0 - 359.9999...)
 
-	double dArray[AXIS_NUM_MAX];
-}SPointDouble;  //µã,doubleÃèÊöÀàĞÍ
+    double dArray[AXIS_NUM_MAX];
+} SPointDouble; //ç‚¹,doubleæè¿°ç±»å‹
 
 typedef struct _SPoint
 {
-	double dX;
-	double dZ;
+    double dX;
+    double dZ;
 
-}SPoint;
-
-typedef struct
-{
-	uint8 ucBaudRateMode;	//0~3;{"9600","19200","38400","57600"}
-	uint8 ucDataBMode;		//0~1;{"7","8","",""}
-	uint8 ucStopBMode;		//0~1;{"1","2","",""}
-	uint8 ucParityBMode;	    //0~2;{"NO","ODD","EVEN",""}
-
-}SSerialComParaInfo;  //´®¿ÚÍ¨Ñ¶²ÎÊı½á¹¹Ìå
-
+} SPoint;
 
 typedef struct
 {
-	uint8 ucToolID;     //µ¶¾ßID          //Ä¥Ëğ²¹³¥ºÅ
-	uint8 ucToolNoseID;  //¼ÙÏëµ¶¼âÆ«ÒÆºÅ
-	double dToolRadius;  //µ¶¾ß°ë¾¶       //Ä¥Ëğ°ë¾¶
-	double dToolNoseWear;//µ¶¼âÄ¥Ëğ
-	SPointDouble SToolCoord;  //µ¶¾ß×ø±ê  //XZÄ¥Ëğ
+    uint8 ucBaudRateMode; //0~3;{"9600","19200","38400","57600"}
+    uint8 ucDataBMode;    //0~1;{"7","8","",""}
+    uint8 ucStopBMode;    //0~1;{"1","2","",""}
+    uint8 ucParityBMode;  //0~2;{"NO","ODD","EVEN",""}
 
-}SToolParaInfo;  //µ¶¾ß²ÎÊıĞÅÏ¢   £¨µ¶¾ßÄ¥ËğĞÅÏ¢)
-
+} SSerialComParaInfo; //ä¸²å£é€šè®¯å‚æ•°ç»“æ„ä½“
 
 typedef struct
 {
-	int8 cHomeDir;	//»ØÁã·½Ïò
-	//2022.4.28 ÖìÎÈÖĞ
-	uint8 ucAxisType;   //ÖáÀàĞÍ   (Ö±ÏßÖá1 / Ğı×ªÖá0)
+    uint8 ucToolID;          //åˆ€å…·ID          //ç£¨æŸè¡¥å¿å·
+    uint8 ucToolNoseID;      //å‡æƒ³åˆ€å°–åç§»å·
+    double dToolRadius;      //åˆ€å…·åŠå¾„       //ç£¨æŸåŠå¾„
+    double dToolNoseWear;    //åˆ€å°–ç£¨æŸ
+    SPointDouble SToolCoord; //åˆ€å…·åæ ‡  //XZç£¨æŸ
 
-	bool bShowByDiameter;//×ø±êÖáÖ±¾¶ÏÔÊ¾
+} SToolParaInfo; //åˆ€å…·å‚æ•°ä¿¡æ¯   ï¼ˆåˆ€å…·ç£¨æŸä¿¡æ¯)
 
-	float fDistPerCircle; //Ğı×ªÖáÊ±  Ò»È¦µÄÎ»ÒÆÁ¿
+typedef struct
+{
+    int8 cHomeDir; //å›é›¶æ–¹å‘
+    //2022.4.28 æœ±ç¨³ä¸­
+    uint8 ucAxisType; //è½´ç±»å‹   (ç›´çº¿è½´1 / æ—‹è½¬è½´0)
 
-	double dPulseToMm;	//Âö³åµ±Á¿£¬Ã¿¸öÂö³å¶àÉÙmm£¨»òÕß½Ç¶È£©
-	uint16 usMmToPulse;	//Ã¿mm£¨»òÕß1×ª£©¶àÉÙ¸öÂö³å
+    bool bShowByDiameter; //åæ ‡è½´ç›´å¾„æ˜¾ç¤º
 
-	double dVs;			//µ¥Öá¿ªÊ¼ËÙ¶È mm/ms  (Ğı×ªÖá 0.1r/ms)
-	double dVmax;		//µ¥Öá×î¸ßËÙ¶È mm/ms
-	double dVe;			//µ¥Öá½áÊøËÙ¶È mm/ms
+    float fDistPerCircle; //æ—‹è½¬è½´æ—¶  ä¸€åœˆçš„ä½ç§»é‡
 
-	//double dAcc;	    //µ¥Öá¼ÓËÙ¶È mm/ms2
-	//double dDec;	    //µ¥Öá¼õËÙ¶È mm/ms2
+    double dPulseToMm;  //è„‰å†²å½“é‡ï¼Œæ¯ä¸ªè„‰å†²å¤šå°‘mmï¼ˆæˆ–è€…è§’åº¦ï¼‰
+    uint16 usMmToPulse; //æ¯mmï¼ˆæˆ–è€…1è½¬ï¼‰å¤šå°‘ä¸ªè„‰å†²
 
-	double dVeerDeltaVMax;	 //µ¥Öá×ªÏòÔÊĞí±ä»¯µÄ×î´óËÙ¶È mm/ms
-	double dVeerAMax;        //µ¥Öá¶Î¼ä·Ç·´ÏòÊ±¹ı¶È×î´ó¼ÓËÙ¶È  mm/ms2£¨¡ã/ms2£©   ¹ùÇ¿ 2022/06/13
-	double dCoefOfAngleToLength;    //Ğı×ªÖá½Ç¶Èµ½³¤¶È×ª»»ÏµÊı  ¹ùÇ¿ 2022/06/13£¨ÎÄÏ×ÖĞÔİÎ´ÕÒµ½¸ÃÏµÊıµÄÈ¡Öµ£¬ÔİÊ¹ÓÃ1×ö²âÊÔ£©
+    double dVs;   //å•è½´å¼€å§‹é€Ÿåº¦ mm/ms  (æ—‹è½¬è½´ 0.1r/ms)
+    double dVmax; //å•è½´æœ€é«˜é€Ÿåº¦ mm/ms
+    double dVe;   //å•è½´ç»“æŸé€Ÿåº¦ mm/ms
 
-	double dClearance;	//µ¥Öá¼äÏ¶Öµ
+    //double dAcc;	    //å•è½´åŠ é€Ÿåº¦ mm/ms2
+    //double dDec;	    //å•è½´å‡é€Ÿåº¦ mm/ms2
 
-	//2021-12-17ĞÂÔö  ÖìÎÈÖĞ
-	double dSysPlanTMaxAcc;//TĞÍÇúÏß¼Ó¼õËÙ¶È
-	double dSysPlanTMaxDec;
+    double dVeerDeltaVMax; //å•è½´è½¬å‘å…è®¸å˜åŒ–çš„æœ€å¤§é€Ÿåº¦ mm/ms
+    double dVeerAMax;      //å•è½´æ®µé—´éåå‘æ—¶è¿‡åº¦æœ€å¤§åŠ é€Ÿåº¦  mm/ms2ï¼ˆÂ°/ms2ï¼‰   éƒ­å¼º 2022/06/13
+    double
+        dCoefOfAngleToLength; //æ—‹è½¬è½´è§’åº¦åˆ°é•¿åº¦è½¬æ¢ç³»æ•°  éƒ­å¼º 2022/06/13ï¼ˆæ–‡çŒ®ä¸­æš‚æœªæ‰¾åˆ°è¯¥ç³»æ•°çš„å–å€¼ï¼Œæš‚ä½¿ç”¨1åšæµ‹è¯•ï¼‰
 
-	double dSysPlanS3MaxAcc;//S3ĞÍÇúÏß¼Ó¼õËÙ¶È
-	double dSysPlanS3MaxDec;
+    double dClearance; //å•è½´é—´éš™å€¼
 
-	double dSysPlanS4MaxAcc;//S4ĞÍÇúÏß¼Ó¼õËÙ¶È
-	double dSysPlanS4MaxDec;
+    //2021-12-17æ–°å¢  æœ±ç¨³ä¸­
+    double dSysPlanTMaxAcc; //Tå‹æ›²çº¿åŠ å‡é€Ÿåº¦
+    double dSysPlanTMaxDec;
 
+    double dSysPlanS3MaxAcc; //S3å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+    double dSysPlanS3MaxDec;
 
-	uint8 ucAccVelPlanType; //¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDecVelPlanType; //¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
+    double dSysPlanS4MaxAcc; //S4å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+    double dSysPlanS4MaxDec;
 
-	/**************ÊÖ¶¯²ÎÊı********************/
-	// ¿ìËÙ
-	double dManualQuickVel; //ÂıËÙËÙ¶Èmm/min
-	double dManualQuickAcc; //ÂıËÙ¼ÓËÙ¶Èmm/ms2
-	double dManualQuickDec; //ÂıËÙ¼õËÙ¶Èmm/ms2
+    uint8 ucAccVelPlanType; //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDecVelPlanType; //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
 
-	//ÂıËÙ
-	double dManualSlowVel; //ÂıËÙËÙ¶Èmm/min
-	double dManualSlowAcc; //ÂıËÙ¼ÓËÙ¶Èmm/ms2
-	double dManualSlowDec; //ÂıËÙ¼õËÙ¶Èmm/ms2
-	/***********Ë¿¸Ü·´Ïò¼äÏ¶²¹³¥²ÎÊı*********///¹ùÇ¿2022-1-20
-	double dRevClearanceCompDist;      //¸ÃÖá·´Ïò¼äÏ¶²¹³¥Á¿
+    /**************æ‰‹åŠ¨å‚æ•°********************/
+    // å¿«é€Ÿ
+    double dManualQuickVel; //æ…¢é€Ÿé€Ÿåº¦mm/min
+    double dManualQuickAcc; //æ…¢é€ŸåŠ é€Ÿåº¦mm/ms2
+    double dManualQuickDec; //æ…¢é€Ÿå‡é€Ÿåº¦mm/ms2
 
-}SAxisParaInfo;  //¸÷ÔË¶¯ÖáµÄ²ÎÊıĞÅÏ¢
+    //æ…¢é€Ÿ
+    double dManualSlowVel;                     //æ…¢é€Ÿé€Ÿåº¦mm/min
+    double dManualSlowAcc;                     //æ…¢é€ŸåŠ é€Ÿåº¦mm/ms2
+    double dManualSlowDec;                     //æ…¢é€Ÿå‡é€Ÿåº¦mm/ms2
+    /***********ä¸æ åå‘é—´éš™è¡¥å¿å‚æ•°*********/ //éƒ­å¼º2022-1-20
+    double dRevClearanceCompDist;              //è¯¥è½´åå‘é—´éš™è¡¥å¿é‡
 
-/****** ĞÂÔöÄ£Ì¬ĞÅÏ¢½á¹¹Ìå *******/  //2021-8-16  ·ëÓ¢»ª
+} SAxisParaInfo; //å„è¿åŠ¨è½´çš„å‚æ•°ä¿¡æ¯
+
+/****** æ–°å¢æ¨¡æ€ä¿¡æ¯ç»“æ„ä½“ *******/ //2021-8-16  å†¯è‹±å
 struct SGCodeModalInfo
 {
-    int8 cGa, cGb, cGc, cGd, cGe, cGf, cGg, cGh ;
-	/// G´úÂë·ÖÀà²ÎÊı£¬
-	/// cGa£ºÔË¶¯Àà G00£¬G01£¬G02£¬G03£¬G32,G33,G76,G92						MOCTION
-	/// cGb£º¹¤¼ş×ø±êÏµ G54-G59												COOR
-	/// cGc£º¶¨Òå²å²¹Æ½Ãæ G17-G19
-	/// cGd£ºµ¶¾ß²¹³¥ G40-G42												TOOLCOMP
-	/// cGe£ºµ¥Î»Ñ¡Ôñ£ºÓ¢ÖÆ/¹«ÖÆ G20£¬G21									UNITS   INCHS MM
-	/****** ĞÂÔöÄ£Ì¬×é *******/  //2021-9-13  ·ëÓ¢»ª
-	/// cGf: ºãÏßËÙ¿ØÖÆ G96¡¢ºã×ªËÙ¿ØÖÆ G97									            SPINDLE_SPEED
-	/// cGg: ¸ø¶¨Ã¿·Ö½ø¸øËÙ¶È G98 ¡¢ÒÔºÁÃ×/×ªÎªµ¥Î»¸ø¶¨ÇĞÏ÷½ø¸øËÙ¶È G99	¡¢¶ÏÏ÷Ö¸ÁîG4.9	FEED
-	/// cGh: ¾ø¶Ô±à³ÌG90/ Ïà¶Ô±à³ÌG91  Ä¬ÈÏG90
-	int8 cDecimalVal;  //Õë¶ÔcGa×é£¬ÅĞ¶ÏĞ¡ÊıºóÒ»Î»£¬ÀıÈç£ºG32.1Ê±£¬ÖµÎª1£¬ G32.2Ê±£¬ÖµÎª2
-
+    int8 cGa, cGb, cGc, cGd, cGe, cGf, cGg, cGh;
+    /// Gä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+    /// cGaï¼šè¿åŠ¨ç±» G00ï¼ŒG01ï¼ŒG02ï¼ŒG03ï¼ŒG32,G33,G76,G92						MOCTION
+    /// cGbï¼šå·¥ä»¶åæ ‡ç³» G54-G59												COOR
+    /// cGcï¼šå®šä¹‰æ’è¡¥å¹³é¢ G17-G19
+    /// cGdï¼šåˆ€å…·è¡¥å¿ G40-G42												TOOLCOMP
+    /// cGeï¼šå•ä½é€‰æ‹©ï¼šè‹±åˆ¶/å…¬åˆ¶ G20ï¼ŒG21									UNITS   INCHS MM
+    /****** æ–°å¢æ¨¡æ€ç»„ *******/ //2021-9-13  å†¯è‹±å
+    /// cGf: æ’çº¿é€Ÿæ§åˆ¶ G96ã€æ’è½¬é€Ÿæ§åˆ¶ G97									            SPINDLE_SPEED
+    /// cGg: ç»™å®šæ¯åˆ†è¿›ç»™é€Ÿåº¦ G98 ã€ä»¥æ¯«ç±³/è½¬ä¸ºå•ä½ç»™å®šåˆ‡å‰Šè¿›ç»™é€Ÿåº¦ G99	ã€æ–­å‰ŠæŒ‡ä»¤G4.9	FEED
+    /// cGh: ç»å¯¹ç¼–ç¨‹G90/ ç›¸å¯¹ç¼–ç¨‹G91  é»˜è®¤G90
+    int8 cDecimalVal; //é’ˆå¯¹cGaç»„ï¼Œåˆ¤æ–­å°æ•°åä¸€ä½ï¼Œä¾‹å¦‚ï¼šG32.1æ—¶ï¼Œå€¼ä¸º1ï¼Œ G32.2æ—¶ï¼Œå€¼ä¸º2
 };
 
-//Í¨µÀÖ¸ÁîĞÅÏ¢½á¹¹Ìå
-typedef struct SChannelCommand//Í¨µÀÖ¸Áî
+//é€šé“æŒ‡ä»¤ä¿¡æ¯ç»“æ„ä½“
+typedef struct SChannelCommand //é€šé“æŒ‡ä»¤
 {
-	int8 ucType;//ÀàĞÍ ¢ÙÍ¨µÀµÈ´ı£¨0£©  ¢ÚÍ¨µÀÆô¶¯£¨1£©  ¢Û¼ì²éÍ¨µÀ×´Ì¬M96 £¨2£©   ÎŞĞ§£¨-1£©
-	struct SChannelData//¢ÙÍ¨µÀĞÅÏ¢
-	{
-		uint8 ucTargetChannelNum;// ¢ÙÍ¨µÀµÈ´ı£¨Î»±íÊ¾£© ¢ÚÍ¨µÀÆô¶¯ ¢Û¼ì²éÍ¨µÀ×´Ì¬M96
-		int32 cFileNameVal;//ÎÄ¼şÃûÖµ £¨M97£©
-	}SChannelData;
-}SChannelCommand;
+    int8 ucType;        //ç±»å‹ â‘ é€šé“ç­‰å¾…ï¼ˆ0ï¼‰  â‘¡é€šé“å¯åŠ¨ï¼ˆ1ï¼‰  â‘¢æ£€æŸ¥é€šé“çŠ¶æ€M96 ï¼ˆ2ï¼‰   æ— æ•ˆï¼ˆ-1ï¼‰
+    struct SChannelData //â‘ é€šé“ä¿¡æ¯
+    {
+        uint8 ucTargetChannelNum; // â‘ é€šé“ç­‰å¾…ï¼ˆä½è¡¨ç¤ºï¼‰ â‘¡é€šé“å¯åŠ¨ â‘¢æ£€æŸ¥é€šé“çŠ¶æ€M96
+        int32 cFileNameVal;       //æ–‡ä»¶åå€¼ ï¼ˆM97ï¼‰
+    } SChannelData;
+} SChannelCommand;
 
-/****** ĞÂÔö·ÇÄ£Ì¬ĞÅÏ¢½á¹¹Ìå *******/  //2021-8-16  ·ëÓ¢»ª
+/****** æ–°å¢éæ¨¡æ€ä¿¡æ¯ç»“æ„ä½“ *******/ //2021-8-16  å†¯è‹±å
 struct SGCodeNonModalInfo
 {
-	int8 cGz;  //ÎŞ:0;  G04 G50  G71 G72 G73
-	/// cGz£º·ÇÄ£Ì¬×é±ğG04(³ÌĞòÔİÍ£)¡¢G50
-	int8 cGx;	//G80
-	/// cGx: ·ÇÄ£Ì¬×é±ğ£¬ÓÃÓÚG83~G89µÄÄ£Ì¬È¡Ïû
-    int8 cMa, cMc, cMe, cMf, cMh ,cMi, cMj, cMk ;
+    int8 cGz; //æ— :0;  G04 G50  G71 G72 G73
+    /// cGzï¼šéæ¨¡æ€ç»„åˆ«G04(ç¨‹åºæš‚åœ)ã€G50
+    int8 cGx; //G80
+              /// cGx: éæ¨¡æ€ç»„åˆ«ï¼Œç”¨äºG83~G89çš„æ¨¡æ€å–æ¶ˆ
+    int8 cMa, cMc, cMe, cMf, cMh, cMi, cMj, cMk;
     int16 sMb;
-	/// M´úÂë·ÖÀà²ÎÊı£¬
-	/// cMa£ºÖ÷ÖáÕı/·´×ª/Í£		/M03/M04/M05(·ÇÄ£Ì¬£©
-	/// sMb£º³ÌĞòÍ£/³ÌĞò½áÊø	/M00/M01/M02/M30(·ÇÄ£Ì¬)	M96 M97 M98 M99		M100~M199
-	/// cMc£ºÀäÈ´Òº¿ª/¹Ø		/M08/M09(·ÇÄ£Ì¬)
-	/// cMe£ºÈó»¬ÓÍ¿ª/¹Ø        /M32/M33
-	/// cMf£º¹¤¼ş¼Ğ½ô / ËÉ¿ª / M10 / M11
-	/// cMg£ºM14 / M15
-	/// cMh£º¶¯Á¦µ¶Õı/·´×ª/Í£		/M50/M51/M52(·ÇÄ£Ì¬£©
-	/// cMi£ºM38 / M39
-	/// cMj£ºM35 / M36 /M20 / M21 / M22	//×Ô¶¯ÖØ¸´ÉÏÁÏ¹¦ÄÜ	M35¿ØÖÆ¸ßµçÆ½Êä³ö/M36¿ØÖÆµÍµçÆ½Êä³ö
-	/// cMk: M80/M81/M82/M83/M84/M85/M86/M87 //»úĞµ±Û
+    /// Mä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+    /// cMaï¼šä¸»è½´æ­£/åè½¬/åœ		/M03/M04/M05(éæ¨¡æ€ï¼‰
+    /// sMbï¼šç¨‹åºåœ/ç¨‹åºç»“æŸ	/M00/M01/M02/M30(éæ¨¡æ€)	M96 M97 M98 M99		M100~M199
+    /// cMcï¼šå†·å´æ¶²å¼€/å…³		/M08/M09(éæ¨¡æ€)
+    /// cMeï¼šæ¶¦æ»‘æ²¹å¼€/å…³        /M32/M33
+    /// cMfï¼šå·¥ä»¶å¤¹ç´§ / æ¾å¼€ / M10 / M11
+    /// cMgï¼šM14 / M15
+    /// cMhï¼šåŠ¨åŠ›åˆ€æ­£/åè½¬/åœ		/M50/M51/M52(éæ¨¡æ€ï¼‰
+    /// cMiï¼šM38 / M39
+    /// cMjï¼šM35 / M36 /M20 / M21 / M22	//è‡ªåŠ¨é‡å¤ä¸Šæ–™åŠŸèƒ½	M35æ§åˆ¶é«˜ç”µå¹³è¾“å‡º/M36æ§åˆ¶ä½ç”µå¹³è¾“å‡º
+    /// cMk: M80/M81/M82/M83/M84/M85/M86/M87 //æœºæ¢°è‡‚
 };
 
-
-
-
-
-
-
-
-struct SToolCompensation  //µ¶²¹ºó²úÉúµÄ½á¹¹Ìå
+struct SToolCompensation //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“
 {
-    int8 cFilename[FILENAME_LENGTH_LIMIT];//ÎÄ¼şÃû
-	uint32 unGCodeLineNum;    // ½âÎöµ½µÚ¼¸ĞĞG´úÂë
+    int8 cFilename[FILENAME_LENGTH_LIMIT]; //æ–‡ä»¶å
+    uint32 unGCodeLineNum;                 // è§£æåˆ°ç¬¬å‡ è¡ŒGä»£ç 
 
-	uint32 unCommandType;  //Ö¸ÁîÀàĞÍ    	2021-09-17 ÖìÎÈÖĞ uint8 ->uint16   unCommandType ->unCommandType
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
-	VAL_STRUCT_TYPE	ucRelaVal;		//Ïà¶ÔÖµ±êÊ¶±äÁ¿  2022-4-20  ÖìÎÈÖĞ
-	bool bG50Appear;//G50ÁÙÊ±×ø±êÏµ´«Èë±êÖ¾Î» 2023-8-3 ºé¹ÚÅô
-	SPointDouble* pSG50Offset;			//lxwÌí¼Ó£¬ÓÃÓÚ¼ÇÂ¼G50Æ«ÖÃ
-	uint8 ucToolCompNum;
-	int8 cWorkpieceCoordNum; //¹¤¼ş×ø±êºÅÂë (54-59) ÎªÆäËûÖµÊ±²»Ê¹ÓÃ¹¤¼ş×ø±ê //ÖìÎÈÖĞ  2021-12-9
+    uint32 unCommandType;        //æŒ‡ä»¤ç±»å‹    	2021-09-17 æœ±ç¨³ä¸­ uint8 ->uint16   unCommandType ->unCommandType
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
+    VAL_STRUCT_TYPE ucRelaVal;   //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡  2022-4-20  æœ±ç¨³ä¸­
+    bool bG50Appear;             //G50ä¸´æ—¶åæ ‡ç³»ä¼ å…¥æ ‡å¿—ä½ 2023-8-3 æ´ªå† é¹
+    SPointDouble* pSG50Offset;   //lxwæ·»åŠ ï¼Œç”¨äºè®°å½•G50åç½®
+    uint8 ucToolCompNum;
+    int8 cWorkpieceCoordNum; //å·¥ä»¶åæ ‡å·ç  (54-59) ä¸ºå…¶ä»–å€¼æ—¶ä¸ä½¿ç”¨å·¥ä»¶åæ ‡ //æœ±ç¨³ä¸­  2021-12-9
 
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬LINE:1, CIRCLE:2, ARC:3
+    enum ENTITY EntityType; //å®ä½“ç±»å‹ï¼ŒLINE:1, CIRCLE:2, ARC:3
 
-	SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
-	SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
+    SPointDouble SStartPoint;  //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;    //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
 
-	int8 cArcDir;	//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	double dRadius;			//°ë¾¶£¬µ¥Î»£ºmm
-	double dArcStartAngle;  //ÆğÊ¼½Ç¶È£¬µ¥Î»£ºrad
-	double dArcEndAngle;    //ÖÕÖ¹½Ç¶È£¬µ¥Î»£ºrad
-	float  dEllipseFactorA; // ÍÖÔ²²ÎÊıA  2023.3.29 ÖìÎÈÖĞ
-	float  dEllipseFactorB; // ÍÖÔ²²ÎÊıB  2023.3.29 ÖìÎÈÖĞ
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ÖìÎÈÖĞ
+    int8 cArcDir;          //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    double dRadius;        //åŠå¾„ï¼Œå•ä½ï¼šmm
+    double dArcStartAngle; //èµ·å§‹è§’åº¦ï¼Œå•ä½ï¼šrad
+    double dArcEndAngle;   //ç»ˆæ­¢è§’åº¦ï¼Œå•ä½ï¼šrad
+    float dEllipseFactorA; // æ¤­åœ†å‚æ•°A  2023.3.29 æœ±ç¨³ä¸­
+    float dEllipseFactorB; // æ¤­åœ†å‚æ•°B  2023.3.29 æœ±ç¨³ä¸­
+    float fCylinderRadius; // åœ†æŸ±åŠå¾„ mm  2023.3.29 æœ±ç¨³ä¸­
 
+    double dG84Ratio; //ç”¨äºG84å€ç‡ 2025.11.15
 
-	double dG84Ratio;       //ÓÃÓÚG84±¶ÂÊ 2025.11.15
+    SToolParaInfo SToolPara; //åˆ€å…·å‚æ•°
+    //uint8 ucWearGroupNum;  //åˆ€å…·ç£¨æŸç»„å·   æœ±ç¨³ä¸­ 2021-12-6
 
-	SToolParaInfo SToolPara;	//µ¶¾ß²ÎÊı
-	//uint8 ucWearGroupNum;  //µ¶¾ßÄ¥Ëğ×éºÅ   ÖìÎÈÖĞ 2021-12-6
+    double dSpindleSpeed; //ä¸»è½´è½¬é€Ÿ r/min
 
-	double dSpindleSpeed; 	//Ö÷Öá×ªËÙ r/min
+    double dSecondSpindleSpeed; //ç¬¬äºŒè½¬è½´é€Ÿåº¦//åŠ¨åŠ›åˆ€
 
-	double dSecondSpindleSpeed;	//µÚ¶ş×ªÖáËÙ¶È//¶¯Á¦µ¶
+    int8 cToolAxisMod;           //åˆ€å…·è½´æ¨¡å¼
+    double dToolAxisFollowRatio; //åˆ€å…·è½´è½¬é€ŸG51.2å¤šè¾¹å½¢åŠ å·¥ï¼ˆè½¬é€Ÿæ¯”ï¼‰
+    double dToolAxisPhase;       //åˆ€å…·è½´ç›¸ä½è§’
+    int8 cTwistCommand;          //åˆ€å…·è½´æ‰­è½¬æŒ‡ä»¤ï¼ˆG0,G1,G2ï¼‰
+    double dTwistAngle;          //åˆ€å…·è½´æ‰­è½¬è§’
 
-	int8 cToolAxisMod;//µ¶¾ßÖáÄ£Ê½
-	double dToolAxisFollowRatio;//µ¶¾ßÖá×ªËÙG51.2¶à±ßĞÎ¼Ó¹¤£¨×ªËÙ±È£©
-	double dToolAxisPhase;//µ¶¾ßÖáÏàÎ»½Ç
-	int8 cTwistCommand;//µ¶¾ßÖáÅ¤×ªÖ¸Áî£¨G0,G1,G2£©
-	double dTwistAngle;//µ¶¾ßÖáÅ¤×ª½Ç
+    double dLimitedSpindleSpeed; // G50 é™åˆ¶çš„ä¸»è½´è½¬é€Ÿ(r/min)  æœ±ç¨³ä¸­ 2022-1-17
 
+    double dFeedrate; //è¿›ç»™é€Ÿåº¦  mm/ms
 
-	double dLimitedSpindleSpeed;// G50 ÏŞÖÆµÄÖ÷Öá×ªËÙ(r/min)  ÖìÎÈÖĞ 2022-1-17
+    int8 cChannelBufNum;             //é€šé“ç­‰å¾…ä¿¡å·æ•°ç»„ä¸‹æ ‡ï¼ˆ-1ä¸ºæ— æ•ˆ èŒƒå›´1~MAX ï¼‰
+    SChannelCommand sChannelCommand; //é€šé“æŒ‡ä»¤ä¿¡æ¯ï¼ˆM97-M100ï¼‰
 
-	double dFeedrate; //½ø¸øËÙ¶È  mm/ms
+    uint8 ucIOCommandArray
+        [IO_MAXGROUP_IN_SINGLE_LINE]; //IOç±»å‹çš„Mä»£ç ç»“æ„ä½“æ•°ç»„ //æœ±ç¨³ä¸­ 2021-11-09   (UIOCommandArray æ”¹ä¸º ucIOCommandArray 2021-12-9)
 
-	int8 cChannelBufNum;//Í¨µÀµÈ´ıĞÅºÅÊı×éÏÂ±ê£¨-1ÎªÎŞĞ§ ·¶Î§1~MAX £©
-	SChannelCommand sChannelCommand; //Í¨µÀÖ¸ÁîĞÅÏ¢£¨M97-M100£©
+    uint32 ulDelayTime; //å»¶æ—¶,å•ä½:ms
 
-	uint8 ucIOCommandArray[IO_MAXGROUP_IN_SINGLE_LINE]; //IOÀàĞÍµÄM´úÂë½á¹¹ÌåÊı×é //ÖìÎÈÖĞ 2021-11-09   (UIOCommandArray ¸ÄÎª ucIOCommandArray 2021-12-9)
+    uint32 unChipBreakDelayTime; //æ–­å±‘æš‚åœæ—¶é—´,å•ä½ms      P
+    double dChipBreakLength;     //æ–­å±‘é•¿åº¦,å•ä½:mm         Q
+    bool bChipBreakFlag;         //æ–­å±‘æ ‡å¿—ä½,TRUE:å¼€å¯ FALSE:å…³é—­
 
-	uint32 ulDelayTime;	//ÑÓÊ±,µ¥Î»:ms
+    int8 cPointType;         //1(G50)  2(G10)
+    uint8 uG10ToolID;        //G10çš„åˆ€å…·å·
+    SPointDouble SPointInfo; //è®°å½•G50G10ç­‰åæ ‡ä¿¡æ¯
 
-	uint32 unChipBreakDelayTime;//¶ÏĞ¼ÔİÍ£Ê±¼ä,µ¥Î»ms      P
-	double dChipBreakLength;	//¶ÏĞ¼³¤¶È,µ¥Î»:mm         Q
-	bool bChipBreakFlag;		//¶ÏĞ¼±êÖ¾Î»,TRUE:¿ªÆô FALSE:¹Ø±Õ
+    bool bG31Flag;
 
-	int8 cPointType;//1(G50)  2(G10)
-	uint8 uG10ToolID;//G10µÄµ¶¾ßºÅ
-	SPointDouble SPointInfo; /**< G50Îª¾ø¶ÔÆ«ÖÃ£»G10Îª´ıÖ´ĞĞÄ¥ºÄÔöÁ¿£¬µ¥Î»mm£¬Ïû·ÑºóÇåÁãX/Z¡£ */
+    //åˆ€è¡¥åè¿½åŠ 
+    double dLength;  //çº¿æ®µé•¿åº¦ï¼ˆæˆ–å¼§é•¿ï¼‰ï¼Œå•ä½ï¼šmm
+    double dPreDist; //å·²èµ°çš„è·ç¦»
 
-	bool bG31Flag;
+    SVector SStartVector; //èµ·ç‚¹çŸ¢é‡
+    SVector SEndVector;   //ç»ˆç‚¹çŸ¢é‡   éƒ­å¼º 8.8 SEndtVector æ”¹ä¸ºSEndVector æ­¤çŸ¢é‡éœ€è¦æ˜¯å•ä½å‘é‡
 
-	//µ¶²¹ºó×·¼Ó
-	double dLength;		//Ïß¶Î³¤¶È£¨»ò»¡³¤£©£¬µ¥Î»£ºmm
-	double dPreDist;	//ÒÑ×ßµÄ¾àÀë
+    //é€Ÿåº¦å‰ç»åæ·»åŠ 
+    double dAcc;  ///<åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;  ///<å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dVeer; //è¡”æ¥ç‚¹å¤¹è§’çº¦æŸé€Ÿåº¦  mm/ms
 
-	SVector SStartVector;  //ÆğµãÊ¸Á¿
-	SVector SEndVector;   //ÖÕµãÊ¸Á¿   ¹ùÇ¿ 8.8 SEndtVector ¸ÄÎªSEndVector ´ËÊ¸Á¿ĞèÒªÊÇµ¥Î»ÏòÁ¿
+    double dArcMaxNormalAccVmax;  //åœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦    éƒ­å¼º 2022/6/16
+    double dArcMaxChordErrorVmax; //åœ†å¼§å¼“é«˜è¯¯å·®çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦     éƒ­å¼º 2022/6/16
 
-	
+    double dCommonVMaxFromSingleAxis;  //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°        éƒ­å¼º 2022/6/16
+    double dCommonVsMinFromSingleAxis; //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å°èµ·è·³é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°   éƒ­å¼º 2022/6/16
+    double dCommonVeMinFromSingleAxis; //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å°ç»ˆæ­¢é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°   éƒ­å¼º 2022/6/16
 
-	//ËÙ¶ÈÇ°Õ°ºóÌí¼Ó
-	double dAcc;	    ///<¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;	    ///<¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dVeer;     //ÏÎ½Óµã¼Ğ½ÇÔ¼ÊøËÙ¶È  mm/ms
+    double dLowerLimitSpeed; //ç”±é•¿è½´åç®—å¾—åˆ°çš„å¤åˆè¿åŠ¨åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼ï¼ˆéƒ­å¼º 2022/11/22 ï¼‰
+    uint8
+        ucLongAxisNum; //é•¿è½´è½´å·  G2G3æŒ‡ä»¤è‹¥æœ‰ç¬¬ä¸‰è½´æ—¶ï¼Œå½“ç¬¬ä¸‰è½´æ˜¯é•¿è½´ï¼Œæ­¤æ—¶è½´å·ä¸ºé•¿è½´ï¼Œå½“ç¬¬ä¸‰è½´ä¸ä¸ºé•¿è½´ï¼Œé•¿è½´è½´å·ä¸º(AXIS_NULL)ï¼ˆéƒ­å¼º 2022/11/22 ï¼‰
+    uint8 ucArcThirdAxisNum; //åœ†å¼§ç¬¬ä¸‰è½´å­˜åœ¨ï¼Œä½†æ˜¯ä¸æ˜¯é•¿è½´ï¼Œæ­¤æ—¶ç¬¬ä¸‰è½´è½´å·ä¿å­˜åœ¨æ­¤å˜é‡ä¸­
 
-	double dArcMaxNormalAccVmax;//Ô²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøÏÂµÄ×î´óËÙ¶È    ¹ùÇ¿ 2022/6/16
-	double dArcMaxChordErrorVmax;//Ô²»¡¹­¸ßÎó²îÔ¼ÊøÏÂµÄ×î´óËÙ¶È     ¹ùÇ¿ 2022/6/16
+    double dUncorrectedFeedrate; //æœªä¿®æ­£çš„è¿›ç»™é€Ÿåº¦  mm/ms
+    double dMinVs;               //èµ·ç‚¹é€Ÿåº¦,å•ä½:mm/ms
+    double dMinVe;               //ç»ˆç‚¹é€Ÿåº¦,å•ä½:mm/ms
+    bool
+        bLookAheadVParaCalcOverFlag; //åœ†å¼§å¼“é«˜ã€æ³•å‘åŠ é€Ÿåº¦ã€é€Ÿåº¦ä¿®æ­£ã€é€Ÿåº¦åŠ é€Ÿåº¦ä¿¡æ¯ã€é€Ÿåº¦å†æ¬¡ä¿®æ­£ã€è¯¥æ®µæœ€ä½èµ·å§‹é€Ÿåº¦å’Œç»ˆç‚¹é€Ÿåº¦è®¡ç®—å®Œæ¯•æ ‡å¿—ä½(éƒ­å¼º2022/11/27)
 
-	double dCommonVMaxFromSingleAxis;     //G1£¬G2,G3¸´ºÏÔË¶¯×î´óËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½        ¹ùÇ¿ 2022/6/16
-	double dCommonVsMinFromSingleAxis;    //G1£¬G2,G3¸´ºÏÔË¶¯×îĞ¡ÆğÌøËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½   ¹ùÇ¿ 2022/6/16
-	double dCommonVeMinFromSingleAxis;    //G1£¬G2,G3¸´ºÏÔË¶¯×îĞ¡ÖÕÖ¹ËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½   ¹ùÇ¿ 2022/6/16
+    double dVmax;           //æœ€å¤§é€Ÿåº¦    mm/ms 12-30 æœ±ç¨³ä¸­
+    uint8 ucAccVelPlanType; //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDecVelPlanType; //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
 
-	double dLowerLimitSpeed; //ÓÉ³¤Öá·´ËãµÃµ½µÄ¸´ºÏÔË¶¯ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ£¨¹ùÇ¿ 2022/11/22 £©
-	uint8  ucLongAxisNum;    //³¤ÖáÖáºÅ  G2G3Ö¸ÁîÈôÓĞµÚÈıÖáÊ±£¬µ±µÚÈıÖáÊÇ³¤Öá£¬´ËÊ±ÖáºÅÎª³¤Öá£¬µ±µÚÈıÖá²»Îª³¤Öá£¬³¤ÖáÖáºÅÎª(AXIS_NULL)£¨¹ùÇ¿ 2022/11/22 £©
-	uint8  ucArcThirdAxisNum;   //Ô²»¡µÚÈıÖá´æÔÚ£¬µ«ÊÇ²»ÊÇ³¤Öá£¬´ËÊ±µÚÈıÖáÖáºÅ±£´æÔÚ´Ë±äÁ¿ÖĞ
+    double dVs; //èµ·ç‚¹é€Ÿåº¦,å•ä½:mm/ms
+    double dVe; //ç»ˆç‚¹é€Ÿåº¦,å•ä½:mm/ms
 
-	double dUncorrectedFeedrate; //Î´ĞŞÕıµÄ½ø¸øËÙ¶È  mm/ms
-	double dMinVs;				 //ÆğµãËÙ¶È,µ¥Î»:mm/ms
-	double dMinVe;				 //ÖÕµãËÙ¶È,µ¥Î»:mm/ms
-	bool bLookAheadVParaCalcOverFlag; //Ô²»¡¹­¸ß¡¢·¨Ïò¼ÓËÙ¶È¡¢ËÙ¶ÈĞŞÕı¡¢ËÙ¶È¼ÓËÙ¶ÈĞÅÏ¢¡¢ËÙ¶ÈÔÙ´ÎĞŞÕı¡¢¸Ã¶Î×îµÍÆğÊ¼ËÙ¶ÈºÍÖÕµãËÙ¶È¼ÆËãÍê±Ï±êÖ¾Î»(¹ùÇ¿2022/11/27)
+    uint8 ucAxisNumOfNeedLookAhead; //éœ€è¦å‰ç»çš„æ’è¡¥å•è½´è½´å· æ´ªå† é¹ 2024/5/27
+    int8 cAxisDirOfNeedLookAhead;   //éœ€è¦å‰ç»çš„æ’è¡¥å•è½´æ–¹å‘ æ´ªå† é¹ 2024/5/27
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”9â€”1**********
+    double dJ;             //çŸ­è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dK;             //é•¿è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dQ;             //èµ·å§‹è§’åº¦     G32å‚æ•°éæ¨¡æ€  //æˆ–è€…æ˜¯ä¸»è½´å‡†åœçš„å€¼
+    double dF;             //é•¿è½´çš„å¯¼ç¨‹
+    uint8 ucL;             // G92G33 å¤šå¤´èºçº¹å¤´æ•°1-99  æ¨¡æ€
+    bool bRepeatG32Flag;   //TRUE:è¿ç»­G32 FALSE:éè¿ç»­G32bool bRepeatG32Flag;    //TRUE:è¿ç»­G32 FALSE:éè¿ç»­G32
+    bool bG34RunFlag;      //G34è¿è¡Œæ ‡å¿—ä½ï¼ˆç”¨äºèºçº¹ç»“æ„ä½“ï¼‰
+    bool bG34BackTailFlag; //G34é€€å°¾æ ‡å¿—ä½
+    bool bG32LetterQ;      //G32æ˜¯å¦å‡ºç°Qçš„æ ‡å¿—ä½
+    uint8 ucG32SubMode;    //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4 é™ˆæ•èª 2023/6/13
 
+    bool bHasVeerFlag;  //8.15 éƒ­å¼º å¸Œæœ›åˆ€è¡¥è¿½åŠ ï¼Œä¸”è¿½åŠ æ—¶å‡ä¸ºFALSE
+    bool bLastLineMark; //æœ€åä¸€è¡Œæ ‡è®°ä½ é€‰æ‹©åœæ­¢åŠŸèƒ½ä½¿ç”¨
+    //é™ˆæ•èª-G10æ‰€æ·»å‚æ•°*********2022/8/19
+    //uint8 uG10ToolID;
+    //é™ˆæ•èª-å¿«é€Ÿå¤„ç†æ‰€æ·»å‚æ•°*********2022/4/17
+    int8 cQuickHandleType; //å¿«é€Ÿå¤„ç†ç±»å‹
+    int8 cMergedCounter;   //è¯¥è¡ŒGä»£ç èåˆçš„æ¬¡æ•°
 
-	double dVmax;   //×î´óËÙ¶È    mm/ms 12-30 ÖìÎÈÖĞ
-	uint8 ucAccVelPlanType; //¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDecVelPlanType; //¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
+    int8 G33RotateAxis;  //G33 æ—‹è½¬è½´  å¯é€‰Aè½´æˆ–Cè½´
+    int8 G33TappingMode; //G33æ”»ç‰™æ¨¡å¼ 0:åˆšæ€§æ”»ç‰™ 1:æŸ”æ€§æ”»ç‰™
 
-	double dVs;				 //ÆğµãËÙ¶È,µ¥Î»:mm/ms
-	double dVe;				 //ÖÕµãËÙ¶È,µ¥Î»:mm/ms
-
-	uint8 ucAxisNumOfNeedLookAhead;	//ĞèÒªÇ°Õ°µÄ²å²¹µ¥ÖáÖáºÅ ºé¹ÚÅô 2024/5/27
-	int8 cAxisDirOfNeedLookAhead;	//ĞèÒªÇ°Õ°µÄ²å²¹µ¥Öá·½Ïò ºé¹ÚÅô 2024/5/27
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª9¡ª1**********
-	double dJ;  //¶ÌÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dK;  //³¤ÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dQ;  //ÆğÊ¼½Ç¶È     G32²ÎÊı·ÇÄ£Ì¬  //»òÕßÊÇÖ÷Öá×¼Í£µÄÖµ
-	double dF;  //³¤ÖáµÄµ¼³Ì
-	uint8  ucL;  // G92G33 ¶àÍ·ÂİÎÆÍ·Êı1-99  Ä£Ì¬
-	bool bRepeatG32Flag;    //TRUE:Á¬ĞøG32 FALSE:·ÇÁ¬ĞøG32bool bRepeatG32Flag;    //TRUE:Á¬ĞøG32 FALSE:·ÇÁ¬ĞøG32
-	bool bG34RunFlag;       //G34ÔËĞĞ±êÖ¾Î»£¨ÓÃÓÚÂİÎÆ½á¹¹Ìå£©
-	bool bG34BackTailFlag;  //G34ÍËÎ²±êÖ¾Î»
-    bool bG32LetterQ;//G32ÊÇ·ñ³öÏÖQµÄ±êÖ¾Î»
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4 ³ÂÃô´Ï 2023/6/13
-
-	bool bHasVeerFlag;  //8.15 ¹ùÇ¿ Ï£Íûµ¶²¹×·¼Ó£¬ÇÒ×·¼ÓÊ±¾ùÎªFALSE
-	bool bLastLineMark;//×îºóÒ»ĞĞ±ê¼ÇÎ» Ñ¡ÔñÍ£Ö¹¹¦ÄÜÊ¹ÓÃ
-	//³ÂÃô´Ï-G10ËùÌí²ÎÊı*********2022/8/19
-	//uint8 uG10ToolID;
-	//³ÂÃô´Ï-¿ìËÙ´¦ÀíËùÌí²ÎÊı*********2022/4/17
-	int8 cQuickHandleType;	//¿ìËÙ´¦ÀíÀàĞÍ
-	int8 cMergedCounter;	//¸ÃĞĞG´úÂëÈÚºÏµÄ´ÎÊı
-
-	int8 G33RotateAxis;			//G33 Ğı×ªÖá  ¿ÉÑ¡AÖá»òCÖá
-	int8 G33TappingMode;		//G33¹¥ÑÀÄ£Ê½ 0:¸ÕĞÔ¹¥ÑÀ 1:ÈáĞÔ¹¥ÑÀ
-
-	SIOContrlInfo SIOContrlInfo;	//IO¿ØÖÆĞÅÏ¢	//³ÂÃô´Ï	2023/7/10
-	bool bG65SystemMacroWait;
-	double dHorMax;		//²å²¹ºáÖá·½ÏòµÄ×î´óÖµ   //¼ÆËãÆ½ÃæÔ²»¡µÄ×îÖµ   ºé¹ÚÅô 2024/4/19
-	double dVerMax;		//²å²¹×İÖá·½ÏòµÄ×î´óÖµ
-	double dHorMin;		//²å²¹ºáÖá·½ÏòµÄ×îĞ¡Öµ
-	double dVerMin;		//²å²¹×İÖá·½ÏòµÄ×îĞ¡Öµ
-	bool bValidQ;		// QÖµÓĞĞ§ 2024/7/12
-	VAL_STRUCT_TYPE ucG28ZeroingValAxis;//G28ĞèÒª»ØÁãµÄÖá
+    SIOContrlInfo SIOContrlInfo; //IOæ§åˆ¶ä¿¡æ¯	//é™ˆæ•èª	2023/7/10
+    bool bG65SystemMacroWait;
+    double dHorMax;                      //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å¤§å€¼   //è®¡ç®—å¹³é¢åœ†å¼§çš„æœ€å€¼   æ´ªå† é¹ 2024/4/19
+    double dVerMax;                      //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å¤§å€¼
+    double dHorMin;                      //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å°å€¼
+    double dVerMin;                      //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å°å€¼
+    bool bValidQ;                        // Qå€¼æœ‰æ•ˆ 2024/7/12
+    VAL_STRUCT_TYPE ucG28ZeroingValAxis; //G28éœ€è¦å›é›¶çš„è½´
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-	bool bHandwheelAuto;
+    bool bHandwheelAuto;
 #endif
-
 };
 
-struct SInput // 2022.3.14  ÖìÎÈÖĞ  ÓÃ»§ÊäÈë²ÎÊı½á¹¹Ìå  Ôİ´æ²ÎÊı
+struct SInput // 2022.3.14  æœ±ç¨³ä¸­  ç”¨æˆ·è¾“å…¥å‚æ•°ç»“æ„ä½“  æš‚å­˜å‚æ•°
 {
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
-	VAL_STRUCT_TYPE	ucRelaVal;		//Ïà¶ÔÖµ±êÊ¶±äÁ¿  2022-4-20  ÖìÎÈÖĞ
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
+    VAL_STRUCT_TYPE ucRelaVal;   //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡  2022-4-20  æœ±ç¨³ä¸­
 
-	double dDistance;		//×Ü¾àÀë  ²å²¹¾àÀë	mm
-	double dTargetDist;		//Ä¿±ê¾àÀë
-	double dPreDist;		//ËÙ¶È¹æ»®Ç°   ³¤Öá!!ÒÑ×ß¾àÀë  (²»Îª0Ê±,ÔİÍ£»ØĞ´½øÈ¥µÄ¶Î£¬²»»ñÈ¡µ±Ç°µã×÷ÎªÆğµã£©
-	double dCurLeftDist;	//µ±Ç°ÁôÏÂÎ´ÒÆ¶¯µÄ¾àÀë
+    double dDistance;    //æ€»è·ç¦»  æ’è¡¥è·ç¦»	mm
+    double dTargetDist;  //ç›®æ ‡è·ç¦»
+    double dPreDist;     //é€Ÿåº¦è§„åˆ’å‰   é•¿è½´!!å·²èµ°è·ç¦»  (ä¸ä¸º0æ—¶,æš‚åœå›å†™è¿›å»çš„æ®µï¼Œä¸è·å–å½“å‰ç‚¹ä½œä¸ºèµ·ç‚¹ï¼‰
+    double dCurLeftDist; //å½“å‰ç•™ä¸‹æœªç§»åŠ¨çš„è·ç¦»
 
-	double dG84Ratio;   //ÓÃÓÚG84±¶ÂÊ 2025.11.15
-	double dFeedrate;	//½ø¸øËÙ¶È  mm/ms 12-30 ÖìÎÈÖĞ
-	double dFeedRatio;	//½ø¸ø±¶ÂÊ  12-30 ÖìÎÈÖĞ
-	double dAcc;	    //¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;	    //¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dVs;			//³õÊ¼ËÙ¶È	mm/ms
-	//double dVe;		//×îÖÕËÙ¶È	mm/ms
-	double dPrimalVe;   //´ÓÇ°Õ°¼Ì³ĞµÄ×îÖÕËÙ¶È mm/ms
+    double dG84Ratio;  //ç”¨äºG84å€ç‡ 2025.11.15
+    double dFeedrate;  //è¿›ç»™é€Ÿåº¦  mm/ms 12-30 æœ±ç¨³ä¸­
+    double dFeedRatio; //è¿›ç»™å€ç‡  12-30 æœ±ç¨³ä¸­
+    double dAcc;       //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;       //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dVs;        //åˆå§‹é€Ÿåº¦	mm/ms
+    //double dVe;		//æœ€ç»ˆé€Ÿåº¦	mm/ms
+    double dPrimalVe; //ä»å‰ç»ç»§æ‰¿çš„æœ€ç»ˆé€Ÿåº¦ mm/ms
 
-	
-	double dArcMaxNormalAccVmax;//Ô²»¡·¨Ïò¼ÓËÙ¶ÈÔ¼ÊøÏÂµÄ×î´óËÙ¶È    2022/11/29¹ùÇ¿
-	double dArcMaxChordErrorVmax;//Ô²»¡¹­¸ßÎó²îÔ¼ÊøÏÂµÄ×î´óËÙ¶È     2022/11/29¹ùÇ¿
-	double dCommonVMaxFromSingleAxis;     //G1£¬G2,G3¸´ºÏÔË¶¯×î´óËÙ¶ÈÓÉ¸÷²å²¹Öá¼ÆËãµÃµ½     2022/11/29¹ùÇ¿
-	double dUncorrectedFeedrate; //Î´ĞŞÕıµÄ½ø¸øËÙ¶È  mm/ms   2022/11/29¹ùÇ¿
-	double dMinVs;				 //Æğµã×îĞ¡ËÙ¶È,µ¥Î»:mm/ms       2022/11/29¹ùÇ¿
-	double dMinVe;				 //ÖÕµã×îĞ¡ËÙ¶È,µ¥Î»:mm/ms       2022/11/29¹ùÇ¿
-	uint8 ucAxisNumOfNeedLookAhead;	//ĞèÒªÇ°Õ°µÄµ¥ÖáÖáºÅ     2024/5/27ºé¹ÚÅô
+    double dArcMaxNormalAccVmax;      //åœ†å¼§æ³•å‘åŠ é€Ÿåº¦çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦    2022/11/29éƒ­å¼º
+    double dArcMaxChordErrorVmax;     //åœ†å¼§å¼“é«˜è¯¯å·®çº¦æŸä¸‹çš„æœ€å¤§é€Ÿåº¦     2022/11/29éƒ­å¼º
+    double dCommonVMaxFromSingleAxis; //G1ï¼ŒG2,G3å¤åˆè¿åŠ¨æœ€å¤§é€Ÿåº¦ç”±å„æ’è¡¥è½´è®¡ç®—å¾—åˆ°     2022/11/29éƒ­å¼º
+    double dUncorrectedFeedrate;      //æœªä¿®æ­£çš„è¿›ç»™é€Ÿåº¦  mm/ms   2022/11/29éƒ­å¼º
+    double dMinVs;                    //èµ·ç‚¹æœ€å°é€Ÿåº¦,å•ä½:mm/ms       2022/11/29éƒ­å¼º
+    double dMinVe;                    //ç»ˆç‚¹æœ€å°é€Ÿåº¦,å•ä½:mm/ms       2022/11/29éƒ­å¼º
+    uint8 ucAxisNumOfNeedLookAhead;   //éœ€è¦å‰ç»çš„å•è½´è½´å·     2024/5/27æ´ªå† é¹
 
-	uint8 ucAccVelPlanType;		//¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDecVelPlanType;		//¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
+    uint8 ucAccVelPlanType;    //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDecVelPlanType;    //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
 
-	SVector SStartVector;  //ÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£©
+    SVector SStartVector; //èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰
 
-	SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
-	float  dEllipseFactorA; // ÍÖÔ²²ÎÊıA
-	float  dEllipseFactorB; // ÍÖÔ²²ÎÊıB
-	double dCoordRotation;// // ×ø±êÏµĞı×ª»¡¶È  rad
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ÖìÎÈÖĞ
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    float dEllipseFactorA;    // æ¤­åœ†å‚æ•°A
+    float dEllipseFactorB;    // æ¤­åœ†å‚æ•°B
+    double dCoordRotation;    // // åæ ‡ç³»æ—‹è½¬å¼§åº¦  rad
+    float fCylinderRadius;    // åœ†æŸ±åŠå¾„ mm  2023.3.29 æœ±ç¨³ä¸­
 
-	int8 cInterpDir;	//²å²¹·½Ïò (ÊÖÂÖ·½Ïò)
+    int8 cInterpDir; //æ’è¡¥æ–¹å‘ (æ‰‹è½®æ–¹å‘)
 
-	int8 cArcDir;		//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1     ( CÖáÊ±ÎªÖ÷Öá·½Ïò)
-	double dRadius;		//°ë¾¶£¬µ¥Î»£ºmm
-	SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
+    int8 cArcDir;              //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1     ( Cè½´æ—¶ä¸ºä¸»è½´æ–¹å‘)
+    double dRadius;            //åŠå¾„ï¼Œå•ä½ï¼šmm
+    SPointDouble SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
 
-	int8 cDealType;	//´¦Àí·½Ê½
-	uint8 ucTconstForTrapezoid; //Èı½ÇĞÎĞŞµ÷ºóÔÈËÙÊ±¼äÕ¼×ÜÖÜÆÚµÄ°Ù·Ö±È £¨ % £© ºé¹ÚÅô 2024/3/22
-	double dHorMax;		//²å²¹ºáÖá·½ÏòµÄ×î´óÖµ   //¼ÆËãÆ½ÃæÔ²»¡µÄ×îÖµ   ºé¹ÚÅô 2024/4/19
-	double dVerMax;		//²å²¹×İÖá·½ÏòµÄ×î´óÖµ
-	double dHorMin;		//²å²¹ºáÖá·½ÏòµÄ×îĞ¡Öµ
-	double dVerMin;		//²å²¹×İÖá·½ÏòµÄ×îĞ¡Öµ
+    int8 cDealType;             //å¤„ç†æ–¹å¼
+    uint8 ucTconstForTrapezoid; //ä¸‰è§’å½¢ä¿®è°ƒååŒ€é€Ÿæ—¶é—´å æ€»å‘¨æœŸçš„ç™¾åˆ†æ¯” ï¼ˆ % ï¼‰ æ´ªå† é¹ 2024/3/22
+    double dHorMax;             //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å¤§å€¼   //è®¡ç®—å¹³é¢åœ†å¼§çš„æœ€å€¼   æ´ªå† é¹ 2024/4/19
+    double dVerMax;             //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å¤§å€¼
+    double dHorMin;             //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å°å€¼
+    double dVerMin;             //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å°å€¼
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-	bool bHandwheelAuto;
+    bool bHandwheelAuto;
 #endif
-
 };
 
-
-
-struct SPlan   //2022.3.14   ÖìÎÈÖĞ  ËÙ¶È¹æ»®µÄÖ´ĞĞ½á¹¹Ìå    µ¥Öá G1 G2G3 G32 G33 ½á¹¹ÌåÄÚ·Ö±ğ°üº¬´Ë½á¹¹Ìå
+struct SPlan //2022.3.14   æœ±ç¨³ä¸­  é€Ÿåº¦è§„åˆ’çš„æ‰§è¡Œç»“æ„ä½“    å•è½´ G1 G2G3 G32 G33 ç»“æ„ä½“å†…åˆ†åˆ«åŒ…å«æ­¤ç»“æ„ä½“
 {
-	double dDistance;		//×Ü¾àÀë  ²å²¹¾àÀë	mm
-	double dTargetDist;		//Ä¿±ê¾àÀë
-	double dPreDist;		//ËÙ¶È¹æ»®Ç°   ÒÑ×ß¾àÀë
-	double dCurLeftDist;	//µ±Ç°ÁôÏÂÎ´ÒÆ¶¯µÄ¾àÀë
+    double dDistance;    //æ€»è·ç¦»  æ’è¡¥è·ç¦»	mm
+    double dTargetDist;  //ç›®æ ‡è·ç¦»
+    double dPreDist;     //é€Ÿåº¦è§„åˆ’å‰   å·²èµ°è·ç¦»
+    double dCurLeftDist; //å½“å‰ç•™ä¸‹æœªç§»åŠ¨çš„è·ç¦»
 
-	double dAcc;	    //¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;	    //¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dVs;			//³õÊ¼ËÙ¶È	mm/ms
-	double dVe;			//×îÖÕËÙ¶È	mm/ms
-	double dPrimalVe;   //´ÓÇ°Õ°¼Ì³ĞµÄ×îÖÕËÙ¶È mm/ms
+    double dAcc;      //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;      //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dVs;       //åˆå§‹é€Ÿåº¦	mm/ms
+    double dVe;       //æœ€ç»ˆé€Ÿåº¦	mm/ms
+    double dPrimalVe; //ä»å‰ç»ç»§æ‰¿çš„æœ€ç»ˆé€Ÿåº¦ mm/ms
 
-	uint8 ucAccVelPlanType;		//¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDecVelPlanType;		//¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	uint8 ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
+    uint8 ucAccVelPlanType;    //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDecVelPlanType;    //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    uint8 ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
 
-	int8 cInterpDir;	//²å²¹·½Ïò (ÊÖÂÖ·½Ïò)   //Ö÷Öá×ª¶¯·½Ïò
+    int8 cInterpDir; //æ’è¡¥æ–¹å‘ (æ‰‹è½®æ–¹å‘)   //ä¸»è½´è½¬åŠ¨æ–¹å‘
 
-	double dTc;			//²å²¹ÖÜÆÚ	ms
-	double dVmax;		//×î´óËÙ¶È	mm/ms  dFeedrate
+    double dTc;   //æ’è¡¥å‘¨æœŸ	ms
+    double dVmax; //æœ€å¤§é€Ÿåº¦	mm/ms  dFeedrate
 
-	double dDistAcc;		//¼ÓËÙ¶ÎÎ»ÒÆ
-	double dDistConst;	    //ÔÈËÙ¶ÎÎ»ÒÆ
-	double dDistDec;		//¼õËÙ¶ÎÎ»ÒÆ
+    double dDistAcc;   //åŠ é€Ÿæ®µä½ç§»
+    double dDistConst; //åŒ€é€Ÿæ®µä½ç§»
+    double dDistDec;   //å‡é€Ÿæ®µä½ç§»
 
-	uint32 unT1;	//Ê±¼ä½ÚµãT1
-	uint32 unT2;	//Ê±¼ä½ÚµãT2
-	uint32 unT3;	//Ê±¼ä½ÚµãT3
-	uint32 unT4;	//Ê±¼ä½ÚµãT4
-	uint32 unT5;	//Ê±¼ä½ÚµãT5
+    uint32 unT1; //æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unT2; //æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unT3; //æ—¶é—´èŠ‚ç‚¹T3
+    uint32 unT4; //æ—¶é—´èŠ‚ç‚¹T4
+    uint32 unT5; //æ—¶é—´èŠ‚ç‚¹T5
 
-	double dT1;	//Ê±¼ä½ÚµãT1
-	double dT2;	//Ê±¼ä½ÚµãT2
-	double dT3;	//Ê±¼ä½ÚµãT3
-	double dT4;	//Ê±¼ä½ÚµãT4
-	double dT5;	//Ê±¼ä½ÚµãT5
+    double dT1; //æ—¶é—´èŠ‚ç‚¹T1
+    double dT2; //æ—¶é—´èŠ‚ç‚¹T2
+    double dT3; //æ—¶é—´èŠ‚ç‚¹T3
+    double dT4; //æ—¶é—´èŠ‚ç‚¹T4
+    double dT5; //æ—¶é—´èŠ‚ç‚¹T5
 
-	uint32 unDistReT1;		//·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT1
-	uint32 unDistReT2;		//·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT2
-	uint32 unDistReT3;		//·ÖÌ¯ÓàÁ¿µÄÊ±¼ä½ÚµãT3
+    uint32 unDistReT1; //åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T1
+    uint32 unDistReT2; //åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T2
+    uint32 unDistReT3; //åˆ†æ‘Šä½™é‡çš„æ—¶é—´èŠ‚ç‚¹T3
 
-	double dDistRemaining;		//²ĞÓà¾àÀë
+    double dDistRemaining; //æ®‹ä½™è·ç¦»
 
-	double dDistNewAddT;	//ĞÂÔöÒ»¸öÖÜÆÚ×ßµÄ¾àÀë
+    double dDistNewAddT; //æ–°å¢ä¸€ä¸ªå‘¨æœŸèµ°çš„è·ç¦»
 
-	//ÌİĞÎÆ½Ì¯²ÎÊı
-	double dTrapezoidAvgAcc;   //Æ½Ì¯ÌİĞÎµÄ¼ÓËÙ¶È
-	double dTrapezoidAvgVel;   //Æ½Ì¯ÌİĞÎµÄ×î´óËÙ¶È
+    //æ¢¯å½¢å¹³æ‘Šå‚æ•°
+    double dTrapezoidAvgAcc; //å¹³æ‘Šæ¢¯å½¢çš„åŠ é€Ÿåº¦
+    double dTrapezoidAvgVel; //å¹³æ‘Šæ¢¯å½¢çš„æœ€å¤§é€Ÿåº¦
 
-	//5´ÎÆ½Ì¯²ÎÊı
-	double dQuinticAvgA;		//Îå´ÎÏîÏµÊıA
-	double dQuinticAvgB;		//Îå´ÎÏîÏµÊıB
-	double dQuinticAvgC;		//Îå´ÎÏîÏµÊıC
-	uint8 ucQuinticAvgTFlag;	//Îå´ÎÖÜÆÚ²»×ã±êÖ¾Î»
+    //5æ¬¡å¹³æ‘Šå‚æ•°
+    double dQuinticAvgA;     //äº”æ¬¡é¡¹ç³»æ•°A
+    double dQuinticAvgB;     //äº”æ¬¡é¡¹ç³»æ•°B
+    double dQuinticAvgC;     //äº”æ¬¡é¡¹ç³»æ•°C
+    uint8 ucQuinticAvgTFlag; //äº”æ¬¡å‘¨æœŸä¸è¶³æ ‡å¿—ä½
 
-	//±ÈÀıÏµÊıÆ½Ì¯²ÎÊı
-	double dAverageFactor;		//±ÈÀıÆ½Ì¯µÄ±ÈÀıÏµÊı
+    //æ¯”ä¾‹ç³»æ•°å¹³æ‘Šå‚æ•°
+    double dAverageFactor; //æ¯”ä¾‹å¹³æ‘Šçš„æ¯”ä¾‹ç³»æ•°
 
-	uint32 unCurrentT;			//²å²¹µÄµ±Ç°Ê±¼äµã
-	uint8 ucTconstForTrapezoid; // Èı½ÇĞÎĞŞµ÷ºóÔÈËÙÊ±¼äÕ¼×ÜÖÜÆÚµÄ°Ù·Ö±È £¨ % £© ºé¹ÚÅô 2024/3/22
-	SPointDouble SMaxVal;//Ô²»¡¹ì¼£ÉÏ×î´óÖµµã¼¯ºÏ   2024/4/12
-	SPointDouble SMinVal;//Ô²»¡¹ì¼£ÉÏ×îĞ¡Öµµã¼¯ºÏ
+    uint32 unCurrentT;          //æ’è¡¥çš„å½“å‰æ—¶é—´ç‚¹
+    uint8 ucTconstForTrapezoid; // ä¸‰è§’å½¢ä¿®è°ƒååŒ€é€Ÿæ—¶é—´å æ€»å‘¨æœŸçš„ç™¾åˆ†æ¯” ï¼ˆ % ï¼‰ æ´ªå† é¹ 2024/3/22
+    SPointDouble SMaxVal;       //åœ†å¼§è½¨è¿¹ä¸Šæœ€å¤§å€¼ç‚¹é›†åˆ   2024/4/12
+    SPointDouble SMinVal;       //åœ†å¼§è½¨è¿¹ä¸Šæœ€å°å€¼ç‚¹é›†åˆ
 };
 
-
-struct SInterpolationPre    // 2022.3.14  ²å²¹Ô¤´¦Àíº¯Êı
+struct SInterpolationPre // 2022.3.14  æ’è¡¥é¢„å¤„ç†å‡½æ•°
 {
-	struct SChannel* pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
 
-    int8 cFilename[FILENAME_LENGTH_LIMIT];//ÎÄ¼şÃû	//µ±Ç°ÕıÔÚÔËĞĞµÄ
-	int8 cOriginFilename[FILENAME_LENGTH_LIMIT];//Ô´ÎÄ¼şÃû
-	uint32 unGCodeLineNum;		// ½âÎöµ½µÚ¼¸ĞĞG´úÂë
+    int8 cFilename[FILENAME_LENGTH_LIMIT];       //æ–‡ä»¶å	//å½“å‰æ­£åœ¨è¿è¡Œçš„
+    int8 cOriginFilename[FILENAME_LENGTH_LIMIT]; //æºæ–‡ä»¶å
+    uint32 unGCodeLineNum;                       // è§£æåˆ°ç¬¬å‡ è¡ŒGä»£ç 
 
-	uint32 unCommandType;		//Ö¸ÁîÀàĞÍ
-	//VAL_STATUS_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
+    uint32 unCommandType; //æŒ‡ä»¤ç±»å‹
+    //VAL_STATUS_TYPE	ucValStatus;	//æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
 
-	int8 cChannelBufNum;//Í¨µÀµÈ´ıĞÅºÅÊı×éÏÂ±ê£¨-1ÎªÎŞĞ§ 0ÒÑÖ´ĞĞ 1~MAX ´æÔÚÇÒÎ´Ö´ĞĞ£©
-	SChannelCommand sChannelCommand; //Í¨µÀÖ¸ÁîĞÅÏ¢£¨M97-M100£©
-	uint8 ucIOCommandArray[IO_MAXGROUP_IN_SINGLE_LINE];		//IOÀàĞÍµÄM´úÂë½á¹¹ÌåÊı×é
+    int8 cChannelBufNum;                                //é€šé“ç­‰å¾…ä¿¡å·æ•°ç»„ä¸‹æ ‡ï¼ˆ-1ä¸ºæ— æ•ˆ 0å·²æ‰§è¡Œ 1~MAX å­˜åœ¨ä¸”æœªæ‰§è¡Œï¼‰
+    SChannelCommand sChannelCommand;                    //é€šé“æŒ‡ä»¤ä¿¡æ¯ï¼ˆM97-M100ï¼‰
+    uint8 ucIOCommandArray[IO_MAXGROUP_IN_SINGLE_LINE]; //IOç±»å‹çš„Mä»£ç ç»“æ„ä½“æ•°ç»„
 
-	//double dSpindleSpeed;			//Ö÷ÖáËÙ¶È    g_SInterpolationµÄÖ÷Öá×ªËÙĞ¡ÓÚ0Ê±ÎŞĞ§ £¬CÖá¶ÁÖ÷Öá×ªËÙºó½«g_SInterpolationµÄ×ªËÙÖÃÎªÎŞĞ§
-	//double dLimitedSpindleSpeed;	// G50 ÏŞÖÆµÄÖ÷Öá×ªËÙ(r/min)
+    //double dSpindleSpeed;			//ä¸»è½´é€Ÿåº¦    g_SInterpolationçš„ä¸»è½´è½¬é€Ÿå°äº0æ—¶æ— æ•ˆ ï¼ŒCè½´è¯»ä¸»è½´è½¬é€Ÿåå°†g_SInterpolationçš„è½¬é€Ÿç½®ä¸ºæ— æ•ˆ
+    //double dLimitedSpindleSpeed;	// G50 é™åˆ¶çš„ä¸»è½´è½¬é€Ÿ(r/min)
 
-	double dSecondSpindleSpeed;		//µÚ¶ş¸ùĞı×ªÖáËÙ¶È»ò¶¯Á¦µ¶ËÙ¶È
+    double dSecondSpindleSpeed; //ç¬¬äºŒæ ¹æ—‹è½¬è½´é€Ÿåº¦æˆ–åŠ¨åŠ›åˆ€é€Ÿåº¦
 
-	uint8 ucToolNum;			//µ¶¾ßºÅ
-	//uint8 ucWearGroupNum;		//µ¶¾ßÄ¥Ëğ×éºÅ
-	uint8 ucToolCompNum;
-	int8 cWorkpieceCoordNum;	//¹¤¼ş×ø±êºÅÂë (54-59) ÎªÆäËûÖµÊ±²»Ê¹ÓÃ¹¤¼ş×ø±ê
-	SPointDouble SWorkPieceOffsetByG50;		//G50ÁÙÊ±×ø±êÏµÆ«ÒÆÁ¿ 2023-8-3ºé¹ÚÅô
-	bool bG50Appear;	//G50ÁÙÊ±×ø±êÏµ´«Èë±êÖ¾Î» 2023-8-3ºé¹ÚÅô
-	SPoint SToolCMPByG10;//G10ÉèÖÃµÄµ¶¾ßÄ¥Ëğ²¹³¥Á¿
-	uint8 uG10ToolID;  //G10µÄµ¶¾ßºÅ 2023/10/23
-	bool bG65SystemMacroWait;
+    uint8 ucToolNum; //åˆ€å…·å·
+    //uint8 ucWearGroupNum;		//åˆ€å…·ç£¨æŸç»„å·
+    uint8 ucToolCompNum;
+    int8 cWorkpieceCoordNum;            //å·¥ä»¶åæ ‡å·ç  (54-59) ä¸ºå…¶ä»–å€¼æ—¶ä¸ä½¿ç”¨å·¥ä»¶åæ ‡
+    SPointDouble SWorkPieceOffsetByG50; //G50ä¸´æ—¶åæ ‡ç³»åç§»é‡ 2023-8-3æ´ªå† é¹
+    bool bG50Appear;                    //G50ä¸´æ—¶åæ ‡ç³»ä¼ å…¥æ ‡å¿—ä½ 2023-8-3æ´ªå† é¹
+    SPoint SToolCMPByG10;               //G10è®¾ç½®çš„åˆ€å…·ç£¨æŸè¡¥å¿é‡
+    uint8 uG10ToolID;                   //G10çš„åˆ€å…·å· 2023/10/23
+    bool bG65SystemMacroWait;
 
+    uint8 ucRunStep;   //æ­¥éª¤
+    uint8 ucInpStatus; //æ’è¡¥çŠ¶æ€ï¼ŒINITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
 
-	uint8 ucRunStep;		//²½Öè
-	uint8 ucInpStatus;			//²å²¹×´Ì¬£¬INITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
+    uint32 ulDelayTime; //å»¶æ—¶,å•ä½:ms
 
-	uint32 ulDelayTime;			//ÑÓÊ±,µ¥Î»:ms
+#if (TURRET_AXIS_TEST == 1)
 
-
-
-#if(TURRET_AXIS_TEST == 1)
-
-	VAL_STRUCT_TYPE ucOccupideValStatus; //Í¨µÀÒÑÕ¼ÓÃµÄ½á¹¹ÌåÖá £¨·Çµ¶ËşÖá+µ¶ËşÖá£©
-	VAL_STRUCT_TYPE ucOccupideTurretAxis;//ÒÑ¾­Õ¼ÓÃµÄÊôÓÚµ¶ËşµÄ½á¹¹ÌåÖá£¨µ¶ËşÖá£©
-	VAL_TURRET_TYPE	 ucOccupideTurret;//Í¨µÀÒÑ¾­Õ¼ÓÃµÄµ¶Ëş
+    VAL_STRUCT_TYPE ucOccupideValStatus;  //é€šé“å·²å ç”¨çš„ç»“æ„ä½“è½´ ï¼ˆéåˆ€å¡”è½´+åˆ€å¡”è½´ï¼‰
+    VAL_STRUCT_TYPE ucOccupideTurretAxis; //å·²ç»å ç”¨çš„å±äºåˆ€å¡”çš„ç»“æ„ä½“è½´ï¼ˆåˆ€å¡”è½´ï¼‰
+    VAL_TURRET_TYPE ucOccupideTurret;     //é€šé“å·²ç»å ç”¨çš„åˆ€å¡”
 #else
-	VAL_STRUCT_TYPE ucToolAxis;//µ¶²¹ÓĞĞ§Öá
-	uint8 ucToolCompensationStatus;//µ¶²¹×´Ì¬
-	VAL_STRUCT_TYPE ucLastValStatus; //ÉÏ¸öÖ¸ÁîµÄÓĞĞ§Öá
+    VAL_STRUCT_TYPE ucToolAxis;      //åˆ€è¡¥æœ‰æ•ˆè½´
+    uint8 ucToolCompensationStatus;  //åˆ€è¡¥çŠ¶æ€
+    VAL_STRUCT_TYPE ucLastValStatus; //ä¸Šä¸ªæŒ‡ä»¤çš„æœ‰æ•ˆè½´
 #endif
 
-	//AL_STRUCT_TYPE ucPauseValStatus; //ÉÏ¸öÖ¸ÁîµÄÓĞĞ§Öá
-	SPointDouble SPausePoint;// ±£´æÔİÍ£µÄµã
+    //AL_STRUCT_TYPE ucPauseValStatus; //ä¸Šä¸ªæŒ‡ä»¤çš„æœ‰æ•ˆè½´
+    SPointDouble SPausePoint; // ä¿å­˜æš‚åœçš„ç‚¹
 
-	struct SInput SUserData; //ÓÃ»§£¨ÊäÈë£©²ÎÊı
+    struct SInput SUserData; //ç”¨æˆ·ï¼ˆè¾“å…¥ï¼‰å‚æ•°
 
-	int8 cInterpDir; // ²å²¹·½Ïò  £¨ÊÖÂÖ·½Ïò£©
+    int8 cInterpDir; // æ’è¡¥æ–¹å‘  ï¼ˆæ‰‹è½®æ–¹å‘ï¼‰
 
-	float preciseStopDegree;// ×¼Í£½Ç¶È
+    float preciseStopDegree; // å‡†åœè§’åº¦
 
-	bool bLastLineMark;//×îºóÒ»ĞĞ±ê¼ÇÎ» Ñ¡ÔñÍ£Ö¹¹¦ÄÜÊ¹ÓÃ
-	bool bRunPostIO;  //ÔËĞĞÇ°×÷ÓÃIO
-	bool bUnStoptableLine;//µ±Ç°¶ÎÎª²»¿ÉÍ£ÏÂµÄĞĞ ÖìÎÈÖĞ 2023.5.19  µ±Ç°¶ÎÎªG34 µ¥½ÚÔËĞĞ²»Í£
-	bool bValidQ;  // QÖµÓĞĞ§?  ÖìÎÈÖĞ 2023.5.19
-	uint32 unChipBreakDelayTime;//¶ÏĞ¼ÔİÍ£Ê±¼ä,µ¥Î»ms      P
-	double dChipBreakLength;	//¶ÏĞ¼¼ä¸ô³¤¶È,µ¥Î»:mm     Q
-	bool bChipBreakFlag;		//¶ÏĞ¼±êÖ¾Î»,TRUE:¿ªÆô FALSE:¹Ø±Õ
+    bool bLastLineMark;          //æœ€åä¸€è¡Œæ ‡è®°ä½ é€‰æ‹©åœæ­¢åŠŸèƒ½ä½¿ç”¨
+    bool bRunPostIO;             //è¿è¡Œå‰ä½œç”¨IO
+    bool bUnStoptableLine;       //å½“å‰æ®µä¸ºä¸å¯åœä¸‹çš„è¡Œ æœ±ç¨³ä¸­ 2023.5.19  å½“å‰æ®µä¸ºG34 å•èŠ‚è¿è¡Œä¸åœ
+    bool bValidQ;                // Qå€¼æœ‰æ•ˆ?  æœ±ç¨³ä¸­ 2023.5.19
+    uint32 unChipBreakDelayTime; //æ–­å±‘æš‚åœæ—¶é—´,å•ä½ms      P
+    double dChipBreakLength;     //æ–­å±‘é—´éš”é•¿åº¦,å•ä½:mm     Q
+    bool bChipBreakFlag;         //æ–­å±‘æ ‡å¿—ä½,TRUE:å¼€å¯ FALSE:å…³é—­
 
-	VAL_STRUCT_TYPE ucG28ZeroingValAxis;//G28ĞèÒª»ØÁãµÄÖá   cyn 2024.12.1
-
+    VAL_STRUCT_TYPE ucG28ZeroingValAxis; //G28éœ€è¦å›é›¶çš„è½´   cyn 2024.12.1
 };
 
+struct _SRun //è¿è¡Œç»“æ„ä½“
+{
+    struct SChannel* pSChannel;            // é€šé“æŒ‡é’ˆ  (çˆ¶)
+    int8 cFilename[FILENAME_LENGTH_LIMIT]; //æ–‡ä»¶å
+    uint32 unGCodeLineNum;                 //è§£æåˆ°ç¬¬å‡ è¡ŒGä»£ç 
+    uint32 unCommandType;                  //æŒ‡ä»¤ç±»å‹ 2023-03-27 æœ±ç¨³ä¸­ uint16 ->uint32   unCommandType ->unCommandType
 
-struct _SRun  //ÔËĞĞ½á¹¹Ìå
-{   
-	struct SChannel* pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
-    int8 cFilename[FILENAME_LENGTH_LIMIT];//ÎÄ¼şÃû
-	uint32 unGCodeLineNum;//½âÎöµ½µÚ¼¸ĞĞG´úÂë
-	uint32 unCommandType;  //Ö¸ÁîÀàĞÍ 2023-03-27 ÖìÎÈÖĞ uint16 ->uint32   unCommandType ->unCommandType
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼
+    SPointDouble SAbsCoord;      //å½“å‰ç»å¯¹åæ ‡
+    SPointDouble SLastAbsCoord;  //ä¸Šä¸€æ¬¡çš„ç»å¯¹åæ ‡
 
-	VAL_STRUCT_TYPE ucValStatus;//ÓĞĞ§Öµ
-	SPointDouble SAbsCoord;     //µ±Ç°¾ø¶Ô×ø±ê
-	SPointDouble SLastAbsCoord; //ÉÏÒ»´ÎµÄ¾ø¶Ô×ø±ê
+    int16 sAxisDeltaPulse[AXIS_NUM_MAX]; //å„ä¸ªè½´çš„ä½ç§»å¢é‡  å•ä½:pulse(è¾“å‡ºæŒ‡ä»¤å•ä½)
+    int16 sLastDeltaPulse[AXIS_NUM_MAX]; //å„ä¸ªè½´ä¸Šå‘¨æœŸçš„ä½ç§»å¢é‡ (ç›¸å½“äºè®°å½•äº†å½“å‰é€Ÿåº¦)
 
-	int16 sAxisDeltaPulse[AXIS_NUM_MAX];	//¸÷¸öÖáµÄÎ»ÒÆÔöÁ¿  µ¥Î»:pulse(Êä³öÖ¸Áîµ¥Î»)
-	int16 sLastDeltaPulse[AXIS_NUM_MAX];	//¸÷¸öÖáÉÏÖÜÆÚµÄÎ»ÒÆÔöÁ¿ (Ïàµ±ÓÚ¼ÇÂ¼ÁËµ±Ç°ËÙ¶È)
+    double dCommonFeedRatio;     //è¿›ç»™å€ç‡
+    double dQuickMoveFeedRatio;  //å¿«é€Ÿè¿åŠ¨è¿›ç»™å€ç‡
+    double dSpindleSpeedRatio;   //ä¸»è½´è½¬é€Ÿå€ç‡
+    double dHandWheelSpeedRatio; //æ‰‹è½®æ¨¡æ‹Ÿå€ç‡
 
-	double dCommonFeedRatio; //½ø¸ø±¶ÂÊ
-	double dQuickMoveFeedRatio;//¿ìËÙÔË¶¯½ø¸ø±¶ÂÊ
-	double dSpindleSpeedRatio;//Ö÷Öá×ªËÙ±¶ÂÊ
-	double dHandWheelSpeedRatio;//ÊÖÂÖÄ£Äâ±¶ÂÊ
+    double dCurrentFeedRate; //å½“å‰çš„è¿›ç»™é€Ÿåº¦ ï¼ˆåˆæˆè¿åŠ¨ï¼‰
+    double dCurrentSpeed;    //å½“å‰é€Ÿåº¦ ï¼ˆåˆæˆï¼‰
+    //int8 cPolarHorDir;//æåæ ‡æ¨ªè½´æ–¹å‘
 
-	double dCurrentFeedRate;//µ±Ç°µÄ½ø¸øËÙ¶È £¨ºÏ³ÉÔË¶¯£©
-	double dCurrentSpeed;//µ±Ç°ËÙ¶È £¨ºÏ³É£©
-	//int8 cPolarHorDir;//¼«×ø±êºáÖá·½Ïò
-
-	//double dCurrentSpeed;//µ±Ç°ËÙ¶È 2022.4.9  ÖìÎÈÖĞ
-	/******************ÏÔÊ¾Ïà¹Ø*********************/
-	uint8 ucToolNum;	  //µ¶¾ßºÅ   /   ÖìÎÈÖĞ 2021-11-13
-	//uint8 ucWearGroupNum;  //µ¶¾ßÄ¥Ëğ×éºÅ   ÖìÎÈÖĞ 2021-12-6
-	uint8 ucToolCompNum;	//µ¶²¹ºÅ	³ÂÃô´Ï 23-2-11
-	int8 cWorkpieceCoordNum; //¹¤¼ş×ø±êºÅ (54-59) ÎªÆäËûÖµÊ±²»Ê¹ÓÃ¹¤¼ş×ø±ê  //ÖìÎÈÖĞ2021-12-9
-	SPointDouble SCurrentOffset;  //µ±Ç°×ÜÆ«ÒÆ  ¾ø¶Ô×ø±ê=»úĞµ×ø±ê-×ÜÆ«ÒÆ(°üÀ¨¶Ôµ¶£¬Ä¥Ëğ£¬G54£¬EXT)//ÖìÎÈÖĞ2021-12-8
-	SPointDouble SWorkPieceOffsetByG50;		//G50ÁÙÊ±×ø±êÏµÆ«ÒÆÁ¿ 2023-8-3ºé¹ÚÅô
-	int8 cSoftLimitedOn; //ÈíÏŞÎ»¿ª¹Ø±êÖ¾Î» 2024/4/12 ºé¹ÚÅô
+    //double dCurrentSpeed;//å½“å‰é€Ÿåº¦ 2022.4.9  æœ±ç¨³ä¸­
+    /******************æ˜¾ç¤ºç›¸å…³*********************/
+    uint8 ucToolNum; //åˆ€å…·å·   /   æœ±ç¨³ä¸­ 2021-11-13
+    //uint8 ucWearGroupNum;  //åˆ€å…·ç£¨æŸç»„å·   æœ±ç¨³ä¸­ 2021-12-6
+    uint8 ucToolCompNum;         //åˆ€è¡¥å·	é™ˆæ•èª 23-2-11
+    int8 cWorkpieceCoordNum;     //å·¥ä»¶åæ ‡å· (54-59) ä¸ºå…¶ä»–å€¼æ—¶ä¸ä½¿ç”¨å·¥ä»¶åæ ‡  //æœ±ç¨³ä¸­2021-12-9
+    SPointDouble SCurrentOffset; //å½“å‰æ€»åç§»  ç»å¯¹åæ ‡=æœºæ¢°åæ ‡-æ€»åç§»(åŒ…æ‹¬å¯¹åˆ€ï¼Œç£¨æŸï¼ŒG54ï¼ŒEXT)//æœ±ç¨³ä¸­2021-12-8
+    SPointDouble SWorkPieceOffsetByG50; //G50ä¸´æ—¶åæ ‡ç³»åç§»é‡ 2023-8-3æ´ªå† é¹
+    int8 cSoftLimitedOn;                //è½¯é™ä½å¼€å…³æ ‡å¿—ä½ 2024/4/12 æ´ªå† é¹
 };
 
-
-//ÂİÎÆÇĞÏ÷Ä£Ê½
+//èºçº¹åˆ‡å‰Šæ¨¡å¼
 enum ThreadCuttingMode
 {
-	COMPLETE_FOLLOW_MODE,   //Ö÷ÖáÍêÈ«¸úËæÄ£Ê½£¨²»ÔÊĞí¶ªÆúÂö³å£©
-	INCOMPLETE_FOLLOW_MODE  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½£¨ÔÊĞí¶ªÆúÂö³å£©
-
+    COMPLETE_FOLLOW_MODE,  //ä¸»è½´å®Œå…¨è·Ÿéšæ¨¡å¼ï¼ˆä¸å…è®¸ä¸¢å¼ƒè„‰å†²ï¼‰
+    INCOMPLETE_FOLLOW_MODE //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ï¼ˆå…è®¸ä¸¢å¼ƒè„‰å†²ï¼‰
 };
 
-//¼Ó¹¤Ê±¼ä  º¯Êı start  mark  stop
-struct _SMachineTimer {
-	bool isTimerBegined;	//¼ÆÊ±¿ªÊ¼±êÖ¾
-	uint32 unStartTime;		//Æô¶¯Ê±¼ä			(Æô¶¯Ê±¼ÇÂ¼,»ò¼Ó¹¤Íê×îºóÒ»ĞĞÊ±ÖØĞÂ¼ÇÂ¼timeji)
-	uint32 unCurProcessTime;// ¼Ó¹¤Ê±¼ä(µ±Ç°¼ş) (¼Ó¹¤Íê×îºóÒ»ĞĞÊ±,»òÍ£Ö¹Ê±¼ÆËã) timeji-unCurProcessTime
+//åŠ å·¥æ—¶é—´  å‡½æ•° start  mark  stop
+struct _SMachineTimer
+{
+    bool isTimerBegined;     //è®¡æ—¶å¼€å§‹æ ‡å¿—
+    uint32 unStartTime;      //å¯åŠ¨æ—¶é—´			(å¯åŠ¨æ—¶è®°å½•,æˆ–åŠ å·¥å®Œæœ€åä¸€è¡Œæ—¶é‡æ–°è®°å½•timeji)
+    uint32 unCurProcessTime; // åŠ å·¥æ—¶é—´(å½“å‰ä»¶) (åŠ å·¥å®Œæœ€åä¸€è¡Œæ—¶,æˆ–åœæ­¢æ—¶è®¡ç®—) timeji-unCurProcessTime
 };
-
-
 
 union SSystemUnion
 {
-	struct     //ÏµÍ³²ÎÊı½á¹¹Ìå
-	{
-		///////////////////////////////////////////////////
-		// ÅäÖÃ²ÎÊı
+    struct //ç³»ç»Ÿå‚æ•°ç»“æ„ä½“
+    {
+        ///////////////////////////////////////////////////
+        // é…ç½®å‚æ•°
 
-		int fVersion;	    //°æ±¾ºÅ       2024.1.15
-		uint8 ucMachType;	//»úÆ÷ÀàĞÍ
+        int fVersion;     //ç‰ˆæœ¬å·       2024.1.15
+        uint8 ucMachType; //æœºå™¨ç±»å‹
 
-		SSerialComParaInfo SSerialComPara[SERIALCOM_NUM_MAX]; //ÏµÍ³µÄ¸÷¸ö´®¿ÚÍ¨Ñ¶²ÎÊı
+        SSerialComParaInfo SSerialComPara[SERIALCOM_NUM_MAX]; //ç³»ç»Ÿçš„å„ä¸ªä¸²å£é€šè®¯å‚æ•°
 
-		uint8 ucAxisMapArray[CHANNEL_NUM_MAX][AXIS_NUM_MAX];//Í¨µÀÓ³Éä 2022.4.23 ÖìÎÈÖĞ
+        uint8 ucAxisMapArray[CHANNEL_NUM_MAX][AXIS_NUM_MAX]; //é€šé“æ˜ å°„ 2022.4.23 æœ±ç¨³ä¸­
 
-		uint8 ucEncoderMapArray[CHANNEL_NUM_MAX][ENCODER_NUM_MAX];		//ÊÖÂÖÓ³Éä 2023.8.1	³ÂÃô´Ï
+        uint8 ucEncoderMapArray[CHANNEL_NUM_MAX][ENCODER_NUM_MAX]; //æ‰‹è½®æ˜ å°„ 2023.8.1	é™ˆæ•èª
 
-		double dInterpolationTime; //²å²¹Ê±¼ä£¬µ¥Î»£ºms
+        double dInterpolationTime; //æ’è¡¥æ—¶é—´ï¼Œå•ä½ï¼šms
 
-		uint8 ucLookAheadNum;		//Ç°Õ°¶ÎÊı
+        uint8 ucLookAheadNum; //å‰ç»æ®µæ•°
 
-		SToolParaInfo SToolPara[CHANNEL_NUM_MAX][TOOL_NUM_MAX];  //µ¶¾ß²ÎÊı		//µ¶³¤	2023/2/15
+        SToolParaInfo SToolPara[CHANNEL_NUM_MAX][TOOL_NUM_MAX]; //åˆ€å…·å‚æ•°		//åˆ€é•¿	2023/2/15
 
-		SToolParaInfo SWearPara[CHANNEL_NUM_MAX][TOOL_NUM_MAX];//µ¶¾ßÄ¥Ëğ²ÎÊı  ÖìÎÈÖĞ 2022-1-6  µ¶¾ß²ÎÊı¸öÊı*µ¶¾ßÄ¥Ëğ×éÊı
+        SToolParaInfo SWearPara[CHANNEL_NUM_MAX]
+                               [TOOL_NUM_MAX]; //åˆ€å…·ç£¨æŸå‚æ•°  æœ±ç¨³ä¸­ 2022-1-6  åˆ€å…·å‚æ•°ä¸ªæ•°*åˆ€å…·ç£¨æŸç»„æ•°
 
+        uint8 ucToolNum;                           //åˆ€å…·å·	//2023.2.8	é™ˆæ•èªæ–°å¢
+        uint8 ucToolCompNum;                       //åˆ€è¡¥å·
+        uint8 ucToolDevie;                         //åˆ€å…·è®¾å¤‡ï¼Œæ’åˆ€æœº/åˆ€å¡”æœº
+        uint8 ucToolChange_TrigDelayTime;          //æ¢åˆ€è§¦å‘ä¿¡å·ç»´æŒæ—¶é—´
+        uint16 usToolChange_AlarmTime;             //æ¢åˆ€æ—¶é—´è¿‡é•¿æ—¶é—´
+        uint16 usToolChange_LockDelayTime;         //æ¢åˆ€ç”µç£é˜€å¤¹ç´§å»¶æ—¶(ä¼ä¸šè¦æ±‚ï¼Œé˜²æ­¢æ¢åˆ€è¿‡å¿«)
+        uint16 usToolChange_ReadOrSendIODelayTime; //è¯»å–åˆ€å·IOæˆ–ä¼ºæœä½¿èƒ½/å¤±èƒ½å»¶æ—¶æ—¶é—´
 
-		uint8 ucToolNum;	//µ¶¾ßºÅ	//2023.2.8	³ÂÃô´ÏĞÂÔö
-		uint8 ucToolCompNum;	//µ¶²¹ºÅ
-		uint8 ucToolDevie;	//µ¶¾ßÉè±¸£¬ÅÅµ¶»ú/µ¶Ëş»ú
-		uint8 ucToolChange_TrigDelayTime;	//»»µ¶´¥·¢ĞÅºÅÎ¬³ÖÊ±¼ä
-		uint16 usToolChange_AlarmTime;	//»»µ¶Ê±¼ä¹ı³¤Ê±¼ä
-		uint16 usToolChange_LockDelayTime;	//»»µ¶µç´Å·§¼Ğ½ôÑÓÊ±(ÆóÒµÒªÇó£¬·ÀÖ¹»»µ¶¹ı¿ì)
-		uint16 usToolChange_ReadOrSendIODelayTime;		//¶ÁÈ¡µ¶ºÅIO»òËÅ·şÊ¹ÄÜ/Ê§ÄÜÑÓÊ±Ê±¼ä
+        /*****************************ä¸»è½´åˆ¹è½¦******************************************/
+        int8 cSpindleClampStatus[CHANNEL_NUM_MAX]; //ä¸»è½´åˆ¹è½¦é”ç´§çŠ¶æ€
 
-		/*****************************Ö÷ÖáÉ²³µ******************************************/
-		int8 cSpindleClampStatus[CHANNEL_NUM_MAX];	//Ö÷ÖáÉ²³µËø½ô×´Ì¬
+        /*****************************å•è¡¨èºè·è¡¥å¿******************************************/
+        bool bScrewCompEnable[AXIS_PHYSICS_NUM_MAX];    //èºè·è¯¯å·®ä½¿èƒ½ä½
+        uint8 ScrewCompGap[AXIS_PHYSICS_NUM_MAX];       //èºè·è¡¥å¿é—´éš”  mm
+        uint16 sScrewCompHomeNum[AXIS_PHYSICS_NUM_MAX]; //åŸç‚¹çš„ä½ç½®å·
 
-		/*****************************µ¥±íÂİ¾à²¹³¥******************************************/
-		bool bScrewCompEnable[AXIS_PHYSICS_NUM_MAX];	//Âİ¾àÎó²îÊ¹ÄÜÎ»
-		uint8 ScrewCompGap[AXIS_PHYSICS_NUM_MAX];		//Âİ¾à²¹³¥¼ä¸ô  mm
-		uint16 sScrewCompHomeNum[AXIS_PHYSICS_NUM_MAX]; //Ô­µãµÄÎ»ÖÃºÅ
+        /*****************************G83toG89ç³»ç»Ÿå‚æ•°******************************************/
+        int16 sG83toG89Para_RetractionLength; //NC_DATA_PARAMETER_089 G83toG83é€€åˆ€å‚æ•°_é€€åˆ€é•¿åº¦ um	CMC 2023/4/3
 
-		/*****************************G83toG89ÏµÍ³²ÎÊı******************************************/
-		int16 sG83toG89Para_RetractionLength;		//NC_DATA_PARAMETER_089 G83toG83ÍËµ¶²ÎÊı_ÍËµ¶³¤¶È um	CMC 2023/4/3
+        /*****************************åŒè¡¨èºè·è¡¥å¿******************************************/
+        bool bBilateralScrewEnable[AXIS_PHYSICS_NUM_MAX]; //åŒå‘èºè·è¯¯å·®ä½¿èƒ½ä½
+        uint8 ucBilateralScrewGap[AXIS_PHYSICS_NUM_MAX];  //èºè·è¡¥å¿é—´éš”  mm
+        int8 cAheadScrewCompVal
+            [AXIS_PHYSICS_NUM_MAX]
+            [SCREWDEVIATION_NUM_MAX]; //æ­£å‘æˆ–å•è¡¨çš„è¡¥å¿å€¼  um   èµ°ä¸€ä¸ªé—´éš”éœ€è¦è¡¥å¿çš„é‡  èµ°10mm æµ‹å¾—9.98mm  åˆ™å¡«å…¥20um
+        int8 cBackScrewCompVal
+            [AXIS_PHYSICS_NUM_MAX]
+            [SCREWDEVIATION_NUM_MAX]; //åå‘è¡¥å¿å€¼  um   èµ°ä¸€ä¸ªé—´éš”éœ€è¦è¡¥å¿çš„é‡  èµ°10mm æµ‹å¾—9.98mm  åˆ™å¡«å…¥20um
+        int16 sScrewReferenceNum[AXIS_PHYSICS_NUM_MAX];   // å‚è€ƒç‚¹ä½ç½®å·
+        float fScrewReferencePoint[AXIS_PHYSICS_NUM_MAX]; // å‚è€ƒç‚¹åæ ‡
 
-		/*****************************Ë«±íÂİ¾à²¹³¥******************************************/
-		bool bBilateralScrewEnable[AXIS_PHYSICS_NUM_MAX];	//Ë«ÏòÂİ¾àÎó²îÊ¹ÄÜÎ»
-		uint8 ucBilateralScrewGap[AXIS_PHYSICS_NUM_MAX];		//Âİ¾à²¹³¥¼ä¸ô  mm
-		int8 cAheadScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //ÕıÏò»òµ¥±íµÄ²¹³¥Öµ  um   ×ßÒ»¸ö¼ä¸ôĞèÒª²¹³¥µÄÁ¿  ×ß10mm ²âµÃ9.98mm  ÔòÌîÈë20um
-		int8 cBackScrewCompVal[AXIS_PHYSICS_NUM_MAX][SCREWDEVIATION_NUM_MAX];  //·´Ïò²¹³¥Öµ  um   ×ßÒ»¸ö¼ä¸ôĞèÒª²¹³¥µÄÁ¿  ×ß10mm ²âµÃ9.98mm  ÔòÌîÈë20um
-		int16 sScrewReferenceNum[AXIS_PHYSICS_NUM_MAX]; // ²Î¿¼µãÎ»ÖÃºÅ
-		float fScrewReferencePoint[AXIS_PHYSICS_NUM_MAX]; // ²Î¿¼µã×ø±ê
+        SAxisParaInfo SAxisPara[AXIS_NUM_MAX]; //å„è¿åŠ¨è½´çš„å‚æ•°
 
-		SAxisParaInfo SAxisPara[AXIS_NUM_MAX]; //¸÷ÔË¶¯ÖáµÄ²ÎÊı
+        double dSysMinVel; //ç³»ç»Ÿå…è®¸èµ·è·³é€Ÿåº¦  éƒ­å¼º 8.8 è¿½åŠ 
+        double dSysMaxVel; //ç³»ç»Ÿæœ€å¤§é€Ÿåº¦  æœ±ç¨³ä¸­  2021-09-15
 
-		double dSysMinVel;//ÏµÍ³ÔÊĞíÆğÌøËÙ¶È  ¹ùÇ¿ 8.8 ×·¼Ó
-		double dSysMaxVel;//ÏµÍ³×î´óËÙ¶È  ÖìÎÈÖĞ  2021-09-15
+        //ä¸‹æ–¹ä¸¤ä¸ªåœ†å¼§çº¦æŸé€Ÿåº¦ä¼˜å…ˆçº§è¦é«˜äºæœ€å¤§å€ç‡ï¼Œå³æœ€é«˜å€ç‡ä¸‹ä¹Ÿä¸èƒ½è¶…å‡ºå¦‚ä¸‹çº¦æŸ
+        double dArcMaxNormalAcc;  //åœ†å¼§æœ€å¤§æ³•å‘åŠ é€Ÿåº¦çº¦æŸ   éƒ­å¼º 2022/06/13
+        double dArcMaxChordError; //åœ†å¼§æœ€å¤§å¼“é«˜è¯¯å·®çº¦æŸ     éƒ­å¼º 2022/06/13
 
-		//ÏÂ·½Á½¸öÔ²»¡Ô¼ÊøËÙ¶ÈÓÅÏÈ¼¶Òª¸ßÓÚ×î´ó±¶ÂÊ£¬¼´×î¸ß±¶ÂÊÏÂÒ²²»ÄÜ³¬³öÈçÏÂÔ¼Êø
-		double dArcMaxNormalAcc;   //Ô²»¡×î´ó·¨Ïò¼ÓËÙ¶ÈÔ¼Êø   ¹ùÇ¿ 2022/06/13
-		double dArcMaxChordError;  //Ô²»¡×î´ó¹­¸ßÎó²îÔ¼Êø     ¹ùÇ¿ 2022/06/13
+        //å„ç§æ›²çº¿çš„åŠ é€Ÿåº¦  æœ±ç¨³ä¸­2021 - 11-28   (åˆæˆè¿åŠ¨)
+        double dSysPlanTMaxAcc; //Tå‹æ›²çº¿åŠ å‡é€Ÿåº¦
+        double dSysPlanTMaxDec;
 
-		//¸÷ÖÖÇúÏßµÄ¼ÓËÙ¶È  ÖìÎÈÖĞ2021 - 11-28   (ºÏ³ÉÔË¶¯)
-		double dSysPlanTMaxAcc;//TĞÍÇúÏß¼Ó¼õËÙ¶È
-		double dSysPlanTMaxDec;
+        double dSysPlanS3MaxAcc; //S3å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+        double dSysPlanS3MaxDec;
 
-		double dSysPlanS3MaxAcc;//S3ĞÍÇúÏß¼Ó¼õËÙ¶È
-		double dSysPlanS3MaxDec;
+        double dSysPlanS4MaxAcc; //S4å‹æ›²çº¿åŠ å‡é€Ÿåº¦
+        double dSysPlanS4MaxDec;
 
-		double dSysPlanS4MaxAcc;//S4ĞÍÇúÏß¼Ó¼õËÙ¶È
-		double dSysPlanS4MaxDec;
+        /*************æ–°å¢å˜é‡***************/ //æœ±ç¨³ä¸­ 2021-08-10
 
-		/*************ĞÂÔö±äÁ¿***************///ÖìÎÈÖĞ 2021-08-10
+        ////G00 æ›²çº¿å‚æ•°  æœ±ç¨³ä¸­2021 - 11-28   //2021 -12-17  å¿«é€Ÿè¿åŠ¨å‚æ•°ä»å•è½´å‚æ•°ä¸­è·å–
+        //uint8 ucQuickMoveAccVelPlanType;//åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+        //uint8 ucQuickMoveDecVelPlanType;//å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
 
-		////G00 ÇúÏß²ÎÊı  ÖìÎÈÖĞ2021 - 11-28   //2021 -12-17  ¿ìËÙÔË¶¯²ÎÊı´Óµ¥Öá²ÎÊıÖĞ»ñÈ¡
-		//uint8 ucQuickMoveAccVelPlanType;//¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-		//uint8 ucQuickMoveDecVelPlanType;//¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
+        //G01 G02 G03æ›²çº¿å‚æ•°æœ±ç¨³ä¸­2021 - 11-28
+        uint8 ucCommonAccVelPlanType; //åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+        uint8 ucCommonDecVelPlanType; //å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
 
-		//G01 G02 G03ÇúÏß²ÎÊıÖìÎÈÖĞ2021 - 11-28
-		uint8 ucCommonAccVelPlanType; //¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-		uint8 ucCommonDecVelPlanType; //¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
+        uint8 ucDistReAverageType; //å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
 
-		uint8 ucDistReAverageType; //Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
+        uint8 ucRotationAxisInterpolationMode; // æ—‹è½¬è½´æ’è¡¥æ–¹å¼    //æœ±ç¨³ä¸­ 2023.5.19
+        //ROTATION_INTERPOLATION_SHORT_DISTANCE			0   //çŸ­è·ç¦»ä¼˜å…ˆ
+        //ROTATION_INTERPOLATION_ACCORDING_DIRECTION	1   //æ ¹æ®æ’è¡¥æ–¹å‘å†³å®š
 
-		uint8 ucRotationAxisInterpolationMode; // Ğı×ªÖá²å²¹·½Ê½    //ÖìÎÈÖĞ 2023.5.19
-		//ROTATION_INTERPOLATION_SHORT_DISTANCE			0   //¶Ì¾àÀëÓÅÏÈ
-		//ROTATION_INTERPOLATION_ACCORDING_DIRECTION	1   //¸ù¾İ²å²¹·½Ïò¾ö¶¨
+        uint8 ucSpindleStopMode; //ä¸»è½´åœæ–¹å¼         //æœ±ç¨³ä¸­ 2023.5.19
+        //SPINDLE_STOP_MODE_PRECISESTOP_MODE	0   //   å‡†åœæ¨¡å¼
+        //SPINDLE_STOP_MODE_COMMONSTOP_MODE		1   //   å‡é€Ÿåœæ¨¡å¼
 
-		uint8 ucSpindleStopMode;   //Ö÷ÖáÍ£·½Ê½         //ÖìÎÈÖĞ 2023.5.19
-		//SPINDLE_STOP_MODE_PRECISESTOP_MODE	0   //   ×¼Í£Ä£Ê½
-		//SPINDLE_STOP_MODE_COMMONSTOP_MODE		1   //   ¼õËÙÍ£Ä£Ê½
+        /*************æ–°å¢å˜é‡***************/ //å†¯è‹±å 2021-08-19
 
-		/*************ĞÂÔö±äÁ¿***************///·ëÓ¢»ª 2021-08-19
+        int16 sXAxisMax, sYAxisMax, sZAxisMax; //å„è½´çš„è¿åŠ¨èŒƒå›´ è½¯é™åˆ¶ soft limit
+        int16 sXAxisMin, sYAxisMin, sZAxisMin;
 
-		int16 sXAxisMax, sYAxisMax, sZAxisMax; //¸÷ÖáµÄÔË¶¯·¶Î§ ÈíÏŞÖÆ soft limit
-		int16 sXAxisMin, sYAxisMin, sZAxisMin;
+        uint32 unEncoderOneCyclePulse; //ç¼–ç å™¨è½¬ä¸€åœˆå‘é€è„‰å†²
 
-		uint32 unEncoderOneCyclePulse; //±àÂëÆ÷×ªÒ»È¦·¢ËÍÂö³å
-
-		double dG33AvoidEmptyDistance;  //G33±Ü¿Õ¾àÀë   ¹ùÇ¿   2021-12-10
-
-		double dG33RevCompDistance;         //G33·´×ª²¹³¥     ¹ùÇ¿   2021-12-14
-
-		bool   bG33RecalDecPointFlag;       //G33ÖØËã¼õËÙµã   ¹ùÇ¿   2022-01-10
-
-		double dG33MaxVel;                  //G33×î´ó¹¥ÑÀËÙ¶È ¹ùÇ¿    2022/8/22
-
-		/***********Ë¿¸Ü·´Ïò¼äÏ¶²¹³¥²ÎÊı*********///¹ùÇ¿2022-1-7£¨G33·´Ïò²¹³¥Ê±¹æ»®²ÎÊıÒ²Ê¹ÓÃ´Ë²ÎÊı£©
-		double dRevClearanceCompVs;             //·´Ïò¼äÏ¶²¹³¥³õËÙ¶È£¨Ä©ËÙ¶È°´ËÕ×ÜÒªÇóÔİÈ¡ºÍ³õËÙ¶ÈÏàÍ¬£©
-		double dRevClearanceCompVmax;           //·´Ïò¼äÏ¶²¹³¥×î´óËÙ¶È
-		double dRevClearanceCompAcc;            //·´Ïò¼äÏ¶²¹³¥×î´ó¼ÓËÙ¶È(ËÕ×Ü£ºÄ¬ÈÏTĞÍ¼Ó¼õËÙ¶È¹æ»®)
-		double dRevClearanceCompDec;            //·´Ïò¼äÏ¶²¹³¥×î´ó¼õËÙ¶È
-		/****************************************************************************************/
-
-		/***** 2022/10/25ĞÂÔöÏµÍ³²ÎÊı--¹ùÇ¿*****/
-		uint8 ucLookAheadMode;		                         //Ç°Õ°Ä£Ê½   £¨1£ºÖ±ÏßÖá¾«¶ÈÄ£Ê½  2£ºÖ±ÏßÖá¶Î¼äÓÅ»¯¹ı¶ÉÄ£Ê½  3£º¶àÖá(º¬Ğı×ªÖá)Ä£Ê½)
-		uint8 ucInterpolationMode;                           //²å²¹Ä£Ê½    (1£º³¤Öá²å²¹ 2£º¹Ì¶¨²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹ 3£º×ÔÊÊÓ¦²ÎÊıÀ©Õ¹ÏßÎ»ÒÆ²å²¹)
-		double dSysLowerLimitSpeed;                          //ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµ
-		uint8 ucGearOfSysLowerLimitSpeed;                    //ÇĞÏ÷½ø¸ø¶Î¼äµÍËÙÏÂÏŞÖµµµÎ»(1:100%¡¢2:125%¡¢3:150%)
-		double dPercentageOfG33EnterLeadCorrection;          //G33¹¥ÑÀ¹¥Èëµ¼³ÌĞŞÕı°Ù·Ö±È(99%-101%)
-		double dPercentageOfG33ReturnLeadCorrection;	     //G33¹¥ÑÀÍËµ¶µ¼³ÌĞŞÕı°Ù·Ö±È(99%-101%)
-		/***************************************/
-
-		double dG33ReturnSpindleRatio;//G33Ö÷Öá·´×ª×ªËÙ°Ù·Ö±È /***** 2023/5/27¹ùÇ¿*****/
-
-		uint32 unG33SpindlePauseTimeBeforeRev; //G33Ö÷Öá·´×ªÇ°ÔİÍ£Ê±¼ä(ms)    2023.5.8    ¹ùÇ¿
-		/***************************************/
-
-		float fSpindleStopDegree; //Ö÷Öá×¼Í£½Ç¶È  ·¶Î§ :0->359   Ïà¶ÔÓÚZĞÅºÅ¶øÑÔ  ÖìÎÈÖĞ  2021-12-9
-
-		float fSpindleSpeedDeviation;//Ö÷Öá×ªËÙÔÊĞíµÄÆ«²î 0%~100%   (0.00~1.00)
-
-		float fG99SpindleSpeedDeviation;//Ö÷Öá×ªËÙÔÊĞíµÄÆ«²î 0%~100%   (0.00~1.00)
-
-		uint16 usSpindleAvgPeriod;//Ö÷ÖáÆ½¾ù×ªËÙ¼ì²âÖÜÆÚÊı
-
-		uint16 usHandleWheelAvgPeriod; //ÊÖÂÖÄ£Äâ²ÉÑùÊ±¼ä
-		float fHandleWheelSpeedMax;//ÊÖÂÖÄ£Äâ´ïµ½×î´ó×ªËÙµÄËÙ¶È  pulse/ms
-		double dSimulaVmax; // ÊÖÂÖÄ£Äâ·ÇG0×î´óËÙ¶È  mm/ms  2022.11.7
-
-		double dRotationAxisG0SpeedMax;//Ğı×ªÖáG0 ×î´óËÙ¶È  ÖìÎÈÖĞ 2023.3.28
-
-		uint8 ucPolarInterpolationAxis[2]; //¼«×ø±ê²å²¹ÖáºÅ   0-->ºáÖá  1-->×İÖá   È¡Öµ·¶Î§ 0~AXIS_NUM_MAX 2023.3.27ÖìÎÈÖĞ
-
-		/*************ĞÂÔö±äÁ¿***************///ÖìÎÈÖĞ 2021-11-09
-		uint32 unSpindlePreDelayTime;   //Ö÷Öá¿ªÑÓÊ±£¨ms)
-		uint32 unSpindlePostDelayTime;  //Ö÷Öá¹ØÑÓÊ±£¨ms)
-		uint32 unSpindleEnableTime;		//Ö÷ÖáÊ¹ÄÜÑÓÊ±£¨ms£©
-		uint32 unSpindleDisableTime;    //Ö÷ÖáÈ¡ÏûÊ¹ÄÜÑÓÊ±£¨ms£©
-		uint32 unChuckOpenDelayTime;	//¼ĞÍ·¿ªÑÓÊ±£¨ms)
-		uint32 unChuckCloseDelayTime;	//¼ĞÍ·¹ØÑÓÊ±£¨ms)
-		uint32 unAutoFeedOpenDelayTime[8];				//ËÍÁÏÆø¸× ¿ªÑÓÊ±£¨ms)
-		uint32 unAutoFeedCloseDelayTime[8];				//ËÍÁÏÆø¸× ¹ØÑÓÊ±£¨ms)
-		uint32 unSpindleSpeedUpAlarmTime;   //Ö÷Öá¼ÓËÙ±¨¾¯Ê±¼ä£¨ms)
-
-		uint32 unSpindleLockPreDelayTime;		//Ö÷ÖáÉ²³µËø½ôÇ°ÑÓÊ±£¨ms)
-		uint32 unSpindleLockPostDelayTime;		//Ö÷ÖáÉ²³µËø½ôºóÑÓÊ±£¨ms)
-		uint32 unSpindleUnLockPreDelayTime;    //Ö÷ÖáÉ²³µËÉ¿ªÇ°ÑÓÊ±£¨ms)
-		uint32 unSpindleUnLockPostDelayTime;    //Ö÷ÖáÉ²³µËÉ¿ªºóÑÓÊ±£¨ms)
-
-		//uint32 ucProcessTimeTotal;//×Ü¼Ó¹¤Ê±¼ä
-		//uint32 unWorkPieceTotal;//×Ü¹¤¼şÊı
-		//uint32 unCurWorkPieceNum; // µ±Ç°¹¤¼şÊı
-		uint32 unNeededWorkPieceNum;// ĞèÇó¹¤¼şÊı
-
-
-		/*************ĞÂÔö±äÁ¿***************///³ÂÃô´Ï 2023-3-15
-		int16 sGcode_MultiLineHandleMaxNum;				//G´úÂë¶àĞĞ´¦Àí×î´óĞĞÊı
-		int16 sToolComp_MultiLineHandleMaxNum;			//µ¶²¹¶àĞĞ´¦Àí×î´óĞĞÊı
-		int16 sInterpolation_MultiLineHandleMaxNum;		//²å²¹¶àĞĞ´¦Àí×î´óĞĞÊı
-
-		int8 bGcodeQuickHandleModeEnabled;						//G´úÂë¿ìËÙ´¦Àí¹¦ÄÜ	0 ¹Ø  1 ¿ª
-
-		//¿ª»úÄ¬ÈÏ²ÎÊı
-		bool bDefaultG99; // ¿ª»úÄ¬ÈÏG99?
-
-		struct
-		{
-			SPointDouble  SZeroPtNC;          //»ú´²Áãµã,¼ÙÉè»úĞµÁãµãÓë»ú´²²Î¿¼µãÖØºÏ £¬¾ùÎª(0,0,0)£¬³õÊ¼»¯Îª(0,0,0),²»¿É¸Ä±ä
-			SPointDouble  SToolSettingOffset; //Íâ²¿¹¤¼ş×ø±êÁãµã£¨Ïà¶ÔÓÚ»ú´²Áãµã£©
-			SPointDouble  SWorkPieceOffset[WORKPIECE_OFFSET_NUM]; //¹¤¼ş×ø±êÏµÁãµãÆ«ÒÆÖµ£¨Ïà¶ÔÓÚ¶Ôµ¶µã£©£¬G54-G59,ÏÂ±ê0-5ÒÀ´Î¶ÔÓ¦G54-G59
-			SPointDouble STotalOffset;         //×ÜµÄÆ«ÒÆÁ¿ ×¢Òâ:×ÜÆ«ÒÆµÄXÊÇ°ë¾¶Öµ
-			SPointDouble SWorkPieceOffsetByG50;		//G50ÁÙÊ±×ø±êÏµÆ«ÒÆÁ¿ 2023-8-3ºé¹ÚÅô
-		}SZeroPointOfCoordSys[CHANNEL_NUM_MAX];   //Êı¿ØÏµÍ³¸÷ÖÖÁãµãµÄ¼¯ºÏ  ×¢Òâ£º³ıÁË×ÜÆ«ÒÆÁ¿Íâ£¬ÆäËüXµÄÆ«ÒÆÁ¿¾ùÊÇÖ±¾¶Öµ  //2021-11-17ÖìÎÈÖĞ  ´ÓGcode.hÒÆµ½ÏµÍ³²ÎÊı½á¹¹Ìå
-
-		enum ThreadCuttingMode ThreadCutMode;     //ÂİÎÆÇĞÏ÷Ä£Ê½£¨ÔÚ°´¼üÉÏ¿ÉÒÔÑ¡ÔñÄ£Ê½£©
-		uint16 usEncoderLinesNum[ENCODER_NUM_MAX]; //±àÂëÆ÷ÏßÊı
-
-		struct
-		{
-			uint8 ucIsNullArr[75];   // 8*75 = 600 £¬Ã¿Ò»Î»±íÊ¾Ò»¸öºê±äÁ¿ÊÇ·ñÎª¿Õ
-			float dValArr[600];      //600¸öºê±äÁ¿µÄÖµ
-		}SMacroVariable;
-
-		struct //±¨¾¯¼°ÏŞÎ»·½Ê½
-		{
-			int8 positype;  			//ÕıÏŞÎ»ÀàĞÍ
-			int8 negatype;  		 	//¸ºÏŞÎ»ÀàĞÍ
-			int8 servowarn;      //ËÅ·ş±¨¾¯
-			int8 servowarntype;  //ËÅ·ş±¨¾¯ÀàĞÍ
-			int8 servowarnway;   //±¨¾¯´¦Àí·½Ê½
-			int8 origin_dire; 	  //»ØÔ­µã·½Ïò
-			int8 origin_way;  	  //»ØÔ­µã·½Ê½
-			int8 soft_pos;  			//ÕıÈíÎ»¼ì²â
-			int8 soft_neg;  			//¸ºÈíÎ»¼ì²â
-			int8 pos_port;  			//ÕıÏŞÎ»¶Ë¿Ú
-			int8 neg_port;	      //¸ºÏŞÎ»¶Ë¿Ú
-			int32 seekspeed;	    //ÕÒÏŞÎ»ËÙ¶È
-			int32 leavespeed;	  //ÕÒÔ­µãËÙ¶È
-			int32 leavedistance; //Àë¿ªÔ­µãÖµ
-			double allowerror;	  //Ô­µãÔÊĞíÎó²î
-			double seekdistance;	//»Øµ½Ô­µãÖµ
-			double pos_soft;//ÕıÈíÏŞÎ»
-			double neg_soft;//¸ºÈíÏŞÎ»
-			int8 hw_pos;   //ÕıÓ²ÏŞÎ»¿ª¹Ø
-			int8 hw_neg;   //¸ºÓ²ÏŞÎ»¿ª¹Ø
-			int8 iomode;   //»ØÁã¶Ë¿ÚÄ£Ê½
-			int8 buff[20];
-		}MOTOR_WARN[6];
-
-		struct  //¼Ó¹¤ĞÅÏ¢
-		{
-			uint32 totalartifacts;//×Ü¹¤¼şÊı
-			uint32 BreakLine;//¶ÏµãĞĞºÅ
-			uint32 BreakPoint; //¶ÏµãĞòºÅ
-			uint32 gcodeline; //¼Ó¹¤ĞĞÊı
-			uint8 toolnum;        //µ±Ç°µ¶ºÅ
-			double dCommonFeedRatio; //½ø¸ø±¶ÂÊ  12-30 ÖìÎÈÖĞ
-			double dQuickMoveFeedRatio;//¿ìËÙÔË¶¯½ø¸ø±¶ÂÊ 2022-1-7
-			double dSpindleSpeedRatio;//Ö÷Öá×ªËÙ±¶ÂÊ
-			double SpindleSpeed;      //
-			double dCurrentFeedRate;
-			uint32 dHandWheelFeedRatio;//ÊÖÂÖ±¶ÂÊ
-			uint8  dHandmode;          //ÊÖ¶¯Ä£Ê½¿ìÂıËÙ
-			int8 buff[20];
-		}MOTOR_WORK[CHANNEL_NUM_MAX];
-		uint8 UseSpindleEncoder[9];	//0Ê¹ÓÃ±àÂëÆ÷  1²»Ê¹ÓÃ±àÂëÆ÷
-
-		int8 ucMotorphase[9];//µç»úÏàÎ»
-		int8 ucEncoderphase[3];//±àÂëÆ÷ÏàÎ»
-
-		struct
-		{
-			uint8 ucRegister_K[40];    //K¼Ä´æÆ÷
-			uint16 ucRegister_DT[100];  //¶¨Ê±Æ÷Ô¤ÖÃÖµ
-			uint16 ucRegister_DC[100];  //¼ÆÊıÆ÷Ô¤ÖÃÖµ
-			uint8 ucRegister_D[1000];  //Êı¾İ¼Ä´æÆ÷
-		}SPlcRegister;//plcµôµç±£»¤µÄ¼Ä´æÆ÷
-
-
-		struct
-		{
-			uint8 on_offsim;//Í¼ĞÎÄ£ÄâÏÔÊ¾
-			uint8 on_offinfor;//¼Ó¹¤×ÊÑ¶Éè¶¨
-			uint8 coord_status;//×ø±êÒ³×´Ì¬
-		}syspage;
-		struct
-		{
-			uint32 warntime;//³¬Ê±±¨¾¯Ê±¼ä
-			uint32 worknum;//¹¤¼şÏŞ¼ş
-			uint8 Daliao_warn;//´òÁÏ±¨¾¯
-			uint8 coord_status;//Èó»¬±¨¾¯
-			uint8 Chuck[2];//¼Ğ½ôÆô¶¯
-			uint8 Chuck_Spindle[2];//¼ĞÍ·ËÉ¿ª
-			uint8 Chuck_status[2];//¼Ğ½ô×´Ì¬
-			uint8 Axismode;//¶àÖáÄ£Ê½
-			uint8 CoordFont_size;//×ø±ê×ÖÌå´óĞ¡
-			uint8 MDI_mode;//MDIÔËĞĞÄ£Ê½
-			uint8 SpindleChuck[2];//Ö÷Öá¼Ğ½ôÆô¶¯    //ÖØ×ö´Ë¹¦ÄÜ£¬´Ë²ÎÊıĞèÒª×¢ÊÍ  2023/11/25 ºé¹ÚÅô
-			uint8 StopChuck[2];//ÔİÍ£Ê±¼ĞÍ·¶¯×÷
-			uint8 Tool_Mode1;//µ¶¾ßÒ³Ä£Ê½1
-			uint8 Tool_Mode2;//µ¶¾ßÒ³Ä£Ê½2
-			uint8 Tool_Mode3;//µ¶¾ßÒ³Ä£Ê½3
-			int8 M20_mode;//M20Êä³öÄ£Ê½ 1-¸´Î»¼±Í£²»¹Ø±ÕM20Êä³ö  0-¹Ø±Õ
-			int8 RunMODE;//ÆóÒµÔö¼ÓµÄ 2023.11.17
-			uint8 RAMCOPYMODE;
-			int8 Daily_Para;
-
-			uint32 Daily_Num;
-			uint32 Iot_Id;
-			int8 buff[20];
-		}userset;
-
-		double dHandWheelVmax;  //ÊÖÂÖµÄ×î´óËÙ¶È
-		double dHandWheelAcc;   //ÊÖÂÖµÄ¼Ó¼õËÙ
-		double dG32SacBase;     //ÂİÎÆ³µÏ÷µÄ±Ü¿Õ¾àÀë  2023.5.13
-		double dJDefault;       //ÂİÎÆ¶ÌÖáÄ¬ÈÏÍËÎ²Á¿  2023.6.6
-		double dKDefault;       //ÂİÎÆ³¤ÖáÄ¬ÈÏÍËÎ²Á¿  2023.6.6
-
-		double pro_origin[AXIS_PHYSICS_NUM_MAX];//ÆóÒµ¼ÓµÄ
-		uint8 ucG32InputMode;    //G32ÏµÍ³²ÎÊıÀ´Ô´£¬0Îª¼Ó¹¤ÏµÍ³²ÎÊı£¬1Îª¶ÔÓ¦µ¥ÖáµÄÏµÍ³²ÎÊı  2023.5.19
-		uint8 ucEmergencyStopType; //¼±Í£IOÀàĞÍ
-
-		int8 Spindlewarn[2];		//Ö÷Öá±¨¾¯	//ÆóÒµ¶¨ÒåµÄ±äÁ¿	//2023/7/25
-		int8 Spindlewarntype[2];	//Ö÷Öá±¨¾¯ÀàĞÍ	//ÆóÒµ¶¨ÒåµÄ±äÁ¿
-		int8 M98TextCalltype;       //M98ÊÇ·ñ´ò¿ªµ÷ÓÃÎÄ±¾
-
-		uint32 FluctuationPercentage; //²¨¶¯°Ù·Ö±È//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2023/8/14
-		uint32 FluctuationTime; //²¨¶¯Ê±¼ä//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2023/8/14
-		uint8 ParameterPassword; //²ÎÊıÃÜÂë////ÆóÒµ¶¨ÒåµÄ±äÁ¿//2023/8/14
-		int resize_multiple; //·Å´óËõĞ¡Í¼ĞÎµ÷Õû±¶ÂÊ//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2023/8/14
-		double Angle_tolerance;//½Ç¶ÈÔÊĞíÎó²î//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2023/10/16
-
-		uint32 Speed[2];//ÆóÒµµÄ±äÁ¿ 2023/11/17
-		int16 acceleration[2];//ÆóÒµµÄ±äÁ¿ 2023/11/17
-		double dRecoveryMaxVel;//»Ö¸´¼Ó¹¤×î´óËÙ¶È 2023/11/24
-		double SpindleChuck[2];//¼ì²âÏàÓ¦×ªËÙ ´ïµ½×ªËÙºó¿ªÆô¼ì²âÖ÷ÖáÔË×ªÓë¼ĞÍ·ËÉ¿ª»¥³âÊ±µÄ±¨¾¯¹¦ÄÜ 2023/11/25
-		double dSimulaMaxAcc;//ÊÖÂÖÄ£Äâ×î´ó¼Ó¼õËÙ¶È 2023/11/2
-		uint8 dhandwheelcontrol;//ÆóÒµµÄ±äÁ¿ 2023/12/20
-		double dG32MaxVelocity;						//G32ÂİÎÆ×¨ÓÃËÙ¶È		//³ÂÃô´Ï
-		bool bIsStopSpindleAndCoolantwhileM30;		// M30Ö´ĞĞ¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´		Ä¬ÈÏÎª0£¬¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´
-		bool bIsStopSpindleAndCoolantwhileReset;	// ¸´Î»Ö´ĞĞ¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´		Ä¬ÈÏÎª0£¬¹ØÖ÷ÖáÍ¬Ê±¹ØÀäÈ´
-		bool bIsG50ProgameHasFinished;  //G50ËùÔÚ³ÌĞòÍê³É±êÖ¾Î» ºé¹ÚÅô 2023/12/23
-		uint32 startline;//Æô¶¯°´¼üÄ£Ê½ ÆóÒµÌí¼ÓµÄ²ÎÊı 2024.1.18
-		int16 PulseAllowablEerror[2];//Ö÷ÖáÂö³åÔÊĞíÆ«²î ÆóÒµ±äÁ¿ 2024.1.25
-		uint8 ucTconstForTrapezoid; // Èı½ÇĞÎĞŞµ÷ºóÔÈËÙÊ±¼äÕ¼×ÜÖÜÆÚµÄ°Ù·Ö±È £¨ % £© ºé¹ÚÅô 2024/3/22
-		
-		uint8 ucDetectTimeforSignlWait;//Í¨µÀµÈ´ıÖ¸Áî¼ì²âÊ±¼ä  ³ÂÓıéª
-
-		bool bM01ResetAllChannel; //M01±¨¾¯ºó¸´Î»ËùÓĞÍ¨µÀ TRUE:¸´Î»ËùÓĞÍ¨µÀ FALSE:½ö¸´Î»µ±Ç°Í¨µÀ ºé¹ÚÅô 2024/6/5
-
-		int32 njixesosz_zuzbaox[6];		//»úĞµÊÖ×ø±êX//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2024/6/5
-		int32 njixesosz_zuzbaob[6];		//»úĞµÊÖ×ø±êb//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2024/6/5
-		uint32 unjixesosz_times[6];	//»úĞµÊÖÑÓÊ±//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2024/6/5
-		int32 njixesosz_zuweizi[6];		//Á¦¾Øµ½Î»Î»ÖÃ×ø±ê//ÆóÒµ¶¨ÒåµÄ±äÁ¿//2024/6/5
-
-		SPointDouble SMachine_REFPOT[SMACHINE_REFPOT_NUM];//»ú´²²Î¿¼µã¼¯ºÏ
-
-#if(TURRET_AXIS_TEST == 1)
-
-		uint8 ucChannelToTurretmap[CHANNEL_NUM_MAX][TURRET_MAX_NUM];//Í¨µÀÓëµ¶ËşµÄÓ³Éä
-		uint8 ucTurretToAxisMap[TURRET_MAX_NUM];//µ¶ËşÓëÓĞĞ§ÖáµÄÓ³Éä
-		uint8 TurretToToolMap[TURRET_MAX_NUM][TOOl_LOCATION_MAX_NUM];//µ¶ËşÓëµ¶Î»µÄÓ³Éä
+        double dG33AvoidEmptyDistance; //G33é¿ç©ºè·ç¦»   éƒ­å¼º   2021-12-10
+
+        double dG33RevCompDistance; //G33åè½¬è¡¥å¿     éƒ­å¼º   2021-12-14
+
+        bool bG33RecalDecPointFlag; //G33é‡ç®—å‡é€Ÿç‚¹   éƒ­å¼º   2022-01-10
+
+        double dG33MaxVel; //G33æœ€å¤§æ”»ç‰™é€Ÿåº¦ éƒ­å¼º    2022/8/22
+
+        /***********ä¸æ åå‘é—´éš™è¡¥å¿å‚æ•°*********/ //éƒ­å¼º2022-1-7ï¼ˆG33åå‘è¡¥å¿æ—¶è§„åˆ’å‚æ•°ä¹Ÿä½¿ç”¨æ­¤å‚æ•°ï¼‰
+        double dRevClearanceCompVs;                //åå‘é—´éš™è¡¥å¿åˆé€Ÿåº¦ï¼ˆæœ«é€Ÿåº¦æŒ‰è‹æ€»è¦æ±‚æš‚å–å’Œåˆé€Ÿåº¦ç›¸åŒï¼‰
+        double dRevClearanceCompVmax;              //åå‘é—´éš™è¡¥å¿æœ€å¤§é€Ÿåº¦
+        double dRevClearanceCompAcc;               //åå‘é—´éš™è¡¥å¿æœ€å¤§åŠ é€Ÿåº¦(è‹æ€»ï¼šé»˜è®¤Tå‹åŠ å‡é€Ÿåº¦è§„åˆ’)
+        double dRevClearanceCompDec;               //åå‘é—´éš™è¡¥å¿æœ€å¤§å‡é€Ÿåº¦
+        /****************************************************************************************/
+
+        /***** 2022/10/25æ–°å¢ç³»ç»Ÿå‚æ•°--éƒ­å¼º*****/
+        uint8 ucLookAheadMode;      //å‰ç»æ¨¡å¼   ï¼ˆ1ï¼šç›´çº¿è½´ç²¾åº¦æ¨¡å¼  2ï¼šç›´çº¿è½´æ®µé—´ä¼˜åŒ–è¿‡æ¸¡æ¨¡å¼  3ï¼šå¤šè½´(å«æ—‹è½¬è½´)æ¨¡å¼)
+        uint8 ucInterpolationMode;  //æ’è¡¥æ¨¡å¼    (1ï¼šé•¿è½´æ’è¡¥ 2ï¼šå›ºå®šå‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥ 3ï¼šè‡ªé€‚åº”å‚æ•°æ‰©å±•çº¿ä½ç§»æ’è¡¥)
+        double dSysLowerLimitSpeed; //åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼
+        uint8 ucGearOfSysLowerLimitSpeed;            //åˆ‡å‰Šè¿›ç»™æ®µé—´ä½é€Ÿä¸‹é™å€¼æ¡£ä½(1:100%ã€2:125%ã€3:150%)
+        double dPercentageOfG33EnterLeadCorrection;  //G33æ”»ç‰™æ”»å…¥å¯¼ç¨‹ä¿®æ­£ç™¾åˆ†æ¯”(99%-101%)
+        double dPercentageOfG33ReturnLeadCorrection; //G33æ”»ç‰™é€€åˆ€å¯¼ç¨‹ä¿®æ­£ç™¾åˆ†æ¯”(99%-101%)
+        /***************************************/
+
+        double dG33ReturnSpindleRatio; //G33ä¸»è½´åè½¬è½¬é€Ÿç™¾åˆ†æ¯” /***** 2023/5/27éƒ­å¼º*****/
+
+        uint32 unG33SpindlePauseTimeBeforeRev; //G33ä¸»è½´åè½¬å‰æš‚åœæ—¶é—´(ms)    2023.5.8    éƒ­å¼º
+        /***************************************/
+
+        float fSpindleStopDegree; //ä¸»è½´å‡†åœè§’åº¦  èŒƒå›´ :0->359   ç›¸å¯¹äºZä¿¡å·è€Œè¨€  æœ±ç¨³ä¸­  2021-12-9
+
+        float fSpindleSpeedDeviation; //ä¸»è½´è½¬é€Ÿå…è®¸çš„åå·® 0%~100%   (0.00~1.00)
+
+        float fG99SpindleSpeedDeviation; //ä¸»è½´è½¬é€Ÿå…è®¸çš„åå·® 0%~100%   (0.00~1.00)
+
+        uint16 usSpindleAvgPeriod; //ä¸»è½´å¹³å‡è½¬é€Ÿæ£€æµ‹å‘¨æœŸæ•°
+
+        uint16 usHandleWheelAvgPeriod; //æ‰‹è½®æ¨¡æ‹Ÿé‡‡æ ·æ—¶é—´
+        float fHandleWheelSpeedMax;    //æ‰‹è½®æ¨¡æ‹Ÿè¾¾åˆ°æœ€å¤§è½¬é€Ÿçš„é€Ÿåº¦  pulse/ms
+        double dSimulaVmax;            // æ‰‹è½®æ¨¡æ‹ŸéG0æœ€å¤§é€Ÿåº¦  mm/ms  2022.11.7
+
+        double dRotationAxisG0SpeedMax; //æ—‹è½¬è½´G0 æœ€å¤§é€Ÿåº¦  æœ±ç¨³ä¸­ 2023.3.28
+
+        uint8
+            ucPolarInterpolationAxis[2]; //æåæ ‡æ’è¡¥è½´å·   0-->æ¨ªè½´  1-->çºµè½´   å–å€¼èŒƒå›´ 0~AXIS_NUM_MAX 2023.3.27æœ±ç¨³ä¸­
+
+        /*************æ–°å¢å˜é‡***************/ //æœ±ç¨³ä¸­ 2021-11-09
+        uint32 unSpindlePreDelayTime;          //ä¸»è½´å¼€å»¶æ—¶ï¼ˆms)
+        uint32 unSpindlePostDelayTime;         //ä¸»è½´å…³å»¶æ—¶ï¼ˆms)
+        uint32 unSpindleEnableTime;            //ä¸»è½´ä½¿èƒ½å»¶æ—¶ï¼ˆmsï¼‰
+        uint32 unSpindleDisableTime;           //ä¸»è½´å–æ¶ˆä½¿èƒ½å»¶æ—¶ï¼ˆmsï¼‰
+        uint32 unChuckOpenDelayTime;           //å¤¹å¤´å¼€å»¶æ—¶ï¼ˆms)
+        uint32 unChuckCloseDelayTime;          //å¤¹å¤´å…³å»¶æ—¶ï¼ˆms)
+        uint32 unAutoFeedOpenDelayTime[8];     //é€æ–™æ°”ç¼¸ å¼€å»¶æ—¶ï¼ˆms)
+        uint32 unAutoFeedCloseDelayTime[8];    //é€æ–™æ°”ç¼¸ å…³å»¶æ—¶ï¼ˆms)
+        uint32 unSpindleSpeedUpAlarmTime;      //ä¸»è½´åŠ é€ŸæŠ¥è­¦æ—¶é—´ï¼ˆms)
+
+        uint32 unSpindleLockPreDelayTime;    //ä¸»è½´åˆ¹è½¦é”ç´§å‰å»¶æ—¶ï¼ˆms)
+        uint32 unSpindleLockPostDelayTime;   //ä¸»è½´åˆ¹è½¦é”ç´§åå»¶æ—¶ï¼ˆms)
+        uint32 unSpindleUnLockPreDelayTime;  //ä¸»è½´åˆ¹è½¦æ¾å¼€å‰å»¶æ—¶ï¼ˆms)
+        uint32 unSpindleUnLockPostDelayTime; //ä¸»è½´åˆ¹è½¦æ¾å¼€åå»¶æ—¶ï¼ˆms)
+
+        //uint32 ucProcessTimeTotal;//æ€»åŠ å·¥æ—¶é—´
+        //uint32 unWorkPieceTotal;//æ€»å·¥ä»¶æ•°
+        //uint32 unCurWorkPieceNum; // å½“å‰å·¥ä»¶æ•°
+        uint32 unNeededWorkPieceNum; // éœ€æ±‚å·¥ä»¶æ•°
+
+        /*************æ–°å¢å˜é‡***************/      //é™ˆæ•èª 2023-3-15
+        int16 sGcode_MultiLineHandleMaxNum;         //Gä»£ç å¤šè¡Œå¤„ç†æœ€å¤§è¡Œæ•°
+        int16 sToolComp_MultiLineHandleMaxNum;      //åˆ€è¡¥å¤šè¡Œå¤„ç†æœ€å¤§è¡Œæ•°
+        int16 sInterpolation_MultiLineHandleMaxNum; //æ’è¡¥å¤šè¡Œå¤„ç†æœ€å¤§è¡Œæ•°
+
+        int8 bGcodeQuickHandleModeEnabled; //Gä»£ç å¿«é€Ÿå¤„ç†åŠŸèƒ½	0 å…³  1 å¼€
+
+        //å¼€æœºé»˜è®¤å‚æ•°
+        bool bDefaultG99; // å¼€æœºé»˜è®¤G99?
+
+        struct
+        {
+            SPointDouble SZeroPtNC; //æœºåºŠé›¶ç‚¹,å‡è®¾æœºæ¢°é›¶ç‚¹ä¸æœºåºŠå‚è€ƒç‚¹é‡åˆ ï¼Œå‡ä¸º(0,0,0)ï¼Œåˆå§‹åŒ–ä¸º(0,0,0),ä¸å¯æ”¹å˜
+            SPointDouble SToolSettingOffset; //å¤–éƒ¨å·¥ä»¶åæ ‡é›¶ç‚¹ï¼ˆç›¸å¯¹äºæœºåºŠé›¶ç‚¹ï¼‰
+            SPointDouble SWorkPieceOffset
+                [WORKPIECE_OFFSET_NUM];         //å·¥ä»¶åæ ‡ç³»é›¶ç‚¹åç§»å€¼ï¼ˆç›¸å¯¹äºå¯¹åˆ€ç‚¹ï¼‰ï¼ŒG54-G59,ä¸‹æ ‡0-5ä¾æ¬¡å¯¹åº”G54-G59
+            SPointDouble STotalOffset;          //æ€»çš„åç§»é‡ æ³¨æ„:æ€»åç§»çš„Xæ˜¯åŠå¾„å€¼
+            SPointDouble SWorkPieceOffsetByG50; //G50ä¸´æ—¶åæ ‡ç³»åç§»é‡ 2023-8-3æ´ªå† é¹
+        } SZeroPointOfCoordSys
+            [CHANNEL_NUM_MAX]; //æ•°æ§ç³»ç»Ÿå„ç§é›¶ç‚¹çš„é›†åˆ  æ³¨æ„ï¼šé™¤äº†æ€»åç§»é‡å¤–ï¼Œå…¶å®ƒXçš„åç§»é‡å‡æ˜¯ç›´å¾„å€¼  //2021-11-17æœ±ç¨³ä¸­  ä»Gcode.hç§»åˆ°ç³»ç»Ÿå‚æ•°ç»“æ„ä½“
+
+        enum ThreadCuttingMode ThreadCutMode;      //èºçº¹åˆ‡å‰Šæ¨¡å¼ï¼ˆåœ¨æŒ‰é”®ä¸Šå¯ä»¥é€‰æ‹©æ¨¡å¼ï¼‰
+        uint16 usEncoderLinesNum[ENCODER_NUM_MAX]; //ç¼–ç å™¨çº¿æ•°
+
+        struct
+        {
+            uint8 ucIsNullArr[75]; // 8*75 = 600 ï¼Œæ¯ä¸€ä½è¡¨ç¤ºä¸€ä¸ªå®å˜é‡æ˜¯å¦ä¸ºç©º
+            float dValArr[600];    //600ä¸ªå®å˜é‡çš„å€¼
+        } SMacroVariable;
+
+        struct //æŠ¥è­¦åŠé™ä½æ–¹å¼
+        {
+            int8 positype;       //æ­£é™ä½ç±»å‹
+            int8 negatype;       //è´Ÿé™ä½ç±»å‹
+            int8 servowarn;      //ä¼ºæœæŠ¥è­¦
+            int8 servowarntype;  //ä¼ºæœæŠ¥è­¦ç±»å‹
+            int8 servowarnway;   //æŠ¥è­¦å¤„ç†æ–¹å¼
+            int8 origin_dire;    //å›åŸç‚¹æ–¹å‘
+            int8 origin_way;     //å›åŸç‚¹æ–¹å¼
+            int8 soft_pos;       //æ­£è½¯ä½æ£€æµ‹
+            int8 soft_neg;       //è´Ÿè½¯ä½æ£€æµ‹
+            int8 pos_port;       //æ­£é™ä½ç«¯å£
+            int8 neg_port;       //è´Ÿé™ä½ç«¯å£
+            int32 seekspeed;     //æ‰¾é™ä½é€Ÿåº¦
+            int32 leavespeed;    //æ‰¾åŸç‚¹é€Ÿåº¦
+            int32 leavedistance; //ç¦»å¼€åŸç‚¹å€¼
+            double allowerror;   //åŸç‚¹å…è®¸è¯¯å·®
+            double seekdistance; //å›åˆ°åŸç‚¹å€¼
+            double pos_soft;     //æ­£è½¯é™ä½
+            double neg_soft;     //è´Ÿè½¯é™ä½
+            int8 hw_pos;         //æ­£ç¡¬é™ä½å¼€å…³
+            int8 hw_neg;         //è´Ÿç¡¬é™ä½å¼€å…³
+            int8 iomode;         //å›é›¶ç«¯å£æ¨¡å¼
+            int8 buff[20];
+        } MOTOR_WARN[6];
+
+        struct //åŠ å·¥ä¿¡æ¯
+        {
+            uint32 totalartifacts;      //æ€»å·¥ä»¶æ•°
+            uint32 BreakLine;           //æ–­ç‚¹è¡Œå·
+            uint32 BreakPoint;          //æ–­ç‚¹åºå·
+            uint32 gcodeline;           //åŠ å·¥è¡Œæ•°
+            uint8 toolnum;              //å½“å‰åˆ€å·
+            double dCommonFeedRatio;    //è¿›ç»™å€ç‡  12-30 æœ±ç¨³ä¸­
+            double dQuickMoveFeedRatio; //å¿«é€Ÿè¿åŠ¨è¿›ç»™å€ç‡ 2022-1-7
+            double dSpindleSpeedRatio;  //ä¸»è½´è½¬é€Ÿå€ç‡
+            double SpindleSpeed;        //
+            double dCurrentFeedRate;
+            uint32 dHandWheelFeedRatio; //æ‰‹è½®å€ç‡
+            uint8 dHandmode;            //æ‰‹åŠ¨æ¨¡å¼å¿«æ…¢é€Ÿ
+            int8 buff[20];
+        } MOTOR_WORK[CHANNEL_NUM_MAX];
+        uint8 UseSpindleEncoder[9]; //0ä½¿ç”¨ç¼–ç å™¨  1ä¸ä½¿ç”¨ç¼–ç å™¨
+
+        int8 ucMotorphase[9];   //ç”µæœºç›¸ä½
+        int8 ucEncoderphase[3]; //ç¼–ç å™¨ç›¸ä½
+
+        struct
+        {
+            uint8 ucRegister_K[40];    //Kå¯„å­˜å™¨
+            uint16 ucRegister_DT[100]; //å®šæ—¶å™¨é¢„ç½®å€¼
+            uint16 ucRegister_DC[100]; //è®¡æ•°å™¨é¢„ç½®å€¼
+            uint8 ucRegister_D[1000];  //æ•°æ®å¯„å­˜å™¨
+        } SPlcRegister;                //plcæ‰ç”µä¿æŠ¤çš„å¯„å­˜å™¨
+
+        struct
+        {
+            uint8 on_offsim;    //å›¾å½¢æ¨¡æ‹Ÿæ˜¾ç¤º
+            uint8 on_offinfor;  //åŠ å·¥èµ„è®¯è®¾å®š
+            uint8 coord_status; //åæ ‡é¡µçŠ¶æ€
+        } syspage;
+        struct
+        {
+            uint32 warntime;        //è¶…æ—¶æŠ¥è­¦æ—¶é—´
+            uint32 worknum;         //å·¥ä»¶é™ä»¶
+            uint8 Daliao_warn;      //æ‰“æ–™æŠ¥è­¦
+            uint8 coord_status;     //æ¶¦æ»‘æŠ¥è­¦
+            uint8 Chuck[2];         //å¤¹ç´§å¯åŠ¨
+            uint8 Chuck_Spindle[2]; //å¤¹å¤´æ¾å¼€
+            uint8 Chuck_status[2];  //å¤¹ç´§çŠ¶æ€
+            uint8 Axismode;         //å¤šè½´æ¨¡å¼
+            uint8 CoordFont_size;   //åæ ‡å­—ä½“å¤§å°
+            uint8 MDI_mode;         //MDIè¿è¡Œæ¨¡å¼
+            uint8 SpindleChuck[2];  //ä¸»è½´å¤¹ç´§å¯åŠ¨    //é‡åšæ­¤åŠŸèƒ½ï¼Œæ­¤å‚æ•°éœ€è¦æ³¨é‡Š  2023/11/25 æ´ªå† é¹
+            uint8 StopChuck[2];     //æš‚åœæ—¶å¤¹å¤´åŠ¨ä½œ
+            uint8 Tool_Mode1;       //åˆ€å…·é¡µæ¨¡å¼1
+            uint8 Tool_Mode2;       //åˆ€å…·é¡µæ¨¡å¼2
+            uint8 Tool_Mode3;       //åˆ€å…·é¡µæ¨¡å¼3
+            int8 M20_mode;          //M20è¾“å‡ºæ¨¡å¼ 1-å¤ä½æ€¥åœä¸å…³é—­M20è¾“å‡º  0-å…³é—­
+            int8 RunMODE;           //ä¼ä¸šå¢åŠ çš„ 2023.11.17
+            uint8 RAMCOPYMODE;
+            int8 Daily_Para;
+
+            uint32 Daily_Num;
+            uint32 Iot_Id;
+            int8 buff[20];
+        } userset;
+
+        double dHandWheelVmax; //æ‰‹è½®çš„æœ€å¤§é€Ÿåº¦
+        double dHandWheelAcc;  //æ‰‹è½®çš„åŠ å‡é€Ÿ
+        double dG32SacBase;    //èºçº¹è½¦å‰Šçš„é¿ç©ºè·ç¦»  2023.5.13
+        double dJDefault;      //èºçº¹çŸ­è½´é»˜è®¤é€€å°¾é‡  2023.6.6
+        double dKDefault;      //èºçº¹é•¿è½´é»˜è®¤é€€å°¾é‡  2023.6.6
+
+        double pro_origin[AXIS_PHYSICS_NUM_MAX]; //ä¼ä¸šåŠ çš„
+        uint8 ucG32InputMode;                    //G32ç³»ç»Ÿå‚æ•°æ¥æºï¼Œ0ä¸ºåŠ å·¥ç³»ç»Ÿå‚æ•°ï¼Œ1ä¸ºå¯¹åº”å•è½´çš„ç³»ç»Ÿå‚æ•°  2023.5.19
+        uint8 ucEmergencyStopType;               //æ€¥åœIOç±»å‹
+
+        int8 Spindlewarn[2];     //ä¸»è½´æŠ¥è­¦	//ä¼ä¸šå®šä¹‰çš„å˜é‡	//2023/7/25
+        int8 Spindlewarntype[2]; //ä¸»è½´æŠ¥è­¦ç±»å‹	//ä¼ä¸šå®šä¹‰çš„å˜é‡
+        int8 M98TextCalltype;    //M98æ˜¯å¦æ‰“å¼€è°ƒç”¨æ–‡æœ¬
+
+        uint32 FluctuationPercentage; //æ³¢åŠ¨ç™¾åˆ†æ¯”//ä¼ä¸šå®šä¹‰çš„å˜é‡//2023/8/14
+        uint32 FluctuationTime;       //æ³¢åŠ¨æ—¶é—´//ä¼ä¸šå®šä¹‰çš„å˜é‡//2023/8/14
+        uint8 ParameterPassword;      //å‚æ•°å¯†ç ////ä¼ä¸šå®šä¹‰çš„å˜é‡//2023/8/14
+        int resize_multiple;          //æ”¾å¤§ç¼©å°å›¾å½¢è°ƒæ•´å€ç‡//ä¼ä¸šå®šä¹‰çš„å˜é‡//2023/8/14
+        double Angle_tolerance;       //è§’åº¦å…è®¸è¯¯å·®//ä¼ä¸šå®šä¹‰çš„å˜é‡//2023/10/16
+
+        uint32 Speed[2];         //ä¼ä¸šçš„å˜é‡ 2023/11/17
+        int16 acceleration[2];   //ä¼ä¸šçš„å˜é‡ 2023/11/17
+        double dRecoveryMaxVel;  //æ¢å¤åŠ å·¥æœ€å¤§é€Ÿåº¦ 2023/11/24
+        double SpindleChuck[2];  //æ£€æµ‹ç›¸åº”è½¬é€Ÿ è¾¾åˆ°è½¬é€Ÿåå¼€å¯æ£€æµ‹ä¸»è½´è¿è½¬ä¸å¤¹å¤´æ¾å¼€äº’æ–¥æ—¶çš„æŠ¥è­¦åŠŸèƒ½ 2023/11/25
+        double dSimulaMaxAcc;    //æ‰‹è½®æ¨¡æ‹Ÿæœ€å¤§åŠ å‡é€Ÿåº¦ 2023/11/2
+        uint8 dhandwheelcontrol; //ä¼ä¸šçš„å˜é‡ 2023/12/20
+        double dG32MaxVelocity;  //G32èºçº¹ä¸“ç”¨é€Ÿåº¦		//é™ˆæ•èª
+        bool bIsStopSpindleAndCoolantwhileM30;   // M30æ‰§è¡Œå…³ä¸»è½´åŒæ—¶å…³å†·å´		é»˜è®¤ä¸º0ï¼Œå…³ä¸»è½´åŒæ—¶å…³å†·å´
+        bool bIsStopSpindleAndCoolantwhileReset; // å¤ä½æ‰§è¡Œå…³ä¸»è½´åŒæ—¶å…³å†·å´		é»˜è®¤ä¸º0ï¼Œå…³ä¸»è½´åŒæ—¶å…³å†·å´
+        bool bIsG50ProgameHasFinished;           //G50æ‰€åœ¨ç¨‹åºå®Œæˆæ ‡å¿—ä½ æ´ªå† é¹ 2023/12/23
+        uint32 startline;                        //å¯åŠ¨æŒ‰é”®æ¨¡å¼ ä¼ä¸šæ·»åŠ çš„å‚æ•° 2024.1.18
+        int16 PulseAllowablEerror[2];            //ä¸»è½´è„‰å†²å…è®¸åå·® ä¼ä¸šå˜é‡ 2024.1.25
+        uint8 ucTconstForTrapezoid;              // ä¸‰è§’å½¢ä¿®è°ƒååŒ€é€Ÿæ—¶é—´å æ€»å‘¨æœŸçš„ç™¾åˆ†æ¯” ï¼ˆ % ï¼‰ æ´ªå† é¹ 2024/3/22
+
+        uint8 ucDetectTimeforSignlWait; //é€šé“ç­‰å¾…æŒ‡ä»¤æ£€æµ‹æ—¶é—´  é™ˆè‚²æ¥ 
+
+        bool bM01ResetAllChannel; //M01æŠ¥è­¦åå¤ä½æ‰€æœ‰é€šé“ TRUE:å¤ä½æ‰€æœ‰é€šé“ FALSE:ä»…å¤ä½å½“å‰é€šé“ æ´ªå† é¹ 2024/6/5
+
+        int32 njixesosz_zuzbaox[6]; //æœºæ¢°æ‰‹åæ ‡X//ä¼ä¸šå®šä¹‰çš„å˜é‡//2024/6/5
+        int32 njixesosz_zuzbaob[6]; //æœºæ¢°æ‰‹åæ ‡b//ä¼ä¸šå®šä¹‰çš„å˜é‡//2024/6/5
+        uint32 unjixesosz_times[6]; //æœºæ¢°æ‰‹å»¶æ—¶//ä¼ä¸šå®šä¹‰çš„å˜é‡//2024/6/5
+        int32 njixesosz_zuweizi[6]; //åŠ›çŸ©åˆ°ä½ä½ç½®åæ ‡//ä¼ä¸šå®šä¹‰çš„å˜é‡//2024/6/5
+
+        SPointDouble SMachine_REFPOT[SMACHINE_REFPOT_NUM]; //æœºåºŠå‚è€ƒç‚¹é›†åˆ
+
+#if (TURRET_AXIS_TEST == 1)
+
+        uint8 ucChannelToTurretmap[CHANNEL_NUM_MAX][TURRET_MAX_NUM];  //é€šé“ä¸åˆ€å¡”çš„æ˜ å°„
+        uint8 ucTurretToAxisMap[TURRET_MAX_NUM];                      //åˆ€å¡”ä¸æœ‰æ•ˆè½´çš„æ˜ å°„
+        uint8 TurretToToolMap[TURRET_MAX_NUM][TOOl_LOCATION_MAX_NUM]; //åˆ€å¡”ä¸åˆ€ä½çš„æ˜ å°„
 
 #endif
-		uint32 unLogSavePageNum;
-		bool bSpindleAlarm;   //±àÂëÆ÷ÏàÎ»ºÍËÙ¶ÈÍ»±ä¿ªÊ¼±êÖ¾
-		double dSimulaG0Vmax; // ÊÖÂÖÄ£ÄâG0×î´óËÙ¶È  mm/ms  2022.11.7
-		double dSimulaMaxDec; // /ÊÖÂÖÄ£Äâ×î´ó¼õËÙ¶È 2025/4/19
-		bool bNowStopflag;//¼±Í£ÏÂ£¬¸÷ÖáÍ£Ö¹·½Ê½£¬TRUEÎªÁ¢¼´Í££¬FALSEÎª¼õËÙÍ£2025.5.7
+        uint32 unLogSavePageNum;
+        bool bSpindleAlarm;   //ç¼–ç å™¨ç›¸ä½å’Œé€Ÿåº¦çªå˜å¼€å§‹æ ‡å¿—
+        double dSimulaG0Vmax; // æ‰‹è½®æ¨¡æ‹ŸG0æœ€å¤§é€Ÿåº¦  mm/ms  2022.11.7
+        double dSimulaMaxDec; // /æ‰‹è½®æ¨¡æ‹Ÿæœ€å¤§å‡é€Ÿåº¦ 2025/4/19
+        bool bNowStopflag;    //æ€¥åœä¸‹ï¼Œå„è½´åœæ­¢æ–¹å¼ï¼ŒTRUEä¸ºç«‹å³åœï¼ŒFALSEä¸ºå‡é€Ÿåœ2025.5.7
 
-		double dAngleXY1;    //Y1ÖáÏà¶ÔXÖáµÄÇãĞ±½Ç¶È£¨¡ã£©		[ĞéÄâYÖá»ú×¨ÓÃ±äÁ¿]
-		double dX1Movement;  //X1ÎïÀíÖáµÄÒÆ¶¯Á¿£¨mm£©			0-999.999
-		double dY1Movement;  //Y1ÎïÀíÖáµÄÒÆ¶¯Á¿£¨mm£©			0-999.999
-		bool bUseVirtualY;	 //ÊÇ·ñ¿ªÆôĞéÄâYÖá					TRUE:¿ªÆô FALSE:¹Ø±Õ
-		double ZeroDistance[6];
+        double dAngleXY1;   //Y1è½´ç›¸å¯¹Xè½´çš„å€¾æ–œè§’åº¦ï¼ˆÂ°ï¼‰		[è™šæ‹ŸYè½´æœºä¸“ç”¨å˜é‡]
+        double dX1Movement; //X1ç‰©ç†è½´çš„ç§»åŠ¨é‡ï¼ˆmmï¼‰			0-999.999
+        double dY1Movement; //Y1ç‰©ç†è½´çš„ç§»åŠ¨é‡ï¼ˆmmï¼‰			0-999.999
+        bool bUseVirtualY;  //æ˜¯å¦å¼€å¯è™šæ‹ŸYè½´					TRUE:å¼€å¯ FALSE:å…³é—­
+        double ZeroDistance[6];
 
-		uint8 ucPWMAxisMapArray[CHANNEL_NUM_MAX][AXIS_NUM_MAX];//PWMÓ³Éä 2025.10.31ĞÜ¿¥
+        uint8 ucPWMAxisMapArray[CHANNEL_NUM_MAX][AXIS_NUM_MAX]; //PWMæ˜ å°„ 2025.10.31ç†Šéª
 
-		double dSysPlanSpindleAcc;//Ö÷ÖáÔË¶¯¼Ó¼õËÙ¶È£¬ÓÃÓÚÇø·Ö·Ö¶ÈÔË¶¯  //Ôö¼Ó 2026.4.17
-		double dSysPlanSpindleDec;
+        double dSysPlanSpindleAcc; //ä¸»è½´è¿åŠ¨åŠ å‡é€Ÿåº¦ï¼Œç”¨äºåŒºåˆ†åˆ†åº¦è¿åŠ¨  //å¢åŠ  2026.4.17
+        double dSysPlanSpindleDec;
 
-		bool bSetG7456mmTOum;//ÉèÖÃG74 G75½øµ¶Á¿ G76ÂİÎÆ´Ö³µ×îĞ¡ÇĞÏ÷Á¿
+        bool bSetG7456mmTOum; //è®¾ç½®G74 G75è¿›åˆ€é‡ G76èºçº¹ç²—è½¦æœ€å°åˆ‡å‰Šé‡
 
-		uint8 ncProtec1venoomnab1e;//·À»¤ÃÅ¹¦ÄÜ(o:ÎŞĞ§1:ÓĞĞ§)//ÆóÒµÔö¼Ó 2026.6.11
-		uint8 ucProtectiveDoorSignal;//·À»¤ÃÅ¼ì²âĞÅºÅ£¨0£º½ÓÍ¨ 1£º¶Ï¿ª£©ÓĞĞ§
-		uint8 ucProtectiveDoorControl;//·À»¤ÃÅ¿ªÊ±(0:¹Ø±Õ 1:²»¹Ø)Ö÷Öá
-		uint8 ucPressurecheckEnable;//Ñ¹Á¦¼ì²âÊäÈëĞÅºÅ(o²»¼ì²â£¬o²»¼ì²â
-		uint8 ucPressureAlarmStopMode;//Ñ¹Á¦±¨¾¯Í£»ú·½Ê½(oÁ¢¼´Í£»ú£¬1Íê³Éµ±Ç°¹¤¼şºóÍ£»ú)
+        uint8 ncProtec1venoomnab1e;    //é˜²æŠ¤é—¨åŠŸèƒ½(o:æ— æ•ˆ1:æœ‰æ•ˆ)//ä¼ä¸šå¢åŠ  2026.6.11
+        uint8 ucProtectiveDoorSignal;  //é˜²æŠ¤é—¨æ£€æµ‹ä¿¡å·ï¼ˆ0ï¼šæ¥é€š 1ï¼šæ–­å¼€ï¼‰æœ‰æ•ˆ
+        uint8 ucProtectiveDoorControl; //é˜²æŠ¤é—¨å¼€æ—¶(0:å…³é—­ 1:ä¸å…³)ä¸»è½´
+        uint8 ucPressurecheckEnable;   //å‹åŠ›æ£€æµ‹è¾“å…¥ä¿¡å·(oä¸æ£€æµ‹ï¼Œoä¸æ£€æµ‹
+        uint8 ucPressureAlarmStopMode; //å‹åŠ›æŠ¥è­¦åœæœºæ–¹å¼(oç«‹å³åœæœºï¼Œ1å®Œæˆå½“å‰å·¥ä»¶ååœæœº)
 
-		double dSpindleVs;  //Ö÷ÖáÆğÊ¼ËÙ¶È
-		double dSpindleVe;  //Ö÷ÖáÄ©ËÙ¶È
+        double dSpindleVs; //ä¸»è½´èµ·å§‹é€Ÿåº¦
+        double dSpindleVe; //ä¸»è½´æœ«é€Ÿåº¦
 
-		uint8 ucCloudStorageSelection;//ÍøÅÌÄ£Ê½Ñ¡Ôñ//ÆóÒµ¶¨ÒåµÄ±äÁ¿  20260908
-		uint8 ucToolCompInputRange;//µ¶²¹¿ÉÊäÈë·¶Î§//ÆóÒµ¶¨ÒåµÄ±äÁ¿//20260911
-		uint16 unG84DefaultDelayTime; //G84¿×µ×ÔİÍ£Ä¬ÈÏÊ±¼ä£¬µ¥Î»£ºms
-
+        uint8 ucCloudStorageSelection; //ç½‘ç›˜æ¨¡å¼é€‰æ‹©//ä¼ä¸šå®šä¹‰çš„å˜é‡  20260908
+        uint8 ucToolCompInputRange;    //åˆ€è¡¥å¯è¾“å…¥èŒƒå›´//ä¼ä¸šå®šä¹‰çš„å˜é‡//20260911
+        uint16 unG84DefaultDelayTime;  //G84å­”åº•æš‚åœé»˜è®¤æ—¶é—´ï¼Œå•ä½ï¼šms
 
 #if STM32_MODE || HANDWHEEL_SIM_DISTANCE_ENABLE || HANDWHEEL_STOP_BOUNDARY_ENABLE
-		int nHandwheelSimDistancePerTick;
+        int nHandwheelSimDistancePerTick;
 #endif
 
-	}SSystemParaInfo;
+    } SSystemParaInfo;
 
-	uint8 ucChar[15 * 1024];
+    uint8 ucChar[15 * 1024];
 };
 
-struct SdPiece	//Ê±ÖÓĞ¾Æ¬Êı¾İ´æ´¢
+struct SdPiece //æ—¶é’ŸèŠ¯ç‰‡æ•°æ®å­˜å‚¨
 {
-	uint32 ucProcessTimeTotal;//×Ü¼Ó¹¤Ê±¼ä
-    uint32 unWorkPieceTotal;	//×Ü¹¤¼şÊı
-    uint32 unCurWorkPieceNum;	//µ±Ç°¹¤¼şÊı
-    double oldTimePoint[AXIS_NUM_MAX];	//ÊµÊ±µã×ø±ê
+    uint32 ucProcessTimeTotal;         //æ€»åŠ å·¥æ—¶é—´
+    uint32 unWorkPieceTotal;           //æ€»å·¥ä»¶æ•°
+    uint32 unCurWorkPieceNum;          //å½“å‰å·¥ä»¶æ•°
+    double oldTimePoint[AXIS_NUM_MAX]; //å®æ—¶ç‚¹åæ ‡
 };
 
-
-struct SEncoder   //±àÂëÆ÷½á¹¹Ìå+
+struct SEncoder //ç¼–ç å™¨ç»“æ„ä½“+
 {
-	uint16 usEncoderLinesNum; //±àÂëÆ÷ÏßÊı
-	uint16 usEncoderCirclePulseNum;  //±àÂëÆ÷Ğı×ªÒ»È¦µÄÂö³åÊı
-	int16 sEncoderCircleNum;  //±àÂëÆ÷ÔËĞĞµÄÈ¦Êı
-	int8 cEncoderDir;       //±àÂëÆ÷µÄ·½Ïò£¬¾É£¨0ÎªÕı1Îª¸º£©ĞÂ£¨1ÎªÕı -1Îª¸º£©
-	uint16 usEncoderValue;  //±¾´Î¶ÁÈ¡µÄ±àÂëÆ÷µÄÊıÖµ
-	uint16 usEncoderLastValue; //±àÂëÆ÷ÉÏÒ»´ÎµÄÊıÖµ
-	uint16 usDelta; //Á½´Î±àÂëÆ÷µÄ²îÖµ
-	int64 lEncoderAbsValue;  //±àÂëÆ÷¾ø¶ÔÊıÖµ
+    uint16 usEncoderLinesNum;       //ç¼–ç å™¨çº¿æ•°
+    uint16 usEncoderCirclePulseNum; //ç¼–ç å™¨æ—‹è½¬ä¸€åœˆçš„è„‰å†²æ•°
+    int16 sEncoderCircleNum;        //ç¼–ç å™¨è¿è¡Œçš„åœˆæ•°
+    int8 cEncoderDir;               //ç¼–ç å™¨çš„æ–¹å‘ï¼Œæ—§ï¼ˆ0ä¸ºæ­£1ä¸ºè´Ÿï¼‰æ–°ï¼ˆ1ä¸ºæ­£ -1ä¸ºè´Ÿï¼‰
+    uint16 usEncoderValue;          //æœ¬æ¬¡è¯»å–çš„ç¼–ç å™¨çš„æ•°å€¼
+    uint16 usEncoderLastValue;      //ç¼–ç å™¨ä¸Šä¸€æ¬¡çš„æ•°å€¼
+    uint16 usDelta;                 //ä¸¤æ¬¡ç¼–ç å™¨çš„å·®å€¼
+    int64 lEncoderAbsValue;         //ç¼–ç å™¨ç»å¯¹æ•°å€¼
 #if !STM32_MODE
-    /* VS ÀíÏë·´À¡µÄÑÇ¼ÆÊıÓàÁ¿£¬simulateGetEncoder ¶ÀÕ¼¸üĞÂ£»È«¾Ö¶ÔÏóÆô¶¯Ê±ÎªÁã¡£
-     * Ëæ±àÂëÆ÷»úĞµÏàÎ»±£Áô£¬Í¨µÀ¸´Î»¡¢G84 »»¶Î²»ÇåÁã£»²»½øÈë°å¶Ë»ò³Ö¾Ã²ÎÊı¡£ */
-    double m_dSimCountRemainder; /**< ±àÂëÆ÷¼ÆÊı£¬Ô²ÕûºóÓàÁ¿·¶Î§ [-0.5, 0.5)¡£ */
+    /* VS ç†æƒ³åé¦ˆçš„äºšè®¡æ•°ä½™é‡ï¼ŒsimulateGetEncoder ç‹¬å æ›´æ–°ï¼›å…¨å±€å¯¹è±¡å¯åŠ¨æ—¶ä¸ºé›¶ã€‚
+     * éšç¼–ç å™¨æœºæ¢°ç›¸ä½ä¿ç•™ï¼Œé€šé“å¤ä½ã€G84 æ¢æ®µä¸æ¸…é›¶ï¼›ä¸è¿›å…¥æ¿ç«¯æˆ–æŒä¹…å‚æ•°ã€‚ */
+    double m_dSimCountRemainder; /**< ç¼–ç å™¨è®¡æ•°ï¼Œåœ†æ•´åä½™é‡èŒƒå›´ [-0.5, 0.5)ã€‚ */
 #endif
 
-	//ÂİÎÆÀàÖ¸ÁîÇĞÏ÷£¬·¢ËÍÍ¬²½ĞÅºÅËùÓÃ
-	double dEncoderNumDeviation;  //¸Ã²å²¹ÖÜÆÚ±àÂëÆ÷µÄÎ»ÖÃÓëÀíÏëÎ»ÖÃµÄÆ«²î£¨pulse£©
+    //èºçº¹ç±»æŒ‡ä»¤åˆ‡å‰Šï¼Œå‘é€åŒæ­¥ä¿¡å·æ‰€ç”¨
+    double dEncoderNumDeviation; //è¯¥æ’è¡¥å‘¨æœŸç¼–ç å™¨çš„ä½ç½®ä¸ç†æƒ³ä½ç½®çš„åå·®ï¼ˆpulseï¼‰
 
-	//ÊÖÂÖËùĞè²ÎÊı
-	uint8 ucWheelMultiple;   //ÊÖÂÖ±¶ÂÊ
-	int16 dDelataAccmulate;  //±àÂëÆ÷²îÖµÀÛ¼Ó
-	uint8 AXISNum;          //¿ØÖÆµÄÖáºÅ
-	uint8 ucChannelNum;     //¿ØÖÆµÄÍ¨µÀºÅ
-	int32 sAxisAccmulate[AXIS_NUM_MAX];     //¸÷¸öÔË¶¯ÖáÎ´¹æ»®µÄÂö³åÊı
-	double dAxisCurrentSpeed[AXIS_NUM_MAX]; //¸÷¸öÔË¶¯ÖáµÄµ±Ç°ËÙ¶È
-	int32 sPulseForChangeDie[AXIS_NUM_MAX]; //»»ÏòÊ±£¬Ëù´æ´¢µÄÂö³åÊı
-	SPointDouble SStartPoint;  //ÊÖÂÖÔË¶¯Æğµã
+    //æ‰‹è½®æ‰€éœ€å‚æ•°
+    uint8 ucWheelMultiple;                  //æ‰‹è½®å€ç‡
+    int16 dDelataAccmulate;                 //ç¼–ç å™¨å·®å€¼ç´¯åŠ 
+    uint8 AXISNum;                          //æ§åˆ¶çš„è½´å·
+    uint8 ucChannelNum;                     //æ§åˆ¶çš„é€šé“å·
+    int32 sAxisAccmulate[AXIS_NUM_MAX];     //å„ä¸ªè¿åŠ¨è½´æœªè§„åˆ’çš„è„‰å†²æ•°
+    double dAxisCurrentSpeed[AXIS_NUM_MAX]; //å„ä¸ªè¿åŠ¨è½´çš„å½“å‰é€Ÿåº¦
+    int32 sPulseForChangeDie[AXIS_NUM_MAX]; //æ¢å‘æ—¶ï¼Œæ‰€å­˜å‚¨çš„è„‰å†²æ•°
+    SPointDouble SStartPoint;               //æ‰‹è½®è¿åŠ¨èµ·ç‚¹
 
-    double dAxisAccmulateRemainder[AXIS_NUM_MAX];    //´¢´æÊÖÂÖ·´À¡²»×ãµç»ú1¸öÂö³åµÄÂö³åÊı£¬ÈçÊÖÂÖÒ»¸ñÊÇ0.001¡ã£¬µç»úÒ»¸öÂö³åÊÇ0.036¡ã£¬ËùÒÔĞèÒª36¸ñ²Å·¢Ò»¸öÂö³å
-	double dPulseAccmulate[AXIS_NUM_MAX];  //´æ´¢¸÷ÖáÎ´´ïµ½Âö³å·¢ËÍÌõ¼şµÄÂö³å  2025-6-16 ĞÜ¿¥ ºé¹ÚÅô
+    double dAxisAccmulateRemainder
+        [AXIS_NUM_MAX]; //å‚¨å­˜æ‰‹è½®åé¦ˆä¸è¶³ç”µæœº1ä¸ªè„‰å†²çš„è„‰å†²æ•°ï¼Œå¦‚æ‰‹è½®ä¸€æ ¼æ˜¯0.001Â°ï¼Œç”µæœºä¸€ä¸ªè„‰å†²æ˜¯0.036Â°ï¼Œæ‰€ä»¥éœ€è¦36æ ¼æ‰å‘ä¸€ä¸ªè„‰å†²
+    double dPulseAccmulate[AXIS_NUM_MAX]; //å­˜å‚¨å„è½´æœªè¾¾åˆ°è„‰å†²å‘é€æ¡ä»¶çš„è„‰å†²  2025-6-16 ç†Šéª æ´ªå† é¹
 
 #if HANDWHEEL_STOP_BOUNDARY_ENABLE
-	/*
-	 * Ã¿Öá¶ÀÁ¢£¬ÇĞ»»ÊÖÂÖÑ¡Öá²»´ò¶ÏÆäËûÖáµÄÖÆ¶¯¡£
-	 * Õı³£Ì¬£º¾»¾àÀëÊÇÏà¶Ô SStartPoint µÄÓĞ·ûºÅÄ¿±ê£»
-	 * ÖÆ¶¯Ì¬£º¾»¾àÀëÊÇÏà¶Ô±¾´ÎËø¶¨É²Í£µãµÄÓĞ·ûºÅ´ı×ßÁ¿¡£
-	 * ¾àÀëµ¥Î»Îª mm »ò degree£¬Óë±¾Öá SPlan Ò»ÖÂ£¬²»ÊÇÂö³åÊı¡£
+    /*
+	 * æ¯è½´ç‹¬ç«‹ï¼Œåˆ‡æ¢æ‰‹è½®é€‰è½´ä¸æ‰“æ–­å…¶ä»–è½´çš„åˆ¶åŠ¨ã€‚
+	 * æ­£å¸¸æ€ï¼šå‡€è·ç¦»æ˜¯ç›¸å¯¹ SStartPoint çš„æœ‰ç¬¦å·ç›®æ ‡ï¼›
+	 * åˆ¶åŠ¨æ€ï¼šå‡€è·ç¦»æ˜¯ç›¸å¯¹æœ¬æ¬¡é”å®šåˆ¹åœç‚¹çš„æœ‰ç¬¦å·å¾…èµ°é‡ã€‚
+	 * è·ç¦»å•ä½ä¸º mm æˆ– degreeï¼Œä¸æœ¬è½´ SPlan ä¸€è‡´ï¼Œä¸æ˜¯è„‰å†²æ•°ã€‚
 	 *
-	 * Àı£ºÔ­·½Ïò +1£¬¶ÎÄ¿±ê 100£¬É²Í£µãĞĞ³Ì 70£¬·´ÏòÊäÈë 35£º
-	 * Õı³£ net ÏÈ±ä³É 65£»´¥·¢Ê± net=65-70=-5£»ÖÆ¶¯ÖĞÔÙÊäÈë +8£¬
-	 * net=+3£»Í£ÔÚ 70 ºó´ÓÁãËÙÕıÏò×ßÔ¼ 3£¨¼ÆÈëÖ¸ÁîÁ¿»¯Î²²î£©¡£
-	 * ÆÕÍ¨ÊäÈëÓÀÔ¶Ö»×ö net+=input£¬ÇĞÎğ¸ù¾İ net µÄ·ûºÅÁ¢¼´ÇĞ´øËÙÖá·½Ïò¡£
+	 * ä¾‹ï¼šåŸæ–¹å‘ +1ï¼Œæ®µç›®æ ‡ 100ï¼Œåˆ¹åœç‚¹è¡Œç¨‹ 70ï¼Œåå‘è¾“å…¥ 35ï¼š
+	 * æ­£å¸¸ net å…ˆå˜æˆ 65ï¼›è§¦å‘æ—¶ net=65-70=-5ï¼›åˆ¶åŠ¨ä¸­å†è¾“å…¥ +8ï¼Œ
+	 * net=+3ï¼›åœåœ¨ 70 åä»é›¶é€Ÿæ­£å‘èµ°çº¦ 3ï¼ˆè®¡å…¥æŒ‡ä»¤é‡åŒ–å°¾å·®ï¼‰ã€‚
+	 * æ™®é€šè¾“å…¥æ°¸è¿œåªåš net+=inputï¼Œåˆ‡å‹¿æ ¹æ® net çš„ç¬¦å·ç«‹å³åˆ‡å¸¦é€Ÿè½´æ–¹å‘ã€‚
 	 *
-	 * ÆôÓÃÊ±ÉÏÃæµÄ dAxisCurrentSpeed ±£´æÖÜÆÚÄ©¹æ»®ËÙ¶È´óĞ¡£¬·ÇÖÜÆÚÆ½¾ùÖµ£»
-	 * SPlan.unCurrentT Îª¹Ì¶¨ÖÆ¶¯/¶Ì¶Î¼ÆÊı£»Õı³£³¤¶ÎÃ¿ÅÄÖØ¹æ»®ºóÈ¡µÚ 1 ÅÄ¡£
-	 * ĞŞ¸Ä±àÒë¿ª¹Ø»á¸Ä±ä SEncoder ²¼¾Ö£¬±ØĞëÈ«Á¿ÖØ±àËùÓĞÒıÓÃËüµÄÄ£¿é¡£
+	 * å¯ç”¨æ—¶ä¸Šé¢çš„ dAxisCurrentSpeed ä¿å­˜å‘¨æœŸæœ«è§„åˆ’é€Ÿåº¦å¤§å°ï¼Œéå‘¨æœŸå¹³å‡å€¼ï¼›
+	 * SPlan.unCurrentT ä¸ºå›ºå®šåˆ¶åŠ¨/çŸ­æ®µè®¡æ•°ï¼›æ­£å¸¸é•¿æ®µæ¯æ‹é‡è§„åˆ’åå–ç¬¬ 1 æ‹ã€‚
+	 * ä¿®æ”¹ç¼–è¯‘å¼€å…³ä¼šæ”¹å˜ SEncoder å¸ƒå±€ï¼Œå¿…é¡»å…¨é‡é‡ç¼–æ‰€æœ‰å¼•ç”¨å®ƒçš„æ¨¡å—ã€‚
 	 */
-	bool bHandwheelBraking[AXIS_NUM_MAX];   //FALSE Õı³££»TRUE Ëø¶¨¼õËÙµ½Áã
-	int8 cHandwheelMoveDir[AXIS_NUM_MAX];   //0 ÎŞ»î¶¯·½Ïò£¬+1/-1 ¹æ»®·½Ïò£¬ÖÆ¶¯Ê±²»±ä
-	double dHandwheelNetDist[AXIS_NUM_MAX];//Î¨Ò»µÄÕı·´ÊäÈëµÖÏûÁ¿£»Õı=×ø±êÕıÏò
-	double dHandwheelStopDist[AXIS_NUM_MAX];//done+brakeDist£¬·Ç½öÊ£ÓàÖÆ¶¯¾àÀë£¬ÖÆ¶¯Ê±Ëø¶¨
+    bool bHandwheelBraking[AXIS_NUM_MAX];    //FALSE æ­£å¸¸ï¼›TRUE é”å®šå‡é€Ÿåˆ°é›¶
+    int8 cHandwheelMoveDir[AXIS_NUM_MAX];    //0 æ— æ´»åŠ¨æ–¹å‘ï¼Œ+1/-1 è§„åˆ’æ–¹å‘ï¼Œåˆ¶åŠ¨æ—¶ä¸å˜
+    double dHandwheelNetDist[AXIS_NUM_MAX];  //å”¯ä¸€çš„æ­£åè¾“å…¥æŠµæ¶ˆé‡ï¼›æ­£=åæ ‡æ­£å‘
+    double dHandwheelStopDist[AXIS_NUM_MAX]; //done+brakeDistï¼Œéä»…å‰©ä½™åˆ¶åŠ¨è·ç¦»ï¼Œåˆ¶åŠ¨æ—¶é”å®š
 #endif
-
 };
 
-struct  SRunTime   //×÷ÓÃÊ±¼ä
+struct SRunTime //ä½œç”¨æ—¶é—´
 {
-	uint32 unSpindlePreRunTime;   //Ö÷Öá¿ª×÷ÓÃÊ±¼ä
-	uint32 unSpindlePostRunTime;  //Ö÷Öá¹Ø×÷ÓÃÊ±¼ä
-	uint32 unSpindleEnableRunTime; //Ö÷ÖáÊ¹ÄÜ×÷ÓÃÊ±¼ä
-	uint32 unSpindleDisableRunTime;//Ö÷ÖáÈ¡ÏûÊ¹ÄÜ×÷ÓÃÊ±¼ä
-	uint32 unChuckAOpenRunTime;	//¼ĞÍ·¿ª×÷ÓÃÊ±¼ä
-	uint32 unChuckACloseRunTime;	//¼ĞÍ·¹Ø×÷ÓÃÊ±¼ä
-	uint32 unChuckBOpenRunTime;	//¼ĞÍ·¿ª×÷ÓÃÊ±¼ä
-	uint32 unChuckBCloseRunTime;	//¼ĞÍ·¹Ø×÷ÓÃÊ±¼ä
-	uint32 unAutoFeedOpenRunTime[8];	//ËÍÁÏÆø¸× ¿ª×÷ÓÃÊ±¼ä
-	uint32 unAutoFeedCloseRunTime[8];	//ËÍÁÏÆø¸× ¿ª×÷ÓÃÊ±¼ä
-	uint32 unSpindleLockRunTime;   //Ö÷ÖáÉ²³µ¿ª×÷ÓÃÊ±¼ä
-	uint32 unSpindleUnLocktRunTime;  //Ö÷ÖáÉ²³µ¹Ø×÷ÓÃÊ±¼ä
+    uint32 unSpindlePreRunTime;       //ä¸»è½´å¼€ä½œç”¨æ—¶é—´
+    uint32 unSpindlePostRunTime;      //ä¸»è½´å…³ä½œç”¨æ—¶é—´
+    uint32 unSpindleEnableRunTime;    //ä¸»è½´ä½¿èƒ½ä½œç”¨æ—¶é—´
+    uint32 unSpindleDisableRunTime;   //ä¸»è½´å–æ¶ˆä½¿èƒ½ä½œç”¨æ—¶é—´
+    uint32 unChuckAOpenRunTime;       //å¤¹å¤´å¼€ä½œç”¨æ—¶é—´
+    uint32 unChuckACloseRunTime;      //å¤¹å¤´å…³ä½œç”¨æ—¶é—´
+    uint32 unChuckBOpenRunTime;       //å¤¹å¤´å¼€ä½œç”¨æ—¶é—´
+    uint32 unChuckBCloseRunTime;      //å¤¹å¤´å…³ä½œç”¨æ—¶é—´
+    uint32 unAutoFeedOpenRunTime[8];  //é€æ–™æ°”ç¼¸ å¼€ä½œç”¨æ—¶é—´
+    uint32 unAutoFeedCloseRunTime[8]; //é€æ–™æ°”ç¼¸ å¼€ä½œç”¨æ—¶é—´
+    uint32 unSpindleLockRunTime;      //ä¸»è½´åˆ¹è½¦å¼€ä½œç”¨æ—¶é—´
+    uint32 unSpindleUnLocktRunTime;   //ä¸»è½´åˆ¹è½¦å…³ä½œç”¨æ—¶é—´
 
-	uint32 unSpindleSpeedUpAlarmRunTime;  //Ö÷Öá¼Ó¼õËÙ³¬Ê±±¨¾¯×÷ÓÃÊ±¼ä
+    uint32 unSpindleSpeedUpAlarmRunTime; //ä¸»è½´åŠ å‡é€Ÿè¶…æ—¶æŠ¥è­¦ä½œç”¨æ—¶é—´
 
-	uint32 unToolChange_TrigRunTime;
-	uint32 unToolChange_AlarmTime;
-	uint32 unSampleIntervalRunTime;
-	uint32 unFeedingRunTime;		//ÉÏÁÏ¶ÁÈ¡ÊäÈë×÷ÓÃÊ±¼ä
+    uint32 unToolChange_TrigRunTime;
+    uint32 unToolChange_AlarmTime;
+    uint32 unSampleIntervalRunTime;
+    uint32 unFeedingRunTime; //ä¸Šæ–™è¯»å–è¾“å…¥ä½œç”¨æ—¶é—´
 };
 
+/********************************************.cä¸­å®šä¹‰çš„å…¨å±€å˜é‡*************************************************/
 
+//extern struct SInterpolationPre g_SInterpolation;  //æ’è¡¥é¢„å¤„ç†ç»“æ„ä½“
 
+extern volatile union SSystemUnion g_SSystemParaUnion; //ç³»ç»Ÿå‚æ•°ç»“æ„ä½“
 
+extern uint16 g_usReloadValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„é¢„è£…è½½å€¼
 
-/********************************************.cÖĞ¶¨ÒåµÄÈ«¾Ö±äÁ¿*************************************************/
+extern uint16 g_usCompareValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„æ¯”è¾ƒå€¼
 
+extern uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€è„‰å†²çš„è®¡æ•°å™¨å€¼ //å¢åŠ 2026.2.7
 
-//extern struct SInterpolationPre g_SInterpolation;  //²å²¹Ô¤´¦Àí½á¹¹Ìå
+extern int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´å‘é€çš„è„‰å†²æ•°
 
-extern volatile union SSystemUnion g_SSystemParaUnion;  //ÏµÍ³²ÎÊı½á¹¹Ìå
+extern int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´çš„è¿è¡Œæ–¹å‘ //å¢åŠ 2026.2.7
 
-extern uint16 g_usReloadValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄÔ¤×°ÔØÖµ
+extern struct SEncoder g_SEncoder[ENCODER_NUM_MAX]; //æ‰‹è½®æ˜¯å®šæ—¶å™¨4ï¼Œæ•°ç»„çš„æœ€åä¸€ä¸ª
 
-extern uint16 g_usCompareValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄ±È½ÏÖµ
+extern enum RUNMODE g_RunMode; //è¿è¡Œæ¨¡å¼
 
-extern uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍÂö³åµÄ¼ÆÊıÆ÷Öµ //Ôö¼Ó2026.2.7
+extern volatile VAL_PHYSICIAL_TYPE
+    g_ucAxisOccupation; //è½´å ç”¨å˜é‡  æ•°æ®ç±»å‹éœ€è¦æ ¹æ®ç‰©ç†è½´æ•°é‡è¿›è¡Œæ”¹å˜  å½“å‰ç‰©ç†è½´ä¸ªæ•°ä¸º6   ä½¿ç”¨å˜é‡uint8
 
-extern int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖá·¢ËÍµÄÂö³åÊı
+extern volatile VAL_PHYSICIAL_TYPE g_ucAxisExactEnable; // ç‰©ç†è½´çš„ä½¿èƒ½çŠ¶æ€
 
-extern int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖáµÄÔËĞĞ·½Ïò //Ôö¼Ó2026.2.7
-
-extern struct SEncoder g_SEncoder[ENCODER_NUM_MAX];  //ÊÖÂÖÊÇ¶¨Ê±Æ÷4£¬Êı×éµÄ×îºóÒ»¸ö
-
-extern	enum RUNMODE g_RunMode;//ÔËĞĞÄ£Ê½
-
-extern volatile VAL_PHYSICIAL_TYPE g_ucAxisOccupation;//ÖáÕ¼ÓÃ±äÁ¿  Êı¾İÀàĞÍĞèÒª¸ù¾İÎïÀíÖáÊıÁ¿½øĞĞ¸Ä±ä  µ±Ç°ÎïÀíÖá¸öÊıÎª6   Ê¹ÓÃ±äÁ¿uint8
-
-extern volatile VAL_PHYSICIAL_TYPE g_ucAxisExactEnable;// ÎïÀíÖáµÄÊ¹ÄÜ×´Ì¬
-
-extern double g_dRealTimePointArray[AXIS_PHYSICS_NUM_MAX];//ÊµÊ±×ø±ê  ¶ÔÓ¦ÎïÀíÖáºÅ   ¹ùÇ¿2022.8.24£¬¹«¿ªÈ¨ÏŞÓÃÓÚG33ĞéÄâÔËĞĞ
+extern double
+    g_dRealTimePointArray[AXIS_PHYSICS_NUM_MAX]; //å®æ—¶åæ ‡  å¯¹åº”ç‰©ç†è½´å·   éƒ­å¼º2022.8.24ï¼Œå…¬å¼€æƒé™ç”¨äºG33è™šæ‹Ÿè¿è¡Œ
 #if CotrexF4 == 1
-extern volatile unsigned long* pAxisEnable[AXIS_PHYSICS_NUM_MAX];// ÎïÀíÖá¶ÔÓ¦µÄÊ¹ÄÜIO
+extern volatile unsigned long* pAxisEnable[AXIS_PHYSICS_NUM_MAX]; // ç‰©ç†è½´å¯¹åº”çš„ä½¿èƒ½IO
 #else
 uint8 pAxisEnable(uint8 AXIS_PHYSICS);
 uint8 pAxisEnableSet(uint8 AXIS_PHYSICS, uint8 value);
-#endif 
-extern struct SdPiece g_sdtime;	//ÆóÒµ¶¨ÒåµÄ±äÁ¿
+#endif
+extern struct SdPiece g_sdtime; //ä¼ä¸šå®šä¹‰çš„å˜é‡
 
 #define g_SSystemPara g_SSystemParaUnion.SSystemParaInfo
 #define g_SZeroPtOfCoordSys g_SSystemParaUnion.SSystemParaInfo.SZeroPointOfCoordSys
 
+/****************************************æ˜ å°„ç›¸å…³****************************************/
 
-/****************************************Ó³ÉäÏà¹Ø****************************************/
-
-//	Çå³ı×ø±ê
+//	æ¸…é™¤åæ ‡
 int8 clearRealTimePoint();
 
-//	»ñÈ¡ÊµÊ±µã×ø±ê
+//	è·å–å®æ—¶ç‚¹åæ ‡
 int8 getRealTimePoint(double* cArray, int nArraySize, const uint8* ucAxisMap, const VAL_STRUCT_TYPE* ucValStatus);
 
-//	»ñÈ¡µ¥ÖáÊµÊ±µã×ø±ê
+//	è·å–å•è½´å®æ—¶ç‚¹åæ ‡
 int8 getSingleAxisRealTimePoint(double* dOutPut, uint8 ucAxis, const uint8* ucAxisMap);
 
-//	¸üĞÂÊµÊ±µã×ø±ê
+//	æ›´æ–°å®æ—¶ç‚¹åæ ‡
 int8 updateRealTimePoint(double* cArray, int nArraySize, const uint8* ucAxisMap, const VAL_STRUCT_TYPE* ucValStatus);
 
-//	¸üĞÂµ¥ÖáÊµÊ±µã×ø±ê
+//	æ›´æ–°å•è½´å®æ—¶ç‚¹åæ ‡
 int8 updateSingleAxisRealTimePoint(double* dInPut, uint8 ucAxis, const uint8* ucAxisMap);
 
-
-/////////¸ù¾İÍ¨µÀºÅ»ñÈ¡×ø±ê
-//	»ñÈ¡ÊµÊ±µã×ø±ê
+/////////æ ¹æ®é€šé“å·è·å–åæ ‡
+//	è·å–å®æ—¶ç‚¹åæ ‡
 int8 getRealTimePointByChannel(uint8 ucChannelNum, double* cArray);
 
-//	»ñÈ¡µ¥ÖáÊµÊ±µã×ø±ê
+//	è·å–å•è½´å®æ—¶ç‚¹åæ ‡
 int8 getSingleAxisRealTimePointByChannel(uint8 ucChannelNum, double* dOutPut, uint8 ucAxis);
 
+/****************************************è½´ç®¡ç†(è½´äº’æ–¥)ç›¸å…³****************************************/
 
-
-/****************************************Öá¹ÜÀí(Öá»¥³â)Ïà¹Ø****************************************/
-
-//³õÊ¼»¯ÖáµÄÊ¹ÄÜ×´Ì¬
+//åˆå§‹åŒ–è½´çš„ä½¿èƒ½çŠ¶æ€
 int initAxisEnableStatus();
 
-//ÉèÖÃÖáµÄµ±Ç°Ê¹ÄÜ×´Ì¬
+//è®¾ç½®è½´çš„å½“å‰ä½¿èƒ½çŠ¶æ€
 int8 setAxisEnableStatus(uint8 ucPhysicalAxis, uint8 ucStatus);
 
-//	½á¹¹ÌåÖá×ª»»ÎªÎïÀíÖá
+//	ç»“æ„ä½“è½´è½¬æ¢ä¸ºç‰©ç†è½´
 int8 structToPhysical(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_PHYSICIAL_TYPE* ucOutput);
 
-//	ÖáÕ¼ÓÃ²éÑ¯£¨ÎïÀíÖá£©
+//	è½´å ç”¨æŸ¥è¯¢ï¼ˆç‰©ç†è½´ï¼‰
 bool axisManagerCheck(VAL_PHYSICIAL_TYPE ucSign);
 
-//	ÖáÕ¼ÓÃº¯Êı£¨ÎïÀíÖá£©
+//	è½´å ç”¨å‡½æ•°ï¼ˆç‰©ç†è½´ï¼‰
 bool axisManagerOccupy(VAL_PHYSICIAL_TYPE ucSign);
-/* ËÕÏò±ê 2026-10-14£º½öÓÃÓÚÉè±¸×¼±¸ºÍÊÕÎ²µÄ¿ØÖÆÈ¨½Ó¿Ú£¬²»´ú±íÔÊĞíÔË¶¯¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šä»…ç”¨äºè®¾å¤‡å‡†å¤‡å’Œæ”¶å°¾çš„æ§åˆ¶æƒæ¥å£ï¼Œä¸ä»£è¡¨å…è®¸è¿åŠ¨ã€‚ */
 int8 reserveAxisControl(VAL_STRUCT_TYPE ucSign, const uint8* pMapArray, VAL_STRUCT_TYPE* pOccupation);
 
-//	ÖáÊÍ·Åº¯Êı£¨ÎïÀíÖá£©
+//	è½´é‡Šæ”¾å‡½æ•°ï¼ˆç‰©ç†è½´ï¼‰
 bool axisManagerRelease(VAL_PHYSICIAL_TYPE ucSign);
 
-
-//	ÖáÕ¼ÓÃ²éÑ¯£¨Í¨¹ı½á¹¹Ìå£©
+//	è½´å ç”¨æŸ¥è¯¢ï¼ˆé€šè¿‡ç»“æ„ä½“ï¼‰
 int8 axisManagerCheckByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize);
 
-//	ÖáÕ¼ÓÃº¯Êı£¨Í¨¹ı½á¹¹Ìå£©
+//	è½´å ç”¨å‡½æ•°ï¼ˆé€šè¿‡ç»“æ„ä½“ï¼‰
 int8 axisManagerOccupyByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE* pSaveVal);
 
-//	ÖáÊÍ·Åº¯Êı£¨Í¨¹ı½á¹¹Ìå£©
-int8 axisManagerReleaseByStruct(VAL_STRUCT_TYPE ucSign, const  uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE* pSaveVal);
+//	è½´é‡Šæ”¾å‡½æ•°ï¼ˆé€šè¿‡ç»“æ„ä½“ï¼‰
+int8 axisManagerReleaseByStruct(VAL_STRUCT_TYPE ucSign, const uint8* ucAxisMap, int nSize, VAL_STRUCT_TYPE* pSaveVal);
 
-//2023.4.27 ÖìÎÈÖĞ
-//	ÖáÕ¼ÓÃº¯Êı£¨Í¨¹ıÍ¨µÀ£©
+//2023.4.27 æœ±ç¨³ä¸­
+//	è½´å ç”¨å‡½æ•°ï¼ˆé€šè¿‡é€šé“ï¼‰
 int8 axisManagerOccupyByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveVal);
 
-//	ÖáÊÍ·Åº¯Êı£¨Í¨¹ıÍ¨µÀ£©
+//	è½´é‡Šæ”¾å‡½æ•°ï¼ˆé€šè¿‡é€šé“ï¼‰
 int8 axisManagerReleaseByChannel(VAL_STRUCT_TYPE ucSign, uint8 ucChannelNum, VAL_STRUCT_TYPE* pSaveVal);
 
-
-
-//	´òÓ¡±äÁ¿¸÷¸öÎ»
+//	æ‰“å°å˜é‡å„ä¸ªä½
 int8 printfBits(int nSign, int nSize);
 
-//¼Ó¹¤Ê±¼ä¼ì²â
+//åŠ å·¥æ—¶é—´æ£€æµ‹
 int8 machineTimerStart(uint8 ucChannelNum);
 
-//µ¥¼ş¼Ó¹¤±ê¼Ç
+//å•ä»¶åŠ å·¥æ ‡è®°
 int8 machineTimerMark(uint8 ucChannelNum);
 
-//×Ü¼Ó¹¤Ê±¼ä×ÔÔö
+//æ€»åŠ å·¥æ—¶é—´è‡ªå¢
 int8 machineTimerInterp(uint8 ucChannelNum);
 
-//¼Ó¹¤Ê±¼äÇåÁã
+//åŠ å·¥æ—¶é—´æ¸…é›¶
 int8 machineTimerClear(uint8 ucChannelNum);
 
-//¼Æ¼ş¹¦ÄÜ
+//è®¡ä»¶åŠŸèƒ½
 int8 calWorkpieceNum(uint8 ucChannelNum);
 
-//³õÊ¼»¯¼Æ¼ş
+//åˆå§‹åŒ–è®¡ä»¶
 int8 initWorkpieceNum(uint8 ucChannelNum);
 
-// STM32Ä£Ê½ÏÂÔ­×Ó²Ù×÷ĞÔµØ»ñÈ¡È«¾Ö±äÁ¿µÄÖµ
+// STM32æ¨¡å¼ä¸‹åŸå­æ“ä½œæ€§åœ°è·å–å…¨å±€å˜é‡çš„å€¼
 int32 atomic_read(volatile int32* ptr);
 
-//STM32Ä£Ê½ÏÂÔ­×Ó²Ù×÷ĞÔµØ¸øÈ¡È«¾Ö±äÁ¿¸³Öµ
+//STM32æ¨¡å¼ä¸‹åŸå­æ“ä½œæ€§åœ°ç»™å–å…¨å±€å˜é‡èµ‹å€¼
 void atomic_write(volatile int32* ptr, volatile int32 value);
 
-//Ô­×Ó²Ù×÷ĞÔµØ¶Ô ptrÖ¸ÏòµÄÄÚ´æÖĞÖµ½øĞĞ¼Ó·¨ÔËËã
+//åŸå­æ“ä½œæ€§åœ°å¯¹ ptræŒ‡å‘çš„å†…å­˜ä¸­å€¼è¿›è¡ŒåŠ æ³•è¿ç®—
 int32 atomic_add(volatile uint32* ptr, int32 value);
 
+#if (TURRET_AXIS_TEST == 1)
+//å ç”¨åˆ€å¡”è½´å’Œåˆ€å¡”
 
-#if(TURRET_AXIS_TEST == 1)
-//Õ¼ÓÃµ¶ËşÖáºÍµ¶Ëş
-
-int8 turretAxisAndTurretOccupyByChannel(VAL_STRUCT_TYPE* ucValAxis, uint8 ucChannelNum, VAL_STRUCT_TYPE* pOccupideAxis, VAL_STRUCT_TYPE* pOccupideTurretAxis, VAL_TURRET_TYPE* pOccupideTurret);
-//ÏÈ²éÑ¯µ¶ËşÊÇ·ñ¿ÕÏĞ  Ä¿±êËùÓĞµ¶Ëş¶¼¿ÕÏĞÊ±Õ¼ÓÃÄ¿±êµ¶Ëş   ²»¿ÕÏĞÊ±Õ¼ÓÃÊ§°Ü ·µ»ØFASLE
+int8 turretAxisAndTurretOccupyByChannel(VAL_STRUCT_TYPE* ucValAxis, uint8 ucChannelNum, VAL_STRUCT_TYPE* pOccupideAxis,
+                                        VAL_STRUCT_TYPE* pOccupideTurretAxis, VAL_TURRET_TYPE* pOccupideTurret);
+//å…ˆæŸ¥è¯¢åˆ€å¡”æ˜¯å¦ç©ºé—²  ç›®æ ‡æ‰€æœ‰åˆ€å¡”éƒ½ç©ºé—²æ—¶å ç”¨ç›®æ ‡åˆ€å¡”   ä¸ç©ºé—²æ—¶å ç”¨å¤±è´¥ è¿”å›FASLE
 bool turretManagerOccupy(VAL_TURRET_TYPE ucSign);
 
-//ÊÍ·Åµ¶Ëş
+//é‡Šæ”¾åˆ€å¡”
 bool turretManagerRelease(VAL_TURRET_TYPE ucSign);
 
-//ÊÍ·Å±¾Í¨µÀËùÓĞÕ¼ÓÃµÄÖá
+//é‡Šæ”¾æœ¬é€šé“æ‰€æœ‰å ç”¨çš„è½´
 int8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess);
 
-//ÊÍ·Å±¾Í¨µÀËùÓĞÕ¼ÓÃµÄµ¶Ëş
+//é‡Šæ”¾æœ¬é€šé“æ‰€æœ‰å ç”¨çš„åˆ€å¡”
 int8 releaseAllOccupiedTurret(struct SInterpolationPre* pSPreProcess);
 #endif
 
-
-
 #endif
 
-
 /*
-1.³£ÓÃÃüÃû
-£¨1£©Ãû×ÖµÚ¶ş¸öµ¥´Ê¿ªÊ¼Ê××ÖÄ¸¶¼Îª´óĞ´£¬·Ç¡°XXX_¡±µÄÇ°×ºÒ²ËãµÚÒ»¸öµ¥´Ê¡£const±äÁ¿¡¢ºê¶¨ÒåºÍenum³ıÍâ¡£Èç¡°dDeta¡±¡¢¡°m_ dDeta¡±¡£
-£¨2£©ÀàÀàĞÍÃû£ºÒÔ¡°C¡±¿ªÍ·¡£Èç¡°CMotionController¡±¡£
-£¨3£©½á¹¹ÌåÀàĞÍÃû£ºÒÔ¡°S¡±¿ªÍ·¡£Èç¡°SMotionController¡±¡£
-£¨4£©Àà³ÉÔ±±äÁ¿£ºÒÔ¡°m_¡±¿ªÍ·¡£Ê¾Àı£ºm_nValue¡£
-£¨5£©È«¾Ö±äÁ¿£ºÒÔ¡°g_¡±¿ªÍ·¡£Ê¾Àı£ºg_nValue¡£
-£¨6£©¾²Ì¬±äÁ¿£ºÒÔ¡°s_¡±¿ªÍ·¡£Ê¾Àı£ºs_nValue¡£
-£¨7£©const±äÁ¿£ºÈ«²¿×ÖÄ¸¶¼´óĞ´£¬µ¥´Ê¼äÓÃ¡°_¡±¸ô¿ª¡£Èç¡°TASKID_LIBRARY¡±¡£
-£¨8£©ºê¶¨Òå£ºÈ«²¿×ÖÄ¸¶¼´óĞ´£¬µ¥´Ê¼äÓÃ¡°_¡±¸ô¿ª¡£Èç¡°TASKID_LIBRARY¡±¡£
-£¨9£©enum¶¨Òå£ºÈ«²¿×ÖÄ¸¶¼´óĞ´£¬µ¥´Ê¼äÓÃ¡°_¡±¸ô¿ª¡£Èç¡°TASKID_LIBRARY¡±¡£
-£¨10£©Ö¸Õë±äÁ¿£ºÒÔ¡°p¡±¿ªÍ·¡£Èç¡°pAhead¡±¡£
-£¨11£©º¯ÊıÃû£ºµÚÒ»¸öµ¥´ÊÊ××ÖÄ¸ÎªĞ¡Ğ´¡££¨ÓëQtµÈ¿âµÄº¯ÊıÃüÃûÒ»ÖÂ£¬¹¹Ôìº¯ÊıºÍÎö¹¹º¯Êı³ıÍâ£©¡£
-£¨12£©¼òµ¥µÄÑ­»·±äÁ¿³£ÓÃi,j,k,p,it(µü´úÆ÷)¡£Óöµ½Ç¶Ì×Ñ­»·Ê±£¬Ñ­»·±äÁ¿Ó¦¸ÃÈ¡Ò»¸öºÃÃû×Ö£¬ÈçxxxLoop¡¢xxxCounter¡£
+1.å¸¸ç”¨å‘½å
+ï¼ˆ1ï¼‰åå­—ç¬¬äºŒä¸ªå•è¯å¼€å§‹é¦–å­—æ¯éƒ½ä¸ºå¤§å†™ï¼Œéâ€œXXX_â€çš„å‰ç¼€ä¹Ÿç®—ç¬¬ä¸€ä¸ªå•è¯ã€‚constå˜é‡ã€å®å®šä¹‰å’Œenumé™¤å¤–ã€‚å¦‚â€œdDetaâ€ã€â€œm_ dDetaâ€ã€‚
+ï¼ˆ2ï¼‰ç±»ç±»å‹åï¼šä»¥â€œCâ€å¼€å¤´ã€‚å¦‚â€œCMotionControllerâ€ã€‚
+ï¼ˆ3ï¼‰ç»“æ„ä½“ç±»å‹åï¼šä»¥â€œSâ€å¼€å¤´ã€‚å¦‚â€œSMotionControllerâ€ã€‚
+ï¼ˆ4ï¼‰ç±»æˆå‘˜å˜é‡ï¼šä»¥â€œm_â€å¼€å¤´ã€‚ç¤ºä¾‹ï¼šm_nValueã€‚
+ï¼ˆ5ï¼‰å…¨å±€å˜é‡ï¼šä»¥â€œg_â€å¼€å¤´ã€‚ç¤ºä¾‹ï¼šg_nValueã€‚
+ï¼ˆ6ï¼‰é™æ€å˜é‡ï¼šä»¥â€œs_â€å¼€å¤´ã€‚ç¤ºä¾‹ï¼šs_nValueã€‚
+ï¼ˆ7ï¼‰constå˜é‡ï¼šå…¨éƒ¨å­—æ¯éƒ½å¤§å†™ï¼Œå•è¯é—´ç”¨â€œ_â€éš”å¼€ã€‚å¦‚â€œTASKID_LIBRARYâ€ã€‚
+ï¼ˆ8ï¼‰å®å®šä¹‰ï¼šå…¨éƒ¨å­—æ¯éƒ½å¤§å†™ï¼Œå•è¯é—´ç”¨â€œ_â€éš”å¼€ã€‚å¦‚â€œTASKID_LIBRARYâ€ã€‚
+ï¼ˆ9ï¼‰enumå®šä¹‰ï¼šå…¨éƒ¨å­—æ¯éƒ½å¤§å†™ï¼Œå•è¯é—´ç”¨â€œ_â€éš”å¼€ã€‚å¦‚â€œTASKID_LIBRARYâ€ã€‚
+ï¼ˆ10ï¼‰æŒ‡é’ˆå˜é‡ï¼šä»¥â€œpâ€å¼€å¤´ã€‚å¦‚â€œpAheadâ€ã€‚
+ï¼ˆ11ï¼‰å‡½æ•°åï¼šç¬¬ä¸€ä¸ªå•è¯é¦–å­—æ¯ä¸ºå°å†™ã€‚ï¼ˆä¸Qtç­‰åº“çš„å‡½æ•°å‘½åä¸€è‡´ï¼Œæ„é€ å‡½æ•°å’Œææ„å‡½æ•°é™¤å¤–ï¼‰ã€‚
+ï¼ˆ12ï¼‰ç®€å•çš„å¾ªç¯å˜é‡å¸¸ç”¨i,j,k,p,it(è¿­ä»£å™¨)ã€‚é‡åˆ°åµŒå¥—å¾ªç¯æ—¶ï¼Œå¾ªç¯å˜é‡åº”è¯¥å–ä¸€ä¸ªå¥½åå­—ï¼Œå¦‚xxxLoopã€xxxCounterã€‚
 
-2.Ò»°ã³£ÓÃÃüÃû
-ÀàĞÍ	±äÁ¿¿ªÍ·	¾ÙÀı
+2.ä¸€èˆ¬å¸¸ç”¨å‘½å
+ç±»å‹	å˜é‡å¼€å¤´	ä¸¾ä¾‹
 bool	b	bIsParent
 short	s	sStepCount
 unsigned short	us	usTemp

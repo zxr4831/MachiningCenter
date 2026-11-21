@@ -1,66 +1,64 @@
-#ifndef  _GCODE_G75_H_
-#define  _GCODE_G75_H_
+#ifndef _GCODE_G75_H_
+#define _GCODE_G75_H_
 
 typedef struct _SG75LoopPara
 {
-	int8 cStepInLoop;
-	double dSX;
-	double dSZ;
-	double dEX;
-	double dEZ;
+    int8 cStepInLoop;
+    double dSX;
+    double dSZ;
+    double dEX;
+    double dEZ;
 
-	int8 cDir_X;		//XÖá¼Ó¹¤·½Ïò£¨ÖÕµãX-ÆğµãX£©        1£ºÑØX×ø±êÖá¸ºÏòÏòÕıÏò     -1£ºÑØX×ø±êÖáÕıÏòÏò¸ºÏò
-	int8 cDir_Z;		//ZÖá¼Ó¹¤·½Ïò£¨ÖÕµãZ-ÆğµãZ£©       1.£ºÑØZ×ø±êÖá¸ºÏòÏòÕıÏò   -1£º ÑØZ×ø±êÖáÕıÏòÏò¸ºÏò
+    int8 cDir_X; //Xè½´åŠ å·¥æ–¹å‘ï¼ˆç»ˆç‚¹X-èµ·ç‚¹Xï¼‰        1ï¼šæ²¿Xåæ ‡è½´è´Ÿå‘å‘æ­£å‘     -1ï¼šæ²¿Xåæ ‡è½´æ­£å‘å‘è´Ÿå‘
+    int8 cDir_Z; //Zè½´åŠ å·¥æ–¹å‘ï¼ˆç»ˆç‚¹Z-èµ·ç‚¹Zï¼‰       1.ï¼šæ²¿Zåæ ‡è½´è´Ÿå‘å‘æ­£å‘   -1ï¼š æ²¿Zåæ ‡è½´æ­£å‘å‘è´Ÿå‘
 
-	double dFeed_X;		//XÖá½øµ¶Á¿
-	double dRetract_X;	//XÖáÍËµ¶Á¿
+    double dFeed_X;    //Xè½´è¿›åˆ€é‡
+    double dRetract_X; //Xè½´é€€åˆ€é‡
 
-	double dFeed_Z;		//ZÖá½øµ¶Á¿
-	double dRetract_Z;	//ZÖáÍËµ¶Á¿
+    double dFeed_Z;    //Zè½´è¿›åˆ€é‡
+    double dRetract_Z; //Zè½´é€€åˆ€é‡
 
-	bool bFirstFeed_X;	//ZÖáÊ×´Î½øµ¶
-	bool bLastFeed;		//×îºóÒ»´ÎÑ­»·
-}SG75LoopPara;
+    bool bFirstFeed_X; //Zè½´é¦–æ¬¡è¿›åˆ€
+    bool bLastFeed;    //æœ€åä¸€æ¬¡å¾ªç¯
+} SG75LoopPara;
 
 typedef struct _SG75Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	bool bG74;					//G74±êÖ¾
-	uint8 ucH;					//ÀàĞÍ
+    bool bG74; //G74æ ‡å¿—
+    uint8 ucH; //ç±»å‹
 
-	SCoord SCoordInfo;			//×ø±êĞÅÏ¢
-	SPointDouble SStartPoint;	//Ö¸ÁîÆğµã
-	SPointDouble SEndPoint;		//Ö¸ÁîÖÕµã
+    SCoord SCoordInfo;        //åæ ‡ä¿¡æ¯
+    SPointDouble SStartPoint; //æŒ‡ä»¤èµ·ç‚¹
+    SPointDouble SEndPoint;   //æŒ‡ä»¤ç»ˆç‚¹
 
-	double dFeed_X;		//XÖá½øµ¶Á¿
-	double dRetract_X;	//XÖáÍËµ¶Á¿
+    double dFeed_X;    //Xè½´è¿›åˆ€é‡
+    double dRetract_X; //Xè½´é€€åˆ€é‡
 
-	double dFeed_Z;		//ZÖá½øµ¶Á¿
-	double dRetract_Z;	//ZÖáÍËµ¶Á¿
+    double dFeed_Z;    //Zè½´è¿›åˆ€é‡
+    double dRetract_Z; //Zè½´é€€åˆ€é‡
 
+    int8 cCommandDir_X; //æŒ‡ä»¤Xè½´åŠ å·¥æ–¹å‘ï¼ˆç»ˆç‚¹X-èµ·ç‚¹Xï¼‰        1ï¼šæ²¿Xåæ ‡è½´è´Ÿå‘å‘æ­£å‘     -1ï¼šæ²¿Xåæ ‡è½´æ­£å‘å‘è´Ÿå‘
+    int8 cCommandDir_Z; //æŒ‡ä»¤Zè½´åŠ å·¥æ–¹å‘ï¼ˆç»ˆç‚¹Z-èµ·ç‚¹Zï¼‰       1.ï¼šæ²¿Zåæ ‡è½´è´Ÿå‘å‘æ­£å‘   -1ï¼š æ²¿Zåæ ‡è½´æ­£å‘å‘è´Ÿå‘
 
-	int8 cCommandDir_X;		//Ö¸ÁîXÖá¼Ó¹¤·½Ïò£¨ÖÕµãX-ÆğµãX£©        1£ºÑØX×ø±êÖá¸ºÏòÏòÕıÏò     -1£ºÑØX×ø±êÖáÕıÏòÏò¸ºÏò
-	int8 cCommandDir_Z;		//Ö¸ÁîZÖá¼Ó¹¤·½Ïò£¨ÖÕµãZ-ÆğµãZ£©       1.£ºÑØZ×ø±êÖá¸ºÏòÏòÕıÏò   -1£º ÑØZ×ø±êÖáÕıÏòÏò¸ºÏò
+    int8 cCurrMachineDir; //â…¢å‹çš„å½“å‰åŠ å·¥æ–¹å‘
 
-	int8 cCurrMachineDir;	//¢óĞÍµÄµ±Ç°¼Ó¹¤·½Ïò
+    //å¾ªç¯å‚æ•°
+    SG75LoopPara SG75LoopPara;
 
-	//Ñ­»·²ÎÊı
-	SG75LoopPara SG75LoopPara;
+    //å±‚å‚æ•°
+    int8 cCurrLayNum;  //å½“å‰å±‚æ•°
+    int8 cTotalLayNum; //æ€»å±‚æ•°
+    double dLayerDepth;
 
-	//²ã²ÎÊı
-	int8 cCurrLayNum;		//µ±Ç°²ãÊı
-	int8 cTotalLayNum;		//×Ü²ãÊı
-	double dLayerDepth;
+    double dCurrLayStartX; //å½“å‰å±‚èµ·ç‚¹X
+    double dCurrLayEndX;   //å½“å‰å±‚ç»ˆç‚¹X
 
-	double dCurrLayStartX;	//µ±Ç°²ãÆğµãX
-	double dCurrLayEndX;	//µ±Ç°²ãÖÕµãX
+    bool bFirstFeed_X; //Zè½´é¦–æ¬¡è¿›åˆ€
+    bool bLastFeed;    //æœ€åä¸€æ¬¡å¾ªç¯
 
-	bool bFirstFeed_X;	//ZÖáÊ×´Î½øµ¶
-	bool bLastFeed;		//×îºóÒ»´ÎÑ­»·
-
-}SG75Para;
-
+} SG75Para;
 
 void addG75RegulationAPI();
 
@@ -74,9 +72,6 @@ int8 CheckG75(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeP
 
 int8 AssignG75(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-
 int8 calcG75Loop(SG75LoopPara* pSG75LoopPara, SPointDouble SCurPoint, struct SGCodeParse* pSGCodeParseUnit);
 
-
 #endif // ! _GCODE_G75_H_
-

@@ -1,17 +1,14 @@
 #ifndef __GCODE_G28_H
 #define __GCODE_G28_H
 
-
 //#include "common.h"
 //#include "GCodeCommon.h"
 
-
 typedef struct _SG28Para
 {
-	int8 cStep;                 //ÇÐÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-}SG28Para;
-
+} SG28Para;
 
 void addG28RegulationAPI();
 

@@ -3,47 +3,48 @@
 
 #include "common.h"
 
-/************************×ø±êÏà¹Ø****************************/
+/************************åæ ‡ç›¸å…³****************************/
 
-//»úĞµ×ø±ê
-double	getMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis);	//»ñÈ¡Double
-int 	getMachCoordInt(uint8 ucChannelNum, uint8 ucAxis);		//»ñÈ¡Int
-int8	setMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val);//ÉèÖÃ
+//æœºæ¢°åæ ‡
+double getMachCoordDouble(uint8 ucChannelNum, uint8 ucAxis);     //è·å–Double
+int getMachCoordInt(uint8 ucChannelNum, uint8 ucAxis);           //è·å–Int
+int8 setMachCoord(uint8 ucChannelNum, uint8 ucAxis, double val); //è®¾ç½®
 
-//¾ø¶Ô×ø±ê
-double	getAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis);	//»ñÈ¡¾ø¶Ô×ø±êDouble
-int		getAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis);		//»ñÈ¡¾ø¶Ô×ø±êInt
+//ç»å¯¹åæ ‡
+double getAbsCoordDouble(uint8 ucChannelNum, uint8 ucAxis); //è·å–ç»å¯¹åæ ‡Double
+int getAbsCoordInt(uint8 ucChannelNum, uint8 ucAxis);       //è·å–ç»å¯¹åæ ‡Int
 
+//ç›¸å¯¹åæ ‡
+double getRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis);     //è·å–ç›¸å¯¹åæ ‡Double
+int getRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis);           //è·å–ç›¸å¯¹åæ ‡Int
+int8 setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val); //è®¾ç½®ç›¸å¯¹åæ ‡
+//int8    clearRalaCoor(uint8 ucChannelNum, uint8 ucAxis);//æ¸…é›¶ç›¸å¯¹åæ ‡
 
-//Ïà¶Ô×ø±ê
-double	getRelaCoordDouble(uint8 ucChannelNum, uint8 ucAxis);	//»ñÈ¡Ïà¶Ô×ø±êDouble
-int		getRelaCoordInt(uint8 ucChannelNum, uint8 ucAxis);		//»ñÈ¡Ïà¶Ô×ø±êInt
-int8	setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val);//ÉèÖÃÏà¶Ô×ø±ê
-//int8    clearRalaCoor(uint8 ucChannelNum, uint8 ucAxis);//ÇåÁãÏà¶Ô×ø±ê
+////ä¿®æ”¹åæ ‡ç³» + è¾“å…¥
+int8 modifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
+                      double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
 
-////ĞŞ¸Ä×ø±êÏµ + ÊäÈë
-int8 modifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset);// ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
+//è®¾ç½®å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»
+int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
+                   double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
 
-//ÉèÖÃÍâ²¿/¹¤¼ş×ø±êÏµ
-int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset);// ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
+//è¾“å…¥å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»
+int8 inputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
+                     double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
 
-//ÊäÈëÍâ²¿/¹¤¼ş×ø±êÏµ
-int8 inputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis, double dOffset);// ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
-
-//»ñÈ¡Íâ²¿/¹¤¼ş×ø±êÏµÆ«ÒÆ
+//è·å–å¤–éƒ¨/å·¥ä»¶åæ ‡ç³»åç§»
 double getCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis);
 
-//»ñÈ¡G50×ø±êÏµÆ«ÒÆ
+//è·å–G50åæ ‡ç³»åç§»
 double getCoorOffsetByG50(uint8 ucChannelNum, uint8 ucAxis);
 
-//ÉèÖÃG50×ø±êÏµÆ«ÒÆ
-int8  setCoorOffsetByG50(uint8 ucChannelNum, uint8 ucAxis, double dOffset);
+//è®¾ç½®G50åæ ‡ç³»åç§»
+int8 setCoorOffsetByG50(uint8 ucChannelNum, uint8 ucAxis, double dOffset);
 
-//Çå³ıG50×ø±êÏµÆ«ÒÆ
+//æ¸…é™¤G50åæ ‡ç³»åç§»
 int8 clearCoorOffset(uint8 ucChannelNum);
 
-//Çå³ı×ø±êÏµ×ÜÆ«ÒÆ
+//æ¸…é™¤åæ ‡ç³»æ€»åç§»
 int8 clearTotalCoorOffset(uint8 ucChannelNum);
 
 #endif // !__COORDAPI_H
-

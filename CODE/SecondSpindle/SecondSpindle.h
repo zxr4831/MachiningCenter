@@ -2,18 +2,18 @@
 #define SSecondSpindle_H
 #include "common.h"
 #include "Spindle.h"
-#define SECONDSPINDLE_USE_NOENCODER 1		//µÚ¶ş×ªÖá²»Ê¹ÓÃ±àÂëÆ÷ 1 ²»Ê¹ÓÃ	0 Ê¹ÓÃ
+#define SECONDSPINDLE_USE_NOENCODER 1 //ç¬¬äºŒè½¬è½´ä¸ä½¿ç”¨ç¼–ç å™¨ 1 ä¸ä½¿ç”¨	0 ä½¿ç”¨
 
-//µÚ¶şÖá / ¶¯Á¦µ¶Æô¶¯½Ó¿Úº¯Êı  £¬µ±Ö÷ÖáÔÚÍ£ÏÂ¹ı³Ì»òÍ£ÏÂÊ±£¬µ÷ÓÃ´Ëº¯Êı¿ÉÈÃÖ÷Öá°´ÕÕÍ£ÏÂÇ°µÄ×´Ì¬ÔË¶¯
+//ç¬¬äºŒè½´ / åŠ¨åŠ›åˆ€å¯åŠ¨æ¥å£å‡½æ•°  ï¼Œå½“ä¸»è½´åœ¨åœä¸‹è¿‡ç¨‹æˆ–åœä¸‹æ—¶ï¼Œè°ƒç”¨æ­¤å‡½æ•°å¯è®©ä¸»è½´æŒ‰ç…§åœä¸‹å‰çš„çŠ¶æ€è¿åŠ¨
 int8 SSecondSpindleBegin(struct _SSpindle* pSSpindlePointer);
 
-//´Ó²å²¹½á¹¹ÌåÖĞ£¬¶ÁÈ¡µÚ¶ş×ªÖá/¶¯Á¦µ¶µÄ×ªËÙ
+//ä»æ’è¡¥ç»“æ„ä½“ä¸­ï¼Œè¯»å–ç¬¬äºŒè½¬è½´/åŠ¨åŠ›åˆ€çš„è½¬é€Ÿ
 int8 readSecondSpindleSpeed(struct SInterpolationPre* pSPrePointer, struct _SSpindle* pSSpindlePointer);
 
-//Ö÷Öá×ªËÙ¼ÆËãÊä³ö
+//ä¸»è½´è½¬é€Ÿè®¡ç®—è¾“å‡º
 int8 SecondspindleMotion(struct _SSpindle* pSSpindlePointer);
 
-//µÚ¶ş×ªÖáÎŞ±àÂëÆ÷£¬Í¨¹ıÀíÂÛµ±Ç°ËÙ¶ÈºÍÄ¿±êËÙ¶ÈµÄ±ÈÖµ´ÖÂÔµÄÅĞ¶ÏµÚ¶ş×ªÖá×ªËÙÊÇ·ñ´ïµ½ÒªÇó
+//ç¬¬äºŒè½¬è½´æ— ç¼–ç å™¨ï¼Œé€šè¿‡ç†è®ºå½“å‰é€Ÿåº¦å’Œç›®æ ‡é€Ÿåº¦çš„æ¯”å€¼ç²—ç•¥çš„åˆ¤æ–­ç¬¬äºŒè½¬è½´è½¬é€Ÿæ˜¯å¦è¾¾åˆ°è¦æ±‚
 int8 getSecondSpindleSpeedReached(struct _SSpindle* pSSpindlePointer);
 
 int8 SecondspindleSpeedTest(struct _SEncoderTest* pEncoderTest, struct _SSpindle* pSSpindlePointer);

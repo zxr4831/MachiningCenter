@@ -1,842 +1,823 @@
 #include "common.h"
 #include "GeneralFunctions.h"
 #include "GCode.h"
-#include"ErrorFunction.h"
+#include "ErrorFunction.h"
 #include "channel.h"
 
-
 #if STM32_MODE
-#include"flread_task.h"    //M98/M97ÓÃµ½ÆóÒµµÄ²éÕÒÎÄ¼þÃûº¯Êý
+#include "flread_task.h" //M98/M97ç”¨åˆ°ä¼ä¸šçš„æŸ¥æ‰¾æ–‡ä»¶åå‡½æ•°
 #endif
 
-#define ProgramVal_MAX_Length 4 //³ÌÐòÃûÊý×Ö×î´ó³¤¶È  µ±Ç°Îª4 ÈçO1114
+#define ProgramVal_MAX_Length 4 //ç¨‹åºåæ•°å­—æœ€å¤§é•¿åº¦  å½“å‰ä¸º4 å¦‚O1114
 
 //*******************************M00***************************************
-//Ìí¼ÓM00¹æÔò
+//æ·»åŠ M00è§„åˆ™
 void addM00RegulationAPI()
 {
-	addMCommadRegulation(0, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM00, AssignM00);
+    addMCommadRegulation(0, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM00, AssignM00);
 }
-//¼ì²éM00
+//æ£€æŸ¥M00
 int8 CheckM00(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
-	return 1;
+    if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    return 1;
 }
-//¸³ÖµM00
+//èµ‹å€¼M00
 int8 AssignM00(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
 
-	//M00Ìí¼Ó½øIO»º³åÇøÖÐ£¬ÒÔ¼°Ö¸ÁîÀàÐÍ¸³Öµ
-	setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_PAUSE, CMD_PROGRAM_ADDR);
-	setIO(M00, pSGCodeBuffUnit->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
+    //M00æ·»åŠ è¿›IOç¼“å†²åŒºä¸­ï¼Œä»¥åŠæŒ‡ä»¤ç±»åž‹èµ‹å€¼
+    setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_PAUSE, CMD_PROGRAM_ADDR);
+    setIO(M00, pSGCodeBuffUnit->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
 
-	return 1;
-
+    return 1;
 }
 //*******************************M01***************************************
-//Ìí¼ÓM01¹æÔò
+//æ·»åŠ M01è§„åˆ™
 void addM01RegulationAPI()
 {
-	addMCommadRegulation(1, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM01, AssignM01);
+    addMCommadRegulation(1, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM01, AssignM01);
 }
 
-//¼ì²éM01
+//æ£€æŸ¥M01
 int8 CheckM01(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
     if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
         return -1;
-    /* Ô­ÓÐ M01 µÄ K/L/J Íâ²¿ÊäÈëµÈ´ýÊôÓÚ³µ´²À©Õ¹Óï·¨¡£ */
+    /* åŽŸæœ‰ M01 çš„ K/L/J å¤–éƒ¨è¾“å…¥ç­‰å¾…å±žäºŽè½¦åºŠæ‰©å±•è¯­æ³•ã€‚ */
     if (pSSyntaxConfig->SScanContainer.bL || pSSyntaxConfig->SScanContainer.bRIJK[2] ||
         pSSyntaxConfig->SScanContainer.bRIJK[3])
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
-		return -1;
-	}
-	return 1;
-}
-//¸³ÖµM01
-int8 AssignM01(SAssignConfiguration* pSAssignConfig, struct SGCodeParse*pSGCodeBuffUnit)
-{
-	if (pSAssignConfig==NULL|| pSGCodeBuffUnit==NULL)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
         return -1;
-    if (pSAssignConfig->SScanContainer.bL|| pSAssignConfig->SScanContainer.bRIJK[2] ||
-        pSAssignConfig->SScanContainer.bRIJK[3])
-	{
-				parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
-		return -1;
     }
-
-	//»ñÈ¡¸³Öµ½á¹¹ÌåÖÐµÄÉ¨Ãè½á¹¹Ìå
-			pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = UNASSIGNED_VALUE;
-			pSGCodeBuffUnit->SIOContrlInfo.nInputDetectTime = UNASSIGNED_VALUE;
-
-	//M01Ìí¼Ó½øIO»º³åÇøÖÐ£¬ÒÔ¼°Ö¸ÁîÀàÐÍ¸³Öµ
-	setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_OPTION_PAUSE, CMD_PROGRAM_ADDR);
-	setIO(M01, pSGCodeBuffUnit->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
-
-	return 1;
-
+    return 1;
 }
-
+//èµ‹å€¼M01
+int8 AssignM01(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
+{
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+        return -1;
+    if (pSAssignConfig->SScanContainer.bL || pSAssignConfig->SScanContainer.bRIJK[2] ||
+        pSAssignConfig->SScanContainer.bRIJK[3])
+    {
+        parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
+        return -1;
+    }
+    pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = UNASSIGNED_VALUE;
+    pSGCodeBuffUnit->SIOContrlInfo.nInputDetectTime = UNASSIGNED_VALUE;
+    setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_OPTION_PAUSE, CMD_PROGRAM_ADDR);
+    setIO(M01, pSGCodeBuffUnit->ucIOCommandArray, IO_MAXGROUP_IN_SINGLE_LINE);
+    return 1;
+}
 
 //*******************************M02***************************************
-//Ìí¼ÓM02¹æÔò
+//æ·»åŠ M02è§„åˆ™
 void addM02RegulationAPI()
 {
-	addMCommadRegulation(2, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM02, AssignM02);
+    addMCommadRegulation(2, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM02, AssignM02);
 }
 
-//¸³ÖµM02
+//èµ‹å€¼M02
 int8 AssignM02(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
 
-	setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP_M02, CMD_PROGRAM_ADDR);
-	//2.±ê¼ÇbLastLineMark
-	pSGCodeBuffUnit->bLastLineMark = TRUE;
+    setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP_M02, CMD_PROGRAM_ADDR);
+    //2.æ ‡è®°bLastLineMark
+    pSGCodeBuffUnit->bLastLineMark = TRUE;
 
-	pSAssignConfig->ucTargetStatus = GCODE_RUN2FINISHED;
-	pSAssignConfig->SGetTextStateInfo.nEndLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
-	pSAssignConfig->bAssignFinished = TRUE;
-	return 1;
+    pSAssignConfig->ucTargetStatus = GCODE_RUN2FINISHED;
+    pSAssignConfig->SGetTextStateInfo.nEndLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
+    pSAssignConfig->bAssignFinished = TRUE;
+    return 1;
 }
 
-//¼ì²éM02
+//æ£€æŸ¥M02
 int8 CheckM02(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		return -1;
-	}
-	//1.×Ó³ÌÐòÎ´³öÏÖM99
-	SList* pSProgramList = getProgramList(0);
-	if (pSProgramList->cSize > 1)
-	{
-		parseGCodeErrorB(0, 0);
-		return -1;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        return -1;
+    }
+    //1.å­ç¨‹åºæœªå‡ºçŽ°M99
+    SList* pSProgramList = getProgramList(0);
+    if (pSProgramList->cSize > 1)
+    {
+        parseGCodeErrorB(0, 0);
+        return -1;
+    }
 
-	pSSyntaxConfig->cTargetStatus = GCODE_RUN2FINISHED;
-	pSSyntaxConfig->SGetTextStateInfo.nEndLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
-	pSSyntaxConfig->bCheckFinished = TRUE;
-	//setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
-	return 1;
+    pSSyntaxConfig->cTargetStatus = GCODE_RUN2FINISHED;
+    pSSyntaxConfig->SGetTextStateInfo.nEndLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
+    pSSyntaxConfig->bCheckFinished = TRUE;
+    //setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
+    return 1;
 }
 
 //*******************************M29***************************************
-//Ìí¼ÓM29¹æÔò
+//æ·»åŠ M29è§„åˆ™
 void addM29RegulationAPI()
 {
-	addMCommadRegulation(29, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM29, AssignM29);
+    addMCommadRegulation(29, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM29, AssignM29);
 }
-//¼ì²éM29
+//æ£€æŸ¥M29
 int8 CheckM29(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		return -1;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        return -1;
+    }
 
-	pSSyntaxConfig->SGCodeCurrSysState.dTappingSpeed = pSSyntaxConfig->SScanContainer.dS;
+    pSSyntaxConfig->SGCodeCurrSysState.dTappingSpeed = pSSyntaxConfig->SScanContainer.dS;
 
-	//Çå³ýÉ¨Ãè½á¹¹ÌåµÄSÖµ
-	pSSyntaxConfig->SScanContainer.bS = FALSE;
-	pSSyntaxConfig->SScanContainer.dS = 0;
+    //æ¸…é™¤æ‰«æç»“æž„ä½“çš„Så€¼
+    pSSyntaxConfig->SScanContainer.bS = FALSE;
+    pSSyntaxConfig->SScanContainer.dS = 0;
 
-	return 1;
+    return 1;
 }
 
-//¸³ÖµM29
+//èµ‹å€¼M29
 int8 AssignM29(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
-	pSAssignConfig->SGCodeCurrSysState.dTappingSpeed = pSAssignConfig->SScanContainer.dS;
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    pSAssignConfig->SGCodeCurrSysState.dTappingSpeed = pSAssignConfig->SScanContainer.dS;
 
-	//Çå³ýÉ¨Ãè½á¹¹ÌåµÄSÖµ
-	pSAssignConfig->SScanContainer.bS = FALSE;
-	pSAssignConfig->SScanContainer.dS = 0;
-	return 1;
+    //æ¸…é™¤æ‰«æç»“æž„ä½“çš„Så€¼
+    pSAssignConfig->SScanContainer.bS = FALSE;
+    pSAssignConfig->SScanContainer.dS = 0;
+    return 1;
 }
 //*******************************M30***************************************
 
-//Ìí¼ÓM30¹æÔò
+//æ·»åŠ M30è§„åˆ™
 void addM30RegulationAPI()
 {
-	addMCommadRegulation(30, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM30, AssignM30);
+    addMCommadRegulation(30, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM30, AssignM30);
 }
-//¼ì²éM30
-int8 CheckM30(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse*pSGCodeBuffUnit)
+//æ£€æŸ¥M30
+int8 CheckM30(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		return -1;
-	}
-	//1.×Ó³ÌÐòÎ´³öÏÖM99
-	SList* pSProgramList = getProgramList(pSSyntaxConfig->ucChannelNum);
-	if (pSProgramList->cSize > 1)
-	{
-		parseGCodeErrorB(0, 0);
-		return -1;
-	}
-	//2.»ñÈ¡¹ì¼£NS-NFÊ±³öÏÖM30
-	if(pSSyntaxConfig->cPart != 0)
-	{
-	
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        return -1;
+    }
+    //1.å­ç¨‹åºæœªå‡ºçŽ°M99
+    SList* pSProgramList = getProgramList(pSSyntaxConfig->ucChannelNum);
+    if (pSProgramList->cSize > 1)
+    {
+        parseGCodeErrorB(0, 0);
+        return -1;
+    }
+    //2.èŽ·å–è½¨è¿¹NS-NFæ—¶å‡ºçŽ°M30
+    if (pSSyntaxConfig->cPart != 0)
+    {
+    }
 
-	pSSyntaxConfig->cTargetStatus = GCODE_RUN2FINISHED;
-	pSSyntaxConfig->SGetTextStateInfo.nEndLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
-	pSSyntaxConfig->bCheckFinished = TRUE;
-	//setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
-	return 1;
+    pSSyntaxConfig->cTargetStatus = GCODE_RUN2FINISHED;
+    pSSyntaxConfig->SGetTextStateInfo.nEndLineNum = pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum;
+    pSSyntaxConfig->bCheckFinished = TRUE;
+    //setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
+    return 1;
 }
 
-//¸³ÖµM30
+//èµ‹å€¼M30
 int8 AssignM30(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
-	//1.Ð´Ö¸ÁîÀàÐÍ
-	setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
-	//2.±ê¼ÇbLastLineMark
-	pSGCodeBuffUnit->bLastLineMark = TRUE;
-	//3.ÉèÖÃ¸³ÖµÄ¿±ê×´Ì¬
-	pSAssignConfig->ucTargetStatus = GCODE_RUN2FINISHED;
-	pSAssignConfig->SGetTextStateInfo.nEndLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
-	pSAssignConfig->bAssignFinished = TRUE;
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    //1.å†™æŒ‡ä»¤ç±»åž‹
+    setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
+    //2.æ ‡è®°bLastLineMark
+    pSGCodeBuffUnit->bLastLineMark = TRUE;
+    //3.è®¾ç½®èµ‹å€¼ç›®æ ‡çŠ¶æ€
+    pSAssignConfig->ucTargetStatus = GCODE_RUN2FINISHED;
+    pSAssignConfig->SGetTextStateInfo.nEndLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
+    pSAssignConfig->bAssignFinished = TRUE;
 
-	//4.1µ±Ç°Ä£Ê½£º×Ô¶¯Ä£Ê½
+    /* å½“å‰é…ç½®çš„ä¸»è½´ä¸Žåˆ€å…·è¾“å…¥è¾“å‡ºä»å¾…æŽ¥å…¥ã€‚åŽç»­ç¡¬ä»¶æ‰§è¡Œå™¨éœ€æ˜¾å¼å®žçŽ° M30
+     * ç»“æŸæ—¶çš„åœæ­¢ç­–ç•¥ï¼Œå¹¶é€šè¿‡åŠ å·¥ä¸­å¿ƒæŽ¥å£å¤„ç†ä¸»è½´ã€å†·å´å’Œåˆ€å…·åŠ¨ä½œã€‚ */
 
-	return 1;
+    return 1;
 }
 
 //*******************************M98***************************************
 
-
 void addM98RegulationAPI()
 {
-	addMCommadRegulation(98, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM98, AssignM98);
+    addMCommadRegulation(98, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM98, AssignM98);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 CheckM98(SSyntaxConfiguration* pSSyntaxConfig)
-  º¯Êý¹¦ÄÜ: ¼ì²éM98
-  ÊäÈë²ÎÊý£ºpSSyntaxConfig		¸³Öµ½á¹¹Ìå
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸ñÊ½M98 P****xxxx
+  å‡½æ•°åç§°ï¼šint8 CheckM98(SSyntaxConfiguration* pSSyntaxConfig)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M98
+  è¾“å…¥å‚æ•°ï¼špSSyntaxConfig		èµ‹å€¼ç»“æž„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.æ ¼å¼M98 P****xxxx
 **************************************************/
 int8 CheckM98(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig==NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	//»ñÈ¡PÖµÕûÊý²¿·Ö
-	int32 nVal = (int32)pSSyntaxConfig->SScanContainer.dP;
-	int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = { 0 };   //ÎÄ¼þÃû
+    //èŽ·å–På€¼æ•´æ•°éƒ¨åˆ†
+    int32 nVal = (int32)pSSyntaxConfig->SScanContainer.dP;
+    int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = {0}; //æ–‡ä»¶å
 
-	//1.¼ì²éPÖµ
-	if (pSSyntaxConfig->SScanContainer.bP == TRUE)
-	{
-		//1.1²ÎÊýPÖµ²»ÄÜÐ¡ÓÚ0
-		//1.2²ÎÊýPÖµ±ØÐëÎªÕûÊý
-		//1.3²ÎÊýPÖµÎ»Êý´óÓÚ8
-		if (pSSyntaxConfig->SScanContainer.dP < 0 ||
-			!isZero(pSSyntaxConfig->SScanContainer.dP - nVal) ||
-			nVal> 99999999)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
-			return -1;
-		}
-	}
-	else
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
-		return -1;
-	}
-	if (pSSyntaxConfig->SScanContainer.bL == TRUE)
-	{
-	    double dL = pSSyntaxConfig->SScanContainer.dL;
-	    if (dL <= 0 || dL != (int32)dL || dL > INT16_MAX) {
-	    	parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
-	        return -1;
-	    }
-	}
+    //1.æ£€æŸ¥På€¼
+    if (pSSyntaxConfig->SScanContainer.bP == TRUE)
+    {
+        //1.1å‚æ•°På€¼ä¸èƒ½å°äºŽ0
+        //1.2å‚æ•°På€¼å¿…é¡»ä¸ºæ•´æ•°
+        //1.3å‚æ•°På€¼ä½æ•°å¤§äºŽ8
+        if (pSSyntaxConfig->SScanContainer.dP < 0 || !isZero(pSSyntaxConfig->SScanContainer.dP - nVal) ||
+            nVal > 99999999)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
+            return -1;
+        }
+    }
+    else
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
+        return -1;
+    }
+    if (pSSyntaxConfig->SScanContainer.bL == TRUE)
+    {
+        double dL = pSSyntaxConfig->SScanContainer.dL;
+        if (dL <= 0 || dL != (int32)dL || dL > INT16_MAX)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
+            return -1;
+        }
+    }
 
-	//2.STM32Ä£Ê½ÏÂ£¬ÔÚFLASHÖÐ²éÕÒÎÄ¼þÃûÊÇ·ñ´æÔÚ
+    //2.STM32æ¨¡å¼ä¸‹ï¼Œåœ¨FLASHä¸­æŸ¥æ‰¾æ–‡ä»¶åæ˜¯å¦å­˜åœ¨
 #if STM32_MODE
-	convertProgramName((int32)pSSyntaxConfig->SScanContainer.dP, cTempArr);   //ÊýÖµ×ª×Ö·û´® »ñÈ¡ÎÄ¼þÃû
-	uint8 ret = FindFileInfo(cTempArr);//ÔÚFLASHÖÐ²éÕÒÎÄ¼þÃû
-	if (ret == 0xF3)
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM89);//²éÕÒ²»µ½ÎÄ¼þÃû
-		return -1;
-	}
-	else if(ret == 0xF4 || ret == 0xF5 ||ret == 0xF6)
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM459);//²éÕÒ²»µ½ÎÄ¼þÃû
-		return -1;
-	}
+    convertProgramName((int32)pSSyntaxConfig->SScanContainer.dP, cTempArr); //æ•°å€¼è½¬å­—ç¬¦ä¸² èŽ·å–æ–‡ä»¶å
+    uint8 ret = FindFileInfo(cTempArr);                                     //åœ¨FLASHä¸­æŸ¥æ‰¾æ–‡ä»¶å
+    if (ret == 0xF3)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM89); //æŸ¥æ‰¾ä¸åˆ°æ–‡ä»¶å
+        return -1;
+    }
+    else if (ret == 0xF4 || ret == 0xF5 || ret == 0xF6)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM459); //æŸ¥æ‰¾ä¸åˆ°æ–‡ä»¶å
+        return -1;
+    }
 #endif
 
-	pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-	return 1;
+    pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 CheckM98(SSyntaxConfiguration* pSSyntaxConfig)
-  º¯Êý¹¦ÄÜ: ¼ì²éM98
-  ÊäÈë²ÎÊý£ºpSSyntaxConfig		¸³Öµ½á¹¹Ìå
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.¸ñÊ½M98 P****xxxx
+  å‡½æ•°åç§°ï¼šint8 CheckM98(SSyntaxConfiguration* pSSyntaxConfig)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M98
+  è¾“å…¥å‚æ•°ï¼špSSyntaxConfig		èµ‹å€¼ç»“æž„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.æ ¼å¼M98 P****xxxx
 **************************************************/
 int8 AssignM98(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
 
-	//1.¿ª±Ù³ÌÐò½ÚµãÄÚ´æ
-	SProgram* pSubProgram = createAProgramStruct();   //´´½¨Ò»¸ö×Ó³ÌÐò½á¹¹Ìå
-	if (pSubProgram == NULL)
-	{
-		return -1;
-	}
+    //1.å¼€è¾Ÿç¨‹åºèŠ‚ç‚¹å†…å­˜
+    SProgram* pSubProgram = createAProgramStruct(); //åˆ›å»ºä¸€ä¸ªå­ç¨‹åºç»“æž„ä½“
+    if (pSubProgram == NULL)
+    {
+        return -1;
+    }
 
-	//2.»ñÈ¡×Ó³ÌÐòµ÷ÓÃ´ÎÊý(Ç°ËÄÎ»)
-	int16 sRemainingCalls = pSAssignConfig->SScanContainer.dP / 10000;
-	if (sRemainingCalls == 0)
-	{
-		sRemainingCalls = 1;
-	}
-	if (pSAssignConfig->SScanContainer.bL == TRUE)
-	{
-		sRemainingCalls = (int16)pSAssignConfig->SScanContainer.dL;
-	}
+    //2.èŽ·å–å­ç¨‹åºè°ƒç”¨æ¬¡æ•°(å‰å››ä½)
+    int16 sRemainingCalls = pSAssignConfig->SScanContainer.dP / 10000;
+    if (sRemainingCalls == 0)
+    {
+        sRemainingCalls = 1;
+    }
+    if (pSAssignConfig->SScanContainer.bL == TRUE)
+    {
+        sRemainingCalls = (int16)pSAssignConfig->SScanContainer.dL;
+    }
 
-	//3.»ñÈ¡×Ó³ÌÐòÃûµÄÊýÖµ£¨ºóËÄÎ»£©
-	int16 sFileNameVal;
-	sFileNameVal = (int32)pSAssignConfig->SScanContainer.dP % 10000;
-	
-	//4.¸³Öµ×Ó³ÌÐò½á¹¹Ìå
-	//4.1Ð´Èë×Ó³ÌÐòÃû
-	convertProgramName(sFileNameVal, pSubProgram->cFileName);
-	//4.2Ð´Èë×Ó³ÌÐòµ÷ÓÃ´ÎÊý
-	pSubProgram->sRemainingCalls = sRemainingCalls;
-	//4.2.Ð´ÈëM98µÄ¸¸³ÌÐòÐÐºÅ
-	pSubProgram->unFatherLineNum = pSAssignConfig->SGetTextStateInfo.unGetLineNum;
+    //3.èŽ·å–å­ç¨‹åºåçš„æ•°å€¼ï¼ˆåŽå››ä½ï¼‰
+    int16 sFileNameVal;
+    sFileNameVal = (int32)pSAssignConfig->SScanContainer.dP % 10000;
 
-	//5.½«×Ó³ÌÐò½á¹¹Ìå²åÈëÁ´±íÖÐ£¨Í·²å£©
-	int8 cRet = insertList(getProgramList(pSAssignConfig->ucChannelNum), 0, pSubProgram, ORAM_NUM302);   //²åÈëÁ´±í,Í·²å
-	if (cRet == FALSE)
-	{
-		freeProgramData(pSubProgram);   //²åÈëÊ§°Ü£¬Á¢¼´ÊÍ·Å
-		freeGCode(pSubProgram);
-		pSubProgram = NULL;
-		parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-		return -1;
-	}
+    //4.èµ‹å€¼å­ç¨‹åºç»“æž„ä½“
+    //4.1å†™å…¥å­ç¨‹åºå
+    convertProgramName(sFileNameVal, pSubProgram->cFileName);
+    //4.2å†™å…¥å­ç¨‹åºè°ƒç”¨æ¬¡æ•°
+    pSubProgram->sRemainingCalls = sRemainingCalls;
+    //4.2.å†™å…¥M98çš„çˆ¶ç¨‹åºè¡Œå·
+    pSubProgram->unFatherLineNum = pSAssignConfig->SGetTextStateInfo.unGetLineNum;
 
-    //6.ÐÞ¸ÄÎÄ±¾×´Ì¬½á¹¹Ìå
-	pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
-	pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
-	pSubProgram->sBeginLineNum = 0;
+    //5.å°†å­ç¨‹åºç»“æž„ä½“æ’å…¥é“¾è¡¨ä¸­ï¼ˆå¤´æ’ï¼‰
+    int8 cRet = insertList(getProgramList(pSAssignConfig->ucChannelNum), 0, pSubProgram, ORAM_NUM302); //æ’å…¥é“¾è¡¨,å¤´æ’
+    if (cRet == FALSE)
+    {
+        freeProgramData(pSubProgram); //æ’å…¥å¤±è´¥ï¼Œç«‹å³é‡Šæ”¾
+        freeGCode(pSubProgram);
+        pSubProgram = NULL;
+        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+        return -1;
+    }
 
-	return 1;
+    //6.ä¿®æ”¹æ–‡æœ¬çŠ¶æ€ç»“æž„ä½“
+    pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
+    pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+    pSubProgram->sBeginLineNum = 0;
 
-} 
-
+    return 1;
+}
 
 //*******************************M99***************************************
 
 /*************************************************
-  º¯ÊýÃû³Æ£º
-  º¯Êý¹¦ÄÜ:
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½:
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void addM99RegulationAPI()
 {
-	addMCommadRegulation(99, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM99, AssignM99);
+    addMCommadRegulation(99, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM99, AssignM99);
 }
 
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºSAssignConfiguration* getAssignConfig(uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ: ¼ì²éM99
-  ÊäÈë²ÎÊý£ºpSSyntaxConfig		¸³Öµ½á¹¹Ìå
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.ÓÐÈýÖÖ´æÔÚ·½Ê½£ºM99¡¢M99 P**¡¢M99 L**
-			2.Ö÷³ÌÐòÖÐÖ»ÔÊÐí³öÏÖM99»òM99 L**£¬²»ÔÊÐí³öÏÖM99 P**
-			3.×Ó³ÌÐòÖÐÖ»ÔÊÐí³öÏÖM99»òM99 P**£¬²»ÔÊÐí³öÏÖM99 L**
+  å‡½æ•°åç§°ï¼šSAssignConfiguration* getAssignConfig(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M99
+  è¾“å…¥å‚æ•°ï¼špSSyntaxConfig		èµ‹å€¼ç»“æž„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.æœ‰ä¸‰ç§å­˜åœ¨æ–¹å¼ï¼šM99ã€M99 P**ã€M99 L**
+			2.ä¸»ç¨‹åºä¸­åªå…è®¸å‡ºçŽ°M99æˆ–M99 L**ï¼Œä¸å…è®¸å‡ºçŽ°M99 P**
+			3.å­ç¨‹åºä¸­åªå…è®¸å‡ºçŽ°M99æˆ–M99 P**ï¼Œä¸å…è®¸å‡ºçŽ°M99 L**
 **************************************************/
 int8 CheckM99(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		parseGCodeErrorB(0, 0);
-		return -1;
-	}
-	
-	SList* pSProgramList = getProgramList(pSSyntaxConfig->ucChannelNum);
-	SProgram* pSCurrProgram = getCurrentProgram(pSSyntaxConfig->ucChannelNum);
+    if (pSSyntaxConfig == NULL)
+    {
+        parseGCodeErrorB(0, 0);
+        return -1;
+    }
 
-	//1.Ö÷³ÌÐòµ÷ÓÃM99
-	if (isMainProgram(pSSyntaxConfig->ucChannelNum))
-	{
-		//1.1Ö÷³ÌÐò£ºM99P**£¨²»ÔÊÐí³öÏÖ´ËÇé¿ö£©
-		if (pSSyntaxConfig->SScanContainer.bP == TRUE)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
-			return -1;
-		}
-		//1.2Ö÷³ÌÐò£ºM99L**£¨Ö÷³ÌÐòÑ­»·Ö´ÐÐL´Î£©
-		else if (pSSyntaxConfig->SScanContainer.bL == TRUE)
-		{
-		    double dL = pSSyntaxConfig->SScanContainer.dL;
-		    if (dL <= 0 || dL != (int32)dL || dL > INT16_MAX) {
-		    	parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
-		        return -1;
-		    }
-			//×¢£º¼ì²éÁ÷³Ì²»ÄÜÐÞ¸ÄpSCurrProgram->sRemainingCalls
-			int16 sRemainingCalls = pSCurrProgram->sRemainingCalls;
+    SList* pSProgramList = getProgramList(pSSyntaxConfig->ucChannelNum);
+    SProgram* pSCurrProgram = getCurrentProgram(pSSyntaxConfig->ucChannelNum);
 
-			if (sRemainingCalls == 0)
-			{
-				//´ËÇ°ÒÑ³öÏÖM99L**£¬±¨´í£¬²»ÔÊÐíÖ÷³ÌÐòÇ¶Ì×M99L**Ñ­»·
-				parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
-				return -1;
-			}
+    //1.ä¸»ç¨‹åºè°ƒç”¨M99
+    if (isMainProgram(pSSyntaxConfig->ucChannelNum))
+    {
+        //1.1ä¸»ç¨‹åºï¼šM99P**ï¼ˆä¸å…è®¸å‡ºçŽ°æ­¤æƒ…å†µï¼‰
+        if (pSSyntaxConfig->SScanContainer.bP == TRUE)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
+            return -1;
+        }
+        //1.2ä¸»ç¨‹åºï¼šM99L**ï¼ˆä¸»ç¨‹åºå¾ªçŽ¯æ‰§è¡ŒLæ¬¡ï¼‰
+        else if (pSSyntaxConfig->SScanContainer.bL == TRUE)
+        {
+            double dL = pSSyntaxConfig->SScanContainer.dL;
+            if (dL <= 0 || dL != (int32)dL || dL > INT16_MAX)
+            {
+                parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM93);
+                return -1;
+            }
+            //æ³¨ï¼šæ£€æŸ¥æµç¨‹ä¸èƒ½ä¿®æ”¹pSCurrProgram->sRemainingCalls
+            int16 sRemainingCalls = pSCurrProgram->sRemainingCalls;
 
-			//1.2.1Ê£Óàµ÷ÓÃ´ÎÊýÎ´Ð´Èë£¨Ö÷³ÌÐòµÚÒ»´Îµ÷ÓÃM99£©
-			if (sRemainingCalls == UNASSIGNED_VALUE)
-			{
-				//Ð´ÈëÊ£Óàµ÷ÓÃ´ÎÊý
-				sRemainingCalls = round(pSSyntaxConfig->SScanContainer.dL);
-				//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-				pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-			}
-			//1.2.2Ê£Óàµ÷ÓÃ´ÎÊýÒÑÐ´Èë£¨Ö÷³ÌÐò·ÇµÚÒ»´Îµ÷ÓÃM99£©
-			else
-			{
-				//Ê£Óàµ÷ÓÃ´ÎÊý--
-				sRemainingCalls--;
-				//Ö÷³ÌÐòÊ£Óàµ÷ÓÃ´ÎÊý > 0£¬¼ÌÐøµ÷ÓÃÖ÷³ÌÐò
-				if (sRemainingCalls > 0)
-				{
-					//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-					pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-				}
-				//Ö÷³ÌÐòÎÞÊ£Óàµ÷ÓÃ´ÎÊý£¬¼ÌÐø¼ì²éM99 L**ºóµÄ³ÌÐò
-				else
-				{
-					//ÎÞÐè²Ù×÷£¬ÈçºÎ·ÀÖ¹Ö÷³ÌÐòM99Ç¶Ì×ÎÊÌâ£¿£¿£¿
-					//½â¾ö·½·¨£ºÖ÷³ÌÐòÎÞµ÷ÓÃ´ÎÊýºó£¬½áÊø¼ì²é
-				}
-			}
-		}
-		//1.2Ö÷³ÌÐò£ºM99£¨Ö÷³ÌÐòÎÞÏÞÑ­»·£©
-		else
-		{
-			//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-			pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-		}
-	}
+            if (sRemainingCalls == 0)
+            {
+                //æ­¤å‰å·²å‡ºçŽ°M99L**ï¼ŒæŠ¥é”™ï¼Œä¸å…è®¸ä¸»ç¨‹åºåµŒå¥—M99L**å¾ªçŽ¯
+                parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
+                return -1;
+            }
 
-	//2.×Ó³ÌÐòµ÷ÓÃM99
-	else
-	{
+            //1.2.1å‰©ä½™è°ƒç”¨æ¬¡æ•°æœªå†™å…¥ï¼ˆä¸»ç¨‹åºç¬¬ä¸€æ¬¡è°ƒç”¨M99ï¼‰
+            if (sRemainingCalls == UNASSIGNED_VALUE)
+            {
+                //å†™å…¥å‰©ä½™è°ƒç”¨æ¬¡æ•°
+                sRemainingCalls = round(pSSyntaxConfig->SScanContainer.dL);
+                //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+                pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+            }
+            //1.2.2å‰©ä½™è°ƒç”¨æ¬¡æ•°å·²å†™å…¥ï¼ˆä¸»ç¨‹åºéžç¬¬ä¸€æ¬¡è°ƒç”¨M99ï¼‰
+            else
+            {
+                //å‰©ä½™è°ƒç”¨æ¬¡æ•°--
+                sRemainingCalls--;
+                //ä¸»ç¨‹åºå‰©ä½™è°ƒç”¨æ¬¡æ•° > 0ï¼Œç»§ç»­è°ƒç”¨ä¸»ç¨‹åº
+                if (sRemainingCalls > 0)
+                {
+                    //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+                    pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+                }
+                //ä¸»ç¨‹åºæ— å‰©ä½™è°ƒç”¨æ¬¡æ•°ï¼Œç»§ç»­æ£€æŸ¥M99 L**åŽçš„ç¨‹åº
+                else
+                {
+                    //æ— éœ€æ“ä½œï¼Œå¦‚ä½•é˜²æ­¢ä¸»ç¨‹åºM99åµŒå¥—é—®é¢˜ï¼Ÿï¼Ÿï¼Ÿ
+                    //è§£å†³æ–¹æ³•ï¼šä¸»ç¨‹åºæ— è°ƒç”¨æ¬¡æ•°åŽï¼Œç»“æŸæ£€æŸ¥
+                }
+            }
+        }
+        //1.2ä¸»ç¨‹åºï¼šM99ï¼ˆä¸»ç¨‹åºæ— é™å¾ªçŽ¯ï¼‰
+        else
+        {
+            //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+            pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+        }
+    }
 
-		//1.1Ö÷³ÌÐò£ºM99P**£¨²»ÔÊÐí³öÏÖ´ËÇé¿ö£©
-		if (pSSyntaxConfig->SScanContainer.bL == TRUE)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
-			return -1;
-		}
-		//×¢£º¼ì²éÁ÷³Ì²»ÄÜÐÞ¸ÄpSCurrProgram->sRemainingCalls
-		int16 sRemainingCalls = pSCurrProgram->sRemainingCalls;
-		//µ÷ÓÃ´ÎÊý--
-		sRemainingCalls--;
-		//2.1Ê£Óàµ÷ÓÃ´ÎÊý > 0£¬¼ÌÐøµ÷ÓÃµ±Ç°×Ó³ÌÐò
-		if (sRemainingCalls > 0)
-		{
-			//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-			pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-		}
-		//2.2×Ó³ÌÐòÎÞÊ£Óàµ÷ÓÃ´ÎÊý£º·µ»Ø¸¸³ÌÐòÄ¿±êÐÐºÅorÄ¿±ê³ÌÐò¶ÎºÅ
-		else
-		{
-			//2.1.1·µ»Ø¸¸³ÌÐòµ÷ÓÃµÄÏÂÒ»ÐÐ£ºM99
-			if (pSSyntaxConfig->SScanContainer.bP == FALSE)
-			{
-				//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-				pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-			}
-			//2.1.2·µ»Ø¸¸³ÌÐòÄ¿±ê³ÌÐò¶ÎºÅ£ºM99 P**
-			else
-			{
-				//¼ì²éÁ÷³Ì×´Ì¬ÖÃÎªWAIT
-				pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
-			}
-		}
-	}
-	
-	return 1;
+    //2.å­ç¨‹åºè°ƒç”¨M99
+    else
+    {
 
+        //1.1ä¸»ç¨‹åºï¼šM99P**ï¼ˆä¸å…è®¸å‡ºçŽ°æ­¤æƒ…å†µï¼‰
+        if (pSSyntaxConfig->SScanContainer.bL == TRUE)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
+            return -1;
+        }
+        //æ³¨ï¼šæ£€æŸ¥æµç¨‹ä¸èƒ½ä¿®æ”¹pSCurrProgram->sRemainingCalls
+        int16 sRemainingCalls = pSCurrProgram->sRemainingCalls;
+        //è°ƒç”¨æ¬¡æ•°--
+        sRemainingCalls--;
+        //2.1å‰©ä½™è°ƒç”¨æ¬¡æ•° > 0ï¼Œç»§ç»­è°ƒç”¨å½“å‰å­ç¨‹åº
+        if (sRemainingCalls > 0)
+        {
+            //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+            pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+        }
+        //2.2å­ç¨‹åºæ— å‰©ä½™è°ƒç”¨æ¬¡æ•°ï¼šè¿”å›žçˆ¶ç¨‹åºç›®æ ‡è¡Œå·orç›®æ ‡ç¨‹åºæ®µå·
+        else
+        {
+            //2.1.1è¿”å›žçˆ¶ç¨‹åºè°ƒç”¨çš„ä¸‹ä¸€è¡Œï¼šM99
+            if (pSSyntaxConfig->SScanContainer.bP == FALSE)
+            {
+                //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+                pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+            }
+            //2.1.2è¿”å›žçˆ¶ç¨‹åºç›®æ ‡ç¨‹åºæ®µå·ï¼šM99 P**
+            else
+            {
+                //æ£€æŸ¥æµç¨‹çŠ¶æ€ç½®ä¸ºWAIT
+                pSSyntaxConfig->cTargetStatus = GCODE_WAIT;
+            }
+        }
+    }
+
+    return 1;
 }
 
 int8 AssignM99(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	SList* pSProgramList = getProgramList(pSAssignConfig->ucChannelNum);
-	SProgram* pSCurrProgram = getCurrentProgram(pSAssignConfig->ucChannelNum);
+    SList* pSProgramList = getProgramList(pSAssignConfig->ucChannelNum);
+    SProgram* pSCurrProgram = getCurrentProgram(pSAssignConfig->ucChannelNum);
 
-	//1.Ö÷³ÌÐòµ÷ÓÃM99
-	if (isMainProgram(pSAssignConfig->ucChannelNum))
-	{
-		//1.1Ö÷³ÌÐò£ºM99L**£¨Ö÷³ÌÐòÑ­»·Ö´ÐÐL´Î£©
-		if (pSAssignConfig->SScanContainer.bL == TRUE)
-		{
+    //1.ä¸»ç¨‹åºè°ƒç”¨M99
+    if (isMainProgram(pSAssignConfig->ucChannelNum))
+    {
+        //1.1ä¸»ç¨‹åºï¼šM99L**ï¼ˆä¸»ç¨‹åºå¾ªçŽ¯æ‰§è¡ŒLæ¬¡ï¼‰
+        if (pSAssignConfig->SScanContainer.bL == TRUE)
+        {
 
-			//1.1.1Ê£Óàµ÷ÓÃ´ÎÊýÎ´Ð´Èë£¨Ö÷³ÌÐòµÚÒ»´Îµ÷ÓÃM99£©
-			if (pSCurrProgram->sRemainingCalls == UNASSIGNED_VALUE)
-			{
-				//Ð´ÈëÊ£Óàµ÷ÓÃ´ÎÊý
-				pSCurrProgram->sRemainingCalls = round(pSAssignConfig->SScanContainer.dL) == 0 ? 1 : round(pSAssignConfig->SScanContainer.dL);
-				//ÐÞ¸Ä¸³ÖµÁ÷³Ì»ñÈ¡ÐÐºÅ
-				pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
-				//ÐÞ¸Ä¼ì²éÁ÷³Ì»ñÈ¡Ë÷Òý
-				pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
-			}
-			//1.1.2Ê£Óàµ÷ÓÃ´ÎÊýÒÑÐ´Èë£¨Ö÷³ÌÐò·ÇµÚÒ»´Îµ÷ÓÃM99£©
-			else
-			{
-				//µ÷ÓÃ´ÎÊý--
-				pSCurrProgram->sRemainingCalls--;
-				//Ö÷³ÌÐòÊ£Óàµ÷ÓÃ´ÎÊý > 0£¬¼ÌÐøµ÷ÓÃÖ÷³ÌÐò
-				if (pSCurrProgram->sRemainingCalls > 0)
-				{
-					//ÐÞ¸Ä¸³ÖµÁ÷³Ì»ñÈ¡ÐÐºÅ
-					pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
-					//ÐÞ¸Ä¸³ÖµÁ÷³Ì»ñÈ¡Ë÷Òý
-					pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
-				}
-				//Ö÷³ÌÐòÎÞÊ£Óàµ÷ÓÃ´ÎÊý£¬¼ÌÐø¼ì²éM99 L**ºóµÄ³ÌÐò
-				else
-				{
-					//ÈçºÎ·ÀÖ¹Ö÷³ÌÐòM99Ç¶Ì×ÎÊÌâ£¿£¿£¿£¨Ç¶Ì×±¨´í£©
-					//ÎÞÐè²Ù×÷£¬¼ÌÐøÖ´ÐÐM99L**ºóÃæÄÚÈÝ
-				}
-			}
-		
-		}
-		//1.2Ö÷³ÌÐò£ºM99£¨Ö÷³ÌÐòÎÞÏÞÑ­»·£©
-		else
-		{
-			//pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
-			pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
-			pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
-			pSAssignConfig->ucTargetStatus = GCODE_WAIT;
-			s_pSChannelConfig[0]->bSkipMode = g_SChannel[0].bSkipMode;
-		}
-		pSGCodeBuffUnit->bLastLineMark = TRUE;//×îºóÒ»ÐÐ±êÖ¾Î» £ºÔÚM99ÖÐbLastLineMarkÓÃÓÚ¼Æ¼þ±êÖ¾Î»
-	}
+            //1.1.1å‰©ä½™è°ƒç”¨æ¬¡æ•°æœªå†™å…¥ï¼ˆä¸»ç¨‹åºç¬¬ä¸€æ¬¡è°ƒç”¨M99ï¼‰
+            if (pSCurrProgram->sRemainingCalls == UNASSIGNED_VALUE)
+            {
+                //å†™å…¥å‰©ä½™è°ƒç”¨æ¬¡æ•°
+                pSCurrProgram->sRemainingCalls =
+                    round(pSAssignConfig->SScanContainer.dL) == 0 ? 1 : round(pSAssignConfig->SScanContainer.dL);
+                //ä¿®æ”¹èµ‹å€¼æµç¨‹èŽ·å–è¡Œå·
+                pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
+                //ä¿®æ”¹æ£€æŸ¥æµç¨‹èŽ·å–ç´¢å¼•
+                pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+            }
+            //1.1.2å‰©ä½™è°ƒç”¨æ¬¡æ•°å·²å†™å…¥ï¼ˆä¸»ç¨‹åºéžç¬¬ä¸€æ¬¡è°ƒç”¨M99ï¼‰
+            else
+            {
+                //è°ƒç”¨æ¬¡æ•°--
+                pSCurrProgram->sRemainingCalls--;
+                //ä¸»ç¨‹åºå‰©ä½™è°ƒç”¨æ¬¡æ•° > 0ï¼Œç»§ç»­è°ƒç”¨ä¸»ç¨‹åº
+                if (pSCurrProgram->sRemainingCalls > 0)
+                {
+                    //ä¿®æ”¹èµ‹å€¼æµç¨‹èŽ·å–è¡Œå·
+                    pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
+                    //ä¿®æ”¹èµ‹å€¼æµç¨‹èŽ·å–ç´¢å¼•
+                    pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+                }
+                //ä¸»ç¨‹åºæ— å‰©ä½™è°ƒç”¨æ¬¡æ•°ï¼Œç»§ç»­æ£€æŸ¥M99 L**åŽçš„ç¨‹åº
+                else
+                {
+                    //å¦‚ä½•é˜²æ­¢ä¸»ç¨‹åºM99åµŒå¥—é—®é¢˜ï¼Ÿï¼Ÿï¼Ÿï¼ˆåµŒå¥—æŠ¥é”™ï¼‰
+                    //æ— éœ€æ“ä½œï¼Œç»§ç»­æ‰§è¡ŒM99L**åŽé¢å†…å®¹
+                }
+            }
+        }
+        //1.2ä¸»ç¨‹åºï¼šM99ï¼ˆä¸»ç¨‹åºæ— é™å¾ªçŽ¯ï¼‰
+        else
+        {
+            //pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
+            pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
+            pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+            pSAssignConfig->ucTargetStatus = GCODE_WAIT;
+            s_pSChannelConfig[0]->bSkipMode = g_SChannel[0].bSkipMode;
+        }
+        pSGCodeBuffUnit->bLastLineMark = TRUE; //æœ€åŽä¸€è¡Œæ ‡å¿—ä½ ï¼šåœ¨M99ä¸­bLastLineMarkç”¨äºŽè®¡ä»¶æ ‡å¿—ä½
+    }
 
-	//2.×Ó³ÌÐòµ÷ÓÃM99
-	else
-	{
-		//0.µ÷ÓÃ´ÎÊý--
-		pSCurrProgram->sRemainingCalls--;
+    //2.å­ç¨‹åºè°ƒç”¨M99
+    else
+    {
+        //0.è°ƒç”¨æ¬¡æ•°--
+        pSCurrProgram->sRemainingCalls--;
 
-		//1.Ê£Óàµ÷ÓÃ´ÎÊý > 0£º¼ÌÐøµ÷ÓÃµ±Ç°×Ó³ÌÐò
-		if (pSCurrProgram->sRemainingCalls > 0)
-		{
-			pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
-			pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
-		}
-		//2.Ê£Óàµ÷ÓÃ´ÎÊý = 0£º·µ»Ø¸¸³ÌÐòÄ¿±êÐÐºÅorÄ¿±ê³ÌÐò¶ÎºÅ
-		else if (pSCurrProgram->sRemainingCalls == 0)
-		{
-			//2.1ÐÞ¸ÄÎÄ±¾×´Ì¬½á¹¹Ìå
-			//2.1.1·µ»ØÄ¿±êÐÐºÅ
-			if (pSAssignConfig->SScanContainer.bP == FALSE)
-			{
-				pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->unFatherLineNum;
-				pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+        //1.å‰©ä½™è°ƒç”¨æ¬¡æ•° > 0ï¼šç»§ç»­è°ƒç”¨å½“å‰å­ç¨‹åº
+        if (pSCurrProgram->sRemainingCalls > 0)
+        {
+            pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->sBeginLineNum;
+            pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+        }
+        //2.å‰©ä½™è°ƒç”¨æ¬¡æ•° = 0ï¼šè¿”å›žçˆ¶ç¨‹åºç›®æ ‡è¡Œå·orç›®æ ‡ç¨‹åºæ®µå·
+        else if (pSCurrProgram->sRemainingCalls == 0)
+        {
+            //2.1ä¿®æ”¹æ–‡æœ¬çŠ¶æ€ç»“æž„ä½“
+            //2.1.1è¿”å›žç›®æ ‡è¡Œå·
+            if (pSAssignConfig->SScanContainer.bP == FALSE)
+            {
+                pSAssignConfig->SGetTextStateInfo.unGetLineNum = pSCurrProgram->unFatherLineNum;
+                pSAssignConfig->SGetTextStateInfo.ucOriStrIndex = 0;
+            }
+            //2.1.2è¿”å›žç›®æ ‡ç¨‹åºæ®µå·ï¼ˆéœ€è¦æ‰¾åˆ°ç¨‹åºæ®µå·å¯¹åº”çš„è¡Œå·ï¼‰
+            else
+            {
+                pSAssignConfig->SScanContainer.cMacroType = 1;
+                pSAssignConfig->SScanContainer.bGOTO = TRUE;
+                pSAssignConfig->SScanContainer.dGOTO = pSAssignConfig->SScanContainer.dP;
+            }
 
-			}
-			//2.1.2·µ»ØÄ¿±ê³ÌÐò¶ÎºÅ£¨ÐèÒªÕÒµ½³ÌÐò¶ÎºÅ¶ÔÓ¦µÄÐÐºÅ£©
-			else
-			{
-				pSAssignConfig->SScanContainer.cMacroType = 1;
-				pSAssignConfig->SScanContainer.bGOTO = TRUE;
-				pSAssignConfig->SScanContainer.dGOTO = pSAssignConfig->SScanContainer.dP;
-			}
+            //2.2é‡Šæ”¾å½“å‰ç¨‹åºèŠ‚ç‚¹å†…éƒ¨å¼€è¾Ÿçš„å†…å­˜ï¼ˆæ³¨ï¼šç¨‹åºèŠ‚ç‚¹è‡ªèº«å†…å­˜æœªé‡Šæ”¾ï¼‰
+            freeProgramData(pSCurrProgram);
 
-			//2.2ÊÍ·Åµ±Ç°³ÌÐò½ÚµãÄÚ²¿¿ª±ÙµÄÄÚ´æ£¨×¢£º³ÌÐò½Úµã×ÔÉíÄÚ´æÎ´ÊÍ·Å£©
-			freeProgramData(pSCurrProgram);
+            //2.3åˆ é™¤å½“å‰å­ç¨‹åºèŠ‚ç‚¹ï¼ˆæ³¨ï¼šç¨‹åºèŠ‚ç‚¹è‡ªèº«å†…å­˜é‡Šæ”¾ï¼‰
+            removeNode(pSProgramList, 0, FALSE);
+        }
+    }
 
-			//2.3É¾³ýµ±Ç°×Ó³ÌÐò½Úµã£¨×¢£º³ÌÐò½Úµã×ÔÉíÄÚ´æÊÍ·Å£©
-			removeNode(pSProgramList, 0, FALSE);
-		}
-
-	}
-
-	return 1;
-
+    return 1;
 }
-
 
 //*******************************M96***************************************
 
 /*************************************************
-  º¯ÊýÃû³Æ£º
-  º¯Êý¹¦ÄÜ:
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½:
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void addM96RegulationAPI()
 {
-	addMCommadRegulation(96, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM96, AssignM96);
+    addMCommadRegulation(96, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM96, AssignM96);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 CheckM96(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¼ì²éM96
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢
+  å‡½æ•°åç§°ï¼šint8 CheckM96(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M96
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨
 **************************************************/
 int8 CheckM96(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if(pSSyntaxConfig==NULL||pSGCodeBuffUnit==NULL)
-	{
-		return -1;
-	}
-	//Ä¿±ê×´Ì¬ÖÃÎªµÈ´ý×´Ì¬£¨µÈ´ý¸³Öµ£©£¿£¿£¿
-	//M96Ó¦¸Ã²»ÐèÒªµÈ´ý
+    if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    //ç›®æ ‡çŠ¶æ€ç½®ä¸ºç­‰å¾…çŠ¶æ€ï¼ˆç­‰å¾…èµ‹å€¼ï¼‰ï¼Ÿï¼Ÿï¼Ÿ
+    //M96åº”è¯¥ä¸éœ€è¦ç­‰å¾…
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 AssignM96(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¸³ÖµM96
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º-1 ´íÎó
-             0 Í¨µÀÖ¸Áî¹ÜÀíÆ÷ÖÐÃ»ÓÐ¿ÕÏÐµÄÎ»ÖÃ£¬ÍË³ö
-			 1 ³É¹¦
+  å‡½æ•°åç§°ï¼šint8 AssignM96(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: èµ‹å€¼M96
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š-1 é”™è¯¯
+             0 é€šé“æŒ‡ä»¤ç®¡ç†å™¨ä¸­æ²¡æœ‰ç©ºé—²çš„ä½ç½®ï¼Œé€€å‡º
+			 1 æˆåŠŸ
 
-  ±¸    ×¢
+  å¤‡    æ³¨
 **************************************************/
 int8 AssignM96(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSAssignConfig==NULL||pSGCodeBuffUnit==NULL)
-	{
-		return -1;
-	}
-	//Ä¿±êÍ¨µÀ
-	uint8 ucTargetChannel = 1;
-#if CHANNEL_NUM_MAX==2
-	//Ë«Í¨µÀÏÂ£¬Ä¿±êÍ¨µÀÎªÍ¨µÀ1
-	 ucTargetChannel = 1;
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    //ç›®æ ‡é€šé“
+    uint8 ucTargetChannel = 1;
+#if CHANNEL_NUM_MAX == 2
+    //åŒé€šé“ä¸‹ï¼Œç›®æ ‡é€šé“ä¸ºé€šé“1
+    ucTargetChannel = 1;
 #else
-	//¶àÍ¨µÀÏÂ£¬Ä¿±êÍ¨µÀ¿´Êµ¼ÊÇé¿ö
+    //å¤šé€šé“ä¸‹ï¼Œç›®æ ‡é€šé“çœ‹å®žé™…æƒ…å†µ
 #endif
-	 //½«Í¨µÀÖ¸ÁîÀàÐÍÒÔ¼°¼ì²âÄ¿±êÍ¨µÀÐ´Èë»º³åÇøÖÐ
-	pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_CHECK;
-	pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = ucTargetChannel;
+    //å°†é€šé“æŒ‡ä»¤ç±»åž‹ä»¥åŠæ£€æµ‹ç›®æ ‡é€šé“å†™å…¥ç¼“å†²åŒºä¸­
+    pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_CHECK;
+    pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = ucTargetChannel;
 
-	return 1;
+    return 1;
 }
-
-
 
 //*******************************M97***************************************
 /*************************************************
-  º¯ÊýÃû³Æ£º
-  º¯Êý¹¦ÄÜ:
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½:
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void addM97RegulationAPI()
 {
-	if(CHANNEL_NUM_MAX > 1)
-	addMCommadRegulation(97, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM97, AssignM97);
+    if (CHANNEL_NUM_MAX > 1)
+        addMCommadRegulation(97, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM97, AssignM97);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 CheckM97(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¼ì²éM97
-  ÊäÈë²ÎÊý£ºpSSyntaxConfig ¼ì²é½á¹¹Ìå
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 CheckM97(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M97
+  è¾“å…¥å‚æ•°ï¼špSSyntaxConfig æ£€æŸ¥ç»“æž„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 CheckM97(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig==NULL||pSGCodeBuffUnit==NULL)
-	{
-		return -1;
-	}
-	//1.Èç¹ûÃ»³öÏÖ²ÎÊýP£¬±¨´í
-	if (pSSyntaxConfig->SScanContainer.bP == FALSE)
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM441);
-		return -1;
-	}
-	else
-	{
-	    // 2. ³öÏÖ²ÎÊýP
-	    int32 pNumber = (int32)(pSSyntaxConfig->SScanContainer.dP);
-	    int maxVal = (int)pow(10, ProgramVal_MAX_Length);  // Èç×î´óÖµÎª9999£¨ÈôÊÇ4Î»£©
-	    //bool isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length)==FALSE)
-	   // bool pNumber = isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length));
-		//2.1Èç¹ûPÖµ´óÓÚ4Î»Êý£¬±¨´í 
-		//if (isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length)==FALSE))
-	    if (pNumber < 0 || pNumber > maxVal)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM441);
-			return -1;
-		}
-		//2.2 STM32Ä£Ê½ÏÂ£¬²éÕÒÊÇ·ñÓÐ¸ÃÎÄ¼þÃû
+    if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+    //1.å¦‚æžœæ²¡å‡ºçŽ°å‚æ•°Pï¼ŒæŠ¥é”™
+    if (pSSyntaxConfig->SScanContainer.bP == FALSE)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM441);
+        return -1;
+    }
+    else
+    {
+        // 2. å‡ºçŽ°å‚æ•°P
+        int32 pNumber = (int32)(pSSyntaxConfig->SScanContainer.dP);
+        int maxVal = (int)pow(10, ProgramVal_MAX_Length); // å¦‚æœ€å¤§å€¼ä¸º9999ï¼ˆè‹¥æ˜¯4ä½ï¼‰
+        //bool isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length)==FALSE)
+        // bool pNumber = isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length));
+        //2.1å¦‚æžœPå€¼å¤§äºŽ4ä½æ•°ï¼ŒæŠ¥é”™
+        //if (isUnEqualAndLessThanZero(pSSyntaxConfig->SScanContainer.dP-pow(10, ProgramVal_MAX_Length)==FALSE))
+        if (pNumber < 0 || pNumber > maxVal)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM441);
+            return -1;
+        }
+        //2.2 STM32æ¨¡å¼ä¸‹ï¼ŒæŸ¥æ‰¾æ˜¯å¦æœ‰è¯¥æ–‡ä»¶å
 #if STM32_MODE
-		int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = { 0 };   //ÎÄ¼þÃû
-		convertProgramName(pSSyntaxConfig->SScanContainer.dP, cTempArr);   //ÊýÖµ×ª×Ö·û´® »ñÈ¡ÎÄ¼þÃû
-		uint8 ret = FindFileInfo(cTempArr);//ÔÚFLASHÖÐ²éÕÒÎÄ¼þÃû
-		if (ret == 0xF3)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM89);//²éÕÒ²»µ½ÎÄ¼þÃû
-			return -1;
-		}
-		else if (ret == 0xF4 || ret == 0xF5 || ret == 0xF6)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM459);//²éÕÒ²»µ½ÎÄ¼þÃû
-			return -1;
-		}
+        int8 cTempArr[TEMP_FILENAME_MAX_LENGTH] = {0};                   //æ–‡ä»¶å
+        convertProgramName(pSSyntaxConfig->SScanContainer.dP, cTempArr); //æ•°å€¼è½¬å­—ç¬¦ä¸² èŽ·å–æ–‡ä»¶å
+        uint8 ret = FindFileInfo(cTempArr);                              //åœ¨FLASHä¸­æŸ¥æ‰¾æ–‡ä»¶å
+        if (ret == 0xF3)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM89); //æŸ¥æ‰¾ä¸åˆ°æ–‡ä»¶å
+            return -1;
+        }
+        else if (ret == 0xF4 || ret == 0xF5 || ret == 0xF6)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM459); //æŸ¥æ‰¾ä¸åˆ°æ–‡ä»¶å
+            return -1;
+        }
 #endif
-		return 1;
-	}
+        return 1;
+    }
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 AssignM97(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¸³ÖµM97
-  ÊäÈë²ÎÊý£ºpSAssignConfig ¸³Öµ½á¹¹Ìå  pSGCodeBuffUnit G´úÂë»º³åÇøÖ¸Õë
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 AssignM97(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: èµ‹å€¼M97
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig èµ‹å€¼ç»“æž„ä½“  pSGCodeBuffUnit Gä»£ç ç¼“å†²åŒºæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 AssignM97(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
 
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
 
-	////Ä¿±êÍ¨µÀ
-	uint8 ucTargetChannel = 1;
-#if CHANNEL_NUM_MAX==2
-	//Ë«Í¨µÀÏÂ£¬Ä¿±êÍ¨µÀÎªÍ¨µÀ1
-	ucTargetChannel = 1;
+    ////ç›®æ ‡é€šé“
+    uint8 ucTargetChannel = 1;
+#if CHANNEL_NUM_MAX == 2
+    //åŒé€šé“ä¸‹ï¼Œç›®æ ‡é€šé“ä¸ºé€šé“1
+    ucTargetChannel = 1;
 #else
-	//¶àÍ¨µÀÏÂ£¬Ä¿±êÍ¨µÀ¿´Êµ¼ÊÇé¿ö
+    //å¤šé€šé“ä¸‹ï¼Œç›®æ ‡é€šé“çœ‹å®žé™…æƒ…å†µ
 #endif
 
-	//1.½«Í¨µÀÖ¸ÁîÀàÐÍ¡¢ÎÄ¼þÃûÊýÖµÒÔ¼°Ä¿±êÍ¨µÀÐ´Èë»º³åÇøÖÐ
-	pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_START;
-	pSGCodeBuffUnit->sChannelCommand.SChannelData.cFileNameVal = (int32)(pSAssignConfig->SScanContainer.dP);
-	pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = ucTargetChannel;
-	return 1;
+    //1.å°†é€šé“æŒ‡ä»¤ç±»åž‹ã€æ–‡ä»¶åæ•°å€¼ä»¥åŠç›®æ ‡é€šé“å†™å…¥ç¼“å†²åŒºä¸­
+    pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_START;
+    pSGCodeBuffUnit->sChannelCommand.SChannelData.cFileNameVal = (int32)(pSAssignConfig->SScanContainer.dP);
+    pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = ucTargetChannel;
+    return 1;
 }
 
-
-//*******************************M100¡ªM199***************************************
+//*******************************M100â€”M199***************************************
 /*************************************************
-  º¯ÊýÃû³Æ£º
-  º¯Êý¹¦ÄÜ:
-  ÊäÈë²ÎÊý£º
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½:
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void addM100_M199RegulationAPI()
 {
-	if(CHANNEL_NUM_MAX > 1)
-	addMCommadRegulation(CHANNEL_COMMAND_MIN_VAL, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM100_M199, AssignM100_M199);
+    if (CHANNEL_NUM_MAX > 1)
+        addMCommadRegulation(CHANNEL_COMMAND_MIN_VAL, IO_POST_ACTION, cMb, 1, NULL, NULL, NULL, CheckM100_M199,
+                             AssignM100_M199);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 CheckM100_M199(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¼ì²éM100-M199
-  ÊäÈë²ÎÊý£ºpSSyntaxConfig ¼ì²é½á¹¹Ìå
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 CheckM100_M199(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: æ£€æŸ¥M100-M199
+  è¾“å…¥å‚æ•°ï¼špSSyntaxConfig æ£€æŸ¥ç»“æž„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 CheckM100_M199(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
-	
-		return 1;
+    if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
+
+    return 1;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 AssignM100_M199(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
-  º¯Êý¹¦ÄÜ: ¸³ÖµM100-M199
-  ÊäÈë²ÎÊý£ºpSAssignConfig ¸³Öµ½á¹¹Ìå  pSGCodeBuffUnit G´úÂë»º³åÇøÖ¸Õë
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 AssignM100_M199(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
+  å‡½æ•°åŠŸèƒ½: èµ‹å€¼M100-M199
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig èµ‹å€¼ç»“æž„ä½“  pSGCodeBuffUnit Gä»£ç ç¼“å†²åŒºæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 AssignM100_M199(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
 
-	if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
-	{
-		return -1;
-	}
+    if (pSAssignConfig == NULL || pSGCodeBuffUnit == NULL)
+    {
+        return -1;
+    }
 
-	////Ïà»¥µÈ´ýµÄÄ¿±êÍ¨µÀ
-	int8 cTargetChannel = 3; //0000 0011
-#if CHANNEL_NUM_MAX==2
-	//Ë«Í¨µÀÏÂ£¬Ïà»¥µÈ´ýµÄÄ¿±êÍ¨µÀÎªÍ¨µÀ0ºÍÍ¨µÀ1 £¨ÒÔÎ»µÄ·½Ê½±íÊ¾Î» 0000 0011£©
-	cTargetChannel = 3;
+    ////ç›¸äº’ç­‰å¾…çš„ç›®æ ‡é€šé“
+    int8 cTargetChannel = 3; //0000 0011
+#if CHANNEL_NUM_MAX == 2
+    //åŒé€šé“ä¸‹ï¼Œç›¸äº’ç­‰å¾…çš„ç›®æ ‡é€šé“ä¸ºé€šé“0å’Œé€šé“1 ï¼ˆä»¥ä½çš„æ–¹å¼è¡¨ç¤ºä½ 0000 0011ï¼‰
+    cTargetChannel = 3;
 #else
-	//¶àÍ¨µÀÏÂ£¬Ä¿±êÍ¨µÀ¿´Êµ¼ÊÇé¿ö
+    //å¤šé€šé“ä¸‹ï¼Œç›®æ ‡é€šé“çœ‹å®žé™…æƒ…å†µ
 #endif
 
-	//1.½«Í¨µÀÖ¸ÁîÀàÐÍ¡¢ÒÔ¼°Ïà»¥µÈ´ýµÄÄ¿±êÍ¨µÀÐ´Èë»º³åÇøÖÐ
-	pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_WAIT;
-	pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = cTargetChannel;
-	return 1;
+    //1.å°†é€šé“æŒ‡ä»¤ç±»åž‹ã€ä»¥åŠç›¸äº’ç­‰å¾…çš„ç›®æ ‡é€šé“å†™å…¥ç¼“å†²åŒºä¸­
+    pSGCodeBuffUnit->sChannelCommand.ucType = CHANNEL_SIGNAL_WAIT;
+    pSGCodeBuffUnit->sChannelCommand.SChannelData.ucTargetChannelNum = cTargetChannel;
+    return 1;
 }

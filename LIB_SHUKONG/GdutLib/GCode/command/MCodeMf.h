@@ -1,33 +1,28 @@
-#ifndef   GCODE_Mf_H
-#define   GCODE_Mf_H
+#ifndef GCODE_Mf_H
+#define GCODE_Mf_H
 
 //************************M10**************************************
 void addM10RegulationAPI();
 
-//¸³ÖµM10
+//èµ‹å€¼M10
 int8 AssignM10(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 //************************M11**************************************
 void addM11RegulationAPI();
 
-//¸³ÖµM11
+//èµ‹å€¼M11
 int8 AssignM11(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //************************M12**************************************
 void addM12RegulationAPI();
 
-//¸³ÖµM12
+//èµ‹å€¼M12
 int8 AssignM12(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 //************************M13**************************************
 void addM13RegulationAPI();
 
-//¸³ÖµM13
+//èµ‹å€¼M13
 int8 AssignM13(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
-
-
 
 #endif

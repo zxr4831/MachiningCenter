@@ -1,506 +1,515 @@
 
-#include"ErrorFunction.h"
+#include "ErrorFunction.h"
 #include "common.h"
-#include"GeneralFunctions.h"
+#include "GeneralFunctions.h"
 #include "Gcode.h"
 
-double getHorAxisMax(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal, double dEndHorVal, double dEndVerVal)
+double getHorAxisMax(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal,
+                     double dEndHorVal, double dEndVerVal)
 {
-	uint8 unStartAngle;//½öÓÃ1£¬0±íÊ¾£¬ÓÃÓÚÅĞ¶ÏÆğµãÖÕµã½Ç¶È´óĞ¡
-	uint8 unEndAngle;
-	uint8 ucHor = SGetAxisMaxAndMin->ucHor;
-	uint8 ucVer = SGetAxisMaxAndMin->ucVer;
-	SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
-	double dRadius = SGetAxisMaxAndMin->dRadius;
-	int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
+    uint8 unStartAngle; //ä»…ç”¨1ï¼Œ0è¡¨ç¤ºï¼Œç”¨äºåˆ¤æ–­èµ·ç‚¹ç»ˆç‚¹è§’åº¦å¤§å°
+    uint8 unEndAngle;
+    uint8 ucHor = SGetAxisMaxAndMin->ucHor;
+    uint8 ucVer = SGetAxisMaxAndMin->ucVer;
+    SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
+    double dRadius = SGetAxisMaxAndMin->dRadius;
+    int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
 
+    //å¦‚æœèµ·ç‚¹çºµåæ ‡ä¸ç»ˆç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ç›¸åŒ
+    if ((isEqualOrGreaterThanZero(dStartVerVal) && isEqualOrGreaterThanZero(dEndVerVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ >= 0
+        || (!isEqualOrGreaterThanZero(dStartVerVal) && !isEqualOrGreaterThanZero(dEndVerVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ < 0
+    )
+    {
+        //çºµåæ ‡ >= 0
+        if (isEqualOrGreaterThanZero(dStartVerVal))
+        {
+            //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+            if (dStartHorVal > dEndHorVal)
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+            else
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+        }
+        //çºµåæ ‡ < 0
+        else
+        {
+            //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+            if (dStartHorVal > dEndHorVal)
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+            else
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+        }
+    }
+    //å¦‚æœèµ·ç‚¹çºµåæ ‡ä¸ç»ˆç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ä¸ç›¸åŒ
+    else
+    {
+        //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+        if (dStartVerVal > dEndVerVal)
+        {
+            unStartAngle = 0;
+            unEndAngle = 1;
+        }
+        else
+        {
+            unStartAngle = 1;
+            unEndAngle = 0;
+        }
+    }
 
-	//Èç¹ûÆğµã×İ×ø±êÓëÖÕµã×İ×ø±êÖµ µÄ·ûºÅÏàÍ¬
-	if ((isEqualOrGreaterThanZero(dStartVerVal) && isEqualOrGreaterThanZero(dEndVerVal))		//Æğµã×İ×ø±êÖÕµã×İ×ø±ê >= 0
-		|| (!isEqualOrGreaterThanZero(dStartVerVal) && !isEqualOrGreaterThanZero(dEndVerVal))	//Æğµã×İ×ø±êÖÕµã×İ×ø±ê < 0
-		)
-	{
-		//×İ×ø±ê >= 0
-		if (isEqualOrGreaterThanZero(dStartVerVal))
-		{
-			//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-			if (dStartHorVal > dEndHorVal)
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-				
-			}
-			else
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-		}
-		//×İ×ø±ê < 0
-		else
-		{
-			//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-			if (dStartHorVal > dEndHorVal)
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-			else
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-		}
-	}
-	//Èç¹ûÆğµã×İ×ø±êÓëÖÕµã×İ×ø±êÖµ µÄ·ûºÅ²»ÏàÍ¬
-	else
-	{
-		//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-		if (dStartVerVal > dEndVerVal)
-		{
-			unStartAngle = 0;
-			unEndAngle = 1;
-		}
-		else
-		{
-			unStartAngle = 1;
-			unEndAngle = 0;
-		}
-	}
-
-	//ÆğµãÖÕµã½Ç¶ÈÒÑÅĞ¶ÏÍê³É£¬ÒÔÏÂ¼ÆËãºáÖá×î´óÖµ
-	//Ë³»¡
-	if (cArcDir == ARC_CW)
-	{
-		//Ë³Ê±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Ô½¹ıXÕı°ëÖá£¬XÖá×î´óÖµ = Ô²ĞÄX + R
-		if (unStartAngle < unEndAngle)
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] + dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] - dRadius;
-			}
-		}
-		//Î´Ô½¹ıXÕı°ëÖá£¬XÖá×î´óÖµ = ÆğµãÖÕµãX½Ï´óÕß
-		else
-		{
-			SGetAxisMaxAndMin->dHorMax = dStartHorVal > dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal : SCenterPoint.dArray[ucHor] + dEndHorVal;
-		}
-	}
-	//Äæ»¡
-	else
-	{
-		//ÄæÊ±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Î´Ô½¹ıXÕı°ëÖá£¬XÖá×î´óÖµ = ÆğµãÖÕµãX½Ï´óÕß
-		if (unStartAngle < unEndAngle)
-		{
-			SGetAxisMaxAndMin->dHorMax = dStartHorVal > dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal : SCenterPoint.dArray[ucHor] + dEndHorVal;
-		}
-		//ÄæÊ±ÕëÔ²»¡£¬Æğµã½Ç¶È > ÖÕµã½Ç¶È£¬Ô½¹ıXÕı°ëÖá£¬XÖá×î´óÖµ = Ô²ĞÄX + R
-		else
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] + dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] - dRadius;
-			}
-		}
-	}
+    //èµ·ç‚¹ç»ˆç‚¹è§’åº¦å·²åˆ¤æ–­å®Œæˆï¼Œä»¥ä¸‹è®¡ç®—æ¨ªè½´æœ€å¤§å€¼
+    //é¡ºå¼§
+    if (cArcDir == ARC_CW)
+    {
+        //é¡ºæ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œè¶Šè¿‡Xæ­£åŠè½´ï¼ŒXè½´æœ€å¤§å€¼ = åœ†å¿ƒX + R
+        if (unStartAngle < unEndAngle)
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] + dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] - dRadius;
+            }
+        }
+        //æœªè¶Šè¿‡Xæ­£åŠè½´ï¼ŒXè½´æœ€å¤§å€¼ = èµ·ç‚¹ç»ˆç‚¹Xè¾ƒå¤§è€…
+        else
+        {
+            SGetAxisMaxAndMin->dHorMax = dStartHorVal > dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal
+                                                                   : SCenterPoint.dArray[ucHor] + dEndHorVal;
+        }
+    }
+    //é€†å¼§
+    else
+    {
+        //é€†æ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œæœªè¶Šè¿‡Xæ­£åŠè½´ï¼ŒXè½´æœ€å¤§å€¼ = èµ·ç‚¹ç»ˆç‚¹Xè¾ƒå¤§è€…
+        if (unStartAngle < unEndAngle)
+        {
+            SGetAxisMaxAndMin->dHorMax = dStartHorVal > dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal
+                                                                   : SCenterPoint.dArray[ucHor] + dEndHorVal;
+        }
+        //é€†æ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ > ç»ˆç‚¹è§’åº¦ï¼Œè¶Šè¿‡Xæ­£åŠè½´ï¼ŒXè½´æœ€å¤§å€¼ = åœ†å¿ƒX + R
+        else
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] + dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dHorMax = SCenterPoint.dArray[ucHor] - dRadius;
+            }
+        }
+    }
 }
 
-double getHorAxisMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal, double dEndHorVal, double dEndVerVal)
+double getHorAxisMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal,
+                     double dEndHorVal, double dEndVerVal)
 {
-	uint8 unStartAngle;//½öÓÃ1£¬0±íÊ¾£¬ÓÃÓÚÅĞ¶ÏÆğµãÖÕµã½Ç¶È´óĞ¡
-	uint8 unEndAngle;
-	uint8 ucHor = SGetAxisMaxAndMin->ucHor;
-	uint8 ucVer = SGetAxisMaxAndMin->ucVer;
-	SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
-	double dRadius = SGetAxisMaxAndMin->dRadius;
-	int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
+    uint8 unStartAngle; //ä»…ç”¨1ï¼Œ0è¡¨ç¤ºï¼Œç”¨äºåˆ¤æ–­èµ·ç‚¹ç»ˆç‚¹è§’åº¦å¤§å°
+    uint8 unEndAngle;
+    uint8 ucHor = SGetAxisMaxAndMin->ucHor;
+    uint8 ucVer = SGetAxisMaxAndMin->ucVer;
+    SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
+    double dRadius = SGetAxisMaxAndMin->dRadius;
+    int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
 
+    //å¦‚æœèµ·ç‚¹çºµåæ ‡ä¸ç»ˆç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ç›¸åŒ
+    if ((isEqualOrGreaterThanZero(dStartVerVal) && isEqualOrGreaterThanZero(dEndVerVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ >= 0
+        || (!isEqualOrGreaterThanZero(dStartVerVal) && !isEqualOrGreaterThanZero(dEndVerVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ < 0
+    )
+    {
+        //çºµåæ ‡ >= 0
+        if (isEqualOrGreaterThanZero(dStartVerVal))
+        {
+            //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+            if (dStartHorVal > dEndHorVal)
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+            else
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+        }
+        //çºµåæ ‡ < 0
+        else
+        {
+            //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+            if (dStartHorVal > dEndHorVal)
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+            else
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+        }
+    }
+    //å¦‚æœèµ·ç‚¹çºµåæ ‡ä¸ç»ˆç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ä¸ç›¸åŒ
+    else
+    {
+        //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+        if (dStartVerVal > dEndVerVal)
+        {
+            unStartAngle = 1;
+            unEndAngle = 0;
+        }
+        else
+        {
+            unStartAngle = 0;
+            unEndAngle = 1;
+        }
+    }
 
-	//Èç¹ûÆğµã×İ×ø±êÓëÖÕµã×İ×ø±êÖµ µÄ·ûºÅÏàÍ¬
-	if ((isEqualOrGreaterThanZero(dStartVerVal) && isEqualOrGreaterThanZero(dEndVerVal))		//Æğµã×İ×ø±êÖÕµã×İ×ø±ê >= 0
-		|| (!isEqualOrGreaterThanZero(dStartVerVal) && !isEqualOrGreaterThanZero(dEndVerVal))	//Æğµã×İ×ø±êÖÕµã×İ×ø±ê < 0
-		)
-	{
-		//×İ×ø±ê >= 0
-		if (isEqualOrGreaterThanZero(dStartVerVal))
-		{
-			//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-			if (dStartHorVal > dEndHorVal)
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-
-			}
-			else
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-		}
-		//×İ×ø±ê < 0
-		else
-		{
-			//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-			if (dStartHorVal > dEndHorVal)
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-			else
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-		}
-	}
-	//Èç¹ûÆğµã×İ×ø±êÓëÖÕµã×İ×ø±êÖµ µÄ·ûºÅ²»ÏàÍ¬
-	else
-	{
-		//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-		if (dStartVerVal > dEndVerVal)
-		{
-			unStartAngle = 1;
-			unEndAngle = 0;
-		}
-		else
-		{
-			unStartAngle = 0;
-			unEndAngle = 1;
-		}
-	}
-
-	//ÆğµãÖÕµã½Ç¶ÈÒÑÅĞ¶ÏÍê³É£¬ÒÔÏÂ¼ÆËãºáÖá×î´óÖµ
-	//Ë³»¡
-	if (cArcDir == ARC_CW)
-	{
-		//Ë³Ê±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Ô½¹ıX¸º°ëÖá£¬XÖá×îĞ¡Öµ = Ô²ĞÄX - R
-		if (unStartAngle < unEndAngle)
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] - dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] + dRadius;
-			}
-		}
-		//Î´Ô½¹ıX¸º°ëÖá£¬XÖá×î´óÖµ = ÆğµãÖÕµãX½ÏĞ¡Õß
-		else
-		{
-			SGetAxisMaxAndMin->dHorMin = dStartHorVal < dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal : SCenterPoint.dArray[ucHor] + dEndHorVal;
-		}
-	}
-	//Äæ»¡
-	else
-	{
-		//ÄæÊ±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Î´Ô½¹ıX¸º°ëÖá
-		if (unStartAngle < unEndAngle)
-		{
-			SGetAxisMaxAndMin->dHorMin = dStartHorVal < dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal : SCenterPoint.dArray[ucHor] + dEndHorVal;
-		}
-		else
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] - dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] + dRadius;
-			}
-		}
-	}
+    //èµ·ç‚¹ç»ˆç‚¹è§’åº¦å·²åˆ¤æ–­å®Œæˆï¼Œä»¥ä¸‹è®¡ç®—æ¨ªè½´æœ€å¤§å€¼
+    //é¡ºå¼§
+    if (cArcDir == ARC_CW)
+    {
+        //é¡ºæ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œè¶Šè¿‡Xè´ŸåŠè½´ï¼ŒXè½´æœ€å°å€¼ = åœ†å¿ƒX - R
+        if (unStartAngle < unEndAngle)
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] - dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] + dRadius;
+            }
+        }
+        //æœªè¶Šè¿‡Xè´ŸåŠè½´ï¼ŒXè½´æœ€å¤§å€¼ = èµ·ç‚¹ç»ˆç‚¹Xè¾ƒå°è€…
+        else
+        {
+            SGetAxisMaxAndMin->dHorMin = dStartHorVal < dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal
+                                                                   : SCenterPoint.dArray[ucHor] + dEndHorVal;
+        }
+    }
+    //é€†å¼§
+    else
+    {
+        //é€†æ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œæœªè¶Šè¿‡Xè´ŸåŠè½´
+        if (unStartAngle < unEndAngle)
+        {
+            SGetAxisMaxAndMin->dHorMin = dStartHorVal < dEndHorVal ? SCenterPoint.dArray[ucHor] + dStartHorVal
+                                                                   : SCenterPoint.dArray[ucHor] + dEndHorVal;
+        }
+        else
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] - dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dHorMin = SCenterPoint.dArray[ucHor] + dRadius;
+            }
+        }
+    }
 }
 
-double getVerAxisMax(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal, double dEndHorVal, double dEndVerVal)
+double getVerAxisMax(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal,
+                     double dEndHorVal, double dEndVerVal)
 {
-	uint8 unStartAngle;//½öÓÃ1£¬0±íÊ¾£¬ÓÃÓÚÅĞ¶ÏÆğµãÖÕµã½Ç¶È´óĞ¡
-	uint8 unEndAngle;
-	uint8 ucHor = SGetAxisMaxAndMin->ucHor;
-	uint8 ucVer = SGetAxisMaxAndMin->ucVer;
-	SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
-	double dRadius = SGetAxisMaxAndMin->dRadius;
-	int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
+    uint8 unStartAngle; //ä»…ç”¨1ï¼Œ0è¡¨ç¤ºï¼Œç”¨äºåˆ¤æ–­èµ·ç‚¹ç»ˆç‚¹è§’åº¦å¤§å°
+    uint8 unEndAngle;
+    uint8 ucHor = SGetAxisMaxAndMin->ucHor;
+    uint8 ucVer = SGetAxisMaxAndMin->ucVer;
+    SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
+    double dRadius = SGetAxisMaxAndMin->dRadius;
+    int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
 
+    //å¦‚æœèµ·ç‚¹æ¨ªåæ ‡ ä¸ æ¨ªç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ç›¸åŒ
+    if ((isEqualOrGreaterThanZero(dStartHorVal) && isEqualOrGreaterThanZero(dEndHorVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ >= 0
+        || (!isEqualOrGreaterThanZero(dStartHorVal) && !isEqualOrGreaterThanZero(dEndHorVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ < 0
+    )
+    {
+        //æ¨ªåæ ‡ >= 0
+        if (isEqualOrGreaterThanZero(dStartHorVal))
+        {
+            //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+            if (dStartVerVal > dEndVerVal)
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+            else
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+        }
+        //æ¨ªåæ ‡ < 0
+        else
+        {
+            //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+            if (dStartVerVal > dEndVerVal)
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+            else
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+        }
+    }
+    //å¦‚æœèµ·ç‚¹æ¨ªåæ ‡ ä¸ ç»ˆç‚¹æ¨ªåæ ‡å€¼ çš„ç¬¦å·ä¸ç›¸åŒ
+    else
+    {
+        //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+        if (dStartHorVal > dEndHorVal)
+        {
+            unStartAngle = 1;
+            unEndAngle = 0;
+        }
+        else
+        {
+            unStartAngle = 0;
+            unEndAngle = 1;
+        }
+    }
 
-	//Èç¹ûÆğµãºá×ø±ê Óë ºáµã×İ×ø±êÖµ µÄ·ûºÅÏàÍ¬
-	if ((isEqualOrGreaterThanZero(dStartHorVal) && isEqualOrGreaterThanZero(dEndHorVal))		//Æğµã×İ×ø±êÖÕµã×İ×ø±ê >= 0
-		|| (!isEqualOrGreaterThanZero(dStartHorVal) && !isEqualOrGreaterThanZero(dEndHorVal))	//Æğµã×İ×ø±êÖÕµã×İ×ø±ê < 0
-		)
-	{
-		//ºá×ø±ê >= 0
-		if (isEqualOrGreaterThanZero(dStartHorVal))
-		{
-			//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-			if (dStartVerVal > dEndVerVal)
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-
-			}
-			else
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-		}
-		//ºá×ø±ê < 0
-		else
-		{
-			//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-			if (dStartVerVal > dEndVerVal)
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-			else
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-		}
-	}
-	//Èç¹ûÆğµãºá×ø±ê Óë ÖÕµãºá×ø±êÖµ µÄ·ûºÅ²»ÏàÍ¬
-	else
-	{
-		//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-		if (dStartHorVal > dEndHorVal)
-		{
-			unStartAngle = 1;
-			unEndAngle = 0;
-		}
-		else
-		{
-			unStartAngle = 0;
-			unEndAngle = 1;
-		}
-	}
-
-	//ÆğµãÖÕµã½Ç¶ÈÒÑÅĞ¶ÏÍê³É£¬ÒÔÏÂ¼ÆËã×İÖá×î´óÖµ
-	//Ë³»¡
-	if (cArcDir == ARC_CW)
-	{
-		//Ë³Ê±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Ô½¹ıYÕı°ëÖá
-		if (unStartAngle < unEndAngle)
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] + dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] - dRadius;
-			}
-		}
-		else
-		{
-			SGetAxisMaxAndMin->dVerMax = dStartVerVal > dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal : SCenterPoint.dArray[ucVer] + dEndVerVal;
-		}
-	}
-	//Äæ»¡
-	else
-	{
-		//ÄæÊ±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Î´Ô½¹ıYÕı°ëÖá
-		if (unStartAngle < unEndAngle)
-		{
-			SGetAxisMaxAndMin->dVerMax = dStartVerVal > dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal : SCenterPoint.dArray[ucVer] + dEndVerVal;
-		}
-		else
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] + dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] - dRadius;
-			}
-		}
-	}
+    //èµ·ç‚¹ç»ˆç‚¹è§’åº¦å·²åˆ¤æ–­å®Œæˆï¼Œä»¥ä¸‹è®¡ç®—çºµè½´æœ€å¤§å€¼
+    //é¡ºå¼§
+    if (cArcDir == ARC_CW)
+    {
+        //é¡ºæ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œè¶Šè¿‡Yæ­£åŠè½´
+        if (unStartAngle < unEndAngle)
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] + dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] - dRadius;
+            }
+        }
+        else
+        {
+            SGetAxisMaxAndMin->dVerMax = dStartVerVal > dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal
+                                                                   : SCenterPoint.dArray[ucVer] + dEndVerVal;
+        }
+    }
+    //é€†å¼§
+    else
+    {
+        //é€†æ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œæœªè¶Šè¿‡Yæ­£åŠè½´
+        if (unStartAngle < unEndAngle)
+        {
+            SGetAxisMaxAndMin->dVerMax = dStartVerVal > dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal
+                                                                   : SCenterPoint.dArray[ucVer] + dEndVerVal;
+        }
+        else
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] + dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dVerMax = SCenterPoint.dArray[ucVer] - dRadius;
+            }
+        }
+    }
 }
 
-double getVerAxisMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal, double dEndHorVal, double dEndVerVal)
+double getVerAxisMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin, double dStartHorVal, double dStartVerVal,
+                     double dEndHorVal, double dEndVerVal)
 {
-	uint8 unStartAngle;//½öÓÃ1£¬0±íÊ¾£¬ÓÃÓÚÅĞ¶ÏÆğµãÖÕµã½Ç¶È´óĞ¡
-	uint8 unEndAngle;
-	uint8 ucHor = SGetAxisMaxAndMin->ucHor;
-	uint8 ucVer = SGetAxisMaxAndMin->ucVer;
-	SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
-	double dRadius = SGetAxisMaxAndMin->dRadius;
-	int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
+    uint8 unStartAngle; //ä»…ç”¨1ï¼Œ0è¡¨ç¤ºï¼Œç”¨äºåˆ¤æ–­èµ·ç‚¹ç»ˆç‚¹è§’åº¦å¤§å°
+    uint8 unEndAngle;
+    uint8 ucHor = SGetAxisMaxAndMin->ucHor;
+    uint8 ucVer = SGetAxisMaxAndMin->ucVer;
+    SPointDouble SCenterPoint = *SGetAxisMaxAndMin->SCenterPoint;
+    double dRadius = SGetAxisMaxAndMin->dRadius;
+    int8 cArcDir = SGetAxisMaxAndMin->cArcDir;
 
+    //å¦‚æœèµ·ç‚¹æ¨ªåæ ‡ ä¸ æ¨ªç‚¹çºµåæ ‡å€¼ çš„ç¬¦å·ç›¸åŒ
+    if ((isEqualOrGreaterThanZero(dStartHorVal) && isEqualOrGreaterThanZero(dEndHorVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ >= 0
+        || (!isEqualOrGreaterThanZero(dStartHorVal) && !isEqualOrGreaterThanZero(dEndHorVal)) //èµ·ç‚¹çºµåæ ‡ç»ˆç‚¹çºµåæ ‡ < 0
+    )
+    {
+        //æ¨ªåæ ‡ >= 0
+        if (isEqualOrGreaterThanZero(dStartHorVal))
+        {
+            //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å¤§
+            if (dStartVerVal > dEndVerVal)
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+            else
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+        }
+        //æ¨ªåæ ‡ < 0
+        else
+        {
+            //çºµåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+            if (dStartVerVal > dEndVerVal)
+            {
+                unStartAngle = 0;
+                unEndAngle = 1;
+            }
+            else
+            {
+                unStartAngle = 1;
+                unEndAngle = 0;
+            }
+        }
+    }
+    //å¦‚æœèµ·ç‚¹æ¨ªåæ ‡ ä¸ ç»ˆç‚¹æ¨ªåæ ‡å€¼ çš„ç¬¦å·ä¸ç›¸åŒ
+    else
+    {
+        //æ¨ªåæ ‡å¤§ï¼Œå¯¹åº”è§’åº¦å°
+        if (dStartHorVal > dEndHorVal)
+        {
+            unStartAngle = 0;
+            unEndAngle = 1;
+        }
+        else
+        {
+            unStartAngle = 1;
+            unEndAngle = 0;
+        }
+    }
 
-	//Èç¹ûÆğµãºá×ø±ê Óë ºáµã×İ×ø±êÖµ µÄ·ûºÅÏàÍ¬
-	if ((isEqualOrGreaterThanZero(dStartHorVal) && isEqualOrGreaterThanZero(dEndHorVal))		//Æğµã×İ×ø±êÖÕµã×İ×ø±ê >= 0
-		|| (!isEqualOrGreaterThanZero(dStartHorVal) && !isEqualOrGreaterThanZero(dEndHorVal))	//Æğµã×İ×ø±êÖÕµã×İ×ø±ê < 0
-		)
-	{
-		//ºá×ø±ê >= 0
-		if (isEqualOrGreaterThanZero(dStartHorVal))
-		{
-			//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶È´ó
-			if (dStartVerVal > dEndVerVal)
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-
-			}
-			else
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-		}
-		//ºá×ø±ê < 0
-		else
-		{
-			//×İ×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-			if (dStartVerVal > dEndVerVal)
-			{
-				unStartAngle = 0;
-				unEndAngle = 1;
-			}
-			else
-			{
-				unStartAngle = 1;
-				unEndAngle = 0;
-			}
-		}
-	}
-	//Èç¹ûÆğµãºá×ø±ê Óë ÖÕµãºá×ø±êÖµ µÄ·ûºÅ²»ÏàÍ¬
-	else
-	{
-		//ºá×ø±ê´ó£¬¶ÔÓ¦½Ç¶ÈĞ¡
-		if (dStartHorVal > dEndHorVal)
-		{
-			unStartAngle = 0;
-			unEndAngle = 1;
-		}
-		else
-		{
-			unStartAngle = 1;
-			unEndAngle = 0;
-		}
-	}
-
-	//ÆğµãÖÕµã½Ç¶ÈÒÑÅĞ¶ÏÍê³É£¬ÒÔÏÂ¼ÆËã×İÖá×îĞ¡Öµ
-	//Ë³»¡
-	if (cArcDir == ARC_CW)
-	{
-		//Ë³Ê±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Ô½¹ıY¸º°ëÖá
-		if (unStartAngle < unEndAngle)
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] - dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] + dRadius;
-			}
-		}
-		else
-		{
-			SGetAxisMaxAndMin->dVerMin = dStartVerVal < dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal : SCenterPoint.dArray[ucVer] + dEndVerVal;
-		}
-	}
-	//Äæ»¡
-	else
-	{
-		//ÄæÊ±ÕëÔ²»¡£¬Æğµã½Ç¶È < ÖÕµã½Ç¶È£¬Î´Ô½¹ıYÕı°ëÖá
-		if (unStartAngle < unEndAngle)
-		{
-			SGetAxisMaxAndMin->dVerMin = dStartVerVal < dEndVerVal ? (SCenterPoint.dArray[ucVer] + dStartVerVal) : (SCenterPoint.dArray[ucVer] + dEndVerVal);
-		}
-		else
-		{
-			if (dRadius > 0)
-			{
-				SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] - dRadius;
-			}
-			//ÓÅ»¡RÖµÎª¸º
-			else
-			{
-				SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] + dRadius;
-			}
-		}
-	}
+    //èµ·ç‚¹ç»ˆç‚¹è§’åº¦å·²åˆ¤æ–­å®Œæˆï¼Œä»¥ä¸‹è®¡ç®—çºµè½´æœ€å°å€¼
+    //é¡ºå¼§
+    if (cArcDir == ARC_CW)
+    {
+        //é¡ºæ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œè¶Šè¿‡Yè´ŸåŠè½´
+        if (unStartAngle < unEndAngle)
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] - dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] + dRadius;
+            }
+        }
+        else
+        {
+            SGetAxisMaxAndMin->dVerMin = dStartVerVal < dEndVerVal ? SCenterPoint.dArray[ucVer] + dStartVerVal
+                                                                   : SCenterPoint.dArray[ucVer] + dEndVerVal;
+        }
+    }
+    //é€†å¼§
+    else
+    {
+        //é€†æ—¶é’ˆåœ†å¼§ï¼Œèµ·ç‚¹è§’åº¦ < ç»ˆç‚¹è§’åº¦ï¼Œæœªè¶Šè¿‡Yæ­£åŠè½´
+        if (unStartAngle < unEndAngle)
+        {
+            SGetAxisMaxAndMin->dVerMin = dStartVerVal < dEndVerVal ? (SCenterPoint.dArray[ucVer] + dStartVerVal)
+                                                                   : (SCenterPoint.dArray[ucVer] + dEndVerVal);
+        }
+        else
+        {
+            if (dRadius > 0)
+            {
+                SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] - dRadius;
+            }
+            //ä¼˜å¼§Rå€¼ä¸ºè´Ÿ
+            else
+            {
+                SGetAxisMaxAndMin->dVerMin = SCenterPoint.dArray[ucVer] + dRadius;
+            }
+        }
+    }
 }
-
-
 
 /****************************************
- º¯ÊıÃû³Æ£ºvoid getAxisMaxAndMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin)
- º¯Êı¹¦ÄÜ£ºÇó½âÔ²»¡×îÖµµã
- ÊäÈë²ÎÊı£º ucHor               ºáÖá
-			ucVer               ×İÖá
-			pdStartPoint		Æğµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			pdEndPoint			ÖÕµã×ø±ê£¨¾ø¶Ô×ø±ê£©
-			pSCenterPoint       Ô²ĞÄ×ø±ê£¨¾ø¶Ô×ø±ê£©
-			dRadius				Ô²»¡°ë¾¶£¨>0±íÊ¾Ğ¡ÓÚ»òµÈÓÚ180¶ÈµÄÔ²»¡£»<0±íÊ¾´óÓÚ180¡ãµÄÔ²»¡)
-			cArcDir				Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
- Êä³ö²ÎÊı£º pSMaxVal            ×î´óÖµ
-			pSMinVal            ×îĞ¡Öµ
-·µ »Ø Öµ£º
-±¸    ×¢£º
+ å‡½æ•°åç§°ï¼švoid getAxisMaxAndMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin)
+ å‡½æ•°åŠŸèƒ½ï¼šæ±‚è§£åœ†å¼§æœ€å€¼ç‚¹
+ è¾“å…¥å‚æ•°ï¼š ucHor               æ¨ªè½´
+			ucVer               çºµè½´
+			pdStartPoint		èµ·ç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			pdEndPoint			ç»ˆç‚¹åæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			pSCenterPoint       åœ†å¿ƒåæ ‡ï¼ˆç»å¯¹åæ ‡ï¼‰
+			dRadius				åœ†å¼§åŠå¾„ï¼ˆ>0è¡¨ç¤ºå°äºæˆ–ç­‰äº180åº¦çš„åœ†å¼§ï¼›<0è¡¨ç¤ºå¤§äº180Â°çš„åœ†å¼§)
+			cArcDir				åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+ è¾“å‡ºå‚æ•°ï¼š pSMaxVal            æœ€å¤§å€¼
+			pSMinVal            æœ€å°å€¼
+è¿” å› å€¼ï¼š
+å¤‡    æ³¨ï¼š
 ****************************************/
 void getAxisMaxAndMin(struct _SGetAxisMaxAndMin* SGetAxisMaxAndMin)
-{	
-	//ÆğµãÏà¶ÔÔ²ĞÄºáÖá×İÖáµÄ²îÖµ
-	double dStartPoint_Hor;
-	double dStartPoint_Ver;
-	//ÖÕµãÏà¶ÔÔ²ĞÄºáÖá×İÖáµÄ²îÖµ
-	double dEndPoint_Hor;
-	double dEndPoint_Ver;
-	if (SGetAxisMaxAndMin == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
-	
-	//Ô²»¡ÆğµãÖÕµãÖØºÏÅĞ¶Ï
-	if(isZero(SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucHor] - SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucHor])
-	&& isZero(SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucVer] - SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucVer]))
-	{
-		//ÆğµãÖÕµãÖØºÏ£¬Êä³öÔ²ËÄ¸ö¶¥µã
-		SGetAxisMaxAndMin->dHorMax = SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor] + SGetAxisMaxAndMin->dRadius;
-		SGetAxisMaxAndMin->dHorMin = SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor] - SGetAxisMaxAndMin->dRadius;
-		SGetAxisMaxAndMin->dVerMax = SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer] + SGetAxisMaxAndMin->dRadius;
-		SGetAxisMaxAndMin->dVerMin = SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer] - SGetAxisMaxAndMin->dRadius;
-		return ;
-	}
-	//¼ÆËãÆğµãÏà¶ÔÔ²ĞÄºáÖá×İÖáµÄ²îÖµ
-	dStartPoint_Hor = SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucHor] - SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor];
-	dStartPoint_Ver = SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucVer] - SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer];
-	//¼ÆËãÖÕµãÏà¶ÔÔ²ĞÄºáÖá×İÖáµÄ²îÖµ
-	dEndPoint_Hor = SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucHor] - SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor];
-	dEndPoint_Ver = SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucVer] - SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer];
+{
+    //èµ·ç‚¹ç›¸å¯¹åœ†å¿ƒæ¨ªè½´çºµè½´çš„å·®å€¼
+    double dStartPoint_Hor;
+    double dStartPoint_Ver;
+    //ç»ˆç‚¹ç›¸å¯¹åœ†å¿ƒæ¨ªè½´çºµè½´çš„å·®å€¼
+    double dEndPoint_Hor;
+    double dEndPoint_Ver;
+    if (SGetAxisMaxAndMin == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
+    //åœ†å¼§èµ·ç‚¹ç»ˆç‚¹é‡åˆåˆ¤æ–­
+    if (isZero(SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucHor] -
+               SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucHor]) &&
+        isZero(SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucVer] -
+               SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucVer]))
+    {
+        //èµ·ç‚¹ç»ˆç‚¹é‡åˆï¼Œè¾“å‡ºåœ†å››ä¸ªé¡¶ç‚¹
+        SGetAxisMaxAndMin->dHorMax =
+            SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor] + SGetAxisMaxAndMin->dRadius;
+        SGetAxisMaxAndMin->dHorMin =
+            SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor] - SGetAxisMaxAndMin->dRadius;
+        SGetAxisMaxAndMin->dVerMax =
+            SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer] + SGetAxisMaxAndMin->dRadius;
+        SGetAxisMaxAndMin->dVerMin =
+            SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer] - SGetAxisMaxAndMin->dRadius;
+        return;
+    }
+    //è®¡ç®—èµ·ç‚¹ç›¸å¯¹åœ†å¿ƒæ¨ªè½´çºµè½´çš„å·®å€¼
+    dStartPoint_Hor = SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucHor] -
+                      SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor];
+    dStartPoint_Ver = SGetAxisMaxAndMin->SStartPoint->dArray[SGetAxisMaxAndMin->ucVer] -
+                      SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer];
+    //è®¡ç®—ç»ˆç‚¹ç›¸å¯¹åœ†å¿ƒæ¨ªè½´çºµè½´çš„å·®å€¼
+    dEndPoint_Hor = SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucHor] -
+                    SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucHor];
+    dEndPoint_Ver = SGetAxisMaxAndMin->SEndPoint->dArray[SGetAxisMaxAndMin->ucVer] -
+                    SGetAxisMaxAndMin->SCenterPoint->dArray[SGetAxisMaxAndMin->ucVer];
 
-	//»ñÈ¡ºáÖá×î´óÖµ
-	getHorAxisMax(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
-	//»ñÈ¡ºáÖá×îĞ¡Öµ
-	getHorAxisMin(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
-	//»ñÈ¡×İÖá×î´óÖµ
-	getVerAxisMax(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
-	//»ñÈ¡×İÖá×îĞ¡Öµ
-	getVerAxisMin(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
-
+    //è·å–æ¨ªè½´æœ€å¤§å€¼
+    getHorAxisMax(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
+    //è·å–æ¨ªè½´æœ€å°å€¼
+    getHorAxisMin(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
+    //è·å–çºµè½´æœ€å¤§å€¼
+    getVerAxisMax(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
+    //è·å–çºµè½´æœ€å°å€¼
+    getVerAxisMin(SGetAxisMaxAndMin, dStartPoint_Hor, dStartPoint_Ver, dEndPoint_Hor, dEndPoint_Ver);
 }
-

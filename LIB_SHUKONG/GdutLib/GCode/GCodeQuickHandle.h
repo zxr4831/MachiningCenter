@@ -1,16 +1,16 @@
 #ifndef __GCODEQUICKHANDLE_H
 #define __GCODEQUICKHANDLE_H
 
-//¿ìËÙ´¦Àí±êÖ¾Î»½á¹¹Ìå		³ÂÃô´Ï 4/17
+//å¿«é€Ÿå¤„ç†æ ‡å¿—ä½ç»“æ„ä½“		é™ˆæ•èª 4/17
 typedef struct _SQuickHandleFlag
 {
-	bool bIsModalInfoChangFlag;			//Ä£Ì¬¸Ä±ä±êÖ¾£¬ÓÃÓÚG´úÂë½âÎöº¯ÊıÖĞ
-	bool bCanModalInfoQuickHandleFlag;	//Ä£Ì¬¸Ä±äÄÜ¿ìËÙ´¦Àí±êÖ¾Îª£¬ÓÃÓÚG´úÂë½âÎöº¯ÊıÖĞ
-	int8 cNeedQuickHandleFlag;			//ĞèÒª¶àĞĞ¿ìËÙ´¦Àí±êÖ¾Î»£¬G´úÂë¡¢µ¶²¹¡¢ÖĞ¶Ï¶¼ÓÃÉÏ
-	int8 cCycleCounter;					//Ñ­»·´ÎÊı£¬G´úÂë¡¢µ¶²¹¡¢ÖĞ¶Ï¶¼ÓÃÉÏ
-	int8 cCycleSum;						//Ñ­»·×ÜÊı£¬²âÊÔÓÃ
-	int8 cFunctionReturnValue;			//º¯Êı·µ»ØÖµ£¬ÓÃÓÚÅĞ¶¨ÖĞ¶Ï·şÎñº¯ÊıÍË³öÑ­»·
-}SQuickHandleFlag;
+    bool bIsModalInfoChangFlag;        //æ¨¡æ€æ”¹å˜æ ‡å¿—ï¼Œç”¨äºGä»£ç è§£æå‡½æ•°ä¸­
+    bool bCanModalInfoQuickHandleFlag; //æ¨¡æ€æ”¹å˜èƒ½å¿«é€Ÿå¤„ç†æ ‡å¿—ä¸ºï¼Œç”¨äºGä»£ç è§£æå‡½æ•°ä¸­
+    int8 cNeedQuickHandleFlag;         //éœ€è¦å¤šè¡Œå¿«é€Ÿå¤„ç†æ ‡å¿—ä½ï¼ŒGä»£ç ã€åˆ€è¡¥ã€ä¸­æ–­éƒ½ç”¨ä¸Š
+    int8 cCycleCounter;                //å¾ªç¯æ¬¡æ•°ï¼ŒGä»£ç ã€åˆ€è¡¥ã€ä¸­æ–­éƒ½ç”¨ä¸Š
+    int8 cCycleSum;                    //å¾ªç¯æ€»æ•°ï¼Œæµ‹è¯•ç”¨
+    int8 cFunctionReturnValue;         //å‡½æ•°è¿”å›å€¼ï¼Œç”¨äºåˆ¤å®šä¸­æ–­æœåŠ¡å‡½æ•°é€€å‡ºå¾ªç¯
+} SQuickHandleFlag;
 
 //int8 JudgeGodeQuickHandleType(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBuf, uint8 ucChannelNum);
 //

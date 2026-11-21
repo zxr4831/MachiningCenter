@@ -1,5 +1,5 @@
 /*
-G3 Z10 R0 °´µãÊä³ö
+G3 Z10 R0 æŒ‰ç‚¹è¾“å‡º
 */
 
 #include <stdio.h>
@@ -10,407 +10,411 @@ G3 Z10 R0 °´µãÊä³ö
 #include "ringbuff.h"
 #include "ErrorFunction.h"
 
-
-
 static SG3Para* pSG3ParaCheck[CHANNEL_NUM_MAX];
 static SG3Para* pSG3ParaAssign[CHANNEL_NUM_MAX];
 
-
-
-//Ìí¼ÓG3¹æÔò½á¹¹Ìå
+//æ·»åŠ G3è§„åˆ™ç»“æž„ä½“
 void addG3RegulationAPI()
 {
-	//Ö¸Áî£ºG3
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	int32 a = 10;
-	addGCommadRegulation(3, sGa, 1, mallocG3ParaStruct, freeG3ParaStruct, getG3Para, CheckG3, AssignG3);
+    //æŒ‡ä»¤ï¼šG3
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    int32 a = 10;
+    addGCommadRegulation(3, sGa, 1, mallocG3ParaStruct, freeG3ParaStruct, getG3Para, CheckG3, AssignG3);
 }
 
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 mallocG3ParaStruct(uint8 ucMode, uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ£º¿ª±ÙG3²ÎÊý½á¹¹Ìå£¨×Ü¿ò¼Ü£©
-  ÊäÈë²ÎÊý£ºucMode			Ä£Ê½£¨¼ì²éÄ£Ê½£º0 ¸³ÖµÄ£Ê½£º1£©
-			ucChannelNum	Í¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.ÓÉÓÚ¸÷Í¨µÀµÄ¼ì²é¸³ÖµÍ¬Ê±½øÐÐ£¬·ÀÖ¹²ÎÊý½á¹¹ÌåµÄÊ¹ÓÃ³åÍ»£¬±ØÐë¸ù¾ÝÍ¨µÀºÅÓë½âÎöÄ£Ê½½øÐÐ¿ª±Ù
-			2.¿ª±ÙºóÍ¬Ê±½øÐÐ³õÊ¼»¯
+  å‡½æ•°åç§°ï¼šint8 mallocG3ParaStruct(uint8 ucMode, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šå¼€è¾ŸG3å‚æ•°ç»“æž„ä½“ï¼ˆæ€»æ¡†æž¶ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucMode			æ¨¡å¼ï¼ˆæ£€æŸ¥æ¨¡å¼ï¼š0 èµ‹å€¼æ¨¡å¼ï¼š1ï¼‰
+			ucChannelNum	é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.ç”±äºŽå„é€šé“çš„æ£€æŸ¥èµ‹å€¼åŒæ—¶è¿›è¡Œï¼Œé˜²æ­¢å‚æ•°ç»“æž„ä½“çš„ä½¿ç”¨å†²çªï¼Œå¿…é¡»æ ¹æ®é€šé“å·ä¸Žè§£æžæ¨¡å¼è¿›è¡Œå¼€è¾Ÿ
+			2.å¼€è¾ŸåŽåŒæ—¶è¿›è¡Œåˆå§‹åŒ–
 **************************************************/
 int8 mallocG3ParaStruct(uint8 ucMode, uint8 ucChannelNum)
 {
-	if (ucMode == GC_SYNTAX)
-	{
-		if (pSG3ParaCheck[ucChannelNum] != NULL)
-		{
-			return 1;
-		}
-		pSG3ParaCheck[ucChannelNum] = mallocGCode(sizeof(SG3Para), ORAM_NUM402);//ÔÝÎ´¶ÔÄÚ´æ±àºÅ
-		if (pSG3ParaCheck[ucChannelNum] == NULL)
-		{
-			return 0;
-		}
-		memset(pSG3ParaCheck[ucChannelNum], 0, sizeof(SG3Para));
-		return 1;
-	}
-	else if (ucMode == GC_ASSIGN)
-	{
-		if (pSG3ParaAssign[ucChannelNum] != NULL)
-		{
-			return 1;
-		}
-		pSG3ParaAssign[ucChannelNum] = mallocGCode(sizeof(SG3Para), ORAM_NUM403);
-		if (pSG3ParaAssign[ucChannelNum] == NULL)
-		{
-			return 0;
-		}
-		memset(pSG3ParaAssign[ucChannelNum], 0, sizeof(SG3Para));
-		return 1;
-	}
+    if (ucMode == GC_SYNTAX)
+    {
+        if (pSG3ParaCheck[ucChannelNum] != NULL)
+        {
+            return 1;
+        }
+        pSG3ParaCheck[ucChannelNum] = mallocGCode(sizeof(SG3Para), ORAM_NUM402); //æš‚æœªå¯¹å†…å­˜ç¼–å·
+        if (pSG3ParaCheck[ucChannelNum] == NULL)
+        {
+            return 0;
+        }
+        memset(pSG3ParaCheck[ucChannelNum], 0, sizeof(SG3Para));
+        return 1;
+    }
+    else if (ucMode == GC_ASSIGN)
+    {
+        if (pSG3ParaAssign[ucChannelNum] != NULL)
+        {
+            return 1;
+        }
+        pSG3ParaAssign[ucChannelNum] = mallocGCode(sizeof(SG3Para), ORAM_NUM403);
+        if (pSG3ParaAssign[ucChannelNum] == NULL)
+        {
+            return 0;
+        }
+        memset(pSG3ParaAssign[ucChannelNum], 0, sizeof(SG3Para));
+        return 1;
+    }
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 freeParaStruct(uint8 ucMode, uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ£º¼ì²écGa¡¢cGz³ÌÐò¶Î£¨×Ü¿ò¼Ü£©
-  ÊäÈë²ÎÊý£ºucMode			Ä£Ê½£¨¼ì²éÄ£Ê½£º0 ¸³ÖµÄ£Ê½£º1£©
-			ucChannelNum	Í¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 freeParaStruct(uint8 ucMode, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥cGaã€cGzç¨‹åºæ®µï¼ˆæ€»æ¡†æž¶ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucMode			æ¨¡å¼ï¼ˆæ£€æŸ¥æ¨¡å¼ï¼š0 èµ‹å€¼æ¨¡å¼ï¼š1ï¼‰
+			ucChannelNum	é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 freeG3ParaStruct(uint8 ucMode, uint8 ucChannelNum)
 {
-	if (ucMode == GC_SYNTAX)
-	{
-		if (pSG3ParaCheck[ucChannelNum] != NULL)
-		{
-			freeGCode(pSG3ParaCheck[ucChannelNum]);
-			pSG3ParaCheck[ucChannelNum] = NULL;
-		}
-	}
-	else if (ucMode == GC_ASSIGN)
-	{
-		if (pSG3ParaAssign[ucChannelNum] != NULL)
-		{
-			freeGCode(pSG3ParaAssign[ucChannelNum]);
-			pSG3ParaAssign[ucChannelNum] = NULL;
-		}
-	}
+    if (ucMode == GC_SYNTAX)
+    {
+        if (pSG3ParaCheck[ucChannelNum] != NULL)
+        {
+            freeGCode(pSG3ParaCheck[ucChannelNum]);
+            pSG3ParaCheck[ucChannelNum] = NULL;
+        }
+    }
+    else if (ucMode == GC_ASSIGN)
+    {
+        if (pSG3ParaAssign[ucChannelNum] != NULL)
+        {
+            freeGCode(pSG3ParaAssign[ucChannelNum]);
+            pSG3ParaAssign[ucChannelNum] = NULL;
+        }
+    }
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 freeParaStruct(uint8 ucMode, uint8 ucChannelNum)
-  º¯Êý¹¦ÄÜ£º¼ì²écGa¡¢cGz³ÌÐò¶Î£¨×Ü¿ò¼Ü£©
-  ÊäÈë²ÎÊý£ºucMode			Ä£Ê½£¨¼ì²éÄ£Ê½£º0 ¸³ÖµÄ£Ê½£º1£©
-			ucChannelNum	Í¨µÀºÅ
-  Êä³ö²ÎÊý£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 freeParaStruct(uint8 ucMode, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥cGaã€cGzç¨‹åºæ®µï¼ˆæ€»æ¡†æž¶ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucMode			æ¨¡å¼ï¼ˆæ£€æŸ¥æ¨¡å¼ï¼š0 èµ‹å€¼æ¨¡å¼ï¼š1ï¼‰
+			ucChannelNum	é€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å›ž å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getG3Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* SGCodeCurrSysState)
 {
-
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºCheckG3
-  º¯Êý¹¦ÄÜ£º¼ì²é G3 µÄ×ø±êÊäÈë²¢¼ÆËãµ±Ç°¼ì²é¼ÇÂ¼¡£
-  ÊäÈë²ÎÊý£ºÓÐÐ§¼ì²éÅäÖÃºÍ¼ÇÂ¼£»±¾¶Î·ÇÔË¶¯Ä£Ì¬ÒÑ¸üÐÂ£¬É¨Ãè×ø±êÉÐÎ´×ª»»¡£
-  Êä³ö²ÎÊý£ºÑØÓÃÔ­×ø±ê×ª»»ºÍ¼ÇÂ¼Ð´Èë£»G16 ÊäÈë¾Ü¾øÊ±É¨ÃèÊý¾ÝºÍ¼ÇÂ¼²»±ä¡£
-  ·µ »Ø Öµ£º2 ±¾¶Î¼ì²éÍê³É£»-1 G16 ÊäÈë·Ç·¨»òÔ­ÓÐÊ§°Ü·ÖÖ§¡£
-  ±¸    ×¢£º×ø±ê´¦ÀíÇøÏÈÐ£Ñé G16 ÊäÈë£»ÆäËû²ÎÊýºÍ¼¸ºÎ¼ì²éÑØÓÃÔ­Á÷³Ì¡£
+  å‡½æ•°åç§°ï¼šCheckG3
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥ G3 çš„åæ ‡è¾“å…¥å¹¶è®¡ç®—å½“å‰æ£€æŸ¥è®°å½•ã€‚
+  è¾“å…¥å‚æ•°ï¼šæœ‰æ•ˆæ£€æŸ¥é…ç½®å’Œè®°å½•ï¼›æœ¬æ®µéžè¿åŠ¨æ¨¡æ€å·²æ›´æ–°ï¼Œæ‰«æåæ ‡å°šæœªè½¬æ¢ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ²¿ç”¨åŽŸåæ ‡è½¬æ¢å’Œè®°å½•å†™å…¥ï¼›G16 è¾“å…¥æ‹’ç»æ—¶æ‰«ææ•°æ®å’Œè®°å½•ä¸å˜ã€‚
+  è¿” å›ž å€¼ï¼š2 æœ¬æ®µæ£€æŸ¥å®Œæˆï¼›-1 G16 è¾“å…¥éžæ³•æˆ–åŽŸæœ‰å¤±è´¥åˆ†æ”¯ã€‚
+  å¤‡    æ³¨ï¼šåæ ‡å¤„ç†åŒºå…ˆæ ¡éªŒ G16 è¾“å…¥ï¼›å…¶ä»–å‚æ•°å’Œå‡ ä½•æ£€æŸ¥æ²¿ç”¨åŽŸæµç¨‹ã€‚
 **************************************************/
 int8 CheckG3(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	if (pSSyntaxConfig == NULL)
-	{
-		//±¨´í
-		return -1;
-	}
-	//0.ÅÐ¶ÏG3³ÌÐò¶ÎÖÐÊÇ·ñ³öÏÖ×ø±êÐÅÏ¢ 
-	bool bRet = 0;
-	bRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
-	if (bRet == TRUE)
-	{
-		// °´±¾¶Î×ø±êÄ£Ì¬¼ì²éÊäÈë£¬Í¨¹ýºóÔÙ½øÐÐ×ø±ê×ª»»¡£
-		if (checkPolarCoordinateInput(&pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGCodeCurrSysState) < 0)
-		{
-			return -1;
-		}
+    if (pSSyntaxConfig == NULL)
+    {
+        //æŠ¥é”™
+        return -1;
+    }
+    //0.åˆ¤æ–­G3ç¨‹åºæ®µä¸­æ˜¯å¦å‡ºçŽ°åæ ‡ä¿¡æ¯
+    bool bRet = 0;
+    bRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
+    if (bRet == TRUE)
+    {
+        // æŒ‰æœ¬æ®µåæ ‡æ¨¡æ€æ£€æŸ¥è¾“å…¥ï¼Œé€šè¿‡åŽå†è¿›è¡Œåæ ‡è½¬æ¢ã€‚
+        if (checkPolarCoordinateInput(&pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGCodeCurrSysState) < 0)
+        {
+            return -1;
+        }
 
-		//1.Ö¸Áî×Ö·û¼ì²é
-		checkParaLetter("XYZABCUVWIJKRLD", &pSSyntaxConfig->SScanContainer);
+        //1.æŒ‡ä»¤å­—ç¬¦æ£€æŸ¥
+        checkParaLetter("XYZABCUVWIJKRLD", &pSSyntaxConfig->SScanContainer);
 
-		//2.²ÎÊýÖµ·¶Î§¼ì²é
-		checkParaRange('X', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('Y', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('Z', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('A', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('B', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('C', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('U', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('V', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('W', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('I', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('J', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('K', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('R', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('L', &pSSyntaxConfig->SScanContainer, 0, 999);
-		checkParaRange('D', &pSSyntaxConfig->SScanContainer, 0, 999);
-		// 2.1 ÏÔÊ½À¹½Ø»¥³â²ÎÊýÍ¬Ê±³öÏÖ
-		if (pSSyntaxConfig->SScanContainer.dD>0 && pSSyntaxConfig->SScanContainer.dL>0)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 280);
-			return -1;                             
-		}
+        //2.å‚æ•°å€¼èŒƒå›´æ£€æŸ¥
+        checkParaRange('X', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('Y', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('Z', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('A', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('B', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('C', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('U', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('V', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('W', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('I', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('J', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('K', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('R', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('L', &pSSyntaxConfig->SScanContainer, 0, 999);
+        checkParaRange('D', &pSSyntaxConfig->SScanContainer, 0, 999);
+        // 2.1 æ˜¾å¼æ‹¦æˆªäº’æ–¥å‚æ•°åŒæ—¶å‡ºçŽ°
+        if (pSSyntaxConfig->SScanContainer.dD > 0 && pSSyntaxConfig->SScanContainer.dL > 0)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 280);
+            return -1;
+        }
 
-		//1.»ñÈ¡G3²ÎÊý
-		//1.1»ñÈ¡G3ºáÖá¡¢×ÝÖá
-		SG3Para* pSG3Para = pSG3ParaCheck[pSSyntaxConfig->ucChannelNum];
-		bool bIsAbsMethod;
-		getHorAndVerAxis(&pSG3Para->ucG3Hor, &pSG3Para->ucG3Ver, pSSyntaxConfig->SGCodeCurrSysState.cInterpolationState, pGCodeBufUnit->SModalInfo.sGc);
-		//1.2»ñÈ¡G3µÄÆðµãÓëÖÕµã×ø±ê£¨»úÐµ×ø±ê£©
-		pSG3Para->SG3EndPoint = pSG3Para->SG3StartPoint = pSSyntaxConfig->SGCodeCurrSysState.SCurrPoint;
-		//»ñÈ¡µ±Ç°µÄ×ø±ê±à³Ì·½Ê½
-		bIsAbsMethod = isAbsProgrammingMethod(GC_SYNTAX, pSSyntaxConfig->ucChannelNum);
-		//¼ÆËã×ø±ê
-		getMacCoordByScanInfo(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, &pSSyntaxConfig->SGCodeCurrSysState);
-		//1.3»ñÈ¡G3µÄ·½Ïò
-		pSG3Para->cG3Dir = ARC_ANTI_CW;
-		//1.4»ñÈ¡G3Ô²»¡µÄÔ²ÐÄÓë°ë¾¶
-		getArcCenterPointAndRadius(&pSSyntaxConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, pSG3Para->cG3Dir, &pSG3Para->SG3CenterPoint, &pSG3Para->dG3Radius, pSG3Para->ucG3Hor, pSG3Para->ucG3Ver);
-		//1.5»ñÈ¡G3ÀàÐÍ£¨0:µã||1:Ô²»¡||2:ÕûÔ²£©
-		SArc SArcInfo;//´æÔ²»¡¶ÎÐÅÏ¢£¨¿ÉÄÜÒª½«´Ë±äÁ¿·ÅÔÚ¸³Öµ½á¹¹ÌåÖÐ£©
-		memset(&SArcInfo, 0, sizeof(SArc));
+        //1.èŽ·å–G3å‚æ•°
+        //1.1èŽ·å–G3æ¨ªè½´ã€çºµè½´
+        SG3Para* pSG3Para = pSG3ParaCheck[pSSyntaxConfig->ucChannelNum];
+        bool bIsAbsMethod;
+        getHorAndVerAxis(&pSG3Para->ucG3Hor, &pSG3Para->ucG3Ver, pSSyntaxConfig->SGCodeCurrSysState.cInterpolationState,
+                         pGCodeBufUnit->SModalInfo.sGc);
+        //1.2èŽ·å–G3çš„èµ·ç‚¹ä¸Žç»ˆç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
+        pSG3Para->SG3EndPoint = pSG3Para->SG3StartPoint = pSSyntaxConfig->SGCodeCurrSysState.SCurrPoint;
+        //èŽ·å–å½“å‰çš„åæ ‡ç¼–ç¨‹æ–¹å¼
+        bIsAbsMethod = isAbsProgrammingMethod(GC_SYNTAX, pSSyntaxConfig->ucChannelNum);
+        //è®¡ç®—åæ ‡
+        getMacCoordByScanInfo(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &pSG3Para->SG3StartPoint,
+                              &pSG3Para->SG3EndPoint, &pSSyntaxConfig->SGCodeCurrSysState);
+        //1.3èŽ·å–G3çš„æ–¹å‘
+        pSG3Para->cG3Dir = ARC_ANTI_CW;
+        //1.4èŽ·å–G3åœ†å¼§çš„åœ†å¿ƒä¸ŽåŠå¾„
+        getArcCenterPointAndRadius(&pSSyntaxConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint,
+                                   pSG3Para->cG3Dir, &pSG3Para->SG3CenterPoint, &pSG3Para->dG3Radius, pSG3Para->ucG3Hor,
+                                   pSG3Para->ucG3Ver);
+        //1.5èŽ·å–G3ç±»åž‹ï¼ˆ0:ç‚¹||1:åœ†å¼§||2:æ•´åœ†ï¼‰
+        SArc SArcInfo; //å­˜åœ†å¼§æ®µä¿¡æ¯ï¼ˆå¯èƒ½è¦å°†æ­¤å˜é‡æ”¾åœ¨èµ‹å€¼ç»“æž„ä½“ä¸­ï¼‰
+        memset(&SArcInfo, 0, sizeof(SArc));
 
-		//1.Ð´Ô²»¡¶ÎÐÅÏ¢SArcInfo
-		SArcInfo.SStartPoint = pSG3Para->SG3StartPoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-		SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
-		SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
-		SArcInfo.dRadius = pSG3Para->dG3Radius;
-		SArcInfo.cArcDir = pSG3Para->cG3Dir;
-		SArcInfo.EntityType = pSG3Para->cType == 0 ? DOT : ARC;
-		//2.µ÷ÓÃÔ²»¡¶Î¸³Öµº¯Êý,Ð´Èë»º³åÇø
-		writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
-		return 2;
-	}
-	return 2;
+        //1.å†™åœ†å¼§æ®µä¿¡æ¯SArcInfo
+        SArcInfo.SStartPoint = pSG3Para->SG3StartPoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+        SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
+        SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
+        SArcInfo.dRadius = pSG3Para->dG3Radius;
+        SArcInfo.cArcDir = pSG3Para->cG3Dir;
+        SArcInfo.EntityType = pSG3Para->cType == 0 ? DOT : ARC;
+        //2.è°ƒç”¨åœ†å¼§æ®µèµ‹å€¼å‡½æ•°,å†™å…¥ç¼“å†²åŒº
+        writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
+        return 2;
+    }
+    return 2;
 }
 
-
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 AssignG3(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
-  º¯Êý¹¦ÄÜ£º¸³ÖµÄæÊ±ÕëÔ²»¡£»ÆÕÍ¨ÕûÔ²ÑØ¼ÈÓÐÁ÷³Ì²ð³ÉÁ½¸ö°ëÔ²¡£
-  ÊäÈë²ÎÊý£ºpSAssignConfig ¸³ÖµÅäÖÃ¼°²½Öè×´Ì¬£»pGCodeBufUnit µ±Ç°Ð´µ¥Ôª¡£
-  Êä³ö²ÎÊý£ºÔ²»¡¼ÇÂ¼¼°ºóÐø¸³Öµ²½Öè¡£
-  ·µ »Ø Öµ£º-1 G16 ÊäÈë·Ç·¨»òÕûÔ²µ¹½Ç±ß½ç´íÎó£»0 Ô¤´¦ÀíÍê³É´ýÐø£»1 ÒÑÐ´ÖÐ¼ä¶Î´ýÐø£»2 ±¾Ö¸ÁîÍê³É¡£
-  ±¸    ×¢£ºµ±Ç°ÕûÔ²ÓÐ L/D£¬»òÇ°¶ÎÓÐ´ý´¦Àí L/D Ê±¾Ü¾ø£»±ÜÃâÔÚÕûÔ²ÄÚ²¿²ð·Öµã´¦Àíµ¹½Ç¡£
+  å‡½æ•°åç§°ï¼šint8 AssignG3(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
+  å‡½æ•°åŠŸèƒ½ï¼šèµ‹å€¼é€†æ—¶é’ˆåœ†å¼§ï¼›æ™®é€šæ•´åœ†æ²¿æ—¢æœ‰æµç¨‹æ‹†æˆä¸¤ä¸ªåŠåœ†ã€‚
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig èµ‹å€¼é…ç½®åŠæ­¥éª¤çŠ¶æ€ï¼›pGCodeBufUnit å½“å‰å†™å•å…ƒã€‚
+  è¾“å‡ºå‚æ•°ï¼šåœ†å¼§è®°å½•åŠåŽç»­èµ‹å€¼æ­¥éª¤ã€‚
+  è¿” å›ž å€¼ï¼š-1 G16 è¾“å…¥éžæ³•æˆ–æ•´åœ†å€’è§’è¾¹ç•Œé”™è¯¯ï¼›0 é¢„å¤„ç†å®Œæˆå¾…ç»­ï¼›1 å·²å†™ä¸­é—´æ®µå¾…ç»­ï¼›2 æœ¬æŒ‡ä»¤å®Œæˆã€‚
+  å¤‡    æ³¨ï¼šå½“å‰æ•´åœ†æœ‰ L/Dï¼Œæˆ–å‰æ®µæœ‰å¾…å¤„ç† L/D æ—¶æ‹’ç»ï¼›é¿å…åœ¨æ•´åœ†å†…éƒ¨æ‹†åˆ†ç‚¹å¤„ç†å€’è§’ã€‚
 **************************************************/
 int8 AssignG3(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	SG3Para* pSG3Para = pSG3ParaAssign[pSAssignConfig->ucChannelNum];
-	bool bIsAbsMethod;
-	switch (pSG3Para->cStep)
-	{
-		//¸³ÖµÔ¤´¦Àí
-	case 0:
-	{
-		// ¸³ÖµÖØÐÂÉ¨Ãè²¢ÇóÖµ£¬Ð£Ñé±¾´ÎÊµ¼ÊÓÃÓÚÉú³ÉÔË¶¯µÄÊäÈë¡£
-		if (checkPolarCoordinateInput(&pSAssignConfig->SScanContainer, &pSAssignConfig->SGCodeCurrSysState) < 0)
-		{
-			return -1;
-		}
+    SG3Para* pSG3Para = pSG3ParaAssign[pSAssignConfig->ucChannelNum];
+    bool bIsAbsMethod;
+    switch (pSG3Para->cStep)
+    {
+        //èµ‹å€¼é¢„å¤„ç†
+    case 0:
+    {
+        // èµ‹å€¼é‡æ–°æ‰«æå¹¶æ±‚å€¼ï¼Œæ ¡éªŒæœ¬æ¬¡å®žé™…ç”¨äºŽç”Ÿæˆè¿åŠ¨çš„è¾“å…¥ã€‚
+        if (checkPolarCoordinateInput(&pSAssignConfig->SScanContainer, &pSAssignConfig->SGCodeCurrSysState) < 0)
+        {
+            return -1;
+        }
 
-		//1.»ñÈ¡G3²ÎÊý
-		//1.1»ñÈ¡G3ºáÖá¡¢×ÝÖá
-		getHorAndVerAxis(&pSG3Para->ucG3Hor, &pSG3Para->ucG3Ver, pSAssignConfig->pGCodeBuf[pSAssignConfig->usIndex].cInterpolationState, pGCodeBufUnit->SModalInfo.sGc);
-		//1.2»ñÈ¡G3µÄÆðµãÓëÖÕµã×ø±ê£¨»úÐµ×ø±ê£©
-		pSG3Para->SG3EndPoint = pSG3Para->SG3StartPoint = pSAssignConfig->SGCodeCurrSysState.SCurrPoint;
-		//»ñÈ¡µ±Ç°µÄ×ø±ê±à³Ì·½Ê½
-		bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSAssignConfig->ucChannelNum);
-		//¼ÆËã»úÐµ×ø±ê
-		getMacCoordByScanInfo(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, &pSAssignConfig->SGCodeCurrSysState);
-		//1.3»ñÈ¡G3µÄ·½Ïò
-		pSG3Para->cG3Dir = ARC_ANTI_CW;
-		//1.4»ñÈ¡G3Ô²»¡µÄÔ²ÐÄÓë°ë¾¶
-		getArcCenterPointAndRadius(&pSAssignConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, pSG3Para->cG3Dir, &pSG3Para->SG3CenterPoint, &pSG3Para->dG3Radius, pSG3Para->ucG3Hor, pSG3Para->ucG3Ver);
-		//1.5»ñÈ¡G3ÀàÐÍ£¨0:µã||1:Ô²»¡||2:ÕûÔ²£©
-		pSG3Para->cType = getArcType(&pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, &pSG3Para->SG3CenterPoint, pSG3Para->dG3Radius, pSG3Para->ucG3Hor, pSG3Para->ucG3Ver);
+        //1.èŽ·å–G3å‚æ•°
+        //1.1èŽ·å–G3æ¨ªè½´ã€çºµè½´
+        getHorAndVerAxis(&pSG3Para->ucG3Hor, &pSG3Para->ucG3Ver,
+                         pSAssignConfig->pGCodeBuf[pSAssignConfig->usIndex].cInterpolationState,
+                         pGCodeBufUnit->SModalInfo.sGc);
+        //1.2èŽ·å–G3çš„èµ·ç‚¹ä¸Žç»ˆç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
+        pSG3Para->SG3EndPoint = pSG3Para->SG3StartPoint = pSAssignConfig->SGCodeCurrSysState.SCurrPoint;
+        //èŽ·å–å½“å‰çš„åæ ‡ç¼–ç¨‹æ–¹å¼
+        bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSAssignConfig->ucChannelNum);
+        //è®¡ç®—æœºæ¢°åæ ‡
+        getMacCoordByScanInfo(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &pSG3Para->SG3StartPoint,
+                              &pSG3Para->SG3EndPoint, &pSAssignConfig->SGCodeCurrSysState);
+        //1.3èŽ·å–G3çš„æ–¹å‘
+        pSG3Para->cG3Dir = ARC_ANTI_CW;
+        //1.4èŽ·å–G3åœ†å¼§çš„åœ†å¿ƒä¸ŽåŠå¾„
+        getArcCenterPointAndRadius(&pSAssignConfig->SScanContainer, &pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint,
+                                   pSG3Para->cG3Dir, &pSG3Para->SG3CenterPoint, &pSG3Para->dG3Radius, pSG3Para->ucG3Hor,
+                                   pSG3Para->ucG3Ver);
+        //1.5èŽ·å–G3ç±»åž‹ï¼ˆ0:ç‚¹||1:åœ†å¼§||2:æ•´åœ†ï¼‰
+        pSG3Para->cType = getArcType(&pSG3Para->SG3StartPoint, &pSG3Para->SG3EndPoint, &pSG3Para->SG3CenterPoint,
+                                     pSG3Para->dG3Radius, pSG3Para->ucG3Hor, pSG3Para->ucG3Ver);
 
-		//2.ÕûÔ²ÐèÒª¶îÍâ¼ÆËãSG3MiddlePoint£¬ÓÃÓÚºóÐø¸îÔ²
-        /* Óë G2 Ò»ÖÂ£¬ÔÚ²ð³ÉÁ½¸ö°ëÔ²Ö®Ç°×èÖ¹ÕûÔ²²ÎÓëµ±Ç°°æ±¾µ¹Ô²¡£ */
-        if (pSG3Para->cType == 2) {
-            int16 wi=getSGCodeParsePointerIndex(GCODE_WRITE,pSAssignConfig->ucChannelNum);
-            struct SGCodeParse *tail=getSGCodeParsePointerByIndex(wi-1,pSAssignConfig->ucChannelNum);
-            if (pSAssignConfig->SScanContainer.bD || pSAssignConfig->SScanContainer.bL
-                || (getSGCodeParsePointerBufRes(GCODE_READ,pSAssignConfig->ucChannelNum)>0
-                    && (tail->dRoundedRadius != 0.0 || tail->dChamferLen != 0.0))) {
-                parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum,283);
+        //2.æ•´åœ†éœ€è¦é¢å¤–è®¡ç®—SG3MiddlePointï¼Œç”¨äºŽåŽç»­å‰²åœ†
+        /* ä¸Ž G2 ä¸€è‡´ï¼Œåœ¨æ‹†æˆä¸¤ä¸ªåŠåœ†ä¹‹å‰é˜»æ­¢æ•´åœ†å‚ä¸Žå½“å‰ç‰ˆæœ¬å€’åœ†ã€‚ */
+        if (pSG3Para->cType == 2)
+        {
+            int16 wi = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+            struct SGCodeParse* tail = getSGCodeParsePointerByIndex(wi - 1, pSAssignConfig->ucChannelNum);
+            if (pSAssignConfig->SScanContainer.bD || pSAssignConfig->SScanContainer.bL ||
+                (getSGCodeParsePointerBufRes(GCODE_READ, pSAssignConfig->ucChannelNum) > 0 &&
+                 (tail->dRoundedRadius != 0.0 || tail->dChamferLen != 0.0)))
+            {
+                parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, 283);
                 return -1;
             }
         }
-		if (pSG3Para->cType == 2)
-		{
-			uint8 ucStraightMoveAxis;  //Ö±ÏßÒÆ¶¯µÄÖá  ÕûÔ²²ð·ÖÊ±ÐèÒª·Ö°ëµ½Á½¸ö°ëÔ²ÉÏ
-			int16 sGcCommand = pGCodeBufUnit->SModalInfo.sGc;
+        if (pSG3Para->cType == 2)
+        {
+            uint8 ucStraightMoveAxis; //ç›´çº¿ç§»åŠ¨çš„è½´  æ•´åœ†æ‹†åˆ†æ—¶éœ€è¦åˆ†åŠåˆ°ä¸¤ä¸ªåŠåœ†ä¸Š
+            int16 sGcCommand = pGCodeBufUnit->SModalInfo.sGc;
 
-			if (sGcCommand == G17 * pow(10, GCOMMAND_DECIMAL_PLACE))
-			{
-				ucStraightMoveAxis = AXIS_Z;
-			}
-			else if (sGcCommand == G18 * pow(10, GCOMMAND_DECIMAL_PLACE))
-			{
-				ucStraightMoveAxis = AXIS_Y;
-			}
-			else if (sGcCommand == G19 * pow(10, GCOMMAND_DECIMAL_PLACE))
-			{
-				ucStraightMoveAxis = AXIS_X;
-			}
-			else
-			{
-				ucStraightMoveAxis = AXIS_Y;
-			}
-			pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Hor] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor] - (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Hor] - pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor]);
-			pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Ver] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver] - (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Ver] - pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver]);
-			//Ö±ÏßÒÆ¶¯ÖáµÄ¼ÆËã
-			pSG3Para->SG3MiddlePoint.dArray[ucStraightMoveAxis] = pSG3Para->SG3StartPoint.dArray[ucStraightMoveAxis]
-				+ (pSG3Para->SG3EndPoint.dArray[ucStraightMoveAxis] - pSG3Para->SG3StartPoint.dArray[ucStraightMoveAxis]) / 2;
-		}
+            if (sGcCommand == G17 * pow(10, GCOMMAND_DECIMAL_PLACE))
+            {
+                ucStraightMoveAxis = AXIS_Z;
+            }
+            else if (sGcCommand == G18 * pow(10, GCOMMAND_DECIMAL_PLACE))
+            {
+                ucStraightMoveAxis = AXIS_Y;
+            }
+            else if (sGcCommand == G19 * pow(10, GCOMMAND_DECIMAL_PLACE))
+            {
+                ucStraightMoveAxis = AXIS_X;
+            }
+            else
+            {
+                ucStraightMoveAxis = AXIS_Y;
+            }
 
-		pSG3Para->cStep = pSG3Para->cType == 2 ? 2 : 1;
+            pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Hor] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor] -
+                                                                 (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Hor] -
+                                                                  pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor]);
+            pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Ver] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver] -
+                                                                 (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Ver] -
+                                                                  pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver]);
+            //ç›´çº¿ç§»åŠ¨è½´çš„è®¡ç®—
+            pSG3Para->SG3MiddlePoint.dArray[ucStraightMoveAxis] = pSG3Para->SG3StartPoint.dArray[ucStraightMoveAxis] +
+                                                                  (pSG3Para->SG3EndPoint.dArray[ucStraightMoveAxis] -
+                                                                   pSG3Para->SG3StartPoint.dArray[ucStraightMoveAxis]) /
+                                                                      2;
+        }
 
-		return 0;
-		break;
-	}
-	//¸³Öµµã||Ô²»¡
-	case 1:
-	{
-		SArc SArcInfo;//´æÔ²»¡¶ÎÐÅÏ¢£¨¿ÉÄÜÒª½«´Ë±äÁ¿·ÅÔÚ¸³Öµ½á¹¹ÌåÖÐ£©
-		memset(&SArcInfo, 0, sizeof(SArc));
+        pSG3Para->cStep = pSG3Para->cType == 2 ? 2 : 1;
 
-		//1.Ð´Ô²»¡¶ÎÐÅÏ¢SArcInfo
-		SArcInfo.SStartPoint = pSG3Para->SG3StartPoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-		SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
-		SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
-		SArcInfo.dRadius = pSG3Para->dG3Radius;
-		SArcInfo.cArcDir = pSG3Para->cG3Dir;
-		SArcInfo.EntityType = pSG3Para->cType == 0 ? DOT : ARC;
-		//2.µ÷ÓÃÔ²»¡¶Î¸³Öµº¯Êý,Ð´Èë»º³åÇø
-		writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
-		
-		//3.×Ô¶¯µ¹½Ç/µ¹Ô²²ÎÊý×ªÐ´£¨L/Dºó×º£¬Fanuc·ç¸ñ£©
-			if (pSAssignConfig->SScanContainer.bD)
-			{
-				double dD = pSAssignConfig->SScanContainer.dD;
-				pGCodeBufUnit->dRoundedRadius = dD;
-			}
-			if (pSAssignConfig->SScanContainer.bL)
-			{
-				double dL = pSAssignConfig->SScanContainer.dL;
-				pGCodeBufUnit->dChamferLen = dL;
-			}
+        return 0;
+        break;
+    }
+    //èµ‹å€¼ç‚¹||åœ†å¼§
+    case 1:
+    {
+        SArc SArcInfo; //å­˜åœ†å¼§æ®µä¿¡æ¯ï¼ˆå¯èƒ½è¦å°†æ­¤å˜é‡æ”¾åœ¨èµ‹å€¼ç»“æž„ä½“ä¸­ï¼‰
+        memset(&SArcInfo, 0, sizeof(SArc));
 
-		//¼«Öµµã
-		pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
-		pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
-		pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
-		pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
-		getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
+        //1.å†™åœ†å¼§æ®µä¿¡æ¯SArcInfo
+        SArcInfo.SStartPoint = pSG3Para->SG3StartPoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+        SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
+        SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
+        SArcInfo.dRadius = pSG3Para->dG3Radius;
+        SArcInfo.cArcDir = pSG3Para->cG3Dir;
+        SArcInfo.EntityType = pSG3Para->cType == 0 ? DOT : ARC;
+        //2.è°ƒç”¨åœ†å¼§æ®µèµ‹å€¼å‡½æ•°,å†™å…¥ç¼“å†²åŒº
+        writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
 
-		pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
-		pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
-		pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
-		pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
+        //3.è‡ªåŠ¨å€’è§’/å€’åœ†å‚æ•°è½¬å†™ï¼ˆL/DåŽç¼€ï¼ŒFanucé£Žæ ¼ï¼‰
+        if (pSAssignConfig->SScanContainer.bD)
+        {
+            double dD = pSAssignConfig->SScanContainer.dD;
+            pGCodeBufUnit->dRoundedRadius = dD;
+        }
+        if (pSAssignConfig->SScanContainer.bL)
+        {
+            double dL = pSAssignConfig->SScanContainer.dL;
+            pGCodeBufUnit->dChamferLen = dL;
+        }
 
-		//		
-		pSG3Para->cStep = 0;
+        //æžå€¼ç‚¹
+        pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
+        pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
+        pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
+        pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
+        getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
 
-		return 2;
-		break;
-	}
-	//¸³ÖµÕûÔ²1
-	case 2:
-	{
-		//1.Ð´Ô²»¡¶ÎÐÅÏ¢SArcInfo
-		SArc SArcInfo;
-		memset(&SArcInfo, 0, sizeof(SArc));
+        pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
+        pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
+        pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
+        pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
 
-		SArcInfo.SStartPoint = pSG3Para->SG3StartPoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-		SArcInfo.SEndPoint = pSG3Para->SG3MiddlePoint;
-		SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
-		SArcInfo.dRadius = pSG3Para->dG3Radius;
-		SArcInfo.cArcDir = pSG3Para->cG3Dir;
-		SArcInfo.EntityType = ARC;
+        //
+        pSG3Para->cStep = 0;
 
-		//2.µ÷ÓÃÔ²»¡¶Î¸³Öµº¯Êý,Ð´Èë»º³åÇø
-		writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
-		//¼«Öµµã
-		pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
-		pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
-		pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
-		pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
-		getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
+        return 2;
+        break;
+    }
+    //èµ‹å€¼æ•´åœ†1
+    case 2:
+    {
+        //1.å†™åœ†å¼§æ®µä¿¡æ¯SArcInfo
+        SArc SArcInfo;
+        memset(&SArcInfo, 0, sizeof(SArc));
 
-		pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
-		pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
-		pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
-		pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
+        SArcInfo.SStartPoint = pSG3Para->SG3StartPoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+        SArcInfo.SEndPoint = pSG3Para->SG3MiddlePoint;
+        SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
+        SArcInfo.dRadius = pSG3Para->dG3Radius;
+        SArcInfo.cArcDir = pSG3Para->cG3Dir;
+        SArcInfo.EntityType = ARC;
 
-		pSG3Para->cStep = 3;
-		return 1;
+        //2.è°ƒç”¨åœ†å¼§æ®µèµ‹å€¼å‡½æ•°,å†™å…¥ç¼“å†²åŒº
+        writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
+        //æžå€¼ç‚¹
+        pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
+        pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
+        pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
+        pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
+        getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
 
+        pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
+        pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
+        pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
+        pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
 
+        pSG3Para->cStep = 3;
+        return 1;
+    }
+    //èµ‹å€¼æ•´åœ†2
+    case 3:
+    {
+        //1.å†™åœ†å¼§æ®µä¿¡æ¯SArcInfo
+        SArc SArcInfo;
+        memset(&SArcInfo, 0, sizeof(SArc));
 
-	}
-	//¸³ÖµÕûÔ²2
-	case 3:
-	{
-		//1.Ð´Ô²»¡¶ÎÐÅÏ¢SArcInfo
-		SArc SArcInfo;
-		memset(&SArcInfo, 0, sizeof(SArc));
+        SArcInfo.SStartPoint = pSG3Para->SG3MiddlePoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+        SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
+        SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
+        SArcInfo.dRadius = pSG3Para->dG3Radius;
+        SArcInfo.cArcDir = pSG3Para->cG3Dir;
+        SArcInfo.EntityType = ARC;
 
-		SArcInfo.SStartPoint = pSG3Para->SG3MiddlePoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-		SArcInfo.SEndPoint = pSG3Para->SG3EndPoint;
-		SArcInfo.SCenterPoint = pSG3Para->SG3CenterPoint;
-		SArcInfo.dRadius = pSG3Para->dG3Radius;
-		SArcInfo.cArcDir = pSG3Para->cG3Dir;
-		SArcInfo.EntityType = ARC;
+        //2.è°ƒç”¨åœ†å¼§æ®µèµ‹å€¼å‡½æ•°,å†™å…¥ç¼“å†²åŒº
+        writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
+        //æžå€¼ç‚¹
+        pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
+        pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
+        pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
+        pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
+        pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
+        getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
 
-		//2.µ÷ÓÃÔ²»¡¶Î¸³Öµº¯Êý,Ð´Èë»º³åÇø
-		writeArcIntoGCodeBuf(&SArcInfo, pGCodeBufUnit);
-		//¼«Öµµã
-		pSAssignConfig->SGetAxisMaxAndMin.cArcDir = pGCodeBufUnit->cArcDir;
-		pSAssignConfig->SGetAxisMaxAndMin.dRadius = pGCodeBufUnit->dRadius;
-		pSAssignConfig->SGetAxisMaxAndMin.SStartPoint = &pGCodeBufUnit->SStartPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SEndPoint = &pGCodeBufUnit->SEndPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.SCenterPoint = &pGCodeBufUnit->SCenterPoint;
-		pSAssignConfig->SGetAxisMaxAndMin.ucHor = pSG3Para->ucG3Hor;
-		pSAssignConfig->SGetAxisMaxAndMin.ucVer = pSG3Para->ucG3Ver;
-		getAxisMaxAndMin(&pSAssignConfig->SGetAxisMaxAndMin);
+        pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
+        pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
+        pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
+        pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
 
-		pGCodeBufUnit->dHorMax = pSAssignConfig->SGetAxisMaxAndMin.dHorMax;
-		pGCodeBufUnit->dHorMin = pSAssignConfig->SGetAxisMaxAndMin.dHorMin;
-		pGCodeBufUnit->dVerMax = pSAssignConfig->SGetAxisMaxAndMin.dVerMax;
-		pGCodeBufUnit->dVerMin = pSAssignConfig->SGetAxisMaxAndMin.dVerMin;
+        pSG3Para->cStep = 0;
 
-		pSG3Para->cStep = 0;
-
-		return 2;
-	}
-	default:
-		break;
-	}
+        return 2;
+    }
+    default:
+        break;
+    }
 }
-
-
-
-
-

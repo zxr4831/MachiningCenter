@@ -1,121 +1,112 @@
 #ifndef __GCODE_G71_H
 #define __GCODE_G71_H
 
-
 #include "common.h"
 //#include "GCodeCommon.h"
 
-#define G71_DEBUG (1&(!STM32_MODE))
+#define G71_DEBUG (1 & (!STM32_MODE))
 
 typedef struct _SG71Para
 {
-	bool bG72;					//G72±êÖ¾
-	bool bSwapFlag;				//½»»»×ø±ê±êÖ¾
+    bool bG72;      //G72æ ‡å¿—
+    bool bSwapFlag; //äº¤æ¢åæ ‡æ ‡å¿—
 
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
-	int8 cStepInBlock;			//¿éÖĞµÄÇĞÆ¬
+    int8 cStep;        //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    int8 cStepInBlock; //å—ä¸­çš„åˆ‡ç‰‡
 
-	//G71Ö¸Áî²ÎÊı
-	uint8 ucH;            // 0: IĞÍ   1: IIĞÍ  Ä¬ÈÏÎª0
+    //G71æŒ‡ä»¤å‚æ•°
+    uint8 ucH; // 0: Iå‹   1: IIå‹  é»˜è®¤ä¸º0
 
-	double dDeltaD;		//ÇĞÏ÷Á¿	0.001¡«99.999 (µ¥Î»£ºmm / inch£¬°ë¾¶Öµ)£¬ÎŞ·ûºÅ  ¡÷d Cutting Depth
-	double dDeltaE;		//ÍËµ¶Á¿	0¡«99.999(µ¥Î»£ºmm / inch£¬°ë¾¶Öµ)£¬ÎŞ·ûºÅ        e
+    double dDeltaD; //åˆ‡å‰Šé‡	0.001ï½99.999 (å•ä½ï¼šmm / inchï¼ŒåŠå¾„å€¼)ï¼Œæ— ç¬¦å·  â–³d Cutting Depth
+    double dDeltaE; //é€€åˆ€é‡	0ï½99.999(å•ä½ï¼šmm / inchï¼ŒåŠå¾„å€¼)ï¼Œæ— ç¬¦å·        e
 
-	uint32 unNS;		//ÆğÊ¼ĞĞºÅ
-	uint32 unNF;		//½áÊøĞĞºÅ
+    uint32 unNS; //èµ·å§‹è¡Œå·
+    uint32 unNF; //ç»“æŸè¡Œå·
 
-	double dDeltaU;      //È¡Öµ·¶Î§ - 99999.999¡«99999.999 (Ö±¾¶, µ¥Î»£ºmm / inch£¬ÓĞ·ûºÅ) £¬Ä¬ÈÏÎª0  ¡÷u ¹ì¼£XÆ«ÒÆÖµ
-	double dDeltaW;      //È¡Öµ·¶Î§ - 99999.999¡«99999.999 (Ö±¾¶, µ¥Î»£ºmm / inch£¬ÓĞ·ûºÅ) £¬Ä¬ÈÏÎª0  ¡÷w ¹ì¼£ZÆ«ÒÆÖµ
+    double dDeltaU; //å–å€¼èŒƒå›´ - 99999.999ï½99999.999 (ç›´å¾„, å•ä½ï¼šmm / inchï¼Œæœ‰ç¬¦å·) ï¼Œé»˜è®¤ä¸º0  â–³u è½¨è¿¹Xåç§»å€¼
+    double dDeltaW; //å–å€¼èŒƒå›´ - 99999.999ï½99999.999 (ç›´å¾„, å•ä½ï¼šmm / inchï¼Œæœ‰ç¬¦å·) ï¼Œé»˜è®¤ä¸º0  â–³w è½¨è¿¹Zåç§»å€¼
 
+    //è½¨è¿¹å‚æ•°
+    SList* pSPathList;     //è½¨è¿¹é“¾è¡¨
+    SPointDouble SPointA1; //Aç‚¹		G71èµ·ç‚¹
+    SPointDouble SPointA2; //A'ç‚¹	åç½®åçš„åŠ å·¥è½¨è¿¹èµ·ç‚¹
+    //SPointDouble SPointB2;//B'ç‚¹	ä½œç”¨ï¼Ÿ
+    SPointDouble SPointC2; //C'ç‚¹
 
-	//¹ì¼£²ÎÊı
-	SList* pSPathList;  //¹ì¼£Á´±í
-	SPointDouble SPointA1;//Aµã		G71Æğµã
-	SPointDouble SPointA2;//A'µã	Æ«ÖÃºóµÄ¼Ó¹¤¹ì¼£Æğµã
-	//SPointDouble SPointB2;//B'µã	×÷ÓÃ£¿
-	SPointDouble SPointC2;//C'µã
+    int8 cMachineXDir; //è½¨è¿¹XåŠ å·¥æ–¹å‘	1ï¼š+å‘-åŠ å·¥ -1ï¼š-å‘+åŠ å·¥
+    int8 cMachineZDir; //è½¨è¿¹XåŠ å·¥æ–¹å‘	1ï¼š+å‘-åŠ å·¥ -1ï¼š-å‘+åŠ å·¥
 
-	int8 cMachineXDir;			//¹ì¼£X¼Ó¹¤·½Ïò	1£º+Ïò-¼Ó¹¤ -1£º-Ïò+¼Ó¹¤
-	int8 cMachineZDir;			//¹ì¼£X¼Ó¹¤·½Ïò	1£º+Ïò-¼Ó¹¤ -1£º-Ïò+¼Ó¹¤
+    SList* pSGrooveList; //æ§½é“¾è¡¨ åŒå±‚é“¾è¡¨
 
-	SList* pSGrooveList;  //²ÛÁ´±í Ë«²ãÁ´±í
+    int16 usCurPos; //å†™å…¥åŠ å·¥è½¨è¿¹é“¾è¡¨ç”¨ G71â… å‹ç”¨
 
-	int16 usCurPos;  //Ğ´Èë¼Ó¹¤¹ì¼£Á´±íÓÃ G71¢ñĞÍÓÃ
-	
-	int16 cCurrMachineGrooveNum;		//µ±Ç°¼Ó¹¤²ÛºÅ£¨ĞÂ£©
-	int16 cCurrPointGrooveNum;		//µ±Ç°µãËùÔÚ²ÛºÅ£¨ĞÂ£©
+    int16 cCurrMachineGrooveNum; //å½“å‰åŠ å·¥æ§½å·ï¼ˆæ–°ï¼‰
+    int16 cCurrPointGrooveNum;   //å½“å‰ç‚¹æ‰€åœ¨æ§½å·ï¼ˆæ–°ï¼‰
 
-	int8 cCurrMachineDir;		//µ±Ç°¼Ó¹¤·½Ïò£¨µ±·´Ïò¼Ó¹¤Ê±£¬Ô²»¡·½ÏòĞèÒªÈ¡·´£©
+    int8 cCurrMachineDir; //å½“å‰åŠ å·¥æ–¹å‘ï¼ˆå½“åå‘åŠ å·¥æ—¶ï¼Œåœ†å¼§æ–¹å‘éœ€è¦å–åï¼‰
 
-	bool bOutOfEdge;//»ØÇĞ¶Î³¬³öÆğÊ¼±ßorÖÕÖ¹±ß
-	double dOutVal;//³¬³öÖµ
+    bool bOutOfEdge; //å›åˆ‡æ®µè¶…å‡ºèµ·å§‹è¾¹orç»ˆæ­¢è¾¹
+    double dOutVal;  //è¶…å‡ºå€¼
 
-	int8 cStepInCut_2;
+    int8 cStepInCut_2;
 
-	//int8 cFeedPos;	//½ø¸ø¶ÎËùÔÚÊµÌå½ÚµãÎ»ÖÃ
-	//int8 BackPos;	//»ØÇĞ¶ÎËùÔÚÊµÌå½ÚµãÎ»ÖÃ
+    //int8 cFeedPos;	//è¿›ç»™æ®µæ‰€åœ¨å®ä½“èŠ‚ç‚¹ä½ç½®
+    //int8 BackPos;	//å›åˆ‡æ®µæ‰€åœ¨å®ä½“èŠ‚ç‚¹ä½ç½®
 
-	double dRestFeedVal;		//Ê£Óà½ø¸øÁ¿ 
-	double dRestBackVal;		//Ê£Óà»ØÇĞÁ¿
+    double dRestFeedVal; //å‰©ä½™è¿›ç»™é‡
+    double dRestBackVal; //å‰©ä½™å›åˆ‡é‡
 
+    SPoint SCycleBlockPointA; //å¾ªç¯å—Aç‚¹
+    SPoint SCycleBlockPointB; //å¾ªç¯å—Bç‚¹
 
+    SPoint STransitBlockPointA; //æ”¶å°¾å—Aç‚¹
+    SPoint STransitBlockPointB; //æ”¶å°¾å—Bç‚¹
+    SPoint STransitBlockPointC; //æ”¶å°¾å—Cç‚¹
+    int16 cBeforeTransitGrooveNum;
+    int16 cAfterTransitGrooveNum;
 
-	SPoint SCycleBlockPointA;	//Ñ­»·¿éAµã
-	SPoint SCycleBlockPointB;	//Ñ­»·¿éBµã
+    double dCurrCutDepth; //å½“å‰åˆ‡å‰Šæ·±åº¦
 
-	SPoint STransitBlockPointA;	//ÊÕÎ²¿éAµã
-	SPoint STransitBlockPointB;	//ÊÕÎ²¿éBµã
-	SPoint STransitBlockPointC;	//ÊÕÎ²¿éCµã
-	int16 cBeforeTransitGrooveNum;
-	int16 cAfterTransitGrooveNum;
+    //SPoint SBackBlockPointA;
+    //SPoint SBackBlockPointB;
 
-	double dCurrCutDepth;	//µ±Ç°ÇĞÏ÷Éî¶È
+    //è·å–è½¨è¿¹é“¾è¡¨æ—¶æ‰€éœ€çš„æ•°æ®
+    SGetTextStateInfo SGetTextStateInfo;
+    SScan SScanContainer;
+    SGCommandRegulation* pSCurrCommandRegulation; //å½“å‰æ‰§è¡ŒGaã€Gzç»„æŒ‡ä»¤è§„åˆ™
+    int8 cCommandSegmentCnt;
 
-	//SPoint SBackBlockPointA;
-	//SPoint SBackBlockPointB;
+    int8 cEndPointPos; //0ï¼šAç‚¹	1ï¼šA'ç‚¹	2ï¼šC'ç‚¹
 
+    bool bFinish;
 
+} SG71Para;
 
-
-	//»ñÈ¡¹ì¼£Á´±íÊ±ËùĞèµÄÊı¾İ
-	SGetTextStateInfo SGetTextStateInfo;
-	SScan SScanContainer;
-	SGCommandRegulation* pSCurrCommandRegulation;//µ±Ç°Ö´ĞĞGa¡¢Gz×éÖ¸Áî¹æÔò
-	int8 cCommandSegmentCnt;
-
-	int8 cEndPointPos;//0£ºAµã	1£ºA'µã	2£ºC'µã
-
-	bool bFinish;
-
-
-}SG71Para;
-
-
-typedef struct _SGrooveData   //G71 IIĞÍ²ÛÊı¾İ
+typedef struct _SGrooveData //G71 IIå‹æ§½æ•°æ®
 {
-	uint16 ucGrooveNum;				//²ÛºÅ  
-	SList* pSGroovePathList;		//²Û¹ì¼£Á´±í
-	int8 cGrooveBottomPos;			//²Ûµ×ÔÚ²Û¹ì¼£Á´±íÖĞµÄÎ»ÖÃ (Î»ÖÃÓÉ×îºó½Úµãµ¹Êı¹ıÈ¥) ÓÃÓÚÇø·ÖÆğÊ¼±ßºÍÖÕÖ¹±ß  
-	                                //Ğ¡ÓÚ£¨²Û¹ì¼£Á´±í´óĞ¡-cGrooveBottomPos£©ÎªÖÕÖ¹±ß   ´óÓÚµÈÓÚ£¨²Û¹ì¼£Á´±í´óĞ¡-cGrooveBottomPos£©ÎªÆğÊ¼±ß
-	
-	int16 cTotalStartLineEntityNum;	//²ÛÆğÊ¼±ßµÄÊµÌåÊıÁ¿
-	int16 cTotalEndLineEntityNum;	//²ÛÖÕÖ¹±ßµÄÊµÌåÊıÁ¿
+    uint16 ucGrooveNum;      //æ§½å·
+    SList* pSGroovePathList; //æ§½è½¨è¿¹é“¾è¡¨
+    int8 cGrooveBottomPos;   //æ§½åº•åœ¨æ§½è½¨è¿¹é“¾è¡¨ä¸­çš„ä½ç½® (ä½ç½®ç”±æœ€åèŠ‚ç‚¹å€’æ•°è¿‡å») ç”¨äºåŒºåˆ†èµ·å§‹è¾¹å’Œç»ˆæ­¢è¾¹
+    //å°äºï¼ˆæ§½è½¨è¿¹é“¾è¡¨å¤§å°-cGrooveBottomPosï¼‰ä¸ºç»ˆæ­¢è¾¹   å¤§äºç­‰äºï¼ˆæ§½è½¨è¿¹é“¾è¡¨å¤§å°-cGrooveBottomPosï¼‰ä¸ºèµ·å§‹è¾¹
 
-	SPoint SPointA;					//ÆğÊ¼±ß¶¥µã
-	SPoint SPointB;					//ÖÕÖ¹±ß¶¥µã
-	SPoint SPointC;					//²Ûµ×µã
+    int16 cTotalStartLineEntityNum; //æ§½èµ·å§‹è¾¹çš„å®ä½“æ•°é‡
+    int16 cTotalEndLineEntityNum;   //æ§½ç»ˆæ­¢è¾¹çš„å®ä½“æ•°é‡
 
-	//ÒÔÏÂÎª¼Ó¹¤Êı¾İ
-	bool bPointA2;
-	SPoint SPointA2;	//ÆğÊ¼±ßµÚÒ»µ¶Éî¶È£¨¿ÉÄÜ³¬¹ı²Ûµ×£©
-	bool bPointB2;
-	SPoint SPointB2;	//ÖÕÖ¹±ßµÚÒ»µ¶Éî¶È£¨¿ÉÄÜ³¬¹ı²Ûµ×£©
+    SPoint SPointA; //èµ·å§‹è¾¹é¡¶ç‚¹
+    SPoint SPointB; //ç»ˆæ­¢è¾¹é¡¶ç‚¹
+    SPoint SPointC; //æ§½åº•ç‚¹
 
-	double dResCutDistance;			//Ã¿¸ö²ÛµÄÊ£ÓàÇĞÉîÉî¶È
+    //ä»¥ä¸‹ä¸ºåŠ å·¥æ•°æ®
+    bool bPointA2;
+    SPoint SPointA2; //èµ·å§‹è¾¹ç¬¬ä¸€åˆ€æ·±åº¦ï¼ˆå¯èƒ½è¶…è¿‡æ§½åº•ï¼‰
+    bool bPointB2;
+    SPoint SPointB2; //ç»ˆæ­¢è¾¹ç¬¬ä¸€åˆ€æ·±åº¦ï¼ˆå¯èƒ½è¶…è¿‡æ§½åº•ï¼‰
 
-	bool bFinished;
+    double dResCutDistance; //æ¯ä¸ªæ§½çš„å‰©ä½™åˆ‡æ·±æ·±åº¦
 
-}SGrooveData;
+    bool bFinished;
+
+} SGrooveData;
 
 void addG71RegulationAPI();
 void addG72RegulationAPI();

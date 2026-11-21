@@ -2,32 +2,31 @@
 #define __GCODEDEFINE_H
 
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
-//×Ô¶¨ÒåºêÊı¾İ
+//è‡ªå®šä¹‰å®æ•°æ®
 typedef struct _SUserDefineData
 {
-	char* pName;          //ºêÃû
-	char* pReplaceStr;    //ÒªÌæ»»µÄ×Ö·û´®
+    char* pName;       //å®å
+    char* pReplaceStr; //è¦æ›¿æ¢çš„å­—ç¬¦ä¸²
 
-}SUserDefineData;
-
+} SUserDefineData;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//ÊÍ·Å×Ô¶¨ÒåºêÊı¾İ
+//é‡Šæ”¾è‡ªå®šä¹‰å®æ•°æ®
 void freeDefineData(SUserDefineData* pData);
 
-//¼ÇÂ¼×Ô¶¨Òåºê
+//è®°å½•è‡ªå®šä¹‰å®
 int8 recordDefine(SGetTextStateInfo* pSGetTextStateInfo, SList* pDefineList);
 
-//Ìæ»»³ÌĞò¶ÎÖĞµÄºêÃû
+//æ›¿æ¢ç¨‹åºæ®µä¸­çš„å®å
 int8 replaceDefineInSegment(SGetTextStateInfo* pSGetTextStateInfo, SList* pDefineList);
 
-//»ñÈ¡ºêÃû¶ÔÓ¦µÄ×Ö·û´®
+//è·å–å®åå¯¹åº”çš„å­—ç¬¦ä¸²
 int8 getTargetStringByMacroName(int8* pMacroName, uint16 cNameSize, int8* pTargetString, SList* pDefineList);
 
 #endif // !__GCODEDEFINE_H

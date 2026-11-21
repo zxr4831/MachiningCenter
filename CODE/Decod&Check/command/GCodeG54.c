@@ -1,266 +1,275 @@
 #include "common.h"
 #include "GCode.h"
 
-
-//Ìí¼ÓG54¹æÔò½á¹¹Ìå
+//æ·»åŠ G54è§„åˆ™ç»“æž„ä½“
 void addG54RegulationAPI()
 {
-	//Ö¸Áî£ºG54
-	//×é±ð£ºsGb
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(54, sGb, 1, NULL, NULL, NULL, CheckG54, AssignG54);
+    //æŒ‡ä»¤ï¼šG54
+    //ç»„åˆ«ï¼šsGb
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(54, sGb, 1, NULL, NULL, NULL, CheckG54, AssignG54);
 }
-//Ìí¼ÓG55¹æÔò½á¹¹Ìå
+//æ·»åŠ G55è§„åˆ™ç»“æž„ä½“
 void addG55RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(55, sGb, 1, NULL, NULL, NULL, CheckG55, AssignG55);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(55, sGb, 1, NULL, NULL, NULL, CheckG55, AssignG55);
 }
-//Ìí¼ÓG56¹æÔò½á¹¹Ìå
+//æ·»åŠ G56è§„åˆ™ç»“æž„ä½“
 void addG56RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(56, sGb, 1, NULL, NULL, NULL, CheckG56, AssignG56);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(56, sGb, 1, NULL, NULL, NULL, CheckG56, AssignG56);
 }
-//Ìí¼ÓG57¹æÔò½á¹¹Ìå
+//æ·»åŠ G57è§„åˆ™ç»“æž„ä½“
 void addG57RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(57, sGb, 1, NULL, NULL, NULL, CheckG57, AssignG57);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(57, sGb, 1, NULL, NULL, NULL, CheckG57, AssignG57);
 }
-//Ìí¼ÓG58¹æÔò½á¹¹Ìå
+//æ·»åŠ G58è§„åˆ™ç»“æž„ä½“
 void addG58RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(58, sGb, 1, NULL, NULL, NULL, CheckG58, AssignG58);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(58, sGb, 1, NULL, NULL, NULL, CheckG58, AssignG58);
 }
-//Ìí¼ÓG59¹æÔò½á¹¹Ìå
+//æ·»åŠ G59è§„åˆ™ç»“æž„ä½“
 void addG59RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(59, sGb, 1, NULL, NULL, NULL, CheckG59, AssignG59);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(59, sGb, 1, NULL, NULL, NULL, CheckG59, AssignG59);
 }
 
-
-//¼ì²éG54
+//æ£€æŸ¥G54
 int8 CheckG54(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G54;
-	
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G54 - 54];
-		
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G54;
 
-	return 1;
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G54 - 54];
+
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+
+    return 1;
 }
-//¼ì²éG55
+//æ£€æŸ¥G55
 int8 CheckG55(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G59Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G55 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G59å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G55 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G55;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G55;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G55 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G55 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¼ì²éG56
+//æ£€æŸ¥G56
 int8 CheckG56(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G59Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G56 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G59å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G56 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G56;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G56;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G56 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G56 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¼ì²éG57
+//æ£€æŸ¥G57
 int8 CheckG57(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G59Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G57* pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G59å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G57 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G57;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G57;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G57 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G57 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¼ì²éG58
+//æ£€æŸ¥G58
 int8 CheckG58(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G59Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G58* pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G59å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G58 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G58;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G58;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G58 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G58 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¼ì²éG59
+//æ£€æŸ¥G59
 int8 CheckG59(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G59Ð´ÈëÁÙÊ±»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G59* pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G59å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G59 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G59;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSSyntaxConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G59;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G59 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSSyntaxConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSSyntaxConfig->ucChannelNum].SWorkPieceOffset[G59 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSSyntaxConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
 
-
-//¸³ÖµG54
+//èµ‹å€¼G54
 int8 AssignG54(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄG54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum= G54;
-	
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G54 - 54];
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G54;
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G54 - 54];
 
-	return 1;
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+
+    return 1;
 }
-//¸³ÖµG55
+//èµ‹å€¼G55
 int8 AssignG55(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G55 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G55 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ/G54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G55;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„/G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G55;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G55 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G55 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¸³ÖµG56
+//èµ‹å€¼G56
 int8 AssignG56(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G56 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G56 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ/G54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G56;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„/G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G56;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G56 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G56 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¸³ÖµG57
+//èµ‹å€¼G57
 int8 AssignG57(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G57 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G57 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ/G54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G57;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„/G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G57;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G57 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G57 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¸³ÖµG58
+//èµ‹å€¼G58
 int8 AssignG58(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G58 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G58 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ/G54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G58;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„/G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G58;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G58 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G58 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }
-//¸³ÖµG59
+//èµ‹å€¼G59
 int8 AssignG59(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	//1.½«G54Ð´Èë»º³åÇø
-	pSGCodeParseUnit->SModalInfo.sGb = G59 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    //1.å°†G54å†™å…¥ç¼“å†²åŒº
+    pSGCodeParseUnit->SModalInfo.sGb = G59 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	//2.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ/G54~G59 ¹¤¼þ×ø±êºÅ
-	pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G59;
+    //2.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„/G54~G59 å·¥ä»¶åæ ‡å·
+    pSAssignConfig->SGCodeCurrSysState.sWorkpieceCoordNum = G59;
 
-	//3.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ¹¤¼þÆ«ÖÃ×ø±ê
-	pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G59 - 54];
+    //3.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„å·¥ä»¶åç½®åæ ‡
+    pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SWorkPieceOffset =
+        g_SZeroPtOfCoordSys[pSAssignConfig->ucChannelNum].SWorkPieceOffset[G59 - 54];
 
-	//4.¸üÐÂ×´Ì¬½á¹¹ÌåÖÐµÄ×ÜÆ«ÖÃ
-	calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    //4.æ›´æ–°çŠ¶æ€ç»“æž„ä½“ä¸­çš„æ€»åç½®
+    calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
 
-	return 1;
+    return 1;
 }

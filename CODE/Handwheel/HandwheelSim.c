@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright (C) 版权归属沿用原项目，本次注释整理不变更权属。
 @file HandwheelSim.c
 @author Codex（本次移植与注释整理）
@@ -47,32 +47,31 @@ Copyright (C) 版权归属沿用原项目，本次注释整理不变更权属。
   返 回 值：TRUE - 从零授权开始接收；FALSE - 累加
   备    注：只用于生产采样，直接距离接口仍保留精确抵消语义
 ****************************************/
-static bool isHandwheelDistanceReplacementNeeded(const struct SHandwheelSimGroup* pGroup, const struct SHandwheelSim* pState, double dInput)
+static bool isHandwheelDistanceReplacementNeeded(const struct SHandwheelSimGroup* pGroup,
+                                                 const struct SHandwheelSim* pState, double dInput)
 {
     /* [HWSIM] 普通低速输入仍按正负距离抵消；只有进入到速限额或停摇阶段后，
      * 新方向/重新摇动才替换旧请求，避免先消耗大量旧余量才响应操作。
      * 这里只决定是否替换授权，当前非零速度仍必须经过规划器减速，不能直接反向。
      */
-    return dInput != 0.0
-        && (pState->bFeedLimitActive || pState->bInputStop)
-        && (pState->bInputStop || (pGroup->cInputDirection != 0
-            && dInput * pGroup->cInputDirection < 0.0));
+    return dInput != 0.0 && (pState->bFeedLimitActive || pState->bInputStop) &&
+           (pState->bInputStop || (pGroup->cInputDirection != 0 && dInput * pGroup->cInputDirection < 0.0));
 }
 
 /** 同一套执行器使用的原插补对象视图，不复制或改变原几何。 */
 struct SHandwheelPathView
 {
     struct SChannel* pChannel; /**< 所属通道。 */
-    struct SPlan* pPlan; /**< 原段参数单位的规划记录。 */
-    SPointDouble* pStart; /**< 原几何起点。 */
-    SPointDouble* pEnd; /**< 原几何终点。 */
-    double* pPulseArray; /**< 原轴脉冲当量。 */
-    double* pSpeed; /**< 原插补显示速度。 */
-    uint8* pStatus; /**< 原插补生命周期状态。 */
-    VAL_STRUCT_TYPE ucValid; /**< 参与轴掩码。 */
-    double dFeedrate; /**< 程序进给速度。 */
-    uint32 unCommand; /**< 原运动类型及模态。 */
-    bool bArc; /**< G1 或 G2/G3。 */
+    struct SPlan* pPlan;       /**< 原段参数单位的规划记录。 */
+    SPointDouble* pStart;      /**< 原几何起点。 */
+    SPointDouble* pEnd;        /**< 原几何终点。 */
+    double* pPulseArray;       /**< 原轴脉冲当量。 */
+    double* pSpeed;            /**< 原插补显示速度。 */
+    uint8* pStatus;            /**< 原插补生命周期状态。 */
+    VAL_STRUCT_TYPE ucValid;   /**< 参与轴掩码。 */
+    double dFeedrate;          /**< 程序进给速度。 */
+    uint32 unCommand;          /**< 原运动类型及模态。 */
+    bool bArc;                 /**< G1 或 G2/G3。 */
 };
 
 /*************************************************
@@ -181,25 +180,26 @@ static bool isHandwheelPathAxisValid(struct SHandwheelPathView* pView, uint8 ucA
     double dStart = pView->pStart->dArray[ucAxis], dEnd = pView->pEnd->dArray[ucAxis];
     double dRatio = pChannel->SHandwheelSim.SPath.dAxisMovePerProgressArray[ucAxis]; /**< 实际轴比例。 */
     double dLow = fmin(dStart, dEnd), dHigh = fmax(dStart, dEnd);
-    if (ucPhysical >= AXIS_PHYSICS_NUM_MAX || !isfinite(dStart) || !isfinite(dEnd)
-        || !isfinite(pView->pPulseArray[ucAxis]) || pView->pPulseArray[ucAxis] <= 0.0
-        || !isfinite(dRatio)
-        || (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != LINEAR_AXIS
-            && g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != ROTATION_AXIS))
+    if (ucPhysical >= AXIS_PHYSICS_NUM_MAX || !isfinite(dStart) || !isfinite(dEnd) ||
+        !isfinite(pView->pPulseArray[ucAxis]) || pView->pPulseArray[ucAxis] <= 0.0 || !isfinite(dRatio) ||
+        (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != LINEAR_AXIS &&
+         g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != ROTATION_AXIS))
     {
         return FALSE;
     }
     for (ucPrevious = 0; ucPrevious < ucAxis; ++ucPrevious)
     {
-        if ((getbit(pView->ucValid, ucPrevious)) == VAL_VALID
-            && pChannel->pMapAxisArray[ucPrevious] == ucPhysical)
+        if ((getbit(pView->ucValid, ucPrevious)) == VAL_VALID && pChannel->pMapAxisArray[ucPrevious] == ucPhysical)
         {
             return FALSE;
         }
     }
     if (pView->bArc && (ucAxis == pChannel->SG02.ucAxis[0] || ucAxis == pChannel->SG02.ucAxis[1]))
     {
-        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != LINEAR_AXIS) { return FALSE; }
+        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType != LINEAR_AXIS)
+        {
+            return FALSE;
+        }
         /* [HWSIM] 圆弧中途可能超过起终点的坐标范围，不能只检查两个端点。
          * 这里采用圆心 +/- 半径的保守范围，可能拒绝实际未越界的小圆弧，
          * 但不会通过裁剪候选坐标把原圆弧改成另一条轨迹。
@@ -213,13 +213,13 @@ static bool isHandwheelPathAxisValid(struct SHandwheelPathView* pView, uint8 ucA
         dLow = fmin(dStart, dEnd);
         dHigh = fmax(dStart, dEnd);
     }
-    return isfinite(dLow) && isfinite(dHigh)
-        && !(g_SSystemPara.MOTOR_WARN[ucPhysical].soft_neg
-            && (!isfinite(g_SSystemPara.MOTOR_WARN[ucPhysical].neg_soft)
-                || dLow < g_SSystemPara.MOTOR_WARN[ucPhysical].neg_soft))
-        && !(g_SSystemPara.MOTOR_WARN[ucPhysical].soft_pos
-            && (!isfinite(g_SSystemPara.MOTOR_WARN[ucPhysical].pos_soft)
-                || dHigh > g_SSystemPara.MOTOR_WARN[ucPhysical].pos_soft));
+    return isfinite(dLow) && isfinite(dHigh) &&
+           !(g_SSystemPara.MOTOR_WARN[ucPhysical].soft_neg &&
+             (!isfinite(g_SSystemPara.MOTOR_WARN[ucPhysical].neg_soft) ||
+              dLow < g_SSystemPara.MOTOR_WARN[ucPhysical].neg_soft)) &&
+           !(g_SSystemPara.MOTOR_WARN[ucPhysical].soft_pos &&
+             (!isfinite(g_SSystemPara.MOTOR_WARN[ucPhysical].pos_soft) ||
+              dHigh > g_SSystemPara.MOTOR_WARN[ucPhysical].pos_soft));
 }
 
 /*************************************************
@@ -237,13 +237,11 @@ static bool prepareHandwheelAxisRatios(struct SHandwheelPathView* pView)
     uint8 ucAxis;
     if (pView->bArc)
     {
-        if (pArc->ucAxis[0] >= AXIS_NUM_MAX || pArc->ucAxis[1] >= AXIS_NUM_MAX
-            || pArc->ucAxis[0] == pArc->ucAxis[1]
-            || (getbit(pView->ucValid, pArc->ucAxis[0])) != VAL_VALID
-            || (getbit(pView->ucValid, pArc->ucAxis[1])) != VAL_VALID
-            || !isfinite(pArc->dRadius) || fabs(pArc->dRadius) <= HWSIM_DISTANCE_EPS
-            || !isfinite(pArc->dRad) || pArc->dRad <= 0.0 || pArc->dRad > 6.283185307180
-            || (pArc->cArcDir != 1 && pArc->cArcDir != -1))
+        if (pArc->ucAxis[0] >= AXIS_NUM_MAX || pArc->ucAxis[1] >= AXIS_NUM_MAX || pArc->ucAxis[0] == pArc->ucAxis[1] ||
+            (getbit(pView->ucValid, pArc->ucAxis[0])) != VAL_VALID ||
+            (getbit(pView->ucValid, pArc->ucAxis[1])) != VAL_VALID || !isfinite(pArc->dRadius) ||
+            fabs(pArc->dRadius) <= HWSIM_DISTANCE_EPS || !isfinite(pArc->dRad) || pArc->dRad <= 0.0 ||
+            pArc->dRad > 6.283185307180 || (pArc->cArcDir != 1 && pArc->cArcDir != -1))
         {
             return FALSE;
         }
@@ -252,18 +250,33 @@ static bool prepareHandwheelAxisRatios(struct SHandwheelPathView* pView)
     {
         uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis]; /**< 实际物理轴。 */
         double dRatio = pView->bArc ? pArc->SStartVector.dArray[ucAxis]
-            : pView->pChannel->SG01.SStartVector.dArray[ucAxis]; /**< 自动几何比例。 */
-        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID) { continue; }
-        if (ucPhysical >= AXIS_PHYSICS_NUM_MAX) { return FALSE; }
-        if (!pView->bArc && g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE
-            && g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS)
+                                    : pView->pChannel->SG01.SStartVector.dArray[ucAxis]; /**< 自动几何比例。 */
+        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
+        if (ucPhysical >= AXIS_PHYSICS_NUM_MAX)
+        {
+            return FALSE;
+        }
+        if (!pView->bArc && g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE &&
+            g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS)
         {
             double dScale = g_SSystemPara.SAxisPara[ucPhysical].dCoefOfAngleToLength; /**< 角度当量系数。 */
-            if (!isfinite(dScale) || dScale < 0.0) { return FALSE; }
-            if (!isZero(dScale)) { dRatio /= dScale; }
+            if (!isfinite(dScale) || dScale < 0.0)
+            {
+                return FALSE;
+            }
+            if (!isZero(dScale))
+            {
+                dRatio /= dScale;
+            }
         }
         pPath->dAxisMovePerProgressArray[ucAxis] = dRatio;
-        if (!isHandwheelPathAxisValid(pView, ucAxis)) { return FALSE; }
+        if (!isHandwheelPathAxisValid(pView, ucAxis))
+        {
+            return FALSE;
+        }
     }
     return TRUE;
 }
@@ -276,7 +289,8 @@ static bool prepareHandwheelAxisRatios(struct SHandwheelPathView* pView)
   返 回 值：TRUE - 有效；FALSE - 参数异常
   备    注：圆弧平面轴各留一半加速度预算给切向和曲率项
 ****************************************/
-static bool applyHandwheelAxisLimitsToPath(struct SHandwheelPathView* pView, uint8 ucAxis, struct SHandwheelSimSegment* pSegment)
+static bool applyHandwheelAxisLimitsToPath(struct SHandwheelPathView* pView, uint8 ucAxis,
+                                           struct SHandwheelSimSegment* pSegment)
 {
     struct SG2* pArc = &pView->pChannel->SG02;
     uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis];
@@ -284,8 +298,7 @@ static bool applyHandwheelAxisLimitsToPath(struct SHandwheelPathView* pView, uin
     double dAcc = g_SSystemPara.SAxisPara[ucPhysical].dSysPlanTMaxAcc;
     double dDec = g_SSystemPara.SAxisPara[ucPhysical].dSysPlanTMaxDec;
     double dSpeed = g_SSystemPara.SAxisPara[ucPhysical].dVmax;
-    if (!isfinite(dAcc) || dAcc <= 0.0 || !isfinite(dDec) || dDec <= 0.0
-        || !isfinite(dSpeed) || dSpeed <= 0.0)
+    if (!isfinite(dAcc) || dAcc <= 0.0 || !isfinite(dDec) || dDec <= 0.0 || !isfinite(dSpeed) || dSpeed <= 0.0)
     {
         return FALSE;
     }
@@ -313,9 +326,9 @@ static bool applyHandwheelAxisLimitsToPath(struct SHandwheelPathView* pView, uin
      * 路径速度乘此比例才是轴速度，所以用轴上限除以该比例反算路径上限。
      * 所有轴逐项取最小值，最终约束必须同时满足每个参与轴。
      */
-    return limitHandwheelPathValue(&pSegment->dSpeedLimit, dSpeed / dTangent)
-        && limitHandwheelPathValue(&pSegment->dAcceleration, dAcc / dTangent)
-        && limitHandwheelPathValue(&pSegment->dDeceleration, dDec / dTangent);
+    return limitHandwheelPathValue(&pSegment->dSpeedLimit, dSpeed / dTangent) &&
+           limitHandwheelPathValue(&pSegment->dAcceleration, dAcc / dTangent) &&
+           limitHandwheelPathValue(&pSegment->dDeceleration, dDec / dTangent);
 }
 
 /*************************************************
@@ -352,10 +365,19 @@ static double calculateHandwheelDisplayDistanceRate(struct SHandwheelPathView* p
             continue;
         }
         dComponent = pView->pChannel->SHandwheelSim.SPath.dAxisMovePerProgressArray[ucAxis] * pView->pPlan->dDistance;
-        if (pView->bArc && ucAxis == pArc->ucAxis[0]) { dComponent = dX; }
-        if (pView->bArc && ucAxis == pArc->ucAxis[1]) { dComponent = dY; }
-        if (g_SSystemPara.SAxisPara[pView->pChannel->pMapAxisArray[ucAxis]].ucAxisType == LINEAR_AXIS
-            && getShowByDiameter(pView->pChannel->pMapAxisArray[ucAxis]) == 1) { dComponent *= 2.0; }
+        if (pView->bArc && ucAxis == pArc->ucAxis[0])
+        {
+            dComponent = dX;
+        }
+        if (pView->bArc && ucAxis == pArc->ucAxis[1])
+        {
+            dComponent = dY;
+        }
+        if (g_SSystemPara.SAxisPara[pView->pChannel->pMapAxisArray[ucAxis]].ucAxisType == LINEAR_AXIS &&
+            getShowByDiameter(pView->pChannel->pMapAxisArray[ucAxis]) == 1)
+        {
+            dComponent *= 2.0;
+        }
         dRate = hypot(dRate, dComponent);
     }
     return dRate * pView->pChannel->SHandwheelSim.SPath.dInputRateToProgress;
@@ -372,23 +394,29 @@ static double calculateHandwheelDisplayDistanceRate(struct SHandwheelPathView* p
 static bool prepareHandwheelInputScale(struct SHandwheelPathView* pView)
 {
     struct SHandwheelPath* pPath = &pView->pChannel->SHandwheelSim.SPath; /**< 当前公共路径。 */
-    struct SG2* pArc = &pView->pChannel->SG02; /**< 原圆弧几何。 */
-    double dBaseSquare = 0.0, dDisplaySquare = 0.0; /**< 基础与显示位移平方和。 */
-    bool bDiameter = FALSE; /**< 是否存在参与的直径显示直线轴。 */
-    uint8 ucAxis; /**< 逻辑轴索引。 */
+    struct SG2* pArc = &pView->pChannel->SG02;                            /**< 原圆弧几何。 */
+    double dBaseSquare = 0.0, dDisplaySquare = 0.0;                       /**< 基础与显示位移平方和。 */
+    bool bDiameter = FALSE;                                               /**< 是否存在参与的直径显示直线轴。 */
+    uint8 ucAxis;                                                         /**< 逻辑轴索引。 */
     pPath->dInputDistanceScale = 1.0;
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
-        uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis]; /**< 物理轴。 */
+        uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis];                         /**< 物理轴。 */
         double dMove = pPath->dAxisMovePerProgressArray[ucAxis] * pView->pPlan->dDistance; /**< 实际位移。 */
-        bool bAxisDiameter; /**< 本轴是否作直径换算。 */
-        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID) { continue; }
-        bAxisDiameter = g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == LINEAR_AXIS
-            && getShowByDiameter(ucPhysical) == 1;
+        bool bAxisDiameter;                                                                /**< 本轴是否作直径换算。 */
+        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
+        bAxisDiameter =
+            g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == LINEAR_AXIS && getShowByDiameter(ucPhysical) == 1;
         bDiameter = bDiameter || bAxisDiameter;
-        if (pView->bArc && (ucAxis == pArc->ucAxis[0] || ucAxis == pArc->ucAxis[1])) { continue; }
-        if (!pView->bArc && g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE
-            && g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS)
+        if (pView->bArc && (ucAxis == pArc->ucAxis[0] || ucAxis == pArc->ucAxis[1]))
+        {
+            continue;
+        }
+        if (!pView->bArc && g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE &&
+            g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS)
         {
             double dScale = g_SSystemPara.SAxisPara[ucPhysical].dCoefOfAngleToLength; /**< 自动当量系数。 */
             dMove *= isZero(dScale) ? 1.0 : dScale;
@@ -396,7 +424,10 @@ static bool prepareHandwheelInputScale(struct SHandwheelPathView* pView)
         dBaseSquare += dMove * dMove;
         dDisplaySquare += dMove * dMove * (bAxisDiameter ? 4.0 : 1.0);
     }
-    if (!bDiameter) { return TRUE; }
+    if (!bDiameter)
+    {
+        return TRUE;
+    }
     if (pView->bArc)
     {
         double dArcLength = fabs(pArc->dRadius) * pArc->dRad; /**< 平面弧长。 */
@@ -421,23 +452,33 @@ static int buildHandwheelInputMapStep(struct SHandwheelPathView* pView)
 {
     struct SHandwheelPath* pPath = &pView->pChannel->SHandwheelSim.SPath;
     int nIndex, nLast = pPath->nDistanceMapIndex + HWSIM_MAP_INTERVALS_PER_TICK;
-    if (!pPath->bUseDistanceMap) { return 1; }
+    if (!pPath->bUseDistanceMap)
+    {
+        return 1;
+    }
     if (pPath->nDistanceMapIndex == 0)
     {
         pPath->dMetricArray[0] = 0.0;
         pPath->dMetricRateArray[0] = calculateHandwheelDisplayDistanceRate(pView, 0.0);
-        if (!isfinite(pPath->dMetricRateArray[0]) || pPath->dMetricRateArray[0] <= 0.0) { return -1; }
+        if (!isfinite(pPath->dMetricRateArray[0]) || pPath->dMetricRateArray[0] <= 0.0)
+        {
+            return -1;
+        }
     }
-    if (nLast > HWSIM_PATH_MAP_COUNT) { nLast = HWSIM_PATH_MAP_COUNT; }
+    if (nLast > HWSIM_PATH_MAP_COUNT)
+    {
+        nLast = HWSIM_PATH_MAP_COUNT;
+    }
     for (nIndex = pPath->nDistanceMapIndex + 1; nIndex <= nLast; ++nIndex)
     {
         double dMiddle = calculateHandwheelDisplayDistanceRate(pView, (nIndex - 0.5) / HWSIM_PATH_MAP_COUNT);
         double dRate = calculateHandwheelDisplayDistanceRate(pView, (double)nIndex / HWSIM_PATH_MAP_COUNT);
         pPath->dMetricRateArray[nIndex] = dRate;
-        pPath->dMetricArray[nIndex] = pPath->dMetricArray[nIndex - 1]
-            + (pPath->dMetricRateArray[nIndex - 1] + 4.0 * dMiddle + dRate) / (6.0 * HWSIM_PATH_MAP_COUNT);
-        if (!isfinite(pPath->dMetricArray[nIndex]) || !isfinite(dRate)
-            || dRate <= 0.0 || pPath->dMetricArray[nIndex] <= pPath->dMetricArray[nIndex - 1])
+        pPath->dMetricArray[nIndex] =
+            pPath->dMetricArray[nIndex - 1] +
+            (pPath->dMetricRateArray[nIndex - 1] + 4.0 * dMiddle + dRate) / (6.0 * HWSIM_PATH_MAP_COUNT);
+        if (!isfinite(pPath->dMetricArray[nIndex]) || !isfinite(dRate) || dRate <= 0.0 ||
+            pPath->dMetricArray[nIndex] <= pPath->dMetricArray[nIndex - 1])
         {
             return -1;
         }
@@ -462,11 +503,14 @@ static double calculateHandwheelDisplayDistance(const struct SHandwheelPath* pPa
     /* [HWSIM] 授权可以暂时超出几何段，用于保留反摇抵消关系；段外只线性外推
      * “输入账本”。真正的候选位置由 calculateHandwheelMotionStep() 限制在段内。
      */
-    if (dFraction <= 0.0) { return dFraction * pPath->dMetricRateArray[0]; }
+    if (dFraction <= 0.0)
+    {
+        return dFraction * pPath->dMetricRateArray[0];
+    }
     if (dFraction >= 1.0)
     {
-        return pPath->dMetricArray[HWSIM_PATH_MAP_COUNT]
-            + (dFraction - 1.0) * pPath->dMetricRateArray[HWSIM_PATH_MAP_COUNT];
+        return pPath->dMetricArray[HWSIM_PATH_MAP_COUNT] +
+               (dFraction - 1.0) * pPath->dMetricRateArray[HWSIM_PATH_MAP_COUNT];
     }
     nIndex = (int)(dFraction * HWSIM_PATH_MAP_COUNT);
     /* [HWSIM] dLocal 是当前表格小区间内的 0..1 位置；三次 Hermite 同时利用
@@ -475,10 +519,10 @@ static double calculateHandwheelDisplayDistance(const struct SHandwheelPath* pPa
     dLocal = dFraction * HWSIM_PATH_MAP_COUNT - nIndex;
     dLocal2 = dLocal * dLocal;
     dLocal3 = dLocal2 * dLocal;
-    return (2.0 * dLocal3 - 3.0 * dLocal2 + 1.0) * pPath->dMetricArray[nIndex]
-        + (dLocal3 - 2.0 * dLocal2 + dLocal) * pPath->dMetricRateArray[nIndex] / HWSIM_PATH_MAP_COUNT
-        + (-2.0 * dLocal3 + 3.0 * dLocal2) * pPath->dMetricArray[nIndex + 1]
-        + (dLocal3 - dLocal2) * pPath->dMetricRateArray[nIndex + 1] / HWSIM_PATH_MAP_COUNT;
+    return (2.0 * dLocal3 - 3.0 * dLocal2 + 1.0) * pPath->dMetricArray[nIndex] +
+           (dLocal3 - 2.0 * dLocal2 + dLocal) * pPath->dMetricRateArray[nIndex] / HWSIM_PATH_MAP_COUNT +
+           (-2.0 * dLocal3 + 3.0 * dLocal2) * pPath->dMetricArray[nIndex + 1] +
+           (dLocal3 - dLocal2) * pPath->dMetricRateArray[nIndex + 1] / HWSIM_PATH_MAP_COUNT;
 }
 
 /*************************************************
@@ -491,8 +535,8 @@ static double calculateHandwheelDisplayDistance(const struct SHandwheelPath* pPa
 ****************************************/
 static double findHandwheelAuthorizedProgress(const struct SHandwheelPath* pPath, double dTarget)
 {
-    double dLength = pPath->SState.dSegmentLength; /**< 自动插补公共总长。 */
-    double dLow, dHigh; /**< 累计表定位后的公共进度区间。 */
+    double dLength = pPath->SState.dSegmentLength;          /**< 自动插补公共总长。 */
+    double dLow, dHigh;                                     /**< 累计表定位后的公共进度区间。 */
     int nLow = 0, nHigh = HWSIM_PATH_MAP_COUNT, nIteration; /**< 有界查找索引。 */
     if (dTarget <= 0.0)
     {
@@ -500,22 +544,34 @@ static double findHandwheelAuthorizedProgress(const struct SHandwheelPath* pPath
     }
     if (dTarget >= pPath->dMetricArray[HWSIM_PATH_MAP_COUNT])
     {
-        return dLength * (1.0
-            + (dTarget - pPath->dMetricArray[HWSIM_PATH_MAP_COUNT]) / pPath->dMetricRateArray[HWSIM_PATH_MAP_COUNT]);
+        return dLength * (1.0 + (dTarget - pPath->dMetricArray[HWSIM_PATH_MAP_COUNT]) /
+                                    pPath->dMetricRateArray[HWSIM_PATH_MAP_COUNT]);
     }
     while (nHigh - nLow > 1)
     {
         int nMiddle = (nLow + nHigh) / 2; /**< 累计距离表中点。 */
-        if (pPath->dMetricArray[nMiddle] < dTarget) { nLow = nMiddle; }
-        else { nHigh = nMiddle; }
+        if (pPath->dMetricArray[nMiddle] < dTarget)
+        {
+            nLow = nMiddle;
+        }
+        else
+        {
+            nHigh = nMiddle;
+        }
     }
     dLow = dLength * nLow / HWSIM_PATH_MAP_COUNT;
     dHigh = dLength * nHigh / HWSIM_PATH_MAP_COUNT;
     for (nIteration = 0; nIteration < 32; ++nIteration)
     {
         double dMiddle = 0.5 * (dLow + dHigh); /**< 单区间进度中点。 */
-        if (calculateHandwheelDisplayDistance(pPath, dMiddle) < dTarget) { dLow = dMiddle; }
-        else { dHigh = dMiddle; }
+        if (calculateHandwheelDisplayDistance(pPath, dMiddle) < dTarget)
+        {
+            dLow = dMiddle;
+        }
+        else
+        {
+            dHigh = dMiddle;
+        }
     }
     return 0.5 * (dLow + dHigh);
 }
@@ -533,9 +589,13 @@ static int addHandwheelPathAuthorizedDistance(struct SHandwheelSimGroup* pGroup,
     struct SHandwheelPath* pPath = &pGroup->SPath; /**< 公共路径。 */
     struct SHandwheelSim* pState = &pPath->SState; /**< 公共授权状态。 */
     double dPending = bResponse && isHandwheelDistanceReplacementNeeded(pGroup, pState, dDistance)
-        ? 0.0 : pState->dPendingDistance; /**< 应保留的原授权。 */
-    double dPosition; /**< 新授权目标，不是本拍输出坐标。 */
-    if (!isfinite(dDistance) || pGroup->bFault) { return -1; }
+                          ? 0.0
+                          : pState->dPendingDistance; /**< 应保留的原授权。 */
+    double dPosition;                                 /**< 新授权目标，不是本拍输出坐标。 */
+    if (!isfinite(dDistance) || pGroup->bFault)
+    {
+        return -1;
+    }
     if (!pPath->bUseDistanceMap)
     {
         dPosition = pState->dSegmentPosition + dPending + dDistance / pPath->dInputDistanceScale;
@@ -543,10 +603,16 @@ static int addHandwheelPathAuthorizedDistance(struct SHandwheelSimGroup* pGroup,
     else
     {
         double dTarget = calculateHandwheelDisplayDistance(pPath, pState->dSegmentPosition + dPending) + dDistance;
-        if (!isfinite(dTarget)) { return -1; }
+        if (!isfinite(dTarget))
+        {
+            return -1;
+        }
         dPosition = findHandwheelAuthorizedProgress(pPath, dTarget);
     }
-    if (!isfinite(dPosition)) { return -1; }
+    if (!isfinite(dPosition))
+    {
+        return -1;
+    }
     /* 段首负授权必须保留到端点判定，否则无法请求倒读历史。
      * executeHandwheelPathStep 在没有合法历史时清除此授权，不输出越界坐标。
      */
@@ -573,14 +639,14 @@ static bool calculateHandwheelPathLimits(struct SHandwheelPathView* pView, struc
      * G99 的 F 是每转进给，不可直接当速度；其主轴相关上限由
      * updateHandwheelG99SpeedLimit() 在运行时更新，其余几何约束仍固定。
      */
-    if (!limitHandwheelPathValue(&pSegment->dSpeedLimit, pSegment->dSpeedLimit)
-        || !limitHandwheelPathValue(&pSegment->dAcceleration, pSegment->dAcceleration)
-        || !limitHandwheelPathValue(&pSegment->dDeceleration, pSegment->dDeceleration)
-        || !limitHandwheelPathValue(&pSegment->dSpeedLimit, g_SSystemPara.dSysMaxVel)
-        || (getBits(pView->unCommand, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
-            && !limitHandwheelPathValue(&pSegment->dSpeedLimit, pView->dFeedrate * pView->pChannel->SRun.dCommonFeedRatio))
-        || !limitHandwheelPathValue(&pSegment->dAcceleration, g_SSystemPara.dSysPlanTMaxAcc)
-        || !limitHandwheelPathValue(&pSegment->dDeceleration, g_SSystemPara.dSysPlanTMaxDec))
+    if (!limitHandwheelPathValue(&pSegment->dSpeedLimit, pSegment->dSpeedLimit) ||
+        !limitHandwheelPathValue(&pSegment->dAcceleration, pSegment->dAcceleration) ||
+        !limitHandwheelPathValue(&pSegment->dDeceleration, pSegment->dDeceleration) ||
+        !limitHandwheelPathValue(&pSegment->dSpeedLimit, g_SSystemPara.dSysMaxVel) ||
+        (getBits(pView->unCommand, CMD_FEED_ADDR) == CMD_FEED_PER_MIN &&
+         !limitHandwheelPathValue(&pSegment->dSpeedLimit, pView->dFeedrate * pView->pChannel->SRun.dCommonFeedRatio)) ||
+        !limitHandwheelPathValue(&pSegment->dAcceleration, g_SSystemPara.dSysPlanTMaxAcc) ||
+        !limitHandwheelPathValue(&pSegment->dDeceleration, g_SSystemPara.dSysPlanTMaxDec))
     {
         return FALSE;
     }
@@ -595,15 +661,15 @@ static bool calculateHandwheelPathLimits(struct SHandwheelPathView* pView, struc
     {
         struct SG2* pArc = &pView->pChannel->SG02;
         double dCurvature = fabs(pArc->dRadius) * pow(pArc->dRad / pSegment->dLength, 2.0);
-        if (!isfinite(g_SSystemPara.dArcMaxNormalAcc) || g_SSystemPara.dArcMaxNormalAcc <= 0.0
-            || !isfinite(g_SSystemPara.dArcMaxChordError) || g_SSystemPara.dArcMaxChordError <= 0.0)
+        if (!isfinite(g_SSystemPara.dArcMaxNormalAcc) || g_SSystemPara.dArcMaxNormalAcc <= 0.0 ||
+            !isfinite(g_SSystemPara.dArcMaxChordError) || g_SSystemPara.dArcMaxChordError <= 0.0)
         {
             return FALSE;
         }
         /* 1-cos(x) <= x*x/2，故此上限保守覆盖每拍弦误差。 */
-        return limitHandwheelPathValue(&pSegment->dSpeedLimit, sqrt(g_SSystemPara.dArcMaxNormalAcc / dCurvature))
-            && limitHandwheelPathValue(&pSegment->dSpeedLimit,
-                sqrt(8.0 * g_SSystemPara.dArcMaxChordError / dCurvature) / pSegment->dPeriod);
+        return limitHandwheelPathValue(&pSegment->dSpeedLimit, sqrt(g_SSystemPara.dArcMaxNormalAcc / dCurvature)) &&
+               limitHandwheelPathValue(&pSegment->dSpeedLimit,
+                                       sqrt(8.0 * g_SSystemPara.dArcMaxChordError / dCurvature) / pSegment->dPeriod);
     }
     return TRUE;
 }
@@ -621,16 +687,25 @@ static bool isHandwheelEndPointMatched(struct SHandwheelPathView* pView, const S
     uint8 ucAxis; /**< 有效逻辑轴。 */
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
-        uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis]; /**< 物理轴。 */
+        uint8 ucPhysical = pView->pChannel->pMapAxisArray[ucAxis];            /**< 物理轴。 */
         double dError = pPoint->dArray[ucAxis] - pView->pEnd->dArray[ucAxis]; /**< 端点误差。 */
-        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID) { continue; }
-        if (!isfinite(dError)) { return FALSE; }
-        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS
-            && !(getbit(pView->pChannel->SPreProcess.SUserData.ucRelaVal, ucAxis)))
+        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
+        if (!isfinite(dError))
+        {
+            return FALSE;
+        }
+        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS &&
+            !(getbit(pView->pChannel->SPreProcess.SUserData.ucRelaVal, ucAxis)))
         {
             dError = remainder(dError, 360.0);
         }
-        if (fabs(dError) > pView->pPulseArray[ucAxis] * 0.5) { return FALSE; }
+        if (fabs(dError) > pView->pPulseArray[ucAxis] * 0.5)
+        {
+            return FALSE;
+        }
     }
     return TRUE;
 }
@@ -645,27 +720,30 @@ static bool isHandwheelEndPointMatched(struct SHandwheelPathView* pView, const S
 ****************************************/
 static void saveHandwheelContinuousGeometry(struct SHandwheelPathView* pView, const SPointDouble* pEnd)
 {
-    struct SChannel* pChannel = pView->pChannel; /**< 当前通道。 */
-    struct SInput* pInput = &pChannel->SPreProcess.SUserData; /**< 当前预处理记录。 */
-    struct SToolCompensation* pBlock = NULL; /**< 可用时同步原历史记录。 */
+    struct SChannel* pChannel = pView->pChannel;                                   /**< 当前通道。 */
+    struct SInput* pInput = &pChannel->SPreProcess.SUserData;                      /**< 当前预处理记录。 */
+    struct SToolCompensation* pBlock = NULL;                                       /**< 可用时同步原历史记录。 */
     INDEX_DATA_TYPE nIndex = g_SRingBuff[pChannel->ucChannelNum].nInterpIndex - 1; /**< 本段索引。 */
-    VAL_STRUCT_TYPE ucRotary = 0; /**< 旋转参与轴。 */
-    uint8 ucAxis; /**< 逻辑轴。 */
+    VAL_STRUCT_TYPE ucRotary = 0;                                                  /**< 旋转参与轴。 */
+    uint8 ucAxis;                                                                  /**< 逻辑轴。 */
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
-        if ((getbit(pView->ucValid, ucAxis)) == VAL_VALID
-            && g_SSystemPara.SAxisPara[pChannel->pMapAxisArray[ucAxis]].ucAxisType == ROTATION_AXIS)
+        if ((getbit(pView->ucValid, ucAxis)) == VAL_VALID &&
+            g_SSystemPara.SAxisPara[pChannel->pMapAxisArray[ucAxis]].ucAxisType == ROTATION_AXIS)
         {
             ucRotary |= 1 << ucAxis;
         }
     }
-    if (ucRotary == 0) { return; }
+    if (ucRotary == 0)
+    {
+        return;
+    }
     *pView->pEnd = *pEnd;
     pInput->SStartPoint = *pView->pStart;
     pInput->SEndPoint = *pEnd;
     pInput->ucRelaVal |= ucRotary;
-    if (nIndex >= g_SRingBuff[pChannel->ucChannelNum].nBackIndex
-        && nIndex >= 0 && nIndex < g_SRingBuff[pChannel->ucChannelNum].nLookAheadIndex)
+    if (nIndex >= g_SRingBuff[pChannel->ucChannelNum].nBackIndex && nIndex >= 0 &&
+        nIndex < g_SRingBuff[pChannel->ucChannelNum].nLookAheadIndex)
     {
         pBlock = getSToolCompPointerByIndex(nIndex, pChannel->ucChannelNum);
     }
@@ -696,32 +774,43 @@ static int prepareHandwheelPath(struct SHandwheelPathView* pView)
      * 自动旁路段应在调用本函数前分流；绑定失败不是继续用旧规划的理由。
      * 这里的负返回值会保存在 cBindResult，便于区别模式、几何和约束错误。
      */
-    if (pChannel->pMapAxisArray == NULL || pChannel->SHandwheelSim.bFault
-        || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim) || pChannel->SRun.dCurrentSpeed != 0.0
-        || (getBits(pView->unCommand, CMD_FEED_ADDR) != CMD_FEED_PER_MIN
-            && getBits(pView->unCommand, CMD_FEED_ADDR) != CMD_FEED_PER_R)
-        || getBits(pView->unCommand, CMD_INTERPOLATION_MODE_ADDR) != CMD_INTERPOLATION_COMMON
-        || pChannel->SPreProcess.SUserData.dG84Ratio != 0.0
-        || !isfinite(pView->dFeedrate) || pView->dFeedrate <= 0.0
-        || !isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0
-        || !isfinite(pView->pPlan->dDistance) || pView->pPlan->dDistance <= 0.0)
+    if (pChannel->pMapAxisArray == NULL || pChannel->SHandwheelSim.bFault ||
+        !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim) || pChannel->SRun.dCurrentSpeed != 0.0 ||
+        (getBits(pView->unCommand, CMD_FEED_ADDR) != CMD_FEED_PER_MIN &&
+         getBits(pView->unCommand, CMD_FEED_ADDR) != CMD_FEED_PER_R) ||
+        getBits(pView->unCommand, CMD_INTERPOLATION_MODE_ADDR) != CMD_INTERPOLATION_COMMON ||
+        pChannel->SPreProcess.SUserData.dG84Ratio != 0.0 || !isfinite(pView->dFeedrate) || pView->dFeedrate <= 0.0 ||
+        !isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0 ||
+        !isfinite(pView->pPlan->dDistance) || pView->pPlan->dDistance <= 0.0)
     {
         return -2;
     }
 #if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE
-    if (pChannel->bUseVirtualY) { return -1; }
+    if (pChannel->bUseVirtualY)
+    {
+        return -1;
+    }
 #endif
 #if ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
     return -1;
 #endif
     clearHandwheelSimMotion(&pChannel->SHandwheelSim);
     SSegment.dLength = pView->pPlan->dDistance;
-    if (!prepareHandwheelAxisRatios(pView)) { return -3; }
+    if (!prepareHandwheelAxisRatios(pView))
+    {
+        return -3;
+    }
     SSegment.dPeriod = g_SSystemPara.dInterpolationTime;
     SSegment.dPosition = pView->pPlan->dDistance - pView->pPlan->dCurLeftDist;
-    if (!calculateHandwheelPathLimits(pView, &SSegment)) { return -4; }
+    if (!calculateHandwheelPathLimits(pView, &SSegment))
+    {
+        return -4;
+    }
     /* 公共进度与原插补器单位一致，段间不迁移剩余授权。 */
-    if (prepareHandwheelMotionSegment(&pPath->SState, &SSegment) < 0) { return -5; }
+    if (prepareHandwheelMotionSegment(&pPath->SState, &SSegment) < 0)
+    {
+        return -5;
+    }
     pPath->bArc = pView->bArc;
     pPath->dFeedRatio = pChannel->SRun.dCommonFeedRatio;
     pPath->dFixedSpeedLimit = SSegment.dSpeedLimit;
@@ -731,20 +820,34 @@ static int prepareHandwheelPath(struct SHandwheelPathView* pView)
      * 再建显示距离映射表，并核对当前理论点与实时指令坐标是否在脉冲容差内。
      * 不允许通过“强行贴到轨迹”掩盖暂停恢复或坐标衔接错误。
      */
-    if (calculateHandwheelPathPoint(pView, SSegment.dLength, &SPoint) < 0
-        || !isHandwheelEndPointMatched(pView, &SPoint)) { return -6; }
+    if (calculateHandwheelPathPoint(pView, SSegment.dLength, &SPoint) < 0 ||
+        !isHandwheelEndPointMatched(pView, &SPoint))
+    {
+        return -6;
+    }
     /* 连续几何只在端点和当前位置都验证成功后写回。 */
-    if (calculateHandwheelPathPoint(pView, SSegment.dPosition, &SPoint) < 0
-        || !prepareHandwheelInputScale(pView)) { return -6; }
+    if (calculateHandwheelPathPoint(pView, SSegment.dPosition, &SPoint) < 0 || !prepareHandwheelInputScale(pView))
+    {
+        return -6;
+    }
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
         double dActual;
-        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID) { continue; }
+        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
         getSingleAxisRealTimePoint(&dActual, ucAxis, pChannel->pMapAxisArray);
-        if (!isfinite(SPoint.dArray[ucAxis]) || !isfinite(dActual)
-            || fabs(SPoint.dArray[ucAxis] - dActual) > pView->pPulseArray[ucAxis] * 1.01) { return -7; }
+        if (!isfinite(SPoint.dArray[ucAxis]) || !isfinite(dActual) ||
+            fabs(SPoint.dArray[ucAxis] - dActual) > pView->pPulseArray[ucAxis] * 1.01)
+        {
+            return -7;
+        }
     }
-    if (calculateHandwheelPathPoint(pView, SSegment.dLength, &SPoint) < 0) { return -6; }
+    if (calculateHandwheelPathPoint(pView, SSegment.dLength, &SPoint) < 0)
+    {
+        return -6;
+    }
     saveHandwheelContinuousGeometry(pView, &SPoint);
     pPath->bPreparing = pPath->bUseDistanceMap;
     pPath->bBound = !pPath->bPreparing;
@@ -781,18 +884,27 @@ static int generateHandwheelPathPulses(struct SHandwheelPathView* pView, SPointD
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
         double dPulse;
-        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID) { continue; }
+        if ((getbit(pView->ucValid, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
         dPulse = (pPoint->dArray[ucAxis] - SActual.dArray[ucAxis]) / pView->pPulseArray[ucAxis];
-        if (!isfinite(dPulse) || fabs(dPulse) > 32766.0) { return -1; }
+        if (!isfinite(dPulse) || fabs(dPulse) > 32766.0)
+        {
+            return -1;
+        }
     }
 #if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE
-    nResult = outPutAbsPointWithScrewComp(pRun, pPoint->dArray, AXIS_NUM_MAX,
-        pView->pChannel->pMapAxisArray, pView->pPulseArray, &pView->ucValid);
+    nResult = outPutAbsPointWithScrewComp(pRun, pPoint->dArray, AXIS_NUM_MAX, pView->pChannel->pMapAxisArray,
+                                          pView->pPulseArray, &pView->ucValid);
 #else
-    nResult = outPutAbsPoint(pRun, pPoint->dArray, AXIS_NUM_MAX,
-        pView->pChannel->pMapAxisArray, pView->pPulseArray, &pView->ucValid);
+    nResult = outPutAbsPoint(pRun, pPoint->dArray, AXIS_NUM_MAX, pView->pChannel->pMapAxisArray, pView->pPulseArray,
+                             &pView->ucValid);
 #endif
-    if (nResult == TRUE && !isErrorHasBeenWritten()) { return 1; }
+    if (nResult == TRUE && !isErrorHasBeenWritten())
+    {
+        return 1;
+    }
     /* [HWSIM] 任一输出失败就还原整帧的软件副作用，调用方随后清候选脉冲并报警。
      * 只有返回成功，executeHandwheelPathStep() 才能扣除本拍距离和提交末速度；
      * 这不是已经发送硬件脉冲后的物理回滚。
@@ -821,10 +933,16 @@ static int saveHandwheelPathPauseState(struct SHandwheelPathView* pView)
     /* [HWSIM] 只有实际规划停到零速后才来这里。读游标通常已指向下一记录，
      * 因此 nInterpIndex-1 是本段；先验证记录仍在保留窗口内，再退回读取位置。
      */
-    if (nIndex < 0 || nIndex < g_SRingBuff[pChannel->ucChannelNum].nBackIndex
-        || nIndex >= g_SRingBuff[pChannel->ucChannelNum].nLookAheadIndex) { return -1; }
+    if (nIndex < 0 || nIndex < g_SRingBuff[pChannel->ucChannelNum].nBackIndex ||
+        nIndex >= g_SRingBuff[pChannel->ucChannelNum].nLookAheadIndex)
+    {
+        return -1;
+    }
     pBlock = getSToolCompPointerByIndex(nIndex, pChannel->ucChannelNum);
-    if (pBlock == NULL || !moveSToolCompBufPointer(INTERPOLATION_READ, BUF_BACK, pChannel->ucChannelNum)) { return -1; }
+    if (pBlock == NULL || !moveSToolCompBufPointer(INTERPOLATION_READ, BUF_BACK, pChannel->ucChannelNum))
+    {
+        return -1;
+    }
     pBlock->dPreDist = pPath->SState.dSegmentPosition;
     /* [HWSIM] 回写已成功提交的进度，不写“预测将来停车点”。恢复原 F 并使前瞻
      * 重新计算；清除本段已处理 IO，避免暂停恢复时重复执行相同外部动作。
@@ -853,22 +971,30 @@ static int saveHandwheelPathPauseState(struct SHandwheelPathView* pView)
 static int updateHandwheelG99SpeedLimit(struct SChannel* pChannel)
 {
     struct SHandwheelPath* pPath = &pChannel->SHandwheelSim.SPath; /**< 当前绑定路径。 */
-    double dSpeed; /**< F 与实测转速换算的 mm/ms 上限。 */
-    if (!pPath->bBound || !pPath->bPerRevolution) { return 1; }
+    double dSpeed;                                                 /**< F 与实测转速换算的 mm/ms 上限。 */
+    if (!pPath->bBound || !pPath->bPerRevolution)
+    {
+        return 1;
+    }
     /* [HWSIM] G99 的速度上限 = |主轴 r/ms| * 程序 mm/r * 进给倍率，
      * 再与固定机床/几何上限取小值。上限突降只改变约束，不直接截断当前速度。
      */
     dSpeed = fabs(pChannel->SSpindleTest.dSpindleAvgSpeed) * pPath->dProgramFeed * pPath->dFeedRatio;
-    if (!isfinite(dSpeed)) { return -1; }
+    if (!isfinite(dSpeed))
+    {
+        return -1;
+    }
     pPath->SState.dSpeedLimit = fmin(pPath->dFixedSpeedLimit, dSpeed);
-    if (dSpeed == 0.0) { pPath->bSpindleStop = TRUE; }
+    if (dSpeed == 0.0)
+    {
+        pPath->bSpindleStop = TRUE;
+    }
     if (pPath->bSpindleStop)
     {
         /* [HWSIM] 停转一旦锁存，即使主轴下一拍恢复，也要等进给轴完成制动且
          * 旧授权已清空才重新放行输入，防止主轴短暂停转后执行积攒的距离。
          */
-        if (dSpeed > 0.0 && pPath->SState.dBoundaryVelocity == 0.0
-            && pPath->SState.dPendingDistance == 0.0)
+        if (dSpeed > 0.0 && pPath->SState.dBoundaryVelocity == 0.0 && pPath->SState.dPendingDistance == 0.0)
         {
             pPath->bSpindleStop = FALSE;
             pPath->SState.bInputStop = FALSE;
@@ -902,7 +1028,10 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc)
      * INP_ASSIGNMENT_START 且尚未绑定时才做完整绑定，正常周期不重建几何。
      */
     selectHandwheelPathData(pChannel, bArc, &SView);
-    if (!isHandwheelDistanceControlActive(pChannel)) { return reportHandwheelPathError(pChannel); }
+    if (!isHandwheelDistanceControlActive(pChannel))
+    {
+        return reportHandwheelPathError(pChannel);
+    }
     if (!pPath->bBound && !pPath->bPreparing && *SView.pStatus == INP_ASSIGNMENT_START)
     {
         pPath->cBindResult = (int8)prepareHandwheelPath(&SView);
@@ -910,9 +1039,15 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc)
     if (pPath->bPreparing)
     {
         int nPrepared; /**< 每拍有限工作量；暂停不等待建表完成。 */
-        if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten()) { return reportHandwheelPathError(pChannel); }
+        if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten())
+        {
+            return reportHandwheelPathError(pChannel);
+        }
         nPrepared = bStop ? 1 : buildHandwheelInputMapStep(&SView);
-        if (nPrepared < 0) { return reportHandwheelPathError(pChannel); }
+        if (nPrepared < 0)
+        {
+            return reportHandwheelPathError(pChannel);
+        }
         if (nPrepared == 0)
         {
             memset(pChannel->SRun.sAxisDeltaPulse, 0, sizeof(pChannel->SRun.sAxisDeltaPulse));
@@ -922,9 +1057,10 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc)
         pPath->bBound = TRUE;
         *SView.pStatus = INP_RUNNING;
     }
-    if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten()
-        || !pPath->bBound
-        || pPath->bArc != bArc) { return reportHandwheelPathError(pChannel); }
+    if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten() || !pPath->bBound || pPath->bArc != bArc)
+    {
+        return reportHandwheelPathError(pChannel);
+    }
     if (pChannel->SRun.dCommonFeedRatio != pPath->dFeedRatio)
     {
         /* [HWSIM] 绑定约束基于当时倍率。倍率变化先沿当前轨迹减速、回写暂停，
@@ -937,10 +1073,13 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc)
      * 全轴输出。逻辑或 || 从左到右短路，前一步失败就不执行后续步骤。
      * preview 生成的 STrial 只是候选，输出失败时绝不能提交它。
      */
-    if (updateHandwheelG99SpeedLimit(pChannel) < 0
-        || calculateHandwheelMotionStep(&pPath->SState, bStop, &STrial) < 0
-        || calculateHandwheelPathPoint(&SView, STrial.dPosition, &SPoint) < 0
-        || generateHandwheelPathPulses(&SView, &SPoint) < 0) { return reportHandwheelPathError(pChannel); }
+    if (updateHandwheelG99SpeedLimit(pChannel) < 0 ||
+        calculateHandwheelMotionStep(&pPath->SState, bStop, &STrial) < 0 ||
+        calculateHandwheelPathPoint(&SView, STrial.dPosition, &SPoint) < 0 ||
+        generateHandwheelPathPulses(&SView, &SPoint) < 0)
+    {
+        return reportHandwheelPathError(pChannel);
+    }
     /* [HWSIM] 每拍步骤 6：先用新旧位置差求本拍平均速度，再提交理论进度和
      * 周期末速度。若先 commit 再做差，显示速度会被错误算成零。
      */
@@ -960,14 +1099,26 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc)
     if (STrial.eStep == HWSIM_STEP_BACKWARD_END)
     {
         bBack = hasHandwheelReverseHistory(pChannel, FALSE);
-        if (!bBack) { pPath->SState.dPendingDistance = 0.0; }
+        if (!bBack)
+        {
+            pPath->SState.dPendingDistance = 0.0;
+        }
     }
-    if (!bBack && STrial.eStep != HWSIM_STEP_FORWARD_END && STrial.eStep != HWSIM_STEP_STOPPED) { return 1; }
+    if (!bBack && STrial.eStep != HWSIM_STEP_FORWARD_END && STrial.eStep != HWSIM_STEP_STOPPED)
+    {
+        return 1;
+    }
     if (STrial.eStep == HWSIM_STEP_STOPPED && STrial.dPosition < pPath->SState.dSegmentLength)
     {
-        if (saveHandwheelPathPauseState(&SView) < 0) { return reportHandwheelPathError(pChannel); }
+        if (saveHandwheelPathPauseState(&SView) < 0)
+        {
+            return reportHandwheelPathError(pChannel);
+        }
     }
-    else { pChannel->SPreProcess.ucInpStatus = INP_FINISHED; }
+    else
+    {
+        pChannel->SPreProcess.ucInpStatus = INP_FINISHED;
+    }
     *SView.pStatus = INP_FINISHED;
     pChannel->SPreProcess.cInterpDir = bBack ? INP_GO_BACK : INP_GO_AHEAD;
     *SView.pSpeed = pChannel->SRun.dCurrentSpeed = 0.0;
@@ -999,11 +1150,9 @@ static bool isHandwheelDistanceControlRequested(const struct SChannel* pChannel)
      * 普通选轴手轮模式不走本模块；暂停后返回加工点的用户数据运动也先走原流程，
      * 回到加工点后才能重新绑定程序轨迹。
      */
-    return pChannel != NULL
-        && pChannel->cHandWheelSimulaStatus == HANWHEELSIMULA_ON
-        && (g_RunMode == AUTOMATIC_MODE || g_RunMode == MDI_MODE)
-        && !(pChannel->ucChannelStatus == SYS_PAUSE_TO_RUN
-            && pChannel->SG00.bIsUserData);
+    return pChannel != NULL && pChannel->cHandWheelSimulaStatus == HANWHEELSIMULA_ON &&
+           (g_RunMode == AUTOMATIC_MODE || g_RunMode == MDI_MODE) &&
+           !(pChannel->ucChannelStatus == SYS_PAUSE_TO_RUN && pChannel->SG00.bIsUserData);
 }
 
 /*************************************************
@@ -1014,33 +1163,52 @@ static bool isHandwheelDistanceControlRequested(const struct SChannel* pChannel)
   返 回 值：TRUE - 自动执行；FALSE - 可模拟或需进一步报错校验
   备    注：未知轴型及非法映射不是能力缺口，仍交给参数校验拒绝
 ****************************************/
-static bool isHandwheelBlockAutomaticOnly(const struct SChannel* pChannel, uint32 unCommand, VAL_STRUCT_TYPE ucValid, bool bAutomatic)
+static bool isHandwheelBlockAutomaticOnly(const struct SChannel* pChannel, uint32 unCommand, VAL_STRUCT_TYPE ucValid,
+                                          bool bAutomatic)
 {
     uint32 unMotion = getBits(unCommand, CMD_MOTION_ADDR); /**< 当前运动类型。 */
-    uint8 ucAxis; /**< 参与运动的逻辑轴。 */
-    uint8 ucPlaneArray[2]; /**< 原自动插补选定平面。 */
+    uint8 ucAxis;                                          /**< 参与运动的逻辑轴。 */
+    uint8 ucPlaneArray[2];                                 /**< 原自动插补选定平面。 */
     /* [HWSIM] 显式标记和已知未接入的运动走自动旁路，包括特殊插补模式。
      * 但非法轴号/未知轴型不能被解释为“自动执行即可”，仍需由后续校验报错。
      * 普通 G1 和圆弧平面外旋转轴由公共进度接管；旋转圆弧平面仍走原流程。
      */
-    if (bAutomatic) { return TRUE; }
-    if (unMotion != CMD_MOTION_QUICKMOVE && unMotion != CMD_MOTION_LINE
-        && unMotion != CMD_MOTION_ARC && unMotion != CMD_MOTION_ANTI_ARC) { return TRUE; }
-    if (getBits(unCommand, CMD_INTERPOLATION_MODE_ADDR) != CMD_INTERPOLATION_COMMON) { return TRUE; }
+    if (bAutomatic)
+    {
+        return TRUE;
+    }
+    if (unMotion != CMD_MOTION_QUICKMOVE && unMotion != CMD_MOTION_LINE && unMotion != CMD_MOTION_ARC &&
+        unMotion != CMD_MOTION_ANTI_ARC)
+    {
+        return TRUE;
+    }
+    if (getBits(unCommand, CMD_INTERPOLATION_MODE_ADDR) != CMD_INTERPOLATION_COMMON)
+    {
+        return TRUE;
+    }
 #if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE
-    if (pChannel->bUseVirtualY) { return TRUE; }
+    if (pChannel->bUseVirtualY)
+    {
+        return TRUE;
+    }
 #endif
 #if ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
     return TRUE;
 #endif
-    if (unMotion == CMD_MOTION_QUICKMOVE || unMotion == CMD_MOTION_LINE || pChannel->pMapAxisArray == NULL) { return FALSE; }
+    if (unMotion == CMD_MOTION_QUICKMOVE || unMotion == CMD_MOTION_LINE || pChannel->pMapAxisArray == NULL)
+    {
+        return FALSE;
+    }
     chooseInterpPlane(ucPlaneArray, unCommand);
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
         uint8 ucPhysical = pChannel->pMapAxisArray[ucAxis]; /**< 已映射的物理轴。 */
-        if ((getbit(ucValid, ucAxis)) == VAL_VALID && ucPhysical < AXIS_PHYSICS_NUM_MAX
-            && (ucAxis == ucPlaneArray[0] || ucAxis == ucPlaneArray[1])
-            && g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS) { return TRUE; }
+        if ((getbit(ucValid, ucAxis)) == VAL_VALID && ucPhysical < AXIS_PHYSICS_NUM_MAX &&
+            (ucAxis == ucPlaneArray[0] || ucAxis == ucPlaneArray[1]) &&
+            g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == ROTATION_AXIS)
+        {
+            return TRUE;
+        }
     }
     return FALSE;
 }
@@ -1056,14 +1224,18 @@ static bool isHandwheelBlockAutomaticOnly(const struct SChannel* pChannel, uint3
 bool isHandwheelAutomaticMoveRequired(const struct SChannel* pChannel)
 {
     const struct SInput* pInput; /**< 当前段输入，不能使用前段残留的插补对象。 */
-    if (!isHandwheelDistanceControlRequested(pChannel)) { return FALSE; }
+    if (!isHandwheelDistanceControlRequested(pChannel))
+    {
+        return FALSE;
+    }
     pInput = &pChannel->SPreProcess.SUserData;
     /* [HWSIM] G84 展开的快速定位段不一定有攻丝倍率，因此需要 bHandwheelAuto
      * 来源标记，不能只看当前 G0/G1 或 dG84Ratio。使用当前输入记录，也避免
      * 上一段 SG01/SG02 残留的倍率影响新段。NaN/Inf 不作为正常旁路的依据。
      */
     return isHandwheelBlockAutomaticOnly(pChannel, pChannel->SRun.unCommandType, pInput->ucValStatus,
-        pInput->bHandwheelAuto || (isfinite(pInput->dG84Ratio) && pInput->dG84Ratio != 0.0));
+                                         pInput->bHandwheelAuto ||
+                                             (isfinite(pInput->dG84Ratio) && pInput->dG84Ratio != 0.0));
 }
 
 /*************************************************
@@ -1092,34 +1264,38 @@ bool isHandwheelDistanceControlActive(const struct SChannel* pChannel)
 ****************************************/
 int prepareHandwheelAutomaticMove(struct SChannel* pChannel)
 {
-    uint8 ucAxis, ucPrevious; /**< 有效轴及重复映射检查索引。 */
+    uint8 ucAxis, ucPrevious;    /**< 有效轴及重复映射检查索引。 */
     const struct SInput* pInput; /**< 原自动规划输入。 */
-    if (!isHandwheelAutomaticMoveRequired(pChannel)) { return 1; }
+    if (!isHandwheelAutomaticMoveRequired(pChannel))
+    {
+        return 1;
+    }
     pInput = &pChannel->SPreProcess.SUserData;
     /* [HWSIM] 自动旁路只能在旧距离段已解除绑定、软件零速且无故障时接管。
      * 不能为了让 G84 开始就直接清掉仍在运动的距离状态；非法几何同样必须拒绝。
      */
-    if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten()
-        || pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.SPath.bBound
-        || pChannel->SHandwheelSim.SPath.bPreparing
-        || pChannel->pMapAxisArray == NULL || !isfinite(pInput->dG84Ratio)
-        || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
+    if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten() || pChannel->SHandwheelSim.bInstructionBound ||
+        pChannel->SHandwheelSim.SPath.bBound || pChannel->SHandwheelSim.SPath.bPreparing ||
+        pChannel->pMapAxisArray == NULL || !isfinite(pInput->dG84Ratio) ||
+        !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
     {
         return reportHandwheelPathError(pChannel);
     }
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
-        if ((getbit(pInput->ucValStatus, ucAxis)) != VAL_VALID) { continue; }
-        if (pChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX
-            || !isfinite(pInput->SStartPoint.dArray[ucAxis])
-            || !isfinite(pInput->SEndPoint.dArray[ucAxis]))
+        if ((getbit(pInput->ucValStatus, ucAxis)) != VAL_VALID)
+        {
+            continue;
+        }
+        if (pChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX || !isfinite(pInput->SStartPoint.dArray[ucAxis]) ||
+            !isfinite(pInput->SEndPoint.dArray[ucAxis]))
         {
             return reportHandwheelPathError(pChannel);
         }
         for (ucPrevious = 0; ucPrevious < ucAxis; ++ucPrevious)
         {
-            if ((getbit(pInput->ucValStatus, ucPrevious)) == VAL_VALID
-                && pChannel->pMapAxisArray[ucPrevious] == pChannel->pMapAxisArray[ucAxis])
+            if ((getbit(pInput->ucValStatus, ucPrevious)) == VAL_VALID &&
+                pChannel->pMapAxisArray[ucPrevious] == pChannel->pMapAxisArray[ucAxis])
             {
                 return reportHandwheelPathError(pChannel);
             }
@@ -1176,14 +1352,13 @@ void clearHandwheelSimMotion(struct SHandwheelSimGroup* pGroup)
   函数名称：resetHandwheelSimGroup
   函数功能：初始化通道及全部独立轴、合成轴的距离状态
   输入参数：pGroup - 通道状态，允许为空
-  输出参数：pGroup - 清零后的控制状态；圆弧表失效并在下次绑定时重建
+  输出参数：pGroup - 清零后的通道及轴状态
   返 回 值：无
   备    注：仅初始化、确认零速或原停止路径接管后调用，不修改共享手轮档位
 ****************************************/
 void resetHandwheelSimGroup(struct SHandwheelSimGroup* pGroup)
 {
     uint8 ucAxis; /**< 逻辑轴索引。 */
-    /* 空指针没有可清理的状态。 */
     if (pGroup == NULL)
     {
         return;
@@ -1193,10 +1368,9 @@ void resetHandwheelSimGroup(struct SHandwheelSimGroup* pGroup)
      * 重新绑定从表项 0 开始逐拍覆盖，完整建表后才允许输入查表，旧内容不会复用。
      * 自动旁路每拍可能多次调用本函数，不能反复清空 4112 B 的无效表。
      */
-    memset(pGroup, 0, offsetof(struct SHandwheelSimGroup, SPath)
-        + offsetof(struct SHandwheelPath, dMetricArray));
+    memset(pGroup, 0, offsetof(struct SHandwheelSimGroup, SPath) + offsetof(struct SHandwheelPath, dMetricArray));
     memset((unsigned char*)pGroup + offsetof(struct SHandwheelSimGroup, bInstructionBound), 0,
-        sizeof(*pGroup) - offsetof(struct SHandwheelSimGroup, bInstructionBound));
+           sizeof(*pGroup) - offsetof(struct SHandwheelSimGroup, bInstructionBound));
     /* 标量状态已随前缀清零，仅补回未绑定轴哨兵，避免重复清理。 */
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
@@ -1242,32 +1416,35 @@ bool isHandwheelSimGroupStopped(const struct SHandwheelSimGroup* pGroup)
 static bool isHandwheelHistoryBlockReversible(const struct SChannel* pChannel, struct SToolCompensation* pBlock)
 {
     bool bMotion;
-    if (pBlock == NULL) { return FALSE; }
+    if (pBlock == NULL)
+    {
+        return FALSE;
+    }
     /* [HWSIM] 回退不能越过自动旁路段或有副作用的指令屏障。即使该记录没有
      * 位移，也必须先检查 IO、程序结束、坐标设置等，不能把它当空白直接跳过。
      * 这也阻止反摇重新进入 G84 攻丝循环。
      */
     if (isHandwheelBlockAutomaticOnly(pChannel, pBlock->unCommandType, pBlock->ucValStatus,
-        pBlock->bHandwheelAuto || pBlock->dG84Ratio != 0.0)) { return FALSE; }
+                                      pBlock->bHandwheelAuto || pBlock->dG84Ratio != 0.0))
+    {
+        return FALSE;
+    }
     bMotion = getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE;
-    if ((getBits(pBlock->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
-            || getBits(pBlock->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_R)
-        && pBlock->dG84Ratio == 0.0 && isfinite(pBlock->dFeedrate) && pBlock->dFeedrate > 0.0)
+    if ((getBits(pBlock->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ||
+         getBits(pBlock->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_R) &&
+        pBlock->dG84Ratio == 0.0 && isfinite(pBlock->dFeedrate) && pBlock->dFeedrate > 0.0)
     {
         bMotion = bMotion || getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_LINE;
-        bMotion = bMotion || ((getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC
-            || getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
-            && isfinite(pBlock->dRadius) && fabs(pBlock->dRadius) > HWSIM_DISTANCE_EPS);
+        bMotion = bMotion || ((getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+                               getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC) &&
+                              isfinite(pBlock->dRadius) && fabs(pBlock->dRadius) > HWSIM_DISTANCE_EPS);
     }
-    return pBlock != NULL && judgeCanMoveBack(pBlock) == 1
-        && pBlock->ucG28ZeroingValAxis == 0
-        && pBlock->sChannelCommand.ucType == UNASSIGNED_VALUE
-        && bMotion
-        && getBits(pBlock->unCommandType, CMD_PROGRAM_ADDR) == CMD_PROGRAM_CONTINUE
-        && getBits(pBlock->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_COMMON
-        && !pBlock->bG50Appear && !pBlock->bG65SystemMacroWait
-        && pBlock->cPointType != G50 && pBlock->cPointType != G10
-        && pBlock->cToolAxisMod == 0 && pBlock->cTwistCommand == 0;
+    return pBlock != NULL && judgeCanMoveBack(pBlock) == 1 && pBlock->ucG28ZeroingValAxis == 0 &&
+           pBlock->sChannelCommand.ucType == UNASSIGNED_VALUE && bMotion &&
+           getBits(pBlock->unCommandType, CMD_PROGRAM_ADDR) == CMD_PROGRAM_CONTINUE &&
+           getBits(pBlock->unCommandType, CMD_INTERPOLATION_MODE_ADDR) == CMD_INTERPOLATION_COMMON &&
+           !pBlock->bG50Appear && !pBlock->bG65SystemMacroWait && pBlock->cPointType != G50 &&
+           pBlock->cPointType != G10 && pBlock->cToolAxisMod == 0 && pBlock->cTwistCommand == 0;
 }
 
 /*************************************************
@@ -1280,7 +1457,7 @@ static bool isHandwheelHistoryBlockReversible(const struct SChannel* pChannel, s
 ****************************************/
 bool hasHandwheelReverseHistory(const struct SChannel* pChannel, bool bCompleted)
 {
-    INDEX_DATA_TYPE nIndex; /**< 未取模索引，必须在原历史窗口内。 */
+    INDEX_DATA_TYPE nIndex;          /**< 未取模索引，必须在原历史窗口内。 */
     const struct SRingBuff* pBuffer; /**< 当前通道的原缓冲区。 */
     if (pChannel == NULL || pChannel->ucChannelNum >= CHANNEL_NUM_MAX)
         return FALSE;
@@ -1290,20 +1467,19 @@ bool hasHandwheelReverseHistory(const struct SChannel* pChannel, bool bCompleted
      * 使用未取模逻辑索引与保留窗口比较，不能读已经被环形缓冲覆盖的历史。
      */
     nIndex = pBuffer->nInterpIndex - (bCompleted ? 1 : 2);
-    for (; nIndex >= 0 && nIndex >= pBuffer->nBackIndex
-        && nIndex < pBuffer->nLookAheadIndex; --nIndex)
+    for (; nIndex >= 0 && nIndex >= pBuffer->nBackIndex && nIndex < pBuffer->nLookAheadIndex; --nIndex)
     {
         struct SToolCompensation* pBlock = getSToolCompPointerByIndex(nIndex, pChannel->ucChannelNum); /**< 历史段。 */
         bool bHasMotion = FALSE; /**< 至少一个有效轴存在实际行程。 */
-        uint8 ucAxis; /**< 逻辑轴索引。 */
+        uint8 ucAxis;            /**< 逻辑轴索引。 */
         if (!isHandwheelHistoryBlockReversible(pChannel, pBlock))
             return FALSE;
         /* [HWSIM] 只跳过已经确认无屏障的零位移普通段，找到真实可回退运动才返回。
          * 此处仅探查，不移动读游标；真正倒读由外层读段流程完成。
          */
         /* 整圆起终点相同，但弧长不为零；几何细项由重新加载时统一校验。 */
-        if (getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC
-            || getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
+        if (getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ARC ||
+            getBits(pBlock->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC)
         {
             return isfinite(pBlock->dLength) && pBlock->dLength > HWSIM_DISTANCE_EPS;
         }
@@ -1333,11 +1509,12 @@ bool hasHandwheelReverseHistory(const struct SChannel* pChannel, bool bCompleted
   返 回 值：1 - 接收；0 - 丢弃距离；-1 - 校验失败
   备    注：未绑定时仅为刚完成段记录换向请求，不积攒运动距离
 ****************************************/
-static int addScaledHandwheelGroupAuthorizedDistance(struct SHandwheelSimGroup* pGroup, int32 nSignedRaw, uint8 ucMultiple, const double* pScaleArray)
+static int addScaledHandwheelGroupAuthorizedDistance(struct SHandwheelSimGroup* pGroup, int32 nSignedRaw,
+                                                     uint8 ucMultiple, const double* pScaleArray)
 {
-    struct SHandwheelSim SInput; /**< 复用标量输入校验，只计算本次距离，不存历史。 */
+    struct SHandwheelSim SInput;      /**< 复用标量输入校验，只计算本次距离，不存历史。 */
     double dInputArray[AXIS_NUM_MAX]; /**< 本拍各轴的实际新增授权，不重新缩放历史余量。 */
-    uint8 ucAxis; /**< 当前逻辑轴索引。 */
+    uint8 ucAxis;                     /**< 当前逻辑轴索引。 */
     if (pGroup == NULL || pGroup->bFault)
         return -1;
     /* [HWSIM] SInput 是本次调用的局部换算器，清它不会清实际运动状态。
@@ -1354,10 +1531,16 @@ static int addScaledHandwheelGroupAuthorizedDistance(struct SHandwheelSimGroup* 
         /* [HWSIM] 合成路径只接收一份授权；pScaleArray[0] 在这里传递输入增益，
          * 直径显示的非线性换算由路径映射表处理，而不是按物理轴逐个累加。
          */
-        if (pGroup->SPath.bSpindleStop) { return 0; }
-        int nResult = addHandwheelPathAuthorizedDistance(pGroup, SInput.dPendingDistance
-            * (pScaleArray != NULL ? pScaleArray[0] : 1.0), pScaleArray != NULL);
-        if (nResult < 0) { pGroup->bFault = TRUE; }
+        if (pGroup->SPath.bSpindleStop)
+        {
+            return 0;
+        }
+        int nResult = addHandwheelPathAuthorizedDistance(
+            pGroup, SInput.dPendingDistance * (pScaleArray != NULL ? pScaleArray[0] : 1.0), pScaleArray != NULL);
+        if (nResult < 0)
+        {
+            pGroup->bFault = TRUE;
+        }
         return nResult;
     }
     if (!pGroup->bInstructionBound)
@@ -1378,15 +1561,12 @@ static int addScaledHandwheelGroupAuthorizedDistance(struct SHandwheelSimGroup* 
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
         const struct SHandwheelSim* pState = &pGroup->SAxisStateArray[ucAxis]; /**< 本轴账本。 */
-        dInputArray[ucAxis] = SInput.dPendingDistance
-            * (pScaleArray != NULL ? pScaleArray[ucAxis] : 1.0);
+        dInputArray[ucAxis] = SInput.dPendingDistance * (pScaleArray != NULL ? pScaleArray[ucAxis] : 1.0);
         if (pScaleArray != NULL && isHandwheelDistanceReplacementNeeded(pGroup, pState, dInputArray[ucAxis]))
         {
             dInputArray[ucAxis] -= pState->dPendingDistance;
         }
-        if (pState->bSegmentBound && (pState->bFault
-            || !isfinite(pState->dPendingDistance
-                + dInputArray[ucAxis])))
+        if (pState->bSegmentBound && (pState->bFault || !isfinite(pState->dPendingDistance + dInputArray[ucAxis])))
         {
             pGroup->bFault = TRUE;
             return -1;
@@ -1451,12 +1631,11 @@ static void resetHandwheelSpeedMeasurement(struct SHandwheelSimGroup* pGroup)
 ****************************************/
 static double calculateHandwheelDistanceMultiplier(struct SHandwheelSimGroup* pGroup, int32 nSignedRaw, double dPeriod)
 {
-    double dMax = g_SSystemPara.fHandleWheelSpeedMax; /**< 面板最大倍率。 */
-    double dAlpha, dFraction, dTarget; /**< 测速权重、线性比例、目标倍率。 */
+    double dMax = g_SSystemPara.fHandleWheelSpeedMax;       /**< 面板最大倍率。 */
+    double dAlpha, dFraction, dTarget;                      /**< 测速权重、线性比例、目标倍率。 */
     uint16 usPeriod = g_SSystemPara.usHandleWheelAvgPeriod; /**< 测速时间常数的周期数。 */
     int8 cDirection = nSignedRaw > 0 ? INP_GO_AHEAD : (nSignedRaw < 0 ? INP_GO_BACK : 0); /**< 输入方向。 */
-    if (!isfinite(dPeriod) || dPeriod <= 0.0 || usPeriod < 1 || usPeriod > 1000
-        || (!isfinite(dMax) || dMax < 0.0))
+    if (!isfinite(dPeriod) || dPeriod <= 0.0 || usPeriod < 1 || usPeriod > 1000 || (!isfinite(dMax) || dMax < 0.0))
     {
         return -1.0;
     }
@@ -1477,10 +1656,9 @@ static double calculateHandwheelDistanceMultiplier(struct SHandwheelSimGroup* pG
      * 先低通格速，再换算相对于最大 RPM 的 0..1 比例，抑制稀疏计数的跳变。
      */
     dAlpha = 1.0 / (1.0 + usPeriod);
-    pGroup->dFilteredInputRate += dAlpha
-        * (fabs((double)nSignedRaw) * 250.0 / dPeriod - pGroup->dFilteredInputRate);
-    dFraction = fmin(1.0, fmax(0.0, pGroup->dFilteredInputRate * 60.0
-        / HWSIM_RESPONSE_TICKS_PER_REV / HWSIM_RESPONSE_MAX_RPM));
+    pGroup->dFilteredInputRate += dAlpha * (fabs((double)nSignedRaw) * 250.0 / dPeriod - pGroup->dFilteredInputRate);
+    dFraction =
+        fmin(1.0, fmax(0.0, pGroup->dFilteredInputRate * 60.0 / HWSIM_RESPONSE_TICKS_PER_REV / HWSIM_RESPONSE_MAX_RPM));
     dMax = fmax(1.0, dMax);
     dTarget = fmax(1.0, dMax * dFraction);
     /* [HWSIM] 对目标增距倍率再做时间平滑，倍率只影响“本次新增授权”。
@@ -1488,8 +1666,7 @@ static double calculateHandwheelDistanceMultiplier(struct SHandwheelSimGroup* pG
      * 但没有原始计数就不会凭空制造运动距离。
      */
     pGroup->dInputGain = fmax(1.0, pGroup->dInputGain);
-    pGroup->dInputGain += dPeriod / (HWSIM_RESPONSE_GAIN_TIME + dPeriod)
-        * (dTarget - pGroup->dInputGain);
+    pGroup->dInputGain += dPeriod / (HWSIM_RESPONSE_GAIN_TIME + dPeriod) * (dTarget - pGroup->dInputGain);
     pGroup->dInputGain = fmin(dMax, pGroup->dInputGain);
     pGroup->bFastInput = pGroup->dInputGain > 1.0 + HWSIM_DISTANCE_EPS;
     return pGroup->dInputGain;
@@ -1514,15 +1691,17 @@ static void updateHandwheelDistanceLimitAndStop(struct SHandwheelSim* pState, bo
     /* [HWSIM] 用上一成功周期的末速判断是否到达限速，并锁存到下一次零速。
      * 低速精确走距阶段不削减授权；进入到速响应阶段后才限制缓冲并处理停摇。
      */
-    if (fabs(pState->dBoundaryVelocity) > 0.0
-        && fabs(pState->dBoundaryVelocity) >= pState->dSpeedLimit - dSpeedError)
+    if (fabs(pState->dBoundaryVelocity) > 0.0 && fabs(pState->dBoundaryVelocity) >= pState->dSpeedLimit - dSpeedError)
     {
         pState->bFeedLimitActive = TRUE;
     }
     if (!pState->bFeedLimitActive)
     {
         /* 未到速不削减授权，也不因无计数取消距离；新输入解除上次停摇标志。 */
-        if (bInput) { pState->bInputStop = FALSE; }
+        if (bInput)
+        {
+            pState->bInputStop = FALSE;
+        }
         return;
     }
     pState->bInputStop = !bInput;
@@ -1531,11 +1710,11 @@ static void updateHandwheelDistanceLimitAndStop(struct SHandwheelSim* pState, bo
         /* [HWSIM] 缓冲限额覆盖前瞻运动和从该速度制动所需距离，正负对称限幅。
          * 这里限的是剩余授权，实际速度仍由 preview 受加减速度约束地变化。
          */
-        dSpeed = fmin(pState->dSpeedLimit, fabs(pState->dBoundaryVelocity)
-            + pState->dAcceleration * HWSIM_RESPONSE_LOOKAHEAD);
+        dSpeed = fmin(pState->dSpeedLimit,
+                      fabs(pState->dBoundaryVelocity) + pState->dAcceleration * HWSIM_RESPONSE_LOOKAHEAD);
         /* 连续制动距离加一拍上界，覆盖离散末拍梯形积分。 */
-        dBudget = dSpeed * dSpeed / (2.0 * pState->dDeceleration)
-            + dSpeed * (pState->dPeriod + HWSIM_RESPONSE_LOOKAHEAD);
+        dBudget =
+            dSpeed * dSpeed / (2.0 * pState->dDeceleration) + dSpeed * (pState->dPeriod + HWSIM_RESPONSE_LOOKAHEAD);
         pState->dPendingDistance = fmin(dBudget, fmax(-dBudget, pState->dPendingDistance));
     }
 }
@@ -1548,13 +1727,13 @@ static void updateHandwheelDistanceLimitAndStop(struct SHandwheelSim* pState, bo
   返 回 值：无
   备    注：只设置制动请求，实际停车和余量清除必须经过输出提交
 ****************************************/
-static void updateHandwheelGroupDistanceLimitAndStop(struct SHandwheelSimGroup* pGroup, int32 nSignedRaw, double dPeriod)
+static void updateHandwheelGroupDistanceLimitAndStop(struct SHandwheelSimGroup* pGroup, int32 nSignedRaw,
+                                                     double dPeriod)
 {
-    double dTimeout; /**< 有界停摇检测时间，ms。 */
+    double dTimeout;                  /**< 有界停摇检测时间，ms。 */
     bool bContinue = nSignedRaw != 0; /**< 允许正常执行，超时后请求制动。 */
-    uint8 ucAxis; /**< 独立 G0 轴索引。 */
-    if ((!pGroup->bInstructionBound && !pGroup->SPath.bBound)
-        || (pGroup->bReverseBlocked && nSignedRaw < 0))
+    uint8 ucAxis;                     /**< 独立 G0 轴索引。 */
+    if ((!pGroup->bInstructionBound && !pGroup->SPath.bBound) || (pGroup->bReverseBlocked && nSignedRaw < 0))
     {
         return;
     }
@@ -1564,13 +1743,17 @@ static void updateHandwheelGroupDistanceLimitAndStop(struct SHandwheelSimGroup* 
          * 慢摇的计数可能隔好几拍才出现，不能把中间每个零计数拍都判为停摇。
          */
         pGroup->dInputGapEstimate = pGroup->bInputActive
-            ? 0.75 * pGroup->dInputGapEstimate + 0.25 * (pGroup->dInputIdleTime + dPeriod) : dPeriod;
+                                        ? 0.75 * pGroup->dInputGapEstimate + 0.25 * (pGroup->dInputIdleTime + dPeriod)
+                                        : dPeriod;
         pGroup->dInputIdleTime = 0.0;
         pGroup->bInputActive = TRUE;
     }
     else
     {
-        if (!pGroup->bInputActive) { return; }
+        if (!pGroup->bInputActive)
+        {
+            return;
+        }
         /* [HWSIM] 超时取平均输入间隔的 2.5 倍，并限制在固定上下界内。
          * 超时仅重置输入增益并传递制动请求；是否取消余量要等真正停稳并提交。
          */
@@ -1607,28 +1790,27 @@ static void updateHandwheelGroupDistanceLimitAndStop(struct SHandwheelSimGroup* 
   返 回 值：1 - 接收；0 - 丢弃；-1 - 校验失败
   备    注：旋转轴及半径显示不缩放；不改程序几何、历史余量和速度
 ****************************************/
-static int addHandwheelChannelAuthorizedDistance(struct SChannel* pChannel, int32 nSignedRaw, uint8 ucMultiple, double dInputGain)
+static int addHandwheelChannelAuthorizedDistance(struct SChannel* pChannel, int32 nSignedRaw, uint8 ucMultiple,
+                                                 double dInputGain)
 {
     double dScaleArray[AXIS_NUM_MAX]; /**< 本次采样各逻辑轴的换算系数。 */
-    uint8 ucAxis; /**< 逻辑轴索引。 */
+    uint8 ucAxis;                     /**< 逻辑轴索引。 */
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
         uint8 ucPhysical; /**< 本逻辑轴映射的物理轴号。 */
         dScaleArray[ucAxis] = dInputGain;
-        if (!pChannel->SHandwheelSim.bInstructionBound
-            || !pChannel->SHandwheelSim.SAxisStateArray[ucAxis].bSegmentBound)
+        if (!pChannel->SHandwheelSim.bInstructionBound ||
+            !pChannel->SHandwheelSim.SAxisStateArray[ucAxis].bSegmentBound)
         {
             continue;
         }
-        if (pChannel->pMapAxisArray == NULL
-            || pChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
+        if (pChannel->pMapAxisArray == NULL || pChannel->pMapAxisArray[ucAxis] >= AXIS_PHYSICS_NUM_MAX)
         {
             pChannel->SHandwheelSim.bFault = TRUE;
             return -1;
         }
         ucPhysical = pChannel->pMapAxisArray[ucAxis];
-        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == LINEAR_AXIS
-            && getShowByDiameter(ucPhysical) == 1)
+        if (g_SSystemPara.SAxisPara[ucPhysical].ucAxisType == LINEAR_AXIS && getShowByDiameter(ucPhysical) == 1)
         {
             /* [HWSIM] G0 直径显示轴：显示走 1 mm 对应实际半径位移 0.5 mm。
              * 只缩放新增授权，不缩放原段起终点，也不重复折半历史余量。
@@ -1658,7 +1840,7 @@ static void transferHandwheelStateToStopControl(struct SChannel* pChannel)
     {
         /* 原停车由上一成功帧各轴脉冲反算速度，绝不能把合成速度塞给每根轴。 */
         memcpy(pChannel->SRun.sAxisDeltaPulse, pChannel->SHandwheelSim.SPath.sLastPulseArray,
-            sizeof(pChannel->SRun.sAxisDeltaPulse));
+               sizeof(pChannel->SRun.sAxisDeltaPulse));
     }
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ++ucAxis)
     {
@@ -1668,7 +1850,7 @@ static void transferHandwheelStateToStopControl(struct SChannel* pChannel)
         {
             pChannel->SSingleAxisArray[ucAxis].dCurrentSpeed = fabs(pState->dBoundaryVelocity);
             if (pState->dBoundaryVelocity != 0.0)
-            pChannel->SSingleAxisArray[ucAxis].SPlanData.cInterpDir =
+                pChannel->SSingleAxisArray[ucAxis].SPlanData.cInterpDir =
                     pState->dBoundaryVelocity > 0.0 ? INP_GO_AHEAD : INP_GO_BACK;
         }
     }
@@ -1693,9 +1875,9 @@ void leaveHandwheelSim(struct SChannel* pChannel)
         /* [HWSIM] 自动旁路和报警退出分别处理：带着旧绑定进入报警/复位时先交接，
          * 正常旁路则必须通过 prepareHandwheelAutomaticMove() 的零速、无绑定检查。
          */
-        if ((pChannel->SHandwheelSim.SPath.bBound || pChannel->SHandwheelSim.bInstructionBound)
-            && (isErrorHasBeenWritten() || pChannel->ucChannelStatus == SYS_RESET
-                || pChannel->ucChannelStatus == SYS_EMERGENCY_STOP))
+        if ((pChannel->SHandwheelSim.SPath.bBound || pChannel->SHandwheelSim.bInstructionBound) &&
+            (isErrorHasBeenWritten() || pChannel->ucChannelStatus == SYS_RESET ||
+             pChannel->ucChannelStatus == SYS_EMERGENCY_STOP))
         {
             transferHandwheelStateToStopControl(pChannel);
             return;
@@ -1708,8 +1890,8 @@ void leaveHandwheelSim(struct SChannel* pChannel)
         transferHandwheelStateToStopControl(pChannel);
         return;
     }
-    if (pChannel->SHandwheelSim.SPath.bBound
-        && (pChannel->ucChannelStatus == SYS_RUN || pChannel->ucChannelStatus == SYS_RUN_TO_PAUSE))
+    if (pChannel->SHandwheelSim.SPath.bBound &&
+        (pChannel->ucChannelStatus == SYS_RUN || pChannel->ucChannelStatus == SYS_RUN_TO_PAUSE))
     {
         /* 未经过暂停回写不能交给旧时间规划；保留末拍脉冲供原报警停车。 */
         pChannel->SHandwheelSim.bFault = TRUE;
@@ -1740,18 +1922,15 @@ void clearHandwheelAverageSpeedAfterRecovery(struct SChannel* pChannel, bool bWa
      * 恢复末拍的平均速度可以非零，但它不应成为下一距离段的起速；
      * 必须同时确认无活动绑定、无故障、标量末速为零，才清这一个显示字段。
      */
-    if (!bWasRecovering || !isHandwheelDistanceControlActive(pChannel)
-        || pChannel->ucChannelStatus != SYS_RUN || pChannel->SG00.bIsUserData
-        || pChannel->SG01.ucInpStatus != INP_FINISHED
-        || (getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_QUICKMOVE
-            && getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_LINE
-            && getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_ARC
-            && getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_ANTI_ARC
-            )
-        || pChannel->SHandwheelSim.SPath.bBound
-        || pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.bFault
-        || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim)
-        || isErrorHasBeenWritten())
+    if (!bWasRecovering || !isHandwheelDistanceControlActive(pChannel) || pChannel->ucChannelStatus != SYS_RUN ||
+        pChannel->SG00.bIsUserData || pChannel->SG01.ucInpStatus != INP_FINISHED ||
+        (getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_QUICKMOVE &&
+         getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_LINE &&
+         getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_ARC &&
+         getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) != CMD_MOTION_ANTI_ARC) ||
+        pChannel->SHandwheelSim.SPath.bBound || pChannel->SHandwheelSim.bInstructionBound ||
+        pChannel->SHandwheelSim.bFault || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim) ||
+        isErrorHasBeenWritten())
     {
         return;
     }
@@ -1769,7 +1948,7 @@ void clearHandwheelAverageSpeedAfterRecovery(struct SChannel* pChannel, bool bWa
 ****************************************/
 int addHandwheelAuthorizedDistance(struct SHandwheelSim* pState, int32 nSignedRaw, uint8 ucMultiple)
 {
-    double dNewPending; /**< 叠加本次输入后的候选待走距离，通过有效性检查后才提交。 */
+    double dNewPending;   /**< 叠加本次输入后的候选待走距离，通过有效性检查后才提交。 */
     int nDistancePerTick; /**< 本次输入的有效整数距离快照，单位为微米或千分之一度。 */
     if (pState == NULL)
     {
@@ -1780,14 +1959,13 @@ int addHandwheelAuthorizedDistance(struct SHandwheelSim* pState, int32 nSignedRa
      * getter 为未初始化的旧参数提供默认距离，不会把零值带入运动。
      * 换档不会追溯放大之前的 dPendingDistance。
      */
-    dNewPending = pState->dPendingDistance + (double)nSignedRaw
-        * (double)ucMultiple * ((double)nDistancePerTick / 1000.0) / 4.0;
+    dNewPending =
+        pState->dPendingDistance + (double)nSignedRaw * (double)ucMultiple * ((double)nDistancePerTick / 1000.0) / 4.0;
     /* [HWSIM] 在写回前统一检查范围、档位和浮点溢出，失败只锁存故障。
      * 先转 double 再乘，避免在整数类型中乘档位发生溢出。
      */
-    if (pState->bFault || nSignedRaw < -65535 || nSignedRaw > 65535
-        || (ucMultiple != 1 && ucMultiple != 10 && ucMultiple != 100)
-        || !isfinite(dNewPending))
+    if (pState->bFault || nSignedRaw < -65535 || nSignedRaw > 65535 ||
+        (ucMultiple != 1 && ucMultiple != 10 && ucMultiple != 100) || !isfinite(dNewPending))
     {
         pState->bFault = TRUE;
         return -1;
@@ -1807,9 +1985,9 @@ int addHandwheelAuthorizedDistance(struct SHandwheelSim* pState, int32 nSignedRa
 static int processHandwheelEncoderInput(struct SChannel* pChannel)
 {
     struct SEncoder* pEncoder = pChannel->pSHandleWheelEncoder; /**< 共享编码器，只读。 */
-    uint32 unInputMultiple; /**< 先校验共享档位再缩窄，避免非法值截断。 */
-    double dInputGain; /**< 本拍新增授权的倍率。 */
-    int32 nSignedRaw; /**< 本拍有符号原始计数。 */
+    uint32 unInputMultiple;                                     /**< 先校验共享档位再缩窄，避免非法值截断。 */
+    double dInputGain;                                          /**< 本拍新增授权的倍率。 */
+    int32 nSignedRaw;                                           /**< 本拍有符号原始计数。 */
     /* [HWSIM] 采样步骤 1：只读共享编码器。没有编码器等同本拍无新输入，
      * 仍更新停摇时钟；不能清 usDelta，否则其它使用同一编码器的通道会丢样本。
      */
@@ -1819,8 +1997,7 @@ static int processHandwheelEncoderInput(struct SChannel* pChannel)
         updateHandwheelGroupDistanceLimitAndStop(&pChannel->SHandwheelSim, 0, g_SSystemPara.dInterpolationTime);
         return 0;
     }
-    if (pEncoder->usDelta != 0 && pEncoder->cEncoderDir != INP_GO_AHEAD
-        && pEncoder->cEncoderDir != INP_GO_BACK)
+    if (pEncoder->usDelta != 0 && pEncoder->cEncoderDir != INP_GO_AHEAD && pEncoder->cEncoderDir != INP_GO_BACK)
     {
         /* 模式交接方向尚未更新时，只丢弃过渡样本。 */
         resetHandwheelSpeedMeasurement(&pChannel->SHandwheelSim);
@@ -1835,7 +2012,8 @@ static int processHandwheelEncoderInput(struct SChannel* pChannel)
     {
         return -1;
     }
-    dInputGain = calculateHandwheelDistanceMultiplier(&pChannel->SHandwheelSim, nSignedRaw, g_SSystemPara.dInterpolationTime);
+    dInputGain =
+        calculateHandwheelDistanceMultiplier(&pChannel->SHandwheelSim, nSignedRaw, g_SSystemPara.dInterpolationTime);
     if (dInputGain < 1.0)
     {
         return -1;
@@ -1882,13 +2060,12 @@ void processHandwheelInput(struct SChannel* pChannel)
         leaveHandwheelSim(pChannel);
         return;
     }
-    if (pChannel->ucChannelStatus == SYS_RESET
-        || pChannel->ucChannelStatus == SYS_EMERGENCY_STOP
-        || isErrorHasBeenWritten()
+    if (pChannel->ucChannelStatus == SYS_RESET || pChannel->ucChannelStatus == SYS_EMERGENCY_STOP ||
+        isErrorHasBeenWritten()
 #if STM32_MODE
         || Check_bootwarning() == 0
 #endif
-        )
+    )
     {
         transferHandwheelStateToStopControl(pChannel);
         return;
@@ -1911,17 +2088,17 @@ void processHandwheelInput(struct SChannel* pChannel)
         if (nSpindle <= 0)
         {
             resetHandwheelSpeedMeasurement(&pChannel->SHandwheelSim);
-            if (nSpindle < 0) { reportHandwheelPathError(pChannel); }
+            if (nSpindle < 0)
+            {
+                reportHandwheelPathError(pChannel);
+            }
             return;
         }
     }
     /* 快移倍率为零时丢弃本拍输入并请求可控暂停，禁止积压授权后突然恢复。 */
-    if (
-        pChannel->SHandwheelSim.SPath.bBound
-        ? (!isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0)
-        :
-        (!isfinite(pChannel->SRun.dQuickMoveFeedRatio)
-        || pChannel->SRun.dQuickMoveFeedRatio <= 0.0))
+    if (pChannel->SHandwheelSim.SPath.bBound
+            ? (!isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0)
+            : (!isfinite(pChannel->SRun.dQuickMoveFeedRatio) || pChannel->SRun.dQuickMoveFeedRatio <= 0.0))
     {
         resetHandwheelSpeedMeasurement(&pChannel->SHandwheelSim);
         pauseButtonAPI(pChannel->ucChannelNum);
@@ -1933,8 +2110,7 @@ void processHandwheelInput(struct SChannel* pChannel)
          * 锁存后由原报警流程停止，防止后续采样继续向异常账本追加距离。
          */
         pChannel->SHandwheelSim.bFault = TRUE;
-        parseRunningError(pChannel->SRun.unGCodeLineNum,
-            GCODE_ERROR_NUM153, 9999);
+        parseRunningError(pChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
     }
 }
 
@@ -1952,16 +2128,12 @@ int prepareHandwheelMotionSegment(struct SHandwheelSim* pState, const struct SHa
      * 只接受零末速状态及段内位置；恢复/倒读的初始进度可以不为零。
      * 它不会自行清旧授权，调用者负责在正常结束后清理，再提供完整的新段约束。
      */
-    if (pState == NULL || pSegment == NULL || pState->bFault
-        || pState->dBoundaryVelocity != 0.0
-        || !isfinite(pSegment->dLength) || pSegment->dLength < 0.0
-        || !isfinite(pSegment->dPosition) || pSegment->dPosition < 0.0
-        || pSegment->dPosition > pSegment->dLength
-        || !isfinite(pSegment->dPeriod) || pSegment->dPeriod <= 0.0
-        || !isfinite(pSegment->dSpeedLimit) || pSegment->dSpeedLimit <= 0.0
-        || !isfinite(pSegment->dAcceleration) || pSegment->dAcceleration <= 0.0
-        || !isfinite(pSegment->dDeceleration) || pSegment->dDeceleration <= 0.0
-        || pSegment->ucAxis >= AXIS_NUM_MAX)
+    if (pState == NULL || pSegment == NULL || pState->bFault || pState->dBoundaryVelocity != 0.0 ||
+        !isfinite(pSegment->dLength) || pSegment->dLength < 0.0 || !isfinite(pSegment->dPosition) ||
+        pSegment->dPosition < 0.0 || pSegment->dPosition > pSegment->dLength || !isfinite(pSegment->dPeriod) ||
+        pSegment->dPeriod <= 0.0 || !isfinite(pSegment->dSpeedLimit) || pSegment->dSpeedLimit <= 0.0 ||
+        !isfinite(pSegment->dAcceleration) || pSegment->dAcceleration <= 0.0 || !isfinite(pSegment->dDeceleration) ||
+        pSegment->dDeceleration <= 0.0 || pSegment->ucAxis >= AXIS_NUM_MAX)
         return -1;
     pState->dSegmentLength = pSegment->dLength;
     pState->dSegmentPosition = pSegment->dPosition;
@@ -1994,8 +2166,7 @@ static double calculateHandwheelStopDistance(double dSpeed, double dDeceleration
     if (dSpeed <= 0.0)
         return 0.0;
     dCycles = ceil(dSpeed / (dDeceleration * dPeriod));
-    return dPeriod * ((dCycles - 0.5) * dSpeed
-        - 0.5 * dDeceleration * dPeriod * dCycles * (dCycles - 1.0));
+    return dPeriod * ((dCycles - 0.5) * dSpeed - 0.5 * dDeceleration * dPeriod * dCycles * (dCycles - 1.0));
 }
 
 /*************************************************
@@ -2013,24 +2184,23 @@ static double calculateHandwheelStopDistance(double dSpeed, double dDeceleration
  * 即使授权目标位于段外，也必须用同样的条件保护当前段端点。 */
 int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop, struct SHandwheelSimTrial* pTrial)
 {
-    double dSpeed, /**< 当前周期起始速度幅值，单位为路径单位/ms。 */
-        dMinSpeed, /**< 按最大减速度执行一拍后的最小可达速度幅值。 */
-        dMaxSpeed, /**< 同时满足加速度和限速要求的搜索速度上界。 */
-        dNextSpeed, /**< 本拍最终采用的周期末速度幅值，也是二分搜索下界。 */
-        dDirection; /**< 本拍段进度方向，+1 为前进，-1 为后退。 */
+    double dSpeed,            /**< 当前周期起始速度幅值，单位为路径单位/ms。 */
+        dMinSpeed,            /**< 按最大减速度执行一拍后的最小可达速度幅值。 */
+        dMaxSpeed,            /**< 同时满足加速度和限速要求的搜索速度上界。 */
+        dNextSpeed,           /**< 本拍最终采用的周期末速度幅值，也是二分搜索下界。 */
+        dDirection;           /**< 本拍段进度方向，+1 为前进，-1 为后退。 */
     double dBoundaryDistance, /**< 沿当前运动方向到当前段边界的可用距离。 */
-        dTargetDistance, /**< 授权目标和段边界共同限定的前方可用距离。 */
-        dMinTravel, /**< 本拍按最大减速度执行时所需的位移幅值。 */
-        dCandidate; /**< 二分搜索的候选周期末速度幅值。 */
-    double dTravel, /**< 本拍实际采用的理论位移幅值。 */
-        dNextPosition, /**< 由当前段进度和本拍位移计算的候选段进度。 */
-        dRequired, /**< 本拍位移与下一拍开始继续制动到零的距离之和。 */
-        dTolerance; /**< 按段长缩放的浮点误差容差，不用于丢弃授权距离。 */
-    int nIteration; /**< 固定次数二分搜索的循环计数。 */
+        dTargetDistance,      /**< 授权目标和段边界共同限定的前方可用距离。 */
+        dMinTravel,           /**< 本拍按最大减速度执行时所需的位移幅值。 */
+        dCandidate;           /**< 二分搜索的候选周期末速度幅值。 */
+    double dTravel,           /**< 本拍实际采用的理论位移幅值。 */
+        dNextPosition,        /**< 由当前段进度和本拍位移计算的候选段进度。 */
+        dRequired,            /**< 本拍位移与下一拍开始继续制动到零的距离之和。 */
+        dTolerance;           /**< 按段长缩放的浮点误差容差，不用于丢弃授权距离。 */
+    int nIteration;           /**< 固定次数二分搜索的循环计数。 */
     bool bInputStop = !bStop && pState != NULL && pState->bInputStop; /**< 停摇等待不等于程序暂停。 */
-    if (pState == NULL || pTrial == NULL || !pState->bSegmentBound
-        || pState->bFault || !isfinite(pState->dPendingDistance)
-        || !isfinite(pState->dBoundaryVelocity))
+    if (pState == NULL || pTrial == NULL || !pState->bSegmentBound || pState->bFault ||
+        !isfinite(pState->dPendingDistance) || !isfinite(pState->dBoundaryVelocity))
         return -1;
     bStop = bStop || bInputStop;
     /* [HWSIM] 规划步骤 1：把输出候选初始化为“原位、原速度、等待”。
@@ -2054,11 +2224,10 @@ int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop,
         if (fabs(pState->dPendingDistance) <= HWSIM_DISTANCE_EPS)
             return 1;
         dDirection = pState->dPendingDistance > 0.0 ? 1.0 : -1.0;
-        if ((dDirection > 0.0 && pState->dSegmentPosition >= pState->dSegmentLength)
-            || (dDirection < 0.0 && pState->dSegmentPosition <= 0.0))
+        if ((dDirection > 0.0 && pState->dSegmentPosition >= pState->dSegmentLength) ||
+            (dDirection < 0.0 && pState->dSegmentPosition <= 0.0))
         {
-            pTrial->eStep = dDirection > 0.0
-                ? HWSIM_STEP_FORWARD_END : HWSIM_STEP_BACKWARD_END;
+            pTrial->eStep = dDirection > 0.0 ? HWSIM_STEP_FORWARD_END : HWSIM_STEP_BACKWARD_END;
             return 1;
         }
     }
@@ -2069,14 +2238,11 @@ int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop,
      * 几何边界绝不允许越过；反摇可能把授权目标拉到当前位置后方，此时前方
      * 授权为零，但仍需沿旧方向完成物理上可实现的减速，不能立即翻转速度符号。
      */
-    dBoundaryDistance = dDirection > 0.0
-        ? pState->dSegmentLength - pState->dSegmentPosition : pState->dSegmentPosition;
-    dTargetDistance = fmin(dBoundaryDistance,
-        fmax(0.0, dDirection * pState->dPendingDistance));
+    dBoundaryDistance = dDirection > 0.0 ? pState->dSegmentLength - pState->dSegmentPosition : pState->dSegmentPosition;
+    dTargetDistance = fmin(dBoundaryDistance, fmax(0.0, dDirection * pState->dPendingDistance));
     dMinSpeed = fmax(0.0, dSpeed - pState->dDeceleration * pState->dPeriod);
     /* 最后一拍相减可能留下机器精度尾速；不能用距离/脉冲容差吞掉真实低速。 */
-    if (dMinSpeed <= 32.0 * DBL_EPSILON
-        * fmax(dSpeed, pState->dDeceleration * pState->dPeriod))
+    if (dMinSpeed <= 32.0 * DBL_EPSILON * fmax(dSpeed, pState->dDeceleration * pState->dPeriod))
     {
         dMinSpeed = 0.0;
     }
@@ -2085,8 +2251,7 @@ int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop,
      * dRequired = 本拍制动位移 + 从本拍末速继续制动到零的离散距离。
      * 连这个方案都停不在段内就报错，不能强制裁剪位置伪装成正常减速。
      */
-    dRequired = dMinTravel + calculateHandwheelStopDistance(dMinSpeed,
-        pState->dDeceleration, pState->dPeriod);
+    dRequired = dMinTravel + calculateHandwheelStopDistance(dMinSpeed, pState->dDeceleration, pState->dPeriod);
     dTolerance = HWSIM_DISTANCE_EPS * fmax(1.0, pState->dSegmentLength);
     if (!isfinite(dRequired) || dRequired > dBoundaryDistance + dTolerance)
         return -1;
@@ -2095,23 +2260,20 @@ int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop,
     /* 与零速等待使用相同的授权容差；尾部余量不再触发加速搜索，
      * 否则不可表示的位置增量会反复生成非零尾速，锁住 DRAIN 的零速交接。
      * 保留上面算出的最大减速结果，不直接清零速度或取消剩余授权。 */
-    if (!bStop && fabs(pState->dPendingDistance) > HWSIM_DISTANCE_EPS
-        && dRequired < dTargetDistance)
+    if (!bStop && fabs(pState->dPendingDistance) > HWSIM_DISTANCE_EPS && dRequired < dTargetDistance)
     {
         /* [HWSIM] 规划步骤 5：只有没有停车请求且目标前方还有制动裕量才搜索更快末速。
          * 搜索下界为最大减速后的末速，上界由本拍加速度与限速共同决定。
          * G99 限速突然降到当前速度以下时，上界仍不能低于 dMinSpeed，
          * 否则等于要求超过最大减速度的瞬间降速。
          */
-        dMaxSpeed = fmax(dMinSpeed, fmin(pState->dSpeedLimit,
-            dSpeed + pState->dAcceleration * pState->dPeriod));
+        dMaxSpeed = fmax(dMinSpeed, fmin(pState->dSpeedLimit, dSpeed + pState->dAcceleration * pState->dPeriod));
         /* 固定迭代次数，保证微小行程下中断内搜索次数也有明确上界。 */
         for (nIteration = 0; nIteration < 48; ++nIteration)
         {
             dCandidate = 0.5 * (dNextSpeed + dMaxSpeed);
-            dRequired = 0.5 * (dSpeed + dCandidate) * pState->dPeriod
-                + calculateHandwheelStopDistance(dCandidate,
-                    pState->dDeceleration, pState->dPeriod);
+            dRequired = 0.5 * (dSpeed + dCandidate) * pState->dPeriod +
+                        calculateHandwheelStopDistance(dCandidate, pState->dDeceleration, pState->dPeriod);
             /* [HWSIM] 候选速度能在授权目标之前停住则抬高下界，否则压低上界。
              * 每次都把本拍位移计入，不能只用 v*v/(2*a) 检查下一拍之后的制动。
              */
@@ -2144,13 +2306,12 @@ int calculateHandwheelMotionStep(const struct SHandwheelSim* pState, bool bStop,
      * 否则仍是 MOVE，即使这一拍已在减速或待走授权已经被反摇抵消。
      * 段首/段尾事件由后续条件补充，是否换段仍由 G0 全轴或合成路径上层决定。
      */
-    pTrial->eStep = bStop && dNextSpeed == 0.0
-        ? (bInputStop ? HWSIM_STEP_INPUT_IDLE : HWSIM_STEP_STOPPED) : HWSIM_STEP_MOVE;
+    pTrial->eStep =
+        bStop && dNextSpeed == 0.0 ? (bInputStop ? HWSIM_STEP_INPUT_IDLE : HWSIM_STEP_STOPPED) : HWSIM_STEP_MOVE;
     /* 恰好到达端点时，即使余量为零也报告本轴端点事件。
      * 多轴总控仍需等待所有轴满足完成条件，不能在此处解除绑定。 */
-    if (!bStop && dNextSpeed == 0.0 && dTravel > 0.0
-        && dDirection * (pState->dPendingDistance - (dNextPosition - pState->dSegmentPosition))
-            >= -HWSIM_DISTANCE_EPS)
+    if (!bStop && dNextSpeed == 0.0 && dTravel > 0.0 &&
+        dDirection * (pState->dPendingDistance - (dNextPosition - pState->dSegmentPosition)) >= -HWSIM_DISTANCE_EPS)
     {
         if (dDirection > 0.0 && dNextPosition == pState->dSegmentLength)
             pTrial->eStep = HWSIM_STEP_FORWARD_END;

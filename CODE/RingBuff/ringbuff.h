@@ -7,155 +7,151 @@
 
 //#include "GCodeCommon.h"
 
-#define GCODEPARSEBUF_MAX	20		//SGCodeParseBufÑ­»·»º³åÇø ÈİÁ¿
+#define GCODEPARSEBUF_MAX 20 //SGCodeParseBufå¾ªç¯ç¼“å†²åŒº å®¹é‡
 
-#define TOOLCOMPBUF_MAX		30		//SToolCompensationBufÑ­»·»º³åÇø ÈİÁ¿ 
+#define TOOLCOMPBUF_MAX 30 //SToolCompensationBufå¾ªç¯ç¼“å†²åŒº å®¹é‡
 
-#define BACKWARDBUF_NUM		10		// µ¶²¹»º³åÇø µ¹×ßÔ¤ÁôµÄ»º³åÇøÈİÁ¿
+#define BACKWARDBUF_NUM 10 // åˆ€è¡¥ç¼“å†²åŒº å€’èµ°é¢„ç•™çš„ç¼“å†²åŒºå®¹é‡
 
-#define BUF_AHEAD	1	//ÒÆ¶¯·½Ïò£ºÏòÇ°£¨Õı·½Ïò£©zxr ÑØËùÑ¡Ö¸ÕëµÄ´¦Àí·½ÏòÍÆ½øÒ»²½
-#define BUF_BACK	-1	//ÒÆ¶¯·½Ïò£º·µ»Ø£¨·´·½Ïò£©zxr ÑØËùÑ¡Ö¸ÕëµÄ´¦Àí·½ÏòÍË»ØÒ»²½
+#define BUF_AHEAD 1 //ç§»åŠ¨æ–¹å‘ï¼šå‘å‰ï¼ˆæ­£æ–¹å‘ï¼‰zxr æ²¿æ‰€é€‰æŒ‡é’ˆçš„å¤„ç†æ–¹å‘æ¨è¿›ä¸€æ­¥
+#define BUF_BACK -1 //ç§»åŠ¨æ–¹å‘ï¼šè¿”å›ï¼ˆåæ–¹å‘ï¼‰zxr æ²¿æ‰€é€‰æŒ‡é’ˆçš„å¤„ç†æ–¹å‘é€€å›ä¸€æ­¥
 
-//2023.5.25 ÖìÎÈÖĞ 
-#define NEW_BUFF  1  //ĞÂµ¶²¹»º³åÇø   Îª0Ê±Ê¹ÓÃ¾ÉµÄµ¶²¹»º³åÇø Îª1Ê±Ê¹ÓÃĞÂµÄµ¶²¹»º³åÇø
+//2023.5.25 æœ±ç¨³ä¸­
+#define NEW_BUFF 1 //æ–°åˆ€è¡¥ç¼“å†²åŒº   ä¸º0æ—¶ä½¿ç”¨æ—§çš„åˆ€è¡¥ç¼“å†²åŒº ä¸º1æ—¶ä½¿ç”¨æ–°çš„åˆ€è¡¥ç¼“å†²åŒº
 
-#define INDEX_DATA_TYPE  int64  //Ë÷ÒıµÄÊı¾İÀàĞÍ   //ÖìÎÈÖĞ 2023.6.15 int32ĞŞ¸ÄÎªint64
+#define INDEX_DATA_TYPE int64 //ç´¢å¼•çš„æ•°æ®ç±»å‹   //æœ±ç¨³ä¸­ 2023.6.15 int32ä¿®æ”¹ä¸ºint64
 
-struct SRingBuff  //»·ĞÎ»º³åÇø½á¹¹Ìå    2022.4.19  ÖìÎÈÖĞ
+struct SRingBuff //ç¯å½¢ç¼“å†²åŒºç»“æ„ä½“    2022.4.19  æœ±ç¨³ä¸­
 {
-	struct SGCodeParse SGCodeParseBuf[GCODEPARSEBUF_MAX]; //G´úÂë»º³åÇø
+    struct SGCodeParse SGCodeParseBuf[GCODEPARSEBUF_MAX]; //Gä»£ç ç¼“å†²åŒº
 
-	struct SToolCompensation SToolCompensationBuf[TOOLCOMPBUF_MAX];//µ¶²¹»º³åÇø
+    struct SToolCompensation SToolCompensationBuf[TOOLCOMPBUF_MAX]; //åˆ€è¡¥ç¼“å†²åŒº
 
-	int16 sSGCODE_WRITEIndex; //G´úÂë»º´æĞ´Ö¸ÕëË÷ÒıÖµ
+    int16 sSGCODE_WRITEIndex; //Gä»£ç ç¼“å­˜å†™æŒ‡é’ˆç´¢å¼•å€¼
 
-	int16 sSGCODE_WRITEdNum;  //G´úÂëÒÑĞ´Èë¸öÊı(ÇÒµ¶²¹Î´¶ÁÈ¡¸öÊı£©
+    int16 sSGCODE_WRITEdNum; //Gä»£ç å·²å†™å…¥ä¸ªæ•°(ä¸”åˆ€è¡¥æœªè¯»å–ä¸ªæ•°ï¼‰
 
-	int16 sSGcodeReadAheadNum; //G´úÂëÒÑĞ´Èë¸öÊıÇÒµ¶²¹¿ÉÔ¤¶Á¸öÊı
+    int16 sSGcodeReadAheadNum; //Gä»£ç å·²å†™å…¥ä¸ªæ•°ä¸”åˆ€è¡¥å¯é¢„è¯»ä¸ªæ•°
 #if NEW_BUFF == 0
-	int16 sSToolIndex;      //µ¶²¹Ğ´Ö¸ÕëµÄË÷ÒıÖµ
+    int16 sSToolIndex; //åˆ€è¡¥å†™æŒ‡é’ˆçš„ç´¢å¼•å€¼
 
-	int16 sSToolDealedNum;  //µ¶²¹ ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
+    int16 sSToolDealedNum; //åˆ€è¡¥ å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
 
-	int16 sLookAheadDealedNum;//Ç°Õ° ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
+    int16 sLookAheadDealedNum; //å‰ç» å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
 
-	int16 sInterpolationDealedNum; //²å²¹´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı £¨ÓÃÓÚµ¹×ß£©
+    int16 sInterpolationDealedNum; //æ’è¡¥å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•° ï¼ˆç”¨äºå€’èµ°ï¼‰
 
-#endif  
-	//2023.5.25 ÖìÎÈÖĞ   
-	volatile INDEX_DATA_TYPE nSToolIndex;		//µ¶²¹Ğ´
-	volatile INDEX_DATA_TYPE nLookAheadIndex;	//Ç°Õ°¶ÁĞ´
-	volatile INDEX_DATA_TYPE nInterpIndex;		//²å²¹¶Á
-	volatile INDEX_DATA_TYPE nBackIndex;		//µ¹×ß×î´ó¿É¶ÁË÷Òı // ÖìÎÈÖĞ 2023.6.3
-	volatile INDEX_DATA_TYPE nDrawIndex;		//»­Í¼¶Á
-
+#endif
+    //2023.5.25 æœ±ç¨³ä¸­
+    volatile INDEX_DATA_TYPE nSToolIndex;     //åˆ€è¡¥å†™
+    volatile INDEX_DATA_TYPE nLookAheadIndex; //å‰ç»è¯»å†™
+    volatile INDEX_DATA_TYPE nInterpIndex;    //æ’è¡¥è¯»
+    volatile INDEX_DATA_TYPE nBackIndex;      //å€’èµ°æœ€å¤§å¯è¯»ç´¢å¼• // æœ±ç¨³ä¸­ 2023.6.3
+    volatile INDEX_DATA_TYPE nDrawIndex;      //ç”»å›¾è¯»
 };
 
-
-enum RingBufPointerType  //»·ĞÎ»º´æµÄÖ¸ÕëÀàĞÍ
+enum RingBufPointerType //ç¯å½¢ç¼“å­˜çš„æŒ‡é’ˆç±»å‹
 {
-	GCODE_WRITE,			//0 G´úÂë»º´æĞ´Ö¸Õë    //2021-8-20
-	GCODE_READ,				//1 G´úÂë»º´æ¶ÁÖ¸Õë		 //2021-8-20
-	STOOL_WRITE,			//2 µ¶²¹µÄĞ´Ö¸Õë
-	LOOKAHEAD_READWRITE,	//3 Ç°Õ°µÄ¶ÁĞ´Ö¸Õë
-	INTERPOLATION_READ,		//4 ²å²¹µÄ¶ÁÖ¸Õë
-	INTERPOLATION_BACK,		//5 ²å²¹µÄ·´ÏòÔË¶¯¶ÁÖ¸Õë
-	STOOL_READ_AHEAD,        //6 µ¶²¹Ô¤¶ÁÖ¸Õë
-	DRAW_READ
+    GCODE_WRITE,         //0 Gä»£ç ç¼“å­˜å†™æŒ‡é’ˆ    //2021-8-20
+    GCODE_READ,          //1 Gä»£ç ç¼“å­˜è¯»æŒ‡é’ˆ		 //2021-8-20
+    STOOL_WRITE,         //2 åˆ€è¡¥çš„å†™æŒ‡é’ˆ
+    LOOKAHEAD_READWRITE, //3 å‰ç»çš„è¯»å†™æŒ‡é’ˆ
+    INTERPOLATION_READ,  //4 æ’è¡¥çš„è¯»æŒ‡é’ˆ
+    INTERPOLATION_BACK,  //5 æ’è¡¥çš„åå‘è¿åŠ¨è¯»æŒ‡é’ˆ
+    STOOL_READ_AHEAD,    //6 åˆ€è¡¥é¢„è¯»æŒ‡é’ˆ
+    DRAW_READ
 };
-   
-extern struct SRingBuff g_SRingBuff[CHANNEL_NUM_MAX];//»·ĞÎ»º³åÇø
 
-/***********************SGCodeParseBufÑ­»·»º³åÇø-±äÁ¿º¯Êı*********************************/
+extern struct SRingBuff g_SRingBuff[CHANNEL_NUM_MAX]; //ç¯å½¢ç¼“å†²åŒº
 
-//	»ñÈ¡Ö¸ÕëµÄË÷ÒıÖµ
+/***********************SGCodeParseBufå¾ªç¯ç¼“å†²åŒº-å˜é‡å‡½æ•°*********************************/
+
+//	è·å–æŒ‡é’ˆçš„ç´¢å¼•å€¼
 int16 getSGCodeParsePointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıË÷Òı)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç´¢å¼•)
 struct SGCodeParse* getSGCodeParsePointerByIndex(short sIndex, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıÀàĞÍ)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç±»å‹)
 struct SGCodeParse* getSGCodeParsePointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	ÒÆ¶¯Ö¸Õë
+//	ç§»åŠ¨æŒ‡é’ˆ
 bool moveSGCodeParsePointer(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	»ñÈ¡Ö¸ÕëÊ£ÓàÈİÁ¿
+//	è·å–æŒ‡é’ˆå‰©ä½™å®¹é‡
 int16 getSGCodeParsePointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	´òÓ¡Êı×éÖ¸ÕëË÷Òı£¬µØÖ·ĞÅÏ¢(µ÷ÊÔ) 
+//	æ‰“å°æ•°ç»„æŒ‡é’ˆç´¢å¼•ï¼Œåœ°å€ä¿¡æ¯(è°ƒè¯•)
 void printSGCodeParsePointerADDR();
 
 /****************************************************************************************/
 
+/******************SToolCompensationBufå¾ªç¯ç¼“å†²åŒº-å˜é‡å‡½æ•°*******************************/
 
-/******************SToolCompensationBufÑ­»·»º³åÇø-±äÁ¿º¯Êı*******************************/
+#if NEW_BUFF == 0 //æ—§åˆ€è¡¥ç¼“å†²åŒº
 
-#if NEW_BUFF == 0  //¾Éµ¶²¹»º³åÇø
-
-//	»ñÈ¡Ö¸ÕëµÄË÷ÒıÖµ
+//	è·å–æŒ‡é’ˆçš„ç´¢å¼•å€¼
 int16 getSToolCompPointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıË÷Òı)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç´¢å¼•)
 struct SToolCompensation* getSToolCompPointerByIndex(int16 sIndex, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıÀàĞÍ)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç±»å‹)
 struct SToolCompensation* getSToolCompPointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	ÒÆ¶¯Ö¸Õë
+//	ç§»åŠ¨æŒ‡é’ˆ
 bool moveSToolCompBufPointer(enum RingBufPointerType pointerTpye, short sDist, uint8 ucChannelNum);
 
-//	»ñÈ¡Ö¸ÕëÊ£ÓàÈİÁ¿
+//	è·å–æŒ‡é’ˆå‰©ä½™å®¹é‡
 int16 getSToolCompPointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//  Çå³ıÇ°Õ°ÒÑ´¦Àí¹ıµÄÊı¾İ
+//  æ¸…é™¤å‰ç»å·²å¤„ç†è¿‡çš„æ•°æ®
 bool clearInterpolationDealedNum(uint8 ucChannelNum);
 
-//	´òÓ¡Êı×éÖ¸ÕëË÷Òı£¬µØÖ·ĞÅÏ¢(µ÷ÊÔ)
+//	æ‰“å°æ•°ç»„æŒ‡é’ˆç´¢å¼•ï¼Œåœ°å€ä¿¡æ¯(è°ƒè¯•)
 void printSToolCompPointerADDR();
 
-//	³õÊ¼»¯Ç°Õ°Ö¸Õë
+//	åˆå§‹åŒ–å‰ç»æŒ‡é’ˆ
 bool initLookAheadDealed(uint8 ucChannelNum);
 
-#else //ĞÂµ¶²¹»º³åÇø
-//	»ñÈ¡Ö¸ÕëµÄË÷ÒıÖµ
+#else //æ–°åˆ€è¡¥ç¼“å†²åŒº
+//	è·å–æŒ‡é’ˆçš„ç´¢å¼•å€¼
 INDEX_DATA_TYPE getSToolCompPointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıË÷Òı)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç´¢å¼•)
 struct SToolCompensation* getSToolCompPointerByIndex(INDEX_DATA_TYPE nIndex, uint8 ucChannelNum);
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıÀàĞÍ)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç±»å‹)
 struct SToolCompensation* getSToolCompPointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//	ÒÆ¶¯Ö¸Õë
+//	ç§»åŠ¨æŒ‡é’ˆ
 bool moveSToolCompBufPointer(enum RingBufPointerType pointerTpye, short sDist, uint8 ucChannelNum);
 
-//	»ñÈ¡Ö¸ÕëÊ£ÓàÈİÁ¿
+//	è·å–æŒ‡é’ˆå‰©ä½™å®¹é‡
 int16 getSToolCompPointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum);
 
-//  Çå³ıÇ°Õ°ÒÑ´¦Àí¹ıµÄÊı¾İ
+//  æ¸…é™¤å‰ç»å·²å¤„ç†è¿‡çš„æ•°æ®
 bool clearInterpolationDealedNum(uint8 ucChannelNum);
 
-//	´òÓ¡Êı×éÖ¸ÕëË÷Òı£¬µØÖ·ĞÅÏ¢(µ÷ÊÔ)
+//	æ‰“å°æ•°ç»„æŒ‡é’ˆç´¢å¼•ï¼Œåœ°å€ä¿¡æ¯(è°ƒè¯•)
 void printSToolCompPointerADDR();
 
-//	³õÊ¼»¯Ç°Õ°Ö¸Õë
+//	åˆå§‹åŒ–å‰ç»æŒ‡é’ˆ
 bool initLookAheadDealed(uint8 ucChannelNum);
 
-//³õÊ¼»¯»º³åÇø
+//åˆå§‹åŒ–ç¼“å†²åŒº
 int8 initAllBuffer(uint8 ucChannelNum);
 #endif
 
 /****************************************************************************************/
 
-//³õÊ¼»¯»º³åÇø
+//åˆå§‹åŒ–ç¼“å†²åŒº
 int8 initAllBuffer(uint8 ucChannelNum);
 
-//	·µ»ØG´úÂëĞ´»º³åÇøµÄµØÖ·   ·ëÓ¢»ª  22.2.28
+//	è¿”å›Gä»£ç å†™ç¼“å†²åŒºçš„åœ°å€   å†¯è‹±å  22.2.28
 struct SGCodeParse* getGCodeHeadAddress(uint8 ucChannelNum);
 /****************************************************************************************/
 
 int8 getDrawData(int8* pBuffAdress, int8 cWriteNum, int8 ucChannelNum);
 
 #endif // !__RINGBUFF_H
-

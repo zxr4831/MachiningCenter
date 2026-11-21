@@ -6,1585 +6,1560 @@
 static int8 s_cIfAndWhielStepCheck[CHANNEL_NUM_MAX];
 static int8 s_cIfAndWhielStepAssign[CHANNEL_NUM_MAX];
 
-
 static SList* getCurrEnableStack(uint8 ucMod, uint8 ucChannelNum)
 {
-	SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-	if (pCurrProgram == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return NULL;
-	}
+    SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+    if (pCurrProgram == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return NULL;
+    }
 
-	SList* pCurrEnableStack = ucMod == GC_SYNTAX ? pCurrProgram->SMacro.pEnableStackSyntax : pCurrProgram->SMacro.pEnableStackAssign;
+    SList* pCurrEnableStack =
+        ucMod == GC_SYNTAX ? pCurrProgram->SMacro.pEnableStackSyntax : pCurrProgram->SMacro.pEnableStackAssign;
 
-	return pCurrEnableStack;
+    return pCurrEnableStack;
 }
 
-
-//Ìí¼ÓIFµÈÌØÊâÖ¸Áîµ½G´úÂë×´Ì¬»ú  2025.11.27
+//æ·»åŠ IFç­‰ç‰¹æ®ŠæŒ‡ä»¤åˆ°Gä»£ç çŠ¶æ€æœº  2025.11.27
 int8 checkIF(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//0.¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-		SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-		if(pCurrNodeData == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-			return -1;
-		}
-		memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //0.å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+        SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+        if (pCurrNodeData == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return -1;
+        }
+        memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
 
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.¸³Öµµ±Ç°IFµ¥Ôª£¬²¢Ñ¹Èë¿ÉÖ´ĞĞÕ»
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			//µ±Ç°dIFÎªÕæ
-			if (!isZero(pSScan->dIF))
-			{
-				pCurrNodeData->ucType = MACRO_IF;
-				pCurrNodeData->ucExecuteSign = MACRO_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
+        //2.èµ‹å€¼å½“å‰IFå•å…ƒï¼Œå¹¶å‹å…¥å¯æ‰§è¡Œæ ˆ
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            //å½“å‰dIFä¸ºçœŸ
+            if (!isZero(pSScan->dIF))
+            {
+                pCurrNodeData->ucType = MACRO_IF;
+                pCurrNodeData->ucExecuteSign = MACRO_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+            //å½“å‰dIFä¸ºå‡
+            else
+            {
+                pCurrNodeData->ucType = MACRO_IF;
+                pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dIFä¸ºçœŸ
+                    if (!isZero(pSScan->dIF))
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->ucType = MACRO_IF;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
+            //2.2.2æ ˆé¡¶å•å…ƒä¸ºWHILE
+            else if (pTopNodeData->ucType == MACRO_WHILE)
+            {
+                //æ ˆé¡¶WHILEå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dIFä¸ºçœŸ
+                    if (!isZero(pSScan->dIF))
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶WHILEå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->ucType = MACRO_IF;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
+        }
 
-			}
-			//µ±Ç°dIFÎª¼Ù
-			else
-			{
-				pCurrNodeData->ucType = MACRO_IF;
-				pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
+        //3.
+        if (pCurrNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 1;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-			}
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dIFÎªÕæ
-					if (!isZero(pSScan->dIF))
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->ucType = MACRO_IF;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-			}
-			//2.2.2Õ»¶¥µ¥ÔªÎªWHILE
-			else if (pTopNodeData->ucType == MACRO_WHILE)
-			{
-				//Õ»¶¥WHILEµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dIFÎªÕæ
-					if (!isZero(pSScan->dIF))
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥WHILEµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->ucType = MACRO_IF;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-
-			}
-		}
-
-		//3.
-		if (pCurrNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 1;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
         {
             s_cIfAndWhielStepCheck[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-	return -1;
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 int8 assignIF(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//0.¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-		SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-		if(pCurrNodeData == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-			return -1;
-		}
-		memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		//2.¸³Öµµ±Ç°IFµ¥Ôª£¬²¢Ñ¹Èë¿ÉÖ´ĞĞÕ»
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			//µ±Ç°dIFÎªÕæ
-			if (!isZero(pSScan->dIF))
-			{
-				pCurrNodeData->ucType = MACRO_IF;
-				pCurrNodeData->ucExecuteSign = MACRO_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-			//µ±Ç°dIFÎª¼Ù
-			else
-			{
-				pCurrNodeData->ucType = MACRO_IF;
-				pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dIFÎªÕæ
-					if (!isZero(pSScan->dIF))
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->ucType = MACRO_IF;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-			}
-			//2.2.2Õ»¶¥µ¥ÔªÎªWHILE
-			else if (pTopNodeData->ucType == MACRO_WHILE)
-			{
-				//Õ»¶¥WHILEµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dIFÎªÕæ
-					if (!isZero(pSScan->dIF))
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-						pCurrNodeData->ucType = MACRO_IF;
-						pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥WHILEµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->ucType = MACRO_IF;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-
-			}
-		}
-
-		//3.
-		if (pCurrNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 1;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //0.å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+        SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+        if (pCurrNodeData == NULL)
         {
-        	s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return -1;
+        }
+        memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        //2.èµ‹å€¼å½“å‰IFå•å…ƒï¼Œå¹¶å‹å…¥å¯æ‰§è¡Œæ ˆ
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            //å½“å‰dIFä¸ºçœŸ
+            if (!isZero(pSScan->dIF))
+            {
+                pCurrNodeData->ucType = MACRO_IF;
+                pCurrNodeData->ucExecuteSign = MACRO_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+            //å½“å‰dIFä¸ºå‡
+            else
+            {
+                pCurrNodeData->ucType = MACRO_IF;
+                pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dIFä¸ºçœŸ
+                    if (!isZero(pSScan->dIF))
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->ucType = MACRO_IF;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
+            //2.2.2æ ˆé¡¶å•å…ƒä¸ºWHILE
+            else if (pTopNodeData->ucType == MACRO_WHILE)
+            {
+                //æ ˆé¡¶WHILEå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dIFä¸ºçœŸ
+                    if (!isZero(pSScan->dIF))
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->ucType = MACRO_IF;
+                        pCurrNodeData->ucExecuteSign = MACRO_NOT_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶WHILEå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->ucType = MACRO_IF;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        //3.
+        if (pCurrNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 1;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-	return -1;
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 
 int8 checkELSEIF(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª Âú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒ æ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œ
+                else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
+                {
+                    //å½“å‰dELSEIFä¸ºçœŸ
+                    if (!isZero(pSScan->dELSEIF))
+                    {
+                        pTopNodeData->ucExecuteSign = MACRO_OK;
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
 
+        //3.
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞ
-				else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
-				{
-					//µ±Ç°dELSEIFÎªÕæ
-					if (!isZero(pSScan->dELSEIF))
-					{
-						pTopNodeData->ucExecuteSign = MACRO_OK;
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ½ûÖ¹Ö´ĞĞ
-				else
-				{
-
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-
-		//3.
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
         {
             s_cIfAndWhielStepCheck[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
     return -1;
 }
 int8 assignELSEIF(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª Âú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
-
-
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞ
-				else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
-				{
-					//µ±Ç°dELSEIFÎªÕæ
-					if (!isZero(pSScan->dELSEIF))
-					{
-						pTopNodeData->ucExecuteSign = MACRO_OK;
-					}
-					//µ±Ç°dIFÎª¼Ù
-					else
-					{
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ½ûÖ¹Ö´ĞĞ
-				else
-				{
-
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-
-		//3.
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
         {
-        	s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-   return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒ æ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œ
+                else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
+                {
+                    //å½“å‰dELSEIFä¸ºçœŸ
+                    if (!isZero(pSScan->dELSEIF))
+                    {
+                        pTopNodeData->ucExecuteSign = MACRO_OK;
+                    }
+                    //å½“å‰dIFä¸ºå‡
+                    else
+                    {
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+
+        //3.
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 
 int8 checkELSE(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª Âú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞ
-				else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_OK;
-				}
-				//Õ»¶¥IFµ¥Ôª ½ûÖ¹Ö´ĞĞ
-				else
-				{
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒ æ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œ
+                else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_OK;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
 
-		//3.
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+        //3.
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
         {
             s_cIfAndWhielStepCheck[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
     return -1;
 }
 int8 assignELSE(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª Âú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞ
-				else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
-				{
-					pTopNodeData->ucExecuteSign = MACRO_OK;
-				}
-				//Õ»¶¥IFµ¥Ôª ½ûÖ¹Ö´ĞĞ
-				else
-				{
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-
-		//3.
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
         {
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-   return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒ æ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œ
+                else if (pTopNodeData->ucExecuteSign == MACRO_NOT_OK)
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_OK;
+                }
+                //æ ˆé¡¶IFå•å…ƒ ç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+
+        //3.
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 
 int8 checkENDIF(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª³öÕ»
-				removeNode(pCurrEnableStack, 0, FALSE);
-				return 1;
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-	}
-	return -1;
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒå‡ºæ ˆ
+                removeNode(pCurrEnableStack, 0, FALSE);
+                return 1;
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 int8 assignENDIF(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//Õ»¶¥IFµ¥Ôª³öÕ»
-				removeNode(pCurrEnableStack, 0, FALSE);
-				return 1;
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-	}
-   return -1;
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIF
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //æ ˆé¡¶IFå•å…ƒå‡ºæ ˆ
+                removeNode(pCurrEnableStack, 0, FALSE);
+                return 1;
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
 }
 
 int8 checkWHILE(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.1Õ»¶¥Îª¿Õ£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-		if (pCurrEnableStack->cSize == 0)
-		{
-			//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-			SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-			if(pCurrNodeData == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				return -1;
-			}
-			memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-			pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+        //2.1æ ˆé¡¶ä¸ºç©ºï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+        if (pCurrEnableStack->cSize == 0)
+        {
+            //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+            SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+            if (pCurrNodeData == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                return -1;
+            }
+            memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+            pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
 
-			//µ±Ç°dWHILEÎªÕæ
-			if (!isZero(pSScan->dWHILE))
-			{
-				pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-				pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-				pCurrNodeData->ucType = MACRO_WHILE;
-				pCurrNodeData->ucExecuteSign = MACRO_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-			//µ±Ç°dWHILEÎª¼Ù
-			else
-			{
-				pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-				pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-				pCurrNodeData->ucType = MACRO_WHILE;
-				pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-				SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-				if(pCurrNodeData == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
-				memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-				pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+            //å½“å‰dWHILEä¸ºçœŸ
+            if (!isZero(pSScan->dWHILE))
+            {
+                pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                pCurrNodeData->ucType = MACRO_WHILE;
+                pCurrNodeData->ucExecuteSign = MACRO_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+            //å½“å‰dWHILEä¸ºå‡
+            else
+            {
+                pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                pCurrNodeData->ucType = MACRO_WHILE;
+                pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIFï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+                SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+                if (pCurrNodeData == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+                memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+                pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
 
-				//Õ»¶¥IFµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dWHILEÎªÕæ
-					if (!isZero(pSScan->dWHILE))
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dWHILEÎª¼Ù
-					else
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-					pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-					pCurrNodeData->ucType = MACRO_WHILE;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-			}
+                //æ ˆé¡¶IFå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dWHILEä¸ºçœŸ
+                    if (!isZero(pSScan->dWHILE))
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dWHILEä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                    pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                    pCurrNodeData->ucType = MACRO_WHILE;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
 
-			//2.2.2Õ»¶¥µ¥ÔªÎªWHILE£¬ÇÒÓëµ±Ç°WHILEÎªÍ¬Ò»µ¥Ôª£¬Ôò²»ĞèÒª¿ª±ÙÕ»½ÚµãÄÚ´æ£¬½öĞŞ¸ÄÕ»¶¥µ¥Ôª
-			else if (pTopNodeData->ucType == MACRO_WHILE && pTopNodeData->unLineNum == pSGetTextStateInfo->unCurrLineNum)
-			{
-				//µ±Ç°dWHILEÎªÕæ
-				if (!isZero(pSScan->dWHILE))
-				{
-					pTopNodeData->ucExecuteSign = MACRO_OK;
-				}
-				//µ±Ç°dWHILEÎª¼Ù
-				else
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
-					if (pTopNodeData->unEndLineNum != UNASSIGNED_VALUE)
-					{
-						pSGetTextStateInfo->unGetLineNum = pTopNodeData->unEndLineNum;
-						pSGetTextStateInfo->ucOriStrIndex = 0;
-						return 1;
-					}
-					//Ó¦¸Ã²»´æÔÚ
-					else
-					{
-						parseGCodeErrorB(0, 0);
-						return 1;
-					}
+            //2.2.2æ ˆé¡¶å•å…ƒä¸ºWHILEï¼Œä¸”ä¸å½“å‰WHILEä¸ºåŒä¸€å•å…ƒï¼Œåˆ™ä¸éœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹å†…å­˜ï¼Œä»…ä¿®æ”¹æ ˆé¡¶å•å…ƒ
+            else if (pTopNodeData->ucType == MACRO_WHILE &&
+                     pTopNodeData->unLineNum == pSGetTextStateInfo->unCurrLineNum)
+            {
+                //å½“å‰dWHILEä¸ºçœŸ
+                if (!isZero(pSScan->dWHILE))
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_OK;
+                }
+                //å½“å‰dWHILEä¸ºå‡
+                else
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                    if (pTopNodeData->unEndLineNum != UNASSIGNED_VALUE)
+                    {
+                        pSGetTextStateInfo->unGetLineNum = pTopNodeData->unEndLineNum;
+                        pSGetTextStateInfo->ucOriStrIndex = 0;
+                        return 1;
+                    }
+                    //åº”è¯¥ä¸å­˜åœ¨
+                    else
+                    {
+                        parseGCodeErrorB(0, 0);
+                        return 1;
+                    }
+                }
+            }
 
-				}
+            //2.2.3æ ˆé¡¶å•å…ƒä¸ºWHILEï¼Œä¸”ä¸å½“å‰WHILEä¸ºä¸åŒå•å…ƒï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+            else if (pTopNodeData->ucType == MACRO_WHILE &&
+                     pTopNodeData->unLineNum != pSGetTextStateInfo->unCurrLineNum)
+            {
+                //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+                SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+                if (pCurrNodeData == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+                memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+                pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
 
-			}
+                //æ ˆé¡¶WHILEå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dWHILEä¸ºçœŸ
+                    if (!isZero(pSScan->dWHILE))
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dWHILEä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                        insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    }
+                }
+            }
+        }
 
-			//2.2.3Õ»¶¥µ¥ÔªÎªWHILE£¬ÇÒÓëµ±Ç°WHILEÎª²»Í¬µ¥Ôª£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-			else if (pTopNodeData->ucType == MACRO_WHILE && pTopNodeData->unLineNum != pSGetTextStateInfo->unCurrLineNum)
-			{
-				//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-				SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-				if(pCurrNodeData == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
-				memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-				pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+        //3.åˆ¤æ–­æ˜¯å¦WHILEæ˜¯å¦èµ‹å€¼å®Œæˆ
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-				//Õ»¶¥WHILEµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dWHILEÎªÕæ
-					if (!isZero(pSScan->dWHILE))
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dWHILEÎª¼Ù
-					else
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-						insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					}
-				}
-
-
-			}
-		}
-
-		//3.ÅĞ¶ÏÊÇ·ñWHILEÊÇ·ñ¸³ÖµÍê³É
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
         {
             s_cIfAndWhielStepCheck[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
 }
 int8 assignWHILE(uint8 ucChannelNum, SScan* pSScan, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		//2.1Õ»¶¥Îª¿Õ£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-		if (pCurrEnableStack->cSize == 0)
-		{
-			//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-			SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-			if(pCurrNodeData == NULL)
-			{
-				parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				return -1;
-			}
-			memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-			pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
-
-			//µ±Ç°dWHILEÎªÕæ
-			if (!isZero(pSScan->dWHILE))
-			{
-				pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-				pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-				pCurrNodeData->ucType = MACRO_WHILE;
-				pCurrNodeData->ucExecuteSign = MACRO_OK;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-			//µ±Ç°dWHILEÎª¼Ù
-			else
-			{
-				pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-				pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-				pCurrNodeData->ucType = MACRO_WHILE;
-				pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-				//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-				if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-				{
-				    freeGCode(pCurrNodeData);
-				    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-				    return -1;
-				}
-			}
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªIF£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-			if (pTopNodeData->ucType == MACRO_IF)
-			{
-				//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-				SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-				if(pCurrNodeData == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
-				memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-				pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
-
-				//Õ»¶¥IFµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dWHILEÎªÕæ
-					if (!isZero(pSScan->dWHILE))
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dWHILEÎª¼Ù
-					else
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-				//Õ»¶¥IFµ¥Ôª ²»Âú×ãÖ´ĞĞor½ûÖ¹Ö´ĞĞ
-				else
-				{
-					pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-					pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-					pCurrNodeData->ucType = MACRO_WHILE;
-					pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-					//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-					if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-					{
-					    freeGCode(pCurrNodeData);
-					    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					    return -1;
-					}
-				}
-			}
-
-			//2.2.2Õ»¶¥µ¥ÔªÎªWHILE£¬ÇÒÓëµ±Ç°WHILEÎªÍ¬Ò»µ¥Ôª£¬Ôò²»ĞèÒª¿ª±ÙÕ»½ÚµãÄÚ´æ£¬½öĞŞ¸ÄÕ»¶¥µ¥Ôª
-			else if (pTopNodeData->ucType == MACRO_WHILE && pTopNodeData->unLineNum == pSGetTextStateInfo->unCurrLineNum)
-			{
-				//µ±Ç°dWHILEÎªÕæ
-				if (!isZero(pSScan->dWHILE))
-				{
-					pTopNodeData->ucExecuteSign = MACRO_OK;
-				}
-				//µ±Ç°dWHILEÎª¼Ù
-				else
-				{
-					pTopNodeData->ucExecuteSign = MACRO_FORBID;
-					if (pTopNodeData->unEndLineNum != UNASSIGNED_VALUE)
-					{
-						pSGetTextStateInfo->unGetLineNum = pTopNodeData->unEndLineNum;
-						pSGetTextStateInfo->ucOriStrIndex = 0;
-						return 1;
-					}
-					//Ó¦¸Ã²»´æÔÚ
-					else
-					{
-						parseGCodeErrorB(0, 0);
-						return 1;
-					}
-
-				}
-
-			}
-
-			//2.2.3Õ»¶¥µ¥ÔªÎªWHILE£¬ÇÒÓëµ±Ç°WHILEÎª²»Í¬µ¥Ôª£¬ĞèÒª¿ª±ÙÕ»½Úµã£¬¸³Öµºó²¢Ñ¹Èë
-			else if (pTopNodeData->ucType == MACRO_WHILE && pTopNodeData->unLineNum != pSGetTextStateInfo->unCurrLineNum)
-			{
-				//¿ª±Ù¿ÉÖ´ĞĞÕ»½ÚµãÄÚ´æ
-				SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
-				if(pCurrNodeData == NULL)
-				{
-					parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-					return -1;
-				}
-				memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
-				pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
-
-				//Õ»¶¥WHILEµ¥ÔªÂú×ãÖ´ĞĞ
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//µ±Ç°dWHILEÎªÕæ
-					if (!isZero(pSScan->dWHILE))
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_OK;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-					//µ±Ç°dWHILEÎª¼Ù
-					else
-					{
-						pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
-						pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
-						pCurrNodeData->ucType = MACRO_WHILE;
-						pCurrNodeData->ucExecuteSign = MACRO_FORBID;
-						//insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
-						if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
-						{
-						    freeGCode(pCurrNodeData);
-						    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-						    return -1;
-						}
-					}
-				}
-			
-
-
-			}
-		}
-
-		//3.ÅĞ¶ÏÊÇ·ñWHILEÊÇ·ñ¸³ÖµÍê³É
-		SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-		if (pTopNodeData->ucExecuteSign == MACRO_OK)
-		{
-			return 1;
-		}
-		else
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 1;
-			return 0;
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-		}
-        else if(cRet != 0)
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
         {
-        	s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        //2.1æ ˆé¡¶ä¸ºç©ºï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+        if (pCurrEnableStack->cSize == 0)
+        {
+            //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+            SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+            if (pCurrNodeData == NULL)
+            {
+                parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                return -1;
+            }
+            memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+            pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+
+            //å½“å‰dWHILEä¸ºçœŸ
+            if (!isZero(pSScan->dWHILE))
+            {
+                pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                pCurrNodeData->ucType = MACRO_WHILE;
+                pCurrNodeData->ucExecuteSign = MACRO_OK;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+            //å½“å‰dWHILEä¸ºå‡
+            else
+            {
+                pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                pCurrNodeData->ucType = MACRO_WHILE;
+                pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                {
+                    freeGCode(pCurrNodeData);
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+            }
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºIFï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+            if (pTopNodeData->ucType == MACRO_IF)
+            {
+                //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+                SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+                if (pCurrNodeData == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+                memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+                pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+
+                //æ ˆé¡¶IFå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dWHILEä¸ºçœŸ
+                    if (!isZero(pSScan->dWHILE))
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dWHILEä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+                //æ ˆé¡¶IFå•å…ƒ ä¸æ»¡è¶³æ‰§è¡Œorç¦æ­¢æ‰§è¡Œ
+                else
+                {
+                    pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                    pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                    pCurrNodeData->ucType = MACRO_WHILE;
+                    pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                    //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                    if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                    {
+                        freeGCode(pCurrNodeData);
+                        parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                        return -1;
+                    }
+                }
+            }
+
+            //2.2.2æ ˆé¡¶å•å…ƒä¸ºWHILEï¼Œä¸”ä¸å½“å‰WHILEä¸ºåŒä¸€å•å…ƒï¼Œåˆ™ä¸éœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹å†…å­˜ï¼Œä»…ä¿®æ”¹æ ˆé¡¶å•å…ƒ
+            else if (pTopNodeData->ucType == MACRO_WHILE &&
+                     pTopNodeData->unLineNum == pSGetTextStateInfo->unCurrLineNum)
+            {
+                //å½“å‰dWHILEä¸ºçœŸ
+                if (!isZero(pSScan->dWHILE))
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_OK;
+                }
+                //å½“å‰dWHILEä¸ºå‡
+                else
+                {
+                    pTopNodeData->ucExecuteSign = MACRO_FORBID;
+                    if (pTopNodeData->unEndLineNum != UNASSIGNED_VALUE)
+                    {
+                        pSGetTextStateInfo->unGetLineNum = pTopNodeData->unEndLineNum;
+                        pSGetTextStateInfo->ucOriStrIndex = 0;
+                        return 1;
+                    }
+                    //åº”è¯¥ä¸å­˜åœ¨
+                    else
+                    {
+                        parseGCodeErrorB(0, 0);
+                        return 1;
+                    }
+                }
+            }
+
+            //2.2.3æ ˆé¡¶å•å…ƒä¸ºWHILEï¼Œä¸”ä¸å½“å‰WHILEä¸ºä¸åŒå•å…ƒï¼Œéœ€è¦å¼€è¾Ÿæ ˆèŠ‚ç‚¹ï¼Œèµ‹å€¼åå¹¶å‹å…¥
+            else if (pTopNodeData->ucType == MACRO_WHILE &&
+                     pTopNodeData->unLineNum != pSGetTextStateInfo->unCurrLineNum)
+            {
+                //å¼€è¾Ÿå¯æ‰§è¡Œæ ˆèŠ‚ç‚¹å†…å­˜
+                SMacroExecutable* pCurrNodeData = mallocGCode(sizeof(SMacroExecutable), ORAM_NUM309);
+                if (pCurrNodeData == NULL)
+                {
+                    parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                    return -1;
+                }
+                memset(pCurrNodeData, 0, sizeof(SMacroExecutable));
+                pCurrNodeData->unEndLineNum == UNASSIGNED_VALUE;
+
+                //æ ˆé¡¶WHILEå•å…ƒæ»¡è¶³æ‰§è¡Œ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //å½“å‰dWHILEä¸ºçœŸ
+                    if (!isZero(pSScan->dWHILE))
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_OK;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                    //å½“å‰dWHILEä¸ºå‡
+                    else
+                    {
+                        pCurrNodeData->unLineNum = pSGetTextStateInfo->unCurrLineNum;
+                        pCurrNodeData->unEndLineNum = UNASSIGNED_VALUE;
+                        pCurrNodeData->ucType = MACRO_WHILE;
+                        pCurrNodeData->ucExecuteSign = MACRO_FORBID;
+                        //insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308);
+                        if (insertList(pCurrEnableStack, 0, pCurrNodeData, ORAM_NUM308) == FALSE)
+                        {
+                            freeGCode(pCurrNodeData);
+                            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+                            return -1;
+                        }
+                    }
+                }
+            }
+        }
+
+        //3.åˆ¤æ–­æ˜¯å¦WHILEæ˜¯å¦èµ‹å€¼å®Œæˆ
+        SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+        if (pTopNodeData->ucExecuteSign == MACRO_OK)
+        {
+            return 1;
+        }
+        else
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 1;
+            return 0;
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+        }
+        else if (cRet != 0)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
             parseGCodeErrorB(0, 0);
             return -1;
-		}
-		return cRet;
-		break;
-	}
-	default:
-		break;
-	}
-
+        }
+        return cRet;
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 int8 checkENDWHILE(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepCheck[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepCheck[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_SYNTAX, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªWHILE
-			if (pTopNodeData->ucType == MACRO_WHILE)
-			{
-				//2.2.1.1Õ»¶¥µ¥ÔªÂú×ãÖ´ĞĞ£¬ÔòĞèÒª±ê¼ÇENDWHILEĞĞºÅ ²¢ »Øµ½Õ»¶¥WHILEËùÔÚ³ÌĞò¶Î
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//±ê¼ÇENDWHILEĞĞºÅ
-					pTopNodeData->unEndLineNum = pSGetTextStateInfo->unCurrLineNum;
-					//»Øµ½Õ»¶¥WHILEËùÔÚ³ÌĞò¶Î
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºWHILE
+            if (pTopNodeData->ucType == MACRO_WHILE)
+            {
+                //2.2.1.1æ ˆé¡¶å•å…ƒæ»¡è¶³æ‰§è¡Œï¼Œåˆ™éœ€è¦æ ‡è®°ENDWHILEè¡Œå· å¹¶ å›åˆ°æ ˆé¡¶WHILEæ‰€åœ¨ç¨‹åºæ®µ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //æ ‡è®°ENDWHILEè¡Œå·
+                    pTopNodeData->unEndLineNum = pSGetTextStateInfo->unCurrLineNum;
+                    //å›åˆ°æ ˆé¡¶WHILEæ‰€åœ¨ç¨‹åºæ®µ
 
-					pSGetTextStateInfo->unGetLineNum = pTopNodeData->unLineNum;
-					pSGetTextStateInfo->ucOriStrIndex = 0;
-					return 1;
+                    pSGetTextStateInfo->unGetLineNum = pTopNodeData->unLineNum;
+                    pSGetTextStateInfo->ucOriStrIndex = 0;
+                    return 1;
+                }
+                //2.2.1.1æ ˆé¡¶å•å…ƒç¦æ­¢æ‰§è¡Œï¼Œåˆ™éœ€è¦ç»§ç»­è·å–
+                else
+                {
+                    removeNode(pCurrEnableStack, 0, FALSE);
+                    return 1;
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-				}
-				//2.2.1.1Õ»¶¥µ¥Ôª½ûÖ¹Ö´ĞĞ£¬ÔòĞèÒª¼ÌĞø»ñÈ¡
-				else
-				{
-					removeNode(pCurrEnableStack, 0, FALSE);
-					return 1;
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+        }
+        else if (cRet < 0)
+        {
+            s_cIfAndWhielStepCheck[ucChannelNum] = 0;
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        return cRet;
+        break;
 
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_SYNTAX, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-		}
-		else if(cRet < 0)
-		{
-			s_cIfAndWhielStepCheck[ucChannelNum] = 0;
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		return cRet;
-		break;
-
-		break;
-	}
-	default:
-		break;
-	}
-	return 1;
+        break;
+    }
+    default:
+        break;
+    }
+    return 1;
 }
 int8 assignENDWHILE(uint8 ucChannelNum, SGetTextStateInfo* pSGetTextStateInfo)
 {
-	switch (s_cIfAndWhielStepAssign[ucChannelNum])
-	{
-	case 0:
-	{
-		//1.»ñÈ¡µ±Ç°¿ÉÖ´ĞĞÕ»
-		SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
-		if (pCurrEnableStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+    switch (s_cIfAndWhielStepAssign[ucChannelNum])
+    {
+    case 0:
+    {
+        //1.è·å–å½“å‰å¯æ‰§è¡Œæ ˆ
+        SList* pCurrEnableStack = getCurrEnableStack(GC_ASSIGN, ucChannelNum);
+        if (pCurrEnableStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-		//2.ĞŞ¸ÄÕ»¶¥IFµ¥ÔªµÄ¿ÉÖ´ĞĞ±êÖ¾
-		//2.1Õ»¶¥Îª¿Õ
-		if (pCurrEnableStack->cSize == 0)
-		{
-			parseGCodeErrorB(0, 0);
-			return -1;
-		}
-		//2.2Õ»¶¥²»Îª¿Õ
-		else
-		{
-			SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
-			//2.2.1Õ»¶¥µ¥ÔªÎªWHILE
-			if (pTopNodeData->ucType == MACRO_WHILE)
-			{
-				//2.2.1.1Õ»¶¥µ¥ÔªÂú×ãÖ´ĞĞ£¬ÔòĞèÒª±ê¼ÇENDWHILEĞĞºÅ ²¢ »Øµ½Õ»¶¥WHILEËùÔÚ³ÌĞò¶Î
-				if (pTopNodeData->ucExecuteSign == MACRO_OK)
-				{
-					//±ê¼ÇENDWHILEĞĞºÅ
-					pTopNodeData->unEndLineNum = pSGetTextStateInfo->unCurrLineNum;
-					//»Øµ½Õ»¶¥WHILEËùÔÚ³ÌĞò¶Î
+        //2.ä¿®æ”¹æ ˆé¡¶IFå•å…ƒçš„å¯æ‰§è¡Œæ ‡å¿—
+        //2.1æ ˆé¡¶ä¸ºç©º
+        if (pCurrEnableStack->cSize == 0)
+        {
+            parseGCodeErrorB(0, 0);
+            return -1;
+        }
+        //2.2æ ˆé¡¶ä¸ä¸ºç©º
+        else
+        {
+            SMacroExecutable* pTopNodeData = FindNodeData(pCurrEnableStack, 0);
+            //2.2.1æ ˆé¡¶å•å…ƒä¸ºWHILE
+            if (pTopNodeData->ucType == MACRO_WHILE)
+            {
+                //2.2.1.1æ ˆé¡¶å•å…ƒæ»¡è¶³æ‰§è¡Œï¼Œåˆ™éœ€è¦æ ‡è®°ENDWHILEè¡Œå· å¹¶ å›åˆ°æ ˆé¡¶WHILEæ‰€åœ¨ç¨‹åºæ®µ
+                if (pTopNodeData->ucExecuteSign == MACRO_OK)
+                {
+                    //æ ‡è®°ENDWHILEè¡Œå·
+                    pTopNodeData->unEndLineNum = pSGetTextStateInfo->unCurrLineNum;
+                    //å›åˆ°æ ˆé¡¶WHILEæ‰€åœ¨ç¨‹åºæ®µ
 
-					pSGetTextStateInfo->unGetLineNum = pTopNodeData->unLineNum;
-					pSGetTextStateInfo->ucOriStrIndex = 0;
-					return 1;
+                    pSGetTextStateInfo->unGetLineNum = pTopNodeData->unLineNum;
+                    pSGetTextStateInfo->ucOriStrIndex = 0;
+                    return 1;
+                }
+                //2.2.1.1æ ˆé¡¶å•å…ƒç¦æ­¢æ‰§è¡Œï¼Œåˆ™éœ€è¦ç»§ç»­è·å–
+                else
+                {
+                    removeNode(pCurrEnableStack, 0, FALSE);
+                    return 1;
+                }
+            }
+            //2.2.2æ ˆé¡¶ä¸ä¸ºIF
+            else
+            {
+                parseGCodeErrorB(0, 0);
+                return -1;
+            }
+        }
+        break;
+    }
+    case 1:
+    {
+        //è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
 
-				}
-				//2.2.1.1Õ»¶¥µ¥Ôª½ûÖ¹Ö´ĞĞ£¬ÔòĞèÒª¼ÌĞø»ñÈ¡
-				else
-				{
-					removeNode(pCurrEnableStack, 0, FALSE);
-					return 1;
-				}
-			}
-			//2.2.2Õ»¶¥²»ÎªIF
-			else
-			{
-				parseGCodeErrorB(0, 0);
-				return -1;
-			}
-		}
-		break;
-	}
-	case 1:
-	{
-		//»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
+        int8 cRet = 0;
+        cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
+        if (cRet == 1)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+        }
+        else if (cRet < 0)
+        {
+            s_cIfAndWhielStepAssign[ucChannelNum] = 0;
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        return cRet;
+        break;
 
-		int8 cRet = 0;
-		cRet = findIfAndWhileSegment(GC_ASSIGN, ucChannelNum, pCurrProgram, pSGetTextStateInfo);
-		if (cRet == 1)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-		}
-		else if(cRet < 0)
-		{
-			s_cIfAndWhielStepAssign[ucChannelNum] = 0;
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		return cRet;
-		break;
-
-		break;
-	}
-	default:
-		break;
-	}
-	return 1;
-
+        break;
+    }
+    default:
+        break;
+    }
+    return 1;
 }
-
-
-
-

@@ -10,5 +10,4 @@ int8 CheckG21(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeP
 int8 AssignG20(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG21(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 #endif

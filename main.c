@@ -1,80 +1,73 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
-#include "Gcode.h"            //G´úÂë½âÎö
+
+#include "Gcode.h"
 #include "Channel.h"
 #include "ErrorFunction.h"
 #include "RunAPI.h"
 #include "SysParaAPI.h"
 #include "coordAPI.h"
 #include "motionAPI.h"
-#include "ToolCompensation.h" //µ¶²¹
+#include "ToolCompensation.h"
 #include "toolAxis.h"
 
-
-FILE *pWriteFid; ///<ÎÄ¼þÖ¸Õë
-
+FILE* pWriteFid;
 extern uint32 timeji;
 
-////G33±£´æÊý¾ÝÓÃÎÄ¼þÖ¸Õë
 bool isRunOver(void)
 {
     for (int i = 0; i < CHANNEL_NUM_MAX; i++)
     {
-		if (g_SChannel[i].ucChannelStatus != SYS_IDLE ||
-			g_SChannel[i].SSpindle.pSSpindleAxis->ucInpStatus != INP_FINISHED)
+        if (g_SChannel[i].ucChannelStatus != SYS_IDLE ||
+            g_SChannel[i].SSpindle.pSSpindleAxis->ucInpStatus != INP_FINISHED)
             return FALSE;
     }
     return TRUE;
 }
 
-void channelPrint(struct SChannel *pSChannel, uint8 *ucAxisArray, int nArraySize, int nCounter)
+// æ²¿ç”¨åŽŸç»ˆç«¯æ‰“å°ï¼Œæ˜¾ç¤ºå‘¨æœŸã€è¡Œå·ã€XYZ åæ ‡å’Œè¿›ç»™ã€‚
+void channelPrint(struct SChannel* pSChannel, uint8* ucAxisArray, int nArraySize, int nCounter)
 {
     SPointDouble SRealTimePoint;
     int i = 0;
 
-	getRealTimePoint(SRealTimePoint.dArray, AXIS_NUM_MAX, pSChannel->pMapAxisArray, NULL);
+    getRealTimePoint(SRealTimePoint.dArray, AXIS_NUM_MAX, pSChannel->pMapAxisArray, NULL);
     if (nCounter > 0)
     {
         printf("%5.d\t", nCounter);
     }
-
     if (pSChannel->ucChannelStatus == SYS_IDLE)
     {
-        printf("*Íê³É*\t");
+        printf("*å®Œæˆ*\t");
     }
     else
     {
-        printf("ÐÐºÅ:%d\t ", pSChannel->SPreProcess.unGCodeLineNum);
-        //printf("Ö¸ÁîÀàÐÍ:%d ", getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR));
+        printf("è¡Œå·:%d\t ", pSChannel->SPreProcess.unGCodeLineNum);
     }
-
     for (i = 0; i < nArraySize; i++)
     {
         if (AXIS_NULL != pSChannel->pMapAxisArray[ucAxisArray[i]])
         {
-                printf("%c:", (char)(ucAxisArray[i] + 88));
-                printf("%.3lf\t", SRealTimePoint.dArray[ucAxisArray[i]]);
-            }
+            printf("%c:", (char)(ucAxisArray[i] + 88));
+            printf("%.3lf\t", SRealTimePoint.dArray[ucAxisArray[i]]);
         }
-    printf("½ø¸ø:%.3lf\t", getCurrentRealFeedRate(pSChannel->ucChannelNum, NULL));
     }
+    printf("è¿›ç»™:%.3lf\t", getCurrentRealFeedRate(pSChannel->ucChannelNum, NULL));
+}
 
-    //printf("BÖá×ªËÙ:%.3lf\t", pSChannel->SRun.sAxisDeltaPulse[g_SToolAxisInfo.pSToolAxis->ucAxis] * g_SSystemPara.SAxisPara[pSChannel->pMapAxisArray[g_SToolAxisInfo.pSToolAxis->ucAxis]].dPulseToMm * 60 * 1000 / DEGREE_OF_CIRCLE);
-
-//´òÓ¡Êä³öÎÄ¼þµ½testÎÄ±¾ÖÐ
-void channelPrintf(struct SChannel *pSChannel, uint8 *ucAxisArray, int nArraySize, int nCounter)
+void channelPrintf(struct SChannel* pSChannel, uint8* ucAxisArray, int nArraySize, int nCounter)
 {
     fprintf(pWriteFid, "%d,%u", nCounter, pSChannel->SPreProcess.unGCodeLineNum + 1);
     for (int i = 0; i < nArraySize; i++)
         fprintf(pWriteFid, ",%.9f", getMachCoordDouble(pSChannel->ucChannelNum, ucAxisArray[i]));
     fprintf(pWriteFid, "\n");
 }
-//  Õý³£Á÷³Ì
-DWORD WINAPI PROCESST1(LPVOID param) //Ïß³Ì2º¯ÊýÄÚÈÝ-------1msÖÐ¶Ï
+
+DWORD WINAPI PROCESST1(LPVOID param)
 {
     int counter = 0;
-	uint8 ucAxisArray[3] = { AXIS_X, AXIS_Y,AXIS_Z};
+    uint8 ucAxisArray[3] = {AXIS_X, AXIS_Y, AXIS_Z};
     (void)param;
     channelPrintf(&g_SChannel[0], ucAxisArray, 3, counter);
     while (1)
@@ -89,421 +82,66 @@ DWORD WINAPI PROCESST1(LPVOID param) //Ïß³Ì2º¯ÊýÄÚÈÝ-------1msÖÐ¶Ï
         counter++;
         for (int i = 0; i < CHANNEL_NUM_MAX; i++)
         {
-            interruptFuncAPI(i); // ÖÐ¶ÏÖ´ÐÐ
+            interruptFuncAPI(i);
             channelPrint(&g_SChannel[i], ucAxisArray, 3, counter);
             channelPrintf(&g_SChannel[i], ucAxisArray, 3, counter);
         }
         printf("\n");
-        //if (counter == 120)
-        //{
-        //	if (g_SChannel[0].ucChannelStatus == SYS_PAUSE)
-        //	{
-        //		struct SInput SInputData;//¾Ö²¿±äÁ¿
-        //		memset(&SInputData, 0, sizeof(struct SInput));//SInputData Îª¾Ö²¿±äÁ¿ Ðè³õÊ¼»¯
-        //		SInputData.dVs = 200.0 / 60 / 1000; //ÆðÊ¼ËÙ¶È(mm/ms)
-        //		SInputData.dFeedrate = 3000.0 / 60 / 1000;			//½ø¸øËÙ¶È(mm/ms)
-        //		SInputData.dPrimalVe = 200.0 / 60 / 1000;//×îÖÕËÙ¶È(mm/ms)
-        //		SInputData.dFeedRatio = -1;
-        //		SInputData.ucAccVelPlanType = VEL_PLAN_S3_CURVE;//¼ÓËÙ¹æ»®ÀàÐÍ		T : VEL_PLAN_T_CURVE   S3 : VEL_PLAN_S3_CURVE   S4 : VEL_PLAN_S4_CURVE
-        //		SInputData.ucDecVelPlanType = VEL_PLAN_S3_CURVE;//¼õËÙ¹æ»®ÀàÐÍ		T : VEL_PLAN_T_CURVE   S3 : VEL_PLAN_S3_CURVE   S4 : VEL_PLAN_S4_CURVE
-        //		SInputData.ucValStatus = 5;
-        //		SInputData.dAcc = 0.001;//¼ÓËÙ¶È (mm/ms2)
-        //		SInputData.dDec = 0.001;//¼õËÙ¶È (mm/ms2)
-
-        //		getRealTimePointByChannel(0, SInputData.SStartPoint.dArray);
-
-        //		///*************************¾ø¶Ô×ø±ê*******************************/
-        //		//Ö±½ÓÖ¸¶¨ÖÕµã×ø±ê
-        //		SInputData.SEndPoint.dArray[AXIS_X] = 5;
-        //		SInputData.SEndPoint.dArray[AXIS_Z] = 5;
-        //		applyMotionParaAPI(0, &SInputData, 0);
-        //	}
-        //}
-        //if (counter == 1000)
-        //{
-        //	runButtonAPI(0, FALSE);
-        //}
-        //if (counter == 1000)
-        //{
-        //	resetButtonAPI(0);
-        //}
-        //if (counter == 1000)
-        //{
-        //	simulaButtonAPI(0);
-        //	simulaButtonAPI(1);
-        //}
-        //if (counter == 1200)
-        //{
-        //	changeFeedRatioAPI(0, 0.99, FALSE, 1);
-        //	changeFeedRatioAPI(1, 0.99, FALSE, 1);
-        //}
-        //if (counter == 50)
-        //{
-        //	simulaButtonAPI(0);
-        //}
-        //if (counter == 1500)
-        //{
-        //	g_SChannel[0].SRun.dHandWheelSpeedRatio = 0.8;
-        //}
-        //if (counter == 2500)
-        //{
-        //	g_SChannel[0].SRun.dHandWheelSpeedRatio = 0;
-        //}
-        //if (counter == 3500)
-        //{
-        //	g_SChannel[0].SRun.dHandWheelSpeedRatio = 1.0;
-        //}
         timeji++;
-        machineTimerInterp(0); //¼Ó¹¤¼ÆÊ±Æô¶¯
+        machineTimerInterp(0);
     }
     return 0;
 }
 
 int main(void)
 {
-
-    HANDLE IRQhandle; //Ïß³Ì¾ä±ú
-
+    HANDLE IRQhandle;
     DWORD result = 4;
 
     pWriteFid = fopen("./outputFile/test.txt", "w");
-
-	if (!pWriteFid)
+    if (!pWriteFid)
         return 1;
-				fprintf(pWriteFid, "cycle,program_line,commanded_x_mm,commanded_y_mm,commanded_z_mm\n");
+    fprintf(pWriteFid, "cycle,program_line,commanded_x_mm,commanded_y_mm,commanded_z_mm\n");
     GCODE_OPEN_FILE(0);
 
-    //Ö¸¶¨ÎÄ±¾°¸Àý:´ò¿ª./resouce/O0001.txt
-    //·½·¨1:Áîg_ucNameType = 1£¬²¢ÊäÈë0001
-    //·½·¨2:Áîg_ucNameType = 0£¬²¢ÊäÈëO0001
-    //g_SChannel[0].cG65SystemMacroRun = TRUE;
-    g_ucNameType = 1; //1£º¼ÓO £¬0£º²»¼ÓO  Ê¹ÓÃ×Ó³ÌÐòµ÷ÓÃ±ØÐëÖÃÎª1£¬²âÊÔMDIÓÃ0
-    strcpy(g_cName_C0, "0001"); // °´Ô­·½Ê½¶ÁÈ¡ ./resource/O0001.txt¡£
-    /**************************************************************************************************************************/
+    g_ucNameType = 1;
+    strcpy(g_cName_C0, "0001"); // æŒ‰åŽŸæ–¹å¼è¯»å– ./resource/O0001.txtã€‚
 
-    //inputToolOffset(0, 1, AXIS_X, 60, FALSE);
-    //inputToolOffset(0, 1, AXIS_Z, 20, FALSE);
-    //inputToolOffset(0, 14, AXIS_X, 60, FALSE);
-    //inputToolOffset(0, 1, AXIS_X, 20, FALSE);
-
-    //inputToolNoseNum(0, 1, 0);
-    //inputToolRadius(0, 1, 5);
-    //inputToolOffset(0, 1, AXIS_Z, 10, FALSE);//ÊäÈëµ¶³¤Æ«ÖÃÖµ  Í¨µÀ0 1ºÅµ¶ ZÖá·½ÏòÆ«ÖÃ10
-    //inputToolOffset(0, 2, AXIS_Z, 50, FALSE);
-    //inputToolOffset(0, 3, AXIS_Z, 100, FALSE);
-    //inputToolOffset(1, 2, AXIS_Z, 50, FALSE);
-
-    initMapArray();        //Ó³Éä³õÊ¼»¯£¨Ä£·Â¼ÓÔØFLASH£©
-    initEncoderMapArray(); //³õÊ¼»¯±àÂëÆ÷Ó³Éä	³ÂÃô´Ï	2023/8/1
-    initSystemPara();      //³õÊ¼»¯ÏµÍ³²ÎÊý
+    initMapArray();
+    initEncoderMapArray();
+    initSystemPara();
     initAxisPara();
-    //VSÖ´ÐÐ  Ä£·Â¼ÓÔØFLASH
-    struct SEncoder *pEncoderArrays[ENCODER_NUM_MAX]; //Ö¸ÕëÊý×é
+    struct SEncoder* pEncoderArrays[ENCODER_NUM_MAX];
     for (int i = 0; i < ENCODER_NUM_MAX; i++)
     {
-		pEncoderArrays[i] = (g_SSystemPara.ucEncoderMapArray[0][i] == ENCODER_NULL || g_SSystemPara.ucEncoderMapArray[0][i] > ENCODER_NUM_MAX - 1) ? NULL : &(g_SEncoder[g_SSystemPara.ucEncoderMapArray[0][i]]);
+        pEncoderArrays[i] = (g_SSystemPara.ucEncoderMapArray[0][i] == ENCODER_NULL ||
+                             g_SSystemPara.ucEncoderMapArray[0][i] > ENCODER_NUM_MAX - 1)
+                                ? NULL
+                                : &(g_SEncoder[g_SSystemPara.ucEncoderMapArray[0][i]]);
     }
-    initChannel(&g_SChannel[0], 0, g_SSystemPara.ucAxisMapArray[0], g_SSystemPara.ucPWMAxisMapArray[0], pEncoderArrays); //Í¨µÀ³õÊ¼»¯£¨Ä£·Â¼ÓÔØFLASH£©
-
+    initChannel(&g_SChannel[0], 0, g_SSystemPara.ucAxisMapArray[0], g_SSystemPara.ucPWMAxisMapArray[0],
+                pEncoderArrays); // é€šé“åˆå§‹åŒ–ï¼Œæ²¿ç”¨åŽŸæ¡Œé¢å…¥å£é¡ºåºã€‚
     initToolAxis(&g_SChannel[0], &g_SChannel[0].SSingleAxisArray[TOOL_AXIS]);
-
-    initEditablePara();                                                                       //¿É±à¼­²ÎÊý³õÊ¼»¯£¨Ä£·Â¼ÓÔØFLASH£©
-
-    initAfterLoadSysPara(); //¼ÓÔØÏµÍ³²ÎÊýºóÖ´ÐÐµÄ³õÊ¼»¯
-
-    //·´Ïò¼äÏ¶²¹³¥
-    //initSingleAxisRev(0, INP_GO_AHEAD);
-
-    //g_SSystemPara.SAxisPara[3].dRevClearanceCompDist = 100;
-    //initSingleAxisRev( 3, INP_GO_AHEAD);
-
-    //Ë«±íÂÝ¾à²¹³¥
+    initEditablePara();
+    initAfterLoadSysPara(); // åŠ è½½ç³»ç»Ÿå‚æ•°åŽæ‰§è¡Œçš„åˆå§‹åŒ–ã€‚
     initErrorBuf();
-    /***********G33********************/
 
-    //g_dRealTimePointArray[0] = 60/2.0;  //                 30
-    //inputToolOffset(0, 1, AXIS_X, 60, FALSE);  //-¡·30  -  15
-    //inputToolOffset(0, 2, AXIS_X, 60, FALSE);
-
-    /*	testNewAdd();*/
-    //setToolOffset(0, 1, AXIS_Z, 10);
-    //g_RunMode = MDI_MODE;
     g_RunMode = AUTOMATIC_MODE;
-    //Æô¶¯Í¨µÀ
     if (runButtonAPI(0, FALSE) == 1)
     {
         IRQhandle = CreateThread(NULL, 0, PROCESST1, NULL, 0, NULL);
         if (IRQhandle)
-    {
-
-    while (1) //g_SystemStatus != SYS_IDLE
-    {
-        GCodeRunLoopAPI();
+        {
+            while (1)
+            {
+                GCodeRunLoopAPI();
                 if (isRunOver() || isErrorHasBeenWritten())
-                break;
-        }
+                    break;
+            }
             WaitForSingleObject(IRQhandle, INFINITE);
             GetExitCodeThread(IRQhandle, &result);
-
-    CloseHandle(IRQhandle);
-
-    //fclose(pFile);
-}
-
-//void channelPrint4(struct SChannel* pSChannel, uint8* ucAxisArray, int nArraySize, int nCounter)
-//{
-//	SPointDouble SRealTimePoint;
-//	int i = 0;
-//
-//	getRealTimePoint(&SRealTimePoint, AXIS_NUM_MAX, pSChannel->pMapAxisArray, NULL);
-//
-//	if (nCounter > 0)
-//	{
-//		fprintf(pWriteFid,"%5.d\t", nCounter);
-//	}
-//
-//
-//
-//	if (pSChannel->ucChannelStatus == SYS_IDLE)
-//	{
-//		fprintf(pWriteFid, "*Íê³É*\t");
-//	}
-//	else
-//	{
-//		fprintf(pWriteFid, "ÐÐºÅ:%d\t ", pSChannel->SPreProcess.unGCodeLineNum);
-//		//printf("Ö¸ÁîÀàÐÍ:%d ", getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR));
-//	}
-//
-//
-//	for (i = 0; i < nArraySize; i++)
-//	{
-//		if (AXIS_NULL != pSChannel->pMapAxisArray[ucAxisArray[i]])
-//		{
-//			switch (ucAxisArray[i])
-//			{
-//			case AXIS_Y:
-//			case AXIS_X:
-//			case AXIS_Z:
-//				fprintf(pWriteFid, "%c:", (char)(ucAxisArray[i] + 88));
-//				break;
-//			case AXIS_A:
-//			case AXIS_B:
-//			case AXIS_C:
-//				fprintf(pWriteFid, "%c:", (char)(ucAxisArray[i] + 62));
-//			}
-//
-//			if (g_SSystemPara.SAxisPara[pSChannel->pMapAxisArray[ucAxisArray[i]]].ucAxisType == ROTATION_AXIS)
-//			{
-//				fprintf(pWriteFid, "%.3f\t", surplusDoubleToPositive(SRealTimePoint.dArray[ucAxisArray[i]], 360));
-//			}
-//			else
-//			{
-//
-//				fprintf(pWriteFid, "%.3lf\t", SRealTimePoint.dArray[ucAxisArray[i]]);
-//
-//			}
-//		}
-//	}
-//	uint8 ucAxis;
-//	//Ö÷Öá×ªËÙ´òÓ¡
-//
-//	fprintf(pWriteFid, "CÖá×ªËÙ:%.3lf\t", pSChannel->SRun.sAxisDeltaPulse[pSChannel->SSpindle.pSSpindleAxis->ucAxis] * g_SSystemPara.SAxisPara[pSChannel->pMapAxisArray[pSChannel->SSpindle.pSSpindleAxis->ucAxis]].dPulseToMm * 60 * 1000 / DEGREE_OF_CIRCLE);
-//	//printf("AÖá×ªËÙ:%.3lf	", pSChannel->SRun.sAxisDeltaPulse[pSChannel->SSecondSpindle.pSSpindleAxis->ucAxis] * g_SSystemPara.SAxisPara[pSChannel->pMapAxisArray[pSChannel->SSpindle.pSSpindleAxis->ucAxis]].dPulseToMm * 60 * 1000 / DEGREE_OF_CIRCLE);
-//	//printf("CÖáÄ¿±ê:%.3lf", calTargetSpindleSpeed(&pSChannel->SSpindle) * 60 * 1000);
-//	//printf("M3821:%d	", ioM38M39);
-//	//printf("M10:%d	", ioM10M11);
-//	//printf("Ê¹ÄÜ:%lu	", AxisEnable[pSChannel->pMapAxisArray[pSChannel->SSpindle.pSSpindleAxis->ucAxis]]);
-//	//getCurrentRealFeedRate(pSChannel->ucChannelNum, &ucAxis);
-//	fprintf(pWriteFid, "½ø¸ø:%.3lf\t", getCurrentRealFeedRate(pSChannel->ucChannelNum, NULL));
-//	fprintf(pWriteFid, "\n");
-//	//printf("Ö÷Öá: %lf " , getSpindleSpeedAPI(pSChannel->ucChannelNum));
-//	//printf("XÊ£Óà¾àÀë£º: %lf ", getCurLeftDist(pSChannel->ucChannelNum, AXIS_X));
-//	//printf("YÊ£Óà¾àÀë£º: %lf ", getCurLeftDist(pSChannel->ucChannelNum, AXIS_Y));
-//	//printf("ZÊ£Óà¾àÀë£º: %lf ",getCurLeftDist(pSChannel->ucChannelNum, AXIS_Z));
-//	//printf("CÊ£Óà¾àÀë£º: %lf ", getCurLeftDist(pSChannel->ucChannelNum, AXIS_C));
-//	return;
-//}
-
-//
-//
-////New Add ²âÊÔÁ÷³Ì
-// //DWORD WINAPI PROCESST1(LPVOID param)//Ïß³Ì2º¯ÊýÄÚÈÝ-------1msÖÐ¶Ï
-// //{
-// //	int counter=0;
-// //	double dAcc=g_SSystemPara.dSysPlanTMaxAcc,dDec=g_SSystemPara.dSysPlanTMaxDec; //¼ÓËÙ
-// //	uint8 res=0;
-// //	uint8 record=0;
-// //	uint32 sleepTime = 0;
-//	//double addDist=0;
-// //#if EN_DEBUG
-// //	printf("PROCESST1 RUNNING\n");
-// //#endif
-//	//fprintf(pWriteFid, "counter ÆðÊ¼ËÙ¶È ×î´óËÙ¶È ×îÖÕËÙ¶È Ê£Óà¾àÀë+Î´¹æ»®¾àÀë ÖØËã×î´óËÙ¶È ¼ÓËÙ¶È ¼õËÙ¶È currentT unT5 Z X\n");
-// //    while(1)
-// //    {
-// //
-// //		counter++;
-//
-// //		fprintf(pWriteFid,"%d ",counter);
-// //
-// //		if ( res ==1 )//Ëæ¶¯
-// //		{
-// //			dAcc = 5.0*g_SSystemPara.dSysPlanTMaxAcc;
-// //			dDec = 5.0*g_SSystemPara.dSysPlanTMaxDec;
-// //		}
-// //		if ( res ==2)//¼õËÙ
-// //		{
-// //			dAcc = g_SSystemPara.dSysPlanTMaxAcc;
-// //			dDec = g_SSystemPara.dSysPlanTMaxDec;
-// //		}
-//
-// //		if (counter >=1268)
-// //		{
-// //			sleepTime = 1;
-//	//		addDist -= 0.001;
-//	//		addDist = (addDist < 0) ? 0 : addDist;
-//	//		res = newAddDistaceUnlimited(&g_SInterpolation, addDist,dAcc,dDec,0.04,1,1);
-// //		}
-//	//	else
-//	//	{
-//	//		addDist += 0.001;
-//	//		addDist = (addDist > 0.04) ? 0.04 : addDist;
-// //			res = newAddDistaceUnlimited(&g_SInterpolation,addDist,dAcc,dDec,0.04,1,1);
-//	//	}
-//
-// //
-// //		fprintf(pWriteFid," %d %d ",g_SInterpolation.unCurrentT,g_SInterpolation.unT5);
-// // 		g_SInterpolation.ucInpStatus = INP_RUNNING;
-// //		if (g_SystemStatus ==SYS_IDLE)
-// //		{
-// //			printf("IDLE\n");
-// //			break;
-// //		}
-// //
-// //		res = max(res,record);
-// //		record = res;
-// //
-// //		IRQHandler();
-// //
-// //		fprintf(pWriteFid,"%lf  %lf\n",g_SRealTimePoint.dZ,g_SRealTimePoint.dX);
-// //
-// //		printf(" counter = %d res = %d \n",counter,res);
-// //
-// //		changeSpindleSpeed(g_SRun.SAbsCoord.dX);//Êä³öÖ÷Öá×ªËÙ    ±ØÐë·ÅºóÃæ  G96ÏÞÖÆ
-// //        Sleep(sleepTime);
-// //		timeji++;
-// //    }
-// //	return 0;
-// //}
-//
-////testNewAdd()
-////{
-////	g_SInterpolation.SEndPoint.dZ = 20;
-////	g_SInterpolation.SEndPoint.dX = 0;
-////	g_SInterpolation.SEndPoint.dY = 0;
-////	g_SInterpolation.SStartPoint.dX = 0;
-////	g_SInterpolation.SStartPoint.dY = 0;
-////	g_SInterpolation.SStartPoint.dZ = 0;
-////	calVectorAndDistance(g_SInterpolation.SStartPoint, g_SInterpolation.SEndPoint, &g_SInterpolation.dDistance, &g_SInterpolation.SStartVector);//distanceÎª×Ü¾àÀë
-////	//g_SInterpolation.dDistance = 0.0;
-////	g_SInterpolation.dPreDist = 0;
-////	g_SInterpolation.dTargetDist = 0;
-////	g_SInterpolation.dCurLeftDist = 0;
-////	g_SInterpolation.dTc = 1;
-////	g_SInterpolation.dVs = g_SSystemPara.dSysMinVel;
-////	g_SInterpolation.dVmax = g_SSystemPara.dSysMaxVel;
-////	g_SInterpolation.dAcc = g_SSystemPara.dSysPlanTMaxAcc;
-////	g_SInterpolation.dDec = g_SSystemPara.dSysPlanTMaxAcc;
-////	g_SInterpolation.dVe = 0.04;
-////	setBits(g_SInterpolation.unCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
-////	setBits(g_SInterpolation.unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);
-////	g_SInterpolation.ucDistReAverageType = DIST_REAVG_T_CURVE;
-////	g_SInterpolation.ucAccVelPlanType = VEL_PLAN_T_CURVE;
-////	g_SInterpolation.ucDecVelPlanType = VEL_PLAN_T_CURVE;
-////	preparePlanningAndDistReAvg(&g_SInterpolation, TRUE);
-////	g_SInterpolation.ucInpStatus = INP_RUNNING;
-////	g_SInterpolation.ucRunStep = 1;
-////	g_SInterpolation.dFeedRatio = g_SRun.dCommonFeedRatio;
-////}
-//
-////
-//// uint8 ucT = 0; //µ±Ç°µÄÖ÷ÖáÖÜÆÚÊý
-//// uint32 unEncoderAccumlateNum = 0;  //Ö÷Öá±àÂëÆ÷ÀÛ¼ÆµÄÊýÖµ
-////
-//// double dLastSpindleSpeedIdeal;  //ÉÏÒ»´ÎÀíÏëÖ÷Öá×ªËÙ£¬ÓÃÀ´ÅÐ¶ÏÊÇ·ñ¸ü»»ÁËÖ÷Öá×ªËÙS
-//// double dSpindleSpeedIdeal;  //±¾´ÎÖ÷Öá×ªËÙ
-//// #define SPEED_TEXT_MAX 1
-//// DWORD WINAPI PROCESST1(LPVOID param)//Ïß³Ì2º¯ÊýÄÚÈÝ-------1msÖÐ¶Ï
-//// {
-//// #if EN_DEBUG
-//// 	printf("PROCESST1 RUNNING\n");
-//// #endif
-//// 	int counter=0;
-////     while(1)
-////     {
-//// 		// 		if (g_SystemStatus !=SYS_IDLE &&g_SystemStatus !=SYS_PAUSE)
-//// 		// 		{
-//// 		//
-//// #if !ENCODER_MODE
-//// 		g_SEncoder[1-1].nEncoderAbsValue = (int)GetSpindleEncoder();   //»ñÈ¡Ä£ÄâÖ÷Öá±àÂëÆ÷Êý¾Ý
-//// #endif
-////
-//// 		g_SEncoder[1-1].usDelta = round(g_SInterpolation.dSpindleSpeed /(60 * 1000) * g_SEncoder[1-1].usEncoderCirclePulseNum);
-//// 		g_SEncoder[1-1].cEncoderDir = 1;
-////
-//// 		if(g_bCalculateSpindleSpeedFlag && g_SInterpolationAxisC.ucInpStatus == INP_FINISHED)
-//// 		{
-//// 			if(ucT < SPEED_TEXT_MAX)
-//// 			{
-//// 				unEncoderAccumlateNum += g_SEncoder[1-1].usDelta;
-//// 			}
-////
-//// 			ucT++;
-////
-//// 			if(ucT == SPEED_TEXT_MAX)
-//// 			{
-//// 				g_dSpindleRealSpeed = (double)((double)unEncoderAccumlateNum / SPEED_TEXT_MAX) * g_SSystemPara.SAxisPara[AXIS_C-1].dPulseToMm * 60 * 1000.0;
-//// 				ucT = 0;
-//// 				unEncoderAccumlateNum = 0;
-//// 				g_bCalculateSpindleSpeedFlag = FALSE;
-////
-//// 			}
-////
-//// 		}
-////
-//// 		counter++;
-//// 		// 		if (counter ==200)
-//// 		// 		{
-//// 		// 			printf("RUN_TO_PAUSE\n");
-//// 		// 			g_SystemStatus = SYS_RUN_TO_PAUSE;
-//// 		// 		}
-//// 		if (g_SystemStatus ==SYS_IDLE)
-//// 		{
-//// 			printf("IDLE\n");
-//// 		}
-//// 		//printf("%10.6lf %10.6lf  %d \n",g_SRealTimePoint.dX,g_SRealTimePoint.dZ,g_SRun.sAxisDeltaPulse[AXIS_C-1]);
-////
-//// 		//
-//// 		if (g_SystemStatus !=SYS_IDLE)
-//// 		{
-//// 			printf("%10.6lf %10.6lf  %d \n",g_SRealTimePoint.dX, g_SRealTimePoint.dZ, g_SEncoder[1-1].nEncoderAbsValue);
-//// 		}
-//// 		else
-//// 		{
-//// 			break;
-//// 		}
-//// 		//fprintf(pWriteFid,"%10.6lf %10.6lf\n",g_SRun.SAbsCoord.dZ,g_SRun.SAbsCoord.dX);
-//// 		//printf("spindle pulse = %d pulse/min\n",g_SRun.sAxisDeltaPulse[AXIS_C-1]*(60*1000));
-//// 		/*		}*/
-//// 		IRQHandler();
-//// 		changeSpindleSpeed(g_SRun.SAbsCoord.dX);//Êä³öÖ÷Öá×ªËÙ    ±ØÐë·ÅºóÃæ  G96ÏÞÖÆ
-////         Sleep(0);
-//// 		timeji++;
-////     }
-//// }
-////
-//
-//
+            CloseHandle(IRQhandle);
+        }
     }
     if (isErrorHasBeenWritten())
         printError();

@@ -3,29 +3,24 @@
 
 typedef struct _SG32_3Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	SPointDouble SStartPoint;
-	SPointDouble SEndPoint;
+    SPointDouble SStartPoint;
+    SPointDouble SEndPoint;
 
+    double dF; //å¯¼ç¨‹ï¼ˆæ¨¡æ€ï¼‰
+    double dQ; //èµ·å§‹è§’åº¦ï¼ˆéæ¨¡æ€ï¼‰
 
-	double dF;          //µ¼³Ì£¨Ä£Ì¬£©
-	double dQ;			//ÆğÊ¼½Ç¶È£¨·ÇÄ£Ì¬£©
+    double dRadius;            //åŠå¾„
+    int8 cDir;                 //åœ†å¼§æ–¹å‘
+    SPointDouble SCenterPoint; //åœ†å¿ƒ
 
-	double dRadius;    //°ë¾¶
-	int8 cDir;         //Ô²»¡·½Ïò
-	SPointDouble SCenterPoint;//Ô²ĞÄ
+    uint16 usL;          //èºçº¹å¤´æ•°
+    bool bRepeatG32Flag; //æ˜¯å¦ä¸ºè¿ç»­G32
+    bool bG32LetterQ;    //æ˜¯å¦å‡ºç°Q
+    uint8 ucG32SubMode;  //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4
 
-	uint16  usL;     //ÂİÎÆÍ·Êı 
-	bool bRepeatG32Flag;    //ÊÇ·ñÎªÁ¬ĞøG32
-	bool bG32LetterQ;       //ÊÇ·ñ³öÏÖQ
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4
-
-
-
-}SG32_3Para;
-
-
+} SG32_3Para;
 
 void addG32_3RegulationAPI();
 
@@ -37,4 +32,3 @@ int8 CheckG32_3(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCode
 int8 AssignG32_3(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 uint8 getQuadrant(SPointDouble SCenter, SPointDouble SPoint, uint8 ucHorAxis, uint8 ucVerAxis);
 #endif
-

@@ -4,255 +4,258 @@
 #include "common.h"
 #include "Config.h"
 
-extern const double TAPER_45;		 //45¡ã¶ÔÓ¦µÄ»¡¶È
+extern const double TAPER_45; //45Â°å¯¹åº”çš„å¼§åº¦
 
 //extern struct _SG32 g_SG32;
 
+#define LHK_DEBUG 0    //1ä¸ºvsæµ‹è¯•
+#define MATLAB_DEBUG 0 //ç”¨äºmatlabçš„æ•°æ®ï¼ˆæ¯”ä¸€èˆ¬çš„è¾“å‡ºå°‘ä¸€äº›å‚æ•°ï¼‰
 
-#define	LHK_DEBUG 0    //1Îªvs²âÊÔ
-#define MATLAB_DEBUG 0 //ÓÃÓÚmatlabµÄÊı¾İ£¨±ÈÒ»°ãµÄÊä³öÉÙÒ»Ğ©²ÎÊı£©
+//G32è¿è¡Œæµç¨‹
+#define G32_INIT_AND_ASSIGNMENT 0                    //åˆå§‹åŒ–å’Œèµ‹å€¼
+#define G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE 1 //è¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’
+#define G32_GET_SYNCSIGN 2                           //åˆ¤æ–­æ˜¯å¦è·å–åŒæ­¥ä¿¡å·
+#define G32_IFM_COMPENSATE 3                         //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
+#define G32_REPEATSTATE_COMPENSATE 4                 //å‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿
+#define G32_RUNNING 5                                //è¿åŠ¨éƒ¨åˆ†
+#define G32_OCCUPATION 6                             //è½´å ç”¨
+#define G32_USER_INPUT 7                             //ç”¨æˆ·è¾“å…¥
+#define G32_BACKTAIL 8                               //é€€å°¾
 
-//G32ÔËĞĞÁ÷³Ì
-#define G32_INIT_AND_ASSIGNMENT                     0  //³õÊ¼»¯ºÍ¸³Öµ
-#define G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE  1  //Á¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç
-#define G32_GET_SYNCSIGN                            2  //ÅĞ¶ÏÊÇ·ñ»ñÈ¡Í¬²½ĞÅºÅ
-#define G32_IFM_COMPENSATE                          3  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
-#define G32_REPEATSTATE_COMPENSATE                  4  //¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥
-#define G32_RUNNING                                 5  //ÔË¶¯²¿·Ö
-#define G32_OCCUPATION                              6  //ÖáÕ¼ÓÃ
-#define G32_USER_INPUT                              7  //ÓÃ»§ÊäÈë
-#define G32_BACKTAIL                                8  //ÍËÎ²
-
-enum UserInputState  //ÓÃ»§²ÎÊıÊäÈë×´Ì¬
+enum UserInputState //ç”¨æˆ·å‚æ•°è¾“å…¥çŠ¶æ€
 {
 
-	NO_INPUT,                    //ÎŞÊäÈë
-	USER_INPUT,                  //ÓÃ»§ÒÑÊäÈë
-	FINSH_CHECK,				 //ÓÃ»§²ÎÊıÍ¨¹ı¼ì²â
-	FINSH_CHECK_SYSNCSIGNAL      //ÓÃ»§²ÎÊıÍ¨¹ı¼ì²â,µ«ÔË¶¯ĞèÒªÍ¬²½ĞÅºÅ
-
+    NO_INPUT,               //æ— è¾“å…¥
+    USER_INPUT,             //ç”¨æˆ·å·²è¾“å…¥
+    FINSH_CHECK,            //ç”¨æˆ·å‚æ•°é€šè¿‡æ£€æµ‹
+    FINSH_CHECK_SYSNCSIGNAL //ç”¨æˆ·å‚æ•°é€šè¿‡æ£€æµ‹,ä½†è¿åŠ¨éœ€è¦åŒæ­¥ä¿¡å·
 };
 
-struct SInputG32//£¨ÓÃ»§ÉèÖÃ£©²ÎÊı(ÖĞ¼ä²ãµÄ»º³åÇø)   
+struct SInputG32 //ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰å‚æ•°(ä¸­é—´å±‚çš„ç¼“å†²åŒº)
 {
-	//VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12  //Õâ¸öÖµ¸Ğ¾õÄ¿Ç°Ã»ÓÃµ½
-	VAL_STRUCT_TYPE	ucRelaVal;		//Ïà¶ÔÖµ±êÊ¶±äÁ¿  2022-4-20  
+    //VAL_STRUCT_TYPE	ucValStatus;	//æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12  //è¿™ä¸ªå€¼æ„Ÿè§‰ç›®å‰æ²¡ç”¨åˆ°
+    VAL_STRUCT_TYPE ucRelaVal; //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡  2022-4-20
 
-	double dAcc;			//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dDec;			//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	double dVs;				//³õÊ¼ËÙ¶È	mm/ms  
-	double dVe;             //ÖÕµãËÙ¶È  mm/ms
-	double dVmax;           //×î´óËÙ¶È  mm/ms  
+    double dAcc;  //åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dDec;  //å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    double dVs;   //åˆå§‹é€Ÿåº¦	mm/ms
+    double dVe;   //ç»ˆç‚¹é€Ÿåº¦  mm/ms
+    double dVmax; //æœ€å¤§é€Ÿåº¦  mm/ms
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª9¡ª1**********
-	double dJ;				 //¶ÌÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dK;				 //³¤ÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dQ;				 //ÆğÊ¼½Ç¶È     G32²ÎÊı·ÇÄ£Ì¬  
-	double dF;				 //µ¼³Ì
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”9â€”1**********
+    double dJ; //çŸ­è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dK; //é•¿è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dQ; //èµ·å§‹è§’åº¦     G32å‚æ•°éæ¨¡æ€
+    double dF; //å¯¼ç¨‹
 
-	SPointDouble SStarCutPoint;   //ÇĞÏ÷Æğµã£¬µ¥Î»£ºmm£¨³õÊ¼»¯Ö®ºó£¬²å²¹½á¹¹ÌåµÄ×ø±êÖ»ÓĞ³¤Öá£¬ËùÒÔĞèÒªÔÚÂİÎÆ½á¹¹Ìå±£ÁôÇĞÏ÷ÆğµãÖÕµã£©
-	SPointDouble SEndPoint;		  //ÇĞÏ÷ÖÕµã£¬µ¥Î»£ºmm
+    SPointDouble
+        SStarCutPoint; //åˆ‡å‰Šèµ·ç‚¹ï¼Œå•ä½ï¼šmmï¼ˆåˆå§‹åŒ–ä¹‹åï¼Œæ’è¡¥ç»“æ„ä½“çš„åæ ‡åªæœ‰é•¿è½´ï¼Œæ‰€ä»¥éœ€è¦åœ¨èºçº¹ç»“æ„ä½“ä¿ç•™åˆ‡å‰Šèµ·ç‚¹ç»ˆç‚¹ï¼‰
+    SPointDouble SEndPoint; //åˆ‡å‰Šç»ˆç‚¹ï¼Œå•ä½ï¼šmm
 
-	uint8 ucUserInputState;        //ÓÃ»§²ÎÊıÊäÈë×´Ì¬  0£¨NO_INPUT ÎŞÊäÈë£©  1£¨USER_INPUT ÓÃ»§ÒÑÊäÈë£©  2£¨FINSH_CHECK  Íê³É¸³Öµ£©
-	uint8 ucAxis[2];               //Ö´ĞĞ²å²¹µÄÖáºÅ
+    uint8
+        ucUserInputState; //ç”¨æˆ·å‚æ•°è¾“å…¥çŠ¶æ€  0ï¼ˆNO_INPUT æ— è¾“å…¥ï¼‰  1ï¼ˆUSER_INPUT ç”¨æˆ·å·²è¾“å…¥ï¼‰  2ï¼ˆFINSH_CHECK  å®Œæˆèµ‹å€¼ï¼‰
+    uint8 ucAxis[2];      //æ‰§è¡Œæ’è¡¥çš„è½´å·
 };
 
-
-struct _SG32  //ÂİÎÆÀàÖ¸Áî²ÎÊı½á¹¹Ìå
+struct _SG32 //èºçº¹ç±»æŒ‡ä»¤å‚æ•°ç»“æ„ä½“
 {
-	double dRatioXZ;	       //XÖáËÅ·şµç»úÓëZÖáËÅ·şµç»úµÄÂö³åÖ®±È£¨ÓÃÓÚÇĞÏ÷×¶ÂİÎÆ,´ø¶ÌÖáÏòÁ¿£©
-	bool bSyncSignal;	      //Í¬²½ĞÅºÅ
-	bool bLeftTailFlag;       //ÍËÎ²±êÖ¾Î»£¬ÓĞÍËÎ²Î»true Ã»ÓĞÎªfalse
+    double dRatioXZ;    //Xè½´ä¼ºæœç”µæœºä¸Zè½´ä¼ºæœç”µæœºçš„è„‰å†²ä¹‹æ¯”ï¼ˆç”¨äºåˆ‡å‰Šé”¥èºçº¹,å¸¦çŸ­è½´å‘é‡ï¼‰
+    bool bSyncSignal;   //åŒæ­¥ä¿¡å·
+    bool bLeftTailFlag; //é€€å°¾æ ‡å¿—ä½ï¼Œæœ‰é€€å°¾ä½true æ²¡æœ‰ä¸ºfalse
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª9¡ª1**********
-	double dJ;				 //¶ÌÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dK;				 //³¤ÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬
-	double dQ;				 //ÆğÊ¼½Ç¶È     G32²ÎÊı·ÇÄ£Ì¬  
-	double dF;				 //µ¼³Ì
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”9â€”1**********
+    double dJ; //çŸ­è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dK; //é•¿è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€
+    double dQ; //èµ·å§‹è§’åº¦     G32å‚æ•°éæ¨¡æ€
+    double dF; //å¯¼ç¨‹
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª9¡ª14**********
-	SPointDouble SStarCutPoint;   //ÇĞÏ÷Æğµã£¬µ¥Î»£ºmm£¨³õÊ¼»¯Ö®ºó£¬²å²¹½á¹¹ÌåµÄ×ø±êÖ»ÓĞ³¤Öá£¬ËùÒÔĞèÒªÔÚÂİÎÆ½á¹¹Ìå±£ÁôÇĞÏ÷ÆğµãÖÕµã£©
-	SPointDouble SEndPoint;		  //ÇĞÏ÷ÖÕµã£¬µ¥Î»£ºmm
-	SPointDouble SBackTailPoint;  //Êµ¼ÊÍËÎ²µã
-	SVector SStartVector;		  //ÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£©
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”9â€”14**********
+    SPointDouble
+        SStarCutPoint; //åˆ‡å‰Šèµ·ç‚¹ï¼Œå•ä½ï¼šmmï¼ˆåˆå§‹åŒ–ä¹‹åï¼Œæ’è¡¥ç»“æ„ä½“çš„åæ ‡åªæœ‰é•¿è½´ï¼Œæ‰€ä»¥éœ€è¦åœ¨èºçº¹ç»“æ„ä½“ä¿ç•™åˆ‡å‰Šèµ·ç‚¹ç»ˆç‚¹ï¼‰
+    SPointDouble SEndPoint;      //åˆ‡å‰Šç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SBackTailPoint; //å®é™…é€€å°¾ç‚¹
+    SVector SStartVector;        //èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª11¡ª17*********
-	bool bRepeatG32Flag; 		  //ÅĞ¶ÏG32ÊÇ·ñÊÇÁ¬ĞøG32Ö¸Áî
-	uint8 ucG32Step;        	//G32ÔËĞĞ²½Öè
-	double dMmToPulse;            //³¤ÖáÂö³åµ±Á¿
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”11â€”17*********
+    bool bRepeatG32Flag; //åˆ¤æ–­G32æ˜¯å¦æ˜¯è¿ç»­G32æŒ‡ä»¤
+    uint8 ucG32Step;     //G32è¿è¡Œæ­¥éª¤
+    double dMmToPulse;   //é•¿è½´è„‰å†²å½“é‡
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª12¡ª3*********
-	uint8 ucMotionState;		  //ÔË¶¯×´Ì¬  0¼ÓËÙ 1Ëæ¶¯ 2¼õËÙ 3Íê³É
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”12â€”3*********
+    uint8 ucMotionState; //è¿åŠ¨çŠ¶æ€  0åŠ é€Ÿ 1éšåŠ¨ 2å‡é€Ÿ 3å®Œæˆ
 
-	//Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂËù¼ÇÂ¼µÄ²ÎÊı
-	uint32 unCurrentT;            //¹ı¶É½×¶ÎÖĞ£¬µ±Ç°µÄ²å²¹Ê±¼äµã
-	uint32 unTac;                 //¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
+    //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹æ‰€è®°å½•çš„å‚æ•°
+    uint32 unCurrentT; //è¿‡æ¸¡é˜¶æ®µä¸­ï¼Œå½“å‰çš„æ’è¡¥æ—¶é—´ç‚¹
+    uint32 unTac;      //è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
 
-	//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª12¡ª29*********
-	double dNextG32LongAxisSpeed;  //ÈôÎªÁ¬ĞøG32£¬ÔòÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáËÙ¶È
-	double dStartPointCompensate;  //Á¬ĞøG32ÖĞ£¬ÉÏÒ»´ÎG32ÖÕµãµÄ³¬¹ıÁ¿×÷Îªµ±Ç°G32ÆğµãµÄ²¹³¥Á¿£¬Ê¹¶à´ÎÇĞÏ÷¹ı³ÌÖĞµÚ¶ş¶ÎG32ÆğµãÏàÍ¬
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”12â€”29*********
+    double dNextG32LongAxisSpeed; //è‹¥ä¸ºè¿ç»­G32ï¼Œåˆ™ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´é€Ÿåº¦
+    double
+        dStartPointCompensate; //è¿ç»­G32ä¸­ï¼Œä¸Šä¸€æ¬¡G32ç»ˆç‚¹çš„è¶…è¿‡é‡ä½œä¸ºå½“å‰G32èµ·ç‚¹çš„è¡¥å¿é‡ï¼Œä½¿å¤šæ¬¡åˆ‡å‰Šè¿‡ç¨‹ä¸­ç¬¬äºŒæ®µG32èµ·ç‚¹ç›¸åŒ
 
-	//**************Áõãüâı-¼õËÙ¹ı¶ÉĞÍÁ¬ĞøG32*********2021¡ª1¡ª13*********
-	bool bDecPlanTransitionFlag;       //Á¬ĞøG32¼õËÙ¹æ»®¹ı¶É±êÖ¾Î»£¨ÊÊÓÃÓÚ¡°»»Ïò¹ı¶É¡±¡¢¡°¼õËÙ¹ı¶É¡±Á¬ĞøG32£©
-	double dIdealTransmitStartPos;   //ÀíÏë¿ªÊ¼¼õËÙ¹æ»®¹ı¶ÉÎ»ÖÃ
-	double dRemainDistance;          //Ê£Óà¾àÀë
-	double dVs;                      //¹ı¶É½×¶ÎµÄÆğÊ¼ËÙ¶È
-	double dDec;                     //ÖØËãµÄ¼õËÙ¶È
-	double dIdealSpindlePosition;    //¼õËÙ¹ı¶É½×¶Î£¬ÖÕµã´¦ÀíÏëµÄÖ÷ÖáÎ»ÖÃ£¨Âö³åĞÎÊ½£©
+    //**************åˆ˜æ³“æº-å‡é€Ÿè¿‡æ¸¡å‹è¿ç»­G32*********2021â€”1â€”13*********
+    bool bDecPlanTransitionFlag;   //è¿ç»­G32å‡é€Ÿè§„åˆ’è¿‡æ¸¡æ ‡å¿—ä½ï¼ˆé€‚ç”¨äºâ€œæ¢å‘è¿‡æ¸¡â€ã€â€œå‡é€Ÿè¿‡æ¸¡â€è¿ç»­G32ï¼‰
+    double dIdealTransmitStartPos; //ç†æƒ³å¼€å§‹å‡é€Ÿè§„åˆ’è¿‡æ¸¡ä½ç½®
+    double dRemainDistance;        //å‰©ä½™è·ç¦»
+    double dVs;                    //è¿‡æ¸¡é˜¶æ®µçš„èµ·å§‹é€Ÿåº¦
+    double dDec;                   //é‡ç®—çš„å‡é€Ÿåº¦
+    double dIdealSpindlePosition;  //å‡é€Ÿè¿‡æ¸¡é˜¶æ®µï¼Œç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ä½ç½®ï¼ˆè„‰å†²å½¢å¼ï¼‰
 
-	bool bPrintFlag;                 //£¨²âÊÔÓÃ²ÎÊı£©
+    bool bPrintFlag; //ï¼ˆæµ‹è¯•ç”¨å‚æ•°ï¼‰
 
-	//**************Áõãüâı-G32²âÊÔµ÷ÊÔ²ÎÊı*********2021¡ª1¡ª18**********
-	double dStartFollowDis;       //¿ªÊ¼Ëæ¶¯ËùĞèµÄ³¤¶È(ÔË¶¯ÆğÀ´ºó²ÅÄÜ¿´µ½)£¨¼à²â²ÎÊı£©
+    //**************åˆ˜æ³“æº-G32æµ‹è¯•è°ƒè¯•å‚æ•°*********2021â€”1â€”18**********
+    double dStartFollowDis; //å¼€å§‹éšåŠ¨æ‰€éœ€çš„é•¿åº¦(è¿åŠ¨èµ·æ¥åæ‰èƒ½çœ‹åˆ°)ï¼ˆç›‘æµ‹å‚æ•°ï¼‰
 
-	//**************Áõãüâı-Á¬ĞøG32*********2021¡ª1¡ª18*********
-	double dSpindleSpeed;         //Ö÷Öá×ªËÙ£¬r/ms       
-	bool bStartCompensate;        //¿ªÊ¼²¹³¥±êÖ¾Î»
+    //**************åˆ˜æ³“æº-è¿ç»­G32*********2021â€”1â€”18*********
+    double dSpindleSpeed;  //ä¸»è½´è½¬é€Ÿï¼Œr/ms
+    bool bStartCompensate; //å¼€å§‹è¡¥å¿æ ‡å¿—ä½
 
-	//**************Áõãüâı-G32¿ò¼Ü¸Ä±ä*********2021¡ª3¡ª16*********
-	struct SPlan SPlanData;       //ËÙ¶È¹æ»®²ÎÊı
-	uint8 ucInpStatus;		     //²å²¹×´Ì¬£¬INITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
-	double dCurrentSpeed;		 //µ±Ç°ËÙ¶È mm/ms
+    //**************åˆ˜æ³“æº-G32æ¡†æ¶æ”¹å˜*********2021â€”3â€”16*********
+    struct SPlan SPlanData; //é€Ÿåº¦è§„åˆ’å‚æ•°
+    uint8 ucInpStatus;      //æ’è¡¥çŠ¶æ€ï¼ŒINITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
+    double dCurrentSpeed;   //å½“å‰é€Ÿåº¦ mm/ms
 
-	struct SInputG32 SUserData;  //£¨ÓÃ»§ÉèÖÃ£©²ÎÊı(ÖĞ¼ä²ãµÄ»º³åÇø)   
+    struct SInputG32 SUserData; //ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰å‚æ•°(ä¸­é—´å±‚çš„ç¼“å†²åŒº)
 
-	uint8 ucAxis[2];             //Ö´ĞĞ²å²¹µÄÖáºÅ 0ºÅÖá¶ÔÓ¦³¤Öá£¬1ºÅÖá¶ÔÓ¦¶ÌÖá
-	uint32 unCommandType;		 //Ö¸ÁîÀàĞÍ	
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ
-	double dPulseToMm[AXIS_NUM_MAX];	//Âö³åµ±Á¿µÄµ¹Êı  ¸÷¸öÖá  XYZ ABC (»¹Î´¸³Öµ)
+    uint8 ucAxis[2];                 //æ‰§è¡Œæ’è¡¥çš„è½´å· 0å·è½´å¯¹åº”é•¿è½´ï¼Œ1å·è½´å¯¹åº”çŸ­è½´
+    uint32 unCommandType;            //æŒ‡ä»¤ç±»å‹
+    VAL_STRUCT_TYPE ucValStatus;     //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹
+    double dPulseToMm[AXIS_NUM_MAX]; //è„‰å†²å½“é‡çš„å€’æ•°  å„ä¸ªè½´  XYZ ABC (è¿˜æœªèµ‹å€¼)
 
-	struct SChannel* pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
 
-	//**************Áõãüâı-Ô²»¡ÃæÂİÎÆ*********2021¡ª5¡ª7*********
-	SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
-	double dRadius;				//°ë¾¶£¬µ¥Î»£ºmm
-	int8 cArcDir;				//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1 
+    //**************åˆ˜æ³“æº-åœ†å¼§é¢èºçº¹*********2021â€”5â€”7*********
+    SPointDouble SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
+    double dRadius;            //åŠå¾„ï¼Œå•ä½ï¼šmm
+    int8 cArcDir;              //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
 
-	//**************Áõãüâı-±ä×¶¶ÈÂİÎÆ*********2021¡ª6¡ª10*********
-	struct SPlan* SExcessPlanForG32;    //¶îÍâËÙ¶È¹æ»®²ÎÊıÖ¸Õë£¨ÏÖÓÃÓÚ±ä×¶¶ÈÏÂ¶ÌÖáµÄËÙ¶È¹æ»®£¬ÍËÎ²Ê±¶ÌÖáµÄËÙ¶È¹æ»®£¬ÓÃµÄÊ±ºò²ÅÉêÇë¿Õ¼ä£©
-	bool bExcessPlanFlag;               //ĞèÒª½øĞĞ¶îÍâµÄËÙ¶È¹æ»®±êÖ¾Î»£¨¶ÌÖá¸úËæ³¤ÖáµÄ¹æ»®£©
-	SPointDouble SLastEndPoint;		    //ÉÏÒ»¸öG32µÄÇĞÏ÷ÖÕµã£¬µ¥Î»£ºmm
-	double dLastRatioXZ;	            //ÉÏÒ»¶ÎG32µÄ³¤¶ÌÖáÖ®±È£¨ÓÃÓÚÇĞÏ÷×¶ÂİÎÆ,´ø¶ÌÖáÏòÁ¿£©
-	double dShortAxisCurrentSpeed;      //¶ÌÖáµÄµ±Ç°ËÙ¶È
-	double dShortAxisCompensate;        //¶ÌÖá²¹³¥Á¿
-	double dStartPointCompensateCopy;   //ÆğÊ¼²¹³¥Á¿¸±±¾
-	double dShortAxisPos;               //ÍËÎ²Ê±£¬¶ÌÖá±È³¤ÖáÏÈÔË¶¯½áÊø£¬¼ÇÂ¼¶ÌÖáÍËÎ²ºóµÄÎ»ÖÃ
+    //**************åˆ˜æ³“æº-å˜é”¥åº¦èºçº¹*********2021â€”6â€”10*********
+    struct SPlan*
+        SExcessPlanForG32; //é¢å¤–é€Ÿåº¦è§„åˆ’å‚æ•°æŒ‡é’ˆï¼ˆç°ç”¨äºå˜é”¥åº¦ä¸‹çŸ­è½´çš„é€Ÿåº¦è§„åˆ’ï¼Œé€€å°¾æ—¶çŸ­è½´çš„é€Ÿåº¦è§„åˆ’ï¼Œç”¨çš„æ—¶å€™æ‰ç”³è¯·ç©ºé—´ï¼‰
+    bool bExcessPlanFlag;             //éœ€è¦è¿›è¡Œé¢å¤–çš„é€Ÿåº¦è§„åˆ’æ ‡å¿—ä½ï¼ˆçŸ­è½´è·Ÿéšé•¿è½´çš„è§„åˆ’ï¼‰
+    SPointDouble SLastEndPoint;       //ä¸Šä¸€ä¸ªG32çš„åˆ‡å‰Šç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    double dLastRatioXZ;              //ä¸Šä¸€æ®µG32çš„é•¿çŸ­è½´ä¹‹æ¯”ï¼ˆç”¨äºåˆ‡å‰Šé”¥èºçº¹,å¸¦çŸ­è½´å‘é‡ï¼‰
+    double dShortAxisCurrentSpeed;    //çŸ­è½´çš„å½“å‰é€Ÿåº¦
+    double dShortAxisCompensate;      //çŸ­è½´è¡¥å¿é‡
+    double dStartPointCompensateCopy; //èµ·å§‹è¡¥å¿é‡å‰¯æœ¬
+    double dShortAxisPos;             //é€€å°¾æ—¶ï¼ŒçŸ­è½´æ¯”é•¿è½´å…ˆè¿åŠ¨ç»“æŸï¼Œè®°å½•çŸ­è½´é€€å°¾åçš„ä½ç½®
 
-	//**************Áõãüâı-G34*********2021¡ª6¡ª10*********
-	bool bG34RunFlag;           //G34ÔËĞĞ±êÖ¾Î»£¬ÓÃÓÚG34´ÓÖÕµã·´ËãºÎÊ±¼õËÙ
-	SPointDouble SG34EndPoint;  //G34µÄÖÕµã
-	bool bG34BackTailFlag;      //G34ÍËÎ²±êÖ¾Î»
-	uint8 ucLastAxis[2];        //ÉÏÒ»¸öG32Ö´ĞĞ²å²¹µÄÖáºÅ
+    //**************åˆ˜æ³“æº-G34*********2021â€”6â€”10*********
+    bool bG34RunFlag;          //G34è¿è¡Œæ ‡å¿—ä½ï¼Œç”¨äºG34ä»ç»ˆç‚¹åç®—ä½•æ—¶å‡é€Ÿ
+    SPointDouble SG34EndPoint; //G34çš„ç»ˆç‚¹
+    bool bG34BackTailFlag;     //G34é€€å°¾æ ‡å¿—ä½
+    uint8 ucLastAxis[2];       //ä¸Šä¸€ä¸ªG32æ‰§è¡Œæ’è¡¥çš„è½´å·
 
-	//**************Áõãüâı-G34*********2021¡ª6¡ª10*********
-	bool bSysDataInitFlag;  //ÊÇ·ñÊ¹ÓÃÏµÍ³²ÎÊı³õÊ¼»¯ÂİÎÆ(Í¨³£Ê¹ÓÃ)
+    //**************åˆ˜æ³“æº-G34*********2021â€”6â€”10*********
+    bool bSysDataInitFlag; //æ˜¯å¦ä½¿ç”¨ç³»ç»Ÿå‚æ•°åˆå§‹åŒ–èºçº¹(é€šå¸¸ä½¿ç”¨)
 
-	//**************Áõãüâı-G32£¨Ôö¼Ó±Ü¿Õ¾àÀë£©*********2023¡ª5¡ª12*********
-	double dAcc;         //¼ÓËÙ¶Î¶ÔÓ¦µÄ¼ÓËÙ¶È
-	bool bAccPhaseFlag;  //ÂİÎÆ²å²¹´¦ÓÚ¼ÓËÙ½×¶Î±êÖ¾Î»
+    //**************åˆ˜æ³“æº-G32ï¼ˆå¢åŠ é¿ç©ºè·ç¦»ï¼‰*********2023â€”5â€”12*********
+    double dAcc;        //åŠ é€Ÿæ®µå¯¹åº”çš„åŠ é€Ÿåº¦
+    bool bAccPhaseFlag; //èºçº¹æ’è¡¥å¤„äºåŠ é€Ÿé˜¶æ®µæ ‡å¿—ä½
 
-	/********************************³ÂÃô´Ï************************************/
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4	2023/6/15Ôö
+    /********************************é™ˆæ•èª************************************/
+    uint8 ucG32SubMode; //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4	2023/6/15å¢
 };
 
-
-//»ñÈ¡Ä£ÄâÖ÷Öá±àÂëÆ÷µÄÊıÖµ
+//è·å–æ¨¡æ‹Ÿä¸»è½´ç¼–ç å™¨çš„æ•°å€¼
 int GetSpindleEncoder();
 
-//ÔØÈëÊäÈëµÄ²ÎÊıÖÁG32½á¹¹Ìå
-uint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInput* pSInput, struct _SG32* pG32, struct SInputG32* pSInputG32);
+//è½½å…¥è¾“å…¥çš„å‚æ•°è‡³G32ç»“æ„ä½“
+uint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInput* pSInput, struct _SG32* pG32,
+                            struct SInputG32* pSInputG32);
 
-//»ñÈ¡ÊäÈë²ÎÊı
+//è·å–è¾“å…¥å‚æ•°
 int8 getInputParameter(struct _SG32* pG32);
 
-//¼ÆËãG32ÔË¶¯¹ı³ÌÖĞµÄ¾ø¶Ô×ø±ê
+//è®¡ç®—G32è¿åŠ¨è¿‡ç¨‹ä¸­çš„ç»å¯¹åæ ‡
 int8 calculateExactPointForG32(double* pdTargetPoint, double dDeltaL, struct _SG32* pG32);
 
-//ÅĞ¶ÏÊÇ·ñ»ñµÃÍ¬²½ĞÅºÅ
+//åˆ¤æ–­æ˜¯å¦è·å¾—åŒæ­¥ä¿¡å·
 bool isGetSyncSignal(double dTargetPositionPulse, struct SChannel* pSChannel, struct SEncoder* pSSpindleEncoder);
 
-//¶ÔÂİÎÆÀà²ÎÊı½á¹¹ÌåÖĞG32Ö¸ÁîËùĞèµÄ²ÎÊı½øĞĞ³õÊ¼»¯
+//å¯¹èºçº¹ç±»å‚æ•°ç»“æ„ä½“ä¸­G32æŒ‡ä»¤æ‰€éœ€çš„å‚æ•°è¿›è¡Œåˆå§‹åŒ–
 void G32Init(struct _SG32* pG32);
 
-//»ñÈ¡ÂİÎÆÔË¶¯ÖĞµÄ±ÈÀıÏµÊıÒÔ¼°³¤Öá²å²¹µÄ¾àÀë
+//è·å–èºçº¹è¿åŠ¨ä¸­çš„æ¯”ä¾‹ç³»æ•°ä»¥åŠé•¿è½´æ’è¡¥çš„è·ç¦»
 void G32Prepare(struct _SG32* pG32);
 
-//¸ù¾İµ¶²¹ºóµÄ½á¹¹Ìå²ÎÊı ³õÊ¼»¯ÂİÎÆÀàÖ¸Áî²ÎÊı½á¹¹Ìå
+//æ ¹æ®åˆ€è¡¥åçš„ç»“æ„ä½“å‚æ•° åˆå§‹åŒ–èºçº¹ç±»æŒ‡ä»¤å‚æ•°ç»“æ„ä½“
 void initThreadPreStructData(struct _SG32* pG32);
 
-//ÍËÎ²Ô¤´¦Àí
+//é€€å°¾é¢„å¤„ç†
 void retreatTailPre(struct _SG32* pG32);
 
-//Á¬ĞøG32Ô¤´¦Àí
+//è¿ç»­G32é¢„å¤„ç†
 void prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPointer, double dDistFromSpindle);
 
-//Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
+//ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
 void runAndCompForIFM(struct _SG32* pG32, double* dDistFromSpindle);
 
-//¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥
+//å‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿
 void runAndCompForG32RepeatDec(struct _SG32* pG32, double* dDistFromSpindle);
 
-//G32ÔË¶¯×ø±êµãµÄ¼ÆËã
-int8 motionForG32(struct _SG32* pG32, double* dLongAxisDelta, double dDistFromSpindle, double dVectorFromSpindle, double dAcc, double dDec);
+//G32è¿åŠ¨åæ ‡ç‚¹çš„è®¡ç®—
+int8 motionForG32(struct _SG32* pG32, double* dLongAxisDelta, double dDistFromSpindle, double dVectorFromSpindle,
+                  double dAcc, double dDec);
 
-//¼õËÙÀàĞÍÁ¬ĞøG32¹ı¶É¹æ»®µÄÇ°ÖÃ×¼±¸
+//å‡é€Ÿç±»å‹è¿ç»­G32è¿‡æ¸¡è§„åˆ’çš„å‰ç½®å‡†å¤‡
 void prepareG32RepeatDecPlanning(struct _SG32* pG32, double* dLongAxisDelta);
 
-//¼ÓËÙÀàĞÍÁ¬ĞøG32µÄ²¹³¥Á¿¼ÆËã
+//åŠ é€Ÿç±»å‹è¿ç»­G32çš„è¡¥å¿é‡è®¡ç®—
 void compensateForAccRepeatG32(struct _SG32* pG32);
 
-//»ñµÃQÖµÇĞÈëµÄÕæÕıÎ»ÖÃ
+//è·å¾—Qå€¼åˆ‡å…¥çš„çœŸæ­£ä½ç½®
 double getRealTargetPulse(struct _SG32* pG32);
 
-//¡°¼õËÙ¡±ÀàĞÍÁ¬ĞøG32µÄËÙ¶È¹æ»®
+//â€œå‡é€Ÿâ€ç±»å‹è¿ç»­G32çš„é€Ÿåº¦è§„åˆ’
 void planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance);
 
-//³õÊ¼»¯ºÍÔË¶¯×¼±¸
+//åˆå§‹åŒ–å’Œè¿åŠ¨å‡†å¤‡
 void prepareForMoveAndInit(struct _SG32* pG32);
 
-//Á¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç 
+//è¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’
 void judgeRepeatG32AndGetRealCutAngle(struct _SG32* pG32, double dDistFromSpindle);
 
-//ÅĞ¶ÏÊÇ·ñ»ñµÃÍ¬²½ĞÅºÅºÍ²¹³¥Æô¶¯Æ«²î
+//åˆ¤æ–­æ˜¯å¦è·å¾—åŒæ­¥ä¿¡å·å’Œè¡¥å¿å¯åŠ¨åå·®
 void judgeSyncSignalAndCompensate(struct _SG32* pG32);
 
-//G32ÔËĞĞ
+//G32è¿è¡Œ
 void G32Run(struct _SG32* pG32);
 
-//ÓÃ»§Íâ²¿ÊäÈë£¨²âÊÔº¯Êı£©
+//ç”¨æˆ·å¤–éƒ¨è¾“å…¥ï¼ˆæµ‹è¯•å‡½æ•°ï¼‰
 void UserInput(struct _SG32* pG32);
 
-//Ñ¡ÔñG32²å²¹Æ½Ãæ
+//é€‰æ‹©G32æ’è¡¥å¹³é¢
 int8 chooseInterpPlaneForG32(struct _SG32* pG32);
 
-//´¦ÀíÓÃ»§ÊäÈëµÄ²å²¹ÖáÖáºÅ
+//å¤„ç†ç”¨æˆ·è¾“å…¥çš„æ’è¡¥è½´è½´å·
 void processUserInputAxis(struct _SG32* pG32);
 
-//G32ĞèÒªÔØÈëµÄÏµÍ³²ÎÊı
+//G32éœ€è¦è½½å…¥çš„ç³»ç»Ÿå‚æ•°
 int8 SG32LoadSysPara(struct _SG32* pG32);
 
-//´¦ÀíÓÃ»§µÄÊäÈë
+//å¤„ç†ç”¨æˆ·çš„è¾“å…¥
 int8 processUserInput(struct _SG32* pG32);
 
-//¼ÆËãÔ²»¡ÃæG32µÄ¶ÌÖá×ø±ê
+//è®¡ç®—åœ†å¼§é¢G32çš„çŸ­è½´åæ ‡
 //double calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos);
 int8 calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos, double* pShortAxisPos);
 
-//G34ÍËÎ²Ê±µÄÖá´¦Àí
+//G34é€€å°¾æ—¶çš„è½´å¤„ç†
 void processAxisForG34BackTail(struct _SG32* pG32, double* dCutDisFirstAxis, double* dCutDisSecondAxis);
 
 double getMoveLagComp(struct SChannel* pSChannel, double dF, uint8 ucLongAxisNum, int nTargetLagNum);
 
 void backTailShortAxisPlan(struct _SG32* pG32, double dShortAxisDistance);
 
-int8 calculateExactPointForG32BackTail(double* pdTargetPoint, double dLongAxisDeltal, double dShortAxisDeltal, struct _SG32* pG32);
+int8 calculateExactPointForG32BackTail(double* pdTargetPoint, double dLongAxisDeltal, double dShortAxisDeltal,
+                                       struct _SG32* pG32);
 
-////ÊÖÂÖĞÂÔö
+////æ‰‹è½®æ–°å¢
 //void getHandWheelData(struct SChannel* pSChannel);
 
-void initResetForG32(struct SChannel* pSChannel);  //G32Óë¸´Î»µÄ½»»¥º¯Êı 2023.6.24
+void initResetForG32(struct SChannel* pSChannel); //G32ä¸å¤ä½çš„äº¤äº’å‡½æ•° 2023.6.24
 
-void changeNoRepeatG32(struct SChannel* pSChannel);//ÖØÖÃÁ¬ĞøG32Îª·ÇÁ¬ĞøG32
+void changeNoRepeatG32(struct SChannel* pSChannel); //é‡ç½®è¿ç»­G32ä¸ºéè¿ç»­G32
 
 #endif
-

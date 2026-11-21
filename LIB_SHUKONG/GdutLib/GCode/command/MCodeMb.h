@@ -1,40 +1,40 @@
 #ifndef GCODE_Mb_H
 #define GCODE_Mb_H
 //***********************************************M01****************************************
-//Ìí¼ÓM00¹æÔò
+//æ·»åŠ M00è§„åˆ™
 void addM00RegulationAPI();
-//¼ì²éM00
+//æ£€æŸ¥M00
 int8 CheckM00(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit);
-//¸³ÖµM00
+//èµ‹å€¼M00
 int8 AssignM00(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 //***********************************************M01****************************************
-//Ìí¼ÓM01¹æÔò
+//æ·»åŠ M01è§„åˆ™
 void addM01RegulationAPI();
-//¼ì²éM01
+//æ£€æŸ¥M01
 int8 CheckM01(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit);
-//¸³ÖµM01
+//èµ‹å€¼M01
 int8 AssignM01(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 //***********************************************M02****************************************
-//Ìí¼ÓM02¹æÔò
+//æ·»åŠ M02è§„åˆ™
 void addM02RegulationAPI();
 
-//¸³ÖµM02
+//èµ‹å€¼M02
 int8 AssignM02(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 CheckM02(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit);
 
 //***********************************************M29****************************************
-//Ìí¼ÓM29¹æÔò
+//æ·»åŠ M29è§„åˆ™
 void addM29RegulationAPI();
 
-//¸³ÖµM29
+//èµ‹å€¼M29
 int8 AssignM29(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 CheckM29(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 //***********************************************M30****************************************
-//Ìí¼ÓM30¹æÔò
+//æ·»åŠ M30è§„åˆ™
 void addM30RegulationAPI();
 
-//¸³ÖµM30
+//èµ‹å€¼M30
 int8 AssignM30(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 CheckM30(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
@@ -73,4 +73,3 @@ int8 CheckM100_M199(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pS
 int8 AssignM100_M199(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeBuffUnit);
 
 #endif // !GCODE_M01_H
-

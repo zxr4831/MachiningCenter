@@ -1,103 +1,100 @@
-#ifndef  __GCODEPROGRAM_H
-#define  __GCODEPROGRAM_H
-
+#ifndef __GCODEPROGRAM_H
+#define __GCODEPROGRAM_H
 
 #include "common.h"
 #include "list.h"
 
-//lxw:Í·ÎÄ¼ş°üº¬¹ØÏµ
+//lxw:å¤´æ–‡ä»¶åŒ…å«å…³ç³»
 #include "GCodeCommon.h"
 #include "GCodeCalcExpression.h"
 
-
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
-
-//ºê½á¹¹Ìå
+//å®ç»“æ„ä½“
 typedef struct _SMacro
 {
-	SList* pDefineList;                         //´æ·Å×Ô¶¨ÒåºêµÄÁ´±í Êı¾İ:SUserDefineData
+    SList* pDefineList; //å­˜æ”¾è‡ªå®šä¹‰å®çš„é“¾è¡¨ æ•°æ®:SUserDefineData
 
-	struct _SLocalMacroVar SLocalVarSyntax;     //¾Ö²¿ºê±äÁ¿½á¹¹Ìå  Óï·¨
-	struct _SLocalMacroVar SLocalVarAssign;     //¾Ö²¿ºê±äÁ¿½á¹¹Ìå  ¸³Öµ
+    struct _SLocalMacroVar SLocalVarSyntax; //å±€éƒ¨å®å˜é‡ç»“æ„ä½“  è¯­æ³•
+    struct _SLocalMacroVar SLocalVarAssign; //å±€éƒ¨å®å˜é‡ç»“æ„ä½“  èµ‹å€¼
 
-	SList* pEnableStackSyntax;                  //´æ·Å¿ÉÖ´ĞĞ½á¹¹ÌåµÄÕ»  Óï·¨ Êı¾İ:SMacroExecutable½á¹¹Ìå
-	SList* pEnableStackAssign;                  //´æ·Å¿ÉÖ´ĞĞ½á¹¹ÌåµÄÕ»  ¸³Öµ Êı¾İ:SMacroExecutable½á¹¹Ìå
+    SList* pEnableStackSyntax; //å­˜æ”¾å¯æ‰§è¡Œç»“æ„ä½“çš„æ ˆ  è¯­æ³• æ•°æ®:SMacroExecutableç»“æ„ä½“
+    SList* pEnableStackAssign; //å­˜æ”¾å¯æ‰§è¡Œç»“æ„ä½“çš„æ ˆ  èµ‹å€¼ æ•°æ®:SMacroExecutableç»“æ„ä½“
 
-	uint8 ucIfCntSyntax;                        //Õ»ÖĞifÓï¾äµÄ¸öÊı
-	uint8 ucIfCntAssign;
+    uint8 ucIfCntSyntax; //æ ˆä¸­ifè¯­å¥çš„ä¸ªæ•°
+    uint8 ucIfCntAssign;
 
-	uint8 ucWhileCntSyntax;                     //Õ»ÖĞwhileÓï¾äµÄ¸öÊı
-	uint8 ucWhileCntAssign;
+    uint8 ucWhileCntSyntax; //æ ˆä¸­whileè¯­å¥çš„ä¸ªæ•°
+    uint8 ucWhileCntAssign;
 
-}SMacro;
+} SMacro;
 
-//³ÌĞò½á¹¹Ìå
+//ç¨‹åºç»“æ„ä½“
 typedef struct _SProgram
 {
-	int8 cFileName[TEMP_FILENAME_MAX_LENGTH];    //³ÌĞòÃû
-	int16 sRemainingCalls;                  //Ê£Óàµ÷ÓÃ´ÎÊı   È¨ÏŞ·½Ãæ:Óï·¨¼ì²éÖ»¶Á£¬¸³Öµ¶ÁĞ´
-	uint32 unFatherLineNum;                       //µ÷ÓÃ×Ó³ÌĞòÊ±£¬¸¸³ÌĞòM98µÄÏÂÒ»ĞĞµÄĞĞºÅ
+    int8 cFileName[TEMP_FILENAME_MAX_LENGTH]; //ç¨‹åºå
+    int16 sRemainingCalls;                    //å‰©ä½™è°ƒç”¨æ¬¡æ•°   æƒé™æ–¹é¢:è¯­æ³•æ£€æŸ¥åªè¯»ï¼Œèµ‹å€¼è¯»å†™
+    uint32 unFatherLineNum;                   //è°ƒç”¨å­ç¨‹åºæ—¶ï¼Œçˆ¶ç¨‹åºM98çš„ä¸‹ä¸€è¡Œçš„è¡Œå·
 
-	//ºêÏà¹Ø
-	int8  cMacroStatus;                     //±êÖ¾Î»£¬µ±Ç°³ÌĞòÊÇ·ñÆôÓÃÁËºê  0(GC_MODE_NORMAL):Ã»ÆôÓÃºê   1(GC_MODE_NORMAL_2_MACRO_1):»ñÈ¡×Ô¶¨Òåºê½×¶Î1  2(GC_MODE_NORMAL_2_MACRO_2):»ñÈ¡×Ô¶¨Òåºê½×¶Î2  3(GC_MODE_MACRO):ºêÔËĞĞ
-	uint16 usBeginLineNumMarco;             //×îºóÒ»¸öºê¶¨ÒåµÄÏÂÒ»ĞĞµÄĞĞºÅ,ÓÉÓï·¨¼ì²éĞ´Èë£¨¹¦ÄÜÓësBeginLineNumÏàÍ¬£©
-	int16 sBeginLineNum;                              //³ÌĞò¿ªÊ¼ĞĞºÅ£¨ÕıÎÄµÄµÚÒ»ĞĞ£¬ÓÉ¼ì²éÁ÷³ÌĞ´Èë£©
-	int32 nEndLineNum;								//³ÌĞò½áÊø
+    //å®ç›¸å…³
+    int8
+        cMacroStatus; //æ ‡å¿—ä½ï¼Œå½“å‰ç¨‹åºæ˜¯å¦å¯ç”¨äº†å®  0(GC_MODE_NORMAL):æ²¡å¯ç”¨å®   1(GC_MODE_NORMAL_2_MACRO_1):è·å–è‡ªå®šä¹‰å®é˜¶æ®µ1  2(GC_MODE_NORMAL_2_MACRO_2):è·å–è‡ªå®šä¹‰å®é˜¶æ®µ2  3(GC_MODE_MACRO):å®è¿è¡Œ
+    uint16 usBeginLineNumMarco; //æœ€åä¸€ä¸ªå®å®šä¹‰çš„ä¸‹ä¸€è¡Œçš„è¡Œå·,ç”±è¯­æ³•æ£€æŸ¥å†™å…¥ï¼ˆåŠŸèƒ½ä¸sBeginLineNumç›¸åŒï¼‰
+    int16 sBeginLineNum;        //ç¨‹åºå¼€å§‹è¡Œå·ï¼ˆæ­£æ–‡çš„ç¬¬ä¸€è¡Œï¼Œç”±æ£€æŸ¥æµç¨‹å†™å…¥ï¼‰
+    int32 nEndLineNum;          //ç¨‹åºç»“æŸ
 
-	uint8 ucG66ArrIndex;                    //G66ĞÅÏ¢½á¹¹ÌåµÄÔÚÊı×épSG66InfoArrÖĞµÄË÷Òı¼Ó1,Ê¹ÓÃÊ±Òª-1   0:±íÊ¾Ã»Ê¹ÓÃG66   1-4:·Ö±ğ¶ÔÓ¦Êı×éË÷Òı0-3
-	SMacro SMacro;                         //ºê½á¹¹Ìå(ÎªÊ²Ã´×ö³É¶¯Ì¬ÄÚ´æ£¬ÊÍ·ÅÒªÖ±½ÓÊµÀı»¯)
+    uint8
+        ucG66ArrIndex; //G66ä¿¡æ¯ç»“æ„ä½“çš„åœ¨æ•°ç»„pSG66InfoArrä¸­çš„ç´¢å¼•åŠ 1,ä½¿ç”¨æ—¶è¦-1   0:è¡¨ç¤ºæ²¡ä½¿ç”¨G66   1-4:åˆ†åˆ«å¯¹åº”æ•°ç»„ç´¢å¼•0-3
+    SMacro SMacro;     //å®ç»“æ„ä½“(ä¸ºä»€ä¹ˆåšæˆåŠ¨æ€å†…å­˜ï¼Œé‡Šæ”¾è¦ç›´æ¥å®ä¾‹åŒ–)
 
-	uint8 ucG66MarkAssign;
-	uint8 ucG66MarkCheck;
+    uint8 ucG66MarkAssign;
+    uint8 ucG66MarkCheck;
 
-
-}SProgram;
+} SProgram;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//³õÊ¼»¯³ÌĞò½á¹¹Ìå
+//åˆå§‹åŒ–ç¨‹åºç»“æ„ä½“
 int8 initProgramData(SProgram* pSProgram);
 
-//³õÊ¼»¯ºê½á¹¹Ìå
+//åˆå§‹åŒ–å®ç»“æ„ä½“
 int8 initMacroStruct(SMacro* pMacro);
 
-//³õÊ¼»¯¾Ö²¿±äÁ¿
+//åˆå§‹åŒ–å±€éƒ¨å˜é‡
 void initLocalVar(SLocalMacroVar* pSLocalMacroVar);
 
-//ÊÍ·Å³ÌĞò½á¹¹ÌåÄÚ¿ª±ÙµÄÄÚ´æ
+//é‡Šæ”¾ç¨‹åºç»“æ„ä½“å†…å¼€è¾Ÿçš„å†…å­˜
 void freeProgramData(SProgram* pSProgram);
 
-//ÊÍ·Åºê½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
+//é‡Šæ”¾å®ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
 void freeMacroData(SMacro* pSMacro);
 
-//»ñÈ¡³ÌĞòÁ´±í
+//è·å–ç¨‹åºé“¾è¡¨
 SList* getProgramList(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°¼Ó¹¤³ÌĞò½á¹¹Ìå
+//è·å–å½“å‰åŠ å·¥ç¨‹åºç»“æ„ä½“
 SProgram* getCurrentProgram(uint8 ucChannelNum);
 
-//Ìí¼ÓÖ÷³ÌĞòÊı¾İ½Úµã
+//æ·»åŠ ä¸»ç¨‹åºæ•°æ®èŠ‚ç‚¹
 int8 addMainProgramNode(uint8 ucChannelNum);
 
-//Ìí¼Ó³ÌĞòÊı¾İ½Úµã
+//æ·»åŠ ç¨‹åºæ•°æ®èŠ‚ç‚¹
 int8 addProgramNode(int32 cFileName, uint8 ucChannelNum);
 
-//´´½¨²¢³õÊ¼»¯³ÌĞò½á¹¹Ìå
+//åˆ›å»ºå¹¶åˆå§‹åŒ–ç¨‹åºç»“æ„ä½“
 SProgram* createAProgramStruct();
 
-//»ñÈ¡µ±Ç°³ÌĞò½á¹¹Ìå
+//è·å–å½“å‰ç¨‹åºç»“æ„ä½“
 SProgram* getCurrProgramStruct(uint8 ucChannelNum);
 
-//µ±Ç°³ÌĞòÊÇ·ñÎªÖ÷³ÌĞò
+//å½“å‰ç¨‹åºæ˜¯å¦ä¸ºä¸»ç¨‹åº
 int8 isMainProgram(uint8 ucChannelNum);
 
-//´«ÈëÊıÖµ£¬·µ»ØÎÄ¼şÃû
+//ä¼ å…¥æ•°å€¼ï¼Œè¿”å›æ–‡ä»¶å
 void convertProgramName(int32 nVal, int8 cArr[TEMP_FILENAME_MAX_LENGTH]);
-
 
 #endif

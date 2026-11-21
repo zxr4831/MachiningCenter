@@ -7,57 +7,56 @@ int MEM_CNT = 0;
 #endif // MEM_TEST
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid* mallocGCode(uint64 ulSize)
-  º¯Êı¹¦ÄÜ: ¸ù¾İ²»Í¬»·¾³£¬Ê¹ÓÃ²»Í¬µÄÄÚ´æ·ÖÅäº¯Êı
-  ÊäÈë²ÎÊı£ºulSizeĞèÒª¿ª±ÙµÄ×Ö½ÚÊı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÉêÇë³É¹¦·µ»ØµØÖ·
-			ÉêÇëÊ§°Ü·µ»ØNULL
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid* mallocGCode(uint64 ulSize)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®ä¸åŒç¯å¢ƒï¼Œä½¿ç”¨ä¸åŒçš„å†…å­˜åˆ†é…å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šulSizeéœ€è¦å¼€è¾Ÿçš„å­—èŠ‚æ•°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šç”³è¯·æˆåŠŸè¿”å›åœ°å€
+			ç”³è¯·å¤±è´¥è¿”å›NULL
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void* mallocGCode(uint64 ulSize, uint16 ORAM_NUM)
 {
-	void* pRet = NULL;
+    void* pRet = NULL;
 #if STM32_MODE
-	pRet = apply_ram(ulSize, ORAM_NUM);
+    pRet = apply_ram(ulSize, ORAM_NUM);
 #else
-	pRet = malloc(ulSize);
+    pRet = malloc(ulSize);
 #endif
-	if (pRet == NULL)
-	{
-		return NULL;
-	}
-	else
-	{
+    if (pRet == NULL)
+    {
+        return NULL;
+    }
+    else
+    {
 #if MEM_TEST
-		MEM_CNT += 1;
+        MEM_CNT += 1;
 #endif // MEM_TEST
-		return pRet;
-	}
+        return pRet;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeGcode(void *pFreeTarget)
-  º¯Êı¹¦ÄÜ: ¸ù¾İ²»Í¬»·¾³£¬Ê¹ÓÃ²»Í¬µÄÄÚ´æÊÍ·Åº¯Êı
-  ÊäÈë²ÎÊı£ºpFreeTargetÄ¿±êÄÚ´æµØÖ·
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºº¯ÊıÄÚ²¿»á¼ì²éÊÇ·ñÎª¿Õ£¬Ê¹ÓÃÊ±²»ÓÃÔÙÌáÇ°ÅĞ¶Ï
+  å‡½æ•°åç§°ï¼švoid freeGcode(void *pFreeTarget)
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®ä¸åŒç¯å¢ƒï¼Œä½¿ç”¨ä¸åŒçš„å†…å­˜é‡Šæ”¾å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼špFreeTargetç›®æ ‡å†…å­˜åœ°å€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šå‡½æ•°å†…éƒ¨ä¼šæ£€æŸ¥æ˜¯å¦ä¸ºç©ºï¼Œä½¿ç”¨æ—¶ä¸ç”¨å†æå‰åˆ¤æ–­
 **************************************************/
 void freeGCode(void* pFreeTarget)
 {
-	if (pFreeTarget == NULL)
-	{
-		return;
-	}
+    if (pFreeTarget == NULL)
+    {
+        return;
+    }
 #if STM32_MODE
-	free_ram(pFreeTarget);
+    free_ram(pFreeTarget);
 #else
-	free(pFreeTarget);
+    free(pFreeTarget);
 #endif
 
 #if MEM_TEST
-	MEM_CNT -= 1;
+    MEM_CNT -= 1;
 #endif // MEM_TEST
-
 }

@@ -1,8 +1,8 @@
 #include "ToolChanger.h"
 
-#include "G1.h" 
-#include "G0.h"  
-#include "Motion.h"	
+#include "G1.h"
+#include "G0.h"
+#include "Motion.h"
 #include <stdio.h>
 #include <string.h>
 #include "Config.h"
@@ -10,37 +10,36 @@
 #include "common.h"
 #include "Gcode.h"
 
-//³õÊ¼»¯µ¶¾ß²ÎÊı£¨µ¶ºÅ£©
+//åˆå§‹åŒ–åˆ€å…·å‚æ•°ï¼ˆåˆ€å·ï¼‰
 int8 toolInitAfterLoad()
 {
-	uint8 ucCounter = 0, ucCounter1 = 0;
-	for (ucCounter = 0; ucCounter < CHANNEL_NUM_MAX; ucCounter++)
-	{
-		for (ucCounter1 = 1; ucCounter1 <= TOOL_NUM_MAX; ucCounter1++)
-		{
-			g_SSystemPara.SToolPara[ucCounter][ucCounter1 - 1].ucToolID = ucCounter1;
-		}
-	}
+    uint8 ucCounter = 0, ucCounter1 = 0;
+    for (ucCounter = 0; ucCounter < CHANNEL_NUM_MAX; ucCounter++)
+    {
+        for (ucCounter1 = 1; ucCounter1 <= TOOL_NUM_MAX; ucCounter1++)
+        {
+            g_SSystemPara.SToolPara[ucCounter][ucCounter1 - 1].ucToolID = ucCounter1;
+        }
+    }
 
-	for (ucCounter = 0; ucCounter < CHANNEL_NUM_MAX; ucCounter++)
-	{
-		for (ucCounter1 = 1; ucCounter1 <= TOOL_NUM_MAX; ucCounter1++)
-		{
-			g_SSystemPara.SWearPara[ucCounter][ucCounter1 - 1].ucToolID = (ucCounter1 - 1) % TOOL_NUM_MAX + 1;
-		}
-	}
-
+    for (ucCounter = 0; ucCounter < CHANNEL_NUM_MAX; ucCounter++)
+    {
+        for (ucCounter1 = 1; ucCounter1 <= TOOL_NUM_MAX; ucCounter1++)
+        {
+            g_SSystemPara.SWearPara[ucCounter][ucCounter1 - 1].ucToolID = (ucCounter1 - 1) % TOOL_NUM_MAX + 1;
+        }
+    }
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºclearToolOffset( uint8 ucToolID )
-//  º¯Êı¹¦ÄÜ£ºÇå³ıÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucToolID µ¶¾ßºÅ
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-//			-1 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//			-2 ¿ÕÖ¸Õë
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šclearToolOffset( uint8 ucToolID )
+//  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+//  è¾“å…¥å‚æ•°ï¼šucToolID åˆ€å…·å·
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+//			-1 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//			-2 ç©ºæŒ‡é’ˆ
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 clearAllToolOffset(SToolParaInfo* STargetPara, uint8 ucTargetParaSize)
 //{
@@ -57,7 +56,7 @@ int8 toolInitAfterLoad()
 //
 //	for (ucCounter = 0; ucCounter < ucTargetParaSize; ucCounter++)
 //	{
-//		STargetPara[ucCounter].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
+//		STargetPara[ucCounter].SToolCoord = SZeroPoint;//åç§»åæ ‡ç½®0
 //		STargetPara[ucCounter].dToolRadius = 0;
 //	}
 //
@@ -67,16 +66,16 @@ int8 toolInitAfterLoad()
 //
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºclearSingleToolOffset(uint8 ucToolID,SToolParaInfo* STargetPara,  uint8 ucTargetParaSize)
-//  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucToolID  µ¶¾ßºÅ
-//			* STargetPara  Ö¸¶¨µ¶¾ß²ÎÊıµÄÆğÊ¼Ö¸Õë
-//			ucTargetParaSize ²ÎÊıµÄ×î´óÖµ
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//			-1 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//			-3 ¿ÕÖ¸Õë
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šclearSingleToolOffset(uint8 ucToolID,SToolParaInfo* STargetPara,  uint8 ucTargetParaSize)
+//  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+//  è¾“å…¥å‚æ•°ï¼šucToolID  åˆ€å…·å·
+//			* STargetPara  æŒ‡å®šåˆ€å…·å‚æ•°çš„èµ·å§‹æŒ‡é’ˆ
+//			ucTargetParaSize å‚æ•°çš„æœ€å¤§å€¼
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//			-1 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//			-3 ç©ºæŒ‡é’ˆ
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 clearSingleToolOffset(uint8 ucToolID, SToolParaInfo* STargetPara, uint8 ucTargetParaSize)
 //{
@@ -87,7 +86,7 @@ int8 toolInitAfterLoad()
 //	}
 //
 //
-//	if (ucToolID > ucTargetParaSize)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > ucTargetParaSize)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -1;
 //	}
@@ -95,52 +94,52 @@ int8 toolInitAfterLoad()
 //	SZeroPoint.dY = 0;
 //	SZeroPoint.dZ = 0;
 //
-//	STargetPara[ucToolID - 1].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
-//	STargetPara[ucToolID - 1].dToolRadius = 0;//°ë¾¶ÖÃ0
+//	STargetPara[ucToolID - 1].SToolCoord = SZeroPoint;//åç§»åæ ‡ç½®0
+//	STargetPara[ucToolID - 1].dToolRadius = 0;//åŠå¾„ç½®0
 //	return 1;
 //}
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºsetToolOffset( uint8 ucToolID,uint8 ucAxis ,double dOffsetVal,SPointDouble STargetCoor)
-//  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucToolID			µ¶¾ßºÅ
-//			ucAxis				ÖáºÅ
-//			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-//			*STargetPara		ĞŞ¸Äµ¶¾ß£¨Ä¥Ëğ£©µÄÆğÊ¼µØÖ·
-//			ucTargetParaSize	µØÖ·¶ÔÓ¦Êı¾İµÄÈİÁ¿
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//			-1 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//			-2 ÖáºÅ´íÎó
-//			-3 ¿ÕÖ¸Õë
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šsetToolOffset( uint8 ucToolID,uint8 ucAxis ,double dOffsetVal,SPointDouble STargetCoor)
+//  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+//  è¾“å…¥å‚æ•°ï¼šucToolID			åˆ€å…·å·
+//			ucAxis				è½´å·
+//			dOffsetVal			è¾“å…¥åç§»å€¼
+//			*STargetPara		ä¿®æ”¹åˆ€å…·ï¼ˆç£¨æŸï¼‰çš„èµ·å§‹åœ°å€
+//			ucTargetParaSize	åœ°å€å¯¹åº”æ•°æ®çš„å®¹é‡
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//			-1 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//			-2 è½´å·é”™è¯¯
+//			-3 ç©ºæŒ‡é’ˆ
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 setToolOffset(uint8 ucToolID, uint8 ucAxis, double dOffsetVal, SToolParaInfo* STargetPara, uint8 ucTargetParaSize)
 //{
-//	double* pdToolCoord;//Ä¿±êµÄµ¶¾ß×ø±ê
-//	double* pdRealTimeCoord = &g_SRealTimePoint.dX; //ÊµÊ±µã×ø±ê
+//	double* pdToolCoord;//ç›®æ ‡çš„åˆ€å…·åæ ‡
+//	double* pdRealTimeCoord = &g_SRealTimePoint.dX; //å®æ—¶ç‚¹åæ ‡
 //	if (STargetPara == NULL)
 //	{
 //		return -3;
 //	}
 //
 //
-//	if (ucToolID > ucTargetParaSize)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > ucTargetParaSize)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -1;
 //	}
-//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//µ¶¾ßÆ«ÒÆÖ»ÓĞXºÍZ
+//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//åˆ€å…·åç§»åªæœ‰Xå’ŒZ
 //	{
 //		return -2;
 //	}
-//	if (ucAxis == AXIS_X)//XÖá½«ÊäÈë³ı2
+//	if (ucAxis == AXIS_X)//Xè½´å°†è¾“å…¥é™¤2
 //	{
 //		dOffsetVal /= 2;
 //	}
 //
-//	pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//Ä¿±êµÄµ¶¾ß×ø±ê
+//	pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//ç›®æ ‡çš„åˆ€å…·åæ ‡
 //
-//	pdToolCoord[ucAxis - 1] = dOffsetVal + pdRealTimeCoord[ucAxis - 1];//ÊäÈëÖµ+»úĞµ×ø±ê
+//	pdToolCoord[ucAxis - 1] = dOffsetVal + pdRealTimeCoord[ucAxis - 1];//è¾“å…¥å€¼+æœºæ¢°åæ ‡
 //
 //
 //	return 1;
@@ -148,44 +147,44 @@ int8 toolInitAfterLoad()
 //
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºinputToolOffset( uint8 ucToolID,uint8 ucAxis ,double dOffsetVal)
-//  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucToolID			µ¶¾ßºÅ
-//			ucAxis				ÖáºÅ
-//			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-//			*STargetPara		ĞŞ¸Äµ¶¾ß£¨Ä¥Ëğ£©µÄÆğÊ¼µØÖ·
-//			ucTargetParaSize	µØÖ·¶ÔÓ¦Êı¾İµÄÈİÁ¿
-//			bIsRelaVal			ÊÇ²»ÊÇÏà¶ÔÖµ£¨ÔÚÔ­»ù´¡ÉÏ¼Ó£¿)
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//						-1 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//						-2 ÖáºÅ´íÎó
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šinputToolOffset( uint8 ucToolID,uint8 ucAxis ,double dOffsetVal)
+//  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+//  è¾“å…¥å‚æ•°ï¼šucToolID			åˆ€å…·å·
+//			ucAxis				è½´å·
+//			dOffsetVal			è¾“å…¥åç§»å€¼
+//			*STargetPara		ä¿®æ”¹åˆ€å…·ï¼ˆç£¨æŸï¼‰çš„èµ·å§‹åœ°å€
+//			ucTargetParaSize	åœ°å€å¯¹åº”æ•°æ®çš„å®¹é‡
+//			bIsRelaVal			æ˜¯ä¸æ˜¯ç›¸å¯¹å€¼ï¼ˆåœ¨åŸåŸºç¡€ä¸ŠåŠ ï¼Ÿ)
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//						-1 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//						-2 è½´å·é”™è¯¯
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 inputToolOffset(uint8 ucToolID, uint8 ucAxis, double dOffsetVal, SToolParaInfo* STargetPara, uint8 ucTargetParaSize,bool bIsRelaVal)
 //{
 //	double* pdToolCoord;
-//	if (ucToolID > ucTargetParaSize)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > ucTargetParaSize)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -1;
 //	}
-//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//µ¶¾ßÆ«ÒÆÖ»ÓĞXºÍZ
+//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//åˆ€å…·åç§»åªæœ‰Xå’ŒZ
 //	{
 //		return -2;
 //	}
-//	if (ucAxis == AXIS_X)//XÖáÎªÊäÈëÖµµÄ1/2
+//	if (ucAxis == AXIS_X)//Xè½´ä¸ºè¾“å…¥å€¼çš„1/2
 //	{
 //		dOffsetVal /= 2;
 //	}
 //	if (bIsRelaVal)
 //	{
-//		pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//È·¶¨Ä¿±ê×ø±ê
-//		pdToolCoord[ucAxis - 1] += dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
+//		pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//ç¡®å®šç›®æ ‡åæ ‡
+//		pdToolCoord[ucAxis - 1] += dOffsetVal;//è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
 //	}
 //	else
 //	{
-//		pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//È·¶¨Ä¿±ê×ø±ê
-//		pdToolCoord[ucAxis - 1] = dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
+//		pdToolCoord = &STargetPara[ucToolID - 1].SToolCoord.dX;//ç¡®å®šç›®æ ‡åæ ‡
+//		pdToolCoord[ucAxis - 1] = dOffsetVal;//è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
 //	}
 //
 //
@@ -193,419 +192,410 @@ int8 toolInitAfterLoad()
 //	return 1;
 //}
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearAllToolOffset(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÇå³ıËùÓĞµ¶¾ßÆ«ÒÆ
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearAllToolOffset(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤æ‰€æœ‰åˆ€å…·åç§»
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearAllToolOffset(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
-	SPointDouble SZeroPoint = { {0} };//Áãµã×ø±ê
-	uint8 ucCounter;
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SPointDouble SZeroPoint = {{0}}; //é›¶ç‚¹åæ ‡
+    uint8 ucCounter;
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)//±éÀú¸ÃÍ¨µÀÏÂµÄµ¶¾ß²ÎÊı
-	{
-		STargetPara[ucCounter].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++) //éå†è¯¥é€šé“ä¸‹çš„åˆ€å…·å‚æ•°
+    {
+        STargetPara[ucCounter].SToolCoord = SZeroPoint; //åç§»åæ ‡ç½®0
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
-
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºclearSingleToolOffset(uint8 ucToolID)
-//  º¯Êı¹¦ÄÜ£ºÇå³ıÒ»ĞĞµÄµ¶¾ßÆ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-//			ucToolID  µ¶¾ßºÅ
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//			-1 Í¨µÀ´íÎó
-//			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šclearSingleToolOffset(uint8 ucToolID)
+//  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤ä¸€è¡Œçš„åˆ€å…·åç§»
+//  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+//			ucToolID  åˆ€å…·å·
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//			-1 é€šé“é”™è¯¯
+//			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 clearSingleToolOffset(uint8 ucChannelNum, uint8 ucToolID)
 //{
-//	SToolParaInfo* STargetPara = (SToolParaInfo*)&g_SSystemPara.SToolPara[0];//Ö¸Ïòµ¶¾ßÆ«ÒÆ
-//	SPointDouble SZeroPoint = { {0} };//Áãµã×ø±ê
+//	SToolParaInfo* STargetPara = (SToolParaInfo*)&g_SSystemPara.SToolPara[0];//æŒ‡å‘åˆ€å…·åç§»
+//	SPointDouble SZeroPoint = { {0} };//é›¶ç‚¹åæ ‡
 //
-//	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
+//	if (ucChannelNum >= CHANNEL_NUM_MAX)//é€šé“å·é”™è¯¯
 //	{
 //		return -1;
 //	}
-//	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > TOOL_NUM_MAX)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -2;
 //	}
 //
-//	STargetPara[ucToolID - 1].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
-//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
+//	STargetPara[ucToolID - 1].SToolCoord = SZeroPoint;//åç§»åæ ‡ç½®0
+//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// æ›´æ–°å½“å‰æ€»åç§»
 //	return 1;
 //}
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal)
-  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolLengthNum		µ¶³¤ºÅ
-			ucAxis				ÖáºÅ      ´Ó0¿ªÊ¼   0~5
-			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀ´íÎó
-			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-			-3 ÖáºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolLengthNum		åˆ€é•¿å·
+			ucAxis				è½´å·      ä»0å¼€å§‹   0~5
+			dOffsetVal			è¾“å…¥åç§»å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“é”™è¯¯
+			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+			-3 è½´å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 setToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal)
 {
-	double* pdToolCoord;//Ä¿±êµÄµ¶¾ß×ø±ê
-	double* pdCurToolCoord;//µ±Ç°Ê¹ÓÃµÄµ¶¾ßºÅ
-	double dRealTimeCoord;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolLengthNum > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
-	{
-		return -3;
-	}
+    double* pdToolCoord;    //ç›®æ ‡çš„åˆ€å…·åæ ‡
+    double* pdCurToolCoord; //å½“å‰ä½¿ç”¨çš„åˆ€å…·å·
+    double dRealTimeCoord;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolLengthNum > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
+    {
+        return -3;
+    }
 
+    if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) //ç›´å¾„æ˜¾ç¤ºè®¾ä¸ºè¾“å…¥å€¼çš„1/2	//é™ˆæ•èª	2023/7/22
+    {
+        dOffsetVal /= 2;
+    }
 
-	if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter)//Ö±¾¶ÏÔÊ¾ÉèÎªÊäÈëÖµµÄ1/2	//³ÂÃô´Ï	2023/7/22
-	{
-		dOffsetVal /= 2;
-	}
+    getSingleAxisRealTimePointByChannel(ucChannelNum, &dRealTimeCoord, ucAxis); //å®æ—¶ç‚¹åæ ‡
 
-	getSingleAxisRealTimePointByChannel(ucChannelNum, &dRealTimeCoord, ucAxis); //ÊµÊ±µã×ø±ê
-
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-	if (g_SSystemPara.bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ
-	{
-		if (ucAxis == AXIS_X)
-		{
-			double dY1RealTimeCoord = 0.0;
-			getSingleAxisRealTimePointByChannel(ucChannelNum, &dY1RealTimeCoord, AXIS_Y); //»ñÈ¡Y1ÖáÊµÊ±µã×ø±ê
-			dRealTimeCoord -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
-		}
-		if (ucAxis == AXIS_Y)
-		{
-			dRealTimeCoord *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-		}
-	}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (g_SSystemPara.bUseVirtualY == TRUE)                                //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½
+    {
+        if (ucAxis == AXIS_X)
+        {
+            double dY1RealTimeCoord = 0.0;
+            getSingleAxisRealTimePointByChannel(ucChannelNum, &dY1RealTimeCoord, AXIS_Y); //è·å–Y1è½´å®æ—¶ç‚¹åæ ‡
+            dRealTimeCoord -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
+        }
+        if (ucAxis == AXIS_Y)
+        {
+            dRealTimeCoord *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+        }
+    }
 #endif
 
-	struct _SRun* pSRun = &g_SChannel[ucChannelNum].SRun;
-	pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1].SToolCoord.dArray;//¹â±ê¶ÔÓ¦µÄµ¶ºÅµÄµ¶¾ß×ø±ê
-	pdCurToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][pSRun->ucToolCompNum - 1].SToolCoord.dArray;//µ±Ç°Ê¹ÓÃµÄµ¶ºÅµÄµ¶¾ß×ø±ê
+    struct _SRun* pSRun = &g_SChannel[ucChannelNum].SRun;
+    pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1]
+                      .SToolCoord.dArray; //å…‰æ ‡å¯¹åº”çš„åˆ€å·çš„åˆ€å…·åæ ‡
+    pdCurToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][pSRun->ucToolCompNum - 1]
+                         .SToolCoord.dArray; //å½“å‰ä½¿ç”¨çš„åˆ€å·çš„åˆ€å…·åæ ‡
 
-	//pdToolCoord[ucAxis] = pdCurToolCoord[ucAxis] + (dRealTimeCoord - pSRun->SCurrentOffset.dArray[ucAxis] - dOffsetVal);//¸ù¾İ¾ø¶Ô×ø±êµÄÔöÁ¿À´ĞŞ¸Äµ¶¾ß×ø±ê£¨¾ø¶Ô×ø±ê¼Ó¶àÉÙ£¬µ¶¾ß×ø±ê¾Í¼õ¶àÉÙ£©³ÂÓıéª2023.10.13
-	pdToolCoord[ucAxis] = dRealTimeCoord - dOffsetVal;//³ÂÓıéª2024.3.1 
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    //pdToolCoord[ucAxis] = pdCurToolCoord[ucAxis] + (dRealTimeCoord - pSRun->SCurrentOffset.dArray[ucAxis] - dOffsetVal);//æ ¹æ®ç»å¯¹åæ ‡çš„å¢é‡æ¥ä¿®æ”¹åˆ€å…·åæ ‡ï¼ˆç»å¯¹åæ ‡åŠ å¤šå°‘ï¼Œåˆ€å…·åæ ‡å°±å‡å¤šå°‘ï¼‰é™ˆè‚²æ¥ 2023.10.13
+    pdToolCoord[ucAxis] = dRealTimeCoord - dOffsetVal; //é™ˆè‚²æ¥ 2024.3.1
+    updataTotalOffset(ucChannelNum, 0, TRUE);          // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinputToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
-  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolLengthNum		µ¶³¤
-			ucAxis				ÖáºÅ
-			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-			bIsRelaVal			ÊÇ²»ÊÇÏà¶ÔÖµ£¨ÔÚÔ­»ù´¡ÉÏ¼Ó£¿)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀ´íÎó
-			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-			-3 ÖáºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinputToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolLengthNum		åˆ€é•¿
+			ucAxis				è½´å·
+			dOffsetVal			è¾“å…¥åç§»å€¼
+			bIsRelaVal			æ˜¯ä¸æ˜¯ç›¸å¯¹å€¼ï¼ˆåœ¨åŸåŸºç¡€ä¸ŠåŠ ï¼Ÿ)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“é”™è¯¯
+			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+			-3 è½´å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 inputToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
 {
-	double* pdToolCoord;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolLengthNum > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
-	{
-		return -3;
-	}
+    double* pdToolCoord;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolLengthNum > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
+    {
+        return -3;
+    }
 
-	if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter)//Ö±¾¶ÏÔÊ¾ÉèÎªÊäÈëÖµµÄ1/2	//³ÂÃô´Ï	2023/7/22
-	{
-		dOffsetVal /= 2;
-	}
+    if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) //ç›´å¾„æ˜¾ç¤ºè®¾ä¸ºè¾“å…¥å€¼çš„1/2	//é™ˆæ•èª	2023/7/22
+    {
+        dOffsetVal /= 2;
+    }
 
-	pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1].SToolCoord.dArray;//È·¶¨Ä¿±ê×ø±ê
+    pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1].SToolCoord.dArray; //ç¡®å®šç›®æ ‡åæ ‡
 
-	if (bIsRelaVal)
-	{
-		pdToolCoord[ucAxis] += dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
-	}
-	else
-	{
-		pdToolCoord[ucAxis] = dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    if (bIsRelaVal)
+    {
+        pdToolCoord[ucAxis] += dOffsetVal; //è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
+    }
+    else
+    {
+        pdToolCoord[ucAxis] = dOffsetVal; //è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡Ö¸¶¨µ¶ºÅµÄµ¶²¹Æ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolLengthNum		µ¶³¤ºÅ
-			ucAxis				ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÖ¸¶¨µ¶ºÅ¶ÔÓ¦ÖáµÄÆ«ÒÆÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolLengthNum		åˆ€é•¿å·
+			ucAxis				è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæŒ‡å®šåˆ€å·å¯¹åº”è½´çš„åç§»å€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getToolOffset(uint8 ucChannelNum, uint8 ucToolLengthNum, uint8 ucAxis)
 {
-	double* pdToolCoord;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return 0.0;
-	}
-	if (ucToolLengthNum > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return 0.0;
-	}
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
-	{
-		return 0.0;
-	}
+    double* pdToolCoord;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return 0.0;
+    }
+    if (ucToolLengthNum > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return 0.0;
+    }
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)
+    {
+        return 0.0;
+    }
 
-	pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1].SToolCoord.dArray;//È·¶¨Ä¿±ê×ø±ê
+    pdToolCoord = (double*)&g_SSystemPara.SToolPara[ucChannelNum][ucToolLengthNum - 1].SToolCoord.dArray; //ç¡®å®šç›®æ ‡åæ ‡
 
-	return (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) ? pdToolCoord[ucAxis] * 2.0 : pdToolCoord[ucAxis];	//·µ»ØÖµ	³ÂÃô´Ï	2023/7/22
+    return (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) ? pdToolCoord[ucAxis] * 2.0
+                                                             : pdToolCoord[ucAxis]; //è¿”å›å€¼	é™ˆæ•èª	2023/7/22
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearAllToolOffset()
-  º¯Êı¹¦ÄÜ£ºÇå³ıËùÓĞµ¶¾ßIDµÄ°ë¾¶
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearAllToolOffset()
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åŠå¾„
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearAllToolRadius(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
-	uint8 ucCounter;
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    uint8 ucCounter;
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)//Ñ­»·  ÖÃµ¶¾ß°ë¾¶Îª0
-	{
-		STargetPara[ucCounter].dToolRadius = 0;
-	}
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++) //å¾ªç¯  ç½®åˆ€å…·åŠå¾„ä¸º0
+    {
+        STargetPara[ucCounter].dToolRadius = 0;
+    }
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearSingleToolOffset(uint8 ucToolID)
-  º¯Êı¹¦ÄÜ£ºÇå³ıÒ»ĞĞµ¶¾ßIDµÄ°ë¾¶
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolID		µ¶¾ßºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearSingleToolOffset(uint8 ucToolID)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åŠå¾„
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolID		åˆ€å…·å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearSingleToolRadius(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
 
-	STargetPara[ucToolID - 1].dToolRadius = 0;//°ë¾¶ÖÃ0
-	return 1;
+    STargetPara[ucToolID - 1].dToolRadius = 0; //åŠå¾„ç½®0
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinputToolRadius(uint8 ucToolID, double dToolRadius)
-  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶²¹°ë¾¶
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolID			µ¶¾ßºÅ
-			dToolRadius			°ë¾¶Öµ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀ´íÎó
-			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinputToolRadius(uint8 ucToolID, double dToolRadius)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€è¡¥åŠå¾„
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolID			åˆ€å…·å·
+			dToolRadius			åŠå¾„å€¼
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“é”™è¯¯
+			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 inputToolRadius(uint8 ucChannelNum, uint8 ucToolID, double dToolRadius)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
 
-	STargetPara[ucToolID - 1].dToolRadius = dToolRadius;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
+    STargetPara[ucToolID - 1].dToolRadius = dToolRadius; //è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolRadius(uint8 ucChannelNum, uint8 ucToolID)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡Ö¸¶¨µ¶ºÅµÄ°ë¾¶
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucToolID			µ¶¾ßºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºµ¶¾ß°ë¾¶
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolRadius(uint8 ucChannelNum, uint8 ucToolID)
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–æŒ‡å®šåˆ€å·çš„åŠå¾„
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucToolID			åˆ€å…·å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåˆ€å…·åŠå¾„
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getToolRadius(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1.0;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2.0;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1.0;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2.0;
+    }
 
-	return STargetPara[ucToolID - 1].dToolRadius;//Æ«ÒÆÖµ
+    return STargetPara[ucToolID - 1].dToolRadius; //åç§»å€¼
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearAllToolWear(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÇå³ıËùÓĞµ¶¾ßIDµÄÄ¥ËğÖµ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Çå³ıÍê³É
-			-1 Í¨µÀ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearAllToolWear(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„ç£¨æŸå€¼
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ¸…é™¤å®Œæˆ
+			-1 é€šé“é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearAllToolWear(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SWearPara[ucChannelNum][0];
-	SPointDouble SZeroPoint = { {0} };//Áãµã×ø±ê
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    SToolParaInfo* STargetPara = &g_SSystemPara.SWearPara[ucChannelNum][0];
+    SPointDouble SZeroPoint = {{0}}; //é›¶ç‚¹åæ ‡
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX ; ucCounter++)
-	{
-		STargetPara[ucCounter].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
-		//STargetPara[ucCounter].dToolRadius = 0;
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
+    {
+        STargetPara[ucCounter].SToolCoord = SZeroPoint; //åç§»åæ ‡ç½®0
+                                                        //STargetPara[ucCounter].dToolRadius = 0;
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
-
 ///*************************************************2023/2/14 cmc
-//  º¯ÊıÃû³Æ£ºclearSingleToolWear(uint8 ucToolID,uint8 ucGroupNum)
-//  º¯Êı¹¦ÄÜ£ºÇå³ıÒ»ĞĞµ¶¾ßIDµÄÄ¥ËğÖµ
-//  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-//			ucToolID	µ¶¾ßºÅ    1~TOOL_NUM_MAX
-//			ucGroupNum	Ä¥Ëğ×éºÅ  1~TOOLWEAR_GROUP_NUM
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//			-1 Í¨µÀ´íÎó
-//			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//			-3 ×éºÅ´íÎó
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šclearSingleToolWear(uint8 ucToolID,uint8 ucGroupNum)
+//  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„ç£¨æŸå€¼
+//  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+//			ucToolID	åˆ€å…·å·    1~TOOL_NUM_MAX
+//			ucGroupNum	ç£¨æŸç»„å·  1~TOOLWEAR_GROUP_NUM
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//			-1 é€šé“é”™è¯¯
+//			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//			-3 ç»„å·é”™è¯¯
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 clearSingleToolWear(uint8 ucChannelNum, uint8 ucToolID, uint8 ucToolCompNum)
 //{
 //	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 //	SPointDouble SZeroPoint = { {0} };
-//	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
+//	if (ucChannelNum >= CHANNEL_NUM_MAX)//é€šé“å·é”™è¯¯
 //	{
 //		return -1;
 //	}
-//	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > TOOL_NUM_MAX)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -2;
 //	}
 //	if (ucToolCompNum > TOOL_NUM_MAX) return -3;
 //
 //
-//	STargetPara[ucToolCompNum - 1].SToolCoord = SZeroPoint;//Æ«ÒÆ×ø±êÖÃ0
-//	//STargetPara[ucToolID - 1].dToolRadius = 0;//°ë¾¶ÖÃ0
-//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
+//	STargetPara[ucToolCompNum - 1].SToolCoord = SZeroPoint;//åç§»åæ ‡ç½®0
+//	//STargetPara[ucToolID - 1].dToolRadius = 0;//åŠå¾„ç½®0
+//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// æ›´æ–°å½“å‰æ€»åç§»
 //	return 1;
 //}
 
-
 ///*************************************************2023/2/14 cmc
-//  º¯ÊıÃû³Æ£ºinputToolWear(uint8 ucToolID, uint8 ucGroupNum,uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
-//  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶¾ßÄ¥ËğÖµ
-//  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-//			ucToolID			µ¶¾ßºÅ 1~TOOL_NUM_MAX
-//			ucGroupNum			Ä¥Ëğ×éºÅ 1~TOOLWEAR_GROUP_NUM
-//			ucAxis				ÖáºÅ   ´Ó0¿ªÊ¼
-//			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-//			bIsRelaVal			ÊÇ²»ÊÇÏà¶ÔÖµ£¨ÔÚÔ­»ù´¡ÉÏ¼Ó£¿)
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-//			-1 Í¨µÀ´íÎó
-//			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-//			-3 ÖáºÅ´íÎó
-//			-4 ×éºÅ´íÎó
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šinputToolWear(uint8 ucToolID, uint8 ucGroupNum,uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
+//  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€å…·ç£¨æŸå€¼
+//  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+//			ucToolID			åˆ€å…·å· 1~TOOL_NUM_MAX
+//			ucGroupNum			ç£¨æŸç»„å· 1~TOOLWEAR_GROUP_NUM
+//			ucAxis				è½´å·   ä»0å¼€å§‹
+//			dOffsetVal			è¾“å…¥åç§»å€¼
+//			bIsRelaVal			æ˜¯ä¸æ˜¯ç›¸å¯¹å€¼ï¼ˆåœ¨åŸåŸºç¡€ä¸ŠåŠ ï¼Ÿ)
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+//			-1 é€šé“é”™è¯¯
+//			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+//			-3 è½´å·é”™è¯¯
+//			-4 ç»„å·é”™è¯¯
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 inputToolWear(uint8 ucChannelNum, uint8 ucToolID, uint8 ucToolCompNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
 //{
 //	double* pdToolCoord;
-//	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
+//	if (ucChannelNum >= CHANNEL_NUM_MAX)//é€šé“å·é”™è¯¯
 //	{
 //		return -1;
 //	}
-//	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
+//	if (ucToolID > TOOL_NUM_MAX)//åˆ€å·å¤§äºåˆ€å…·æ•°é‡
 //	{
 //		return -2;
 //	}
@@ -614,293 +604,288 @@ int8 clearAllToolWear(uint8 ucChannelNum)
 //		return -4;
 //	}
 //
-//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//µ¶¾ßÆ«ÒÆÖ»ÓĞXºÍZ
+//	if (ucAxis != AXIS_X && ucAxis != AXIS_Z)//åˆ€å…·åç§»åªæœ‰Xå’ŒZ
 //	{
 //		return -3;
 //	}
-//	if (ucAxis == AXIS_X)//XÖáÎªÊäÈëÖµµÄ1/2
+//	if (ucAxis == AXIS_X)//Xè½´ä¸ºè¾“å…¥å€¼çš„1/2
 //	{
 //		dOffsetVal /= 2;
 //	}
 //
-//	pdToolCoord = (double*)&g_SSystemPara.SWearPara[ucChannelNum][ucToolCompNum - 1].SToolCoord.dArray;//È·¶¨Ä¿±ê×ø±ê
+//	pdToolCoord = (double*)&g_SSystemPara.SWearPara[ucChannelNum][ucToolCompNum - 1].SToolCoord.dArray;//ç¡®å®šç›®æ ‡åæ ‡
 //
 //	if (bIsRelaVal)
 //	{
-//		pdToolCoord[ucAxis] += dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
+//		pdToolCoord[ucAxis] += dOffsetVal;//è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
 //	}
 //	else
 //	{
-//		pdToolCoord[ucAxis] = dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
+//		pdToolCoord[ucAxis] = dOffsetVal;//è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
 //	}
-//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
+//	updataTotalOffset(ucChannelNum, ucToolID, 0, FALSE);// æ›´æ–°å½“å‰æ€»åç§»
 //	return 1;
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinputToolWear(uint8 ucGroupNum,uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
-  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶¾ßÄ¥ËğÖµ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucWearCompNum		Ä¥ËğºÅ 1~TOOLWEAR_GROUP_NUM
-			ucAxis				ÖáºÅ   ´Ó0¿ªÊ¼
-			dOffsetVal			ÊäÈëÆ«ÒÆÖµ
-			bIsRelaVal			ÊÇ²»ÊÇÏà¶ÔÖµ£¨ÔÚÔ­»ù´¡ÉÏ¼Ó£¿)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀ´íÎó
-			-2 µ¶¾ßºÅ³¬¹ıµ¶¾ßÊıÁ¿
-			-3 ÖáºÅ´íÎó
-			-4 ×éºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinputToolWear(uint8 ucGroupNum,uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€å…·ç£¨æŸå€¼
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucWearCompNum		ç£¨æŸå· 1~TOOLWEAR_GROUP_NUM
+			ucAxis				è½´å·   ä»0å¼€å§‹
+			dOffsetVal			è¾“å…¥åç§»å€¼
+			bIsRelaVal			æ˜¯ä¸æ˜¯ç›¸å¯¹å€¼ï¼ˆåœ¨åŸåŸºç¡€ä¸ŠåŠ ï¼Ÿ)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“é”™è¯¯
+			-2 åˆ€å…·å·è¶…è¿‡åˆ€å…·æ•°é‡
+			-3 è½´å·é”™è¯¯
+			-4 ç»„å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 inputToolWear(uint8 ucChannelNum, uint8 ucWearCompNum, uint8 ucAxis, double dOffsetVal, bool bIsRelaVal)
 {
-	double* pdToolCoord;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucWearCompNum > TOOL_NUM_MAX || ucWearCompNum < 1)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
+    double* pdToolCoord;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucWearCompNum > TOOL_NUM_MAX || ucWearCompNum < 1) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
 
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)//µ¶¾ßÆ«ÒÆÖ»ÓĞXºÍZ
-	{
-		return -3;
-	}
-	//if (ucAxis == AXIS_X)//XÖáÎªÊäÈëÖµµÄ1/2    ³ÂÓıéª ×¢ÊÍµô 5.27
-	//{
-	//	dOffsetVal /= 2;
-	//}
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y) //åˆ€å…·åç§»åªæœ‰Xå’ŒZ
+    {
+        return -3;
+    }
+    //if (ucAxis == AXIS_X)//Xè½´ä¸ºè¾“å…¥å€¼çš„1/2    é™ˆè‚²æ¥  æ³¨é‡Šæ‰ 5.27
+    //{
+    //	dOffsetVal /= 2;
+    //}
 
-	if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter)//Ö±¾¶ÏÔÊ¾ÉèÎªÊäÈëÖµµÄ1/2	°ë¾¶ÏÔÊ¾ÉèÎªÔ­À´µÄÖµ  /³ÂÓıéª 5.27
-	{
-		dOffsetVal /= 2;
-	}
-	pdToolCoord = (double*)&g_SSystemPara.SWearPara[ucChannelNum][ucWearCompNum - 1].SToolCoord.dArray;//È·¶¨Ä¿±ê×ø±ê
+    if (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) //ç›´å¾„æ˜¾ç¤ºè®¾ä¸ºè¾“å…¥å€¼çš„1/2	åŠå¾„æ˜¾ç¤ºè®¾ä¸ºåŸæ¥çš„å€¼  /é™ˆè‚²æ¥  5.27
+    {
+        dOffsetVal /= 2;
+    }
+    pdToolCoord = (double*)&g_SSystemPara.SWearPara[ucChannelNum][ucWearCompNum - 1].SToolCoord.dArray; //ç¡®å®šç›®æ ‡åæ ‡
 
-	if (bIsRelaVal)
-	{
-		pdToolCoord[ucAxis] += dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
-	}
-	else
-	{
-		pdToolCoord[ucAxis] = dOffsetVal;//ÉèÖÃÎªÊäÈëµÄÆ«ÒÆÖµ
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ 
-	return 1;
+    if (bIsRelaVal)
+    {
+        pdToolCoord[ucAxis] += dOffsetVal; //è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
+    }
+    else
+    {
+        pdToolCoord[ucAxis] = dOffsetVal; //è®¾ç½®ä¸ºè¾“å…¥çš„åç§»å€¼
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolWear(uint8 ucChannelNum, uint8 ucGroupNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ£ºÉèÖÃÖ¸¶¨µ¶ºÅµÄµ¶¾ßÄ¥ËğÖµ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucWearCompNum		Ä¥ËğºÅ ´Ó1¿ªÊ¼ 1~TOOL_NUM_MAX
-			ucAxis				ÖáºÅ   ´Ó0¿ªÊ¼
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºµ¶¾ßÄ¥ËğÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolWear(uint8 ucChannelNum, uint8 ucGroupNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¾ç½®æŒ‡å®šåˆ€å·çš„åˆ€å…·ç£¨æŸå€¼
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucWearCompNum		ç£¨æŸå· ä»1å¼€å§‹ 1~TOOL_NUM_MAX
+			ucAxis				è½´å·   ä»0å¼€å§‹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šåˆ€å…·ç£¨æŸå€¼
+  å¤‡    æ³¨ï¼š
 **************************************************/
 double getToolWear(uint8 ucChannelNum, uint8 ucWearCompNum, uint8 ucAxis)
 {
-	double dRes;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return 0.0;
-	}
+    double dRes;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return 0.0;
+    }
 
-	if (ucWearCompNum > TOOL_NUM_MAX)
-	{
-		return 0.0;
-	}
+    if (ucWearCompNum > TOOL_NUM_MAX)
+    {
+        return 0.0;
+    }
 
-	if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y)//µ¶¾ßÆ«ÒÆÖ»ÓĞXºÍZ
-	{
-		return 0.0;
-	}
+    if (ucAxis != AXIS_X && ucAxis != AXIS_Z && ucAxis != AXIS_Y) //åˆ€å…·åç§»åªæœ‰Xå’ŒZ
+    {
+        return 0.0;
+    }
 
-	dRes = g_SSystemPara.SWearPara[ucChannelNum][ucWearCompNum - 1].SToolCoord.dArray[ucAxis];//È·¶¨Ä¿±ê×ø±ê
-	//return (ucAxis == AXIS_X) ? dRes * 2.0 : dRes;//   ³ÂÓıéª ×¢ÊÍµô 5.27
-	return (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter) ? dRes * 2.0 : dRes;//Ö±¾¶ÏÔÊ¾ÉèÎªÊäÈëÖµµÄ1/2	°ë¾¶ÏÔÊ¾ÉèÎªÔ­À´µÄÖµ  /³ÂÓıéª 5.27
+    dRes = g_SSystemPara.SWearPara[ucChannelNum][ucWearCompNum - 1].SToolCoord.dArray[ucAxis]; //ç¡®å®šç›®æ ‡åæ ‡
+    //return (ucAxis == AXIS_X) ? dRes * 2.0 : dRes;//   é™ˆè‚²æ¥  æ³¨é‡Šæ‰ 5.27
+    return (g_SSystemPara.SAxisPara[ucAxis].bShowByDiameter)
+               ? dRes * 2.0
+               : dRes; //ç›´å¾„æ˜¾ç¤ºè®¾ä¸ºè¾“å…¥å€¼çš„1/2	åŠå¾„æ˜¾ç¤ºè®¾ä¸ºåŸæ¥çš„å€¼  /é™ˆè‚²æ¥  5.27
 }
 
-
-//Çå³ıËùÓĞµ¶¾ßIDµÄ¼ÙÏóµ¶¼âºÅ
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„å‡è±¡åˆ€å°–å·
 int8 clearAllToolNoseNum(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
-	{
-		STargetPara[ucCounter].ucToolNoseID = 0;
-	}
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
+    {
+        STargetPara[ucCounter].ucToolNoseID = 0;
+    }
 
-	return 1;
+    return 1;
 }
 
-
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄ¼ÙÏóµ¶¼âºÅ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„å‡è±¡åˆ€å°–å·
 int8 clearSingleToolNoseNum(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//¼ÙÏóµ¶¼âºÅ´óÓÚ¼ÙÏóµ¶¼â×ÜÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //å‡è±¡åˆ€å°–å·å¤§äºå‡è±¡åˆ€å°–æ€»æ•°é‡
+    {
+        return -2;
+    }
 
-	STargetPara[ucToolID - 1].ucToolNoseID = 0;//¼ÙÏóµ¶¼âºÅÉèÎª0
-	return 1;
+    STargetPara[ucToolID - 1].ucToolNoseID = 0; //å‡è±¡åˆ€å°–å·è®¾ä¸º0
+    return 1;
 }
 
-
-//ÊäÈë¼ÙÏóµ¶¼âºÅ
+//è¾“å…¥å‡è±¡åˆ€å°–å·
 int8 inputToolNoseNum(uint8 ucChannelNum, uint8 ucToolID, uint8 ucToolNoseNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
 
-	if (ucToolNoseNum > TOOLNOSE_NUM_MAX)//¼ÙÏóµ¶¼âºÅ´óÓÚ×ÜÊıÁ¿
-	{
-		return -3;
-	}
+    if (ucToolNoseNum > TOOLNOSE_NUM_MAX) //å‡è±¡åˆ€å°–å·å¤§äºæ€»æ•°é‡
+    {
+        return -3;
+    }
 
-	STargetPara[ucToolID - 1].ucToolNoseID = ucToolNoseNum;//ÉèÖÃÎªÊäÈë¼ÙÏóµ¶¼âºÅ
+    STargetPara[ucToolID - 1].ucToolNoseID = ucToolNoseNum; //è®¾ç½®ä¸ºè¾“å…¥å‡è±¡åˆ€å°–å·
 
-	return 1;
+    return 1;
 }
 
-
-//»ñÈ¡µ¶¾ß¼ÙÏóµ¶¼âºÅ
+//è·å–åˆ€å…·å‡è±¡åˆ€å°–å·
 int8 getToolNoseNum(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
-	return STargetPara[ucToolID - 1].ucToolNoseID;//Æ«ÒÆÖµ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
+    return STargetPara[ucToolID - 1].ucToolNoseID; //åç§»å€¼
 }
 
-
-//Çå³ıËùÓĞµ¶¾ßIDµÄµ¶¼âÄ¥Ëğ
+//æ¸…é™¤æ‰€æœ‰åˆ€å…·IDçš„åˆ€å°–ç£¨æŸ
 int8 clearAllToolNoseWear(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
-	{
-		STargetPara[ucCounter].dToolNoseWear = 0;
-	}
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
+    {
+        STargetPara[ucCounter].dToolNoseWear = 0;
+    }
 
-	return 1;
+    return 1;
 }
 
-//Çå³ıÒ»ĞĞµ¶¾ßIDµÄµ¶¼âÄ¥Ëğ
+//æ¸…é™¤ä¸€è¡Œåˆ€å…·IDçš„åˆ€å°–ç£¨æŸ
 int8 clearSingleToolNoseWear(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//¼ÙÏóµ¶¼âºÅ´óÓÚ¼ÙÏóµ¶¼â×ÜÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //å‡è±¡åˆ€å°–å·å¤§äºå‡è±¡åˆ€å°–æ€»æ•°é‡
+    {
+        return -2;
+    }
 
-	STargetPara[ucToolID - 1].dToolNoseWear = 0;//¼ÙÏóµ¶¼âºÅÉèÎª0
-	return 1;
+    STargetPara[ucToolID - 1].dToolNoseWear = 0; //å‡è±¡åˆ€å°–å·è®¾ä¸º0
+    return 1;
 }
 
-//ÊäÈëµ¶¼âÄ¥Ëğ
+//è¾“å…¥åˆ€å°–ç£¨æŸ
 int8 inputToolNoseWear(uint8 ucChannelNum, uint8 ucToolID, double dToolNoseWear)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
 
-	STargetPara[ucToolID - 1].dToolNoseWear = dToolNoseWear;//ÉèÖÃÎªÊäÈëµ¶¼âÄ¥Ëğ
+    STargetPara[ucToolID - 1].dToolNoseWear = dToolNoseWear; //è®¾ç½®ä¸ºè¾“å…¥åˆ€å°–ç£¨æŸ
 
-	return 1;
+    return 1;
 }
 
-//»ñÈ¡µ¶¾ß¼ÙÏóµ¶¼âÄ¥Ëğ
+//è·å–åˆ€å…·å‡è±¡åˆ€å°–ç£¨æŸ
 double getToolNoseWear(uint8 ucChannelNum, uint8 ucToolID)
 {
-	SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (ucToolID > TOOL_NUM_MAX)//µ¶ºÅ´óÓÚµ¶¾ßÊıÁ¿
-	{
-		return -2;
-	}
-	return STargetPara[ucToolID - 1].dToolNoseWear;//·µ»Øµ¶¼âÄ¥ËğÖµ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (ucToolID > TOOL_NUM_MAX) //åˆ€å·å¤§äºåˆ€å…·æ•°é‡
+    {
+        return -2;
+    }
+    return STargetPara[ucToolID - 1].dToolNoseWear; //è¿”å›åˆ€å°–ç£¨æŸå€¼
 }
 
-
 ///*************************************************2023/2/14 cmc
-//  º¯ÊıÃû³Æ£ºgetToolWear(uint8 ucChannelNum, uint8 ucToolID, uint8 ucGroupNum, uint8 ucAxis)
-//  º¯Êı¹¦ÄÜ£º¸üĞÂµ±Ç°Æ«ÒÆ
-//  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-//			ucToolID			µ¶¾ßºÅ ´Ó1¿ªÊ¼ 1~TOOL_NUM_MAX
-//			cWorkpieceCoordNum	¹¤¼ş×ø±êÏµ 54 ~ 59
-//			bForceUpdate		ÊÇ·ñÇ¿ÖÆ¸üĞÂ×ÜÆ«ÒÆ
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šgetToolWear(uint8 ucChannelNum, uint8 ucToolID, uint8 ucGroupNum, uint8 ucAxis)
+//  å‡½æ•°åŠŸèƒ½ï¼šæ›´æ–°å½“å‰åç§»
+//  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+//			ucToolID			åˆ€å…·å· ä»1å¼€å§‹ 1~TOOL_NUM_MAX
+//			cWorkpieceCoordNum	å·¥ä»¶åæ ‡ç³» 54 ~ 59
+//			bForceUpdate		æ˜¯å¦å¼ºåˆ¶æ›´æ–°æ€»åç§»
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š
+//  å¤‡    æ³¨ï¼š
 //**************************************************/
 //int8 updataTotalOffset(uint8 ucChannelNum, uint8 ucToolNum,int8 cWorkpieceCoordNum,bool bForceUpdate)
 //{
 //
-//	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
+//	if (ucChannelNum >= CHANNEL_NUM_MAX)//é€šé“å·é”™è¯¯
 //	{
 //		return -1;
 //	}
 //
-//	if (bForceUpdate ||g_SChannel[ucChannelNum].SRun.ucToolNum == ucToolNum || g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum ==cWorkpieceCoordNum)//µ¶¾ßºÅ »ò×ø±êÆ«ÒÆ×ø±êÏµÏàÍ¬  ¸üĞÂ
+//	if (bForceUpdate ||g_SChannel[ucChannelNum].SRun.ucToolNum == ucToolNum || g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum ==cWorkpieceCoordNum)//åˆ€å…·å· æˆ–åæ ‡åç§»åæ ‡ç³»ç›¸åŒ  æ›´æ–°
 //	{
 //		struct _SRun* pSRun = &g_SChannel[ucChannelNum].SRun;
 //		TChangeTotalOffset(ucChannelNum, pSRun->ucToolNum, pSRun->ucToolCompNum,pSRun->cWorkpieceCoordNum, &pSRun->SCurrentOffset);
@@ -910,60 +895,62 @@ double getToolNoseWear(uint8 ucChannelNum, uint8 ucToolID)
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolWear(uint8 ucChannelNum,uint8 ucGroupNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ£º¸üĞÂµ±Ç°Æ«ÒÆ
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			cWorkpieceCoordNum	¹¤¼ş×ø±êÏµ 54 ~ 59
-			bForceUpdate		ÊÇ·ñÇ¿ÖÆ¸üĞÂ×ÜÆ«ÒÆ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolWear(uint8 ucChannelNum,uint8 ucGroupNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½ï¼šæ›´æ–°å½“å‰åç§»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			cWorkpieceCoordNum	å·¥ä»¶åæ ‡ç³» 54 ~ 59
+			bForceUpdate		æ˜¯å¦å¼ºåˆ¶æ›´æ–°æ€»åç§»
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 updataTotalOffset(uint8 ucChannelNum, int8 cWorkpieceCoordNum, bool bForceUpdate)
 {
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
 
-	if (bForceUpdate || g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum == cWorkpieceCoordNum)//µ¶¾ßºÅ »ò×ø±êÆ«ÒÆ×ø±êÏµÏàÍ¬  ¸üĞÂ
-	{
-		struct _SRun* pSRun = &g_SChannel[ucChannelNum].SRun;
-		TChangeTotalOffset(ucChannelNum, pSRun->ucToolCompNum, pSRun->cWorkpieceCoordNum, &pSRun->SCurrentOffset, &pSRun->SWorkPieceOffsetByG50);
-		return 1;
-	}
-	return 0;
+    if (bForceUpdate ||
+        g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum == cWorkpieceCoordNum) //åˆ€å…·å· æˆ–åæ ‡åç§»åæ ‡ç³»ç›¸åŒ  æ›´æ–°
+    {
+        struct _SRun* pSRun = &g_SChannel[ucChannelNum].SRun;
+        TChangeTotalOffset(ucChannelNum, pSRun->ucToolCompNum, pSRun->cWorkpieceCoordNum, &pSRun->SCurrentOffset,
+                           &pSRun->SWorkPieceOffsetByG50);
+        return 1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearRotateAXISToolWear(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£ºÇå³ıABCÖáµÄµ¶¾ßÄ¥Ëğ²ÎÊı
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearRotateAXISToolWear(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤ABCè½´çš„åˆ€å…·ç£¨æŸå‚æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearRotateAXISToolWear(uint8 ucChannelNum)
 {
-	SToolParaInfo* STargetToolPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
-	SToolParaInfo* STargetWearPara = &g_SSystemPara.SWearPara[ucChannelNum][0];
-	uint8 ucCounter;
+    SToolParaInfo* STargetToolPara = &g_SSystemPara.SToolPara[ucChannelNum][0];
+    SToolParaInfo* STargetWearPara = &g_SSystemPara.SWearPara[ucChannelNum][0];
+    uint8 ucCounter;
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
-	{
-		STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_A] = 0;
-		STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_B] = 0;
-		STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_C] = 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    for (ucCounter = 0; ucCounter < TOOL_NUM_MAX; ucCounter++)
+    {
+        STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_A] = 0;
+        STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_B] = 0;
+        STargetToolPara[ucCounter].SToolCoord.dArray[AXIS_C] = 0;
 
-		STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_A] = 0;
-		STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_B] = 0;
-		STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_C] = 0;
-	}
-	updataTotalOffset(ucChannelNum, 0, TRUE);// ¸üĞÂµ±Ç°×ÜÆ«ÒÆ
-	return 1;
+        STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_A] = 0;
+        STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_B] = 0;
+        STargetWearPara[ucCounter].SToolCoord.dArray[AXIS_C] = 0;
+    }
+    updataTotalOffset(ucChannelNum, 0, TRUE); // æ›´æ–°å½“å‰æ€»åç§»
+    return 1;
 }

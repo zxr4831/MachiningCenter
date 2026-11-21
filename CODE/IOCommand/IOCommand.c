@@ -3,287 +3,307 @@
 #include <stdio.h>
 #include "GeneralFunctions.h"
 #include "time.h"
-#include "G1.h" 
-#include "G0.h"  
-#include "Motion.h"	
+#include "G1.h"
+#include "G0.h"
+#include "Motion.h"
 #include "Spindle.h"
 #include "Channel.h"
 #include <string.h>
 #include "Config.h"
 #include "Gcode.h"
 //#include "libGCodeExpandFunc.h"
-/**********************************************±äÁ¿¶¨Òå*****************************************************/
+/**********************************************å˜é‡å®šä¹‰*****************************************************/
 
+uint8 g_ucIOBlockedCounter = 0; //é˜»å¡é”
 
-
-uint8 g_ucIOBlockedCounter = 0;  //×èÈûËø
-
-uint8 g_ucIORunBuff[IO_MAXGROUP_IN_SINGLE_LINE];  //Ö´ĞĞIOµÄ»º´æ
+uint8 g_ucIORunBuff[IO_MAXGROUP_IN_SINGLE_LINE]; //æ‰§è¡ŒIOçš„ç¼“å­˜
 
 uint8 g_ucIOToolRun;
 
-uint8 g_ucMCodeStatus[CHANNEL_NUM_MAX][MCODE_GROUP_NUM]; // ¼ÇÂ¼µ±Ç°M´úÂë
+uint8 g_ucMCodeStatus[CHANNEL_NUM_MAX][MCODE_GROUP_NUM]; // è®°å½•å½“å‰Mä»£ç 
 
-uint8 g_ucMCodeRunStatus[CHANNEL_NUM_MAX][2];  //¼ĞÍ·£¬ÇĞÏ÷Òº×´Ì¬
+uint8 g_ucMCodeRunStatus[CHANNEL_NUM_MAX][2]; //å¤¹å¤´ï¼Œåˆ‡å‰Šæ¶²çŠ¶æ€
 
-#if  !STM32_MODE 
+#if !STM32_MODE
 
-unsigned long AxisEnable[AXIS_PHYSICS_NUM_MAX];//¸÷¸öÖáµÄÊ¹ÄÜÎ»
+unsigned long AxisEnable[AXIS_PHYSICS_NUM_MAX]; //å„ä¸ªè½´çš„ä½¿èƒ½ä½
 
-
-#if !STM32_MODE 
-int ioM10M11;	//¼ĞÍ·AIO
-int ioM12M13;	//¼ĞÍ·BIO
-int ioM08M09;	//ÇĞÏ÷ÒºIO
-int ioM38M39;	//Ö÷ÖáÉ²³µIO
-int ioEMERGENCY_STOP = 1; //¼±Í£IO  //ÖìÎÈÖĞ 2023.6.24
-uint8 out[30];					//ÆóÒµµÄÊä³öIOÊı×é,ÓëÆóÒµÍ¬Ãû
-uint8 attribute[40][3];			//ÆóÒµµÄÊäÈëIOÊı×é,ÓëÆóÒµÍ¬Ãû
+#if !STM32_MODE
+int ioM10M11;             //å¤¹å¤´AIO
+int ioM12M13;             //å¤¹å¤´BIO
+int ioM08M09;             //åˆ‡å‰Šæ¶²IO
+int ioM38M39;             //ä¸»è½´åˆ¹è½¦IO
+int ioEMERGENCY_STOP = 1; //æ€¥åœIO  //æœ±ç¨³ä¸­ 2023.6.24
+uint8 out[30];            //ä¼ä¸šçš„è¾“å‡ºIOæ•°ç»„,ä¸ä¼ä¸šåŒå
+uint8 attribute[40][3];   //ä¼ä¸šçš„è¾“å…¥IOæ•°ç»„,ä¸ä¼ä¸šåŒå
 #endif
-
-
-
-
-
 
 uint32 timeji = 0;
 
-int delays_ms(u32 ms, u32* delang)//¼ÆÊ±º¯Êı1ms
+int delays_ms(u32 ms, u32* delang) //è®¡æ—¶å‡½æ•°1ms
 {
-	u32 delays_j;
-	u32 delays_i;
+    u32 delays_j;
+    u32 delays_i;
 
-	if (*delang == 0)
-	{
-		*delang = timeji;
-		if (*delang == 0)
-		{
-			*delang = 1;
+    if (*delang == 0)
+    {
+        *delang = timeji;
+        if (*delang == 0)
+        {
+            *delang = 1;
+        }
+    }
 
-		}
-	}
+    if ((timeji < *delang) && timeji != 0) //å·²æº¢å‡º
+    {
+        delays_j = 0xffffffff - *delang;
+        delays_i = delays_j + timeji; //è®¡ç®—å·²ç»å»¶æ—¶çš„æ—¶é—´
 
-
-
-	if ((timeji < *delang) && timeji != 0)//ÒÑÒç³ö
-	{
-		delays_j = 0xffffffff - *delang;
-		delays_i = delays_j + timeji;//¼ÆËãÒÑ¾­ÑÓÊ±µÄÊ±¼ä
-
-		if (delays_i >= ms)//³¬¹ıÄ¿±êÊ±¼ä
-		{
-			*delang = 0;//¹Ø±ÕÑÓÊ±
-			return 1;
-		}
-		else return 0;
-	}
-	else
-	{
-		delays_i = *delang + ms;
-		if (delays_i < *delang) //½«ÒªÒç³ö
-		{
-			if (timeji < *delang)
-			{
-				if (timeji >= delays_i)
-				{
-					*delang = 0;
-					return 1;
-				}
-				else return 0;
-			}
-			else return 0;
-		}
-		else
-		{
-			if (timeji >= (*delang + ms))
-			{
-				*delang = 0;
-				return 1;
-			}
-			else return 0;
-		}
-	}
-
+        if (delays_i >= ms) //è¶…è¿‡ç›®æ ‡æ—¶é—´
+        {
+            *delang = 0; //å…³é—­å»¶æ—¶
+            return 1;
+        }
+        else
+            return 0;
+    }
+    else
+    {
+        delays_i = *delang + ms;
+        if (delays_i < *delang) //å°†è¦æº¢å‡º
+        {
+            if (timeji < *delang)
+            {
+                if (timeji >= delays_i)
+                {
+                    *delang = 0;
+                    return 1;
+                }
+                else
+                    return 0;
+            }
+            else
+                return 0;
+        }
+        else
+        {
+            if (timeji >= (*delang + ms))
+            {
+                *delang = 0;
+                return 1;
+            }
+            else
+                return 0;
+        }
+    }
 }
-
 
 #else
 #include "io_exc.h"
 
-
 #if (MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-#define ioM10M11		out[3]	//out3//PG(10)
-#define ioM08M09		out[4]	//out4//PG(9)
+#define ioM10M11 out[3] //out3//PG(10)
+#define ioM08M09 out[4] //out4//PG(9)
 #else
-#define ioM08M09		out[0]	//PG(13)
-#define ioM10M11		out[12]	//PE(8)
-#define ioM12M13		out[13]	//PC(1)
+#define ioM08M09 out[0]  //PG(13)
+#define ioM10M11 out[12] //PE(8)
+#define ioM12M13 out[13] //PC(1)
 #endif
-#define ioM38M39;		out[10] //out12//PA(10)//Ö÷ÖáÉ²³µIO
-#endif 
-
-
-
-
-
-
+#define ioM38M39                                                                                                       \
+    ;                                                                                                                  \
+    out[10] //out12//PA(10)//ä¸»è½´åˆ¹è½¦IO
+#endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºfindIOType(uint8 ucNum)
-  º¯Êı¹¦ÄÜ  ¸ù¾İM´úÂëÑ°ÕÒ¸ÃM´úÂëµÄÇ°ºó×÷ÓÃÀàĞÍ
-  ÊäÈë²ÎÊı£ºucNum	M´úÂëµÄºÅÂë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint8 Ç°ºó×÷ÓÃÀàĞÍ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šfindIOType(uint8 ucNum)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®Mä»£ç å¯»æ‰¾è¯¥Mä»£ç çš„å‰åä½œç”¨ç±»å‹
+  è¾“å…¥å‚æ•°ï¼šucNum	Mä»£ç çš„å·ç 
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint8 å‰åä½œç”¨ç±»å‹
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 findIOType(uint8 ucNum)
 {
-	switch (ucNum)
-	{
-	case 3:case 4:case 71: case 50:	case 51:case 39:case M20:case M21:case M22:case M35:case M36:case M01:	//M03 M04 Ö÷ÖáÕı×ª·´×ª	M39Ö÷ÖáÉ²³µËÉ¿ª	//Ôİ¶¨IO¿ØÖÆÀà£¬20¡¢21¡¢22¡¢35¡¢36ÎªÇ°×÷ÓÃ
-	case 10:case 11:case 12:case 13:
-		return IO_PRE_ACTION;//Ç°×÷ÓÃ
+    switch (ucNum)
+    {
+    case 3:
+    case 4:
+    case 71:
+    case 50:
+    case 51:
+    case 39:
+    case M20:
+    case M21:
+    case M22:
+    case M35:
+    case M36:
+    case M01: //M03 M04 ä¸»è½´æ­£è½¬åè½¬	M39ä¸»è½´åˆ¹è½¦æ¾å¼€	//æš‚å®šIOæ§åˆ¶ç±»ï¼Œ20ã€21ã€22ã€35ã€36ä¸ºå‰ä½œç”¨
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+        return IO_PRE_ACTION; //å‰ä½œç”¨
 
-	case 5:	case 72: case 52:case 38:case 15:	//M05Ö÷ÖáÍ£	M38Ö÷ÖáÉ²³µËø½ô
-		return IO_POST_ACTION;//ºó×÷ÓÃ
+    case 5:
+    case 72:
+    case 52:
+    case 38:
+    case 15:                   //M05ä¸»è½´åœ	M38ä¸»è½´åˆ¹è½¦é”ç´§
+        return IO_POST_ACTION; //åä½œç”¨
 
-	default:
-		return IO_PRE_ACTION;//È±Ê¡£ºÇ°×÷ÓÃ
-	}
+    default:
+        return IO_PRE_ACTION; //ç¼ºçœï¼šå‰ä½œç”¨
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum,uint8 ucStatus)
-  º¯Êı¹¦ÄÜ  ÉèÖÃ¼ĞÍ·/ÇĞÏ÷Òº×´Ì¬
-  ÊäÈë²ÎÊı£ºuint8 ucChannelNumÍ¨µÀºÅ, ucNum 0¼ĞÍ·,1ÇĞÏ÷Òº£¬ucStatus×´Ì¬
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum,uint8 ucStatus)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®å¤¹å¤´/åˆ‡å‰Šæ¶²çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šuint8 ucChannelNumé€šé“å·, ucNum 0å¤¹å¤´,1åˆ‡å‰Šæ¶²ï¼ŒucStatusçŠ¶æ€
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 setMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum,uint8 ucStatus)
+int8 setMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum, uint8 ucStatus)
 {
- 	g_ucMCodeRunStatus[CHANNEL_NUM_MAX][2] = ucStatus;
-	return 1;
+    g_ucMCodeRunStatus[CHANNEL_NUM_MAX][2] = ucStatus;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum)
-  º¯Êı¹¦ÄÜ: »ñÈ¡¼ĞÍ·/ÇĞÏ÷Òº×´Ì¬
-  ÊäÈë²ÎÊı£ºuint8 ucChannelNumÍ¨µÀºÅ, ucNum 0¼ĞÍ·,1ÇĞÏ÷Òº
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º×´Ì¬
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum)
+  å‡½æ•°åŠŸèƒ½: è·å–å¤¹å¤´/åˆ‡å‰Šæ¶²çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šuint8 ucChannelNumé€šé“å·, ucNum 0å¤¹å¤´,1åˆ‡å‰Šæ¶²
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šçŠ¶æ€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getMCodeRunStatus(uint8 ucChannelNum, uint8 ucNum)
 {
- 	return g_ucMCodeRunStatus[CHANNEL_NUM_MAX][ucNum];
+    return g_ucMCodeRunStatus[CHANNEL_NUM_MAX][ucNum];
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetIO(uint8 ucNum,UMcode *ucIOcommand)
-  º¯Êı¹¦ÄÜ  ÊäÈëM´úÂëµÄnum  ²éÕÒ¸ÃM´úÂëµÄ×÷ÓÃÀàĞÍ ´æ´¢µ½ucIOCommandÊı×éÖĞ £¨´Ó0¿ªÊ¼´æ·Å£©
-  ÊäÈë²ÎÊı£ºucNum				M´úÂëµÄºÅÂë
-			*ucIOCommandArray	M´úÂë½á¹¹ÌåÊı×é
-			ucSize				Êı×é³¤¶È
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ³É¹¦
-			0 Êı×éÒÑÂú
-			-1 Ö¸ÕëÎª¿Õ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetIO(uint8 ucNum,UMcode *ucIOcommand)
+  å‡½æ•°åŠŸèƒ½  è¾“å…¥Mä»£ç çš„num  æŸ¥æ‰¾è¯¥Mä»£ç çš„ä½œç”¨ç±»å‹ å­˜å‚¨åˆ°ucIOCommandæ•°ç»„ä¸­ ï¼ˆä»0å¼€å§‹å­˜æ”¾ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucNum				Mä»£ç çš„å·ç 
+			*ucIOCommandArray	Mä»£ç ç»“æ„ä½“æ•°ç»„
+			ucSize				æ•°ç»„é•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æˆåŠŸ
+			0 æ•°ç»„å·²æ»¡
+			-1 æŒ‡é’ˆä¸ºç©º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 setIO(uint8 ucNum, uint8* ucIOCommandArray, uint8 ucSize)
 {
-	uint8 ucOffsetRecorder; //¼ÇÂ¼Æ«ÒÆµÄ´ÎÊı
-	uint8 ucCommandType;	//×÷ÓÃÀàĞÍ  £¨Ç°ºó×÷ÓÃ£©
+    uint8 ucOffsetRecorder; //è®°å½•åç§»çš„æ¬¡æ•°
+    uint8 ucCommandType;    //ä½œç”¨ç±»å‹  ï¼ˆå‰åä½œç”¨ï¼‰
 
-	if (ucIOCommandArray == NULL)
-	{
-		return -1;
-	}
+    if (ucIOCommandArray == NULL)
+    {
+        return -1;
+    }
 
-	ucCommandType = findIOType(ucNum);//»ñÈ¡µ±Ç°´úÂëµÄ×÷ÓÃÀàĞÍ
+    ucCommandType = findIOType(ucNum); //è·å–å½“å‰ä»£ç çš„ä½œç”¨ç±»å‹
 
-	for (ucOffsetRecorder = 0; ucOffsetRecorder < ucSize; ucOffsetRecorder++)
-	{
-		if (ucIOCommandArray[ucOffsetRecorder] == 0) //´ÓµØÖ·¶Á³öµÄÊı¾İÎª0  ËµÃ÷Îª¿Õ
-		{
-			setBits(ucIOCommandArray[ucOffsetRecorder], ucNum, IO_NUM_ADDR);  //¸³Öµ M´úÂëºÅ
-			setBits(ucIOCommandArray[ucOffsetRecorder], (ucCommandType << 7), IO_TYPE_ADDR); //¸³Öµ Ç°ºó×÷ÓÃÀàĞÍ
-			return 1;
-		}
-		else if (getBits(ucIOCommandArray[ucOffsetRecorder], IO_NUM_ADDR) == ucNum)//ÒÑÓĞ¸ÃM´úÂë
-		{
-			return 1;
-		}
-	}
+    for (ucOffsetRecorder = 0; ucOffsetRecorder < ucSize; ucOffsetRecorder++)
+    {
+        if (ucIOCommandArray[ucOffsetRecorder] == 0) //ä»åœ°å€è¯»å‡ºçš„æ•°æ®ä¸º0  è¯´æ˜ä¸ºç©º
+        {
+            setBits(ucIOCommandArray[ucOffsetRecorder], ucNum, IO_NUM_ADDR);                 //èµ‹å€¼ Mä»£ç å·
+            setBits(ucIOCommandArray[ucOffsetRecorder], (ucCommandType << 7), IO_TYPE_ADDR); //èµ‹å€¼ å‰åä½œç”¨ç±»å‹
+            return 1;
+        }
+        else if (getBits(ucIOCommandArray[ucOffsetRecorder], IO_NUM_ADDR) == ucNum) //å·²æœ‰è¯¥Mä»£ç 
+        {
+            return 1;
+        }
+    }
 
-	return 0;//±äÁ¿ÒÑÂú
+    return 0; //å˜é‡å·²æ»¡
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºisBlockedIO(UMcode ucIOCommand)
-  º¯Êı¹¦ÄÜ  ¸ù¾İM´úÂëÅĞ¶Ï¸ÃM´úÂëÊÇ·ñ×èÈû
-  ÊäÈë²ÎÊı£ºucNum		M´úÂëµÄºÅÂë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·Ç0	M´úÂë Îª   ×èÈûM´úÂë
-			0   M´úÂë ²»ÊÇ ×èÈûM´úÂë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šisBlockedIO(UMcode ucIOCommand)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®Mä»£ç åˆ¤æ–­è¯¥Mä»£ç æ˜¯å¦é˜»å¡
+  è¾“å…¥å‚æ•°ï¼šucNum		Mä»£ç çš„å·ç 
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šé0	Mä»£ç  ä¸º   é˜»å¡Mä»£ç 
+			0   Mä»£ç  ä¸æ˜¯ é˜»å¡Mä»£ç 
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 isBlockedIO(uint8 ucNum)
 {
-	switch (ucNum)
-	{
-	case 3:case 4:case 51:case 50:
-	case 10:case 12:case 71:case 35:case 36://¼ĞÍ·Ëø½ô
-	case M20:case M21:case M22:case M01:case M39:
-		return 1;
-	case 5:case 52:case M38:
-	case 11:case 13:case 72://¼ĞÍ·Ëø½ô
-		return 2;
-	default:
-		return 0;
-	}
+    switch (ucNum)
+    {
+    case 3:
+    case 4:
+    case 51:
+    case 50:
+    case 10:
+    case 12:
+    case 71:
+    case 35:
+    case 36: //å¤¹å¤´é”ç´§
+    case M20:
+    case M21:
+    case M22:
+    case M01:
+    case M39:
+        return 1;
+    case 5:
+    case 52:
+    case M38:
+    case 11:
+    case 13:
+    case 72: //å¤¹å¤´é”ç´§
+        return 2;
+    default:
+        return 0;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisVariableIO(UMcode ucIOCommand)
-  º¯Êı¹¦ÄÜ  ¸ù¾İM´úÂëÅĞ¶Ï¸ÃÊÇ·ñIO¿É±äÖ¸Áî
-  ÊäÈë²ÎÊı£ºucNum		M´úÂëµÄºÅÂë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·Ç0	M´úÂë Îª   ¿É±äIO M´úÂë
-			0   M´úÂë ²»ÊÇ ²»¿É±äIO M´úÂë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šisVariableIO(UMcode ucIOCommand)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®Mä»£ç åˆ¤æ–­è¯¥æ˜¯å¦IOå¯å˜æŒ‡ä»¤
+  è¾“å…¥å‚æ•°ï¼šucNum		Mä»£ç çš„å·ç 
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šé0	Mä»£ç  ä¸º   å¯å˜IO Mä»£ç 
+			0   Mä»£ç  ä¸æ˜¯ ä¸å¯å˜IO Mä»£ç 
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 isVariableIO(uint8 ucNum)
 {
-	switch (ucNum)
-	{
-	case M35:case M36:case M20:case M21:case M22:case M01:
-		return 1;
-	default:
-		return 0;
-	}
+    switch (ucNum)
+    {
+    case M35:
+    case M36:
+    case M20:
+    case M21:
+    case M22:
+    case M01:
+        return 1;
+    default:
+        return 0;
+    }
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIOStructToBuff
-  º¯Êı¹¦ÄÜ£ºµÇ¼ÇIOÇëÇó¼°Èë¶Ó°æ±¾£¬Ê¶±ğÍ£Ö¹Ç°ÅÅ¶ÓµÄ¾ÉÊ¹ÄÜ
-  ÊäÈë²ÎÊı£ºucIOCommand - MÖ¸Áî£»pSIOCommand - ¶ÓÁĞ£»pIOContrlInfo - ¿É±äIO²ÎÊı
-  Êä³ö²ÎÊı£º¸üĞÂ¶ÓÁĞºÍ×èÈû¼ÆÊı
-  ·µ »Ø Öµ£º1 - Èë¶Ó£»0 - ¶ÓÁĞÂú»ò²ÎÊıÎŞĞ§
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14
+  å‡½æ•°åç§°ï¼šIOStructToBuff
+  å‡½æ•°åŠŸèƒ½ï¼šç™»è®°IOè¯·æ±‚åŠå…¥é˜Ÿç‰ˆæœ¬ï¼Œè¯†åˆ«åœæ­¢å‰æ’é˜Ÿçš„æ—§ä½¿èƒ½
+  è¾“å…¥å‚æ•°ï¼šucIOCommand - MæŒ‡ä»¤ï¼›pSIOCommand - é˜Ÿåˆ—ï¼›pIOContrlInfo - å¯å˜IOå‚æ•°
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°é˜Ÿåˆ—å’Œé˜»å¡è®¡æ•°
+  è¿” å› å€¼ï¼š1 - å…¥é˜Ÿï¼›0 - é˜Ÿåˆ—æ»¡æˆ–å‚æ•°æ— æ•ˆ
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14
 ****************************************/
 
 uint8 IOStructToBuff(uint8 ucIOCommand, struct _SIOCommand* pSIOCommand, SIOContrlInfo* pIOContrlInfo)
 {
-    uint8 ucCounter; /**< ¿ÕÏĞ²ÛË÷Òı¡£ */
-    uint32 unSpindleVersion; /**< ±¾´ÎÈë¶ÓµÄÈ¡Ïû°æ±¾¿ìÕÕ¡£ */
+    uint8 ucCounter;         /**< ç©ºé—²æ§½ç´¢å¼•ã€‚ */
+    uint32 unSpindleVersion; /**< æœ¬æ¬¡å…¥é˜Ÿçš„å–æ¶ˆç‰ˆæœ¬å¿«ç…§ã€‚ */
     setBits(ucIOCommand, 0x00, IO_TYPE_ADDR);
-    if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL
-        || (isVariableIO(ucIOCommand) && pIOContrlInfo == NULL))
+    if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL || (isVariableIO(ucIOCommand) && pIOContrlInfo == NULL))
     {
         return 0;
     }
@@ -308,582 +328,599 @@ uint8 IOStructToBuff(uint8 ucIOCommand, struct _SIOCommand* pSIOCommand, SIOCont
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºApplyIO(uint8* ucOCommandArray, uint8 ucSize, uint8 ucCommandType, struct _SIOCommand* pSIOCommand)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄ×÷ÓÃÀàĞÍ(Ç°ºó×÷ÓÃ£© Ê¹ÄÜ£¨·ÅÈëÔËĞĞbuffÖĞ£©ucIOcommandÊı×éÖĞµÄM´úÂë
-  ÊäÈë²ÎÊı£º*ucIOCommandArray	M´úÂë½á¹¹ÌåÊı×é
-			ucSize				Êı×é³¤¶È
-			ucCommandType		Ç°/ºó×÷ÓÃÀàĞÍ
-			pSIOCommand			IO½á¹¹ÌåÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0	Ê§°Ü  Êı×éÖ¸ÕëÎª¿Õ
-			1	³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šApplyIO(uint8* ucOCommandArray, uint8 ucSize, uint8 ucCommandType, struct _SIOCommand* pSIOCommand)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„ä½œç”¨ç±»å‹(å‰åä½œç”¨ï¼‰ ä½¿èƒ½ï¼ˆæ”¾å…¥è¿è¡Œbuffä¸­ï¼‰ucIOcommandæ•°ç»„ä¸­çš„Mä»£ç 
+  è¾“å…¥å‚æ•°ï¼š*ucIOCommandArray	Mä»£ç ç»“æ„ä½“æ•°ç»„
+			ucSize				æ•°ç»„é•¿åº¦
+			ucCommandType		å‰/åä½œç”¨ç±»å‹
+			pSIOCommand			IOç»“æ„ä½“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0	å¤±è´¥  æ•°ç»„æŒ‡é’ˆä¸ºç©º
+			1	æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
-uint8 ApplyIO(uint8* ucOCommandArray, uint8 ucSize, uint8 ucCommandType, struct _SIOCommand* pSIOCommand, SIOContrlInfo* pIOContrlInfo)
+uint8 ApplyIO(uint8* ucOCommandArray, uint8 ucSize, uint8 ucCommandType, struct _SIOCommand* pSIOCommand,
+              SIOContrlInfo* pIOContrlInfo)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
-	uint8 res = 0;
-  uint8 ucNum;
-	if (ucOCommandArray == NULL)
-	{
-		return 0;
-	}
+    uint8 ucCounter; //è®¡æ•°å™¨
+    uint8 res = 0;
+    uint8 ucNum;
+    if (ucOCommandArray == NULL)
+    {
+        return 0;
+    }
 
-	for (ucCounter = 0; ucCounter < ucSize; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
+    for (ucCounter = 0; ucCounter < ucSize; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
 
-		if (getBits(ucOCommandArray[ucCounter], IO_TYPE_ADDR) == (ucCommandType << 7))//×÷ÓÃÀàĞÍ·ûºÏÒªÇó
-		{
-			ucNum = getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
-			if (!isVariableIO(ucOCommandArray[ucCounter]) && findIO(ucNum, pSIOCommand->ucIORunBuff, IO_MAXGROUP_IN_SINGLE_LINE) == ucNum)//2024/10/9 Ìá¸ßM´úÂëÖ´ĞĞĞ§ÂÊµÄÖ¸ÁîÓ¦Ö»Éæ¼°¿ØÖÆµ¥¸öIOµÄM´úÂëÖ¸Áî
-			{
-				continue;
-			}
+        if (getBits(ucOCommandArray[ucCounter], IO_TYPE_ADDR) == (ucCommandType << 7)) //ä½œç”¨ç±»å‹ç¬¦åˆè¦æ±‚
+        {
+            ucNum = getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
+            if (!isVariableIO(ucOCommandArray[ucCounter]) &&
+                findIO(ucNum, pSIOCommand->ucIORunBuff, IO_MAXGROUP_IN_SINGLE_LINE) ==
+                    ucNum) //2024/10/9 æé«˜Mä»£ç æ‰§è¡Œæ•ˆç‡çš„æŒ‡ä»¤åº”åªæ¶‰åŠæ§åˆ¶å•ä¸ªIOçš„Mä»£ç æŒ‡ä»¤
+            {
+                continue;
+            }
 
-			if(IOStructToBuff(ucOCommandArray[ucCounter], pSIOCommand, pIOContrlInfo) == 0)//·Åµ½BUFFÖĞÖ´ĞĞ
-			{
-				return 0;
-			}
-			checkAndsetIOBlockedBeforG0(ucOCommandArray[ucCounter], pSIOCommand);	//¼ì²éIO,²¢¸ù¾İ²¿·ÖIO£¬ÉèÖÃÏà¹ØµÄ×´Ì¬±äÁ¿Ê¹µÃG0ÔË¶¯×èÈû 2023/4/6³ÂÃô´Ï
-			switch (getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR)) //ĞÜ¿¥ 2024-10-15
-			{
-			case 3:
-			case 4:
-			case 5:
-				g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_SPINDLE] = getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
-				break;
-			case 8:
-			case 9:
-				g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] = getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
-				break;
-			case 10:
-			case 11:
-				g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] = getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
-			}
-		}
-	}
+            if (IOStructToBuff(ucOCommandArray[ucCounter], pSIOCommand, pIOContrlInfo) == 0) //æ”¾åˆ°BUFFä¸­æ‰§è¡Œ
+            {
+                return 0;
+            }
+            checkAndsetIOBlockedBeforG0(
+                ucOCommandArray[ucCounter],
+                pSIOCommand); //æ£€æŸ¥IO,å¹¶æ ¹æ®éƒ¨åˆ†IOï¼Œè®¾ç½®ç›¸å…³çš„çŠ¶æ€å˜é‡ä½¿å¾—G0è¿åŠ¨é˜»å¡ 2023/4/6é™ˆæ•èª
+            switch (getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR)) //ç†Šéª 2024-10-15
+            {
+            case 3:
+            case 4:
+            case 5:
+                g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_SPINDLE] =
+                    getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
+                break;
+            case 8:
+            case 9:
+                g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] =
+                    getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
+                break;
+            case 10:
+            case 11:
+                g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] =
+                    getBits(ucOCommandArray[ucCounter], IO_NUM_ADDR);
+            }
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
-/* ËÕÏò±ê 2026-10-14£º±£ÁôÔ­IOÖ´ĞĞ·ÖÖ§£¬Ö÷ÖáËÄÀàIOÓÉÖÜÆÚµ÷ÓÃ£¬Íê³É¼ÆÊıÓÉºóÌ¨È·ÈÏ¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šä¿ç•™åŸIOæ‰§è¡Œåˆ†æ”¯ï¼Œä¸»è½´å››ç±»IOç”±å‘¨æœŸè°ƒç”¨ï¼Œå®Œæˆè®¡æ•°ç”±åå°ç¡®è®¤ã€‚ */
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunIOCore
-  º¯Êı¹¦ÄÜ£ºÖ´ĞĞÔ­M´úÂë·ÖÖ§£¬Ö÷ÖáÊ¹ÄÜÓëÉ²³µ·ÖÖ§½öÓÉÖÜÆÚÂ·¾¶µ÷ÓÃ
-  ÊäÈë²ÎÊı£ºpSIOCommand - IO¶ÓÁĞ£»ucIOCommand - M´úÂë£»pPreAndPostDelayStatus - ½×¶Î£»pSVaribleIOInfo - ¿É±äIO²ÎÊı
-  Êä³ö²ÎÊı£º¸üĞÂ¶ÔÓ¦Êä³ö¡¢½×¶ÎÓëÆÕÍ¨IOµÄ×èÈû¼ÆÊı
-  ·µ »Ø Öµ£º1 - Íê³É£»0 - µÈ´ı£»¸ºÖµ - ²ÎÊı»òÖ´ĞĞÒì³£
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14£»M38/M39Íê³É¼ÆÊıÒÆ½»ºóÌ¨runIOÈ·ÈÏ£»ÆäËû·ÖÖ§±£ÁôÔ­Âß¼­
+  å‡½æ•°åç§°ï¼šrunIOCore
+  å‡½æ•°åŠŸèƒ½ï¼šæ‰§è¡ŒåŸMä»£ç åˆ†æ”¯ï¼Œä¸»è½´ä½¿èƒ½ä¸åˆ¹è½¦åˆ†æ”¯ä»…ç”±å‘¨æœŸè·¯å¾„è°ƒç”¨
+  è¾“å…¥å‚æ•°ï¼špSIOCommand - IOé˜Ÿåˆ—ï¼›ucIOCommand - Mä»£ç ï¼›pPreAndPostDelayStatus - é˜¶æ®µï¼›pSVaribleIOInfo - å¯å˜IOå‚æ•°
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°å¯¹åº”è¾“å‡ºã€é˜¶æ®µä¸æ™®é€šIOçš„é˜»å¡è®¡æ•°
+  è¿” å› å€¼ï¼š1 - å®Œæˆï¼›0 - ç­‰å¾…ï¼›è´Ÿå€¼ - å‚æ•°æˆ–æ‰§è¡Œå¼‚å¸¸
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14ï¼›M38/M39å®Œæˆè®¡æ•°ç§»äº¤åå°runIOç¡®è®¤ï¼›å…¶ä»–åˆ†æ”¯ä¿ç•™åŸé€»è¾‘
 ****************************************/
-static int8 runIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand,uint8* pPreAndPostDelayStatus, SVaribleIOInfo *pSVaribleIOInfo)
+static int8 runIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPostDelayStatus,
+                      SVaribleIOInfo* pSVaribleIOInfo)
 {
-	if (pSIOCommand == NULL)
-	{
-		return -1;
-	}
-	if (ucIOCommand == 0)//0±íÊ¾¿Õ ²»Ö´ĞĞ  ·µ»Ø
-	{
-		return 0;
-	}
+    if (pSIOCommand == NULL)
+    {
+        return -1;
+    }
+    if (ucIOCommand == 0) //0è¡¨ç¤ºç©º ä¸æ‰§è¡Œ  è¿”å›
+    {
+        return 0;
+    }
 
-	switch (ucIOCommand)
-	{
-	case 1:	//2023/8/5	³ÂÃô´Ï
-		if (pSIOCommand->pSChannel->ucChannelStatus != SYS_PAUSE)	//Èç¹û²»ÎªÔİÍ£µÄ»°£¬µ÷ÓÃÔİÍ£API
-		{
-			pauseButtonAPI(pSIOCommand->pSChannel->ucChannelNum);
-			return 0;
-		}
-		if (detectM01Command(pSIOCommand, pSVaribleIOInfo))	//¼ì²âM01Ö¸¶¨µÄIOÊÇ·ñÍê³É
-		{
-			if (pSVaribleIOInfo->ucStatus == VARIABLE_IO_ERROR)	//³¬Ê±±¨¾¯
-			{
-				parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM31, pSVaribleIOInfo->pIOContrlInfo->cInputIOIndex);
-			}
-			else
-			{
-				runButtonAPI(pSIOCommand->pSChannel->ucChannelNum, FALSE); //M01Ö´ĞĞÍê³É£¬³ÌĞòÔİÍ£ÇĞ»»ÖÁÔËĞĞ
-				pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1 //ÁÙÊ±¸Ä¶¯Î»ÖÃ£¬ÆóÒµĞèÇó£º¼ì²â¶Ë¿ÚÎ´ÊäÈë±¨¾¯ºó£¬²»°´¸´Î»°´Æô¶¯¼´¿ÉÖØĞÂÔËĞĞ 2023/10/24 
-			}
-			//pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			break;
-		}
-		return 0;
-	case 3:	//M03 
-	case 4:	//M04
-		//if (g_SApplyTime.unSpindlePreRunTime == 0)
-		//{
-		//	setSpindleDirAPI(&g_SInterpolationAxisC, ((ucIOCommand == 3)? INP_GO_AHEAD: INP_GO_BACK));
-		//	spindleBeginAPI(&g_SInterpolationAxisC);
-		//}
-		if (delays_ms(g_SSystemPara.unSpindlePreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePreRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			break;
-		}
-		return 0;
+    switch (ucIOCommand)
+    {
+    case 1:                                                       //2023/8/5	é™ˆæ•èª
+        if (pSIOCommand->pSChannel->ucChannelStatus != SYS_PAUSE) //å¦‚æœä¸ä¸ºæš‚åœçš„è¯ï¼Œè°ƒç”¨æš‚åœAPI
+        {
+            pauseButtonAPI(pSIOCommand->pSChannel->ucChannelNum);
+            return 0;
+        }
+        if (detectM01Command(pSIOCommand, pSVaribleIOInfo)) //æ£€æµ‹M01æŒ‡å®šçš„IOæ˜¯å¦å®Œæˆ
+        {
+            if (pSVaribleIOInfo->ucStatus == VARIABLE_IO_ERROR) //è¶…æ—¶æŠ¥è­¦
+            {
+                parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM31,
+                                  pSVaribleIOInfo->pIOContrlInfo->cInputIOIndex);
+            }
+            else
+            {
+                runButtonAPI(pSIOCommand->pSChannel->ucChannelNum, FALSE); //M01æ‰§è¡Œå®Œæˆï¼Œç¨‹åºæš‚åœåˆ‡æ¢è‡³è¿è¡Œ
+                pSIOCommand->ucIOBlockedCounter -=
+                    1; //é˜»å¡é”-1 //ä¸´æ—¶æ”¹åŠ¨ä½ç½®ï¼Œä¼ä¸šéœ€æ±‚ï¼šæ£€æµ‹ç«¯å£æœªè¾“å…¥æŠ¥è­¦åï¼Œä¸æŒ‰å¤ä½æŒ‰å¯åŠ¨å³å¯é‡æ–°è¿è¡Œ 2023/10/24
+            }
+            //pSIOCommand->ucIOBlockedCounter -= 1;//é˜»å¡é”-1
+            break;
+        }
+        return 0;
+    case 3: //M03
+    case 4: //M04
+        //if (g_SApplyTime.unSpindlePreRunTime == 0)
+        //{
+        //	setSpindleDirAPI(&g_SInterpolationAxisC, ((ucIOCommand == 3)? INP_GO_AHEAD: INP_GO_BACK));
+        //	spindleBeginAPI(&g_SInterpolationAxisC);
+        //}
+        if (delays_ms(g_SSystemPara.unSpindlePreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePreRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            break;
+        }
+        return 0;
 
-	case 5:	//M05
-		//if (g_SApplyTime.unSpindlePreRunTime == 0)
-		//{
-		//	spindleCommonStopAPI(&g_SInterpolationAxisC);
-		//}
-		if (delays_ms(g_SSystemPara.unSpindlePostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePostRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			break;
-		}
-		return 0;
+    case 5: //M05
+        //if (g_SApplyTime.unSpindlePreRunTime == 0)
+        //{
+        //	spindleCommonStopAPI(&g_SInterpolationAxisC);
+        //}
+        if (delays_ms(g_SSystemPara.unSpindlePostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePostRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            break;
+        }
+        return 0;
 
-	case 8:	//M08
+    case 8: //M08
 #if STM32_MODE
-		ioM08M09 = IO_SET;	//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+        ioM08M09 = IO_SET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-		PGout(9) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
+        PGout(9) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-		PGout(13) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
+        PGout(13) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
 #endif
 #else
-		ioM08M09 = IO_SET;
+        ioM08M09 = IO_SET;
 #endif // STM32_MODE
-		break;
+        break;
 
-	case 9:	//M09
+    case 9: //M09
 #if STM32_MODE
-		ioM08M09 = IO_RESET;	//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+        ioM08M09 = IO_RESET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-		PGout(9) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
+        PGout(9) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-		PGout(13) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
-#endif	//(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+        PGout(13) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
+#endif //(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
 
 #else
-		ioM08M09 = IO_RESET;
+        ioM08M09 = IO_RESET;
 #endif // STM32_MODE
-		break;
+        break;
 
-	case 10://M10
+    case 10: //M10
 #if STM32_MODE
-		if (g_SSystemPara.userset.Chuck_status[0] == 1)//ËÉ¿ªÎª¼Ğ½ô
-		{
-			ioM10M11 = IO_SET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+        if (g_SSystemPara.userset.Chuck_status[0] == 1) //æ¾å¼€ä¸ºå¤¹ç´§
+        {
+            ioM10M11 = IO_SET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-			PIout(4) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
+            PIout(4) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-			PGout(10) = IO_SET;		//±£Ö¤ÊµÊ±Êä³ö;	
-#endif	//(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-
-	    }
-		else
-		{
-			ioM10M11 = IO_RESET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+            PGout(10) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º;
+#endif //(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+        }
+        else
+        {
+            ioM10M11 = IO_RESET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-			PIout(4) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
+            PIout(4) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-			PGout(10) = IO_RESET;		//±£Ö¤ÊµÊ±Êä³ö;	
-#endif	//(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-
-		}
+            PGout(10) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º;
+#endif //(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+        }
 #else
-		ioM10M11 = IO_SET;
+        ioM10M11 = IO_SET;
 #endif // STM32_MODE
-		if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckAOpenRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			pSIOCommand->pSChannel->bChuckALoose = FALSE; //¼ĞÍ·Ëø½ô 2023/10/14
-			setMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum,0,1); //¼ĞÍ·Ëø½ô
-			return 1;
-			break;
-		}
-		
-		return 0;
+        if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckAOpenRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1;                          //é˜»å¡é”-1
+            pSIOCommand->pSChannel->bChuckALoose = FALSE;                  //å¤¹å¤´é”ç´§ 2023/10/14
+            setMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum, 0, 1); //å¤¹å¤´é”ç´§
+            return 1;
+            break;
+        }
 
-	case 11://M11
-		if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dCurrentSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE > g_SSystemPara.SpindleChuck[0])//Ö÷Öá×ªËÙ´óÓÚÖ¸¶¨×ªËÙ¿ªÆô¼ì²â£¬Ö÷ÖáÖ´ĞĞµ½M11¼ĞÍ·ËÉ¿ªÊ±½øĞĞ±¨¾¯´¦Àí 2023/10/14 ºé¹ÚÅô  //2026.7.1½«Ö÷ÖáÀíÂÛ×ªËÙĞŞ¸ÄÎªÊµ¼Ê×ªËÙ
-		{
-			parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
-			return 1;
-		}
+        return 0;
+
+    case 11: //M11
+        if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dCurrentSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE >
+            g_SSystemPara.SpindleChuck
+                [0]) //ä¸»è½´è½¬é€Ÿå¤§äºæŒ‡å®šè½¬é€Ÿå¼€å¯æ£€æµ‹ï¼Œä¸»è½´æ‰§è¡Œåˆ°M11å¤¹å¤´æ¾å¼€æ—¶è¿›è¡ŒæŠ¥è­¦å¤„ç† 2023/10/14 æ´ªå† é¹  //2026.7.1å°†ä¸»è½´ç†è®ºè½¬é€Ÿä¿®æ”¹ä¸ºå®é™…è½¬é€Ÿ
+        {
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
+            return 1;
+        }
 #if STM32_MODE
-		if (g_SSystemPara.userset.Chuck_status[0] == 1)//ËÉ¿ªÎª¼Ğ½ô
-		{
-			ioM10M11 = IO_RESET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+        if (g_SSystemPara.userset.Chuck_status[0] == 1) //æ¾å¼€ä¸ºå¤¹ç´§
+        {
+            ioM10M11 = IO_RESET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-			PIout(4) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
+            PIout(4) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-			PGout(10) = IO_RESET;		//±£Ö¤ÊµÊ±Êä³ö;	
-#endif	//(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-
-		}
-		else
-		{
-			ioM10M11 = IO_SET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
+            PGout(10) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º;
+#endif //(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+        }
+        else
+        {
+            ioM10M11 = IO_SET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
 #if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-			PIout(4) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
+            PIout(4) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
 #else
-			PGout(10) = IO_SET;		//±£Ö¤ÊµÊ±Êä³ö;	
-#endif	//(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-		}
+            PGout(10) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º;
+#endif //(MACHINE_CONFIG != NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+        }
 #else
-		ioM10M11 = IO_RESET;
-#endif // STM32_MODE		
-		if (delays_ms(g_SSystemPara.unChuckOpenDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckAOpenRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			pSIOCommand->pSChannel->bChuckALoose = TRUE; //¼ĞÍ·ËÉ¼Ğ 2023/10/14
-			break;
-		}
-		return 0;
-#if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
-	case 12://M12
-#if STM32_MODE
-		if (g_SSystemPara.userset.Chuck_status[0] == 1)//ËÉ¿ªÎª¼Ğ½ô
-		{
-			ioM12M13 = IO_SET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
-			PGout(3) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
-
-
-		}
-		else
-		{
-			ioM12M13 = IO_RESET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
-			PIout(3) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
-
-		}
-#else
-		ioM12M13 = IO_SET;
+        ioM10M11 = IO_RESET;
 #endif // STM32_MODE
-		if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckBOpenRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			pSIOCommand->pSChannel->bChuckBLoose = FALSE; //¼ĞÍ·Ëø½ô×´Ì¬ 2023/10/14
-			break;
-		}
-
-		return 0;
-		break;
-
-	case 13://M13
-		if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dSpindleSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE > g_SSystemPara.SpindleChuck[1])//Ö÷Öá×ªËÙ´óÓÚÖ¸¶¨×ªËÙ¿ªÆô¼ì²â£¬Ö÷ÖáÖ´ĞĞµ½M13¼ĞÍ·ËÉ¿ªÊ±½øĞĞ±¨¾¯´¦Àí 2023/10/14 ºé¹ÚÅô
-		{
-			parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
-			return 1;
-		}
+        if (delays_ms(g_SSystemPara.unChuckOpenDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckAOpenRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1;        //é˜»å¡é”-1
+            pSIOCommand->pSChannel->bChuckALoose = TRUE; //å¤¹å¤´æ¾å¤¹ 2023/10/14
+            break;
+        }
+        return 0;
+#if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE)
+    case 12: //M12
 #if STM32_MODE
-		if (g_SSystemPara.userset.Chuck_status[0] == 1)//ËÉ¿ªÎª¼Ğ½ô
-		{
-			ioM12M13 = IO_RESET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
-			PGout(3) = IO_RESET;	//±£Ö¤ÊµÊ±Êä³ö
-
-
-		}
-		else
-		{
-			ioM12M13 = IO_SET;		//±£³ÖIO³ÖĞøÊä³ö£¬±£Ö¤ÏÂÒ»ÖÜÆÚ²»»á±»ÆóÒµµÄIO¹ÜÀíº¯ÊıÇå¿Õ
-			PIout(3) = IO_SET;	//±£Ö¤ÊµÊ±Êä³ö
-
-		}
+        if (g_SSystemPara.userset.Chuck_status[0] == 1) //æ¾å¼€ä¸ºå¤¹ç´§
+        {
+            ioM12M13 = IO_SET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
+            PGout(3) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
+        }
+        else
+        {
+            ioM12M13 = IO_RESET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
+            PIout(3) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
+        }
 #else
-		ioM12M13 = IO_RESET;
+        ioM12M13 = IO_SET;
 #endif // STM32_MODE
-		if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckBCloseRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			pSIOCommand->pSChannel->bChuckBLoose = TRUE; //¼ĞÍ·ËÉ¼Ğ×´Ì¬ 2023/10/14
-			return 1;
-			break;
-		}
-		return 0;
-		break;
-		break;
+        if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckBOpenRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1;         //é˜»å¡é”-1
+            pSIOCommand->pSChannel->bChuckBLoose = FALSE; //å¤¹å¤´é”ç´§çŠ¶æ€ 2023/10/14
+            break;
+        }
+
+        return 0;
+        break;
+
+    case 13: //M13
+        if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dSpindleSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE >
+            g_SSystemPara
+                .SpindleChuck[1]) //ä¸»è½´è½¬é€Ÿå¤§äºæŒ‡å®šè½¬é€Ÿå¼€å¯æ£€æµ‹ï¼Œä¸»è½´æ‰§è¡Œåˆ°M13å¤¹å¤´æ¾å¼€æ—¶è¿›è¡ŒæŠ¥è­¦å¤„ç† 2023/10/14 æ´ªå† é¹
+        {
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
+            return 1;
+        }
+#if STM32_MODE
+        if (g_SSystemPara.userset.Chuck_status[0] == 1) //æ¾å¼€ä¸ºå¤¹ç´§
+        {
+            ioM12M13 = IO_RESET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
+            PGout(3) = IO_RESET; //ä¿è¯å®æ—¶è¾“å‡º
+        }
+        else
+        {
+            ioM12M13 = IO_SET; //ä¿æŒIOæŒç»­è¾“å‡ºï¼Œä¿è¯ä¸‹ä¸€å‘¨æœŸä¸ä¼šè¢«ä¼ä¸šçš„IOç®¡ç†å‡½æ•°æ¸…ç©º
+            PIout(3) = IO_SET; //ä¿è¯å®æ—¶è¾“å‡º
+        }
+#else
+        ioM12M13 = IO_RESET;
+#endif // STM32_MODE
+        if (delays_ms(g_SSystemPara.unChuckCloseDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckBCloseRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1;        //é˜»å¡é”-1
+            pSIOCommand->pSChannel->bChuckBLoose = TRUE; //å¤¹å¤´æ¾å¤¹çŠ¶æ€ 2023/10/14
+            return 1;
+            break;
+        }
+        return 0;
+        break;
+        break;
 #else
 
-	case 12:
-		pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-		break;
-	case 13:
-		pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-		break;
+    case 12:
+        pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+        break;
+    case 13:
+        pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+        break;
 
 #endif
-	case 14://M14  Ö÷ÖáÊ¹ÄÜ
-		//pSIOCommand->pSChannel->SSpindle.toDisableAxis = FALSE;
-		//setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, TRUE);
-		//if (delays_ms(g_SSystemPara.unChuckOpenDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckOpenRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		//{
-		//	break;
-		//}
-		//return 0;
-		return IOSetSpindleEnabled(&pSIOCommand->pSChannel->SSpindle,TRUE);
+    case 14: //M14  ä¸»è½´ä½¿èƒ½
+        //pSIOCommand->pSChannel->SSpindle.toDisableAxis = FALSE;
+        //setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, TRUE);
+        //if (delays_ms(g_SSystemPara.unChuckOpenDelayTime, &pSIOCommand->pSChannel->SApplyTime.unChuckOpenRunTime) == 1)//å»¶æ—¶æ˜¯å¦å®Œæˆ
+        //{
+        //	break;
+        //}
+        //return 0;
+        return IOSetSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, TRUE);
 
-	case 15://M15
+    case 15: //M15
 
-		return IOSetSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE);
-		//setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE);
-		//break;
+        return IOSetSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE);
+        //setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE);
+        //break;
 
-	case 16://M16
-		break;
+    case 16: //M16
+        break;
 
-	case 17://M17
-		break;
-	case 38:	//É²³µËø½ô
-		switch (*pPreAndPostDelayStatus)
-		{
-		case 0:
-		{
-			//¿ªÖ÷ÖáÉ²³µÊä³ö 2025.11.7ĞŞ¸ÄM38Á÷³Ì
-			if (isZero(pSIOCommand->pSChannel->SSpindleTest.dSpindleAvgSpeed) && pSIOCommand->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
-			{
+    case 17: //M17
+        break;
+    case 38: //åˆ¹è½¦é”ç´§
+        switch (*pPreAndPostDelayStatus)
+        {
+        case 0:
+        {
+            //å¼€ä¸»è½´åˆ¹è½¦è¾“å‡º 2025.11.7ä¿®æ”¹M38æµç¨‹
+            if (isZero(pSIOCommand->pSChannel->SSpindleTest.dSpindleAvgSpeed) &&
+                pSIOCommand->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
+            {
 #if STM32_MODE
-					ioM38M39 = IO_SET;
-					PAout(10) = IO_SET; // PG10
+                ioM38M39 = IO_SET;
+                PAout(10) = IO_SET; // PG10
 #else
-					ioM38M39 = IO_SET;
+                ioM38M39 = IO_SET;
 #endif
-					*pPreAndPostDelayStatus = 1;
-			}
-			else
-			{
-				spindleCommonStop(&pSIOCommand->pSChannel->SSpindle); // ÏÈÈÃÖ÷ÖáÍ£
-				break;
-			}
-		}
+                *pPreAndPostDelayStatus = 1;
+            }
+            else
+            {
+                spindleCommonStop(&pSIOCommand->pSChannel->SSpindle); // å…ˆè®©ä¸»è½´åœ
+                break;
+            }
+        }
 
-		case 1:
-		{
-			//Ç°ÑÓÊ±
-			if (delays_ms(g_SSystemPara.unSpindleLockPreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindleLockRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-			{
-				*pPreAndPostDelayStatus = 2;
-				
-			}
-			else
-			{
-				break;
-			}
-		}
+        case 1:
+        {
+            //å‰å»¶æ—¶
+            if (delays_ms(g_SSystemPara.unSpindleLockPreDelayTime,
+                          &pSIOCommand->pSChannel->SApplyTime.unSpindleLockRunTime) == 1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+            {
+                *pPreAndPostDelayStatus = 2;
+            }
+            else
+            {
+                break;
+            }
+        }
 
-		case 2:
-		{
-			//¹Ø±ÕÖ÷ÖáÊ¹ÄÜ
-			if (setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE) == 1)
-			{
-				*pPreAndPostDelayStatus = 3;
-			}
-			else
-			{
-				break;
-			}
-		}
+        case 2:
+        {
+            //å…³é—­ä¸»è½´ä½¿èƒ½
+            if (setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, FALSE) == 1)
+            {
+                *pPreAndPostDelayStatus = 3;
+            }
+            else
+            {
+                break;
+            }
+        }
 
-		case 3:
-		{
-			//ºóÑÓÊ±
-			if (delays_ms(g_SSystemPara.unSpindleLockPostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindleLockRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-			{
-				/* ËÕÏò±ê 2026-10-14£ºÍê³ÉºóÓÉºóÌ¨Ó¦´ğÈë¿ÚÍ³Ò»¿Û¼õ×èÈû¼ÆÊı¡£ */
-				*pPreAndPostDelayStatus = 0;
-				pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_CLAMPED;
-				return 1;
-			}
-			break;
-		}
-		}
-		return 0;
-		break;
-	case 39:  //É²³µËÉ¿ª
-		switch (*pPreAndPostDelayStatus)
-		{
-		case 0:
-		{
-			// Ö÷ÖáÊ¹ÄÜ 2025.11.7ĞŞ¸ÄM39Á÷³Ì
-			if (setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, TRUE) == 1)
-			{
-				*pPreAndPostDelayStatus = 1;
-				
-			}
-			else
-			{
-				break;	
-			}
-			
-		}
+        case 3:
+        {
+            //åå»¶æ—¶
+            if (delays_ms(g_SSystemPara.unSpindleLockPostDelayTime,
+                          &pSIOCommand->pSChannel->SApplyTime.unSpindleLockRunTime) == 1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+            {
+                /* è‹å‘æ ‡ 2026-10-14ï¼šå®Œæˆåç”±åå°åº”ç­”å…¥å£ç»Ÿä¸€æ‰£å‡é˜»å¡è®¡æ•°ã€‚ */
+                *pPreAndPostDelayStatus = 0;
+                pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_CLAMPED;
+                return 1;
+            }
+            break;
+        }
+        }
+        return 0;
+        break;
+    case 39: //åˆ¹è½¦æ¾å¼€
+        switch (*pPreAndPostDelayStatus)
+        {
+        case 0:
+        {
+            // ä¸»è½´ä½¿èƒ½ 2025.11.7ä¿®æ”¹M39æµç¨‹
+            if (setSpindleEnabled(&pSIOCommand->pSChannel->SSpindle, TRUE) == 1)
+            {
+                *pPreAndPostDelayStatus = 1;
+            }
+            else
+            {
+                break;
+            }
+        }
 
-		case 1:
-		{
-			//ÑÓÊ±
-			if (delays_ms(g_SSystemPara.unSpindleUnLockPreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindleUnLocktRunTime) == 1) // ÑÓÊ±ÊÇ·ñÍê³É
-			{
-				*pPreAndPostDelayStatus = 2;
-				
-			}
-			break;	
-		}
-		case 2:
-		{
-			//¹ØÖ÷ÖáÉ²³µÊä³ö
+        case 1:
+        {
+            //å»¶æ—¶
+            if (delays_ms(g_SSystemPara.unSpindleUnLockPreDelayTime,
+                          &pSIOCommand->pSChannel->SApplyTime.unSpindleUnLocktRunTime) == 1) // å»¶æ—¶æ˜¯å¦å®Œæˆ
+            {
+                *pPreAndPostDelayStatus = 2;
+            }
+            break;
+        }
+        case 2:
+        {
+            //å…³ä¸»è½´åˆ¹è½¦è¾“å‡º
 #if STM32_MODE
-			ioM38M39 = IO_RESET;
-			PAout(10) = IO_RESET;	// PG10
+            ioM38M39 = IO_RESET;
+            PAout(10) = IO_RESET; // PG10
 #else
-			ioM38M39 = IO_RESET;
+            ioM38M39 = IO_RESET;
 #endif
-			* pPreAndPostDelayStatus = 3;
+            *pPreAndPostDelayStatus = 3;
+        }
 
-		}
+        case 3:
+        {
+            //å»¶æ—¶
+            if (delays_ms(g_SSystemPara.unSpindleUnLockPostDelayTime,
+                          &pSIOCommand->pSChannel->SApplyTime.unSpindleUnLocktRunTime) == 1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+            {
+                /* è‹å‘æ ‡ 2026-10-14ï¼šå®Œæˆåç”±åå°åº”ç­”å…¥å£ç»Ÿä¸€æ‰£å‡é˜»å¡è®¡æ•°ã€‚ */
+                *pPreAndPostDelayStatus = 0;
+                pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_UNCLAMPED;
+                return 1;
+            }
+            break;
+        }
+        }
+        return 0;
+        break;
+    case M20:
+    case M21:
+    case M22:
+        if (runM20M21M22Command(pSIOCommand, pSVaribleIOInfo))
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            return 1;
+            break;
+        }
+        return 0;
+        break;
+    case 23: //M23
+        break;
 
-		case 3:
-		{
-			//ÑÓÊ±
-			if (delays_ms(g_SSystemPara.unSpindleUnLockPostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindleUnLocktRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-			{
-				/* ËÕÏò±ê 2026-10-14£ºÍê³ÉºóÓÉºóÌ¨Ó¦´ğÈë¿ÚÍ³Ò»¿Û¼õ×èÈû¼ÆÊı¡£ */
-				*pPreAndPostDelayStatus = 0;
-				pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_UNCLAMPED;
-				return 1;
-			}
-			break;
-		}
-		}
-		return 0;
-		break;
-	case M20:case M21:case M22:
-		if (runM20M21M22Command(pSIOCommand, pSVaribleIOInfo))
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			return 1;
-			break;
-		}
-		return 0;
-		break;
-	case 23://M23
-		break;
+    case 24: //M24
+        break;
 
-	case 24://M24
-		break;
+    case 25: //M25
+        break;
 
-	case 25://M25
-		break;
+    case 32: //M32
+        break;
 
-	case 32://M32
-		break;
+    case 33: //M33
+        break;
 
-	case 33://M33
-		break;
+    case 35:
+    case 36: //M35
+        if (runM35Command(pSIOCommand, pSVaribleIOInfo))
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            return 1;
+            break;
+        }
+        return 0;
+        break;
 
-	case 35:case 36://M35
-		if (runM35Command(pSIOCommand, pSVaribleIOInfo))
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			return 1;
-			break;
-		}
-		return 0;
-		break;
+    case 41: //M41
+        break;
 
-	case 41://M41
-		break;
+    case 42: //M42
+        break;
+    case 43: //M43
+        break;
 
-	case 42://M42
-		break;
-	case 43://M43
-		break;
+    case 44: //M44
+        break;
+    case 50:
+    case 51: //M51
+        if (delays_ms(g_SSystemPara.unSpindlePreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePreRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            return 1;
+            break;
+        }
+        return 0;
+        break;
 
-	case 44://M44
-		break;
-	case 50:
-	case 51://M51
-		if (delays_ms(g_SSystemPara.unSpindlePreDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePreRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			return 1;
-			break;
-		}
-		return 0;
-		break;
+    case 52: //M52
+        if (delays_ms(g_SSystemPara.unSpindlePostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePostRunTime) ==
+            1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+        {
+            pSIOCommand->ucIOBlockedCounter -= 1; //é˜»å¡é”-1
+            return 1;
+            break;
+        }
+        return 0;
+        break;
+        break;
 
-	case 52://M52
-		if (delays_ms(g_SSystemPara.unSpindlePostDelayTime, &pSIOCommand->pSChannel->SApplyTime.unSpindlePostRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-		{
-			pSIOCommand->ucIOBlockedCounter -= 1;//×èÈûËø-1
-			return 1;
-			break;
-		}
-		return 0;
-		break;
-		break;
+    case 53: //M53
+        break;
 
-	case 53://M53
-		break;
+    case 54: //M54
+        break;
 
-	case 54://M54
-		break;
+    case 55: //M55
+        break;
 
-	case 55://M55
-		break;
+    case 56: //M56
+        break;
 
-	case 56://M56
-		break;
+    case 57: //M57
+        break;
 
-	case 57://M57
-		break;
+    case 58: //M58
+        break;
 
-	case 58://M58
-		break;
+    case 59: //M59
+        break;
 
-	case 59://M59
-		break;
+    case 60: //M60
+        break;
 
-	case 60://M60
-		break;
+    case 61: //M61
+        break;
 
-	case 61://M61
-		break;
+    case 62: //M62
+        break;
 
-	case 62://M62
-		break;
+    case 63: //M63
+        break;
 
-	case 63://M63
-		break;
+    case 64: //M64
+        break;
 
-	case 64://M64
-		break;
+    case 65: //M65
+        break;
 
-	case 65://M65
-		break;
+    case 66: //M66
+        break;
 
-	case 66://M66
-		break;
+    case 71: //M66
+        break;
+    case 72: //M66
 
-	case 71://M66
-		break;
-	case 72://M66
-
-		break;
-	default:
-		break;
-		 //return runIOExpand(pSIOCommand,ucIOCommand, pPreAndPostDelayStatus, pSVaribleIOInfo);
-	}
-	return 1;
+        break;
+    default:
+        break;
+        //return runIOExpand(pSIOCommand,ucIOCommand, pPreAndPostDelayStatus, pSVaribleIOInfo);
+    }
+    return 1;
 }
 
-
-/* ËÕÏò±ê 2026-10-14£º¶ÀÁ¢ÍÆ½øÖ÷ÖáÍ£Ö¹£¬±ÜÃâÍ£Ö¹ÒÀÀµÆô¶¯Ê¹ÄÜÍê³É¡£ */
+/* è‹å‘æ ‡ 2026-10-14ï¼šç‹¬ç«‹æ¨è¿›ä¸»è½´åœæ­¢ï¼Œé¿å…åœæ­¢ä¾èµ–å¯åŠ¨ä½¿èƒ½å®Œæˆã€‚ */
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunSpindleIOCore
-  º¯Êı¹¦ÄÜ£ºÔÚÔË¶¯ÖÜÆÚĞ£Ñé¾ÉÊ¹ÄÜÇëÇó°æ±¾£¬²»½øÈëÁÙ½çÇø
-  ÊäÈë²ÎÊı£ºpSIOCommand - ¶ÓÁĞ£»ucIOCommand - MÖ¸Áî£»pPreAndPostDelayStatus - ²Û×´Ì¬£»pSVaribleIOInfo - ¿É±äIO²ÎÊı
-  Êä³ö²ÎÊı£º¸üĞÂ¶ÔÓ¦IO×´Ì¬
-  ·µ »Ø Öµ£º1 - Íê³É£»0 - µÈ´ı£»¸ºÖµ - Òì³£
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14
+  å‡½æ•°åç§°ï¼šrunSpindleIOCore
+  å‡½æ•°åŠŸèƒ½ï¼šåœ¨è¿åŠ¨å‘¨æœŸæ ¡éªŒæ—§ä½¿èƒ½è¯·æ±‚ç‰ˆæœ¬ï¼Œä¸è¿›å…¥ä¸´ç•ŒåŒº
+  è¾“å…¥å‚æ•°ï¼špSIOCommand - é˜Ÿåˆ—ï¼›ucIOCommand - MæŒ‡ä»¤ï¼›pPreAndPostDelayStatus - æ§½çŠ¶æ€ï¼›pSVaribleIOInfo - å¯å˜IOå‚æ•°
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°å¯¹åº”IOçŠ¶æ€
+  è¿” å› å€¼ï¼š1 - å®Œæˆï¼›0 - ç­‰å¾…ï¼›è´Ÿå€¼ - å¼‚å¸¸
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14
 ****************************************/
 
-static int8 runSpindleIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPostDelayStatus, SVaribleIOInfo* pSVaribleIOInfo)
+static int8 runSpindleIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPostDelayStatus,
+                             SVaribleIOInfo* pSVaribleIOInfo)
 {
-    uint8 ucCounter; /**< ¶ÔÓ¦Èë¶Ó²Û¡£ */
-    int8 cResult; /**< Ö¸ÁîÖ´ĞĞ½á¹û¡£ */
+    uint8 ucCounter; /**< å¯¹åº”å…¥é˜Ÿæ§½ã€‚ */
+    int8 cResult;    /**< æŒ‡ä»¤æ‰§è¡Œç»“æœã€‚ */
     if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL)
     {
         return -1;
@@ -894,8 +931,9 @@ static int8 runSpindleIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand,
     }
     for (ucCounter = 0; ucCounter < IO_MAXGROUP_IN_SINGLE_LINE; ++ucCounter)
     {
-        if (pPreAndPostDelayStatus == &pSIOCommand->ucPreAndPostDelayStatus[ucCounter]
-            && pSIOCommand->unSpindleRequestVersionArray[ucCounter] != pSIOCommand->pSChannel->SSpindle.unEnableRequestVersion)
+        if (pPreAndPostDelayStatus == &pSIOCommand->ucPreAndPostDelayStatus[ucCounter] &&
+            pSIOCommand->unSpindleRequestVersionArray[ucCounter] !=
+                pSIOCommand->pSChannel->SSpindle.unEnableRequestVersion)
         {
             if (ucIOCommand == 39)
             {
@@ -911,17 +949,18 @@ static int8 runSpindleIOCore(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand,
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunIO
-  º¯Êı¹¦ÄÜ£ººóÌ¨Ö´ĞĞÆÕÍ¨ IO£»Ö÷ÖáÏà¹Ø IO Ö»·¢²¼²ÛÎ»²¢µÈ´ıÓ¦´ğ
-  ÊäÈë²ÎÊı£ºpSIOCommand - IO½á¹¹£»ucIOCommand - Ö¸Áî£»pPreAndPostDelayStatus - ½×¶Î£»pSVaribleIOInfo - ¿É±äIOĞÅÏ¢
-  Êä³ö²ÎÊı£º½ö·¢²¼Ö÷Öá²ÛÎ»£¬²»¸ÄÊ¹ÄÜÊä³ö
-  ·µ »Ø Öµ£º1 - Íê³É£»0 - µÈ´ı£»¸ºÖµ - ²ÎÊı´íÎó
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14£»²»¹ØÖĞ¶Ï£¬²»Ê¹ÓÃ goto
+  å‡½æ•°åç§°ï¼šrunIO
+  å‡½æ•°åŠŸèƒ½ï¼šåå°æ‰§è¡Œæ™®é€š IOï¼›ä¸»è½´ç›¸å…³ IO åªå‘å¸ƒæ§½ä½å¹¶ç­‰å¾…åº”ç­”
+  è¾“å…¥å‚æ•°ï¼špSIOCommand - IOç»“æ„ï¼›ucIOCommand - æŒ‡ä»¤ï¼›pPreAndPostDelayStatus - é˜¶æ®µï¼›pSVaribleIOInfo - å¯å˜IOä¿¡æ¯
+  è¾“å‡ºå‚æ•°ï¼šä»…å‘å¸ƒä¸»è½´æ§½ä½ï¼Œä¸æ”¹ä½¿èƒ½è¾“å‡º
+  è¿” å› å€¼ï¼š1 - å®Œæˆï¼›0 - ç­‰å¾…ï¼›è´Ÿå€¼ - å‚æ•°é”™è¯¯
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14ï¼›ä¸å…³ä¸­æ–­ï¼Œä¸ä½¿ç”¨ goto
 ****************************************/
-int8 runIO(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPostDelayStatus, SVaribleIOInfo* pSVaribleIOInfo)
+int8 runIO(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPostDelayStatus,
+           SVaribleIOInfo* pSVaribleIOInfo)
 {
-    uint8 ucCounter; /**< ´ıÌá½»µÄ¶ÓÁĞ²ÛºÅ¡£ */
-    int8 cSlot; /**< µ¥×Ö½Ú²ÛÎ»¿ìÕÕ¡£ */
+    uint8 ucCounter; /**< å¾…æäº¤çš„é˜Ÿåˆ—æ§½å·ã€‚ */
+    int8 cSlot;      /**< å•å­—èŠ‚æ§½ä½å¿«ç…§ã€‚ */
     if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL)
     {
         return -1;
@@ -937,7 +976,7 @@ int8 runIO(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPos
             cSlot = pSIOCommand->cSpindleIOSlot;
             if (pSIOCommand->ucIORunBuff[ucCounter] != ucIOCommand)
             {
-                return 1; /* ¸´Î»ÒÑÇåÀí£¬²»ÖØĞÂÌá½»¾É²ÛÎ»¡£ */
+                return 1; /* å¤ä½å·²æ¸…ç†ï¼Œä¸é‡æ–°æäº¤æ—§æ§½ä½ã€‚ */
             }
             if (cSlot == -(int8)(ucCounter + 1))
             {
@@ -951,29 +990,29 @@ int8 runIO(struct _SIOCommand* pSIOCommand, uint8 ucIOCommand, uint8* pPreAndPos
             if (cSlot == 0)
             {
 #if STM32_MODE
-                __DMB(); /* ·¢²¼Ç°Íê³ÉÊı¾İĞ´Èë£»²»ÆÁ±ÎÈÎºÎÖĞ¶Ï¡£ */
+                __DMB(); /* å‘å¸ƒå‰å®Œæˆæ•°æ®å†™å…¥ï¼›ä¸å±è”½ä»»ä½•ä¸­æ–­ã€‚ */
 #endif
                 pSIOCommand->cSpindleIOSlot = (int8)(ucCounter + 1);
             }
             return 0;
         }
     }
-    return -1; /* ²»½ÓÊÜÉúÃüÖÜÆÚÎ´ÖªµÄÁÙÊ±²ÛÎ»Ö¸Õë¡£ */
+    return -1; /* ä¸æ¥å—ç”Ÿå‘½å‘¨æœŸæœªçŸ¥çš„ä¸´æ—¶æ§½ä½æŒ‡é’ˆã€‚ */
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºprocessSpindleIORequest
-  º¯Êı¹¦ÄÜ£ºÖÜÆÚÄÚÍÆ½øÒ»¸öÒÑ·¢²¼Ö÷Öá IO£»¸´Î»ÆÚ¼ä²»Ö´ĞĞÆÕÍ¨ IO
-  ÊäÈë²ÎÊı£ºpSIOCommand - Í¨µÀ IO ½á¹¹
-  Êä³ö²ÎÊı£ºÖ´ĞĞ½á¹ûÍ¨¹ı²ÛÎ»·ûºÅÓ¦´ğ
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£ºËÕÏò±ê 2026-10-14£»²»¹ØÖĞ¶Ï£¬²»Ê¹ÓÃ goto
+  å‡½æ•°åç§°ï¼šprocessSpindleIORequest
+  å‡½æ•°åŠŸèƒ½ï¼šå‘¨æœŸå†…æ¨è¿›ä¸€ä¸ªå·²å‘å¸ƒä¸»è½´ IOï¼›å¤ä½æœŸé—´ä¸æ‰§è¡Œæ™®é€š IO
+  è¾“å…¥å‚æ•°ï¼špSIOCommand - é€šé“ IO ç»“æ„
+  è¾“å‡ºå‚æ•°ï¼šæ‰§è¡Œç»“æœé€šè¿‡æ§½ä½ç¬¦å·åº”ç­”
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼šè‹å‘æ ‡ 2026-10-14ï¼›ä¸å…³ä¸­æ–­ï¼Œä¸ä½¿ç”¨ goto
 ****************************************/
 void processSpindleIORequest(struct _SIOCommand* pSIOCommand)
 {
-    int8 cSlot; /**< ºóÌ¨·¢²¼µÄ²ÛºÅ¿ìÕÕ¡£ */
-    uint8 ucSlot; /**< Ğ£ÑéºóµÄÊı×éÏÂ±ê¡£ */
-    uint8 ucCommand; /**< ²ÛÎ»Ö¸Áî¡£ */
+    int8 cSlot;      /**< åå°å‘å¸ƒçš„æ§½å·å¿«ç…§ã€‚ */
+    uint8 ucSlot;    /**< æ ¡éªŒåçš„æ•°ç»„ä¸‹æ ‡ã€‚ */
+    uint8 ucCommand; /**< æ§½ä½æŒ‡ä»¤ã€‚ */
     if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL)
     {
         return;
@@ -984,7 +1023,7 @@ void processSpindleIORequest(struct _SIOCommand* pSIOCommand)
         return;
     }
 #if STM32_MODE
-    __DMB(); /* ÒÑ¿´µ½ÇëÇó£¬ÔÙ¶ÁÈ¡¸Ã²ÛÎ»Êı¾İ¡£ */
+    __DMB(); /* å·²çœ‹åˆ°è¯·æ±‚ï¼Œå†è¯»å–è¯¥æ§½ä½æ•°æ®ã€‚ */
 #endif
     ucSlot = (uint8)(cSlot - 1);
     ucCommand = pSIOCommand->ucIORunBuff[ucSlot];
@@ -993,807 +1032,832 @@ void processSpindleIORequest(struct _SIOCommand* pSIOCommand)
         pSIOCommand->cSpindleIOSlot = 0;
         return;
     }
-    /* ËÕÏò±ê 2026-10-14£ºÖ´ĞĞÇ°ÖØĞÂ¶ÁÈ¡¹²Ïí¼±Í£ÊäÈë¡¢¼«ĞÔ²ÎÊıºÍ±¨¾¯£¬²»ÑØÓÃºóÌ¨·¢²¼Ê±µÄÌõ¼ş¡£ */
-    if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType
-        || pSIOCommand->pSChannel->ucChannelStatus == SYS_RESET
-        || pSIOCommand->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP
-        || isErrorHasBeenWritten())
+    /* è‹å‘æ ‡ 2026-10-14ï¼šæ‰§è¡Œå‰é‡æ–°è¯»å–å…±äº«æ€¥åœè¾“å…¥ã€ææ€§å‚æ•°å’ŒæŠ¥è­¦ï¼Œä¸æ²¿ç”¨åå°å‘å¸ƒæ—¶çš„æ¡ä»¶ã€‚ */
+    if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType ||
+        pSIOCommand->pSChannel->ucChannelStatus == SYS_RESET ||
+        pSIOCommand->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP || isErrorHasBeenWritten())
     {
         return;
     }
     if (runSpindleIOCore(pSIOCommand, ucCommand, &pSIOCommand->ucPreAndPostDelayStatus[ucSlot],
-        &pSIOCommand->SVaribleIOInfoArray[ucSlot]) == 1)
+                         &pSIOCommand->SVaribleIOInfoArray[ucSlot]) == 1)
     {
 #if STM32_MODE
-        __DMB(); /* ÏÈÍê³ÉÊä³öºÍ½×¶Î¸üĞÂ£¬ÔÙ·¢²¼Íê³ÉÓ¦´ğ¡£ */
+        __DMB(); /* å…ˆå®Œæˆè¾“å‡ºå’Œé˜¶æ®µæ›´æ–°ï¼Œå†å‘å¸ƒå®Œæˆåº”ç­”ã€‚ */
 #endif
         pSIOCommand->cSpindleIOSlot = -cSlot;
     }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunIOBuff(struct _SIOCommand* pSIOCommand)
-  º¯Êı¹¦ÄÜ  ±éÀúbuff  Ö´ĞĞÊı×éÔªËØ²»Îª0µÄM´úÂë  ÈôM´úÂëÖ´ĞĞÍê³É Ôò³õÊ¼»¯¶ÔÓ¦µÄÊı×éÔªËØ£¨ÖÃ0£© ÏÂÒ»´ÎÔò²»»áÖ´ĞĞ
-  ÊäÈë²ÎÊı£ºpSIOCommand	IO½á¹¹ÌåÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ö´ĞĞÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrunIOBuff(struct _SIOCommand* pSIOCommand)
+  å‡½æ•°åŠŸèƒ½  éå†buff  æ‰§è¡Œæ•°ç»„å…ƒç´ ä¸ä¸º0çš„Mä»£ç   è‹¥Mä»£ç æ‰§è¡Œå®Œæˆ åˆ™åˆå§‹åŒ–å¯¹åº”çš„æ•°ç»„å…ƒç´ ï¼ˆç½®0ï¼‰ ä¸‹ä¸€æ¬¡åˆ™ä¸ä¼šæ‰§è¡Œ
+  è¾“å…¥å‚æ•°ï¼špSIOCommand	IOç»“æ„ä½“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ‰§è¡Œå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 runIOBuff(struct _SIOCommand* pSIOCommand)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
+    uint8 ucCounter; //è®¡æ•°å™¨
 
-	//if(getMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum,0) == 0) //2026.7.1 Ôö¼Ó¼ĞÍ·ËÉ¿ª¼ì²â,ÓÉÓÚMDIÄ£Ê½ÏÂ£¬Ö´ĞĞM11Ö¸Áî£¬ÖØĞÂ×Ô¶¯Ö´ĞĞÃ»ÓĞ¼Ì³Ğ£¬¹Ê¸ù¾İ±êÖ¾Î»ÅĞ¶Ï
-	//{
-	//	g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] = M11; //M´úÂëÏàÓ¦×´Ì¬ÖÃÎª¼ĞÍ·ËÉ¿ªM11
-	//	if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dCurrentSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE > g_SSystemPara.SpindleChuck[0])//Ö÷Öá×ªËÙ´óÓÚÖ¸¶¨×ªËÙ¿ªÆô¼ì²â£¬Ö÷ÖáÖ´ĞĞµ½M11¼ĞÍ·ËÉ¿ªÊ±½øĞĞ±¨¾¯´¦Àí
-	//	{
-	//		parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
-	//		return 1;
-	//	}
-	//}
-	//else
-	//{
-	//	g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] = M10; //M´úÂëÏàÓ¦×´Ì¬ÖÃÎª¼ĞÍ·¼Ğ½ôM10
-	//}
+    //if(getMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum,0) == 0) //2026.7.1 å¢åŠ å¤¹å¤´æ¾å¼€æ£€æµ‹,ç”±äºMDIæ¨¡å¼ä¸‹ï¼Œæ‰§è¡ŒM11æŒ‡ä»¤ï¼Œé‡æ–°è‡ªåŠ¨æ‰§è¡Œæ²¡æœ‰ç»§æ‰¿ï¼Œæ•…æ ¹æ®æ ‡å¿—ä½åˆ¤æ–­
+    //{
+    //	g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] = M11; //Mä»£ç ç›¸åº”çŠ¶æ€ç½®ä¸ºå¤¹å¤´æ¾å¼€M11
+    //	if (pSIOCommand->pSChannel->SSingleAxisArray[AXIS_C].dCurrentSpeed * (60.0 * 1000) / DEGREE_OF_CIRCLE > g_SSystemPara.SpindleChuck[0])//ä¸»è½´è½¬é€Ÿå¤§äºæŒ‡å®šè½¬é€Ÿå¼€å¯æ£€æµ‹ï¼Œä¸»è½´æ‰§è¡Œåˆ°M11å¤¹å¤´æ¾å¼€æ—¶è¿›è¡ŒæŠ¥è­¦å¤„ç†
+    //	{
+    //		parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM149, 9999);
+    //		return 1;
+    //	}
+    //}
+    //else
+    //{
+    //	g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_CHUCK] = M10; //Mä»£ç ç›¸åº”çŠ¶æ€ç½®ä¸ºå¤¹å¤´å¤¹ç´§M10
+    //}
 
-	if(getMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum,1) ==1) //Ôö¼ÓÇĞÏ÷ÒºM´úÂë×´Ì¬ÇĞ»»
-	{
-		g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] = 8; //M´úÂëÏàÓ¦×´Ì¬ÖÃÎªÇĞÏ÷Òº¿ªÆôM8
-	}
-	else
-	{
-		g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] = 9; //M´úÂëÏàÓ¦×´Ì¬ÖÃÎªÇĞÏ÷Òº¹Ø±ÕM9
-	}
+    if (getMCodeRunStatus(pSIOCommand->pSChannel->ucChannelNum, 1) == 1) //å¢åŠ åˆ‡å‰Šæ¶²Mä»£ç çŠ¶æ€åˆ‡æ¢
+    {
+        g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] = 8; //Mä»£ç ç›¸åº”çŠ¶æ€ç½®ä¸ºåˆ‡å‰Šæ¶²å¼€å¯M8
+    }
+    else
+    {
+        g_ucMCodeStatus[pSIOCommand->pSChannel->ucChannelNum][MCODE_GROUP_FUILD] = 9; //Mä»£ç ç›¸åº”çŠ¶æ€ç½®ä¸ºåˆ‡å‰Šæ¶²å…³é—­M9
+    }
 
-	for (ucCounter = 0; ucCounter < IO_MAXGROUP_IN_SINGLE_LINE; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
-		if (pSIOCommand->ucIORunBuff[ucCounter] != 0)  //²»Îª0  ·Ç¿Õ  ÓĞĞ§µÄM´úÂë
-		{
-			if (runIO(pSIOCommand, pSIOCommand->ucIORunBuff[ucCounter], &(pSIOCommand->ucPreAndPostDelayStatus[ucCounter]),&pSIOCommand->SVaribleIOInfoArray[ucCounter]) == 1)//Ö´ĞĞIOÖ¸Áî  
-			{
-				if (isVariableIO(pSIOCommand->ucIORunBuff[ucCounter]))
-				{
-					pSIOCommand->SVaribleIOInfoArray[ucCounter].pIOContrlInfo = NULL;
-					pSIOCommand->SVaribleIOInfoArray[ucCounter].ucStatus = 0;
-				}
-				pSIOCommand->ucIORunBuff[ucCounter] = 0;//·µ»ØÖµÎª1Ê±Ö´ĞĞÍê³É ³õÊ¼»¯Êı×éÔªËØ
-			}
-		}
-	}
+    for (ucCounter = 0; ucCounter < IO_MAXGROUP_IN_SINGLE_LINE; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
+        if (pSIOCommand->ucIORunBuff[ucCounter] != 0) //ä¸ä¸º0  éç©º  æœ‰æ•ˆçš„Mä»£ç 
+        {
+            if (runIO(pSIOCommand, pSIOCommand->ucIORunBuff[ucCounter],
+                      &(pSIOCommand->ucPreAndPostDelayStatus[ucCounter]),
+                      &pSIOCommand->SVaribleIOInfoArray[ucCounter]) == 1) //æ‰§è¡ŒIOæŒ‡ä»¤
+            {
+                if (isVariableIO(pSIOCommand->ucIORunBuff[ucCounter]))
+                {
+                    pSIOCommand->SVaribleIOInfoArray[ucCounter].pIOContrlInfo = NULL;
+                    pSIOCommand->SVaribleIOInfoArray[ucCounter].ucStatus = 0;
+                }
+                pSIOCommand->ucIORunBuff[ucCounter] = 0; //è¿”å›å€¼ä¸º1æ—¶æ‰§è¡Œå®Œæˆ åˆå§‹åŒ–æ•°ç»„å…ƒç´ 
+            }
+        }
+    }
 
-	if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType)
-	{//¼±Í£ÅĞ¶Ï//ÖìÎÈÖĞ 2023.6.24
-		emergencyStopAPI(pSIOCommand->pSChannel->ucChannelNum);
-	}
-	return 1;
+    if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType)
+    { //æ€¥åœåˆ¤æ–­//æœ±ç¨³ä¸­ 2023.6.24
+        emergencyStopAPI(pSIOCommand->pSChannel->ucChannelNum);
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºfindIO(uint32 ucNum,UMcode *ucIOCommandArray,uint8 ucSize)
-  º¯Êı¹¦ÄÜ  Ñ°ÕÒ×éºÅÎªunGroupNumµÄ IO  Ñ°ÕÒµ½·µ»Ø²»Îª0µÄ½á¹¹Ìå ·ñÔò·µ»ØÈ«²¿Î»Îª0µÄ½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºucNum		M´úÂëµÄºÅÂë
-			ucIOcommand	M´úÂë½á¹¹ÌåÊı×é
-			ucSize		Êı×é³¤¶È
-  Êä³ö²ÎÊı£ºint8 ÕÒµ½µÄMÖ¸ÁîºÅÂë
-			0    Î´ÕÒµ½
-			-1	 Êı×éÖ¸ÕëÎª¿Õ
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šfindIO(uint32 ucNum,UMcode *ucIOCommandArray,uint8 ucSize)
+  å‡½æ•°åŠŸèƒ½  å¯»æ‰¾ç»„å·ä¸ºunGroupNumçš„ IO  å¯»æ‰¾åˆ°è¿”å›ä¸ä¸º0çš„ç»“æ„ä½“ å¦åˆ™è¿”å›å…¨éƒ¨ä½ä¸º0çš„ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šucNum		Mä»£ç çš„å·ç 
+			ucIOcommand	Mä»£ç ç»“æ„ä½“æ•°ç»„
+			ucSize		æ•°ç»„é•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼šint8 æ‰¾åˆ°çš„MæŒ‡ä»¤å·ç 
+			0    æœªæ‰¾åˆ°
+			-1	 æ•°ç»„æŒ‡é’ˆä¸ºç©º
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 findIO(uint8 ucNum, uint8* ucIOCommandArray, uint8 ucSize)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
+    uint8 ucCounter; //è®¡æ•°å™¨
     uint8 Num;
-	if (ucIOCommandArray == NULL)
-	{
-		return -1;
-	}
-	ucNum = getBits(ucNum, IO_NUM_ADDR);
+    if (ucIOCommandArray == NULL)
+    {
+        return -1;
+    }
+    ucNum = getBits(ucNum, IO_NUM_ADDR);
 
-	for (ucCounter = 0; ucCounter < ucSize; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
-		if (getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR) == ucNum)  //ÅĞ¶ÏÊÇ·ñÎªÄ¿±ê
-		{
-			return getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR);
-		}
-	}
+    for (ucCounter = 0; ucCounter < ucSize; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
+        if (getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR) == ucNum) //åˆ¤æ–­æ˜¯å¦ä¸ºç›®æ ‡
+        {
+            return getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR);
+        }
+    }
 
-	return 0;//Î´ÕÒµ½
+    return 0; //æœªæ‰¾åˆ°
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºfindIOPosition(uint8 ucNum, uint8* ucIOCommandArray, uint8 ucSize, uint8* ucPos)
-  º¯Êı¹¦ÄÜ  Ñ°ÕÒ×éºÅÎªunGroupNumµÄ IO  Ñ°ÕÒµ½·µ»Ø²»Îª0µÄ½á¹¹Ìå ·ñÔò·µ»ØÈ«²¿Î»Îª0µÄ½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºucNum		M´úÂëµÄºÅÂë
-			ucIOcommand	M´úÂë½á¹¹ÌåÊı×é
-			ucSize		Êı×é³¤¶È
-  Êä³ö²ÎÊı£ºIO¶ÔÓ¦¾ßÌåÎ»ÖÃ
-  ·µ »Ø Öµ£º¶ÔÓ¦M´úÂë»òÕß0Î´ÕÒµ½
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šfindIOPosition(uint8 ucNum, uint8* ucIOCommandArray, uint8 ucSize, uint8* ucPos)
+  å‡½æ•°åŠŸèƒ½  å¯»æ‰¾ç»„å·ä¸ºunGroupNumçš„ IO  å¯»æ‰¾åˆ°è¿”å›ä¸ä¸º0çš„ç»“æ„ä½“ å¦åˆ™è¿”å›å…¨éƒ¨ä½ä¸º0çš„ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šucNum		Mä»£ç çš„å·ç 
+			ucIOcommand	Mä»£ç ç»“æ„ä½“æ•°ç»„
+			ucSize		æ•°ç»„é•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼šIOå¯¹åº”å…·ä½“ä½ç½®
+  è¿” å› å€¼ï¼šå¯¹åº”Mä»£ç æˆ–è€…0æœªæ‰¾åˆ°
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 findIOPosition(uint8 ucNum, uint8* ucIOCommandArray, uint8 ucSize, uint8* ucPos)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
+    uint8 ucCounter; //è®¡æ•°å™¨
     uint8 Num;
-	if (ucIOCommandArray == NULL)
-	{
-		return -1;
-	}
-	ucNum = getBits(ucNum, IO_NUM_ADDR);
+    if (ucIOCommandArray == NULL)
+    {
+        return -1;
+    }
+    ucNum = getBits(ucNum, IO_NUM_ADDR);
 
-	for (ucCounter = 0; ucCounter < ucSize; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
-		if (getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR) == ucNum)  //ÅĞ¶ÏÊÇ·ñÎªÄ¿±ê
-		{
-			*ucPos = ucCounter;
-			return getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR);
-		}
-	}
+    for (ucCounter = 0; ucCounter < ucSize; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
+        if (getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR) == ucNum) //åˆ¤æ–­æ˜¯å¦ä¸ºç›®æ ‡
+        {
+            *ucPos = ucCounter;
+            return getBits(ucIOCommandArray[ucCounter], IO_NUM_ADDR);
+        }
+    }
 
-	return 0;//Î´ÕÒµ½
+    return 0; //æœªæ‰¾åˆ°
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleStatusInBuff()
-  º¯Êı¹¦ÄÜ  Ñ°ÕÒ×éºÅÎªunGroupNumµÄ IO  Ñ°ÕÒµ½·µ»Ø²»Îª0µÄ½á¹¹Ìå ·ñÔò·µ»ØÈ«²¿Î»Îª0µÄ½á¹¹Ìå
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint8 ×îºóÕÒµ½µÄM03 M04 M05µÄÖµ    £¨ÕâÒâÎ¶×Å  ·µ»ØµÄÊÇ×îºó·ÅÈëbuffÖĞµÄM´úÂë£©£¨Ò»¶¨Ìõ¼şÏÂ ÓĞ¿Ó£¡£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleStatusInBuff()
+  å‡½æ•°åŠŸèƒ½  å¯»æ‰¾ç»„å·ä¸ºunGroupNumçš„ IO  å¯»æ‰¾åˆ°è¿”å›ä¸ä¸º0çš„ç»“æ„ä½“ å¦åˆ™è¿”å›å…¨éƒ¨ä½ä¸º0çš„ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint8 æœ€åæ‰¾åˆ°çš„M03 M04 M05çš„å€¼    ï¼ˆè¿™æ„å‘³ç€  è¿”å›çš„æ˜¯æœ€åæ”¾å…¥buffä¸­çš„Mä»£ç ï¼‰ï¼ˆä¸€å®šæ¡ä»¶ä¸‹ æœ‰å‘ï¼ï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 checkSpindleStatus(uint8* ucIOCommandArray, uint8 ucSize)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
-	int8 cRes = 0;
-	for (ucCounter = 0; ucCounter < ucSize; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
-		if (ucIOCommandArray[ucCounter] == 3 || ucIOCommandArray[ucCounter] == 4 || ucIOCommandArray[ucCounter] == 5)  //ÅĞ¶ÏÊÇ·ñÎªÄ¿±ê
-		{
-			cRes = ucIOCommandArray[ucCounter];
-			setBits(cRes, 0x00, IO_TYPE_ADDR);
-		}
-	}
-	return cRes;
+    uint8 ucCounter; //è®¡æ•°å™¨
+    int8 cRes = 0;
+    for (ucCounter = 0; ucCounter < ucSize; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
+        if (ucIOCommandArray[ucCounter] == 3 || ucIOCommandArray[ucCounter] == 4 ||
+            ucIOCommandArray[ucCounter] == 5) //åˆ¤æ–­æ˜¯å¦ä¸ºç›®æ ‡
+        {
+            cRes = ucIOCommandArray[ucCounter];
+            setBits(cRes, 0x00, IO_TYPE_ADDR);
+        }
+    }
+    return cRes;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleStatusInBuff()
-  º¯Êı¹¦ÄÜ  Ñ°ÕÒ×éºÅÎªunGroupNumµÄ IO  Ñ°ÕÒµ½·µ»Ø²»Îª0µÄ½á¹¹Ìå ·ñÔò·µ»ØÈ«²¿Î»Îª0µÄ½á¹¹Ìå
-  ÊäÈë²ÎÊı£º*ucIOCommandArray	Êı×éÖ¸Õë
-			ucSize				ÔªËØ¸öÊı
-  Êä³ö²ÎÊı£º0 ÎŞ×èÈû
-			1 Ç°×èÈû
-			2 ºó×èÈû
-			3 Ç°ºó¶¼×èÈû
-  ·µ »Ø Öµ£ºint8 ×îºóÕÒµ½µÄM03 M04 M05µÄÖµ    £¨ÕâÒâÎ¶×Å  ·µ»ØµÄÊÇ×îºó·ÅÈëbuffÖĞµÄM´úÂë£©£¨Ò»¶¨Ìõ¼şÏÂ ÓĞ¿Ó£¡£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleStatusInBuff()
+  å‡½æ•°åŠŸèƒ½  å¯»æ‰¾ç»„å·ä¸ºunGroupNumçš„ IO  å¯»æ‰¾åˆ°è¿”å›ä¸ä¸º0çš„ç»“æ„ä½“ å¦åˆ™è¿”å›å…¨éƒ¨ä½ä¸º0çš„ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼š*ucIOCommandArray	æ•°ç»„æŒ‡é’ˆ
+			ucSize				å…ƒç´ ä¸ªæ•°
+  è¾“å‡ºå‚æ•°ï¼š0 æ— é˜»å¡
+			1 å‰é˜»å¡
+			2 åé˜»å¡
+			3 å‰åéƒ½é˜»å¡
+  è¿” å› å€¼ï¼šint8 æœ€åæ‰¾åˆ°çš„M03 M04 M05çš„å€¼    ï¼ˆè¿™æ„å‘³ç€  è¿”å›çš„æ˜¯æœ€åæ”¾å…¥buffä¸­çš„Mä»£ç ï¼‰ï¼ˆä¸€å®šæ¡ä»¶ä¸‹ æœ‰å‘ï¼ï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 isBlockedInCommand(uint8* ucIOCommandArray, uint8 ucSize)
 {
-	uint8 ucCounter; //¼ÆÊıÆ÷
-	uint8 ucRes = 0;
-	uint8 ucReturnVal = 0;
-	for (ucCounter = 0; ucCounter < ucSize; ucCounter++)  //´Ó0¿ªÊ¼²éÕÒ
-	{
-		uint8 uctemp=ucIOCommandArray[ucCounter];
-		setBits(ucIOCommandArray[ucCounter], 0x00, IO_TYPE_ADDR);//É¾³ıÆäÇ°ºó×÷ÓÃÀàĞÍ	//³ÂÃô´Ï	2023/7/11Ôö
-		ucRes = isBlockedIO(ucIOCommandArray[ucCounter]);
-		ucIOCommandArray[ucCounter] =uctemp;
-		ucReturnVal = ucReturnVal | ucRes;
-	}
-	return ucReturnVal;
+    uint8 ucCounter; //è®¡æ•°å™¨
+    uint8 ucRes = 0;
+    uint8 ucReturnVal = 0;
+    for (ucCounter = 0; ucCounter < ucSize; ucCounter++) //ä»0å¼€å§‹æŸ¥æ‰¾
+    {
+        uint8 uctemp = ucIOCommandArray[ucCounter];
+        setBits(ucIOCommandArray[ucCounter], 0x00, IO_TYPE_ADDR); //åˆ é™¤å…¶å‰åä½œç”¨ç±»å‹	//é™ˆæ•èª	2023/7/11å¢
+        ucRes = isBlockedIO(ucIOCommandArray[ucCounter]);
+        ucIOCommandArray[ucCounter] = uctemp;
+        ucReturnVal = ucReturnVal | ucRes;
+    }
+    return ucReturnVal;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearIOCommand(uint8* ucIOCommandArray, uint8 ucCommandType, uint8 ucSize)
-  º¯Êı¹¦ÄÜ  Çå³ıÄ¿±ê»º´æ ×÷ÓÃÀàĞÍÎªucCommandTypeµÄIO
-  ÊäÈë²ÎÊı£º*ucIOCommandArray	Êı×éÖ¸Õë
-			ucCommandType		×÷ÓÃÀàĞÍ
-			ucSize				ÔªËØ¸öÊı
-  Êä³ö²ÎÊı£º*ucIOCommandArray	Êı×éÖ¸Õë
-  ·µ »Ø Öµ£ºint8 ×îºóÕÒµ½µÄM03 M04 M05µÄÖµ    £¨ÕâÒâÎ¶×Å  ·µ»ØµÄÊÇ×îºó·ÅÈëbuffÖĞµÄM´úÂë£©£¨Ò»¶¨Ìõ¼şÏÂ ÓĞ¿Ó£¡£©
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearIOCommand(uint8* ucIOCommandArray, uint8 ucCommandType, uint8 ucSize)
+  å‡½æ•°åŠŸèƒ½  æ¸…é™¤ç›®æ ‡ç¼“å­˜ ä½œç”¨ç±»å‹ä¸ºucCommandTypeçš„IO
+  è¾“å…¥å‚æ•°ï¼š*ucIOCommandArray	æ•°ç»„æŒ‡é’ˆ
+			ucCommandType		ä½œç”¨ç±»å‹
+			ucSize				å…ƒç´ ä¸ªæ•°
+  è¾“å‡ºå‚æ•°ï¼š*ucIOCommandArray	æ•°ç»„æŒ‡é’ˆ
+  è¿” å› å€¼ï¼šint8 æœ€åæ‰¾åˆ°çš„M03 M04 M05çš„å€¼    ï¼ˆè¿™æ„å‘³ç€  è¿”å›çš„æ˜¯æœ€åæ”¾å…¥buffä¸­çš„Mä»£ç ï¼‰ï¼ˆä¸€å®šæ¡ä»¶ä¸‹ æœ‰å‘ï¼ï¼‰
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 clearIOCommand(uint8* ucIOCommandArray, uint8 ucCommandType, uint8 ucSize)
 {
-	int i;
-	if (ucIOCommandArray == NULL)
-	{
-		return  -1;
-	}
+    int i;
+    if (ucIOCommandArray == NULL)
+    {
+        return -1;
+    }
 
-	switch (ucCommandType)//¸ù¾İ×÷ÓÃÀàĞÍ²»Í¬
-	{
-	case IO_PRE_ACTION://Çå³ıÇ°×÷ÓÃÀàĞÍ
-	case IO_POST_ACTION://Çå³ıºó×÷ÓÃÀàĞÍ
+    switch (ucCommandType) //æ ¹æ®ä½œç”¨ç±»å‹ä¸åŒ
+    {
+    case IO_PRE_ACTION:  //æ¸…é™¤å‰ä½œç”¨ç±»å‹
+    case IO_POST_ACTION: //æ¸…é™¤åä½œç”¨ç±»å‹
 
-		for ( i = 0; i < ucSize; i++)
-		{
+        for (i = 0; i < ucSize; i++)
+        {
 
-			if (getBits(ucIOCommandArray[i],IO_TYPE_ADDR)>>7 == ucCommandType )//ÅĞ¶Ï×÷ÓÃÀàĞÍ
-			{
-				ucIOCommandArray[i] = 0;
-			}
-		}
+            if (getBits(ucIOCommandArray[i], IO_TYPE_ADDR) >> 7 == ucCommandType) //åˆ¤æ–­ä½œç”¨ç±»å‹
+            {
+                ucIOCommandArray[i] = 0;
+            }
+        }
 
-		break;
-	case IO_ALL_ACTION://Çå³ıËùÓĞ×÷ÓÃÀàĞÍµÄIO
+        break;
+    case IO_ALL_ACTION: //æ¸…é™¤æ‰€æœ‰ä½œç”¨ç±»å‹çš„IO
 
-		memset(ucIOCommandArray, 0, sizeof(uint8) * ucSize);
-		break;
-	default:
-		return -2;
-	}
+        memset(ucIOCommandArray, 0, sizeof(uint8) * ucSize);
+        break;
+    default:
+        return -2;
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºhasIOCommand(uint8* ucIOCommandArray, uint8 ucSize)
-  º¯Êı¹¦ÄÜ  ²éÑ¯ÊÇ·ñÓĞM´úÂë
-  ÊäÈë²ÎÊı£º*ucIOCommandArray	Êı×éÖ¸Õë
-			ucSize				ÔªËØ¸öÊı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE	ÎŞM´úÂë
-			TRUE	´æÔÚM´úÂë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šhasIOCommand(uint8* ucIOCommandArray, uint8 ucSize)
+  å‡½æ•°åŠŸèƒ½  æŸ¥è¯¢æ˜¯å¦æœ‰Mä»£ç 
+  è¾“å…¥å‚æ•°ï¼š*ucIOCommandArray	æ•°ç»„æŒ‡é’ˆ
+			ucSize				å…ƒç´ ä¸ªæ•°
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE	æ— Mä»£ç 
+			TRUE	å­˜åœ¨Mä»£ç 
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool hasIOCommand(uint8* ucIOCommandArray, uint8 ucSize)
 {
-	int i = 0;
-	if (ucIOCommandArray == NULL)
-	{
-		return FALSE;
-	}
+    int i = 0;
+    if (ucIOCommandArray == NULL)
+    {
+        return FALSE;
+    }
 
-	for (i = 0; i < ucSize; i++)
-	{
-		if (ucIOCommandArray[i] != 0)//´æÔÚÒ»¸ö²»Îª0µÄM´úÂë  ËµÃ÷´æÔÚM´úÂë  ·µ»ØÕæ
-		{
-			return TRUE;
-		}
-	}
-	return FALSE;// Ã»ÓĞÕÒµ½M´úÂë
+    for (i = 0; i < ucSize; i++)
+    {
+        if (ucIOCommandArray[i] != 0) //å­˜åœ¨ä¸€ä¸ªä¸ä¸º0çš„Mä»£ç   è¯´æ˜å­˜åœ¨Mä»£ç   è¿”å›çœŸ
+        {
+            return TRUE;
+        }
+    }
+    return FALSE; // æ²¡æœ‰æ‰¾åˆ°Mä»£ç 
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetOrSetMCodeStatus(uint8 ucGroupNum, uint8* pVal, bool bIsWrite)
-  º¯Êı¹¦ÄÜ  Ğ´Èë»ò»ñÈ¡M´úÂë×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ
-			ucGroupNum		M´úÂë×éºÅ
-			*pVal			Ğ´ÈëÊ±ÎªÊäÈë²ÎÊı
-			bIsWrite		ÊÇ·ñÎªĞ´Èë
-  Êä³ö²ÎÊı£º*pVal			¶Á³öÊ±Îª´«³ö²ÎÊı
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetOrSetMCodeStatus(uint8 ucGroupNum, uint8* pVal, bool bIsWrite)
+  å‡½æ•°åŠŸèƒ½  å†™å…¥æˆ–è·å–Mä»£ç çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å·
+			ucGroupNum		Mä»£ç ç»„å·
+			*pVal			å†™å…¥æ—¶ä¸ºè¾“å…¥å‚æ•°
+			bIsWrite		æ˜¯å¦ä¸ºå†™å…¥
+  è¾“å‡ºå‚æ•°ï¼š*pVal			è¯»å‡ºæ—¶ä¸ºä¼ å‡ºå‚æ•°
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 getOrSetMCodeStatus(uint8 ucChannelNum, uint8 ucGroupNum, uint8* pVal, bool bIsWrite) // ¶Á»òĞ´
+int8 getOrSetMCodeStatus(uint8 ucChannelNum, uint8 ucGroupNum, uint8* pVal, bool bIsWrite) // è¯»æˆ–å†™
 {
-	if (ucGroupNum >= MCODE_GROUP_NUM)
-	{
-		return -1;
-	}
-	if (bIsWrite)//Ğ´Èë
-	{
-		g_ucMCodeStatus[ucChannelNum][ucGroupNum] = *pVal;
-	}
-	else // ¶Á³ö
-	{
-		*pVal = g_ucMCodeStatus[ucChannelNum][ucGroupNum];
-	}
-	return 1;
+    if (ucGroupNum >= MCODE_GROUP_NUM)
+    {
+        return -1;
+    }
+    if (bIsWrite) //å†™å…¥
+    {
+        g_ucMCodeStatus[ucChannelNum][ucGroupNum] = *pVal;
+    }
+    else // è¯»å‡º
+    {
+        *pVal = g_ucMCodeStatus[ucChannelNum][ucGroupNum];
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcheckAndsetIOBlockedBeforG0(uint8 ucNum,struct _SIOCommand* pSIOCommand)
-  º¯Êı¹¦ÄÜ£º¼ì²éIO,²¢¸ù¾İ²¿·ÖIO£¬ÉèÖÃÏà¹ØµÄ×´Ì¬±äÁ¿Ê¹µÃG0ÔË¶¯×èÈû
-  ÊäÈë²ÎÊı£ºucNum IOºÅ
-  Êä³ö²ÎÊı£ºpSIOCommand->pSChannel->SSpindle.cSpindleClampStatus Ö÷ÖáÉ²³µËø½ô×´Ì¬
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º2023/4/6 CMCÔö
+  å‡½æ•°åç§°ï¼šcheckAndsetIOBlockedBeforG0(uint8 ucNum,struct _SIOCommand* pSIOCommand)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥IO,å¹¶æ ¹æ®éƒ¨åˆ†IOï¼Œè®¾ç½®ç›¸å…³çš„çŠ¶æ€å˜é‡ä½¿å¾—G0è¿åŠ¨é˜»å¡
+  è¾“å…¥å‚æ•°ï¼šucNum IOå·
+  è¾“å‡ºå‚æ•°ï¼špSIOCommand->pSChannel->SSpindle.cSpindleClampStatus ä¸»è½´åˆ¹è½¦é”ç´§çŠ¶æ€
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š2023/4/6 CMCå¢
 **************************************************/
 void checkAndsetIOBlockedBeforG0(uint8 ucNum, struct _SIOCommand* pSIOCommand)
 {
-	setBits(ucNum, 0x00, IO_TYPE_ADDR);//É¾³ıÆäÇ°ºó×÷ÓÃÀàĞÍ
-	if (ucNum == M38 || ucNum == M39)	//Ö÷ÖáÉ²³µËø½ô»òËÉ¿ªÃüÁî M38/M39
-	{
-		if (ucNum == M39)	//M39
-		{
-			pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_GET_UNCLAMP_INSTRUCTION;
-		}
+    setBits(ucNum, 0x00, IO_TYPE_ADDR); //åˆ é™¤å…¶å‰åä½œç”¨ç±»å‹
+    if (ucNum == M38 || ucNum == M39)   //ä¸»è½´åˆ¹è½¦é”ç´§æˆ–æ¾å¼€å‘½ä»¤ M38/M39
+    {
+        if (ucNum == M39) //M39
+        {
+            pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_GET_UNCLAMP_INSTRUCTION;
+        }
 
-		if (ucNum == M38)	//M38
-		{
-			pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_GET_CLAMP_INSTRUCTION;
-		}
-	}
+        if (ucNum == M38) //M38
+        {
+            pSIOCommand->pSChannel->SSpindle.cSpindleClampStatus = STATUS_GET_CLAMP_INSTRUCTION;
+        }
+    }
 }
 
-//ÉÏÁÏ×´Ì¬»ú
-#define FEED_INITATION				0
-#define FEED_OVERTIME_INITATION		1
-#define	FEED_OVERTIME_MOVEBACK		2
-#define	FEED_OPEN_OUTPUTIO			3
-#define	FEED_CHECK_INTPUTIO			4
-#define	FEED_OVERTIME_INTPUTIO		5
-#define	FEED_FINISH_CLOSE_IO		6
-#define	FEED_FINISH_RELEASE			7
-#define	FEED_ERROR_WARNING			50
+//ä¸Šæ–™çŠ¶æ€æœº
+#define FEED_INITATION 0
+#define FEED_OVERTIME_INITATION 1
+#define FEED_OVERTIME_MOVEBACK 2
+#define FEED_OPEN_OUTPUTIO 3
+#define FEED_CHECK_INTPUTIO 4
+#define FEED_OVERTIME_INTPUTIO 5
+#define FEED_FINISH_CLOSE_IO 6
+#define FEED_FINISH_RELEASE 7
+#define FEED_ERROR_WARNING 50
 
-#define CONFIG_FINISH_CLOSEIO		0	//Ñ¡Ïî£¬ÔËĞĞ½áÊøºóÊÇ·ñ¹Ø±ÕIO
+#define CONFIG_FINISH_CLOSEIO 0 //é€‰é¡¹ï¼Œè¿è¡Œç»“æŸåæ˜¯å¦å…³é—­IO
 
-#define	FEED_IO_TEST 0					//VS²âÊÔÑ¡Ïî
+#define FEED_IO_TEST 0 //VSæµ‹è¯•é€‰é¡¹
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºcancelWaitingInputIO
-  º¯Êı¹¦ÄÜ£º³·Ïú±¾Í¨µÀÉĞÎ´Íê³ÉµÄM35/M36µÈ´ıÊä³ö
-  ÊäÈë²ÎÊı£ºpSIOCommandÎª´ıÇåÀíµÄIO¶ÓÁĞ£¬ÔÊĞíÎª¿Õ
-  Êä³ö²ÎÊı£º³·ÏúÓĞĞ§Êä³ö£¬ÖÕÖ¹»î¶¯µÈ´ı×´Ì¬²¢Çå³ıµÈ´ı¼ÆÊ±
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£ºÔÚÊÍ·Å³ÌĞò»º³åºÍÇå¿Õ¶ÓÁĞÇ°µ÷ÓÃ£»²»³·ÏúÕı³£³É¹¦µÄ±£³ÖÊä³ö
+  å‡½æ•°åç§°ï¼šcancelWaitingInputIO
+  å‡½æ•°åŠŸèƒ½ï¼šæ’¤é”€æœ¬é€šé“å°šæœªå®Œæˆçš„M35/M36ç­‰å¾…è¾“å‡º
+  è¾“å…¥å‚æ•°ï¼špSIOCommandä¸ºå¾…æ¸…ç†çš„IOé˜Ÿåˆ—ï¼Œå…è®¸ä¸ºç©º
+  è¾“å‡ºå‚æ•°ï¼šæ’¤é”€æœ‰æ•ˆè¾“å‡ºï¼Œç»ˆæ­¢æ´»åŠ¨ç­‰å¾…çŠ¶æ€å¹¶æ¸…é™¤ç­‰å¾…è®¡æ—¶
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼šåœ¨é‡Šæ”¾ç¨‹åºç¼“å†²å’Œæ¸…ç©ºé˜Ÿåˆ—å‰è°ƒç”¨ï¼›ä¸æ’¤é”€æ­£å¸¸æˆåŠŸçš„ä¿æŒè¾“å‡º
 ****************************************/
 void cancelWaitingInputIO(struct _SIOCommand* pSIOCommand)
 {
-	/* outÊÇÎïÀíÊä³ö¹²ÏíÊı×é£¬½ö¸ÄĞ´±¾Í¨µÀ»î¶¯µÈ´ı¶ÔÓ¦µÄÒÑÓ³Éä¶Ë¿Ú¡£ */
-	if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL)
-	{
-		return;
-	}
-	for (uint8 ucSlot = 0; ucSlot < IO_MAXGROUP_IN_SINGLE_LINE; ucSlot++)
-	{
-		SVaribleIOInfo* pVariable = &pSIOCommand->SVaribleIOInfoArray[ucSlot];
-		/* ·ÇµÈ´ıÖ¸ÁîºÍÎ´·¢²¼²ÎÊı²»²ÎÓë³·Ïú¡£ */
-		if ((getBits(pSIOCommand->ucIORunBuff[ucSlot], IO_NUM_ADDR) != M35 && getBits(pSIOCommand->ucIORunBuff[ucSlot], IO_NUM_ADDR) != M36)
-			|| pVariable->pIOContrlInfo == NULL)
-		{
-			continue;
-		}
-		/* Ö»ÔÚÊä³öÒÑÉúĞ§¡¢ÉĞÎ´Íê³ÉÊÕÎ²Ê±ÊÍ·Å£»ÆäËü×´Ì¬²»³ÖÓĞµÈ´ıÊä³ö¡£ */
-		if (pVariable->ucStatus == FEED_CHECK_INTPUTIO || pVariable->ucStatus == FEED_OVERTIME_INTPUTIO
-			|| pVariable->ucStatus == FEED_FINISH_CLOSE_IO)
-		{
-			int8 cOutputIOIndex = pVariable->pIOContrlInfo->cOutputIOIndex;
-			/* Ë÷ÒıÒÑ¾­ÔÚÖ´ĞĞÈë¿ÚÓ³Éä£¬È¡ÏûÊ±²»µÃÔÙ´ÎÓ³Éä»òÔ½½çĞ´³ö¡£ */
-			if (cOutputIOIndex >= 0 && cOutputIOIndex < 32 && cOutputIOIndex < sizeof(out) / sizeof(out[0]))
-			{
-				out[cOutputIOIndex] = !pVariable->pIOContrlInfo->cOutputControlType;
-			}
-			pVariable->ucStatus = FEED_ERROR_WARNING;
-		}
-	}
-	pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
+    /* outæ˜¯ç‰©ç†è¾“å‡ºå…±äº«æ•°ç»„ï¼Œä»…æ”¹å†™æœ¬é€šé“æ´»åŠ¨ç­‰å¾…å¯¹åº”çš„å·²æ˜ å°„ç«¯å£ã€‚ */
+    if (pSIOCommand == NULL || pSIOCommand->pSChannel == NULL)
+    {
+        return;
+    }
+    for (uint8 ucSlot = 0; ucSlot < IO_MAXGROUP_IN_SINGLE_LINE; ucSlot++)
+    {
+        SVaribleIOInfo* pVariable = &pSIOCommand->SVaribleIOInfoArray[ucSlot];
+        /* éç­‰å¾…æŒ‡ä»¤å’Œæœªå‘å¸ƒå‚æ•°ä¸å‚ä¸æ’¤é”€ã€‚ */
+        if ((getBits(pSIOCommand->ucIORunBuff[ucSlot], IO_NUM_ADDR) != M35 &&
+             getBits(pSIOCommand->ucIORunBuff[ucSlot], IO_NUM_ADDR) != M36) ||
+            pVariable->pIOContrlInfo == NULL)
+        {
+            continue;
+        }
+        /* åªåœ¨è¾“å‡ºå·²ç”Ÿæ•ˆã€å°šæœªå®Œæˆæ”¶å°¾æ—¶é‡Šæ”¾ï¼›å…¶å®ƒçŠ¶æ€ä¸æŒæœ‰ç­‰å¾…è¾“å‡ºã€‚ */
+        if (pVariable->ucStatus == FEED_CHECK_INTPUTIO || pVariable->ucStatus == FEED_OVERTIME_INTPUTIO ||
+            pVariable->ucStatus == FEED_FINISH_CLOSE_IO)
+        {
+            int8 cOutputIOIndex = pVariable->pIOContrlInfo->cOutputIOIndex;
+            /* ç´¢å¼•å·²ç»åœ¨æ‰§è¡Œå…¥å£æ˜ å°„ï¼Œå–æ¶ˆæ—¶ä¸å¾—å†æ¬¡æ˜ å°„æˆ–è¶Šç•Œå†™å‡ºã€‚ */
+            if (cOutputIOIndex >= 0 && cOutputIOIndex < 32 && cOutputIOIndex < sizeof(out) / sizeof(out[0]))
+            {
+                out[cOutputIOIndex] = !pVariable->pIOContrlInfo->cOutputControlType;
+            }
+            pVariable->ucStatus = FEED_ERROR_WARNING;
+        }
+    }
+    pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunM35Command
-  º¯Êı¹¦ÄÜ£ºÉÏÁÏIOÖ´ĞĞ
-  ÊäÈë²ÎÊı£ºpSIOCommand Ö¸ÏòIO½á¹¹ÌåµÄÖ¸Õë£¬pVaribleIOInfo Ö´ĞĞÖ´ĞĞIOĞÅÏ¢½á¹¹ÌåµÄÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ö´ĞĞÍê³É/±¨¾¯	0	Î´Ö´ĞĞÍê³É
-  ±¸    ×¢£º2023/7/11 CMCÔö
+  å‡½æ•°åç§°ï¼šrunM35Command
+  å‡½æ•°åŠŸèƒ½ï¼šä¸Šæ–™IOæ‰§è¡Œ
+  è¾“å…¥å‚æ•°ï¼špSIOCommand æŒ‡å‘IOç»“æ„ä½“çš„æŒ‡é’ˆï¼ŒpVaribleIOInfo æ‰§è¡Œæ‰§è¡ŒIOä¿¡æ¯ç»“æ„ä½“çš„æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ‰§è¡Œå®Œæˆ/æŠ¥è­¦	0	æœªæ‰§è¡Œå®Œæˆ
+  å¤‡    æ³¨ï¼š2023/7/11 CMCå¢
 **************************************************/
 int8 runM35Command(struct _SIOCommand* pSIOCommand, SVaribleIOInfo* pVaribleIOInfo)
 {
-	int8 cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
-	int8 cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
-	switch (pVaribleIOInfo->ucStatus)
-	{
-		case FEED_INITATION:		//³õÊ¼»¯ºÍ¸³Öµ¹¤×÷
-		{
-			if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 38 || pVaribleIOInfo->pIOContrlInfo->cInputIOIndex < 0)		//½«ÊäÈëIOË÷ÒıÓ³Éäµ½ÆóÒµÊı×éµÄË÷Òı
-			{
-				pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;	//Ë÷Òı³¬³ö±¨¾¯
-				parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-				return 1;
-			}
-			if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 17)
-			{
-				pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 2;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 20 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 27)
-			{
-				pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 4;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 30 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 37)
-			{
-				pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 6;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 10)
-			{
-
-			}
-			cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
-			if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 17)		//½«Êä³öIOË÷ÒıÓ³Éäµ½ÆóÒµÊı×éµÄË÷Òı
-			{
-				pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 2;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 20 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
-			{
-				pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 4;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 30 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 37)
-			{
-				pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 6;
-			}
-			else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 10)
-			{
-
-			}
-			else
-			{
-				pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;	//Ë÷Òı³¬³ö±¨¾¯
-				parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-				return 1;
-			}
-			cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
-			/* VS µÄÊä³öÊı×éÖ»ÓĞ 30 Ïî£»Î´ÅäÖÃµÄÓ³Éä¶Ë¿Ú²»ÄÜ½øÈëµÈ´ı»ò³·ÏúÁ÷³Ì¡£ */
-			if (cOutputIOIndex >= sizeof(out) / sizeof(out[0]))
-			{
-				pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
-				parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-				return 1;
-			}
-			if (pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes <= 0)	//Èç¹ûÃ»ÊäÈëÖØ¸´´ÎÊı        P
-			{
-				pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes = 0;	//³õÊ¼»¯ÖØ¸´´ÎÊıÎª0
-			}
-			if (pVaribleIOInfo->pIOContrlInfo->nInputDetectTime <= 0)		// Èç¹ûÃ»ÊäÈëIO¶ÁÈ¡Ê±¼äÎª0    J
-			{
-				pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 0;	//³õÊ¼»¯IO¶ÁÈ¡Ê±¼äÎª0
-			}
-			if (pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime <= 0)	// Èç¹ûÃ»ÊäÈëÉÏÁÏÍË»ØÊ±¼äÎª0    R
-			{
-				pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime = 0;	//³õÊ¼»¯ÉÏÁÏÍË»ØÊ±¼äÎª0
-			}
-			else
-			{ 
-				pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime *= 1000; //s×ª»¯Îªms
-			}
-			pVaribleIOInfo->ucStatus = FEED_OPEN_OUTPUTIO;
-		}
-		break;	
-		case FEED_OVERTIME_INITATION:		//³¬Ê±£¬Ñ­»·´¦Àí
-		{
-			pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes -= 1;
-			if (pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes < 0)	//ÅĞ¶ÏÖØ¸´´ÎÊıÊÇ·ñ´óÓÚ0
-			{
-				pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
-				parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM29, 9999);
-				return 1;
-			}
-			else
-			{
-				pVaribleIOInfo->ucStatus = FEED_OVERTIME_MOVEBACK;
-			}
-		}
-		break;	
-		case FEED_OVERTIME_MOVEBACK:	//³¬Ê±£¬µÈ´ıÒ»¶ÎÑÓÊ±ºóµÈÉÏÁÏÍË»ØºóÔÙÖØĞÂÊä³ö
-		{
-			if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime, &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))	
-			{
-				pVaribleIOInfo->ucStatus = FEED_OPEN_OUTPUTIO;
-			}
-		}
-		break;	
-		case FEED_OPEN_OUTPUTIO:		//Êä³ö¿ØÖÆĞÅºÅÖÁÊä³öIO
-		{
-			/* µ±Ç°Í¨µÀÃ¿´ÎÖØĞÂÊä³ö¶¼¶ÀÁ¢¼ÆÊ±£¬Çå³ıÇ°Ìõ³É¹¦»òÖØÊÔµÄ¾ÉÆğµã¡£ */
-			pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
-			/* ±¾´ÎÊä³ö½Ó¹ÜÍ¬¿Ú¾ÉM20£¬·ÀÖ¹³¬Ê±»ò¸´Î»ÇåµÍÔÙ´Î¼¤»îM36¡£ */
-			for (uint8 ucRecord = 0; ucRecord < IO_MAXGROUP_IN_SINGLE_LINE; ucRecord++)
-			{
-				pSIOCommand->SVaribleIOInfoArray[ucRecord].unOutputIOIndexOfM20 &= ~((uint32)1 << cOutputIOIndex);
-			}
-			out[cOutputIOIndex] = pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
-			pVaribleIOInfo->ucStatus = FEED_CHECK_INTPUTIO;
+    int8 cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
+    int8 cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
+    switch (pVaribleIOInfo->ucStatus)
+    {
+    case FEED_INITATION: //åˆå§‹åŒ–å’Œèµ‹å€¼å·¥ä½œ
+    {
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 38 ||
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex < 0) //å°†è¾“å…¥IOç´¢å¼•æ˜ å°„åˆ°ä¼ä¸šæ•°ç»„çš„ç´¢å¼•
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING; //ç´¢å¼•è¶…å‡ºæŠ¥è­¦
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+            return 1;
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 17)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 2;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 20 &&
+                 pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 27)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 4;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 30 &&
+                 pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 37)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 6;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 &&
+                 pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 10)
+        {
+        }
+        cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
+        if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 10 &&
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 17) //å°†è¾“å‡ºIOç´¢å¼•æ˜ å°„åˆ°ä¼ä¸šæ•°ç»„çš„ç´¢å¼•
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 2;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 20 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 4;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 30 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 37)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 6;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 0 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 10)
+        {
+        }
+        else
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING; //ç´¢å¼•è¶…å‡ºæŠ¥è­¦
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+            return 1;
+        }
+        cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
+        /* VS çš„è¾“å‡ºæ•°ç»„åªæœ‰ 30 é¡¹ï¼›æœªé…ç½®çš„æ˜ å°„ç«¯å£ä¸èƒ½è¿›å…¥ç­‰å¾…æˆ–æ’¤é”€æµç¨‹ã€‚ */
+        if (cOutputIOIndex >= sizeof(out) / sizeof(out[0]))
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+            return 1;
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes <= 0) //å¦‚æœæ²¡è¾“å…¥é‡å¤æ¬¡æ•°        P
+        {
+            pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes = 0; //åˆå§‹åŒ–é‡å¤æ¬¡æ•°ä¸º0
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->nInputDetectTime <= 0) // å¦‚æœæ²¡è¾“å…¥IOè¯»å–æ—¶é—´ä¸º0    J
+        {
+            pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 0; //åˆå§‹åŒ–IOè¯»å–æ—¶é—´ä¸º0
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime <= 0) // å¦‚æœæ²¡è¾“å…¥ä¸Šæ–™é€€å›æ—¶é—´ä¸º0    R
+        {
+            pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime = 0; //åˆå§‹åŒ–ä¸Šæ–™é€€å›æ—¶é—´ä¸º0
+        }
+        else
+        {
+            pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime *= 1000; //sè½¬åŒ–ä¸ºms
+        }
+        pVaribleIOInfo->ucStatus = FEED_OPEN_OUTPUTIO;
+    }
+    break;
+    case FEED_OVERTIME_INITATION: //è¶…æ—¶ï¼Œå¾ªç¯å¤„ç†
+    {
+        pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes -= 1;
+        if (pVaribleIOInfo->pIOContrlInfo->ucFeeding_RepeatTimes < 0) //åˆ¤æ–­é‡å¤æ¬¡æ•°æ˜¯å¦å¤§äº0
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM29, 9999);
+            return 1;
+        }
+        else
+        {
+            pVaribleIOInfo->ucStatus = FEED_OVERTIME_MOVEBACK;
+        }
+    }
+    break;
+    case FEED_OVERTIME_MOVEBACK: //è¶…æ—¶ï¼Œç­‰å¾…ä¸€æ®µå»¶æ—¶åç­‰ä¸Šæ–™é€€å›åå†é‡æ–°è¾“å‡º
+    {
+        if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nFeedingBackTime,
+                      &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))
+        {
+            pVaribleIOInfo->ucStatus = FEED_OPEN_OUTPUTIO;
+        }
+    }
+    break;
+    case FEED_OPEN_OUTPUTIO: //è¾“å‡ºæ§åˆ¶ä¿¡å·è‡³è¾“å‡ºIO
+    {
+        /* å½“å‰é€šé“æ¯æ¬¡é‡æ–°è¾“å‡ºéƒ½ç‹¬ç«‹è®¡æ—¶ï¼Œæ¸…é™¤å‰æ¡æˆåŠŸæˆ–é‡è¯•çš„æ—§èµ·ç‚¹ã€‚ */
+        pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
+        /* æœ¬æ¬¡è¾“å‡ºæ¥ç®¡åŒå£æ—§M20ï¼Œé˜²æ­¢è¶…æ—¶æˆ–å¤ä½æ¸…ä½å†æ¬¡æ¿€æ´»M36ã€‚ */
+        for (uint8 ucRecord = 0; ucRecord < IO_MAXGROUP_IN_SINGLE_LINE; ucRecord++)
+        {
+            pSIOCommand->SVaribleIOInfoArray[ucRecord].unOutputIOIndexOfM20 &= ~((uint32)1 << cOutputIOIndex);
+        }
+        out[cOutputIOIndex] = pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
+        pVaribleIOInfo->ucStatus = FEED_CHECK_INTPUTIO;
 #if (FEED_IO_TEST == 1)
-			attribute[cInputIOIndex][2] = pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
+        attribute[cInputIOIndex][2] = pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
 #endif
-		}	
-		case FEED_CHECK_INTPUTIO:		//¼ì²âÊäÈë¿ÚÊÇ·ñÎªÓĞĞ§ĞÅºÅ
-		{
-			if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nInputDetectTime, &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime) && pVaribleIOInfo->pIOContrlInfo->nInputDetectTime != 0)	//¼ì²âÊäÈëÊÇ·ñÎªÓĞĞ§ĞÅºÅµÄ×î³¤Ê±¼ä£¬×¢£º¼ì²âÊ±¼äÎª0»áÒ»Ö±¼ì²â
-			{
-				pVaribleIOInfo->ucStatus = FEED_OVERTIME_INTPUTIO;
-			}
-			if (attribute[cInputIOIndex][2] == pVaribleIOInfo->pIOContrlInfo->cInputValidType) //ÔÚÉè¶¨Ê±¼äJÀï¼ì²âµ½ÓĞÍâ²¿ÊäÈëĞÅºÅ 2023/9/13 ºé¹ÚÅô
-			{
-#if	(CONFIG_FINISH_CLOSEIO == 1)
-				pVaribleIOInfo->ucStatus = FEED_FINISH_CLOSE_IO;
+    }
+    case FEED_CHECK_INTPUTIO: //æ£€æµ‹è¾“å…¥å£æ˜¯å¦ä¸ºæœ‰æ•ˆä¿¡å·
+    {
+        if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nInputDetectTime,
+                      &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime) &&
+            pVaribleIOInfo->pIOContrlInfo->nInputDetectTime !=
+                0) //æ£€æµ‹è¾“å…¥æ˜¯å¦ä¸ºæœ‰æ•ˆä¿¡å·çš„æœ€é•¿æ—¶é—´ï¼Œæ³¨ï¼šæ£€æµ‹æ—¶é—´ä¸º0ä¼šä¸€ç›´æ£€æµ‹
+        {
+            pVaribleIOInfo->ucStatus = FEED_OVERTIME_INTPUTIO;
+        }
+        if (attribute[cInputIOIndex][2] ==
+            pVaribleIOInfo->pIOContrlInfo->cInputValidType) //åœ¨è®¾å®šæ—¶é—´Jé‡Œæ£€æµ‹åˆ°æœ‰å¤–éƒ¨è¾“å…¥ä¿¡å· 2023/9/13 æ´ªå† é¹
+        {
+#if (CONFIG_FINISH_CLOSEIO == 1)
+            pVaribleIOInfo->ucStatus = FEED_FINISH_CLOSE_IO;
 #else
-				pVaribleIOInfo->ucStatus = FEED_FINISH_RELEASE; //M35Ö´ĞĞ½áÊø
+            pVaribleIOInfo->ucStatus = FEED_FINISH_RELEASE; //M35æ‰§è¡Œç»“æŸ
 #endif
-				/* ÊäÈë³É¹¦ºóÊÍ·Å¹²Ïí¼ÆÊ±×Ö¶Î£¬ºóĞøM01/M22µÈ²»µÃ¼Ì³ĞÆğµã¡£ */
-				pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
-				pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 0;  
-			}
-		}
-		break;
-		case FEED_OVERTIME_INTPUTIO:		//¼ì²â³¬Ê±£¬ÑÓÊ±Rºó¹Ø±ÕÊä³öIO
-		{
-			out[cOutputIOIndex] = !pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
-			pVaribleIOInfo->ucStatus = FEED_OVERTIME_INITATION;
-		}
-		break;
-		case FEED_FINISH_CLOSE_IO:		//¿ÉÑ¡ÅäÖÃ£¬Èç¹ûÔËĞĞÍê³É»á¹Ø±ÕÊä³öIO
-		{
-			out[cOutputIOIndex] = !pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
-			pVaribleIOInfo->ucStatus = FEED_FINISH_RELEASE;
-		}	
-		case FEED_FINISH_RELEASE:		//Íê³É
-		{
-			return 1;
-			break;
-		}		
-		case FEED_ERROR_WARNING:	//±¨¾¯	
-		default:
-			return 1;
-			break;
-	}
-	return 0;
+            /* è¾“å…¥æˆåŠŸåé‡Šæ”¾å…±äº«è®¡æ—¶å­—æ®µï¼Œåç»­M01/M22ç­‰ä¸å¾—ç»§æ‰¿èµ·ç‚¹ã€‚ */
+            pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
+            pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 0;
+        }
+    }
+    break;
+    case FEED_OVERTIME_INTPUTIO: //æ£€æµ‹è¶…æ—¶ï¼Œå»¶æ—¶Råå…³é—­è¾“å‡ºIO
+    {
+        out[cOutputIOIndex] = !pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
+        pVaribleIOInfo->ucStatus = FEED_OVERTIME_INITATION;
+    }
+    break;
+    case FEED_FINISH_CLOSE_IO: //å¯é€‰é…ç½®ï¼Œå¦‚æœè¿è¡Œå®Œæˆä¼šå…³é—­è¾“å‡ºIO
+    {
+        out[cOutputIOIndex] = !pVaribleIOInfo->pIOContrlInfo->cOutputControlType;
+        pVaribleIOInfo->ucStatus = FEED_FINISH_RELEASE;
+    }
+    case FEED_FINISH_RELEASE: //å®Œæˆ
+    {
+        return 1;
+        break;
+    }
+    case FEED_ERROR_WARNING: //æŠ¥è­¦
+    default:
+        return 1;
+        break;
+    }
+    return 0;
 }
 
-#define VARIABLE_IO_INITATION	0		//³õÊ¼»¯
-#define VARIABLE_IO_RUN			1		//Ö´ĞĞIO
-#define VARIABLE_IO_WAIT		2		//µÈ´ıIOÖ´ĞĞÍê
-#define VARIABLE_IO_CLOSE		3		//¹Ø±ÕIO
-#define VARIABLE_IO_FINISH		4		//Íê³É
+#define VARIABLE_IO_INITATION 0 //åˆå§‹åŒ–
+#define VARIABLE_IO_RUN 1       //æ‰§è¡ŒIO
+#define VARIABLE_IO_WAIT 2      //ç­‰å¾…IOæ‰§è¡Œå®Œ
+#define VARIABLE_IO_CLOSE 3     //å…³é—­IO
+#define VARIABLE_IO_FINISH 4    //å®Œæˆ
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunM20M21M22Command
-  º¯Êı¹¦ÄÜ£ºM20/M21/M22Ö¸¶¨µÄIOÖ´ĞĞ
-  ÊäÈë²ÎÊı£ºpSIOCommand Ö¸ÏòIO½á¹¹ÌåµÄÖ¸Õë£¬pVaribleIOInfo Ö´ĞĞÖ´ĞĞIOĞÅÏ¢½á¹¹ÌåµÄÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ö´ĞĞÍê³É/±¨¾¯	0	Î´Ö´ĞĞÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrunM20M21M22Command
+  å‡½æ•°åŠŸèƒ½ï¼šM20/M21/M22æŒ‡å®šçš„IOæ‰§è¡Œ
+  è¾“å…¥å‚æ•°ï¼špSIOCommand æŒ‡å‘IOç»“æ„ä½“çš„æŒ‡é’ˆï¼ŒpVaribleIOInfo æ‰§è¡Œæ‰§è¡ŒIOä¿¡æ¯ç»“æ„ä½“çš„æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ‰§è¡Œå®Œæˆ/æŠ¥è­¦	0	æœªæ‰§è¡Œå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 runM20M21M22Command(struct _SIOCommand* pSIOCommand, SVaribleIOInfo* pVaribleIOInfo)
 {
-	int32 cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
-	switch (pVaribleIOInfo->ucStatus)
-	{
-	case VARIABLE_IO_INITATION:
-		if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 17)		//½«Êä³öIOË÷ÒıÓ³Éäµ½ÆóÒµÊı×éµÄË÷Òı
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 2;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 20 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 4;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 30 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 33)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 6;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 10)
-		{
+    int32 cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
+    switch (pVaribleIOInfo->ucStatus)
+    {
+    case VARIABLE_IO_INITATION:
+        if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 10 &&
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 17) //å°†è¾“å‡ºIOç´¢å¼•æ˜ å°„åˆ°ä¼ä¸šæ•°ç»„çš„ç´¢å¼•
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 2;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 20 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 4;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 30 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 33)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex -= 6;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 0 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 10)
+        {
+        }
+        else
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING; //ç´¢å¼•è¶…å‡ºæŠ¥è­¦
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+            // **ç¡¬é—¨æ§›ï¼šç«‹å³ç»ˆæ­¢æœ¬å‘½ä»¤ï¼Œç¦æ­¢åç»­ setbit/out å†™IO**
+            return 1; // ä½ è¿™ä¸ªå‡½æ•°å®šä¹‰ï¼š1=å®Œæˆ/æŠ¥è­¦ï¼›ç”¨ 1 å¯è®©ä¸Šå±‚åœæ­¢æ¨è¿›
+        }
+        cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
+        if (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == 1) //è¯†åˆ«å½“å‰æŒ‡ä»¤ä½M20  æ´ªå† é¹ 2023/9/22
+        {
+            setbit(pVaribleIOInfo->unOutputIOIndexOfM20, cOutputIOIndex); //è·å–M20è¾“å‡ºç«¯å£ï¼Œç½®1
+        }
+        pVaribleIOInfo->ucStatus = VARIABLE_IO_RUN;
 
-		}
-		else
-		{
-			pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;	//Ë÷Òı³¬³ö±¨¾¯
-			parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-		    // **Ó²ÃÅ¼÷£ºÁ¢¼´ÖÕÖ¹±¾ÃüÁî£¬½ûÖ¹ºóĞø setbit/out Ğ´IO**
-		    return 1;  // ÄãÕâ¸öº¯Êı¶¨Òå£º1=Íê³É/±¨¾¯£»ÓÃ 1 ¿ÉÈÃÉÏ²ãÍ£Ö¹ÍÆ½ø
-		}
-		cOutputIOIndex = pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex;
-		if (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == 1) //Ê¶±ğµ±Ç°Ö¸ÁîÎ»M20  ºé¹ÚÅô 2023/9/22
-		{
-			setbit(pVaribleIOInfo->unOutputIOIndexOfM20, cOutputIOIndex); //»ñÈ¡M20Êä³ö¶Ë¿Ú£¬ÖÃ1
-		}
-		pVaribleIOInfo->ucStatus = VARIABLE_IO_RUN;
+        if (pVaribleIOInfo->pIOContrlInfo->nOutputRunTims <= 0 &&
+            pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE) //å¦‚æœå¤–éƒ¨è¾“å‡ºæŒç»­æ—¶é—´ä¸º0ï¼Œä¸è¾“å‡ºIO
+        {
+            pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;
+        }
+        break;
+    case VARIABLE_IO_RUN:
+        out[cOutputIOIndex] =
+            (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE)
+                ? HIGHLEVEL
+                : pVaribleIOInfo->pIOContrlInfo->cOutputControlType; //å¦‚æœä¸ºè„‰å†²å‹IOè¾“å‡ºé«˜ç”µå¹³ï¼Œå¦åˆ™è¾“å‡ºå¯¹åº”çš„ç”µå¹³ç±»å‹
+        pVaribleIOInfo->ucStatus =
+            (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE) ? VARIABLE_IO_WAIT : VARIABLE_IO_FINISH;
+        if (pVaribleIOInfo->ucStatus == VARIABLE_IO_FINISH)
+        {
+            if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 8 &&
+                pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <=
+                    15) // å°†ä¼ä¸šæ•°ç»„çš„ç´¢å¼•æ¢å›IOç´¢å¼•ï¼Œä»¥ä¾¿ç»Ÿä¸€åˆå§‹åŒ–  2023/9/25 æ´ªå† é¹
+            {
+                pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 2;
+            }
+            else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 16 &&
+                     pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 23)
+            {
+                pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 4;
+            }
+            else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 24 &&
+                     pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
+            {
+                pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 6;
+            }
+        }
 
-		if (pVaribleIOInfo->pIOContrlInfo->nOutputRunTims <= 0 && pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE)	//Èç¹ûÍâ²¿Êä³ö³ÖĞøÊ±¼äÎª0£¬²»Êä³öIO
-		{
-			pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;
-		}
-		break;
-	case VARIABLE_IO_RUN:
-		out[cOutputIOIndex] = (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE) ? HIGHLEVEL: pVaribleIOInfo->pIOContrlInfo->cOutputControlType;	//Èç¹ûÎªÂö³åĞÍIOÊä³ö¸ßµçÆ½£¬·ñÔòÊä³ö¶ÔÓ¦µÄµçÆ½ÀàĞÍ
-		pVaribleIOInfo->ucStatus = (pVaribleIOInfo->pIOContrlInfo->cOutputControlType == PULSE_TYPE) ? VARIABLE_IO_WAIT: VARIABLE_IO_FINISH;
-		if(pVaribleIOInfo->ucStatus == VARIABLE_IO_FINISH)
-		{
-		if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 8 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 15) // ½«ÆóÒµÊı×éµÄË÷Òı»»»ØIOË÷Òı£¬ÒÔ±ãÍ³Ò»³õÊ¼»¯  2023/9/25 ºé¹ÚÅô 
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 2;
-		}
-			else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 16 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 23)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 4;
-		}
-			else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 24 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 6;
-		}
-		}
+        break;
 
-		break;
+    case VARIABLE_IO_WAIT: //è„‰å†²å‹IOè¾“å‡ºï¼Œç»´æŒä¸€æ®µé«˜ç”µå¹³æ—¶é—´
+        if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nOutputRunTims,
+                      &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))
+        {
+            pVaribleIOInfo->ucStatus = VARIABLE_IO_CLOSE;
+        }
+        break;
 
-	case VARIABLE_IO_WAIT:	//Âö³åĞÍIOÊä³ö£¬Î¬³ÖÒ»¶Î¸ßµçÆ½Ê±¼ä
-		if (delays_ms(pVaribleIOInfo->pIOContrlInfo->nOutputRunTims, &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))
-		{
-			pVaribleIOInfo->ucStatus = VARIABLE_IO_CLOSE;
-		}
-		break;
+    case VARIABLE_IO_CLOSE: //è„‰å†²å‹IOè¾“å‡ºï¼Œå…³é—­IO
+        out[cOutputIOIndex] = LOWLEVEL;
+        pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;
+        if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 8 &&
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <=
+                15) // å°†ä¼ä¸šæ•°ç»„çš„ç´¢å¼•æ¢å›IOç´¢å¼•ï¼Œä»¥ä¾¿ç»Ÿä¸€åˆå§‹åŒ–  2023/9/25 æ´ªå† é¹
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 2;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 16 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 23)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 4;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 24 &&
+                 pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 6;
+        }
+        break;
 
-	case VARIABLE_IO_CLOSE:	//Âö³åĞÍIOÊä³ö£¬¹Ø±ÕIO
-		out[cOutputIOIndex] = LOWLEVEL;
-		pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;
-		if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 8 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 15) // ½«ÆóÒµÊı×éµÄË÷Òı»»»ØIOË÷Òı£¬ÒÔ±ãÍ³Ò»³õÊ¼»¯  2023/9/25 ºé¹ÚÅô
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 2;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 16 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 23)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 4;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex >= 24 && pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex <= 27)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cOutputIOIndex += 6;
-		}
-		break;
-
-	case VARIABLE_IO_FINISH:
-		return 1;
-	default:
-		return 1;
-		break;
-	}
-	return 0;
+    case VARIABLE_IO_FINISH:
+        return 1;
+    default:
+        return 1;
+        break;
+    }
+    return 0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºdetectM01Command
-  º¯Êı¹¦ÄÜ£ºM01µÄÖ¸¶¨IO¼ì²â
-  ÊäÈë²ÎÊı£ºpSIOCommand Ö¸ÏòIO½á¹¹ÌåµÄÖ¸Õë£¬pVaribleIOInfo Ö´ĞĞÖ´ĞĞIOĞÅÏ¢½á¹¹ÌåµÄÖ¸Õë
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	Ö´ĞĞÍê³É/±¨¾¯	0	Î´Ö´ĞĞÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šdetectM01Command
+  å‡½æ•°åŠŸèƒ½ï¼šM01çš„æŒ‡å®šIOæ£€æµ‹
+  è¾“å…¥å‚æ•°ï¼špSIOCommand æŒ‡å‘IOç»“æ„ä½“çš„æŒ‡é’ˆï¼ŒpVaribleIOInfo æ‰§è¡Œæ‰§è¡ŒIOä¿¡æ¯ç»“æ„ä½“çš„æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ‰§è¡Œå®Œæˆ/æŠ¥è­¦	0	æœªæ‰§è¡Œå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 detectM01Command(struct _SIOCommand* pSIOCommand, SVaribleIOInfo* pVaribleIOInfo)
 {
-	int8 cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
-	int32 nInputDetectTime = pVaribleIOInfo->pIOContrlInfo->nInputDetectTime;
-	switch (pVaribleIOInfo->ucStatus)
-	{
-	case VARIABLE_IO_INITATION:	//³õÊ¼»¯
-		if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex % 10 == 8 || pVaribleIOInfo->pIOContrlInfo->cInputIOIndex % 10 == 9)		//ÊäÈëµÄIO¶Ë¿Ú²»´æÔÚ
-		{
-			pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
-			parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-		}
-		if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 38)		//½«ÊäÈëIOË÷ÒıÓ³Éäµ½ÆóÒµÊı×éµÄË÷Òı
-		{
-			pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;	//Ë÷Òı³¬³ö±¨¾¯
-			parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
-		}
-		if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 17)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 2;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 20 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 27)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 4;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 30 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 37)
-		{
-			pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 6;
-		}
-		else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <=7)
-		{
-		}
+    int8 cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
+    int32 nInputDetectTime = pVaribleIOInfo->pIOContrlInfo->nInputDetectTime;
+    switch (pVaribleIOInfo->ucStatus)
+    {
+    case VARIABLE_IO_INITATION: //åˆå§‹åŒ–
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex % 10 == 8 ||
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex % 10 == 9) //è¾“å…¥çš„IOç«¯å£ä¸å­˜åœ¨
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING;
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 38) //å°†è¾“å…¥IOç´¢å¼•æ˜ å°„åˆ°ä¼ä¸šæ•°ç»„çš„ç´¢å¼•
+        {
+            pVaribleIOInfo->ucStatus = FEED_ERROR_WARNING; //ç´¢å¼•è¶…å‡ºæŠ¥è­¦
+            parseRunningError(pSIOCommand->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM30, 9999);
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 10 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 17)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 2;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 20 &&
+                 pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 27)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 4;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 30 &&
+                 pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 37)
+        {
+            pVaribleIOInfo->pIOContrlInfo->cInputIOIndex -= 6;
+        }
+        else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 7)
+        {
+        }
 
-		if (pVaribleIOInfo->pIOContrlInfo->nInputDetectTime <= 0)	//Èç¹ûÍâ²¿Êä³ö³ÖĞøÊ±¼äÎª0£¬²»Êä³öIO
-		{
-			//pVaribleIOInfo->ucStatus = VARIABLE_IO_ERROR;
-			pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 100000;	//ÆóÒµÒªÇó£¬Ã»ÊäÈëÊ±ÎŞÏŞÑÓÊ±£¬Ôİ¶¨100000ms
-		}
-		nInputDetectTime = pVaribleIOInfo->pIOContrlInfo->nInputDetectTime;
-		cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
-		pVaribleIOInfo->ucStatus = VARIABLE_IO_DETECT;
-		break;
-	case VARIABLE_IO_DETECT:	//¼ì²âIO
-		if (pSIOCommand->pSChannel->bProgramStop == TRUE)  //³ÌĞòÔİÍ£°´¼üÔÚµÈ´ıÆÚ¼ä±»°´ÏÂ µÈ´ı³ÌĞòÆô¶¯ 2023/10/9 ºé¹ÚÅô
-		{
-			pVaribleIOInfo->ucStatus = VARIABLE_IO_WAIT;
-			break;
-		}
-		if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <0) //ÎŞÍâ²¿Êä³ö¶Ë¿Ú£¨½öÓĞM01£©   2023/9/25 ºé¹ÚÅô ĞÂÔöÑ¡ÔñÍ£Ö¹¹¦ÄÜ
-		{
-			if (pSIOCommand->pSChannel->bSelectableStop == TRUE) //Ñ¡ÔñÍ£Ö¹¿ª¹Ø¡ª¿ª£¬½øÈëµÈ´ı
-			{
-				pVaribleIOInfo->ucStatus = VARIABLE_IO_WAIT;
-				return 1;
-			}
-			else //Ñ¡ÔñÍ£Ö¹¿ª¹Ø¡ª¹Ø£¬Ìø¹ıM01
-			{
-				pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;	
-				pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
-			}
-		}
-		else
-		{
-			if (attribute[cInputIOIndex][2] == pVaribleIOInfo->pIOContrlInfo->cInputValidType)
-			{
-				pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;	//¼ì²âµ½IOÎªÆ¥ÅäµÄÀàĞÍ£¬½áÊø
-				pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
-			}
-			else
-			{
-				if (delays_ms(nInputDetectTime, &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))
-				{
-					if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 8 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 15)
-					{
-						pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 2;
-					}
-					else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 16 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 23)
-					{
-						pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 4;
-					}
-					else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 24 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 31)
-					{
-						pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 6;
-					}
-					else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 && pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 7)
-					{
-					}
-					pVaribleIOInfo->ucStatus = VARIABLE_IO_ERROR;	//³¬¹ı¼ì²âÊ±¼ä±¨¾¯
-				}
-			}
-		}
-		break;
-	case VARIABLE_IO_WAIT:
-		if (pSIOCommand->pSChannel->bProgramStop == FALSE) //ÖØĞÂÆô¶¯ºóÖØĞÂÖ´ĞĞM01
-		{
-			pVaribleIOInfo->ucStatus = VARIABLE_IO_DETECT;
-		}
-		break;
-	case VARIABLE_IO_FINISH:
-	case VARIABLE_IO_ERROR:
-		pSIOCommand->pSChannel->bProgramStop = FALSE;   //³õÊ¼»¯³ÌĞòÔİÍ£±êÖ¾Î» 
-		return 1;
-	default:
-		return 1;
-		break;
-	}
-	return 0;
+        if (pVaribleIOInfo->pIOContrlInfo->nInputDetectTime <= 0) //å¦‚æœå¤–éƒ¨è¾“å‡ºæŒç»­æ—¶é—´ä¸º0ï¼Œä¸è¾“å‡ºIO
+        {
+            //pVaribleIOInfo->ucStatus = VARIABLE_IO_ERROR;
+            pVaribleIOInfo->pIOContrlInfo->nInputDetectTime = 100000; //ä¼ä¸šè¦æ±‚ï¼Œæ²¡è¾“å…¥æ—¶æ— é™å»¶æ—¶ï¼Œæš‚å®š100000ms
+        }
+        nInputDetectTime = pVaribleIOInfo->pIOContrlInfo->nInputDetectTime;
+        cInputIOIndex = pVaribleIOInfo->pIOContrlInfo->cInputIOIndex;
+        pVaribleIOInfo->ucStatus = VARIABLE_IO_DETECT;
+        break;
+    case VARIABLE_IO_DETECT:                              //æ£€æµ‹IO
+        if (pSIOCommand->pSChannel->bProgramStop == TRUE) //ç¨‹åºæš‚åœæŒ‰é”®åœ¨ç­‰å¾…æœŸé—´è¢«æŒ‰ä¸‹ ç­‰å¾…ç¨‹åºå¯åŠ¨ 2023/10/9 æ´ªå† é¹
+        {
+            pVaribleIOInfo->ucStatus = VARIABLE_IO_WAIT;
+            break;
+        }
+        if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <
+            0) //æ— å¤–éƒ¨è¾“å‡ºç«¯å£ï¼ˆä»…æœ‰M01ï¼‰   2023/9/25 æ´ªå† é¹ æ–°å¢é€‰æ‹©åœæ­¢åŠŸèƒ½
+        {
+            if (pSIOCommand->pSChannel->bSelectableStop == TRUE) //é€‰æ‹©åœæ­¢å¼€å…³â€”å¼€ï¼Œè¿›å…¥ç­‰å¾…
+            {
+                pVaribleIOInfo->ucStatus = VARIABLE_IO_WAIT;
+                return 1;
+            }
+            else //é€‰æ‹©åœæ­¢å¼€å…³â€”å…³ï¼Œè·³è¿‡M01
+            {
+                pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH;
+                pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
+            }
+        }
+        else
+        {
+            if (attribute[cInputIOIndex][2] == pVaribleIOInfo->pIOContrlInfo->cInputValidType)
+            {
+                pVaribleIOInfo->ucStatus = VARIABLE_IO_FINISH; //æ£€æµ‹åˆ°IOä¸ºåŒ¹é…çš„ç±»å‹ï¼Œç»“æŸ
+                pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime = 0;
+            }
+            else
+            {
+                if (delays_ms(nInputDetectTime, &pSIOCommand->pSChannel->SApplyTime.unFeedingRunTime))
+                {
+                    if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 8 &&
+                        pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 15)
+                    {
+                        pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 2;
+                    }
+                    else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 16 &&
+                             pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 23)
+                    {
+                        pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 4;
+                    }
+                    else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 24 &&
+                             pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 31)
+                    {
+                        pVaribleIOInfo->pIOContrlInfo->cInputIOIndex += 6;
+                    }
+                    else if (pVaribleIOInfo->pIOContrlInfo->cInputIOIndex >= 0 &&
+                             pVaribleIOInfo->pIOContrlInfo->cInputIOIndex <= 7)
+                    {
+                    }
+                    pVaribleIOInfo->ucStatus = VARIABLE_IO_ERROR; //è¶…è¿‡æ£€æµ‹æ—¶é—´æŠ¥è­¦
+                }
+            }
+        }
+        break;
+    case VARIABLE_IO_WAIT:
+        if (pSIOCommand->pSChannel->bProgramStop == FALSE) //é‡æ–°å¯åŠ¨åé‡æ–°æ‰§è¡ŒM01
+        {
+            pVaribleIOInfo->ucStatus = VARIABLE_IO_DETECT;
+        }
+        break;
+    case VARIABLE_IO_FINISH:
+    case VARIABLE_IO_ERROR:
+        pSIOCommand->pSChannel->bProgramStop = FALSE; //åˆå§‹åŒ–ç¨‹åºæš‚åœæ ‡å¿—ä½
+        return 1;
+    default:
+        return 1;
+        break;
+    }
+    return 0;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºclearApplyRunTime
-  º¯Êı¹¦ÄÜ£ºÔËĞĞ×÷ÓÃÊ±¼äÇåÁã
-  ÊäÈë²ÎÊı£ºpSChannel Í¨µÀ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šclearApplyRunTime
+  å‡½æ•°åŠŸèƒ½ï¼šè¿è¡Œä½œç”¨æ—¶é—´æ¸…é›¶
+  è¾“å…¥å‚æ•°ï¼špSChannel é€šé“ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void clearApplyRunTime(struct SChannel* pSChannel)
 {
 
-
-
-	if(pSChannel == NULL)
-	{
-	    return;
-	}
-	pSChannel->SApplyTime.unFeedingRunTime = 0;
-	pSChannel->SApplyTime.unSampleIntervalRunTime = 0;
-	pSChannel->SApplyTime.unSpindlePreRunTime = 0;
-	pSChannel->SApplyTime.unSpindlePostRunTime = 0;
-	pSChannel->SApplyTime.unChuckAOpenRunTime = 0;
-	pSChannel->SApplyTime.unSpindleLockRunTime = 0;
-	pSChannel->SApplyTime.unSpindleUnLocktRunTime = 0;
-	//memset(&pSChannel->SApplyTime, 0, sizeof(struct SRunTime));
+    if (pSChannel == NULL)
+    {
+        return;
+    }
+    pSChannel->SApplyTime.unFeedingRunTime = 0;
+    pSChannel->SApplyTime.unSampleIntervalRunTime = 0;
+    pSChannel->SApplyTime.unSpindlePreRunTime = 0;
+    pSChannel->SApplyTime.unSpindlePostRunTime = 0;
+    pSChannel->SApplyTime.unChuckAOpenRunTime = 0;
+    pSChannel->SApplyTime.unSpindleLockRunTime = 0;
+    pSChannel->SApplyTime.unSpindleUnLocktRunTime = 0;
+    //memset(&pSChannel->SApplyTime, 0, sizeof(struct SRunTime));
 }
-

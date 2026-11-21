@@ -1,0 +1,21 @@
+# 采用 Visual Studio 的 Microsoft 排版风格，已使用 clang-format 21.1.8 验证。
+BasedOnStyle: Microsoft
+Language: Cpp
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+PointerAlignment: Left
+DerivePointerAlignment: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: Never
+BreakStringLiterals: false
+IndentPPDirectives: None
+MaxEmptyLinesToKeep: 1
+LineEnding: CRLF
+InsertNewlineAtEOF: true

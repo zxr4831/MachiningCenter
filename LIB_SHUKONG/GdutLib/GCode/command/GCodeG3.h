@@ -1,24 +1,23 @@
 #ifndef __GCODE_G3_H
 #define __GCODE_G3_H
 
-
 typedef struct _SG3Para
 {
-	int8 cStep;
+    int8 cStep;
 
-	uint8 ucG3Hor;
-	uint8 ucG3Ver;
-	SPointDouble SG3StartPoint;
-	SPointDouble SG3EndPoint;
-	SPointDouble SG3CenterPoint;
-	double dG3Radius;
-	int8 cG3Dir;
+    uint8 ucG3Hor;
+    uint8 ucG3Ver;
+    SPointDouble SG3StartPoint;
+    SPointDouble SG3EndPoint;
+    SPointDouble SG3CenterPoint;
+    double dG3Radius;
+    int8 cG3Dir;
 
-	SPointDouble SG3MiddlePoint;//ÕûÔ²¸³ÖµĞèÒªÓÃ
+    SPointDouble SG3MiddlePoint; //æ•´åœ†èµ‹å€¼éœ€è¦ç”¨
 
-	int8 cType;//0£ºµã 1£ºÔ²»¡orÊúÖ±Ïß 2£ºÕûÔ²
+    int8 cType; //0ï¼šç‚¹ 1ï¼šåœ†å¼§orç«–ç›´çº¿ 2ï¼šæ•´åœ†
 
-}SG3Para;
+} SG3Para;
 
 void addG3RegulationAPI();
 

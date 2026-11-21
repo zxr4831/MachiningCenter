@@ -1,155 +1,172 @@
 #define _CRT_SECURE_NO_WARNINGS
-#ifndef  __TOOLCOMPENSATION_H
-#define  __TOOLCOMPENSATION_H
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
+#ifndef __TOOLCOMPENSATION_H
+#define __TOOLCOMPENSATION_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 #include "common.h"
-#include"GeneralFunctions.h"
-#include"Channel.h"
+#include "GeneralFunctions.h"
+#include "Channel.h"
 #include "ToolChanger.h"
-#include"lookAhead.h"
+#include "lookAhead.h"
 #include "Gcode.h"
 
-//²âÊÔdebugºê
+//æµ‹è¯•debugå®
 #define ENABLE_TOOL_DEBUG 0
 
 typedef struct
 {
-	SPointDouble SS1;
-	SPointDouble SS2;
-	SPointDouble SS3;
-	SPointDouble SS4;
-	int8 cPointNum;//¼ÇÂ¼Ã¿Á½¶Îµ¶²¹ºóµãµÄÊıÁ¿
-}SSToolRunPoint;
+    SPointDouble SS1;
+    SPointDouble SS2;
+    SPointDouble SS3;
+    SPointDouble SS4;
+    int8 cPointNum; //è®°å½•æ¯ä¸¤æ®µåˆ€è¡¥åç‚¹çš„æ•°é‡
+} SSToolRunPoint;
 
-
-//´æ·Åµ¶²¹¹ı³ÌµÄÖĞ¼äµãÒÔ¼°µ¶²¹µÄÒ»Ğ©×´Ì¬
+//å­˜æ”¾åˆ€è¡¥è¿‡ç¨‹çš„ä¸­é—´ç‚¹ä»¥åŠåˆ€è¡¥çš„ä¸€äº›çŠ¶æ€
 typedef struct
 {
-	struct SGCodeParse SGcodeRecord[CHANNEL_NUM_MAX];
-	SPointDouble TcodePrevPoint[CHANNEL_NUM_MAX];//¼ÇÂ¼Ç°Ò»¸öµ¶²¹³¥µã
-	bool bFristSavePrePointFlag[CHANNEL_NUM_MAX];//³õÊ¼»¯
-	bool bG4142Flag[CHANNEL_NUM_MAX];//µ¶²¹½¨Á¢±êÖ¾
-	bool bPointFlag[CHANNEL_NUM_MAX];//´æ´¢Ê×¸öµ¶²¹µã±êÖ¾
-	bool bTurnBackFlag[CHANNEL_NUM_MAX];//»ØÍË±êÖ¾Î»
-	uint8 ucNoMoveCounter[CHANNEL_NUM_MAX];//Á¬Ğø·ÇÒÆ¶¯´úÂë¶ÎÊı
-}SSToolCompensationRecord;
+    struct SGCodeParse SGcodeRecord[CHANNEL_NUM_MAX];
+    SPointDouble TcodePrevPoint[CHANNEL_NUM_MAX]; //è®°å½•å‰ä¸€ä¸ªåˆ€è¡¥å¿ç‚¹
+    bool bFristSavePrePointFlag[CHANNEL_NUM_MAX]; //åˆå§‹åŒ–
+    bool bG4142Flag[CHANNEL_NUM_MAX];             //åˆ€è¡¥å»ºç«‹æ ‡å¿—
+    bool bPointFlag[CHANNEL_NUM_MAX];             //å­˜å‚¨é¦–ä¸ªåˆ€è¡¥ç‚¹æ ‡å¿—
+    bool bTurnBackFlag[CHANNEL_NUM_MAX];          //å›é€€æ ‡å¿—ä½
+    uint8 ucNoMoveCounter[CHANNEL_NUM_MAX];       //è¿ç»­éç§»åŠ¨ä»£ç æ®µæ•°
+} SSToolCompensationRecord;
 
-extern SSToolCompensationRecord* SToolCompensationRecord;//´æ·Åµ¶²¹¹ı³ÌµÄÖĞ¼äµãÒÔ¼°µ¶²¹µÄÒ»Ğ©×´Ì¬µÄ½á¹¹ÌåÖ¸Õë
+extern SSToolCompensationRecord* SToolCompensationRecord; //å­˜æ”¾åˆ€è¡¥è¿‡ç¨‹çš„ä¸­é—´ç‚¹ä»¥åŠåˆ€è¡¥çš„ä¸€äº›çŠ¶æ€çš„ç»“æ„ä½“æŒ‡é’ˆ
 
-//ÔÚ¶¯Ì¬ÄÚ´æÖĞ¿ª±Ù´æ·Åµ¶²¹¹ı³ÌµÄÖĞ¼äµãÒÔ¼°µ¶²¹µÄ×´Ì¬µÄ½á¹¹Ìå
+//åœ¨åŠ¨æ€å†…å­˜ä¸­å¼€è¾Ÿå­˜æ”¾åˆ€è¡¥è¿‡ç¨‹çš„ä¸­é—´ç‚¹ä»¥åŠåˆ€è¡¥çš„çŠ¶æ€çš„ç»“æ„ä½“
 SSToolCompensationRecord* initSToolCompensationRecord();
-//½×Ô¾º¯Êı
+//é˜¶è·ƒå‡½æ•°
 double Sgn(double r);
 
-//ÇóÖ±ÏßµÄ·½ÏòÊ¸Á¿
-void getLineVector(SPointDouble SP1, SPointDouble SP2, SVector *LineVec, uint8* ucAxisNum);
+//æ±‚ç›´çº¿çš„æ–¹å‘çŸ¢é‡
+void getLineVector(SPointDouble SP1, SPointDouble SP2, SVector* LineVec, uint8* ucAxisNum);
 
-//Çó×ª½ÓµãÔÚÔ²»¡ÆğµãµÄ·½ÏòÊ¸Á¿
+//æ±‚è½¬æ¥ç‚¹åœ¨åœ†å¼§èµ·ç‚¹çš„æ–¹å‘çŸ¢é‡
 //void getArcVectorAtStart(double dI, double dJ, SVector *ArcVec, int iArcDir, uint8* ucAxisNum);
 void getArcVectorAtStart(double dK, double dI, SVector* SArcVec, int iArcDir, uint8* ucAxisNum);
 
-//Çó×ª½ÓµãÔÚÔ²»¡ÖÕµãµÄ·½ÏòÊ¸Á¿
+//æ±‚è½¬æ¥ç‚¹åœ¨åœ†å¼§ç»ˆç‚¹çš„æ–¹å‘çŸ¢é‡
 //void getArcVectorAtEnd(SPointDouble SP1, SPointDouble SP2, double dI, double dJ, SVector *ArcVec, int iArcDir, uint8* ucAxisNum);
-void getArcVectorAtEnd(SPointDouble SPoint1, SPointDouble SPoint2, double dK, double dI, SVector* SArcVec, int iArcDir, uint8* ucAxisNum);
+void getArcVectorAtEnd(SPointDouble SPoint1, SPointDouble SPoint2, double dK, double dI, SVector* SArcVec, int iArcDir,
+                       uint8* ucAxisNum);
 
-//×ª½Ó½ÇÀàĞÍµÄÅĞ¶Ï
+//è½¬æ¥è§’ç±»å‹çš„åˆ¤æ–­
 int JudgeAngle(double dr, SVector Vec1, SVector Vec2, uint8* ucAxisNum);
 
-//ÌØÊâ½Ç180»ò0¶ÈÅĞ¶Ï
+//ç‰¹æ®Šè§’180æˆ–0åº¦åˆ¤æ–­
 int SpecialAngleJudge(double dr, SVector Vec1, SVector Vec2, uint8* ucAxisNum);
 
-//ÇóÆ«ÒÆÒ»¸ö°ë¾¶Ê¸Á¿µÄ×ª½Óµãº¯Êı
-void offsetRadiusVector(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble *SP2, uint8* ucAxisNum);
+//æ±‚åç§»ä¸€ä¸ªåŠå¾„çŸ¢é‡çš„è½¬æ¥ç‚¹å‡½æ•°
+void offsetRadiusVector(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum);
 
-//ÇóÁ½µÈ¾àÏß½»µã
-void Intersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble SP1, SPointDouble *SP2, uint8* ucAxisNum);
+//æ±‚ä¸¤ç­‰è·çº¿äº¤ç‚¹
+void Intersection_Of_Quidistant_Lines(double dToolRadius, SVector LineVec1, SVector LineVec2, SPointDouble SP1,
+                                      SPointDouble* SP2, uint8* ucAxisNum);
 
-//²åÈëĞÍÆ«ÖÃµã1
-void offsetRadiusVector1(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble *SP2, uint8* ucAxisNum);
+//æ’å…¥å‹åç½®ç‚¹1
+void offsetRadiusVector1(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble* SP2, uint8* ucAxisNum);
 
-//²åÈëĞÍÆ«ÖÃµã2
-void offsetRadiusVector2(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble *Sp2, uint8* ucAxisNum);
+//æ’å…¥å‹åç½®ç‚¹2
+void offsetRadiusVector2(double dToolRadius, SVector LineVec, SPointDouble SP1, SPointDouble* Sp2, uint8* ucAxisNum);
 
-//Ö±ÏßÓëÔ²»¡µÈ¾àÏßµÄ½»µã
-void Intersection_Of_Line_And_Arc(double dToolRadius, SPointDouble SP1, SVector LineVec, double dI, double dJ, SPointDouble *SP2, int8 cArcDirection, uint8* ucAxisNum);
+//ç›´çº¿ä¸åœ†å¼§ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Line_And_Arc(double dToolRadius, SPointDouble SP1, SVector LineVec, double dI, double dJ,
+                                  SPointDouble* SP2, int8 cArcDirection, uint8* ucAxisNum);
 
-//Ô²»¡×ªÖ±ÏßµÈ¾àÏßµÄ½»µã
-void Intersection_Of_Arc_And_Line(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble *SP3, SVector LineVec, double dI, double dJ, int8 cArcDirection, uint8* ucAxisNum);
+//åœ†å¼§è½¬ç›´çº¿ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Arc_And_Line(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3,
+                                  SVector LineVec, double dI, double dJ, int8 cArcDirection, uint8* ucAxisNum);
 
-//Ô²»¡×ªÔ²»¡µÈ¾àÏßµÄ½»µã
-void Intersection_Of_Arc_And_Arc(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3, double dK1, double dI1, double dK2, double dI2, int8 cArc1Direction, int8 cArc2Direction, uint8* ucAxisNum, uint8 ucPosFlag);
+//åœ†å¼§è½¬åœ†å¼§ç­‰è·çº¿çš„äº¤ç‚¹
+void Intersection_Of_Arc_And_Arc(double dToolRadius, SPointDouble SP1, SPointDouble SP2, SPointDouble* SP3, double dK1,
+                                 double dI1, double dK2, double dI2, int8 cArc1Direction, int8 cArc2Direction,
+                                 uint8* ucAxisNum, uint8 ucPosFlag);
 
-//¿ìËÙÔË¶¯¸´ºÏÎ»ÒÆ³¤¶È¼°·½ÏòÏòÁ¿£¨¸÷Öá±ÈÀı£©¼ÆËã(¹ùÇ¿)  2023/05/19¹ùÇ¿ Ôö¼ÓVAL_STRUCT_TYPE ucRelaVal²ÎÊı
-int8 calcG0VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* SStartVector, SVector* SEndVector, double* dLength, int nArraySize, uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal);
+//å¿«é€Ÿè¿åŠ¨å¤åˆä½ç§»é•¿åº¦åŠæ–¹å‘å‘é‡ï¼ˆå„è½´æ¯”ä¾‹ï¼‰è®¡ç®—(éƒ­å¼º)  2023/05/19éƒ­å¼º å¢åŠ VAL_STRUCT_TYPE ucRelaValå‚æ•°
+int8 calcG0VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* SStartVector,
+                             SVector* SEndVector, double* dLength, int nArraySize, uint8* ucMapArray,
+                             VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal);
 
-//¶àÖá²å²¹¸´ºÏÎ»ÒÆ³¤¶È¼°·½ÏòÏòÁ¿£¨¸÷Öá±ÈÀı£©¼ÆËã(¹ùÇ¿)  2023/05/19¹ùÇ¿ Ôö¼ÓVAL_STRUCT_TYPE ucRelaVal²ÎÊı
-int8 calcG1VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* SStartVector, SVector* SEndVector, double* dLength, int nArraySize, uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal);
+//å¤šè½´æ’è¡¥å¤åˆä½ç§»é•¿åº¦åŠæ–¹å‘å‘é‡ï¼ˆå„è½´æ¯”ä¾‹ï¼‰è®¡ç®—(éƒ­å¼º)  2023/05/19éƒ­å¼º å¢åŠ VAL_STRUCT_TYPE ucRelaValå‚æ•°
+int8 calcG1VectorAndDistance(SPointDouble SStartPoint, SPointDouble SEndPoint, SVector* SStartVector,
+                             SVector* SEndVector, double* dLength, int nArraySize, uint8* ucMapArray,
+                             VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal);
 
-//¸üĞÂµ¶²¹¹ì¼£µã
-void GcodeToTCode(struct SGCodeParse *pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, bool bPFlag, uint8* ucAxisNum, uint8 ucChannelNum);
+//æ›´æ–°åˆ€è¡¥è½¨è¿¹ç‚¹
+void GcodeToTCode(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, bool bPFlag,
+                  uint8* ucAxisNum, uint8 ucChannelNum);
 
-//¼Ì³ĞG´úÂë»º³åÇøÖĞ¹«¹²µÄ²ÎÊı
-void SaveCommonParameter(struct SGCodeParse *pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint, uint8* ucAxisNum, uint8 ucChannelNum);
+//ç»§æ‰¿Gä»£ç ç¼“å†²åŒºä¸­å…¬å…±çš„å‚æ•°
+void SaveCommonParameter(struct SGCodeParse* pGcode, SPointDouble STcodePrevPoint, SPointDouble STcodeEndPoint,
+                         uint8* ucAxisNum, uint8 ucChannelNum);
 
-//¸ù¾İµ¶²¹ºóµÄµãÊı¼ÇÂ¼×îºóÒ»¸öµ¶²¹µã
+//æ ¹æ®åˆ€è¡¥åçš„ç‚¹æ•°è®°å½•æœ€åä¸€ä¸ªåˆ€è¡¥ç‚¹
 void RecordLastToolPoint(int8 cPointNum, uint8 ucChannelNum);
 
-//Ö±Ïß½ÓÖ±Ïß
-int8 LineToLine(struct SGCodeParse *pSGcode, struct SGCodeParse *pSNextGcode, double dToolRadius, int8 StageSelect, uint8* ucAxisNum);
+//ç›´çº¿æ¥ç›´çº¿
+int8 LineToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 StageSelect,
+                uint8* ucAxisNum);
 
-//Ö±Ïß½ÓÔ²»¡
-int8 LineToArc(struct SGCodeParse *pSGcode, struct SGCodeParse *pSNextGcode, double dToolRadius, int8 StageSelect, uint8* ucAxisNum);
+//ç›´çº¿æ¥åœ†å¼§
+int8 LineToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, double dToolRadius, int8 StageSelect,
+               uint8* ucAxisNum);
 
-//Ô²»¡½ÓÖ±Ïß
-int8 ArcToLine(struct SGCodeParse *pSGcode, struct SGCodeParse *pSNextcode, double dToolRadius, int8 StageSelect, uint8* ucAxisNum);
+//åœ†å¼§æ¥ç›´çº¿
+int8 ArcToLine(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 StageSelect,
+               uint8* ucAxisNum);
 
-//Ô²»¡½ÓÔ²»¡
-int8 ArcToArc(struct SGCodeParse *pSGcode, struct SGCodeParse *pSNextcode, double dToolRadius, int8 StageSelect, uint8* ucAxisNum);
+//åœ†å¼§æ¥åœ†å¼§
+int8 ArcToArc(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextcode, double dToolRadius, int8 StageSelect,
+              uint8* ucAxisNum);
 
-//½øĞĞµ¶²¹¼ÆËã
-bool toolCompensation(struct SGCodeParse *pSGcode, struct SGCodeParse *pSNextGcode, uint8* ucAxisNum, uint8 ucChannelNum);
+//è¿›è¡Œåˆ€è¡¥è®¡ç®—
+bool toolCompensation(struct SGCodeParse* pSGcode, struct SGCodeParse* pSNextGcode, uint8* ucAxisNum,
+                      uint8 ucChannelNum);
 
-//±£´æµ¶²¹¼ÆËãÖ®ºóµÄ²¹³¥µã²¢´æ·Åµ½µ¶²¹»º³åÇø
-void saveToolCode(struct SGCodeParse *pSGcode, uint8* ucAxisNum, uint8 ucChannelNum);
+//ä¿å­˜åˆ€è¡¥è®¡ç®—ä¹‹åçš„è¡¥å¿ç‚¹å¹¶å­˜æ”¾åˆ°åˆ€è¡¥ç¼“å†²åŒº
+void saveToolCode(struct SGCodeParse* pSGcode, uint8* ucAxisNum, uint8 ucChannelNum);
 
-//ÅĞ¶ÏÊÇ·ñÓĞ²»ÒÆ¶¯µÄÇé¿ö
-bool JudgeNoMoveStruct(struct SGCodeParse *pSGcode);
+//åˆ¤æ–­æ˜¯å¦æœ‰ä¸ç§»åŠ¨çš„æƒ…å†µ
+bool JudgeNoMoveStruct(struct SGCodeParse* pSGcode);
 
-//³õÊ¼»¯±êÖ¾Î»
+//åˆå§‹åŒ–æ ‡å¿—ä½
 void toolCompensationInit(uint8 ucChannelNum);
 
-//µ¶²¹¼ÆËãÁ÷³Ì
-void ToolCompensation_Caculate(uint8 ucChannelNum);	
+//åˆ€è¡¥è®¡ç®—æµç¨‹
+void ToolCompensation_Caculate(uint8 ucChannelNum);
 
-//´¦ÀíÁ¬Ğø³öÏÖµÄ³¬¹ı¹æ¶¨ÊıÁ¿·ÇÒÆ¶¯´úÂë¶Î
-int8 dealMaxCounterNoMoveTrack(struct SGCodeParse *pSGcode, uint8* ucAxisNum, uint8 ucChannelNum);
+//å¤„ç†è¿ç»­å‡ºç°çš„è¶…è¿‡è§„å®šæ•°é‡éç§»åŠ¨ä»£ç æ®µ
+int8 dealMaxCounterNoMoveTrack(struct SGCodeParse* pSGcode, uint8* ucAxisNum, uint8 ucChannelNum);
 
-//²»Í¬Æ½Ãæ×ø±êÓ³Éä
+//ä¸åŒå¹³é¢åæ ‡æ˜ å°„
 void CoordinateMap(struct SGCodeParse* pSGcode, uint8* ucAxisNum);
 
-//¸ù¾İ²»Í¬µÄ¼ÙÏóµ¶¼âºÅ¼ÆËãºáÖáÆ«ÒÆÖµ
+//æ ¹æ®ä¸åŒçš„å‡è±¡åˆ€å°–å·è®¡ç®—æ¨ªè½´åç§»å€¼
 double getHorizontalAxisOffset(uint8 ucToolNum, double dToolRadius);
 
-//¸ù¾İ²»Í¬µÄ¼ÙÏóµ¶¼âºÅ¼ÆËã×İÖáÆ«ÒÆÖµ
+//æ ¹æ®ä¸åŒçš„å‡è±¡åˆ€å°–å·è®¡ç®—çºµè½´åç§»å€¼
 double getVerticalAxisOffset(uint8 ucToolNum, double dToolRadius);
 
-//µ¶²¹Ç°¸ù¾İ¼ÙÏóµ¶¼âºÅ¸ü¸Ä×ø±ê
-int8 modifyCoorByToolNum(struct SGCodeParse* pGcode, struct SGCodeParse *SGetGode, uint8* ucAxisNum, uint8 ucChannelNum);
+//åˆ€è¡¥å‰æ ¹æ®å‡è±¡åˆ€å°–å·æ›´æ”¹åæ ‡
+int8 modifyCoorByToolNum(struct SGCodeParse* pGcode, struct SGCodeParse* SGetGode, uint8* ucAxisNum,
+                         uint8 ucChannelNum);
 
-//ÅĞ¶ÏÔö¼ÓµÄ×ª½ÓÏß¶ÎÊÇ·ñĞ¡ÓÚÒ»¸öÂö³å,ÈôĞ¡ÓÚÒ»¸öÂö³åÔò½øĞĞÓÅ»¯´¦Àí£¬¼õÉÙ¹ı¶Éµã
+//åˆ¤æ–­å¢åŠ çš„è½¬æ¥çº¿æ®µæ˜¯å¦å°äºä¸€ä¸ªè„‰å†²,è‹¥å°äºä¸€ä¸ªè„‰å†²åˆ™è¿›è¡Œä¼˜åŒ–å¤„ç†ï¼Œå‡å°‘è¿‡æ¸¡ç‚¹
 int8 judgeNewLineLength(uint8* ucAxisNum, uint8 ucChannelNum);
 
-/****ÒÔÏÂÎÄ¼şµ÷ÊÔÓÃ****/
+/****ä»¥ä¸‹æ–‡ä»¶è°ƒè¯•ç”¨****/
 
-//´ò¿ªÎÄ¼ş
+//æ‰“å¼€æ–‡ä»¶
 void TCODE_OPEN_FILE(uint8 ucChannelNum);
 
-//¹Ø±ÕÎÄ¼ş
+//å…³é—­æ–‡ä»¶
 void CloseFile(uint8 ucChannelNum);
 
-//¸ù¾İÍ¨µÀ´òÓ¡Êı¾İ
+//æ ¹æ®é€šé“æ‰“å°æ•°æ®
 void PrintDataByChannel(uint8 ucChannelNum);
 
 #endif

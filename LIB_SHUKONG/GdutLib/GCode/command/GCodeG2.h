@@ -1,24 +1,23 @@
 #ifndef __GCODE_G2_H
 #define __GCODE_G2_H
 
-
 typedef struct _SG2Para
 {
-	int8 cStep;
+    int8 cStep;
 
-	uint8 ucG2Hor;					//G2ºáÖá
-	uint8 ucG2Ver;					//G2×İÖá
-	SPointDouble SG2StartPoint;		//G2Æğµã
-	SPointDouble SG2EndPoint;		//G2ÖÕµã
-	SPointDouble SG2CenterPoint;	//G2Ô²ĞÄ
-	double dG2Radius;				//G2°ë¾¶
-	int8 cG2Dir;					//G2·½Ïò
+    uint8 ucG2Hor;               //G2æ¨ªè½´
+    uint8 ucG2Ver;               //G2çºµè½´
+    SPointDouble SG2StartPoint;  //G2èµ·ç‚¹
+    SPointDouble SG2EndPoint;    //G2ç»ˆç‚¹
+    SPointDouble SG2CenterPoint; //G2åœ†å¿ƒ
+    double dG2Radius;            //G2åŠå¾„
+    int8 cG2Dir;                 //G2æ–¹å‘
 
-	SPointDouble SG2MiddlePoint;//ÕûÔ²¸³ÖµĞèÒªÓÃ
+    SPointDouble SG2MiddlePoint; //æ•´åœ†èµ‹å€¼éœ€è¦ç”¨
 
-	int8 cType;//0£ºµã 1£ºÔ²»¡orÊúÖ±Ïß 2£ºÕûÔ²
+    int8 cType; //0ï¼šç‚¹ 1ï¼šåœ†å¼§orç«–ç›´çº¿ 2ï¼šæ•´åœ†
 
-}SG2Para;
+} SG2Para;
 
 void addG2RegulationAPI();
 
@@ -26,7 +25,7 @@ int8 mallocG2ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 int8 freeG2ParaStruct(uint8 ucMode, uint8 ucChannelNum);
 int8 getG2Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCodeSysState* SGCodeCurrSysState);
 
-int8 CheckG2(SSyntaxConfiguration* pSSyntaxConfig,struct SGCodeParse* pGCodeBufUnit);
+int8 CheckG2(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG2(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
 #endif

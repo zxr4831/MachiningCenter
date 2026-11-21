@@ -1,101 +1,95 @@
 #include "GCode.h"
-#include"ErrorFunction.h"
-
+#include "ErrorFunction.h"
 
 int8 CheckG40(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
 int8 CheckG41(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
 int8 CheckG42(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 int8 AssignG40(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG41(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG42(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
 
-
-
 void addG40RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(40, sGd, 1, NULL, NULL, NULL, CheckG40, AssignG40);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(40, sGd, 1, NULL, NULL, NULL, CheckG40, AssignG40);
 }
 void addG41RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(41, sGd, 1, NULL, NULL, NULL, CheckG41, AssignG41);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(41, sGd, 1, NULL, NULL, NULL, CheckG41, AssignG41);
 }
 
-//Ìí¼ÓG41¹æÔò½á¹¹Ìå
+//æ·»åŠ G41è§„åˆ™ç»“æž„ä½“
 void addG42RegulationAPI()
 {
-	//Ö¸Áî£ºG2
-	//×é±ð£ºsGa
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	addGCommadRegulation(42, sGd, 1, NULL, NULL, NULL, CheckG42, AssignG42);
+    //æŒ‡ä»¤ï¼šG2
+    //ç»„åˆ«ï¼šsGa
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    addGCommadRegulation(42, sGd, 1, NULL, NULL, NULL, CheckG42, AssignG42);
 }
 
 int8 CheckG40(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//0.ÅÐ¶ÏG40³ÌÐò¶ÎÖÐÊÇ·ñ³öÏÖ×ø±êÐÅÏ¢ ¼´G40 G0/G1 µÈÖ¸Áî
-	//int8 cRet = 0;
-	//cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
+    //0.åˆ¤æ–­G40ç¨‹åºæ®µä¸­æ˜¯å¦å‡ºçŽ°åæ ‡ä¿¡æ¯ å³G40 G0/G1 ç­‰æŒ‡ä»¤
+    //int8 cRet = 0;
+    //cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
 
-	//if (cRet == FALSE)
-	//{
-	//	parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
-	//}
+    //if (cRet == FALSE)
+    //{
+    //	parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
+    //}
 
-	return 2;
+    return 2;
 }
 int8 CheckG41(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	int8 cRet = 0;
-	cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
+    int8 cRet = 0;
+    cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
 
-	if (cRet == FALSE)
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
-	}
-	pGCodeBufUnit->SModalInfo.sGd = G41 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    if (cRet == FALSE)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
+    }
+    pGCodeBufUnit->SModalInfo.sGd = G41 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
-//¼ì²éG41
+//æ£€æŸ¥G41
 int8 CheckG42(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	int8 cRet = 0;
-	cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
+    int8 cRet = 0;
+    cRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
 
-	if (cRet == FALSE)
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
-	}
-	pGCodeBufUnit->SModalInfo.sGd = G42 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    if (cRet == FALSE)
+    {
+        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM409);
+    }
+    pGCodeBufUnit->SModalInfo.sGd = G42 * pow(10, GCOMMAND_DECIMAL_PLACE);
 
-	return 2;
+    return 2;
 }
-
 
 int8 AssignG40(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGd = G40 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGd = G40 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
 int8 AssignG41(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGd = G41 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGd = G41 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }
 int8 AssignG42(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	pGCodeBufUnit->SModalInfo.sGd = G42 * pow(10, GCOMMAND_DECIMAL_PLACE);
-	return 2;
+    pGCodeBufUnit->SModalInfo.sGd = G42 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
 }

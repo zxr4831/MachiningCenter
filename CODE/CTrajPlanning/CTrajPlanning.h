@@ -1,7 +1,6 @@
 #ifndef __CTRAJPLANNING_H
 #define __CTRAJPLANNING_H
 
-
 #include "common.h"
 #include "G32.h"
 
@@ -15,79 +14,76 @@ double getSingleAxisAcc(uint8 ucAxis, uint8 ucVelPlanType, const uint8* ucAxisMa
 
 double getSingleAxisDec(uint8 ucAxis, uint8 ucVelPlanType, const uint8* ucAxisMap);
 
-//¹æ»®Ô¤´¦Àíº¯Êı
-int8 preparePlanningT(struct SPlan* pSPlanPointer);    // TĞÍËÙ¶È¹æ»® Ô¤´¦Àí
+//è§„åˆ’é¢„å¤„ç†å‡½æ•°
+int8 preparePlanningT(struct SPlan* pSPlanPointer); // Tå‹é€Ÿåº¦è§„åˆ’ é¢„å¤„ç†
 
-int8 preparePlanningS3(struct SPlan* pSPlanPointer);    // S3ĞÍËÙ¶È¹æ»® Ô¤´¦Àí
+int8 preparePlanningS3(struct SPlan* pSPlanPointer); // S3å‹é€Ÿåº¦è§„åˆ’ é¢„å¤„ç†
 
-int8 preparePlanningS4(struct SPlan* pSPlanPointer);    //S4ĞÍËÙ¶È¹æ»® Ô¤´¦Àí
+int8 preparePlanningS4(struct SPlan* pSPlanPointer); //S4å‹é€Ÿåº¦è§„åˆ’ é¢„å¤„ç†
 
-int8 preparePlanningCombine(struct SPlan* pSPlanPointer, bool bUseFloatingVe);//»ìºÏĞÍËÙ¶È¹æ»® Ô¤´¦Àí
+int8 preparePlanningCombine(struct SPlan* pSPlanPointer, bool bUseFloatingVe); //æ··åˆå‹é€Ÿåº¦è§„åˆ’ é¢„å¤„ç†
 
-int8 preparePlanningTNewAdd(struct SPlan* pSPlanPointer);    // TĞÍËÙ¶È¹æ»® £¨ĞÂÔö¾àÀëÄ£Ê½£©Ô¤´¦Àí
+int8 preparePlanningTNewAdd(struct SPlan* pSPlanPointer); // Tå‹é€Ÿåº¦è§„åˆ’ ï¼ˆæ–°å¢è·ç¦»æ¨¡å¼ï¼‰é¢„å¤„ç†
 
-//Æ½Ì¯Ô¤´¦Àíº¯Êı
-int8 prepareDistReAvgT(struct SPlan* pSPlanPointer, bool bAddCycleFlag);  // ÌİĞÎÆ½Ì¯ Ô¤´¦Àí
+//å¹³æ‘Šé¢„å¤„ç†å‡½æ•°
+int8 prepareDistReAvgT(struct SPlan* pSPlanPointer, bool bAddCycleFlag); // æ¢¯å½¢å¹³æ‘Š é¢„å¤„ç†
 
-int8 prepareDistReAvgS5(struct SPlan* pSPlanPointer);  //Îå´Î¶àÏîÊ½Æ½Ì¯ Ô¤´¦Àí
+int8 prepareDistReAvgS5(struct SPlan* pSPlanPointer); //äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š é¢„å¤„ç†
 
-int8 prepareDistReAvgRatio(struct SPlan* pSPlanPointer); //±ÈÀıÆ½Ì¯ Ô¤´¦Àí
+int8 prepareDistReAvgRatio(struct SPlan* pSPlanPointer); //æ¯”ä¾‹å¹³æ‘Š é¢„å¤„ç†
 
+//è§„åˆ’nextstepå‡½æ•°
+double nextstepPlanningT(uint32 unK, struct SPlan* pSPlanPointer); //Tå‹S(t)
 
-//¹æ»®nextstepº¯Êı
-double nextstepPlanningT(uint32 unK, struct SPlan* pSPlanPointer);   //TĞÍS(t) 
+double nextstepPlanningS3(uint32 unK, struct SPlan* pSPlanPointer); //S3å‹S(t)
 
-double nextstepPlanningS3(uint32 unK, struct SPlan* pSPlanPointer);   //S3ĞÍS(t)
+double nextstepPlanningS4(uint32 unK, struct SPlan* pSPlanPointer); //S4å‹S(t)
 
-double nextstepPlanningS4(uint32 unK, struct SPlan* pSPlanPointer);  //S4ĞÍS(t)
+double nextstepPlanningCombine(uint32 unK, struct SPlan* pSPlanPointer); //æ··åˆå‹S(t)
 
-double nextstepPlanningCombine(uint32 unK, struct SPlan* pSPlanPointer);  //»ìºÏĞÍS(t)
+//å¹³æ‘Šnextstepå‡½æ•°
+double nextstepDistReAvgT(uint32 unK, struct SPlan* pSPlanPointer); //æ¢¯å½¢å¹³æ‘ŠS(t)
 
-//Æ½Ì¯nextstepº¯Êı
-double nextstepDistReAvgT(uint32 unK, struct SPlan* pSPlanPointer);  //ÌİĞÎÆ½Ì¯S(t)
+double nextstepDistReAvgS5(uint32 unK, struct SPlan* pSPlanPointer); //äº”æ¬¡å¤šé¡¹å¼å¹³æ‘Š S(t)
 
-double nextstepDistReAvgS5(uint32 unK, struct SPlan* pSPlanPointer);  //Îå´Î¶àÏîÊ½Æ½Ì¯ S(t)
+//å°è£…å‡½æ•°
+int8 preparePlanningAndDistReAvg(struct SPlan* pSPlanPointer, bool bUseFloatingVe); //é¢„å¤„ç†å‡½æ•°ï¼ˆé€Ÿåº¦è§„åˆ’+å¹³æ‘Šï¼‰
 
-
-//·â×°º¯Êı
-int8 preparePlanningAndDistReAvg(struct SPlan* pSPlanPointer, bool bUseFloatingVe);  //Ô¤´¦Àíº¯Êı£¨ËÙ¶È¹æ»®+Æ½Ì¯£©
-
-double nextstepPlanningAndDistReAvg(uint32 unK, struct SPlan* pSPlanPointer);  //·â×°¶àÖÖÀàĞÍµÄS(t)
+double nextstepPlanningAndDistReAvg(uint32 unK, struct SPlan* pSPlanPointer); //å°è£…å¤šç§ç±»å‹çš„S(t)
 
 //double nextstepDeRatio();
 
+/*****************************************<é€Ÿåº¦æ§åˆ¶><ä¸»è½´ä½¿ç”¨>********************************************/
 
-
-/*****************************************<ËÙ¶È¿ØÖÆ><Ö÷ÖáÊ¹ÓÃ>********************************************/
-
-//ËÙ¶È¹æ»®V3
+//é€Ÿåº¦è§„åˆ’V3
 int8 preparePlanningV3(struct SPlan* pSPlanPointer);
-//»ìºÏËÙ¶È¹æ»®V++
-int8 preparePlanningVelCombine(struct SPlan* pSPlanPointer,double dVeerDeltaVMax);
+//æ··åˆé€Ÿåº¦è§„åˆ’V++
+int8 preparePlanningVelCombine(struct SPlan* pSPlanPointer, double dVeerDeltaVMax);
 
-//Vel nextstepº¯Êı
+//Vel nextstepå‡½æ•°
 double nextstepPlanningV1(uint32 unK, struct SPlan* pSPlanPointer);
 
 double nextstepPlanningV2(uint32 unK, struct SPlan* pSPlanPointer);
 
 double nextstepPlanningV3(uint32 unK, struct SPlan* pSPlanPointer);
 
-double nextstepPlanningVelCombine(uint32 unK, struct SPlan* pSPlanPointer);  //»ìºÏĞÍV(t)
+double nextstepPlanningVelCombine(uint32 unK, struct SPlan* pSPlanPointer); //æ··åˆå‹V(t)
 
+//æ–°å¢è·ç¦»
+uint8 newAddDistace(struct _SG32* pG32, struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec,
+                    double dVe, double dCurrentSpeed);
 
-//ĞÂÔö¾àÀë
-uint8 newAddDistace(struct _SG32* pG32, struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, double dCurrentSpeed);
+//æ–°å¢è·ç¦» ä¸é™åˆ¶ç»ˆç‚¹
+uint8 newAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe,
+                              bool bEnableDec, double dDecDist, double dCurrentSpeed);
 
-//ĞÂÔö¾àÀë ²»ÏŞÖÆÖÕµã
-uint8 newAddDistanceUnlimited(struct SPlan* pSPlanPointer, double newAddDist, double dAcc, double dDec, double dVe, bool bEnableDec, double dDecDist , double dCurrentSpeed);
+uint8 handWheelAddNewPlan(struct SPlan* pSPlanPointer, double dDistance, double dVs, double dVe, double dCurrentSpeed,
+                          bool bIsRotationAxis);
 
-uint8 handWheelAddNewPlan(struct SPlan* pSPlanPointer, double dDistance, double dVs, double dVe, double dCurrentSpeed, bool bIsRotationAxis);
-
-//Çå³ıÓëÆ½Ì¯ÓĞ¹ØµÄ²ÎÊı
+//æ¸…é™¤ä¸å¹³æ‘Šæœ‰å…³çš„å‚æ•°
 int8 clearDistReAvgPara(struct SPlan* pSPlanPointer);
 
-//Çå³ıËÙ¶È¹æ»®²ÎÊı
+//æ¸…é™¤é€Ÿåº¦è§„åˆ’å‚æ•°
 int8 clearSPlanData(struct SPlan* pSPlanPointer);
-
 
 #endif

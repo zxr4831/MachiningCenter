@@ -2,13 +2,13 @@
 #ifndef __GCODE_G66_H
 #define __GCODE_G66_H
 
-//G66ĞÅÏ¢½á¹¹Ìå
+//G66ä¿¡æ¯ç»“æ„ä½“
 typedef struct _SG66InfoStruct
 {
-	int8 cFileName[TEMP_FILENAME_MAX_LENGTH];   //³ÌĞòÃû
-	uint16 sCalls;                          //µ÷ÓÃ´ÎÊı
-	struct _SLocalMacroVar SLocalVar;      //¾Ö²¿ºê±äÁ¿½á¹¹Ìå 
-}SG66InfoStruct;
+    int8 cFileName[TEMP_FILENAME_MAX_LENGTH]; //ç¨‹åºå
+    uint16 sCalls;                            //è°ƒç”¨æ¬¡æ•°
+    struct _SLocalMacroVar SLocalVar;         //å±€éƒ¨å®å˜é‡ç»“æ„ä½“
+} SG66InfoStruct;
 
 void addG66RegulationAPI();
 
@@ -21,14 +21,11 @@ bool isTriggerG66Command(int16 sCurrCommandVal);
 int8 triggerG66ByAssign(SAssignConfiguration* pSAssignConfig, SG66InfoStruct* pSG66Info);
 int8 triggerG66ByCheck(SSyntaxConfiguration* pSSyntaxConfig);
 
-
-//Ìí¼ÓG67¹æÔò½á¹¹Ìå
+//æ·»åŠ G67è§„åˆ™ç»“æ„ä½“
 void addG67RegulationAPI();
-//¼ì²éG67
+//æ£€æŸ¥G67
 int8 CheckG67(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
-//¸³ÖµG67
+//èµ‹å€¼G67
 int8 AssignG67(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
-
-
 
 #endif

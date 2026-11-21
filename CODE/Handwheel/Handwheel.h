@@ -5,5 +5,4 @@
 
 void getHandWheelData(struct SChannel* pSChannel);
 
-
 #endif

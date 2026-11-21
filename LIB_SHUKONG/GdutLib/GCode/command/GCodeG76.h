@@ -3,45 +3,45 @@
 
 typedef struct _SG76Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
-	SCoord SCoordInfo;			//³ÌĞò¶Î×ø±êĞÅÏ¢
-	//G76µÚÒ»ĞĞ²ÎÊı   G76Ö¸ÁîµÚ1ĞĞ P(m)(r)(a) Q(¡÷dmin) R(d) J_ K_£»£¨µÚÒ»ĞĞ²ÎÊı¿ÉÒÔÈ«²¿Ê¡ÂÔ£© µÚÒ»ĞĞºÍµÚ¶şĞĞµÄÇø±ğÔÚÓÚµÚ¶şĞĞÓĞF£¨I£©
-	uint8 ucPm;  //ÂİÎÆ¾«³µ´ÎÊıP(m)
-	uint8 ucPr; //ÂİÎÆÍËÎ²ÏµÊıP£¨r£©
-	uint8 ucPa; //ÏàÁÚÁ½ÑÀÂİÎÆµÄ¼Ğ½Ç£¬È¡Öµ·¶Î§Îª00¡«99£¬µ¥Î»£º¶È(¡ã)   P£¨a£©
-	double dQdmin; //ÂİÎÆ´Ö³µÊ±µÄ×îĞ¡ÇĞÏ÷Á¿ Q(¡÷dmin)
-	double dRd; //ÂİÎÆ¾«³µÓàÁ¿    R(d)
-	double dJ;   // ¶ÌÖáÍËÎ²Á¿
-	double dK;   //³¤ÖáÍËÎ²Á¿
+    int8 cStep;        //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    SCoord SCoordInfo; //ç¨‹åºæ®µåæ ‡ä¿¡æ¯
+    //G76ç¬¬ä¸€è¡Œå‚æ•°   G76æŒ‡ä»¤ç¬¬1è¡Œ P(m)(r)(a) Q(â–³dmin) R(d) J_ K_ï¼›ï¼ˆç¬¬ä¸€è¡Œå‚æ•°å¯ä»¥å…¨éƒ¨çœç•¥ï¼‰ ç¬¬ä¸€è¡Œå’Œç¬¬äºŒè¡Œçš„åŒºåˆ«åœ¨äºç¬¬äºŒè¡Œæœ‰Fï¼ˆIï¼‰
+    uint8 ucPm;    //èºçº¹ç²¾è½¦æ¬¡æ•°P(m)
+    uint8 ucPr;    //èºçº¹é€€å°¾ç³»æ•°Pï¼ˆrï¼‰
+    uint8 ucPa;    //ç›¸é‚»ä¸¤ç‰™èºçº¹çš„å¤¹è§’ï¼Œå–å€¼èŒƒå›´ä¸º00ï½99ï¼Œå•ä½ï¼šåº¦(Â°)   Pï¼ˆaï¼‰
+    double dQdmin; //èºçº¹ç²—è½¦æ—¶çš„æœ€å°åˆ‡å‰Šé‡ Q(â–³dmin)
+    double dRd;    //èºçº¹ç²¾è½¦ä½™é‡    R(d)
+    double dJ;     // çŸ­è½´é€€å°¾é‡
+    double dK;     //é•¿è½´é€€å°¾é‡
 
-	bool bCalculateBackTailByJK;   //ÍËÎ²Á¿ÓÉJK²ÎÊı¼ÆËã±êÖ¾Î»
-	bool bCalculateBackTailByPr;  //ÍËÎ²Á¿ÓÉPr²ÎÊı¼ÆËã±êÖ¾Î»  ÔÚÃ»ÓĞJKµÄÇ°ÌáÏÂ£¬ÂİÎÆÍËÎ²Á¿=Pr*0.1*F£¬µ«FÓÖÊÇ³öÏÖÔÚµÚ¶şĞĞ£¬ËùÒÔÏÈ¼ÇÂ¼PrµÄÖµÒÔ¼°³öÏÖ±êÖ¾£¬ÔÚµÚ¶şĞĞ²ÎÊı»ñÈ¡Ê±ÔÙ¼ÆËã¡£µ«ÊÇÈç¹û³öÏÖJK¡£Pr¾ÍÃ»²ÎÓë¼ÆËãÁË
+    bool bCalculateBackTailByJK; //é€€å°¾é‡ç”±JKå‚æ•°è®¡ç®—æ ‡å¿—ä½
+    bool
+        bCalculateBackTailByPr; //é€€å°¾é‡ç”±Prå‚æ•°è®¡ç®—æ ‡å¿—ä½  åœ¨æ²¡æœ‰JKçš„å‰æä¸‹ï¼Œèºçº¹é€€å°¾é‡=Pr*0.1*Fï¼Œä½†Fåˆæ˜¯å‡ºç°åœ¨ç¬¬äºŒè¡Œï¼Œæ‰€ä»¥å…ˆè®°å½•Prçš„å€¼ä»¥åŠå‡ºç°æ ‡å¿—ï¼Œåœ¨ç¬¬äºŒè¡Œå‚æ•°è·å–æ—¶å†è®¡ç®—ã€‚ä½†æ˜¯å¦‚æœå‡ºç°JKã€‚Prå°±æ²¡å‚ä¸è®¡ç®—äº†
 
-	//¹ØÓÚG76µÄÍËÎ²Á¿ÓĞ3¸öÀ´Ô´ £º1.²ÎÊıJ K£»2.²ÎÊıP£¨r£©£»3.Ä¬ÈÏÏµÍ³²ÎÊı  ÓÅÏÈ¼¶´ÎĞò´Ó¸ßµ½µÍÎª 1.2.3
+    //å…³äºG76çš„é€€å°¾é‡æœ‰3ä¸ªæ¥æº ï¼š1.å‚æ•°J Kï¼›2.å‚æ•°Pï¼ˆrï¼‰ï¼›3.é»˜è®¤ç³»ç»Ÿå‚æ•°  ä¼˜å…ˆçº§æ¬¡åºä»é«˜åˆ°ä½ä¸º 1.2.3
 
-	//G76µÚ¶şĞĞ²ÎÊı    G76 X(U)_ Z(W)_ R(i) P(k)_ Q(¡÷d)_ F(I)_ £»
-	double dRi;                //ÂİÎÆ×¶¶È
-	double dPk;                //ÂİÎÆÑÀ¸ß
-	double dQd;                //µÚÒ»´ÎÂİÎÆÇĞÏ÷Éî¶È
-	double dF;                 //ÂİÎÆµ¼³Ì
+    //G76ç¬¬äºŒè¡Œå‚æ•°    G76 X(U)_ Z(W)_ R(i) P(k)_ Q(â–³d)_ F(I)_ ï¼›
+    double dRi; //èºçº¹é”¥åº¦
+    double dPk; //èºçº¹ç‰™é«˜
+    double dQd; //ç¬¬ä¸€æ¬¡èºçº¹åˆ‡å‰Šæ·±åº¦
+    double dF;  //èºçº¹å¯¼ç¨‹
 
-	//¹ì¼£µã¼ÆËãËùĞèµÄ¹Ø¼üµã
-	SPointDouble SPointA;      //Æğµã×ø±ê
-	SPointDouble SPointB;      //ÂİÎÆÇĞÉî²Î¿¼µã
-	SPointDouble SPointD;      //ÂİÎÆÖÕµã×ø±ê
-	SPointDouble SPointBn;     //´Ö³µÂİÎÆÇĞÏ÷Æğµã
+    //è½¨è¿¹ç‚¹è®¡ç®—æ‰€éœ€çš„å…³é”®ç‚¹
+    SPointDouble SPointA;  //èµ·ç‚¹åæ ‡
+    SPointDouble SPointB;  //èºçº¹åˆ‡æ·±å‚è€ƒç‚¹
+    SPointDouble SPointD;  //èºçº¹ç»ˆç‚¹åæ ‡
+    SPointDouble SPointBn; //ç²—è½¦èºçº¹åˆ‡å‰Šèµ·ç‚¹
 
-	//¹ì¼£¼ÆËãËùĞèµÄ±äÁ¿
-	int nCurCutTime;           //µ±Ç°µÄÇĞÏ÷´ÎÊı
-	double dThreadCutSlope;    //ÂİÎÆÇĞÏ÷Ğ±ÂÊ
-	bool bFineCutFlag;         //¾«³µ±êÖ¾Î»£¨Çø·Ö´Ö¡¢¾«³µ£©
+    //è½¨è¿¹è®¡ç®—æ‰€éœ€çš„å˜é‡
+    int nCurCutTime;        //å½“å‰çš„åˆ‡å‰Šæ¬¡æ•°
+    double dThreadCutSlope; //èºçº¹åˆ‡å‰Šæ–œç‡
+    bool bFineCutFlag;      //ç²¾è½¦æ ‡å¿—ä½ï¼ˆåŒºåˆ†ç²—ã€ç²¾è½¦ï¼‰
 
-	//·½ÏòÏµÊı    A¡ª>D 
-	int8 cDir_X;  //XÖáµÄ¼Ó¹¤·½Ïò  1£ºÑØX×ø±êÖá¸ºÏòÏòÕıÏò     -1£ºÑØX×ø±êÖáÕıÏòÏò¸ºÏò
-	int8 cDir_Z;   //ZÖáµÄ¼Ó¹¤·½Ïò  1.£ºÑØZ×ø±êÖá¸ºÏòÏòÕıÏò   -1£º ÑØZ×ø±êÖáÕıÏòÏò¸ºÏò
+    //æ–¹å‘ç³»æ•°    Aâ€”>D
+    int8 cDir_X; //Xè½´çš„åŠ å·¥æ–¹å‘  1ï¼šæ²¿Xåæ ‡è½´è´Ÿå‘å‘æ­£å‘     -1ï¼šæ²¿Xåæ ‡è½´æ­£å‘å‘è´Ÿå‘
+    int8 cDir_Z; //Zè½´çš„åŠ å·¥æ–¹å‘  1.ï¼šæ²¿Zåæ ‡è½´è´Ÿå‘å‘æ­£å‘   -1ï¼š æ²¿Zåæ ‡è½´æ­£å‘å‘è´Ÿå‘
 
-}SG76Para;
-
+} SG76Para;
 
 void addG76RegulationAPI();
 
@@ -52,16 +52,4 @@ int8 getG76Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCode
 int8 CheckG76(struct _SSyntaxConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 int8 AssignG76(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-
-
-
-
-
-
-
-
-
-
-
 #endif // !_GCODE76_H_
-

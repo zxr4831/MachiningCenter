@@ -1,38 +1,35 @@
 #ifndef __GCODE_G70_H
 #define __GCODE_G70_H
 
-
 #include "common.h"
 //#include "GCodeCommon.h"
 
-
 typedef struct _SG70Para
 {
-	SGetTextStateInfo SGetTextStateInfo;			//ÓÃÓÚ¼ÇÂ¼G70µÄNSÖÁNF³ÌĞò¶Î»ñÈ¡ÎÄ±¾×´Ì¬
-	SScan SScanContainer;							//1.ÓÃÓÚ¼ÇÂ¼G70µÄNS-NF³ÌĞò¶ÎÉ¨Ãè½á¹û or ±£´æ¸³Öµ½á¹¹ÌåÖĞµÄÉ¨Ãè½á¹¹Ìå£¬G70Ö´ĞĞÍêºóÔÙ»¹»ØÈ¥
-//	struct _SGCodeSysState SGCodeSysState;			//ÓÃÓÚ¼ÇÂ¼¸³ÖµG70µÄNS-NF³ÌĞò¶ÎÊ±µÄÏµÍ³×´Ì¬
+    SGetTextStateInfo SGetTextStateInfo; //ç”¨äºè®°å½•G70çš„NSè‡³NFç¨‹åºæ®µè·å–æ–‡æœ¬çŠ¶æ€
+    SScan SScanContainer; //1.ç”¨äºè®°å½•G70çš„NS-NFç¨‹åºæ®µæ‰«æç»“æœ or ä¿å­˜èµ‹å€¼ç»“æ„ä½“ä¸­çš„æ‰«æç»“æ„ä½“ï¼ŒG70æ‰§è¡Œå®Œåå†è¿˜å›å»
+    //	struct _SGCodeSysState SGCodeSysState;			//ç”¨äºè®°å½•èµ‹å€¼G70çš„NS-NFç¨‹åºæ®µæ—¶çš„ç³»ç»ŸçŠ¶æ€
 
-	int8 cCommandSegmentCnt;						//ÓÃÓÚÅĞ¶Ï¶à³ÌĞò¶ÎÊÇ·ñÏàÍ¬
-	int16 sCurrCommandVal;							
-	SGCommandRegulation* pSCurrCommandRegulation;	//ÓÃÓÚ¼ÇÂ¼G70ÄÚ²¿µ±Ç°Ö´ĞĞGa¡¢Gz×éÖ¸Áî¹æÔò
+    int8 cCommandSegmentCnt; //ç”¨äºåˆ¤æ–­å¤šç¨‹åºæ®µæ˜¯å¦ç›¸åŒ
+    int16 sCurrCommandVal;
+    SGCommandRegulation* pSCurrCommandRegulation; //ç”¨äºè®°å½•G70å†…éƒ¨å½“å‰æ‰§è¡ŒGaã€Gzç»„æŒ‡ä»¤è§„åˆ™
 
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
-	int8 cPart;					//¸³ÖµÇĞÆ¬
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    int8 cPart; //èµ‹å€¼åˆ‡ç‰‡
 
-	uint32 unNS;				//NSĞĞºÅ
-	uint32 unNF;				//NFĞĞºÅ
-	SPointDouble SCycleStartPoint;  //±¾´ÎG70Ñ­»·Æğµã£¬ÄÚ²¿»úĞµ×ø±ê
+    uint32 unNS;                   //NSè¡Œå·
+    uint32 unNF;                   //NFè¡Œå·
+    SPointDouble SCycleStartPoint; //æœ¬æ¬¡G70å¾ªç¯èµ·ç‚¹ï¼Œå†…éƒ¨æœºæ¢°åæ ‡
 
-	double dDelta[3];      //XÓàÁ¿ (Ö±¾¶, µ¥Î»£ºmm / inch£¬ÓĞ·ûºÅ) £¬Ä¬ÈÏÎª0  ¡÷u ¹ì¼£XÆ«ÒÆÖµ
-	//double dDeltaW;      //ZÓàÁ¿ (Ö±¾¶, µ¥Î»£ºmm / inch£¬ÓĞ·ûºÅ) £¬Ä¬ÈÏÎª0  ¡÷w ¹ì¼£ZÆ«ÒÆÖµ
+    double dDelta[3]; //Xä½™é‡ (ç›´å¾„, å•ä½ï¼šmm / inchï¼Œæœ‰ç¬¦å·) ï¼Œé»˜è®¤ä¸º0  â–³u è½¨è¿¹Xåç§»å€¼
+    //double dDeltaW;      //Zä½™é‡ (ç›´å¾„, å•ä½ï¼šmm / inchï¼Œæœ‰ç¬¦å·) ï¼Œé»˜è®¤ä¸º0  â–³w è½¨è¿¹Zåç§»å€¼
 
-	uint8 ucH;//ÀàĞÍ 0£ºÕıÏò	1£ºÕıÏò¾µÏñ		2£º·´Ïò		3£º·´Ïò¾µÏñ
+    uint8 ucH; //ç±»å‹ 0ï¼šæ­£å‘	1ï¼šæ­£å‘é•œåƒ		2ï¼šåå‘		3ï¼šåå‘é•œåƒ
 
+    SList* pSPathList; //åŸå§‹è½¨è¿¹é“¾è¡¨ï¼ˆæ­¤é“¾è¡¨è®°å½•NS-NFè½¨è¿¹ï¼Œè®°å½•åä¸åšä¿®æ”¹ï¼‰
+    uint16 usCurPos;   //å½“å‰å†™å…¥å®ä½“åœ¨åŠ å·¥è½¨è¿¹é“¾è¡¨ä¸­çš„ä½ç½®
 
-	SList* pSPathList;//Ô­Ê¼¹ì¼£Á´±í£¨´ËÁ´±í¼ÇÂ¼NS-NF¹ì¼££¬¼ÇÂ¼ºó²»×öĞŞ¸Ä£©
-	uint16 usCurPos;				//µ±Ç°Ğ´ÈëÊµÌåÔÚ¼Ó¹¤¹ì¼£Á´±íÖĞµÄÎ»ÖÃ
-
-}SG70Para;
+} SG70Para;
 
 void addG70RegulationAPI();
 

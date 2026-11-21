@@ -48,7 +48,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>STM32_MODE=0;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)Gdut\API;$(ProjectDir)CODE\CTrajPlanning;$(ProjectDir)CODE\Channel;$(ProjectDir)CODE\Corner;$(ProjectDir)CODE\ErrorCompensation;$(ProjectDir)CODE\Handwheel;$(ProjectDir)CODE\IOCommand;$(ProjectDir)CODE\Motion;$(ProjectDir)CODE\RingBuff;$(ProjectDir)CODE\SecondSpindle;$(ProjectDir)CODE\Spindle;$(ProjectDir)CODE\TIOCommand;$(ProjectDir)CODE\ToolCompensation;$(ProjectDir)CODE\list;$(ProjectDir)CODE\lookAhead;$(ProjectDir)CODE\manageMem;$(ProjectDir)CODE\toolAxis;$(ProjectDir)CODE\tree;$(ProjectDir)Gdut;$(ProjectDir)Gdut\G0;$(ProjectDir)Gdut\G1&amp;G2G3;$(ProjectDir)Gdut\G32;$(ProjectDir)Gdut\G33;$(ProjectDir)LIB_SHUKONG\GdutLib;$(ProjectDir)LIB_SHUKONG\GdutLib\GCode;$(ProjectDir)LIB_SHUKONG\GdutLib\GCode\command;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <CompileAs>CompileAsC</CompileAs>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

@@ -4,840 +4,809 @@
 #include "Config.h"
 #include "channel.h"
 
-struct SRingBuff g_SRingBuff[CHANNEL_NUM_MAX];//»·ĞÎ»º³åÇø
+struct SRingBuff g_SRingBuff[CHANNEL_NUM_MAX]; //ç¯å½¢ç¼“å†²åŒº
 
+//ä»¥ä¸‹å‚æ•°å³å°†åˆ é™¤
+//struct SGCodeParse g_SGCodeParseBuf[GCODEPARSEBUF_MAX]; //SGCodeParseBufå¾ªç¯ç¼“å†²åŒºï¼ˆ20æ¡ï¼‰(ç§»åŠ¨åˆ°ç¯å½¢ç¼“å†²ç»“æ„ä½“)
 
-//ÒÔÏÂ²ÎÊı¼´½«É¾³ı
-//struct SGCodeParse g_SGCodeParseBuf[GCODEPARSEBUF_MAX]; //SGCodeParseBufÑ­»·»º³åÇø£¨20Ìõ£©(ÒÆ¶¯µ½»·ĞÎ»º³å½á¹¹Ìå)
+//struct SToolCompensation g_SToolCompensationBuf[TOOLCOMPBUF_MAX];//SToolCompensationBufå¾ªç¯ç¼“å†²åŒºï¼ˆ20æ¡ï¼‰(ç§»åŠ¨åˆ°ç¯å½¢ç¼“å†²ç»“æ„ä½“)
 
-//struct SToolCompensation g_SToolCompensationBuf[TOOLCOMPBUF_MAX];//SToolCompensationBufÑ­»·»º³åÇø£¨20Ìõ£©(ÒÆ¶¯µ½»·ĞÎ»º³å½á¹¹Ìå)
-
-//int16 g_sSGCODE_WRITEIndex; //G´úÂë»º´æĞ´Ö¸ÕëË÷ÒıÖµ(ÒÆ¶¯µ½»·ĞÎ»º³å½á¹¹Ìå)
+//int16 g_sSGCODE_WRITEIndex; //Gä»£ç ç¼“å­˜å†™æŒ‡é’ˆç´¢å¼•å€¼(ç§»åŠ¨åˆ°ç¯å½¢ç¼“å†²ç»“æ„ä½“)
 //
-//int16 g_sSGCODE_WRITEdNum;  //G´úÂëÒÑĞ´Èë¸öÊı(ÇÒµ¶²¹Î´¶ÁÈ¡¸öÊı£©(ÒÆ¶¯µ½»·ĞÎ»º³å½á¹¹Ìå)
+//int16 g_sSGCODE_WRITEdNum;  //Gä»£ç å·²å†™å…¥ä¸ªæ•°(ä¸”åˆ€è¡¥æœªè¯»å–ä¸ªæ•°ï¼‰(ç§»åŠ¨åˆ°ç¯å½¢ç¼“å†²ç»“æ„ä½“)
 //
-//int16 g_sSToolIndex = 0;      //µ¶²¹Ğ´Ö¸ÕëµÄË÷ÒıÖµ
+//int16 g_sSToolIndex = 0;      //åˆ€è¡¥å†™æŒ‡é’ˆçš„ç´¢å¼•å€¼
 //
-//int16 g_sSToolDealedNum = 0;  //µ¶²¹ ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
+//int16 g_sSToolDealedNum = 0;  //åˆ€è¡¥ å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
 //
-//int16 g_sLookAheadDealedNum = 0;//Ç°Õ° ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
-
+//int16 g_sLookAheadDealedNum = 0;//å‰ç» å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSGCodeParsePointerIndex(enum RingBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍ£¬»ñÈ¡¸ÃÖ¸ÕëµÄË÷Òı²¢·µ»Ø
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum RingBufPointerType Ã¶¾Ù±äÁ¿ (0~1)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint16 Ö¸Õë¶ÔÓ¦ÔªËØµÄË÷Òı ·¶Î§£º£¨0~GCODEPARSEBUF_MAX-1£©
-			-1	  ÊäÈëµÄÃ¶¾ÙÀàĞÍ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSGCodeParsePointerIndex(enum RingBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹ï¼Œè·å–è¯¥æŒ‡é’ˆçš„ç´¢å¼•å¹¶è¿”å›
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum RingBufPointerType æšä¸¾å˜é‡ (0~1)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint16 æŒ‡é’ˆå¯¹åº”å…ƒç´ çš„ç´¢å¼• èŒƒå›´ï¼šï¼ˆ0~GCODEPARSEBUF_MAX-1ï¼‰
+			-1	  è¾“å…¥çš„æšä¸¾ç±»å‹é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 
 int16 getSGCodeParsePointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sIndex;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    int16 sIndex;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case GCODE_WRITE:
-		sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex;//G´úÂëĞ´Ö¸Õë
-		break;
-	case GCODE_READ:
-		//G´úÂë¶ÁÖ¸ÕëµÄË÷Òı  = Ğ´Ö¸ÕëË÷Òı - ÒÑĞ´ÔªËØ¸öÊı
-		sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex - g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
-		break;
-	case STOOL_READ_AHEAD:
-		//µ¶²¹Ô¤¶ÁÖ¸ÕëË÷Òı = Ğ´Ö¸ÕëË÷Òı - ¿ÉÔ¤¶ÁÔªËØ¸öÊı
-		sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex - g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum;
-		break;
-	default:
-		sIndex = 0;
-		break;
-	}
+    switch (pointerTpye)
+    {
+    case GCODE_WRITE:
+        sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex; //Gä»£ç å†™æŒ‡é’ˆ
+        break;
+    case GCODE_READ:
+        //Gä»£ç è¯»æŒ‡é’ˆçš„ç´¢å¼•  = å†™æŒ‡é’ˆç´¢å¼• - å·²å†™å…ƒç´ ä¸ªæ•°
+        sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex - g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
+        break;
+    case STOOL_READ_AHEAD:
+        //åˆ€è¡¥é¢„è¯»æŒ‡é’ˆç´¢å¼• = å†™æŒ‡é’ˆç´¢å¼• - å¯é¢„è¯»å…ƒç´ ä¸ªæ•°
+        sIndex = g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex - g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum;
+        break;
+    default:
+        sIndex = 0;
+        break;
+    }
 
-	sIndex %= GCODEPARSEBUF_MAX;//¶ÔsIndexÈ¡Óà£¬·ÀÖ¹³¬¹ıÊı×é·¶Î§
+    sIndex %= GCODEPARSEBUF_MAX; //å¯¹sIndexå–ä½™ï¼Œé˜²æ­¢è¶…è¿‡æ•°ç»„èŒƒå›´
 
-	if (sIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬Ğ¡ÓÚÊı×é·¶Î§
-	{
-		sIndex += GCODEPARSEBUF_MAX;
-	}
+    if (sIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œå°äºæ•°ç»„èŒƒå›´
+    {
+        sIndex += GCODEPARSEBUF_MAX;
+    }
 
-	return sIndex;
+    return sIndex;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSGCodeParsePointerByIndex(short sIndex)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄË÷Òı»ñÈ¡¶ÔÓ¦µÄÊı×éÔªËØÖ¸Õë
-  ÊäÈë²ÎÊı£ºsIndex	Ë÷Òı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstruct SGCodeParse*  Êı×éÔªËØÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSGCodeParsePointerByIndex(short sIndex)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„ç´¢å¼•è·å–å¯¹åº”çš„æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  è¾“å…¥å‚æ•°ï¼šsIndex	ç´¢å¼•
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstruct SGCodeParse*  æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SGCodeParse* getSGCodeParsePointerByIndex(short sIndex, uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	sIndex %= GCODEPARSEBUF_MAX;  //¶ÔsIndexÈ¡ÓàÊı  ±£Ö¤Index²»»á³¬¹ıÊı×é×î´óÖµ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    sIndex %= GCODEPARSEBUF_MAX; //å¯¹sIndexå–ä½™æ•°  ä¿è¯Indexä¸ä¼šè¶…è¿‡æ•°ç»„æœ€å¤§å€¼
 
-	if (sIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬·µ»ØÒ°Ö¸Õë
-	{
-		sIndex += GCODEPARSEBUF_MAX;
-	}
-	return g_SRingBuff[ucChannelNum].SGCodeParseBuf + sIndex;//·µ»ØË÷ÒıÖµ¶ÔÓ¦µÄÔªËØÖ¸Õë
+    if (sIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œè¿”å›é‡æŒ‡é’ˆ
+    {
+        sIndex += GCODEPARSEBUF_MAX;
+    }
+    return g_SRingBuff[ucChannelNum].SGCodeParseBuf + sIndex; //è¿”å›ç´¢å¼•å€¼å¯¹åº”çš„å…ƒç´ æŒ‡é’ˆ
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSGCodeParsePointerByType(enum RingBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍÑ°ÕÒÆäË÷ÒıÖµ£¬¸ù¾İË÷ÒıÖµÕÒµ½¶ÔÓ¦µÄÊı×éÔªËØ£¬·µ»ØÆäÖ¸Õë
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum RingBufPointerType Ã¶¾Ù±äÁ¿ (0~1)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstruct SGCodeParse*  Êı×éÔªËØÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSGCodeParsePointerByType(enum RingBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹å¯»æ‰¾å…¶ç´¢å¼•å€¼ï¼Œæ ¹æ®ç´¢å¼•å€¼æ‰¾åˆ°å¯¹åº”çš„æ•°ç»„å…ƒç´ ï¼Œè¿”å›å…¶æŒ‡é’ˆ
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum RingBufPointerType æšä¸¾å˜é‡ (0~1)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstruct SGCodeParse*  æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SGCodeParse* getSGCodeParsePointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sIndex;  //Ë÷ÒıÖµ
-	struct SGCodeParse* pPointer; //Ö¸Õë
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	sIndex = getSGCodeParsePointerIndex(pointerTpye, ucChannelNum);  //»ñÈ¡Ë÷ÒıÖµ
+    int16 sIndex;                        //ç´¢å¼•å€¼
+    struct SGCodeParse* pPointer;        //æŒ‡é’ˆ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    sIndex = getSGCodeParsePointerIndex(pointerTpye, ucChannelNum); //è·å–ç´¢å¼•å€¼
 
-	pPointer = getSGCodeParsePointerByIndex(sIndex, ucChannelNum);   //¸ù¾İË÷ÒıÖµ»ñÈ¡Ö¸Õë
+    pPointer = getSGCodeParsePointerByIndex(sIndex, ucChannelNum); //æ ¹æ®ç´¢å¼•å€¼è·å–æŒ‡é’ˆ
 
-	return pPointer;  //·µ»Ø½á¹¹ÌåÖ¸Õë
+    return pPointer; //è¿”å›ç»“æ„ä½“æŒ‡é’ˆ
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºmoveSGCodeParsePointer(enum RingBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÖ¸ÕëÀàĞÍ,¿ØÖÆÖ¸Õë´Óµ±Ç°Î»ÖÃÍùÊı×éµÄÏÂÒ»¸öÔªËØÒÆ¶¯
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	ÒÆ¶¯³É¹¦
-			FALSE	ÒÆ¶¯Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmoveSGCodeParsePointer(enum RingBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æŒ‡é’ˆç±»å‹,æ§åˆ¶æŒ‡é’ˆä»å½“å‰ä½ç½®å¾€æ•°ç»„çš„ä¸‹ä¸€ä¸ªå…ƒç´ ç§»åŠ¨
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	ç§»åŠ¨æˆåŠŸ
+			FALSE	ç§»åŠ¨å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool moveSGCodeParsePointer(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sResBuf;  //Ê£Óàbuf
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
-	sResBuf = getSGCodeParsePointerBufRes(pointerTpye, ucChannelNum);//»ñÈ¡¶ÔÓ¦ Ö¸ÕëµÄÊ£Óàbuf
+    int16 sResBuf;                       //å‰©ä½™buf
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
+    sResBuf = getSGCodeParsePointerBufRes(pointerTpye, ucChannelNum); //è·å–å¯¹åº” æŒ‡é’ˆçš„å‰©ä½™buf
 
-	//Ê£ÓàbufĞ¡ÓÚ0²»ÄÜÒÆ¶¯,ÒÆ¶¯ºóÊ£ÓàbufÎª¸ºÊı£¬²»Ó¦³öÏÖ
-	if (sResBuf <= 0)
-	{
-		return FALSE;
-	}
+    //å‰©ä½™bufå°äº0ä¸èƒ½ç§»åŠ¨,ç§»åŠ¨åå‰©ä½™bufä¸ºè´Ÿæ•°ï¼Œä¸åº”å‡ºç°
+    if (sResBuf <= 0)
+    {
+        return FALSE;
+    }
 
-	switch (pointerTpye)
-	{
-	case GCODE_WRITE:
-		g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex += 1;  //Ğ´Ö¸ÕëË÷Òı¼Ó1
-		g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum += 1;	//ÒÑĞ´ÔªËØ¸öÊı¼Ó1
-		g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum += 1; //¿ÉÔ¤¶ÁÔªËØ¸öÊı+1
-		break;
-	case GCODE_READ:
-		g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum -= 1;   //ÒÑĞ´ÔªËØ¸öÊı¼õ1
-		break;
-	case STOOL_READ_AHEAD:
-		g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum -= 1; //µ¶²¹¿ÉÔ¤¶ÁÔªËØ¸öÊı¼õ1
-		break;
-	default:
-		return FALSE;
-	}
+    switch (pointerTpye)
+    {
+    case GCODE_WRITE:
+        g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex += 1;  //å†™æŒ‡é’ˆç´¢å¼•åŠ 1
+        g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum += 1;   //å·²å†™å…ƒç´ ä¸ªæ•°åŠ 1
+        g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum += 1; //å¯é¢„è¯»å…ƒç´ ä¸ªæ•°+1
+        break;
+    case GCODE_READ:
+        g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum -= 1; //å·²å†™å…ƒç´ ä¸ªæ•°å‡1
+        break;
+    case STOOL_READ_AHEAD:
+        g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum -= 1; //åˆ€è¡¥å¯é¢„è¯»å…ƒç´ ä¸ªæ•°å‡1
+        break;
+    default:
+        return FALSE;
+    }
 
-	//¶ÔsSToolIndexÈ¡ÓàÊı  ±£Ö¤Index²»»á³¬¹ıÊı×é×î´óÖµ
-	g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex %= GCODEPARSEBUF_MAX;
+    //å¯¹sSToolIndexå–ä½™æ•°  ä¿è¯Indexä¸ä¼šè¶…è¿‡æ•°ç»„æœ€å¤§å€¼
+    g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex %= GCODEPARSEBUF_MAX;
 
-	if (g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬·µ»ØÒ°Ö¸Õë
-	{
-		g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex += GCODEPARSEBUF_MAX;
-	}
-	return TRUE;
+    if (g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œè¿”å›é‡æŒ‡é’ˆ
+    {
+        g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex += GCODEPARSEBUF_MAX;
+    }
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSGCodeParsePointerBufRes(enum RingBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍ£¬»ñÈ¡¸ÃÖ¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint16	Ö¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSGCodeParsePointerBufRes(enum RingBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹ï¼Œè·å–è¯¥æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint16	æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getSGCodeParsePointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sBufRes; //    ÄÜ¶Á/Ğ´ÈİÁ¿  
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    int16 sBufRes;                       //    èƒ½è¯»/å†™å®¹é‡
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case GCODE_WRITE:
-		//G´úÂëĞ´Ö¸Õë ÄÜ¹»Ğ´µÄ¸öÊı
-		sBufRes = GCODEPARSEBUF_MAX - g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
-		break;
-	case GCODE_READ:
-		//G´úÂë¶ÁÖ¸Õë ÄÜ¹»¶ÁµÄ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
-		break;
-	case STOOL_READ_AHEAD:
-		//µ¶²¹¿ÉÔ¤¶ÁÖ¸Õë¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum;
-		break;
-	default:
-		sBufRes = -1;
-		break;
-	}
+    switch (pointerTpye)
+    {
+    case GCODE_WRITE:
+        //Gä»£ç å†™æŒ‡é’ˆ èƒ½å¤Ÿå†™çš„ä¸ªæ•°
+        sBufRes = GCODEPARSEBUF_MAX - g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
+        break;
+    case GCODE_READ:
+        //Gä»£ç è¯»æŒ‡é’ˆ èƒ½å¤Ÿè¯»çš„ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum;
+        break;
+    case STOOL_READ_AHEAD:
+        //åˆ€è¡¥å¯é¢„è¯»æŒ‡é’ˆä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum;
+        break;
+    default:
+        sBufRes = -1;
+        break;
+    }
 
-	return sBufRes;
+    return sBufRes;
 }
 
-
-///´òÓ¡Êı×éÖ¸ÕëË÷Òı£¬µØÖ·ĞÅÏ¢(µ÷ÊÔ) 
+///æ‰“å°æ•°ç»„æŒ‡é’ˆç´¢å¼•ï¼Œåœ°å€ä¿¡æ¯(è°ƒè¯•)
 void printSGCodeParsePointerADDR()
 {
 #if EN_DEBUG
-	int i;
-	printf("****************************************\n");
-	for (i = 0; i < 20; i++)
-	{
-		printf("%2.d %d\n", i, g_SGCodeParseBuf + i);
-	}
-	printf("****************************************\n");
-	printf("BUF::\n");
-	printf("GCODE_WRITE = %d\n", getSGCodeParsePointerBufRes(GCODE_WRITE));
-	printf("GCODE_READ = %d\n", getSGCodeParsePointerBufRes(GCODE_READ));
-	printf("****************************************\n");
-	printf("INDEX AND ADDR::\n");
-	printf("GCODE_WRITE:\n");
-	printf("%2.d %d\n", getSGCodeParsePointerIndex(GCODE_WRITE), getSGCodeParsePointerByType(GCODE_WRITE));
-	printf("GCODE_READ:\n");
-	printf("%2.d %d\n", getSGCodeParsePointerIndex(GCODE_READ), getSGCodeParsePointerByType(GCODE_READ));
+    int i;
+    printf("****************************************\n");
+    for (i = 0; i < 20; i++)
+    {
+        printf("%2.d %d\n", i, g_SGCodeParseBuf + i);
+    }
+    printf("****************************************\n");
+    printf("BUF::\n");
+    printf("GCODE_WRITE = %d\n", getSGCodeParsePointerBufRes(GCODE_WRITE));
+    printf("GCODE_READ = %d\n", getSGCodeParsePointerBufRes(GCODE_READ));
+    printf("****************************************\n");
+    printf("INDEX AND ADDR::\n");
+    printf("GCODE_WRITE:\n");
+    printf("%2.d %d\n", getSGCodeParsePointerIndex(GCODE_WRITE), getSGCodeParsePointerByType(GCODE_WRITE));
+    printf("GCODE_READ:\n");
+    printf("%2.d %d\n", getSGCodeParsePointerIndex(GCODE_READ), getSGCodeParsePointerByType(GCODE_READ));
 #endif
-
 }
 
+/******************SToolCompensationBufå¾ªç¯ç¼“å†²åŒº-å˜é‡å‡½æ•°********************************/
 
-
-/******************SToolCompensationBufÑ­»·»º³åÇø-±äÁ¿º¯Êı********************************/
-
-
-
-
-/*     SToolCompensationBufÑ­»·»º³åÇøº¯ÊıÊ¹ÓÃ·¶Àı
-void XXX()  //Ä³º¯ÊıÊµÏÖ
+/*     SToolCompensationBufå¾ªç¯ç¼“å†²åŒºå‡½æ•°ä½¿ç”¨èŒƒä¾‹
+void XXX()  //æŸå‡½æ•°å®ç°
 {
 	int16 sBufRes;
-	//ÏÈ»ñÈ¡¿É¶Á/Ğ´ÈİÁ¿   Èç¹ûÃ»ÓĞÈİÁ¿Ôò²»½øĞĞµ¶²¹»òÇ°Õ°´¦Àí
-	sBufRes = getSToolCompPointerBufRes(enum XX);//»ñÈ¡ÈİÁ¿
+	//å…ˆè·å–å¯è¯»/å†™å®¹é‡   å¦‚æœæ²¡æœ‰å®¹é‡åˆ™ä¸è¿›è¡Œåˆ€è¡¥æˆ–å‰ç»å¤„ç†
+	sBufRes = getSToolCompPointerBufRes(enum XX);//è·å–å®¹é‡
 
-	if (sBufRes < N)  //NÎªĞèÒªÇ°Õ°¶ÎÊı  »ò µ¶²¹ĞÂÔöµÄÏß¶ÎÊı
+	if (sBufRes < N)  //Nä¸ºéœ€è¦å‰ç»æ®µæ•°  æˆ– åˆ€è¡¥æ–°å¢çš„çº¿æ®µæ•°
 	{
-		return;  //»º´æÇø²»×ã  ²»ÄÜÖ´ĞĞÇ°Õ°»òµ¶²¹ (ÒòÎªÊı¾İ¿É¶Á »ò Ã»ÓĞ¿Õ¼ä¿ÉĞ´)
+		return;  //ç¼“å­˜åŒºä¸è¶³  ä¸èƒ½æ‰§è¡Œå‰ç»æˆ–åˆ€è¡¥ (å› ä¸ºæ•°æ®å¯è¯» æˆ– æ²¡æœ‰ç©ºé—´å¯å†™)
 	}
 
-	//ÏÈ»ñÈ¡Ö¸Õë
+	//å…ˆè·å–æŒ‡é’ˆ
 	struct SToolCompensation *pSToolCmpPointer = getSToolCompPointerByType(enum XX);
 
-	//Ö´ĞĞÇ°Õ°»òµ¶²¹
-	//ÀûÓÃÖ¸Õë pSToolCmpPointer ½øĞĞ¶ÁĞ´
-	//´æÈëÊı¾İºó
+	//æ‰§è¡Œå‰ç»æˆ–åˆ€è¡¥
+	//åˆ©ç”¨æŒ‡é’ˆ pSToolCmpPointer è¿›è¡Œè¯»å†™
+	//å­˜å…¥æ•°æ®å
 
-	moveSToolCompBufPointer(enum XX);//ÒÆ¶¯Ö¸Õë
-	//#### ĞèÒª¶à´Î¶ÁĞ´¾ÍÖØĞÂ»ñÈ¡Ö¸Õë£¬´¦ÀíÍê&&¶Á³ö»ò´æÈëÊı¾İÖ®ºó£¬ÔÙÒÆ¶¯Ö¸Õë#####//
-	//´¦ÀíÍêÖ®ºóÒ»¶¨ÒªÊÖ¶¯ÒÆ¶¯Ö¸Õë  ·ñÔòÏÂ´ÎĞ´Èë»á¸²¸Ç »ò ÖØ¸´¶Á
+	moveSToolCompBufPointer(enum XX);//ç§»åŠ¨æŒ‡é’ˆ
+	//#### éœ€è¦å¤šæ¬¡è¯»å†™å°±é‡æ–°è·å–æŒ‡é’ˆï¼Œå¤„ç†å®Œ&&è¯»å‡ºæˆ–å­˜å…¥æ•°æ®ä¹‹åï¼Œå†ç§»åŠ¨æŒ‡é’ˆ#####//
+	//å¤„ç†å®Œä¹‹åä¸€å®šè¦æ‰‹åŠ¨ç§»åŠ¨æŒ‡é’ˆ  å¦åˆ™ä¸‹æ¬¡å†™å…¥ä¼šè¦†ç›– æˆ– é‡å¤è¯»
 }
 */
 
-
-
 #if NEW_BUFF == 0
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSToolCompPointerIndex(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍ£¬»ñÈ¡¸ÃÖ¸ÕëµÄË÷Òı²¢·µ»Ø
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint16 Ö¸Õë¶ÔÓ¦ÔªËØµÄË÷Òı ·¶Î§£º£¨0~TOOLCOMPBUF_MAX-1£©
-			-1	  ÊäÈëµÄÃ¶¾ÙÀàĞÍ´íÎó
-  ±¸    ×¢£ºÊäÈëÃ»¶¨ÒåµÄÃ¶¾ÙÖµÊ±£¬»á·µ»ØÍ·ÔªËØË÷Òı
+  å‡½æ•°åç§°ï¼šgetSToolCompPointerIndex(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹ï¼Œè·å–è¯¥æŒ‡é’ˆçš„ç´¢å¼•å¹¶è¿”å›
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint16 æŒ‡é’ˆå¯¹åº”å…ƒç´ çš„ç´¢å¼• èŒƒå›´ï¼šï¼ˆ0~TOOLCOMPBUF_MAX-1ï¼‰
+			-1	  è¾“å…¥çš„æšä¸¾ç±»å‹é”™è¯¯
+  å¤‡    æ³¨ï¼šè¾“å…¥æ²¡å®šä¹‰çš„æšä¸¾å€¼æ—¶ï¼Œä¼šè¿”å›å¤´å…ƒç´ ç´¢å¼•
 **************************************************/
 int16 getSToolCompPointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sIndex;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    int16 sIndex;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		sIndex = g_SRingBuff[ucChannelNum].sSToolIndex; //µ¶²¹Ğ´µÄË÷ÒıÖµÎªsSToolIndex
-		break;
-	case LOOKAHEAD_READWRITE:
-		//Ç°Õ°¶ÁĞ´µÄË÷ÒıÎªsSToolIndex - µ¶²¹´¦ÀíµÄ + Ç°Õ°´¦ÀíµÄ
-		sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum + g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
-		break;
-	case INTERPOLATION_READ:
-		//²å²¹µÄË÷ÒıÎª sSToolIndex - µ¶²¹´¦ÀíµÄ
-		sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum;
-		break;
-	case INTERPOLATION_BACK:
-		//µ¹×ßµÄË÷ÒıÎª sSToolIndex - µ¶²¹´¦ÀíµÄ - 2  //µ±Ç°¶ÎµÄÇ°Ò»¸ö   µ±Ç°¶ÎÎª-1  Ç°Ò»¸öÎ»-1-1
-		sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum - 2; //µ¹×ßË÷Òı  
-		break;
-	default:
-		sIndex = 0;
-		break;
-	}
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        sIndex = g_SRingBuff[ucChannelNum].sSToolIndex; //åˆ€è¡¥å†™çš„ç´¢å¼•å€¼ä¸ºsSToolIndex
+        break;
+    case LOOKAHEAD_READWRITE:
+        //å‰ç»è¯»å†™çš„ç´¢å¼•ä¸ºsSToolIndex - åˆ€è¡¥å¤„ç†çš„ + å‰ç»å¤„ç†çš„
+        sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum +
+                 g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
+        break;
+    case INTERPOLATION_READ:
+        //æ’è¡¥çš„ç´¢å¼•ä¸º sSToolIndex - åˆ€è¡¥å¤„ç†çš„
+        sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum;
+        break;
+    case INTERPOLATION_BACK:
+        //å€’èµ°çš„ç´¢å¼•ä¸º sSToolIndex - åˆ€è¡¥å¤„ç†çš„ - 2  //å½“å‰æ®µçš„å‰ä¸€ä¸ª   å½“å‰æ®µä¸º-1  å‰ä¸€ä¸ªä½-1-1
+        sIndex = g_SRingBuff[ucChannelNum].sSToolIndex - g_SRingBuff[ucChannelNum].sSToolDealedNum - 2; //å€’èµ°ç´¢å¼•
+        break;
+    default:
+        sIndex = 0;
+        break;
+    }
 
-	sIndex %= TOOLCOMPBUF_MAX;//¶ÔsIndexÈ¡Óà£¬·ÀÖ¹³¬¹ıÊı×é·¶Î§
+    sIndex %= TOOLCOMPBUF_MAX; //å¯¹sIndexå–ä½™ï¼Œé˜²æ­¢è¶…è¿‡æ•°ç»„èŒƒå›´
 
-	if (sIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬Ğ¡ÓÚÊı×é·¶Î§
-	{
-		sIndex += TOOLCOMPBUF_MAX;
-	}
+    if (sIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œå°äºæ•°ç»„èŒƒå›´
+    {
+        sIndex += TOOLCOMPBUF_MAX;
+    }
 
-	return sIndex;
+    return sIndex;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSToolCompPointerByIndex(int16 sIndex)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄË÷Òı»ñÈ¡¶ÔÓ¦µÄÊı×éÔªËØÖ¸Õë
-  ÊäÈë²ÎÊı£ºsIndex	Ë÷Òı
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstruct SToolCompensation*  Êı×éÔªËØÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSToolCompPointerByIndex(int16 sIndex)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„ç´¢å¼•è·å–å¯¹åº”çš„æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  è¾“å…¥å‚æ•°ï¼šsIndex	ç´¢å¼•
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstruct SToolCompensation*  æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SToolCompensation* getSToolCompPointerByIndex(int16 sIndex, uint8 ucChannelNum)
 {
-	sIndex %= TOOLCOMPBUF_MAX;  //¶ÔsIndexÈ¡ÓàÊı  ±£Ö¤Index²»»á³¬¹ıÊı×é×î´óÖµ
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	if (sIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬·µ»ØÒ°Ö¸Õë
-	{
-		sIndex += TOOLCOMPBUF_MAX;
-	}
-	return g_SRingBuff[ucChannelNum].SToolCompensationBuf + sIndex;//·µ»ØË÷ÒıÖµ¶ÔÓ¦µÄÔªËØÖ¸Õë
+    sIndex %= TOOLCOMPBUF_MAX;           //å¯¹sIndexå–ä½™æ•°  ä¿è¯Indexä¸ä¼šè¶…è¿‡æ•°ç»„æœ€å¤§å€¼
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    if (sIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œè¿”å›é‡æŒ‡é’ˆ
+    {
+        sIndex += TOOLCOMPBUF_MAX;
+    }
+    return g_SRingBuff[ucChannelNum].SToolCompensationBuf + sIndex; //è¿”å›ç´¢å¼•å€¼å¯¹åº”çš„å…ƒç´ æŒ‡é’ˆ
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSToolCompPointerByType(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍÑ°ÕÒÆäË÷ÒıÖµ£¬¸ù¾İË÷ÒıÖµÕÒµ½¶ÔÓ¦µÄÊı×éÔªËØ£¬·µ»ØÆäÖ¸Õë
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºstruct SToolCompensation*  Êı×éÔªËØÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSToolCompPointerByType(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹å¯»æ‰¾å…¶ç´¢å¼•å€¼ï¼Œæ ¹æ®ç´¢å¼•å€¼æ‰¾åˆ°å¯¹åº”çš„æ•°ç»„å…ƒç´ ï¼Œè¿”å›å…¶æŒ‡é’ˆ
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šstruct SToolCompensation*  æ•°ç»„å…ƒç´ æŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SToolCompensation* getSToolCompPointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sIndex;  //Ë÷ÒıÖµ
-	struct SToolCompensation* pPointer; //Ö¸Õë
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	sIndex = getSToolCompPointerIndex(pointerTpye, ucChannelNum);  //»ñÈ¡Ë÷ÒıÖµ
+    int16 sIndex;                        //ç´¢å¼•å€¼
+    struct SToolCompensation* pPointer;  //æŒ‡é’ˆ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    sIndex = getSToolCompPointerIndex(pointerTpye, ucChannelNum); //è·å–ç´¢å¼•å€¼
 
-	pPointer = getSToolCompPointerByIndex(sIndex, ucChannelNum);   //¸ù¾İË÷ÒıÖµ»ñÈ¡Ö¸Õë
+    pPointer = getSToolCompPointerByIndex(sIndex, ucChannelNum); //æ ¹æ®ç´¢å¼•å€¼è·å–æŒ‡é’ˆ
 
-	return pPointer;  //·µ»Ø½á¹¹ÌåÖ¸Õë
+    return pPointer; //è¿”å›ç»“æ„ä½“æŒ‡é’ˆ
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmoveSToolCompBufPointer(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÖ¸ÕëÀàĞÍ,¿ØÖÆÖ¸Õë´Óµ±Ç°Î»ÖÃÍùÊı×éµÄÏÂÒ»¸öÔªËØÒÆ¶¯
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	ÒÆ¶¯³É¹¦
-			FALSE	ÒÆ¶¯Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmoveSToolCompBufPointer(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æŒ‡é’ˆç±»å‹,æ§åˆ¶æŒ‡é’ˆä»å½“å‰ä½ç½®å¾€æ•°ç»„çš„ä¸‹ä¸€ä¸ªå…ƒç´ ç§»åŠ¨
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	ç§»åŠ¨æˆåŠŸ
+			FALSE	ç§»åŠ¨å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool moveSToolCompBufPointer(enum RingBufPointerType pointerTpye, short sDist, uint8 ucChannelNum)
 {
-	int16 sResBuf;  //Ê£Óàbuf
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
-	sResBuf = getSToolCompPointerBufRes(pointerTpye, ucChannelNum);//»ñÈ¡¶ÔÓ¦ Ö¸ÕëµÄÊ£Óàbuf
+    int16 sResBuf;                       //å‰©ä½™buf
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
+    sResBuf = getSToolCompPointerBufRes(pointerTpye, ucChannelNum); //è·å–å¯¹åº” æŒ‡é’ˆçš„å‰©ä½™buf
 
-	//Ê£ÓàbufĞ¡ÓÚ0²»ÄÜÒÆ¶¯,ÒÆ¶¯ºóÊ£ÓàbufÎª¸ºÊı£¬²»Ó¦³öÏÖ
-	if (sResBuf - sDist < 0 || sResBuf - sDist > TOOLCOMPBUF_MAX)
-	{
-		return FALSE;
-	}
+    //å‰©ä½™bufå°äº0ä¸èƒ½ç§»åŠ¨,ç§»åŠ¨åå‰©ä½™bufä¸ºè´Ÿæ•°ï¼Œä¸åº”å‡ºç°
+    if (sResBuf - sDist < 0 || sResBuf - sDist > TOOLCOMPBUF_MAX)
+    {
+        return FALSE;
+    }
 
-	//ÅĞ¶ÏÖ¸ÕëÀàĞÍ£¬ÒÆ¶¯¶ÔÓ¦Ö¸Õë
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		g_SRingBuff[ucChannelNum].sSToolIndex += sDist;    //µ¶²¹Ğ´Ö¸ÕëÒÆ¶¯
-		g_SRingBuff[ucChannelNum].sSToolDealedNum += sDist;//µ¶²¹´¦Àí¹ıµÄÔªËØ¼Ó1
-		break;
-	case LOOKAHEAD_READWRITE:
-		g_SRingBuff[ucChannelNum].sLookAheadDealedNum += sDist;   //Ç°Õ°´¦Àí¹ıµÄÔªËØ¼Ó1
-		break;
-	case INTERPOLATION_READ:
-		g_SRingBuff[ucChannelNum].sSToolDealedNum -= sDist;      //µ¶²¹´¦Àí¹ıµÄÔªËØ¼õ1
-		g_SRingBuff[ucChannelNum].sLookAheadDealedNum -= sDist;   //Ç°Õ°´¦Àí¹ıµÄÔªËØ¼õ1
-		//²å²¹´¦Àí¹ıµÄ¶ÎÊı+1  ²»ÄÜ³¬¹ıµ¹×ß¶ÎÊı
-		g_SRingBuff[ucChannelNum].sInterpolationDealedNum = (g_SRingBuff[ucChannelNum].sInterpolationDealedNum + sDist > BACKWARDBUF_NUM) ? BACKWARDBUF_NUM : max(g_SRingBuff[ucChannelNum].sInterpolationDealedNum + sDist, 0);
-		break;
-	case INTERPOLATION_BACK:
-		g_SRingBuff[ucChannelNum].sSToolDealedNum += sDist;      //µ¶²¹´¦Àí¹ıµÄÔªËØ¼õ1
-		g_SRingBuff[ucChannelNum].sLookAheadDealedNum += sDist;   //Ç°Õ°´¦Àí¹ıµÄÔªËØ¼õ1
-		//²å²¹´¦Àí¹ıµÄ¶ÎÊı+1  ²»ÄÜ³¬¹ıµ¹×ß¶ÎÊı
-		g_SRingBuff[ucChannelNum].sInterpolationDealedNum = (g_SRingBuff[ucChannelNum].sInterpolationDealedNum - sDist < 0) ? 0 : g_SRingBuff[ucChannelNum].sInterpolationDealedNum - sDist;
-		break;
-	default:
-		return FALSE;
-		break;
-	}
+    //åˆ¤æ–­æŒ‡é’ˆç±»å‹ï¼Œç§»åŠ¨å¯¹åº”æŒ‡é’ˆ
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        g_SRingBuff[ucChannelNum].sSToolIndex += sDist;     //åˆ€è¡¥å†™æŒ‡é’ˆç§»åŠ¨
+        g_SRingBuff[ucChannelNum].sSToolDealedNum += sDist; //åˆ€è¡¥å¤„ç†è¿‡çš„å…ƒç´ åŠ 1
+        break;
+    case LOOKAHEAD_READWRITE:
+        g_SRingBuff[ucChannelNum].sLookAheadDealedNum += sDist; //å‰ç»å¤„ç†è¿‡çš„å…ƒç´ åŠ 1
+        break;
+    case INTERPOLATION_READ:
+        g_SRingBuff[ucChannelNum].sSToolDealedNum -= sDist;     //åˆ€è¡¥å¤„ç†è¿‡çš„å…ƒç´ å‡1
+        g_SRingBuff[ucChannelNum].sLookAheadDealedNum -= sDist; //å‰ç»å¤„ç†è¿‡çš„å…ƒç´ å‡1
+        //æ’è¡¥å¤„ç†è¿‡çš„æ®µæ•°+1  ä¸èƒ½è¶…è¿‡å€’èµ°æ®µæ•°
+        g_SRingBuff[ucChannelNum].sInterpolationDealedNum =
+            (g_SRingBuff[ucChannelNum].sInterpolationDealedNum + sDist > BACKWARDBUF_NUM)
+                ? BACKWARDBUF_NUM
+                : max(g_SRingBuff[ucChannelNum].sInterpolationDealedNum + sDist, 0);
+        break;
+    case INTERPOLATION_BACK:
+        g_SRingBuff[ucChannelNum].sSToolDealedNum += sDist;     //åˆ€è¡¥å¤„ç†è¿‡çš„å…ƒç´ å‡1
+        g_SRingBuff[ucChannelNum].sLookAheadDealedNum += sDist; //å‰ç»å¤„ç†è¿‡çš„å…ƒç´ å‡1
+        //æ’è¡¥å¤„ç†è¿‡çš„æ®µæ•°+1  ä¸èƒ½è¶…è¿‡å€’èµ°æ®µæ•°
+        g_SRingBuff[ucChannelNum].sInterpolationDealedNum =
+            (g_SRingBuff[ucChannelNum].sInterpolationDealedNum - sDist < 0)
+                ? 0
+                : g_SRingBuff[ucChannelNum].sInterpolationDealedNum - sDist;
+        break;
+    default:
+        return FALSE;
+        break;
+    }
 
-	//¶ÔsSToolIndexÈ¡ÓàÊı  ±£Ö¤Index²»»á³¬¹ıÊı×é×î´óÖµ
-	g_SRingBuff[ucChannelNum].sSToolIndex %= TOOLCOMPBUF_MAX;
+    //å¯¹sSToolIndexå–ä½™æ•°  ä¿è¯Indexä¸ä¼šè¶…è¿‡æ•°ç»„æœ€å¤§å€¼
+    g_SRingBuff[ucChannelNum].sSToolIndex %= TOOLCOMPBUF_MAX;
 
-	if (g_SRingBuff[ucChannelNum].sSToolIndex < 0)   //·ÀÖ¹IndexĞ¡ÓÚÁã£¬·µ»ØÒ°Ö¸Õë
-	{
-		g_SRingBuff[ucChannelNum].sSToolIndex += TOOLCOMPBUF_MAX;
-	}
-	return TRUE;
+    if (g_SRingBuff[ucChannelNum].sSToolIndex < 0) //é˜²æ­¢Indexå°äºé›¶ï¼Œè¿”å›é‡æŒ‡é’ˆ
+    {
+        g_SRingBuff[ucChannelNum].sSToolIndex += TOOLCOMPBUF_MAX;
+    }
+    return TRUE;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSToolCompPointerBufRes(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍ£¬»ñÈ¡¸ÃÖ¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint16	Ö¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSToolCompPointerBufRes(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹ï¼Œè·å–è¯¥æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint16	æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getSToolCompPointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sBufRes = 0; //    ÄÜ¶Á/Ğ´ÈİÁ¿  
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    int16 sBufRes = 0;                   //    èƒ½è¯»/å†™å®¹é‡
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		//µ¶²¹Ğ´ÄÜĞ´µÄÊı×éÔªËØ¸öÊı
-		sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].sSToolDealedNum - 1 - g_SRingBuff[ucChannelNum].sInterpolationDealedNum;  //²å²¹´¦Àí¹ıµÄ¶ÎÊı²»ÄÜĞ´ÈëÊı¾İ  µ¹×ßĞèÒª
-		break;
-	case LOOKAHEAD_READWRITE:
-		//Ç°Õ°ÄÜ¹»´¦ÀíµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].sSToolDealedNum - g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
-		break;
-	case INTERPOLATION_READ:
-		//²å²¹ÄÜ¹»¶ÁµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
-		break;
-	case INTERPOLATION_BACK:
-		//²å²¹µ¹×ßÄÜ¹»¶ÁµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].sInterpolationDealedNum - 1;
-		break;
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        //åˆ€è¡¥å†™èƒ½å†™çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].sSToolDealedNum - 1 -
+                  g_SRingBuff[ucChannelNum].sInterpolationDealedNum; //æ’è¡¥å¤„ç†è¿‡çš„æ®µæ•°ä¸èƒ½å†™å…¥æ•°æ®  å€’èµ°éœ€è¦
+        break;
+    case LOOKAHEAD_READWRITE:
+        //å‰ç»èƒ½å¤Ÿå¤„ç†çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].sSToolDealedNum - g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
+        break;
+    case INTERPOLATION_READ:
+        //æ’è¡¥èƒ½å¤Ÿè¯»çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].sLookAheadDealedNum;
+        break;
+    case INTERPOLATION_BACK:
+        //æ’è¡¥å€’èµ°èƒ½å¤Ÿè¯»çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].sInterpolationDealedNum - 1;
+        break;
 
-	default:
-		sBufRes = -1;
-		break;
-	}
-	return sBufRes;
+    default:
+        sBufRes = -1;
+        break;
+    }
+    return sBufRes;
 }
 
-
-//	³õÊ¼»¯Ç°Õ°Ö¸Õë
+//	åˆå§‹åŒ–å‰ç»æŒ‡é’ˆ
 bool initLookAheadDealed(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return FALSE;
-	}
-	g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;
-	return TRUE;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return FALSE;
+    }
+    g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;
+    return TRUE;
 }
 
-//Çå³ı²å²¹´¦Àí¹ıµÄÊı¾İ
+//æ¸…é™¤æ’è¡¥å¤„ç†è¿‡çš„æ•°æ®
 bool clearInterpolationDealedNum(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return FALSE;
-	}
-	g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 1;// 
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return FALSE;
+    }
+    g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 1; //
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºprintSToolCompPointerADDR()
-  º¯Êı¹¦ÄÜ  Êä³öÈı¸öÖ¸ÕëµÄµØÖ·¡¢Ë÷Òı¡¢ºÍÖ¸Õë¿É¶Á/Ğ´ÈİÁ¿
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šprintSToolCompPointerADDR()
+  å‡½æ•°åŠŸèƒ½  è¾“å‡ºä¸‰ä¸ªæŒ‡é’ˆçš„åœ°å€ã€ç´¢å¼•ã€å’ŒæŒ‡é’ˆå¯è¯»/å†™å®¹é‡
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void printSToolCompPointerADDR()
 {
 #if EN_DEBUG
-	int i;
-	printf("****************************************\n");
-	for (i = 0; i < 20; i++)
-	{
-		printf("%2.d %d\n", i, g_SToolCompensationBuf + i);
-	}
-	printf("****************************************\n");
-	printf("BUF::\n");
-	printf("STOOL_WRITE = %d\n", getSToolCompPointerBufRes(STOOL_WRITE));
-	printf("LOOKAHEAD_READWRITE = %d\n", getSToolCompPointerBufRes(LOOKAHEAD_READWRITE));
-	printf("INTERPOLATION_READ = %d\n", getSToolCompPointerBufRes(INTERPOLATION_READ));
-	printf("****************************************\n");
-	printf("INDEX AND ADDR::\n");
-	printf("STOOL_WRITE:\n");
-	printf("%2.d %d\n", getSToolCompPointerIndex(STOOL_WRITE), getSToolCompPointerByType(STOOL_WRITE));
-	printf("LOOKAHEAD_READWRITE:\n");
-	printf("%2.d %d\n", getSToolCompPointerIndex(LOOKAHEAD_READWRITE), getSToolCompPointerByType(LOOKAHEAD_READWRITE));
-	printf("INTERPOLATION_READ:\n");
-	printf("%2.d %d\n", getSToolCompPointerIndex(INTERPOLATION_READ), getSToolCompPointerByType(INTERPOLATION_READ));
+    int i;
+    printf("****************************************\n");
+    for (i = 0; i < 20; i++)
+    {
+        printf("%2.d %d\n", i, g_SToolCompensationBuf + i);
+    }
+    printf("****************************************\n");
+    printf("BUF::\n");
+    printf("STOOL_WRITE = %d\n", getSToolCompPointerBufRes(STOOL_WRITE));
+    printf("LOOKAHEAD_READWRITE = %d\n", getSToolCompPointerBufRes(LOOKAHEAD_READWRITE));
+    printf("INTERPOLATION_READ = %d\n", getSToolCompPointerBufRes(INTERPOLATION_READ));
+    printf("****************************************\n");
+    printf("INDEX AND ADDR::\n");
+    printf("STOOL_WRITE:\n");
+    printf("%2.d %d\n", getSToolCompPointerIndex(STOOL_WRITE), getSToolCompPointerByType(STOOL_WRITE));
+    printf("LOOKAHEAD_READWRITE:\n");
+    printf("%2.d %d\n", getSToolCompPointerIndex(LOOKAHEAD_READWRITE), getSToolCompPointerByType(LOOKAHEAD_READWRITE));
+    printf("INTERPOLATION_READ:\n");
+    printf("%2.d %d\n", getSToolCompPointerIndex(INTERPOLATION_READ), getSToolCompPointerByType(INTERPOLATION_READ));
 #endif
-
 }
 
-//³õÊ¼»¯2¸ö»º³åÇøÊı×é
+//åˆå§‹åŒ–2ä¸ªç¼“å†²åŒºæ•°ç»„
 int8 initAllBuffer(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
-	g_SRingBuff[ucChannelNum].sSToolIndex = 0;      //µ¶²¹Ğ´Ö¸ÕëµÄË÷ÒıÖµ
-	g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;  //µ¶²¹ ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
-	g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;//Ç°Õ° ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
-	g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex = 0; //G´úÂë»º´æĞ´Ö¸ÕëË÷ÒıÖµ
-	g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum = 0;  //G´úÂëÒÑĞ´Èë¸öÊı(ÇÒµ¶²¹Î´¶ÁÈ¡¸öÊı£©
-	g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;//G´úÂë»º³åÇøµ¶²¹¿ÉÔ¤¶Á¸öÊı
-	g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 0; // ²å²¹´¦Àí¹ıµÄÔªËØ¸öÊı  £¨µ¹×ß£©
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
+    g_SRingBuff[ucChannelNum].sSToolIndex = 0;             //åˆ€è¡¥å†™æŒ‡é’ˆçš„ç´¢å¼•å€¼
+    g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;         //åˆ€è¡¥ å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+    g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;     //å‰ç» å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+    g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex = 0;      //Gä»£ç ç¼“å­˜å†™æŒ‡é’ˆç´¢å¼•å€¼
+    g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum = 0;       //Gä»£ç å·²å†™å…¥ä¸ªæ•°(ä¸”åˆ€è¡¥æœªè¯»å–ä¸ªæ•°ï¼‰
+    g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;         //Gä»£ç ç¼“å†²åŒºåˆ€è¡¥å¯é¢„è¯»ä¸ªæ•°
+    g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 0; // æ’è¡¥å¤„ç†è¿‡çš„å…ƒç´ ä¸ªæ•°  ï¼ˆå€’èµ°ï¼‰
 }
-#else  //2023.5.25 ÖìÎÈÖĞ 
+#else //2023.5.25 æœ±ç¨³ä¸­
 
-//	»ñÈ¡Ö¸ÕëµÄË÷ÒıÖµ
+//	è·å–æŒ‡é’ˆçš„ç´¢å¼•å€¼
 INDEX_DATA_TYPE getSToolCompPointerIndex(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	INDEX_DATA_TYPE nIndex;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    INDEX_DATA_TYPE nIndex;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		//µ¶²¹Ğ´Ë÷Òı
-		nIndex = g_SRingBuff[ucChannelNum].nSToolIndex; //µ¶²¹Ğ´µÄË÷ÒıÖµÎªsSToolIndex
-		break;
-	case LOOKAHEAD_READWRITE:
-		//Ç°Õ°¶ÁĞ´µÄË÷Òı
-		nIndex = g_SRingBuff[ucChannelNum].nLookAheadIndex;
-		break;
-	case INTERPOLATION_READ:
-		//²å²¹µÄË÷Òı
-		nIndex = g_SRingBuff[ucChannelNum].nInterpIndex;
-		break;
-	case INTERPOLATION_BACK:
-		//µ¹×ßµÄË÷Òı ²å²¹ - 2    //µ±Ç°¶ÎµÄÇ°Ò»¸ö   µ±Ç°¶ÎÎª-1  Ç°Ò»¸öÎ»-1-1
-		nIndex = g_SRingBuff[ucChannelNum].nInterpIndex - 2; //µ¹×ßË÷Òı  
-		break;
-	case DRAW_READ:
-		nIndex = g_SRingBuff[ucChannelNum].nDrawIndex;
-		break;
-	default:
-		nIndex = 0;
-		break;
-	}
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        //åˆ€è¡¥å†™ç´¢å¼•
+        nIndex = g_SRingBuff[ucChannelNum].nSToolIndex; //åˆ€è¡¥å†™çš„ç´¢å¼•å€¼ä¸ºsSToolIndex
+        break;
+    case LOOKAHEAD_READWRITE:
+        //å‰ç»è¯»å†™çš„ç´¢å¼•
+        nIndex = g_SRingBuff[ucChannelNum].nLookAheadIndex;
+        break;
+    case INTERPOLATION_READ:
+        //æ’è¡¥çš„ç´¢å¼•
+        nIndex = g_SRingBuff[ucChannelNum].nInterpIndex;
+        break;
+    case INTERPOLATION_BACK:
+        //å€’èµ°çš„ç´¢å¼• æ’è¡¥ - 2    //å½“å‰æ®µçš„å‰ä¸€ä¸ª   å½“å‰æ®µä¸º-1  å‰ä¸€ä¸ªä½-1-1
+        nIndex = g_SRingBuff[ucChannelNum].nInterpIndex - 2; //å€’èµ°ç´¢å¼•
+        break;
+    case DRAW_READ:
+        nIndex = g_SRingBuff[ucChannelNum].nDrawIndex;
+        break;
+    default:
+        nIndex = 0;
+        break;
+    }
 
-	nIndex %= TOOLCOMPBUF_MAX;//¶ÔsIndexÈ¡Óà£¬·ÀÖ¹³¬¹ıÊı×é·¶Î§
+    nIndex %= TOOLCOMPBUF_MAX; //å¯¹sIndexå–ä½™ï¼Œé˜²æ­¢è¶…è¿‡æ•°ç»„èŒƒå›´
 
-	return (int16)nIndex;
+    return (int16)nIndex;
 }
 
-
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıË÷Òı)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç´¢å¼•)
 struct SToolCompensation* getSToolCompPointerByIndex(INDEX_DATA_TYPE nIndex, uint8 ucChannelNum)
 {
-	nIndex += TOOLCOMPBUF_MAX;
-	nIndex %= TOOLCOMPBUF_MAX;  //¶ÔsIndexÈ¡ÓàÊı  ±£Ö¤Index²»»á³¬¹ıÊı×é×î´óÖµ
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
+    nIndex += TOOLCOMPBUF_MAX;
+    nIndex %= TOOLCOMPBUF_MAX;           //å¯¹sIndexå–ä½™æ•°  ä¿è¯Indexä¸ä¼šè¶…è¿‡æ•°ç»„æœ€å¤§å€¼
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
 
-	return &g_SRingBuff[ucChannelNum].SToolCompensationBuf[nIndex];//·µ»ØË÷ÒıÖµ¶ÔÓ¦µÄÔªËØÖ¸Õë
+    return &g_SRingBuff[ucChannelNum].SToolCompensationBuf[nIndex]; //è¿”å›ç´¢å¼•å€¼å¯¹åº”çš„å…ƒç´ æŒ‡é’ˆ
 }
 
-//	»ñÈ¡Êı×éÔªËØÖ¸Õë(Í¨¹ıÀàĞÍ)
+//	è·å–æ•°ç»„å…ƒç´ æŒ‡é’ˆ(é€šè¿‡ç±»å‹)
 struct SToolCompensation* getSToolCompPointerByType(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	INDEX_DATA_TYPE nIndex;  //Ë÷ÒıÖµ
-	struct SToolCompensation* pPointer; //Ö¸Õë
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	nIndex = getSToolCompPointerIndex(pointerTpye, ucChannelNum);  //»ñÈ¡Ë÷ÒıÖµ
+    INDEX_DATA_TYPE nIndex;              //ç´¢å¼•å€¼
+    struct SToolCompensation* pPointer;  //æŒ‡é’ˆ
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    nIndex = getSToolCompPointerIndex(pointerTpye, ucChannelNum); //è·å–ç´¢å¼•å€¼
 
-	pPointer = getSToolCompPointerByIndex(nIndex, ucChannelNum);   //¸ù¾İË÷ÒıÖµ»ñÈ¡Ö¸Õë
+    pPointer = getSToolCompPointerByIndex(nIndex, ucChannelNum); //æ ¹æ®ç´¢å¼•å€¼è·å–æŒ‡é’ˆ
 
-	return pPointer;  //·µ»Ø½á¹¹ÌåÖ¸Õë
-
-
+    return pPointer; //è¿”å›ç»“æ„ä½“æŒ‡é’ˆ
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºmoveSToolCompBufPointer(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÖ¸ÕëÀàĞÍ,¿ØÖÆÖ¸Õë´Óµ±Ç°Î»ÖÃÍùÊı×éµÄÏÂÒ»¸öÔªËØÒÆ¶¯
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE    ÒÆ¶¯³É¹¦
-            FALSE   ÒÆ¶¯Ê§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šmoveSToolCompBufPointer(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®æŒ‡é’ˆç±»å‹,æ§åˆ¶æŒ‡é’ˆä»å½“å‰ä½ç½®å¾€æ•°ç»„çš„ä¸‹ä¸€ä¸ªå…ƒç´ ç§»åŠ¨
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE    ç§»åŠ¨æˆåŠŸ
+            FALSE   ç§»åŠ¨å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool moveSToolCompBufPointer(enum RingBufPointerType pointerTpye, short sDist, uint8 ucChannelNum)
 {
-	int16 sResBuf;  //Ê£Óàbuf
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
-	sResBuf = getSToolCompPointerBufRes(pointerTpye, ucChannelNum);//»ñÈ¡¶ÔÓ¦ Ö¸ÕëµÄÊ£Óàbuf
+    int16 sResBuf;                       //å‰©ä½™buf
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
+    sResBuf = getSToolCompPointerBufRes(pointerTpye, ucChannelNum); //è·å–å¯¹åº” æŒ‡é’ˆçš„å‰©ä½™buf
 
-	//Ê£ÓàbufĞ¡ÓÚ0²»ÄÜÒÆ¶¯,ÒÆ¶¯ºóÊ£ÓàbufÎª¸ºÊı£¬²»Ó¦³öÏÖ
-	if (sResBuf - sDist < 0 || sResBuf - sDist > TOOLCOMPBUF_MAX)
-	{
-		return FALSE;
-	}
+    //å‰©ä½™bufå°äº0ä¸èƒ½ç§»åŠ¨,ç§»åŠ¨åå‰©ä½™bufä¸ºè´Ÿæ•°ï¼Œä¸åº”å‡ºç°
+    if (sResBuf - sDist < 0 || sResBuf - sDist > TOOLCOMPBUF_MAX)
+    {
+        return FALSE;
+    }
 
-	//ÅĞ¶ÏÖ¸ÕëÀàĞÍ£¬ÒÆ¶¯¶ÔÓ¦Ö¸Õë
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		g_SRingBuff[ucChannelNum].nSToolIndex += sDist;    //µ¶²¹Ë÷Òı¼Ó sDist
-		break;
-	case LOOKAHEAD_READWRITE:
-		g_SRingBuff[ucChannelNum].nLookAheadIndex += sDist;   //Ç°Õ°Ë÷Òı¼Ó sDist
-		break;
-	case INTERPOLATION_READ:
-		g_SRingBuff[ucChannelNum].nInterpIndex += sDist;  //²å²¹Ë÷Òı¼Ó sDist
-		//²å²¹´¦Àí¹ıµÄ¶ÎÊı+1  ²»ÄÜ³¬¹ıµ¹×ß¶ÎÊı
-		if (sDist>=0)
-		{
-			g_SRingBuff[ucChannelNum].nBackIndex = max(g_SRingBuff[ucChannelNum].nBackIndex, g_SRingBuff[ucChannelNum].nInterpIndex - BACKWARDBUF_NUM);
-		}
-		//g_SRingBuff[ucChannelNum].nBackIndex = (g_SRingBuff[ucChannelNum].nBackIndex + sDist > BACKWARDBUF_NUM) ? BACKWARDBUF_NUM : max(g_SRingBuff[ucChannelNum].nBackIndex + sDist, 0);
-		break;
-	case INTERPOLATION_BACK:
-		g_SRingBuff[ucChannelNum].nInterpIndex -= sDist; //²å²¹Ë÷Òı¼õ sDist
-		////²å²¹´¦Àí¹ıµÄ¶ÎÊı+1  ²»ÄÜ³¬¹ıµ¹×ß¶ÎÊı
-		//g_SRingBuff[ucChannelNum].nBackIndex = (g_SRingBuff[ucChannelNum].nBackIndex - sDist < 0) ? 0 : g_SRingBuff[ucChannelNum].nBackIndex - sDist;
-		break;
-	case DRAW_READ:
-		g_SRingBuff[ucChannelNum].nDrawIndex += sDist;   //»­Í¼Ë÷Òı¼Ó sDist
-		break;
-	default:
-		return FALSE;
-		break;
-	}
+    //åˆ¤æ–­æŒ‡é’ˆç±»å‹ï¼Œç§»åŠ¨å¯¹åº”æŒ‡é’ˆ
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        g_SRingBuff[ucChannelNum].nSToolIndex += sDist; //åˆ€è¡¥ç´¢å¼•åŠ  sDist
+        break;
+    case LOOKAHEAD_READWRITE:
+        g_SRingBuff[ucChannelNum].nLookAheadIndex += sDist; //å‰ç»ç´¢å¼•åŠ  sDist
+        break;
+    case INTERPOLATION_READ:
+        g_SRingBuff[ucChannelNum].nInterpIndex += sDist; //æ’è¡¥ç´¢å¼•åŠ  sDist
+        //æ’è¡¥å¤„ç†è¿‡çš„æ®µæ•°+1  ä¸èƒ½è¶…è¿‡å€’èµ°æ®µæ•°
+        if (sDist >= 0)
+        {
+            g_SRingBuff[ucChannelNum].nBackIndex =
+                max(g_SRingBuff[ucChannelNum].nBackIndex, g_SRingBuff[ucChannelNum].nInterpIndex - BACKWARDBUF_NUM);
+        }
+        //g_SRingBuff[ucChannelNum].nBackIndex = (g_SRingBuff[ucChannelNum].nBackIndex + sDist > BACKWARDBUF_NUM) ? BACKWARDBUF_NUM : max(g_SRingBuff[ucChannelNum].nBackIndex + sDist, 0);
+        break;
+    case INTERPOLATION_BACK:
+        g_SRingBuff[ucChannelNum].nInterpIndex -= sDist; //æ’è¡¥ç´¢å¼•å‡ sDist
+        ////æ’è¡¥å¤„ç†è¿‡çš„æ®µæ•°+1  ä¸èƒ½è¶…è¿‡å€’èµ°æ®µæ•°
+        //g_SRingBuff[ucChannelNum].nBackIndex = (g_SRingBuff[ucChannelNum].nBackIndex - sDist < 0) ? 0 : g_SRingBuff[ucChannelNum].nBackIndex - sDist;
+        break;
+    case DRAW_READ:
+        g_SRingBuff[ucChannelNum].nDrawIndex += sDist; //ç”»å›¾ç´¢å¼•åŠ  sDist
+        break;
+    default:
+        return FALSE;
+        break;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSToolCompPointerBufRes(enum SToolCompBufPointerType pointerTpye)
-  º¯Êı¹¦ÄÜ  ¸ù¾İÊäÈëµÄÖ¸ÕëÀàĞÍ£¬»ñÈ¡¸ÃÖ¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ÊäÈë²ÎÊı£ºpointerTpye£¬enum SToolCompBufPointerType Ã¶¾Ù±äÁ¿ (0~2)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint16   Ö¸ÕëÄÜ¹»¶Á/Ğ´µÄÈİÁ¿
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSToolCompPointerBufRes(enum SToolCompBufPointerType pointerTpye)
+  å‡½æ•°åŠŸèƒ½  æ ¹æ®è¾“å…¥çš„æŒ‡é’ˆç±»å‹ï¼Œè·å–è¯¥æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  è¾“å…¥å‚æ•°ï¼špointerTpyeï¼Œenum SToolCompBufPointerType æšä¸¾å˜é‡ (0~2)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint16   æŒ‡é’ˆèƒ½å¤Ÿè¯»/å†™çš„å®¹é‡
+  å¤‡    æ³¨ï¼š
 **************************************************/
-//	»ñÈ¡Ö¸ÕëÊ£ÓàÈİÁ¿
+//	è·å–æŒ‡é’ˆå‰©ä½™å®¹é‡
 int16 getSToolCompPointerBufRes(enum RingBufPointerType pointerTpye, uint8 ucChannelNum)
 {
-	int16 sBufRes = 0; //    ÄÜ¶Á/Ğ´ÈİÁ¿  
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
+    int16 sBufRes = 0;                   //    èƒ½è¯»/å†™å®¹é‡
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
 
-	switch (pointerTpye)
-	{
-	case STOOL_WRITE:
-		//1.»­Í¼Ä£Ê½
-		if (g_SChannel[ucChannelNum].cSubRunMode == 0)
-		{
-			sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].nSToolIndex + g_SRingBuff[ucChannelNum].nDrawIndex;
-		}
-		//2.ÔË¶¯Ä£Ê½//µ¶²¹Ğ´ÄÜĞ´µÄÊı×éÔªËØ¸öÊı    (MAX+µ¹×ß-µ¶²¹)
-		else if (g_SChannel[ucChannelNum].cSubRunMode == 1)
-		{
-			sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].nSToolIndex + g_SRingBuff[ucChannelNum].nBackIndex;
-		}
-		
-		break;
-	case LOOKAHEAD_READWRITE:
-		//Ç°Õ°ÄÜ¹»´¦ÀíµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].nSToolIndex - g_SRingBuff[ucChannelNum].nLookAheadIndex;
-		break;
-	case INTERPOLATION_READ:
-		//²å²¹ÄÜ¹»¶ÁµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].nLookAheadIndex - g_SRingBuff[ucChannelNum].nInterpIndex;
-		break;
-	case INTERPOLATION_BACK:
-		//²å²¹µ¹×ßÄÜ¹»¶ÁµÄÊı×éÔªËØ¸öÊı
-		sBufRes = g_SRingBuff[ucChannelNum].nInterpIndex-g_SRingBuff[ucChannelNum].nBackIndex - 1;
-		break;
-	case DRAW_READ:
-		sBufRes = g_SRingBuff[ucChannelNum].nSToolIndex - g_SRingBuff[ucChannelNum].nDrawIndex;
-		break;
-	default:
-		sBufRes = -1;
-		break;
-	}
-	return sBufRes;
+    switch (pointerTpye)
+    {
+    case STOOL_WRITE:
+        //1.ç”»å›¾æ¨¡å¼
+        if (g_SChannel[ucChannelNum].cSubRunMode == 0)
+        {
+            sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].nSToolIndex + g_SRingBuff[ucChannelNum].nDrawIndex;
+        }
+        //2.è¿åŠ¨æ¨¡å¼//åˆ€è¡¥å†™èƒ½å†™çš„æ•°ç»„å…ƒç´ ä¸ªæ•°    (MAX+å€’èµ°-åˆ€è¡¥)
+        else if (g_SChannel[ucChannelNum].cSubRunMode == 1)
+        {
+            sBufRes = TOOLCOMPBUF_MAX - g_SRingBuff[ucChannelNum].nSToolIndex + g_SRingBuff[ucChannelNum].nBackIndex;
+        }
+
+        break;
+    case LOOKAHEAD_READWRITE:
+        //å‰ç»èƒ½å¤Ÿå¤„ç†çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].nSToolIndex - g_SRingBuff[ucChannelNum].nLookAheadIndex;
+        break;
+    case INTERPOLATION_READ:
+        //æ’è¡¥èƒ½å¤Ÿè¯»çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].nLookAheadIndex - g_SRingBuff[ucChannelNum].nInterpIndex;
+        break;
+    case INTERPOLATION_BACK:
+        //æ’è¡¥å€’èµ°èƒ½å¤Ÿè¯»çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+        sBufRes = g_SRingBuff[ucChannelNum].nInterpIndex - g_SRingBuff[ucChannelNum].nBackIndex - 1;
+        break;
+    case DRAW_READ:
+        sBufRes = g_SRingBuff[ucChannelNum].nSToolIndex - g_SRingBuff[ucChannelNum].nDrawIndex;
+        break;
+    default:
+        sBufRes = -1;
+        break;
+    }
+    return sBufRes;
 }
 
-//  Çå³ı²å²¹ÒÑ´¦Àí¹ıµÄÊı¾İ  
+//  æ¸…é™¤æ’è¡¥å·²å¤„ç†è¿‡çš„æ•°æ®
 bool clearInterpolationDealedNum(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return FALSE;
-	}
-	g_SRingBuff[ucChannelNum].nBackIndex = g_SRingBuff[ucChannelNum].nInterpIndex-1;// 
-	return TRUE;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return FALSE;
+    }
+    g_SRingBuff[ucChannelNum].nBackIndex = g_SRingBuff[ucChannelNum].nInterpIndex - 1; //
+    return TRUE;
 }
 #include <stdio.h>
-//	´òÓ¡Êı×éÖ¸ÕëË÷Òı£¬µØÖ·ĞÅÏ¢(µ÷ÊÔ)
+//	æ‰“å°æ•°ç»„æŒ‡é’ˆç´¢å¼•ï¼Œåœ°å€ä¿¡æ¯(è°ƒè¯•)
 void printSToolCompPointerADDR()
 {
-	printf("****************************************\n");
-	printf("µ¶²¹£ºË÷Òı = %d\t¿É¶ÁĞ´ = %d\n", getSToolCompPointerIndex(STOOL_WRITE, 0), getSToolCompPointerBufRes(STOOL_WRITE, 0));
-	printf("Ç°Õ°£ºË÷Òı = %d\t¿É¶ÁĞ´ = %d\n", getSToolCompPointerIndex(LOOKAHEAD_READWRITE, 0), getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, 0));
-	printf("²å²¹£ºË÷Òı = %d\t¿É¶ÁĞ´ = %d\n", getSToolCompPointerIndex(INTERPOLATION_READ, 0), getSToolCompPointerBufRes(INTERPOLATION_READ, 0));
-	printf("µ¹×ß£ºË÷Òı = %d\t¿É¶ÁĞ´ = %d\n", getSToolCompPointerIndex(INTERPOLATION_BACK, 0), getSToolCompPointerBufRes(INTERPOLATION_BACK, 0));
-	printf("****************************************\n");
+    printf("****************************************\n");
+    printf("åˆ€è¡¥ï¼šç´¢å¼• = %d\tå¯è¯»å†™ = %d\n", getSToolCompPointerIndex(STOOL_WRITE, 0),
+           getSToolCompPointerBufRes(STOOL_WRITE, 0));
+    printf("å‰ç»ï¼šç´¢å¼• = %d\tå¯è¯»å†™ = %d\n", getSToolCompPointerIndex(LOOKAHEAD_READWRITE, 0),
+           getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, 0));
+    printf("æ’è¡¥ï¼šç´¢å¼• = %d\tå¯è¯»å†™ = %d\n", getSToolCompPointerIndex(INTERPOLATION_READ, 0),
+           getSToolCompPointerBufRes(INTERPOLATION_READ, 0));
+    printf("å€’èµ°ï¼šç´¢å¼• = %d\tå¯è¯»å†™ = %d\n", getSToolCompPointerIndex(INTERPOLATION_BACK, 0),
+           getSToolCompPointerBufRes(INTERPOLATION_BACK, 0));
+    printf("****************************************\n");
 }
 
-//	³õÊ¼»¯Ç°Õ°Ö¸Õë   //½«Ç°Õ°Ë÷Òı¸³ÖµÎª²å²¹Ë÷Òı
+//	åˆå§‹åŒ–å‰ç»æŒ‡é’ˆ   //å°†å‰ç»ç´¢å¼•èµ‹å€¼ä¸ºæ’è¡¥ç´¢å¼•
 bool initLookAheadDealed(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return FALSE;
-	}
-	g_SRingBuff[ucChannelNum].nLookAheadIndex = g_SRingBuff[ucChannelNum].nInterpIndex;
-	return TRUE;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return FALSE;
+    }
+    g_SRingBuff[ucChannelNum].nLookAheadIndex = g_SRingBuff[ucChannelNum].nInterpIndex;
+    return TRUE;
 }
 
-//³õÊ¼»¯»º³åÇø
+//åˆå§‹åŒ–ç¼“å†²åŒº
 int8 initAllBuffer(uint8 ucChannelNum)
 {
 
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return -1;
-	}
-	//g_SRingBuff[ucChannelNum].sSToolIndex = 0;      //µ¶²¹Ğ´Ö¸ÕëµÄË÷ÒıÖµ
-	//g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;  //µ¶²¹ ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
-	//g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;//Ç°Õ° ´¦Àí¹ıµÄÊı×éÔªËØ¸öÊı
-	g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex = 0; //G´úÂë»º´æĞ´Ö¸ÕëË÷ÒıÖµ
-	g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum = 0;  //G´úÂëÒÑĞ´Èë¸öÊı(ÇÒµ¶²¹Î´¶ÁÈ¡¸öÊı£©
-	//g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;//G´úÂë»º³åÇøµ¶²¹¿ÉÔ¤¶Á¸öÊı
-	//g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 0; // ²å²¹´¦Àí¹ıµÄÔªËØ¸öÊı  £¨µ¹×ß£©
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return -1;
+    }
+    //g_SRingBuff[ucChannelNum].sSToolIndex = 0;      //åˆ€è¡¥å†™æŒ‡é’ˆçš„ç´¢å¼•å€¼
+    //g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;  //åˆ€è¡¥ å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+    //g_SRingBuff[ucChannelNum].sLookAheadDealedNum = 0;//å‰ç» å¤„ç†è¿‡çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
+    g_SRingBuff[ucChannelNum].sSGCODE_WRITEIndex = 0; //Gä»£ç ç¼“å­˜å†™æŒ‡é’ˆç´¢å¼•å€¼
+    g_SRingBuff[ucChannelNum].sSGCODE_WRITEdNum = 0;  //Gä»£ç å·²å†™å…¥ä¸ªæ•°(ä¸”åˆ€è¡¥æœªè¯»å–ä¸ªæ•°ï¼‰
+    //g_SRingBuff[ucChannelNum].sSToolDealedNum = 0;//Gä»£ç ç¼“å†²åŒºåˆ€è¡¥å¯é¢„è¯»ä¸ªæ•°
+    //g_SRingBuff[ucChannelNum].sInterpolationDealedNum = 0; // æ’è¡¥å¤„ç†è¿‡çš„å…ƒç´ ä¸ªæ•°  ï¼ˆå€’èµ°ï¼‰
     g_SRingBuff[ucChannelNum].sSGcodeReadAheadNum = 0;
-	g_SRingBuff[ucChannelNum].nBackIndex = 0;
-	g_SRingBuff[ucChannelNum].nInterpIndex = 0;
-	g_SRingBuff[ucChannelNum].nLookAheadIndex = 0;
-	g_SRingBuff[ucChannelNum].nSToolIndex = 0;
+    g_SRingBuff[ucChannelNum].nBackIndex = 0;
+    g_SRingBuff[ucChannelNum].nInterpIndex = 0;
+    g_SRingBuff[ucChannelNum].nLookAheadIndex = 0;
+    g_SRingBuff[ucChannelNum].nSToolIndex = 0;
 
-	//»­Í¼¶Á
-	g_SRingBuff[ucChannelNum].nDrawIndex = 0;
+    //ç”»å›¾è¯»
+    g_SRingBuff[ucChannelNum].nDrawIndex = 0;
 
-	return 1;
+    return 1;
 }
-
 
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstruct SGCodeParse *getGCodeHeadAddress()
-  º¯Êı¹¦ÄÜ  ·µ»ØG´úÂë»º³åÇøµÄÊ×µØÖ·
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstruct SGCodeParse *getGCodeHeadAddress()
+  å‡½æ•°åŠŸèƒ½  è¿”å›Gä»£ç ç¼“å†²åŒºçš„é¦–åœ°å€
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 struct SGCodeParse* getGCodeHeadAddress(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//³¬³öÊı×é·¶Î§
-	{
-		return NULL;
-	}
-	return g_SRingBuff[ucChannelNum].SGCodeParseBuf;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //è¶…å‡ºæ•°ç»„èŒƒå›´
+    {
+        return NULL;
+    }
+    return g_SRingBuff[ucChannelNum].SGCodeParseBuf;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //int8 DrawDataBuff_1[512];//512B
 //int8 DrawDataBuff_2[512];//512B
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getDrawData(SDrawData* pWriteAdress, int8 cWriteNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡µ¶²¹»º³åÇøµÄ¹ì¼£Êı¾İ
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2	¼Ó¹¤³ÌĞò´íÎó
-			-3	´«²Î´íÎó
-			0	»­Í¼¶ÁÈİÁ¿²»×ã
-			n	Ğ´Èë¹ì¼£
-			0xAF	Ğ´ÈëÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 getDrawData(SDrawData* pWriteAdress, int8 cWriteNum)
+  å‡½æ•°åŠŸèƒ½  è·å–åˆ€è¡¥ç¼“å†²åŒºçš„è½¨è¿¹æ•°æ®
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2	åŠ å·¥ç¨‹åºé”™è¯¯
+			-3	ä¼ å‚é”™è¯¯
+			0	ç”»å›¾è¯»å®¹é‡ä¸è¶³
+			n	å†™å…¥è½¨è¿¹
+			0xAF	å†™å…¥å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 cTempBuff[512];
 int8 cNum = 0;
@@ -845,373 +814,369 @@ int nPos = 0;
 int8 cGetDrawData_Step = 0;
 int8 getDrawData(int8* pBuffAdress, int8 cWriteNum, int8 ucChannelNum)
 {
-	//¼ì²éÏµÍ³ÊÇ·ñÎªÔËĞĞ×´Ì¬
-	if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_RUN)
-		return 0xAF;
-	//¼ì²é¼Ó¹¤³ÌĞòÊÇ·ñ³öÏÖ´íÎó
-	if (isErrorHasBeenWritten() == TRUE)
-		return -2;
-	//¼ì²é´«²Î
-	if (pBuffAdress == NULL || cWriteNum <= 0)
-	{
-		return -3;
-	}
-	switch (cGetDrawData_Step)
-	{
-	//³õÊ¼»¯
-	case 0:
-	{
-		cNum = 0;
-		nPos = 0;
-		cGetDrawData_Step = 1;
-	}
-	//Ğ´ÈëÁÙÊ±»º³åÇø
-	case 1:
-	{
-		bool bFull = FALSE;
-		bool bFinish = FALSE;
-		while (cNum < cWriteNum)
-		{
-			//1.ÅĞ¶Ï»­Í¼¶ÁÈİÁ¿
-			if (getSToolCompPointerBufRes(DRAW_READ, ucChannelNum) <= 0)
-				break;
-			//2.»ñÈ¡»­Í¼¶Á»º³åÇøµ¥Ôª
-			struct SToolCompensation* pToolBuf;
-			pToolBuf = getSToolCompPointerByType(DRAW_READ, ucChannelNum);
+    //æ£€æŸ¥ç³»ç»Ÿæ˜¯å¦ä¸ºè¿è¡ŒçŠ¶æ€
+    if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_RUN)
+        return 0xAF;
+    //æ£€æŸ¥åŠ å·¥ç¨‹åºæ˜¯å¦å‡ºç°é”™è¯¯
+    if (isErrorHasBeenWritten() == TRUE)
+        return -2;
+    //æ£€æŸ¥ä¼ å‚
+    if (pBuffAdress == NULL || cWriteNum <= 0)
+    {
+        return -3;
+    }
+    switch (cGetDrawData_Step)
+    {
+    //åˆå§‹åŒ–
+    case 0:
+    {
+        cNum = 0;
+        nPos = 0;
+        cGetDrawData_Step = 1;
+    }
+    //å†™å…¥ä¸´æ—¶ç¼“å†²åŒº
+    case 1:
+    {
+        bool bFull = FALSE;
+        bool bFinish = FALSE;
+        while (cNum < cWriteNum)
+        {
+            //1.åˆ¤æ–­ç”»å›¾è¯»å®¹é‡
+            if (getSToolCompPointerBufRes(DRAW_READ, ucChannelNum) <= 0)
+                break;
+            //2.è·å–ç”»å›¾è¯»ç¼“å†²åŒºå•å…ƒ
+            struct SToolCompensation* pToolBuf;
+            pToolBuf = getSToolCompPointerByType(DRAW_READ, ucChannelNum);
 
-			//3.ÅĞ¶Ïµ±Ç°µ¶²¹»º³åÇøµ¥ÔªÊÇ·ñÓĞĞ§
-			if (!isSamePoint(&pToolBuf->SStartPoint, &pToolBuf->SEndPoint))
-			{
-				//3.1¼ÆËãBuffÈİÁ¿
-				int nBufRest = 512 - nPos;
-				pToolBuf->ucToolCompNum;
+            //3.åˆ¤æ–­å½“å‰åˆ€è¡¥ç¼“å†²åŒºå•å…ƒæ˜¯å¦æœ‰æ•ˆ
+            if (!isSamePoint(&pToolBuf->SStartPoint, &pToolBuf->SEndPoint))
+            {
+                //3.1è®¡ç®—Buffå®¹é‡
+                int nBufRest = 512 - nPos;
+                pToolBuf->ucToolCompNum;
 
-				//3.2¼ÆËã×ÜÆ«ÖÃ
-				SPointDouble SG50Offset = s_pSChannelConfig[0]->SAssignConfig.SGCodeCurrSysState.SAllOffsetOfCoord.SG50Offset;
-				SPointDouble STotalOffset;
-				TChangeTotalOffset(ucChannelNum, pToolBuf->ucToolCompNum, pToolBuf->cWorkpieceCoordNum, &STotalOffset, &SG50Offset);
-				
-				//Ğ´Èë»­Í¼Êı¾İ
-				switch (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR))
-				{
-				//ĞéÏß¡¢Ö±Ïß¹ì¼£´óĞ¡£º17×Ö½Ú
-				case CMD_MOTION_QUICKMOVE:
-				case CMD_MOTION_LINE:
-				case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-				case CMD_MOTION_SCREWCUT_VP:
-				case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-				case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-				{
-					//ÅĞ¶Ï»­Í¼»º³åÇøÊ£ÓàÄÚ´æ
-					if (nBufRest < 17)
-					{
-						bFull = TRUE;
-						break;
-					}
+                //3.2è®¡ç®—æ€»åç½®
+                SPointDouble SG50Offset =
+                    s_pSChannelConfig[0]->SAssignConfig.SGCodeCurrSysState.SAllOffsetOfCoord.SG50Offset;
+                SPointDouble STotalOffset;
+                TChangeTotalOffset(ucChannelNum, pToolBuf->ucToolCompNum, pToolBuf->cWorkpieceCoordNum, &STotalOffset,
+                                   &SG50Offset);
 
-					//Ğ´ÈëÀàĞÍ
-					if (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)
-						*(cTempBuff + nPos) = 0;//ĞéÏß
-					else
-						*(cTempBuff + nPos) = 1;//ÊµÏß
-					nPos += 1;
+                //å†™å…¥ç”»å›¾æ•°æ®
+                switch (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR))
+                {
+                //è™šçº¿ã€ç›´çº¿è½¨è¿¹å¤§å°ï¼š17å­—èŠ‚
+                case CMD_MOTION_QUICKMOVE:
+                case CMD_MOTION_LINE:
+                case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+                case CMD_MOTION_SCREWCUT_VP:
+                case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+                case CMD_MOTION_G33:      //G33èºçº¹æ”»ç‰™å¾ªç¯
+                {
+                    //åˆ¤æ–­ç”»å›¾ç¼“å†²åŒºå‰©ä½™å†…å­˜
+                    if (nBufRest < 17)
+                    {
+                        bFull = TRUE;
+                        break;
+                    }
 
-					//Ğ´ÈëÆğµãX
-					float fStartPoint_X;
-					fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
-					fStartPoint_X -= STotalOffset.dArray[AXIS_X];
-					memcpy(cTempBuff + nPos, &fStartPoint_X, 4);
-					nPos += 4;
+                    //å†™å…¥ç±»å‹
+                    if (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)
+                        *(cTempBuff + nPos) = 0; //è™šçº¿
+                    else
+                        *(cTempBuff + nPos) = 1; //å®çº¿
+                    nPos += 1;
 
-					//Ğ´ÈëÆğµãZ
-					float fStartPoint_Z;
-					fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
-					fStartPoint_Z -= STotalOffset.dArray[AXIS_Z];
-					memcpy(cTempBuff + nPos, &fStartPoint_Z, 4);
-					nPos += 4;
+                    //å†™å…¥èµ·ç‚¹X
+                    float fStartPoint_X;
+                    fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
+                    fStartPoint_X -= STotalOffset.dArray[AXIS_X];
+                    memcpy(cTempBuff + nPos, &fStartPoint_X, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÖÕµãX
-					float fEndPoint_X;
-					fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
-					fEndPoint_X -= STotalOffset.dArray[AXIS_X];
-					memcpy(cTempBuff + nPos, &fEndPoint_X, 4);
-					nPos += 4;
+                    //å†™å…¥èµ·ç‚¹Z
+                    float fStartPoint_Z;
+                    fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
+                    fStartPoint_Z -= STotalOffset.dArray[AXIS_Z];
+                    memcpy(cTempBuff + nPos, &fStartPoint_Z, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÖÕµãZ
-					float fEndPoint_Z;
-					fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
-					fEndPoint_Z -= STotalOffset.dArray[AXIS_Z];
-					memcpy(cTempBuff + nPos, &fEndPoint_Z, 4);
-					nPos += 4;
+                    //å†™å…¥ç»ˆç‚¹X
+                    float fEndPoint_X;
+                    fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
+                    fEndPoint_X -= STotalOffset.dArray[AXIS_X];
+                    memcpy(cTempBuff + nPos, &fEndPoint_X, 4);
+                    nPos += 4;
 
-					//ÒÆÖ¸Õë
-					moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
+                    //å†™å…¥ç»ˆç‚¹Z
+                    float fEndPoint_Z;
+                    fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
+                    fEndPoint_Z -= STotalOffset.dArray[AXIS_Z];
+                    memcpy(cTempBuff + nPos, &fEndPoint_Z, 4);
+                    nPos += 4;
 
-					break;
-				}
+                    //ç§»æŒ‡é’ˆ
+                    moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
 
-				//Ô²»¡¹ì¼£´óĞ¡£º26×Ö½Ú
-				case CMD_MOTION_ARC:
-				case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-				case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-				case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
-				{
-					//ÅĞ¶Ï»­Í¼»º³åÇøÊ£ÓàÄÚ´æ
-					if (nBufRest < 26)
-					{
-						bFull = TRUE;
-						break;
-					}
+                    break;
+                }
 
-					//Ğ´ÈëÀàĞÍ
-					*(cTempBuff + nPos) = 2;//Ô²»¡
-					nPos += 1;
+                //åœ†å¼§è½¨è¿¹å¤§å°ï¼š26å­—èŠ‚
+                case CMD_MOTION_ARC:
+                case CMD_MOTION_ANTI_ARC:         //é€†åœ†
+                case CMD_MOTION_ELLIPSE_ARC:      //é¡ºæ¤­åœ†
+                case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
+                {
+                    //åˆ¤æ–­ç”»å›¾ç¼“å†²åŒºå‰©ä½™å†…å­˜
+                    if (nBufRest < 26)
+                    {
+                        bFull = TRUE;
+                        break;
+                    }
 
-					//Ğ´Èë·½Ïò
-					*(cTempBuff + nPos) = pToolBuf->cArcDir;
-					nPos += 1;
+                    //å†™å…¥ç±»å‹
+                    *(cTempBuff + nPos) = 2; //åœ†å¼§
+                    nPos += 1;
 
-					//Ğ´ÈëÆğµãX
-					float fStartPoint_X;
-					fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
-					fStartPoint_X -= STotalOffset.dArray[AXIS_X];
-					memcpy(cTempBuff + nPos, &fStartPoint_X, 4);
-					nPos += 4;
+                    //å†™å…¥æ–¹å‘
+                    *(cTempBuff + nPos) = pToolBuf->cArcDir;
+                    nPos += 1;
 
-					//Ğ´ÈëÆğµãZ
-					float fStartPoint_Z;
-					fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
-					fStartPoint_Z -= STotalOffset.dArray[AXIS_Z];
-					memcpy(cTempBuff + nPos, &fStartPoint_Z, 4);
-					nPos += 4;
+                    //å†™å…¥èµ·ç‚¹X
+                    float fStartPoint_X;
+                    fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
+                    fStartPoint_X -= STotalOffset.dArray[AXIS_X];
+                    memcpy(cTempBuff + nPos, &fStartPoint_X, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÖÕµãX
-					float fEndPoint_X;
-					fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
-					fEndPoint_X -= STotalOffset.dArray[AXIS_X];
-					memcpy(cTempBuff + nPos, &fEndPoint_X, 4);
-					nPos += 4;
+                    //å†™å…¥èµ·ç‚¹Z
+                    float fStartPoint_Z;
+                    fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
+                    fStartPoint_Z -= STotalOffset.dArray[AXIS_Z];
+                    memcpy(cTempBuff + nPos, &fStartPoint_Z, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÖÕµãZ
-					float fEndPoint_Z;
-					fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
-					fEndPoint_Z -= STotalOffset.dArray[AXIS_Z];
-					memcpy(cTempBuff + nPos, &fEndPoint_Z, 4);
-					nPos += 4;
+                    //å†™å…¥ç»ˆç‚¹X
+                    float fEndPoint_X;
+                    fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
+                    fEndPoint_X -= STotalOffset.dArray[AXIS_X];
+                    memcpy(cTempBuff + nPos, &fEndPoint_X, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÔ²ĞÄX
-					float fCenterPoint_X;
-					fCenterPoint_X = (float)pToolBuf->SCenterPoint.dArray[AXIS_X];
-					fCenterPoint_X -= STotalOffset.dArray[AXIS_X];
-					memcpy(cTempBuff + nPos, &fCenterPoint_X, 4);
-					nPos += 4;
+                    //å†™å…¥ç»ˆç‚¹Z
+                    float fEndPoint_Z;
+                    fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
+                    fEndPoint_Z -= STotalOffset.dArray[AXIS_Z];
+                    memcpy(cTempBuff + nPos, &fEndPoint_Z, 4);
+                    nPos += 4;
 
-					//Ğ´ÈëÔ²ĞÄZ
-					float fCenterPoint_Z;
-					fCenterPoint_Z = (float)pToolBuf->SCenterPoint.dArray[AXIS_Z];
-					fCenterPoint_Z -= STotalOffset.dArray[AXIS_Z];
-					memcpy(cTempBuff + nPos, &fCenterPoint_Z, 4);
-					nPos += 4;
+                    //å†™å…¥åœ†å¿ƒX
+                    float fCenterPoint_X;
+                    fCenterPoint_X = (float)pToolBuf->SCenterPoint.dArray[AXIS_X];
+                    fCenterPoint_X -= STotalOffset.dArray[AXIS_X];
+                    memcpy(cTempBuff + nPos, &fCenterPoint_X, 4);
+                    nPos += 4;
 
-					//ÒÆÖ¸Õë
-					moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
+                    //å†™å…¥åœ†å¿ƒZ
+                    float fCenterPoint_Z;
+                    fCenterPoint_Z = (float)pToolBuf->SCenterPoint.dArray[AXIS_Z];
+                    fCenterPoint_Z -= STotalOffset.dArray[AXIS_Z];
+                    memcpy(cTempBuff + nPos, &fCenterPoint_Z, 4);
+                    nPos += 4;
 
-					break;
+                    //ç§»æŒ‡é’ˆ
+                    moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
 
-				}
+                    break;
+                }
 
-				default:
-					break;
-				}
+                default:
+                    break;
+                }
 
-				cNum++;
-			}
-			else
-			{
-				moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
-			}
-			
+                cNum++;
+            }
+            else
+            {
+                moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
+            }
 
-			//4.¼Ó¹¤³ÌĞòÈ«²¿¶ÁÈ¡Íê³É
-			if (pToolBuf->bLastLineMark)
-			{
-				g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
-				bFinish = TRUE;
-			}
-			
+            //4.åŠ å·¥ç¨‹åºå…¨éƒ¨è¯»å–å®Œæˆ
+            if (pToolBuf->bLastLineMark)
+            {
+                g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
+                bFinish = TRUE;
+            }
 
-			if (bFull || bFinish)
-				break;//BufĞ´ÂúÌø³öwhile
-		}
+            if (bFull || bFinish)
+                break; //Bufå†™æ»¡è·³å‡ºwhile
+        }
 
-		//BufÒÑĞ´ÈëÄ¿±êÊıÁ¿ÓĞĞ§¹ì¼£ || BufĞ´Âú || ËùÓĞ³ÌĞò¶ÁÍê
-		if (cNum == cWriteNum || bFull || bFinish)
-			cGetDrawData_Step = 2;
-		else
-			return 0;
-		if (bFinish)
-			g_SChannel[0].cSubRunMode = 1;
-	}
-	//Ğ´ÈëÄ¿±ê»º³åÇø
-	case 2:
-	{			
-		memcpy(pBuffAdress, cTempBuff, 512);
-		cGetDrawData_Step = 0;
-		
-		return cNum;
-	}
-	default:
-		break;
-	}
+        //Bufå·²å†™å…¥ç›®æ ‡æ•°é‡æœ‰æ•ˆè½¨è¿¹ || Bufå†™æ»¡ || æ‰€æœ‰ç¨‹åºè¯»å®Œ
+        if (cNum == cWriteNum || bFull || bFinish)
+            cGetDrawData_Step = 2;
+        else
+            return 0;
+        if (bFinish)
+            g_SChannel[0].cSubRunMode = 1;
+    }
+    //å†™å…¥ç›®æ ‡ç¼“å†²åŒº
+    case 2:
+    {
+        memcpy(pBuffAdress, cTempBuff, 512);
+        cGetDrawData_Step = 0;
 
+        return cNum;
+    }
+    default:
+        break;
+    }
 
-	////0.³õÊ¼»¯»­Í¼»º³åÇøÄÚ´æ
-	//memset(pBuffAdress, -1, 512);
+    ////0.åˆå§‹åŒ–ç”»å›¾ç¼“å†²åŒºå†…å­˜
+    //memset(pBuffAdress, -1, 512);
 
-	////1.ÅĞ¶Ïµ¶²¹»º³åÇø¿É¶ÁÈİÁ¿
-	//int16 sRest;
-	//sRest = getSToolCompPointerBufRes(DRAW_READ, ucChannelNum);
-	////1.G´úÂëÔËĞĞÊ±¿É¶ÁÈİÁ¿²»×ã£¬Ôò²»½øĞĞĞ´Èë
-	//if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN && sRest < cWriteNum)
-	//{
-	//	return 0;
-	//}
-	//
-	////2.Ğ´Èë¹ì¼£Êı¾İ£¨µ¶²¹»º³åÇø->»­Í¼»º³åÇø£©
-	//int16 sCurrByte = 0;	//»­Í¼»º³åÇøÒÑĞ´Èë×Ö½ÚÊı
-	//int i;
-	//for (i = 0; i < cWriteNum; i++)
-	//{
-	//	//0.»­Í¼»º³åÇøÊ£Óà×Ö½ÚÊı
-	//	int16 sBufRest;
-	//	sBufRest = 512 - sCurrByte;
+    ////1.åˆ¤æ–­åˆ€è¡¥ç¼“å†²åŒºå¯è¯»å®¹é‡
+    //int16 sRest;
+    //sRest = getSToolCompPointerBufRes(DRAW_READ, ucChannelNum);
+    ////1.Gä»£ç è¿è¡Œæ—¶å¯è¯»å®¹é‡ä¸è¶³ï¼Œåˆ™ä¸è¿›è¡Œå†™å…¥
+    //if (getGCodeStatus(GC_ASSIGN, ucChannelNum) == GCODE_RUN && sRest < cWriteNum)
+    //{
+    //	return 0;
+    //}
+    //
+    ////2.å†™å…¥è½¨è¿¹æ•°æ®ï¼ˆåˆ€è¡¥ç¼“å†²åŒº->ç”»å›¾ç¼“å†²åŒºï¼‰
+    //int16 sCurrByte = 0;	//ç”»å›¾ç¼“å†²åŒºå·²å†™å…¥å­—èŠ‚æ•°
+    //int i;
+    //for (i = 0; i < cWriteNum; i++)
+    //{
+    //	//0.ç”»å›¾ç¼“å†²åŒºå‰©ä½™å­—èŠ‚æ•°
+    //	int16 sBufRest;
+    //	sBufRest = 512 - sCurrByte;
 
-	//	//1.µ¶²¹»º³åÇøÊı¾İ
-	//	struct SToolCompensation* pToolBuf;
-	//	pToolBuf = getSToolCompPointerByType(DRAW_READ, ucChannelNum);
+    //	//1.åˆ€è¡¥ç¼“å†²åŒºæ•°æ®
+    //	struct SToolCompensation* pToolBuf;
+    //	pToolBuf = getSToolCompPointerByType(DRAW_READ, ucChannelNum);
 
-	//	//2.¸ù¾İ²»Í¬¹ì¼£ÀàĞÍ½øĞĞĞ´Èë
-	//	switch (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR))
-	//	{
-	//	//ĞéÏß¡¢Ö±Ïß¹ì¼£´óĞ¡£º17×Ö½Ú
-	//	case CMD_MOTION_QUICKMOVE:
-	//	case CMD_MOTION_LINE:		
-	//	case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-	//	case CMD_MOTION_SCREWCUT_VP:
-	//	case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-	//	case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-	//	{
-	//		//ÅĞ¶Ï»­Í¼»º³åÇøÊ£ÓàÄÚ´æ
-	//		if (sBufRest < 17)
-	//			return i;
+    //	//2.æ ¹æ®ä¸åŒè½¨è¿¹ç±»å‹è¿›è¡Œå†™å…¥
+    //	switch (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR))
+    //	{
+    //	//è™šçº¿ã€ç›´çº¿è½¨è¿¹å¤§å°ï¼š17å­—èŠ‚
+    //	case CMD_MOTION_QUICKMOVE:
+    //	case CMD_MOTION_LINE:
+    //	case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    //	case CMD_MOTION_SCREWCUT_VP:
+    //	case CMD_MOTION_SCREWCUT:  //èºçº¹åˆ‡å‰Š
+    //	case CMD_MOTION_G33://G33èºçº¹æ”»ç‰™å¾ªç¯
+    //	{
+    //		//åˆ¤æ–­ç”»å›¾ç¼“å†²åŒºå‰©ä½™å†…å­˜
+    //		if (sBufRest < 17)
+    //			return i;
 
-	//		//Ğ´ÈëÀàĞÍ
-	//		if (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)
-	//			*(pBuffAdress + sCurrByte) = 0;//ĞéÏß
-	//		else
-	//			*(pBuffAdress + sCurrByte) = 1;//ÊµÏß
-	//		sCurrByte += 1;
+    //		//å†™å…¥ç±»å‹
+    //		if (getBits(pToolBuf->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE)
+    //			*(pBuffAdress + sCurrByte) = 0;//è™šçº¿
+    //		else
+    //			*(pBuffAdress + sCurrByte) = 1;//å®çº¿
+    //		sCurrByte += 1;
 
-	//		//Ğ´ÈëÆğµãX
-	//		float fStartPoint_X;
-	//		fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
-	//		memcpy(pBuffAdress + sCurrByte, &fStartPoint_X, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥èµ·ç‚¹X
+    //		float fStartPoint_X;
+    //		fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
+    //		memcpy(pBuffAdress + sCurrByte, &fStartPoint_X, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÆğµãZ
-	//		float fStartPoint_Z;
-	//		fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
-	//		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥èµ·ç‚¹Z
+    //		float fStartPoint_Z;
+    //		fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
+    //		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÖÕµãX
-	//		float fEndPoint_X;
-	//		fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
-	//		memcpy(pBuffAdress + sCurrByte, &fEndPoint_X, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥ç»ˆç‚¹X
+    //		float fEndPoint_X;
+    //		fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
+    //		memcpy(pBuffAdress + sCurrByte, &fEndPoint_X, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÖÕµãZ
-	//		float fEndPoint_Z;
-	//		fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
-	//		memcpy(pBuffAdress + sCurrByte, &fEndPoint_Z, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥ç»ˆç‚¹Z
+    //		float fEndPoint_Z;
+    //		fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
+    //		memcpy(pBuffAdress + sCurrByte, &fEndPoint_Z, 4);
+    //		sCurrByte += 4;
 
-	//		break;
-	//	}
-	//		
-	//	//Ô²»¡¹ì¼£´óĞ¡£º26×Ö½Ú
-	//	case CMD_MOTION_ARC:		
-	//	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-	//	case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-	//	case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
-	//	{
-	//		//ÅĞ¶Ï»­Í¼»º³åÇøÊ£ÓàÄÚ´æ
-	//		if (sBufRest < 26)
-	//			return i;
+    //		break;
+    //	}
+    //
+    //	//åœ†å¼§è½¨è¿¹å¤§å°ï¼š26å­—èŠ‚
+    //	case CMD_MOTION_ARC:
+    //	case CMD_MOTION_ANTI_ARC:	//é€†åœ†
+    //	case CMD_MOTION_ELLIPSE_ARC:	//é¡ºæ¤­åœ†
+    //	case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
+    //	{
+    //		//åˆ¤æ–­ç”»å›¾ç¼“å†²åŒºå‰©ä½™å†…å­˜
+    //		if (sBufRest < 26)
+    //			return i;
 
-	//		//Ğ´ÈëÀàĞÍ
-	//		*(pBuffAdress + sCurrByte) = 2;//Ô²»¡
-	//		sCurrByte += 1;
+    //		//å†™å…¥ç±»å‹
+    //		*(pBuffAdress + sCurrByte) = 2;//åœ†å¼§
+    //		sCurrByte += 1;
 
-	//		//Ğ´Èë·½Ïò
-	//		*(pBuffAdress + sCurrByte) = pToolBuf->cArcDir;
-	//		sCurrByte += 1;
+    //		//å†™å…¥æ–¹å‘
+    //		*(pBuffAdress + sCurrByte) = pToolBuf->cArcDir;
+    //		sCurrByte += 1;
 
-	//		//Ğ´ÈëÆğµãX
-	//		float fStartPoint_X;
-	//		fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
-	//		memcpy(pBuffAdress + sCurrByte, &fStartPoint_X, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥èµ·ç‚¹X
+    //		float fStartPoint_X;
+    //		fStartPoint_X = (float)pToolBuf->SStartPoint.dArray[AXIS_X];
+    //		memcpy(pBuffAdress + sCurrByte, &fStartPoint_X, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÆğµãZ
-	//		float fStartPoint_Z;
-	//		fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
-	//		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥èµ·ç‚¹Z
+    //		float fStartPoint_Z;
+    //		fStartPoint_Z = (float)pToolBuf->SStartPoint.dArray[AXIS_Z];
+    //		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÖÕµãX
-	//		float fEndPoint_X;
-	//		fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
-	//		memcpy(pBuffAdress + sCurrByte, &fEndPoint_X, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥ç»ˆç‚¹X
+    //		float fEndPoint_X;
+    //		fEndPoint_X = (float)pToolBuf->SEndPoint.dArray[AXIS_X];
+    //		memcpy(pBuffAdress + sCurrByte, &fEndPoint_X, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÖÕµãZ
-	//		float fEndPoint_Z;
-	//		fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
-	//		memcpy(pBuffAdress + sCurrByte, &fEndPoint_Z, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥ç»ˆç‚¹Z
+    //		float fEndPoint_Z;
+    //		fEndPoint_Z = (float)pToolBuf->SEndPoint.dArray[AXIS_Z];
+    //		memcpy(pBuffAdress + sCurrByte, &fEndPoint_Z, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÔ²ĞÄX
-	//		float fCenterPoint_X;
-	//		fCenterPoint_X = (float)pToolBuf->SCenterPoint.dArray[AXIS_X];
-	//		memcpy(pBuffAdress + sCurrByte, &fCenterPoint_X, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥åœ†å¿ƒX
+    //		float fCenterPoint_X;
+    //		fCenterPoint_X = (float)pToolBuf->SCenterPoint.dArray[AXIS_X];
+    //		memcpy(pBuffAdress + sCurrByte, &fCenterPoint_X, 4);
+    //		sCurrByte += 4;
 
-	//		//Ğ´ÈëÔ²ĞÄZ
-	//		float fCenterPoint_Z;
-	//		fCenterPoint_Z = (float)pToolBuf->SCenterPoint.dArray[AXIS_Z];
-	//		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
-	//		sCurrByte += 4;
+    //		//å†™å…¥åœ†å¿ƒZ
+    //		float fCenterPoint_Z;
+    //		fCenterPoint_Z = (float)pToolBuf->SCenterPoint.dArray[AXIS_Z];
+    //		memcpy(pBuffAdress + sCurrByte, &fStartPoint_Z, 4);
+    //		sCurrByte += 4;
 
-	//		break;
+    //		break;
 
-	//	}
+    //	}
 
-	//	}
+    //	}
 
-	//	//3.ÅĞ¶ÏÊÇ·ñÎª×îºóÒ»¸ö»º³åÇøµ¥Ôª
-	//	if (pToolBuf->bLastLineMark == TRUE)
-	//	{
-	//		g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
+    //	//3.åˆ¤æ–­æ˜¯å¦ä¸ºæœ€åä¸€ä¸ªç¼“å†²åŒºå•å…ƒ
+    //	if (pToolBuf->bLastLineMark == TRUE)
+    //	{
+    //		g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
 
-	//		return i + 1;
-	//	}
+    //		return i + 1;
+    //	}
 
-	//	//4.ÒÆ¶¯»­Í¼¶ÁÖ¸Õë
-	//	moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
-	//}
+    //	//4.ç§»åŠ¨ç”»å›¾è¯»æŒ‡é’ˆ
+    //	moveSToolCompBufPointer(DRAW_READ, BUF_AHEAD, ucChannelNum);
+    //}
 
-	//return i;
+    //return i;
 }
-
-

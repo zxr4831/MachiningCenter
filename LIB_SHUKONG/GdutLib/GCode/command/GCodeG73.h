@@ -1,40 +1,40 @@
 #ifndef __GCODE_G73_H
 #define __GCODE_G73_H
 
-#define G73_DEBUG (0&(!STM32_MODE))
+#define G73_DEBUG (0 & (!STM32_MODE))
 
 typedef struct _SG73Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	double dDeltaI;		//XÖá´Ö³µÍËµ¶Á¿£¬°ë¾¶Öµ£¨µÚÒ»ĞĞU£©
-	double dDeltaK;		//ZÖá´Ö³µÍËµ¶Á¿£¨µÚÒ»ĞĞW£©
+    double dDeltaI; //Xè½´ç²—è½¦é€€åˆ€é‡ï¼ŒåŠå¾„å€¼ï¼ˆç¬¬ä¸€è¡ŒUï¼‰
+    double dDeltaK; //Zè½´ç²—è½¦é€€åˆ€é‡ï¼ˆç¬¬ä¸€è¡ŒWï¼‰
 
-	uint16 ucD;			//ÇĞÏ÷´ÎÊı£¨µÚÒ»ĞĞR£©£¨Êµ¼ÊÇĞÏ÷´ÎÊıĞèÒª¼Ó1¡£ucDÎª1£¬ÔòÑ­»·ÇĞÏ÷2´Î£©
-	uint8 ucH;			//G73¹ì¼£ÀàĞÍ£¨µÚÒ»ĞĞH£©
+    uint16 ucD; //åˆ‡å‰Šæ¬¡æ•°ï¼ˆç¬¬ä¸€è¡ŒRï¼‰ï¼ˆå®é™…åˆ‡å‰Šæ¬¡æ•°éœ€è¦åŠ 1ã€‚ucDä¸º1ï¼Œåˆ™å¾ªç¯åˆ‡å‰Š2æ¬¡ï¼‰
+    uint8 ucH;  //G73è½¨è¿¹ç±»å‹ï¼ˆç¬¬ä¸€è¡ŒHï¼‰
 
-	uint32 unNS;		//ÆğÊ¼ĞĞºÅ£¨µÚ¶şĞĞP£©
-	uint32 unNF;		//½áÊøĞĞºÅ£¨µÚ¶şĞĞQ£©
-	double dDeltaU;		//¹¤¼şÂÖÀªXÖáÆ«ÒÆÖµ£¬Ö±¾¶Öµ£¨µÚ¶şĞĞU£©
-	double dDeltaW;		//¹¤¼şÂÖÀªZÖáÆ«ÒÆÖµ£¨µÚ¶şĞĞW£©
+    uint32 unNS;    //èµ·å§‹è¡Œå·ï¼ˆç¬¬äºŒè¡ŒPï¼‰
+    uint32 unNF;    //ç»“æŸè¡Œå·ï¼ˆç¬¬äºŒè¡ŒQï¼‰
+    double dDeltaU; //å·¥ä»¶è½®å»“Xè½´åç§»å€¼ï¼Œç›´å¾„å€¼ï¼ˆç¬¬äºŒè¡ŒUï¼‰
+    double dDeltaW; //å·¥ä»¶è½®å»“Zè½´åç§»å€¼ï¼ˆç¬¬äºŒè¡ŒWï¼‰
 
-	SList* pSPathList;//Ô­Ê¼¹ì¼£Á´±í£¨´ËÁ´±í¼ÇÂ¼NS-NF¹ì¼££¬¼ÇÂ¼ºó²»×öĞŞ¸Ä£©
-	SList* pSCurrMachinePathList;//µ±Ç°¼Ó¹¤¹ì¼£Á´±í£¨´ËÁ´±í¼ÇÂ¼µ±Ç°¼Ó¹¤¹ì¼££¬Á´±íÖĞ¹ì¼£È«²¿Ğ´ÈëÍê³ÉºóÊÍ·Å£©
+    SList* pSPathList;            //åŸå§‹è½¨è¿¹é“¾è¡¨ï¼ˆæ­¤é“¾è¡¨è®°å½•NS-NFè½¨è¿¹ï¼Œè®°å½•åä¸åšä¿®æ”¹ï¼‰
+    SList* pSCurrMachinePathList; //å½“å‰åŠ å·¥è½¨è¿¹é“¾è¡¨ï¼ˆæ­¤é“¾è¡¨è®°å½•å½“å‰åŠ å·¥è½¨è¿¹ï¼Œé“¾è¡¨ä¸­è½¨è¿¹å…¨éƒ¨å†™å…¥å®Œæˆåé‡Šæ”¾ï¼‰
 
-	double dRestDeltaI;	//XÖá´Ö³µÊ£ÓàÍËµ¶Á¿£¬°ë¾¶Öµ
-	double dRestDeltaK;	//ZÖá´Ö³µÊ£ÓàÍËµ¶Á¿
+    double dRestDeltaI; //Xè½´ç²—è½¦å‰©ä½™é€€åˆ€é‡ï¼ŒåŠå¾„å€¼
+    double dRestDeltaK; //Zè½´ç²—è½¦å‰©ä½™é€€åˆ€é‡
 
-	SPointDouble SPointA;	//Æğµ¶µã£¬¼´Ã«Å÷×ø±ê
-	SPointDouble SPointA1;
+    SPointDouble SPointA; //èµ·åˆ€ç‚¹ï¼Œå³æ¯›å¯åæ ‡
+    SPointDouble SPointA1;
 
-	uint16 usCurPos;				//µ±Ç°Ğ´ÈëÊµÌåÔÚ¼Ó¹¤¹ì¼£Á´±íÖĞµÄÎ»ÖÃ
-	uint16 cRestCount;				//µ±Ç°Ñ­»·ÇĞÏ÷´ÎÊı
+    uint16 usCurPos;   //å½“å‰å†™å…¥å®ä½“åœ¨åŠ å·¥è½¨è¿¹é“¾è¡¨ä¸­çš„ä½ç½®
+    uint16 cRestCount; //å½“å‰å¾ªç¯åˆ‡å‰Šæ¬¡æ•°
 
-	int8 cCurrMachineDir;			//µ±Ç°¼Ó¹¤·½Ïò£¨¢óĞÍÓÃµ½£©
+    int8 cCurrMachineDir; //å½“å‰åŠ å·¥æ–¹å‘ï¼ˆâ…¢å‹ç”¨åˆ°ï¼‰
 
-	SGetTextStateInfo SGetTextStateInfo;	//G73Ö¸ÁîÖ´ĞĞÍê³ÉÖ®ºó£¬ÏÂÒ»´ÎÓ¦Ö´ĞĞNFÖ®ºóµÄ³ÌĞò
+    SGetTextStateInfo SGetTextStateInfo; //G73æŒ‡ä»¤æ‰§è¡Œå®Œæˆä¹‹åï¼Œä¸‹ä¸€æ¬¡åº”æ‰§è¡ŒNFä¹‹åçš„ç¨‹åº
 
-}SG73Para;
+} SG73Para;
 
 void addG73RegulationAPI();
 int8 mallocG73ParaStruct(uint8 ucMode, uint8 ucChannelNum);
@@ -43,8 +43,5 @@ int8 getG73Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCode
 
 int8 CheckG73(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 int8 AssignG73(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
-
-
-
 
 #endif

@@ -11,1380 +11,1476 @@
 #include "ToolChanger.h"
 #include "Spindle.h"
 #include "G32.h"
-#include "G1.h" 
-#include "G0.h"  
-#include "Motion.h"	
+#include "G1.h"
+#include "G0.h"
+#include "Motion.h"
 #include <string.h>
 #include "G2.h"
 #include "Channel.h"
 #include "Config.h"
 
-#define SWITCH_SEPPD_PARA(target,dVal,ucType) {switch(ucType)\
-{\
-case VEL_VS:\
-	target.SPlanData.dVs = dVal;break;\
-case VEL_VMAX:\
-	target.dFeedrate = dVal;break;\
-case VEL_VE:\
-	target.SPlanData.dPrimalVe = dVal;break;\
-case PLAN_ACC:\
-	target.dAcc = dVal;break;\
-case PLAN_DEC:\
-	target.dDec = dVal;break;\
-case PLAN_DISTANCE:\
-	target.SPlanData.dPreDist = 0;\
-	target.SPlanData.dDistance = target.SPlanData.dTargetDist = target.SPlanData.dCurLeftDist = dVal; break; \
-default:\
-return -3;\
-} }
-
+#define SWITCH_SEPPD_PARA(target, dVal, ucType)                                                                        \
+    {                                                                                                                  \
+        switch (ucType)                                                                                                \
+        {                                                                                                              \
+        case VEL_VS:                                                                                                   \
+            target.SPlanData.dVs = dVal;                                                                               \
+            break;                                                                                                     \
+        case VEL_VMAX:                                                                                                 \
+            target.dFeedrate = dVal;                                                                                   \
+            break;                                                                                                     \
+        case VEL_VE:                                                                                                   \
+            target.SPlanData.dPrimalVe = dVal;                                                                         \
+            break;                                                                                                     \
+        case PLAN_ACC:                                                                                                 \
+            target.dAcc = dVal;                                                                                        \
+            break;                                                                                                     \
+        case PLAN_DEC:                                                                                                 \
+            target.dDec = dVal;                                                                                        \
+            break;                                                                                                     \
+        case PLAN_DISTANCE:                                                                                            \
+            target.SPlanData.dPreDist = 0;                                                                             \
+            target.SPlanData.dDistance = target.SPlanData.dTargetDist = target.SPlanData.dCurLeftDist = dVal;          \
+            break;                                                                                                     \
+        default:                                                                                                       \
+            return -3;                                                                                                 \
+        }                                                                                                              \
+    }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetRealFeedRatio(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  »ñµÃµ±Ç°ËÙÂÊ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºINT 0~100
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetRealFeedRatio(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è·å¾—å½“å‰é€Ÿç‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šINT 0~100
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int getRealFeedRatio(uint8 ucChannelNum)
 {
-	int res = 0;
-	uint8 ucPhysicalAxis; ;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	ucPhysicalAxis = g_SChannel[ucChannelNum].pMapAxisArray[AXIS_X];//XÖá¶ÔÓ¦µÄÎïÀíÖá
+    int res = 0;
+    uint8 ucPhysicalAxis;
+    ;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    ucPhysicalAxis = g_SChannel[ucChannelNum].pMapAxisArray[AXIS_X]; //Xè½´å¯¹åº”çš„ç‰©ç†è½´
 
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
-	{
-		//¿ÕÏĞ×´Ì¬ÏÂ  ÏÔÊ¾XÖáµÄ±¶ÂÊ   µ±Ç°ËÙ¶È/
-		res = round(g_usCompareValue[ucPhysicalAxis] * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm /
-			(g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedRatio * g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedrate) * 100.0);
-	}
-	else
-	{
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))// Ö÷Öá¼ÓËÙÍê³É »òÕßµ±Ç°Îª¿ìËÙÔË¶¯  2024/10/15 ĞÜ¿¥
-		{
-		case CMD_MOTION_QUICKMOVE:
-			// ÏÔÊ¾XÖáµÄ±¶ÂÊ   µ±Ç°ËÙ¶È/
-			res = round(g_usCompareValue[ucPhysicalAxis] * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm /
-				(g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedRatio * g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedrate) * 100.0);
-			break;
-		default:
-		case CMD_MOTION_LINE://Ö±Ïß²å²¹
-			res = round(g_SChannel[ucChannelNum].SG01.dCurrentSpeed / g_SChannel[ucChannelNum].SRun.dCurrentFeedRate * 100.0);
-			break;
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
+    {
+        //ç©ºé—²çŠ¶æ€ä¸‹  æ˜¾ç¤ºXè½´çš„å€ç‡   å½“å‰é€Ÿåº¦/
+        res = round(g_usCompareValue[ucPhysicalAxis] * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm /
+                    (g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedRatio *
+                     g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedrate) *
+                    100.0);
+    }
+    else
+    {
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType,
+                        CMD_MOTION_ADDR)) // ä¸»è½´åŠ é€Ÿå®Œæˆ æˆ–è€…å½“å‰ä¸ºå¿«é€Ÿè¿åŠ¨  2024/10/15 ç†Šéª
+        {
+        case CMD_MOTION_QUICKMOVE:
+            // æ˜¾ç¤ºXè½´çš„å€ç‡   å½“å‰é€Ÿåº¦/
+            res = round(g_usCompareValue[ucPhysicalAxis] * g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm /
+                        (g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedRatio *
+                         g_SChannel[ucChannelNum].SSingleAxisArray[AXIS_X].dFeedrate) *
+                        100.0);
+            break;
+        default:
+        case CMD_MOTION_LINE: //ç›´çº¿æ’è¡¥
+            res = round(g_SChannel[ucChannelNum].SG01.dCurrentSpeed / g_SChannel[ucChannelNum].SRun.dCurrentFeedRate *
+                        100.0);
+            break;
 
-		case CMD_MOTION_ARC://Ë³ÄæÔ²²å²¹
-		case CMD_MOTION_ANTI_ARC:
-			res = round(g_SChannel[ucChannelNum].SG02.dCurrentSpeed / g_SChannel[ucChannelNum].SRun.dCurrentFeedRate * 100.0);
-			break;
-		}
-	}
-	return res;
+        case CMD_MOTION_ARC: //é¡ºé€†åœ†æ’è¡¥
+        case CMD_MOTION_ANTI_ARC:
+            res = round(g_SChannel[ucChannelNum].SG02.dCurrentSpeed / g_SChannel[ucChannelNum].SRun.dCurrentFeedRate *
+                        100.0);
+            break;
+        }
+    }
+    return res;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCurrentFeedRate(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñµÃµ±Ç°ÀíÂÛ½ø¸øËÙ¶È
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ(G0»ò¿ÕÏĞÊ±  ·µ»ØµÄ½ø¸øËÙ¶È)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble   mm/min
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCurrentFeedRate(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å¾—å½“å‰ç†è®ºè¿›ç»™é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·(G0æˆ–ç©ºé—²æ—¶  è¿”å›çš„è¿›ç»™é€Ÿåº¦)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble   mm/min
+  å¤‡    æ³¨ï¼š
 ****************************************/
 double getCurrentFeedRate(uint8 ucChannelNum, uint8 ucAxis)
 {
-	double dRes = 0.0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
-	{
-		dRes = g_SChannel[ucChannelNum].SRun.dQuickMoveFeedRatio //±¶ÂÊ
-			* g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].dFeedrate * 60.0 * 1000.0;//½ø¸øËÙ¶È
-	}
-	else
-	{
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
-		{
-		case CMD_MOTION_QUICKMOVE:
-			dRes = g_SChannel[ucChannelNum].SRun.dQuickMoveFeedRatio  //±¶ÂÊ
-				* g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].dFeedrate * 60.0 * 1000.0;  //½ø¸øËÙ¶È
-			break;
-		default:
-		case CMD_MOTION_LINE:
-			//dRes = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR) == CMD_FEED_PER_MIN?
-			//	g_SChannel[ucChannelNum].SG01.dFeedrate * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio* 60.0 * 1000.0//½ø¸øËÙ¶È
-			//	: fabs(g_SChannel[ucChannelNum].SSpindleTest.dSpindleAvgSpeed) * g_SChannel[ucChannelNum].SG01.dFeedrate * 60 * 1000 * 60 * 1000;//³Ë±¶ÂÊ ×ª»»³Émm/min
+    double dRes = 0.0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
+    {
+        dRes = g_SChannel[ucChannelNum].SRun.dQuickMoveFeedRatio                              //å€ç‡
+               * g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].dFeedrate * 60.0 * 1000.0; //è¿›ç»™é€Ÿåº¦
+    }
+    else
+    {
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
+        {
+        case CMD_MOTION_QUICKMOVE:
+            dRes = g_SChannel[ucChannelNum].SRun.dQuickMoveFeedRatio                              //å€ç‡
+                   * g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].dFeedrate * 60.0 * 1000.0; //è¿›ç»™é€Ÿåº¦
+            break;
+        default:
+        case CMD_MOTION_LINE:
+            //dRes = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR) == CMD_FEED_PER_MIN?
+            //	g_SChannel[ucChannelNum].SG01.dFeedrate * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio* 60.0 * 1000.0//è¿›ç»™é€Ÿåº¦
+            //	: fabs(g_SChannel[ucChannelNum].SSpindleTest.dSpindleAvgSpeed) * g_SChannel[ucChannelNum].SG01.dFeedrate * 60 * 1000 * 60 * 1000;//ä¹˜å€ç‡ è½¬æ¢æˆmm/min
 
-			//dRes = g_SChannel[ucChannelNum].SG01.dFeedrate *g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0;//2024/4/29×¢ÊÍ£º½ø¸øËÙÂÊÎ´¿¼ÂÇG99
-			int i;
-			double dTemp;
-			double dMaxNum = 0;
-			for (i = 0; i < AXIS_NUM_MAX; i++) //»ñÈ¡³¤Öá·ÖÁ¿
-			{
-				dTemp = fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[i]);
-				if (dTemp > dMaxNum)
-				{
-					dMaxNum = dTemp;
-				}
-			}
+            //dRes = g_SChannel[ucChannelNum].SG01.dFeedrate *g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0;//2024/4/29æ³¨é‡Šï¼šè¿›ç»™é€Ÿç‡æœªè€ƒè™‘G99
+            int i;
+            double dTemp;
+            double dMaxNum = 0;
+            for (i = 0; i < AXIS_NUM_MAX; i++) //è·å–é•¿è½´åˆ†é‡
+            {
+                dTemp = fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[i]);
+                if (dTemp > dMaxNum)
+                {
+                    dMaxNum = dTemp;
+                }
+            }
 
-			dRes = getBits(g_SChannel[ucChannelNum].SG01.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ?//2024/4/29 ºé¹ÚÅô
-				g_SChannel[ucChannelNum].SG01.dFeedrate* dTemp * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio* 60.0 * 1000.0//mm/ms -> mm/min 
-				: fabs(g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->dSpindleSpeed) * (60.0 * 1000) / DEGREE_OF_CIRCLE * g_SChannel[ucChannelNum].SG01.dFeedrate* dTemp * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio;// r/min * mm/r
-			dRes = isZero(g_SChannel[ucChannelNum].SG01.dG84Ratio) ? dRes : g_SChannel[ucChannelNum].SG01.dFeedrate  * (60.0 * 1000)/ fabs(g_SChannel[ucChannelNum].SG01.dG84Ratio); //¶ÔÓÚG84×ª»»ZÖá½ø¸øËÙ¶È£¬ÆäÓà»ñÈ¡³¤ÖáËÙ¶È
-			break;
-		case CMD_MOTION_ARC:
-		case CMD_MOTION_ANTI_ARC:
-			//dRes = g_SChannel[ucChannelNum].SG02.dFeedrate *//½ø¸øËÙ¶È
-			//	g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0;//³Ë±¶ÂÊ ×ª»»³Émm/min //2024/4/29×¢ÊÍ£º½ø¸øËÙÂÊÎ´¿¼ÂÇG99
+            dRes = getBits(g_SChannel[ucChannelNum].SG01.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
+                       ? //2024/4/29 æ´ªå† é¹
+                       g_SChannel[ucChannelNum].SG01.dFeedrate * dTemp *
+                           g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0 //mm/ms -> mm/min
+                       : fabs(g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->dSpindleSpeed) * (60.0 * 1000) /
+                             DEGREE_OF_CIRCLE * g_SChannel[ucChannelNum].SG01.dFeedrate * dTemp *
+                             g_SChannel[ucChannelNum].SRun.dCommonFeedRatio; // r/min * mm/r
+            dRes = isZero(g_SChannel[ucChannelNum].SG01.dG84Ratio)
+                       ? dRes
+                       : g_SChannel[ucChannelNum].SG01.dFeedrate * (60.0 * 1000) /
+                             fabs(g_SChannel[ucChannelNum].SG01.dG84Ratio); //å¯¹äºG84è½¬æ¢Zè½´è¿›ç»™é€Ÿåº¦ï¼Œå…¶ä½™è·å–é•¿è½´é€Ÿåº¦
+            break;
+        case CMD_MOTION_ARC:
+        case CMD_MOTION_ANTI_ARC:
+            //dRes = g_SChannel[ucChannelNum].SG02.dFeedrate *//è¿›ç»™é€Ÿåº¦
+            //	g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0;//ä¹˜å€ç‡ è½¬æ¢æˆmm/min //2024/4/29æ³¨é‡Šï¼šè¿›ç»™é€Ÿç‡æœªè€ƒè™‘G99
 
-			dRes = getBits(g_SChannel[ucChannelNum].SG02.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ?//2024/4/29 ºé¹ÚÅô
-				g_SChannel[ucChannelNum].SG02.dFeedrate * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 * 1000.0//mm/ms -> mm/min 
-				: fabs(g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->dSpindleSpeed) * (60.0 * 1000) / DEGREE_OF_CIRCLE * g_SChannel[ucChannelNum].SG02.dFeedrate * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio;// r/min * mm/r
-			break;
-		case CMD_MOTION_SCREWCUT:	//³ÂÃô´Ï	2023/8/19
-			dRes = g_SChannel[ucChannelNum].SG32.dF * g_SChannel[ucChannelNum].SSpindle.dSpindleSpeed * 60.0 * 1000.0 / DEGREE_OF_CIRCLE; //×ª»»³Émm/min
-			break;	
-		case CMD_MOTION_G33:
-			dRes = g_SChannel[ucChannelNum].SG33.dF * g_SChannel[ucChannelNum].SSpindle.dSpindleSpeed * 60.0 * 1000.0 / DEGREE_OF_CIRCLE; //×ª»»³Émm/min
-			break;		
+            dRes = getBits(g_SChannel[ucChannelNum].SG02.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN
+                       ? //2024/4/29 æ´ªå† é¹
+                       g_SChannel[ucChannelNum].SG02.dFeedrate * g_SChannel[ucChannelNum].SRun.dCommonFeedRatio * 60.0 *
+                           1000.0 //mm/ms -> mm/min
+                       : fabs(g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->dSpindleSpeed) * (60.0 * 1000) /
+                             DEGREE_OF_CIRCLE * g_SChannel[ucChannelNum].SG02.dFeedrate *
+                             g_SChannel[ucChannelNum].SRun.dCommonFeedRatio; // r/min * mm/r
+            break;
+        case CMD_MOTION_SCREWCUT: //é™ˆæ•èª	2023/8/19
+            dRes = g_SChannel[ucChannelNum].SG32.dF * g_SChannel[ucChannelNum].SSpindle.dSpindleSpeed * 60.0 * 1000.0 /
+                   DEGREE_OF_CIRCLE; //è½¬æ¢æˆmm/min
+            break;
+        case CMD_MOTION_G33:
+            dRes = g_SChannel[ucChannelNum].SG33.dF * g_SChannel[ucChannelNum].SSpindle.dSpindleSpeed * 60.0 * 1000.0 /
+                   DEGREE_OF_CIRCLE; //è½¬æ¢æˆmm/min
+            break;
 
-			break;
-
-		}
-	}
-	return dRes;
+            break;
+        }
+    }
+    return dRes;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCurrentRealFeedRate(uint8 ucChannelNum, uint8* pAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡µ±Ç°ÕæÊµ½ø¸øËÙ¶È
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£ºpMaxAxis ´«³öG0»òÊÖ¶¯µÄÊ±ºò×î´óËÙ¶ÈµÄÖáºÅ
-  ·µ »Ø Öµ£ºdouble   mm/min
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCurrentRealFeedRate(uint8 ucChannelNum, uint8* pAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–å½“å‰çœŸå®è¿›ç»™é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼špMaxAxis ä¼ å‡ºG0æˆ–æ‰‹åŠ¨çš„æ—¶å€™æœ€å¤§é€Ÿåº¦çš„è½´å·
+  è¿” å› å€¼ï¼šdouble   mm/min
+  å¤‡    æ³¨ï¼š
 ****************************************/
 double getCurrentRealFeedRate(uint8 ucChannelNum, uint8* pMaxAxis)
 {
-	double dRes = 0.0;
-	int i;
-	struct SSingleAxis* pSSingleAxisPointer = NULL;//µ¥Öá½á¹¹ÌåÖ¸Õë
-	double dMaxVal = 0.0; // G0 ÊÖ¶¯×î´óµÄËÙ¶È
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	pSSingleAxisPointer = g_SChannel[ucChannelNum].SSingleAxisArray;//Ö¸ÏòµÚÒ»¸öÖá
-	dMaxVal = pSSingleAxisPointer->dCurrentSpeed;//ÔİÊ±ÄÃµÚÒ»¸öÖáµÄµ±Ç°ËÙ¶È
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
-	{
-		if (g_RunMode == HANDWHEEL_MODE)//ÊÖÂÖÄ£Ê½
-		{
-			uint8 ucAXISNum; //ÊÖÂÖ¿ØÖÆµÄÖáºÅ
-			ucAXISNum = g_SChannel[ucChannelNum].pSHandleWheelEncoder->AXISNum;
-			if (g_SSystemPara.SAxisPara[ucAXISNum].ucAxisType == LINEAR_AXIS)//2025.4.8ĞÜ¿¥
-			{
-				dRes = g_SChannel[ucChannelNum].pSHandleWheelEncoder->dAxisCurrentSpeed[ucAXISNum] * 60.0 * 1000.0;
-			}
-		}
-		else//·ÇÊÖÂÖÄ£Ê½
-		{
-			for (i = 1; i < AXIS_NUM_MAX; i++)
-			{
-				if (g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed > dMaxVal)
-				{//Ñ°ÕÒµ¥Öá×î´óµÄËÙ¶È
-					if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis
-						== g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)//ÎªÖ÷ÖáµÄÖá
-					{
-						continue;
-					}
-					if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis
-						== g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis)//ÎªÖ÷ÖáµÄÖá
-					{
-						continue;
-					}
-					dMaxVal = g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed;
-					pSSingleAxisPointer = &g_SChannel[ucChannelNum].SSingleAxisArray[i];
-				}
-			}
-			if (pMaxAxis != NULL)//´«³öÖáºÅ
-			{
-				*pMaxAxis = pSSingleAxisPointer->ucAxis;//ÖáºÅ
-			}
-			dRes = dMaxVal * 60.0 * 1000.0;
-		}
-	}
-	else
-	{
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
-		{
-		case CMD_MOTION_QUICKMOVE:
-			for (i = 1; i < AXIS_NUM_MAX; i++)
-			{
-				if (g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed > dMaxVal)
-				{//Ñ°ÕÒµ¥Öá×î´óµÄËÙ¶È
-					if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis
-						== g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis)//ÎªÖ÷ÖáµÄÖá
-					{
-						continue;
-					}
-					if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis
-						== g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis)//ÎªÖ÷ÖáµÄÖá
-					{
-						continue;
-					}
-					dMaxVal = g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed;
-					pSSingleAxisPointer = &g_SChannel[ucChannelNum].SSingleAxisArray[i];
-				}
-			}
-			if (pMaxAxis != NULL)//´«³öÖáºÅ
-			{
-				*pMaxAxis = pSSingleAxisPointer->ucAxis;//ÖáºÅ
-			}
+    double dRes = 0.0;
+    int i;
+    struct SSingleAxis* pSSingleAxisPointer = NULL; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
+    double dMaxVal = 0.0;                           // G0 æ‰‹åŠ¨æœ€å¤§çš„é€Ÿåº¦
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    pSSingleAxisPointer = g_SChannel[ucChannelNum].SSingleAxisArray; //æŒ‡å‘ç¬¬ä¸€ä¸ªè½´
+    dMaxVal = pSSingleAxisPointer->dCurrentSpeed;                    //æš‚æ—¶æ‹¿ç¬¬ä¸€ä¸ªè½´çš„å½“å‰é€Ÿåº¦
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
+    {
+        if (g_RunMode == HANDWHEEL_MODE) //æ‰‹è½®æ¨¡å¼
+        {
+            uint8 ucAXISNum; //æ‰‹è½®æ§åˆ¶çš„è½´å·
+            ucAXISNum = g_SChannel[ucChannelNum].pSHandleWheelEncoder->AXISNum;
+            if (g_SSystemPara.SAxisPara[ucAXISNum].ucAxisType == LINEAR_AXIS) //2025.4.8ç†Šéª
+            {
+                dRes = g_SChannel[ucChannelNum].pSHandleWheelEncoder->dAxisCurrentSpeed[ucAXISNum] * 60.0 * 1000.0;
+            }
+        }
+        else //éæ‰‹è½®æ¨¡å¼
+        {
+            for (i = 1; i < AXIS_NUM_MAX; i++)
+            {
+                if (g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed > dMaxVal)
+                { //å¯»æ‰¾å•è½´æœ€å¤§çš„é€Ÿåº¦
+                    if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis ==
+                        g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis) //ä¸ºä¸»è½´çš„è½´
+                    {
+                        continue;
+                    }
+                    if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis ==
+                        g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis) //ä¸ºä¸»è½´çš„è½´
+                    {
+                        continue;
+                    }
+                    dMaxVal = g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed;
+                    pSSingleAxisPointer = &g_SChannel[ucChannelNum].SSingleAxisArray[i];
+                }
+            }
+            if (pMaxAxis != NULL) //ä¼ å‡ºè½´å·
+            {
+                *pMaxAxis = pSSingleAxisPointer->ucAxis; //è½´å·
+            }
+            dRes = dMaxVal * 60.0 * 1000.0;
+        }
+    }
+    else
+    {
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
+        {
+        case CMD_MOTION_QUICKMOVE:
+            for (i = 1; i < AXIS_NUM_MAX; i++)
+            {
+                if (g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed > dMaxVal)
+                { //å¯»æ‰¾å•è½´æœ€å¤§çš„é€Ÿåº¦
+                    if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis ==
+                        g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucAxis) //ä¸ºä¸»è½´çš„è½´
+                    {
+                        continue;
+                    }
+                    if (g_SChannel[ucChannelNum].SSingleAxisArray[i].ucAxis ==
+                        g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis) //ä¸ºä¸»è½´çš„è½´
+                    {
+                        continue;
+                    }
+                    dMaxVal = g_SChannel[ucChannelNum].SSingleAxisArray[i].dCurrentSpeed;
+                    pSSingleAxisPointer = &g_SChannel[ucChannelNum].SSingleAxisArray[i];
+                }
+            }
+            if (pMaxAxis != NULL) //ä¼ å‡ºè½´å·
+            {
+                *pMaxAxis = pSSingleAxisPointer->ucAxis; //è½´å·
+            }
 
-			dRes = dMaxVal * 60.0 * 1000.0;//·µ»Ø×î´óµÄµ¥ÖáËÙ¶È  ²¢×ª»»³Émm/min
-			break;
-		default:
-		case CMD_MOTION_LINE:
-		    double dTemp;
-			double dMaxNum = 0;
-			dRes = g_SChannel[ucChannelNum].SG01.dCurrentSpeed //G1µ±Ç°ËÙ¶È
-				* 60.0 * 1000.0; //×ª»»³Émm/min
-			for (i = 0; i < AXIS_NUM_MAX; i++) //»ñÈ¡³¤Öá·ÖÁ¿
-			{
-				dTemp = fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[i]);
-				if (dTemp > dMaxNum)
-				{
-					dMaxNum = dTemp;
-				}
-			}
-			dRes = isZero(g_SChannel[ucChannelNum].SG01.dG84Ratio) ? dRes * dMaxNum : dRes / fabs(g_SChannel[ucChannelNum].SG01.dG84Ratio); //¶ÔÓÚG84×ª»»ZÖá½ø¸øËÙ¶È£¬ÆäÓà»ñÈ¡³¤ÖáËÙ¶È
-			break;
-		case CMD_MOTION_ARC:
-		case CMD_MOTION_ANTI_ARC:
-			dRes = g_SChannel[ucChannelNum].SG02.dCurrentSpeed //G2G3µ±Ç°ËÙ¶È
-				* 60.0 * 1000.0; //×ª»»³Émm/min
-			break;
+            dRes = dMaxVal * 60.0 * 1000.0; //è¿”å›æœ€å¤§çš„å•è½´é€Ÿåº¦  å¹¶è½¬æ¢æˆmm/min
+            break;
+        default:
+        case CMD_MOTION_LINE:
+            double dTemp;
+            double dMaxNum = 0;
+            dRes = g_SChannel[ucChannelNum].SG01.dCurrentSpeed //G1å½“å‰é€Ÿåº¦
+                   * 60.0 * 1000.0;                            //è½¬æ¢æˆmm/min
+            for (i = 0; i < AXIS_NUM_MAX; i++)                 //è·å–é•¿è½´åˆ†é‡
+            {
+                dTemp = fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[i]);
+                if (dTemp > dMaxNum)
+                {
+                    dMaxNum = dTemp;
+                }
+            }
+            dRes =
+                isZero(g_SChannel[ucChannelNum].SG01.dG84Ratio)
+                    ? dRes * dMaxNum
+                    : dRes / fabs(g_SChannel[ucChannelNum].SG01.dG84Ratio); //å¯¹äºG84è½¬æ¢Zè½´è¿›ç»™é€Ÿåº¦ï¼Œå…¶ä½™è·å–é•¿è½´é€Ÿåº¦
+            break;
+        case CMD_MOTION_ARC:
+        case CMD_MOTION_ANTI_ARC:
+            dRes = g_SChannel[ucChannelNum].SG02.dCurrentSpeed //G2G3å½“å‰é€Ÿåº¦
+                   * 60.0 * 1000.0;                            //è½¬æ¢æˆmm/min
+            break;
 
-		case CMD_MOTION_SCREWCUT:	//³ÂÃô´Ï	2023/8/19
-			dRes = g_SChannel[ucChannelNum].SG32.dCurrentSpeed * 60.0 * 1000.0; //×ª»»³Émm/min
-			break;	
-		case CMD_MOTION_G33:
-			dRes = g_SChannel[ucChannelNum].SG33.dCurrentSpeed * 60.0 * 1000.0; //×ª»»³Émm/min
-			break;
-		}
-	}
-	return dRes;
+        case CMD_MOTION_SCREWCUT:                                               //é™ˆæ•èª	2023/8/19
+            dRes = g_SChannel[ucChannelNum].SG32.dCurrentSpeed * 60.0 * 1000.0; //è½¬æ¢æˆmm/min
+            break;
+        case CMD_MOTION_G33:
+            dRes = g_SChannel[ucChannelNum].SG33.dCurrentSpeed * 60.0 * 1000.0; //è½¬æ¢æˆmm/min
+            break;
+        }
+    }
+    return dRes;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetCurLeftDist(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ê£Óà¾àÀë
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis			ÖáºÅ   0~AXIS_NUM_MAX-1 Ê¹ÓÃºê¶¨ÒåAXIS_X  AXIS_Y ...
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºdouble   mm
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetCurLeftDist(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–å‰©ä½™è·ç¦»
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis			è½´å·   0~AXIS_NUM_MAX-1 ä½¿ç”¨å®å®šä¹‰AXIS_X  AXIS_Y ...
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šdouble   mm
+  å¤‡    æ³¨ï¼š
 ****************************************/
 double getCurLeftDist(uint8 ucChannelNum, uint8 ucAxis)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 0.0;
-	}
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
-	{
-		return 0.0;
-	}
-	uint8 ucLongAxis;
-	uint8 ucShortAxis;
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
-	{
-	case CMD_MOTION_QUICKMOVE:
-		return g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].SPlanData.dCurLeftDist;//µ¥Öá¶ÔÓ¦µÄÊ£Óà¾àÀë
-	case CMD_MOTION_LINE:
-		return g_SChannel[ucChannelNum].SG01.SPlanData.dCurLeftDist
-			* fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[ucAxis]);//Ö±ÏßÊ£Óà³Ë¶ÔÓ¦ÏòÁ¿
-	case CMD_MOTION_ARC:
-	case CMD_MOTION_ANTI_ARC:
-		//³ÂÃô´Ï 2023/6/4
-		if (ucAxis == g_SChannel[ucChannelNum].SG02.ucAxis[0] || ucAxis == g_SChannel[ucChannelNum].SG02.ucAxis[1])	//ºáÖáºÍ×İÖáµÄÊ£Óà¾àÀë
-		{
-			const uint8* ucMapArray;
-			ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
-			//ÕâÀï²»ĞèÒªÖ±¾¶ÏÔÊ¾µÄ×ø±ê
-			if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
-				return  fabs(g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] - getMachCoordDouble(ucChannelNum, ucAxis) / 2);//Ê£Óà¾àÀë·µ»Ø¡°ÖÕµã - µ±Ç°µã¡±
-			else
-				return  fabs(g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] - getMachCoordDouble(ucChannelNum, ucAxis));//Ê£Óà¾àÀë·µ»Ø¡°ÖÕµã - µ±Ç°µã¡±
-
-		}
-		else if (!isZero(g_SChannel[ucChannelNum].SG02.SStartVector.dArray[ucAxis]))	//´øÓĞµÚÈıÖáµÄÔ²»¡Ö¸ÁîµÄµÚÈıÖá
-		{
-			return  g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] - getMachCoordDouble(ucChannelNum, ucAxis);//Ê£Óà¾àÀë·µ»Ø¡°ÖÕµã - µ±Ç°µã¡±
-		}
-		else
-		{
-			return 0.0;	//·ÇºáÖá×İÖá·µ»Ø0
-		}
-	case CMD_MOTION_SCREWCUT:	//³ÂÃô´Ï	2023/7/27
-		ucLongAxis = g_SChannel[ucChannelNum].SG32.ucAxis[0];	//³¤Öá
-		ucShortAxis = g_SChannel[ucChannelNum].SG32.ucAxis[1];	//¶ÌÖá
-		if (ucLongAxis == ucAxis)
-		{
-			//ĞŞ¸Ä2025.11.27 Ôö¼ÓÍËÎ²½×¶Î£¬³¤ÖáÊ£Óà¾àÀëÎªµ±Ç°Î´ÒÆ¶¯¾àÀë
-			if (g_SChannel[ucChannelNum].SG32.ucG32Step == G32_INIT_AND_ASSIGNMENT || g_SChannel[ucChannelNum].SG32.ucG32Step == G32_BACKTAIL || g_SChannel[ucChannelNum].SG32.ucG32Step == G32_OCCUPATION) // ³¤ÖáÍËÎ²½×¶Î»ò³õÊ¼»¯·ÖÅä½×¶Î£¬ÖáÕ¼ÓÃ½×¶Î
-			{
-				return g_SChannel[ucChannelNum].SG32.SPlanData.dCurLeftDist; // ³¤ÖáÊ£Óà¾àÀë
-			}
-			else
-			{
-				return g_SChannel[ucChannelNum].SG32.SPlanData.dDistance - g_SChannel[ucChannelNum].SG32.SPlanData.dPreDist; // ¼ÆËã³¤ÖáÊ£Óà¾àÀë
-			}
-
-		}
-		else if (ucShortAxis == ucAxis)
-		{
-			// ĞŞ¸Ä2025.11.27 Ôö¼ÓÍËÎ²½×¶Î£¬¶ÌÖáÊ£Óà¾àÀëÎªµ±Ç°³¤ÖáÎ´ÒÆ¶¯¾àÀë³ËÒÔÏµÊı
-			if (g_SChannel[ucChannelNum].SG32.ucG32Step == G32_INIT_AND_ASSIGNMENT || g_SChannel[ucChannelNum].SG32.ucG32Step == G32_BACKTAIL || g_SChannel[ucChannelNum].SG32.ucG32Step == G32_OCCUPATION) // ¶ÌÖáÍËÎ²½×¶Î»ò³õÊ¼»¯·ÖÅä½×¶Î£¬ÖáÕ¼ÓÃ½×¶Î
-			{
-				return g_SChannel[ucChannelNum].SG32.SPlanData.dCurLeftDist *g_SChannel[ucChannelNum].SG32.dRatioXZ; // ¼ÆËã¶ÌÖáÊ£Óà¾àÀë
-			}
-			else
-			{
-				return (g_SChannel[ucChannelNum].SG32.SPlanData.dDistance - g_SChannel[ucChannelNum].SG32.SPlanData.dPreDist) * g_SChannel[ucChannelNum].SG32.dRatioXZ; // ¼ÆËã¶ÌÖáÊ£Óà¾àÀë
-			}
-
-		}
-		else
-		{
-			return 0.0;	//·ÇºáÖá×İÖá·µ»Ø0
-		}
-		break;
-	case CMD_MOTION_G33:	//³ÂÃô´Ï	2023/7/27
-		if (ucAxis == g_SChannel[ucChannelNum].SG33.ucAxis[0] || ucAxis == g_SChannel[ucChannelNum].SG33.ucAxis[1])
-		{
-			return (g_SChannel[ucChannelNum].SG33.SPlanData.dDistance - g_SChannel[ucChannelNum].SG33.SPlanData.dPreDist)	//¼ÆËã³¤/¶ÌÖáÊ£Óà¾àÀë
-				* fabs(g_SChannel[ucChannelNum].SG33.SStartVector.dArray[ucAxis]);
-		}
-		else
-		{
-			return 0.0;
-		}
-		break;
-	default:
-		return 0;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 0.0;
+    }
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)
+    {
+        return 0.0;
+    }
+    uint8 ucLongAxis;
+    uint8 ucShortAxis;
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
+    {
+    case CMD_MOTION_QUICKMOVE:
+        return g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis].SPlanData.dCurLeftDist; //å•è½´å¯¹åº”çš„å‰©ä½™è·ç¦»
+    case CMD_MOTION_LINE:
+        return g_SChannel[ucChannelNum].SG01.SPlanData.dCurLeftDist *
+               fabs(g_SChannel[ucChannelNum].SG01.SStartVector.dArray[ucAxis]); //ç›´çº¿å‰©ä½™ä¹˜å¯¹åº”å‘é‡
+    case CMD_MOTION_ARC:
+    case CMD_MOTION_ANTI_ARC:
+        //é™ˆæ•èª 2023/6/4
+        if (ucAxis == g_SChannel[ucChannelNum].SG02.ucAxis[0] ||
+            ucAxis == g_SChannel[ucChannelNum].SG02.ucAxis[1]) //æ¨ªè½´å’Œçºµè½´çš„å‰©ä½™è·ç¦»
+        {
+            const uint8* ucMapArray;
+            ucMapArray = g_SChannel[ucChannelNum].pMapAxisArray;
+            //è¿™é‡Œä¸éœ€è¦ç›´å¾„æ˜¾ç¤ºçš„åæ ‡
+            if (g_SSystemPara.SAxisPara[ucMapArray[ucAxis]].bShowByDiameter == TRUE)
+                return fabs(g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] -
+                            getMachCoordDouble(ucChannelNum, ucAxis) / 2); //å‰©ä½™è·ç¦»è¿”å›â€œç»ˆç‚¹ - å½“å‰ç‚¹â€
+            else
+                return fabs(g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] -
+                            getMachCoordDouble(ucChannelNum, ucAxis)); //å‰©ä½™è·ç¦»è¿”å›â€œç»ˆç‚¹ - å½“å‰ç‚¹â€
+        }
+        else if (!isZero(g_SChannel[ucChannelNum].SG02.SStartVector.dArray[ucAxis])) //å¸¦æœ‰ç¬¬ä¸‰è½´çš„åœ†å¼§æŒ‡ä»¤çš„ç¬¬ä¸‰è½´
+        {
+            return g_SChannel[ucChannelNum].SG02.SEndPoint.dArray[ucAxis] -
+                   getMachCoordDouble(ucChannelNum, ucAxis); //å‰©ä½™è·ç¦»è¿”å›â€œç»ˆç‚¹ - å½“å‰ç‚¹â€
+        }
+        else
+        {
+            return 0.0; //éæ¨ªè½´çºµè½´è¿”å›0
+        }
+    case CMD_MOTION_SCREWCUT:                                  //é™ˆæ•èª	2023/7/27
+        ucLongAxis = g_SChannel[ucChannelNum].SG32.ucAxis[0];  //é•¿è½´
+        ucShortAxis = g_SChannel[ucChannelNum].SG32.ucAxis[1]; //çŸ­è½´
+        if (ucLongAxis == ucAxis)
+        {
+            //ä¿®æ”¹2025.11.27 å¢åŠ é€€å°¾é˜¶æ®µï¼Œé•¿è½´å‰©ä½™è·ç¦»ä¸ºå½“å‰æœªç§»åŠ¨è·ç¦»
+            if (g_SChannel[ucChannelNum].SG32.ucG32Step == G32_INIT_AND_ASSIGNMENT ||
+                g_SChannel[ucChannelNum].SG32.ucG32Step == G32_BACKTAIL ||
+                g_SChannel[ucChannelNum].SG32.ucG32Step == G32_OCCUPATION) // é•¿è½´é€€å°¾é˜¶æ®µæˆ–åˆå§‹åŒ–åˆ†é…é˜¶æ®µï¼Œè½´å ç”¨é˜¶æ®µ
+            {
+                return g_SChannel[ucChannelNum].SG32.SPlanData.dCurLeftDist; // é•¿è½´å‰©ä½™è·ç¦»
+            }
+            else
+            {
+                return g_SChannel[ucChannelNum].SG32.SPlanData.dDistance -
+                       g_SChannel[ucChannelNum].SG32.SPlanData.dPreDist; // è®¡ç®—é•¿è½´å‰©ä½™è·ç¦»
+            }
+        }
+        else if (ucShortAxis == ucAxis)
+        {
+            // ä¿®æ”¹2025.11.27 å¢åŠ é€€å°¾é˜¶æ®µï¼ŒçŸ­è½´å‰©ä½™è·ç¦»ä¸ºå½“å‰é•¿è½´æœªç§»åŠ¨è·ç¦»ä¹˜ä»¥ç³»æ•°
+            if (g_SChannel[ucChannelNum].SG32.ucG32Step == G32_INIT_AND_ASSIGNMENT ||
+                g_SChannel[ucChannelNum].SG32.ucG32Step == G32_BACKTAIL ||
+                g_SChannel[ucChannelNum].SG32.ucG32Step == G32_OCCUPATION) // çŸ­è½´é€€å°¾é˜¶æ®µæˆ–åˆå§‹åŒ–åˆ†é…é˜¶æ®µï¼Œè½´å ç”¨é˜¶æ®µ
+            {
+                return g_SChannel[ucChannelNum].SG32.SPlanData.dCurLeftDist *
+                       g_SChannel[ucChannelNum].SG32.dRatioXZ; // è®¡ç®—çŸ­è½´å‰©ä½™è·ç¦»
+            }
+            else
+            {
+                return (g_SChannel[ucChannelNum].SG32.SPlanData.dDistance -
+                        g_SChannel[ucChannelNum].SG32.SPlanData.dPreDist) *
+                       g_SChannel[ucChannelNum].SG32.dRatioXZ; // è®¡ç®—çŸ­è½´å‰©ä½™è·ç¦»
+            }
+        }
+        else
+        {
+            return 0.0; //éæ¨ªè½´çºµè½´è¿”å›0
+        }
+        break;
+    case CMD_MOTION_G33: //é™ˆæ•èª	2023/7/27
+        if (ucAxis == g_SChannel[ucChannelNum].SG33.ucAxis[0] || ucAxis == g_SChannel[ucChannelNum].SG33.ucAxis[1])
+        {
+            return (g_SChannel[ucChannelNum].SG33.SPlanData.dDistance -
+                    g_SChannel[ucChannelNum].SG33.SPlanData.dPreDist) //è®¡ç®—é•¿/çŸ­è½´å‰©ä½™è·ç¦»
+                   * fabs(g_SChannel[ucChannelNum].SG33.SStartVector.dArray[ucAxis]);
+        }
+        else
+        {
+            return 0.0;
+        }
+        break;
+    default:
+        return 0;
+    }
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetAxisAccmulate(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡¸÷ÖáÎ´¹æ»®µÄÂö³åÊı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis		ÖáºÅ   0~AXIS_NUM_MAX-1 Ê¹ÓÃºê¶¨ÒåAXIS_X  AXIS_Y ...
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º -1   Í¨µÀºÅ´íÎó
-			-2   ÖáºÅ´íÎó
-			-3   ¿ÕÖ¸Õë
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetAxisAccmulate(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–å„è½´æœªè§„åˆ’çš„è„‰å†²æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis		è½´å·   0~AXIS_NUM_MAX-1 ä½¿ç”¨å®å®šä¹‰AXIS_X  AXIS_Y ...
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š -1   é€šé“å·é”™è¯¯
+			-2   è½´å·é”™è¯¯
+			-3   ç©ºæŒ‡é’ˆ
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int32 getAxisAccmulate(uint8 ucChannelNum, uint8 ucAxis)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (ucAxis >= AXIS_NUM_MAX )//ÖáºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -2;
-	}
-	if(g_SChannel[ucChannelNum].pSHandleWheelEncoder == NULL)
-	{
-		return -3;
-	}
-	return g_SChannel[ucChannelNum].pSHandleWheelEncoder->sAxisAccmulate[ucAxis];
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (ucAxis >= AXIS_NUM_MAX) //è½´å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -2;
+    }
+    if (g_SChannel[ucChannelNum].pSHandleWheelEncoder == NULL)
+    {
+        return -3;
+    }
+    return g_SChannel[ucChannelNum].pSHandleWheelEncoder->sAxisAccmulate[ucAxis];
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetGCodeStatusAPI(uint8 ucChannelNum,uint8 ucGroupNum)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡G´úÂëµÄ×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucGroupNum		G´úÂë×éºÅ ºê¶¨Òå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint   G´úÂëµÄÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetGCodeStatusAPI(uint8 ucChannelNum,uint8 ucGroupNum)
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–Gä»£ç çš„çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucGroupNum		Gä»£ç ç»„å· å®å®šä¹‰
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint   Gä»£ç çš„å€¼
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int getGCodeStatusAPI(uint8 ucChannelNum, uint8 ucGroupNum)
 {
-	int res = 0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	switch (ucGroupNum)
-	{
-	case GCODE_GROUP_MOTION://G0 G1 G2...
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
-		{
-		case CMD_MOTION_QUICKMOVE:	res = 0; break;
-		case CMD_MOTION_LINE:		res = 1; break;
-		case CMD_MOTION_ARC:		res = 2; break;
-		case CMD_MOTION_ANTI_ARC:	res = 3; break;
-		case CMD_MOTION_SCREWCUT:	res = 32; break;
-		case CMD_MOTION_SCREWCUT_LOOP:	res = 92; break;
-		case CMD_MOTION_G33:		res = 33; break;
-		default:
-			break;
-		}
-		break;
+    int res = 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    switch (ucGroupNum)
+    {
+    case GCODE_GROUP_MOTION: //G0 G1 G2...
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))
+        {
+        case CMD_MOTION_QUICKMOVE:
+            res = 0;
+            break;
+        case CMD_MOTION_LINE:
+            res = 1;
+            break;
+        case CMD_MOTION_ARC:
+            res = 2;
+            break;
+        case CMD_MOTION_ANTI_ARC:
+            res = 3;
+            break;
+        case CMD_MOTION_SCREWCUT:
+            res = 32;
+            break;
+        case CMD_MOTION_SCREWCUT_LOOP:
+            res = 92;
+            break;
+        case CMD_MOTION_G33:
+            res = 33;
+            break;
+        default:
+            break;
+        }
+        break;
 
-	case GCODE_GROUP_PLANE: // G17 G18 G19
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_PLANE_ADDR))
-		{
-		case CMD_PLANE_G17:res = 17; break;
-		case CMD_PLANE_G19:res = 19; break;
-		case CMD_PLANE_G18:default:res = 18; break;
-		}
-		break;
-	case GCODE_GROUP_TOOLCOMP://µ¶²¹G40 G41 G42
-		switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_TOOLCOMP_ADDR))
-		{
-		case CMD_TOOLCOMP_LEFT:res = 41; break;
-		case CMD_TOOLCOMP_RIGHT:res = 42; break;
-		case CMD_TOOLCOMP_CANCEL:default:res = 40; break;
-		}
-		break;
+    case GCODE_GROUP_PLANE: // G17 G18 G19
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_PLANE_ADDR))
+        {
+        case CMD_PLANE_G17:
+            res = 17;
+            break;
+        case CMD_PLANE_G19:
+            res = 19;
+            break;
+        case CMD_PLANE_G18:
+        default:
+            res = 18;
+            break;
+        }
+        break;
+    case GCODE_GROUP_TOOLCOMP: //åˆ€è¡¥G40 G41 G42
+        switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_TOOLCOMP_ADDR))
+        {
+        case CMD_TOOLCOMP_LEFT:
+            res = 41;
+            break;
+        case CMD_TOOLCOMP_RIGHT:
+            res = 42;
+            break;
+        case CMD_TOOLCOMP_CANCEL:
+        default:
+            res = 40;
+            break;
+        }
+        break;
 
-	case GCODE_GROUP_WORKPIECE://¹¤¼ş×ø±ê G54  G55 ...
-		res = g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum;
-		break;
+    case GCODE_GROUP_WORKPIECE: //å·¥ä»¶åæ ‡ G54  G55 ...
+        res = g_SChannel[ucChannelNum].SRun.cWorkpieceCoordNum;
+        break;
 
-	case GCODE_GROUP_SPINDLE_SPEED://Ö÷ÖáÄ£Ê½G96 G97
-		res = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_SPINDLE_SPEED_ADDR) == CMD_SPINDLE_SPEED_CV ?
-			97 : 96;
-		break;
+    case GCODE_GROUP_SPINDLE_SPEED: //ä¸»è½´æ¨¡å¼G96 G97
+        res = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_SPINDLE_SPEED_ADDR) == CMD_SPINDLE_SPEED_CV ? 97
+                                                                                                                   : 96;
+        break;
 
-	case GCODE_GROUP_FEED_TYPE://½ø¸øÄ£Ê½ G98 G99
-		res = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ?
-			98 : 99;
-		break;
+    case GCODE_GROUP_FEED_TYPE: //è¿›ç»™æ¨¡å¼ G98 G99
+        res = getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN ? 98 : 99;
+        break;
 
-	default:
-		break;
-	}
-	return res;
+    default:
+        break;
+    }
+    return res;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMCodeStatusAPI(uint8 ucChannelNum,uint8 ucGroupNum)
-  º¯Êı¹¦ÄÜ£º»ñÈ¡M´úÂë×éµÄ×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucGroupNum		M´úÂë×éºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºint   M´úÂëµÄÖµ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetMCodeStatusAPI(uint8 ucChannelNum,uint8 ucGroupNum)
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–Mä»£ç ç»„çš„çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucGroupNum		Mä»£ç ç»„å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šint   Mä»£ç çš„å€¼
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int getMCodeStatusAPI(uint8 ucChannelNum, uint8 ucGroupNum)
 {
-	uint8 val = 0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (getOrSetMCodeStatus(ucChannelNum, ucGroupNum, &val, FALSE) == 1)//¶ÁÈ¡¶ÔÓ¦M´úÂë×éµÄ×´Ì¬
-	{
-		return val;
-	}
-	else
-	{
-		return 0;
-	}
+    uint8 val = 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (getOrSetMCodeStatus(ucChannelNum, ucGroupNum, &val, FALSE) == 1) //è¯»å–å¯¹åº”Mä»£ç ç»„çš„çŠ¶æ€
+    {
+        return val;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSingleAxisStatus(uint8 ucChannelNum, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  »ñÈ¡µ¥Öá×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis		ÖáºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSingleAxisStatus(uint8 ucChannelNum, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è·å–å•è½´çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis		è½´å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 getSingleAxisStatus(uint8 ucChannelNum, uint8 ucAxis)
 {
-	struct SSingleAxis* pSSingleAxis;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	pSSingleAxis = &g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis];
-	if (pSSingleAxis->ucInpStatus == INP_FINISHED)
-	{
-		return 1;
-	}
-	return 0;
+    struct SSingleAxis* pSSingleAxis;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    pSSingleAxis = &g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis];
+    if (pSSingleAxis->ucInpStatus == INP_FINISHED)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSingleAxisStop(uint8 ucChannelNum, uint8 ucAxis, uint8 mode, double dDec)
-  º¯Êı¹¦ÄÜ  ÉèÖÃµ¥Öá¼õËÙÍ£  Á¢¼´Í£
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			ucAxis		ÖáºÅ
-			mode		Ä£Ê½   INP_DECELERATE£º ¼õËÙÍ£    £»INP_STOP£º Á¢¼´Í£
-			dDec		¼õËÙÍ£µÄ¼õËÙ¶È   £¨µ¥Î»  mm/ms)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1		ÖáºÅ´íÎó
-			-2		Ä£Ê½´íÎó
-			1		ÉèÖÃÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSingleAxisStop(uint8 ucChannelNum, uint8 ucAxis, uint8 mode, double dDec)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®å•è½´å‡é€Ÿåœ  ç«‹å³åœ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			ucAxis		è½´å·
+			mode		æ¨¡å¼   INP_DECELERATEï¼š å‡é€Ÿåœ    ï¼›INP_STOPï¼š ç«‹å³åœ
+			dDec		å‡é€Ÿåœçš„å‡é€Ÿåº¦   ï¼ˆå•ä½  mm/ms)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1		è½´å·é”™è¯¯
+			-2		æ¨¡å¼é”™è¯¯
+			1		è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 setSingleAxisStop(uint8 ucChannelNum, uint8 ucAxis, uint8 mode, double dDec)
 {
-	struct SSingleAxis* pSSingleAxis;
-	if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
-	{
-		return -1;
-	}
-	//µ¥Öá½á¹¹Ìå
-	pSSingleAxis = &g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis];
-
-	if (mode != INP_DECELERATE && mode != INP_STOP)//¼ì²éÄ£Ê½
-	{
-		return -2;
-	}
-
-	if (pSSingleAxis->ucInpStatus == INP_FINISHED)
-	{
-		clearSPlanData(&pSSingleAxis->SPlanData);//Í£ÏÂºóÇå³ıËÙ¶È¹æ»®²ÎÊı 2024/7/26 ºé¹ÚÅô
-		return 1;
-	}
-    /* === **×´Ì¬ÓÅÏÈ¼¶±£»¤£ºINP_STOP ²»ÔÊĞí±»½µ¼¶Îª INP_DECELERATE** === */
-    if (pSSingleAxis->ucInpStatus == INP_STOP && mode == INP_DECELERATE)
+    struct SSingleAxis* pSSingleAxis;
+    if (ucChannelNum >= CHANNEL_NUM_MAX || ucAxis >= AXIS_NUM_MAX)
     {
-        /* **Î¬³ÖINP_STOP£º¾Ü¾ø¸²¸Ç** */
+        return -1;
+    }
+    //å•è½´ç»“æ„ä½“
+    pSSingleAxis = &g_SChannel[ucChannelNum].SSingleAxisArray[ucAxis];
+
+    if (mode != INP_DECELERATE && mode != INP_STOP) //æ£€æŸ¥æ¨¡å¼
+    {
+        return -2;
+    }
+
+    if (pSSingleAxis->ucInpStatus == INP_FINISHED)
+    {
+        clearSPlanData(&pSSingleAxis->SPlanData); //åœä¸‹åæ¸…é™¤é€Ÿåº¦è§„åˆ’å‚æ•° 2024/7/26 æ´ªå† é¹
         return 1;
     }
-	switch (mode)//¸ù¾İÄ£Ê½¸³Öµ
-	{
-	case INP_DECELERATE:
-		if (pSSingleAxis->ucInpStatus == INP_DECELERATE)
-		{
-			break;
-		}
-		pSSingleAxis->ucInpStatus = INP_DECELERATE;
-		  /*¶ÔdDec×ö»ù±¾·ÀÓù£¬±ÜÃâÒì³£ÖµÏÂ·¢ */
-	    if (!isfinite(dDec) || dDec <= 0)
-	    return -2;
-		pSSingleAxis->SPlanData.dDec = dDec;//¸³Öµ¼õËÙ¶È
-		break;
-	case INP_STOP:
-		if (pSSingleAxis->ucInpStatus == INP_STOP)
-		{
-			break;
-		}
-		pSSingleAxis->ucInpStatus = INP_STOP;
-	default:
-		break;
-	}
+    /* === **çŠ¶æ€ä¼˜å…ˆçº§ä¿æŠ¤ï¼šINP_STOP ä¸å…è®¸è¢«é™çº§ä¸º INP_DECELERATE** === */
+    if (pSSingleAxis->ucInpStatus == INP_STOP && mode == INP_DECELERATE)
+    {
+        /* **ç»´æŒINP_STOPï¼šæ‹’ç»è¦†ç›–** */
+        return 1;
+    }
+    switch (mode) //æ ¹æ®æ¨¡å¼èµ‹å€¼
+    {
+    case INP_DECELERATE:
+        if (pSSingleAxis->ucInpStatus == INP_DECELERATE)
+        {
+            break;
+        }
+        pSSingleAxis->ucInpStatus = INP_DECELERATE;
+        /*å¯¹dDecåšåŸºæœ¬é˜²å¾¡ï¼Œé¿å…å¼‚å¸¸å€¼ä¸‹å‘ */
+        if (!isfinite(dDec) || dDec <= 0)
+            return -2;
+        pSSingleAxis->SPlanData.dDec = dDec; //èµ‹å€¼å‡é€Ÿåº¦
+        break;
+    case INP_STOP:
+        if (pSSingleAxis->ucInpStatus == INP_STOP)
+        {
+            break;
+        }
+        pSSingleAxis->ucInpStatus = INP_STOP;
+    default:
+        break;
+    }
 
-	return 0;
+    return 0;
 }
 
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSG0SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
-  º¯Êı¹¦ÄÜ  ÉèÖÃG0 µ¥ÖáµÄËÙ¶È²ÎÊı
-  ÊäÈë²ÎÊı£ºdVal			²ÎÊıÖµ		ËÙ¶Èµ¥Î»Îª mm/ms   ¼ÓËÙ¶Èµ¥Î»Îªmm/ms^2
-			ucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ		AXIS_X   AXIS_Y ...    AXIS_ALL ÎªÈ«²¿Öá
-			ucType			²ÎÊıÀàĞÍ	VEL_VS--ÆğÊ¼ËÙ¶È	VEL_VMAX--×î´óËÙ¶È	VEL_VE--Ä©ËÙ¶È	PLAN_ACC--¼ÓËÙ¶È	PLAN_DEC--¼õËÙ¶Î
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1		Í¨µÀºÅ´íÎó
-			-2		ÖáºÅ´íÎó
-			-3		ÀàĞÍ´íÎó
-			1		Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSG0SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®G0 å•è½´çš„é€Ÿåº¦å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šdVal			å‚æ•°å€¼		é€Ÿåº¦å•ä½ä¸º mm/ms   åŠ é€Ÿåº¦å•ä½ä¸ºmm/ms^2
+			ucChannelNum	é€šé“å·
+			ucAxis			è½´å·		AXIS_X   AXIS_Y ...    AXIS_ALL ä¸ºå…¨éƒ¨è½´
+			ucType			å‚æ•°ç±»å‹	VEL_VS--èµ·å§‹é€Ÿåº¦	VEL_VMAX--æœ€å¤§é€Ÿåº¦	VEL_VE--æœ«é€Ÿåº¦	PLAN_ACC--åŠ é€Ÿåº¦	PLAN_DEC--å‡é€Ÿæ®µ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1		é€šé“å·é”™è¯¯
+			-2		è½´å·é”™è¯¯
+			-3		ç±»å‹é”™è¯¯
+			1		å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 setSG0SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
 {
-	uint8 ucCounter;
-	struct SSingleAxis* pSSingleAxisArray;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -1;
-	}
-	if (ucAxis >= AXIS_NUM_MAX && ucAxis != AXIS_ALL)//ÖáºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -2;
-	}
-	pSSingleAxisArray = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray;//µ¥Öá½á¹¹ÌåÊı×é
+    uint8 ucCounter;
+    struct SSingleAxis* pSSingleAxisArray;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -1;
+    }
+    if (ucAxis >= AXIS_NUM_MAX && ucAxis != AXIS_ALL) //è½´å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -2;
+    }
+    pSSingleAxisArray = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray; //å•è½´ç»“æ„ä½“æ•°ç»„
 
-	if (ucAxis != AXIS_ALL)//Ö¸¶¨µ¥Öá
-	{
-		SWITCH_SEPPD_PARA(pSSingleAxisArray[ucAxis], dVal, ucType);//¸ù¾İÀàĞÍ¸³Öµ
-		if (ucType == PLAN_DISTANCE)//2024/10/15 ĞÜ¿¥
-		{
-			getSingleAxisRealTimePoint(&pSSingleAxisArray[ucAxis].dStartPoint, ucAxis, g_SChannel[ucChannelNum].pMapAxisArray);
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-			if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-			{
-				if (ucAxis == AXIS_X)
-				{
-					double dY1RealTimeCoord = 0.0;
-					getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡Y1ÖáÊµÊ±µã×ø±ê
-					pSSingleAxisArray[ucAxis].dStartPoint -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
-				}
-				if (ucAxis == AXIS_Y)
-				{
-					pSSingleAxisArray[ucAxis].dStartPoint *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-				}
-			}
+    if (ucAxis != AXIS_ALL) //æŒ‡å®šå•è½´
+    {
+        SWITCH_SEPPD_PARA(pSSingleAxisArray[ucAxis], dVal, ucType); //æ ¹æ®ç±»å‹èµ‹å€¼
+        if (ucType == PLAN_DISTANCE)                                //2024/10/15 ç†Šéª
+        {
+            getSingleAxisRealTimePoint(&pSSingleAxisArray[ucAxis].dStartPoint, ucAxis,
+                                       g_SChannel[ucChannelNum].pMapAxisArray);
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+            if (g_SChannel[ucChannelNum].bUseVirtualY ==
+                TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+            {
+                if (ucAxis == AXIS_X)
+                {
+                    double dY1RealTimeCoord = 0.0;
+                    getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y,
+                                               g_SChannel[ucChannelNum].pMapAxisArray); //è·å–Y1è½´å®æ—¶ç‚¹åæ ‡
+                    pSSingleAxisArray[ucAxis].dStartPoint -=
+                        1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
+                }
+                if (ucAxis == AXIS_Y)
+                {
+                    pSSingleAxisArray[ucAxis].dStartPoint *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+                }
+            }
 #endif
-		}
-		pSSingleAxisArray[ucAxis].ucInpStatus = INP_ASSIGNMENT_START;//ÖØĞÂËÙ¶È¹æ»®
-	}
-	else//Ö¸¶¨ËùÓĞÖá
-	{
-		for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)
-		{
-			SWITCH_SEPPD_PARA(pSSingleAxisArray[ucCounter], dVal, ucType);//¸ù¾İÀàĞÍ¸³Öµ
-			if (ucType == PLAN_DISTANCE)
-			{
-				getSingleAxisRealTimePoint(&pSSingleAxisArray[ucCounter].dStartPoint, ucCounter, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡µ±Ç°×ø±ê
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-				if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-				{
-					if (ucAxis == AXIS_X)
-					{
-						double dY1RealTimeCoord = 0.0;
-						getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡Y1ÖáÊµÊ±µã×ø±ê
-						pSSingleAxisArray[ucAxis].dStartPoint -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
-					}
-					if (ucAxis == AXIS_Y)
-					{
-						pSSingleAxisArray[ucAxis].dStartPoint *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-					}
-				}
+        }
+        pSSingleAxisArray[ucAxis].ucInpStatus = INP_ASSIGNMENT_START; //é‡æ–°é€Ÿåº¦è§„åˆ’
+    }
+    else //æŒ‡å®šæ‰€æœ‰è½´
+    {
+        for (ucCounter = 0; ucCounter < AXIS_NUM_MAX; ucCounter++)
+        {
+            SWITCH_SEPPD_PARA(pSSingleAxisArray[ucCounter], dVal, ucType); //æ ¹æ®ç±»å‹èµ‹å€¼
+            if (ucType == PLAN_DISTANCE)
+            {
+                getSingleAxisRealTimePoint(&pSSingleAxisArray[ucCounter].dStartPoint, ucCounter,
+                                           g_SChannel[ucChannelNum].pMapAxisArray); //è·å–å½“å‰åæ ‡
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE          //å€¾æ–œYè½´æœº
+                if (g_SChannel[ucChannelNum].bUseVirtualY ==
+                    TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+                {
+                    if (ucAxis == AXIS_X)
+                    {
+                        double dY1RealTimeCoord = 0.0;
+                        getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y,
+                                                   g_SChannel[ucChannelNum].pMapAxisArray); //è·å–Y1è½´å®æ—¶ç‚¹åæ ‡
+                        pSSingleAxisArray[ucAxis].dStartPoint -=
+                            1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
+                    }
+                    if (ucAxis == AXIS_Y)
+                    {
+                        pSSingleAxisArray[ucAxis].dStartPoint *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+                    }
+                }
 #endif
-			}
-			pSSingleAxisArray[ucCounter].ucInpStatus = INP_ASSIGNMENT_START;//ÖØĞÂËÙ¶È¹æ»®
-		}
-	}
-	return 1;
+            }
+            pSSingleAxisArray[ucCounter].ucInpStatus = INP_ASSIGNMENT_START; //é‡æ–°é€Ÿåº¦è§„åˆ’
+        }
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSG1SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
-  º¯Êı¹¦ÄÜ  ÉèÖÃG1ËÙ¶È²ÎÊı
-  ÊäÈë²ÎÊı£ºdVal			²ÎÊıÖµ		ËÙ¶Èµ¥Î»Îª mm/ms   ¼ÓËÙ¶Èµ¥Î»Îªmm/ms^2
-			ucChannelNum	Í¨µÀºÅ
-			ucType			²ÎÊıÀàĞÍ	VEL_VS--ÆğÊ¼ËÙ¶È	VEL_VMAX--×î´óËÙ¶È	VEL_VE--Ä©ËÙ¶È	PLAN_ACC--¼ÓËÙ¶È	PLAN_DEC--¼õËÙ¶Î
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1		Í¨µÀºÅ´íÎó
-			-3		ÀàĞÍ´íÎó
-			1		Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSG1SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®G1é€Ÿåº¦å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šdVal			å‚æ•°å€¼		é€Ÿåº¦å•ä½ä¸º mm/ms   åŠ é€Ÿåº¦å•ä½ä¸ºmm/ms^2
+			ucChannelNum	é€šé“å·
+			ucType			å‚æ•°ç±»å‹	VEL_VS--èµ·å§‹é€Ÿåº¦	VEL_VMAX--æœ€å¤§é€Ÿåº¦	VEL_VE--æœ«é€Ÿåº¦	PLAN_ACC--åŠ é€Ÿåº¦	PLAN_DEC--å‡é€Ÿæ®µ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1		é€šé“å·é”™è¯¯
+			-3		ç±»å‹é”™è¯¯
+			1		å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 setSG1SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -1;
-	}
-
-	SWITCH_SEPPD_PARA(g_SChannel[ucChannelNum].SG01, dVal, ucType);//¸ù¾İÀàĞÍ¸³Öµ
-	if (ucType == PLAN_DISTANCE)
-	{
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			getSingleAxisRealTimePoint(&g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i], i, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡µ±Ç°×ø±ê
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-			if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-			{
-				if (i == AXIS_X)
-				{
-					double dY1RealTimeCoord = 0.0;
-					getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡Y1ÖáÊµÊ±µã×ø±ê
-					g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i] -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
-				}
-				if (i == AXIS_Y)
-				{
-					g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i] *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-				}
-			}
-#endif
-		}
-	}
-	g_SChannel[ucChannelNum].SG01.ucInpStatus = INP_ASSIGNMENT_START;//ÖØĞÂËÙ¶È¹æ»®
-
-	return 1;
-}
-
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºsetSG2SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
-  º¯Êı¹¦ÄÜ  ÉèÖÃG2ËÙ¶È²ÎÊı
-  ÊäÈë²ÎÊı£ºdVal			²ÎÊıÖµ		ËÙ¶Èµ¥Î»Îª mm/ms   ¼ÓËÙ¶Èµ¥Î»Îªmm/ms^2
-			ucChannelNum	Í¨µÀºÅ
-			ucType			²ÎÊıÀàĞÍ	VEL_VS--ÆğÊ¼ËÙ¶È	VEL_VMAX--×î´óËÙ¶È	VEL_VE--Ä©ËÙ¶È	PLAN_ACC--¼ÓËÙ¶È	PLAN_DEC--¼õËÙ¶Î
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1		Í¨µÀºÅ´íÎó
-			-3		ÀàĞÍ´íÎó
-			1		Íê³É
-  ±¸    ×¢£º
-  ****************************************/
-int8 setSG2SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
-{
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -1;
-	}
-
-	SWITCH_SEPPD_PARA(g_SChannel[ucChannelNum].SG02, dVal, ucType);//¸ù¾İÀàĞÍ¸³Öµ
-	if (ucType == PLAN_DISTANCE)
-	{
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			getSingleAxisRealTimePoint(&g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i], i, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡µ±Ç°×ø±ê
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-			if (g_SChannel[ucChannelNum].bUseVirtualY == TRUE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-			{
-				if (i == AXIS_X)
-				{
-					double dY1RealTimeCoord = 0.0;
-					getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y, g_SChannel[ucChannelNum].pMapAxisArray);//»ñÈ¡Y1ÖáÊµÊ±µã×ø±ê
-					g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i] -= 1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
-				}
-				if (i == AXIS_Y)
-				{
-					g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i] *= g_SChannel[ucChannelNum].dCOSAngleYY1;
-				}
-			}
-#endif
-		}
-	}
-	g_SChannel[ucChannelNum].SG02.ucInpStatus = INP_ASSIGNMENT_START;//ÖØĞÂËÙ¶È¹æ»®
-
-	return 1;
-}
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºsetCurSpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
-  º¯Êı¹¦ÄÜ  ÉèÖÃµ±Ç°Ö¸ÁîµÄËÙ¶È²ÎÊı
-  ÊäÈë²ÎÊı£ºdVal			²ÎÊıÖµ		ËÙ¶Èµ¥Î»Îª mm/ms   ¼ÓËÙ¶Èµ¥Î»Îªmm/ms^2
-			ucChannelNum	Í¨µÀºÅ
-			ucAxis			ÖáºÅ		AXIS_X   AXIS_Y ...    AXIS_ALL ÎªÈ«²¿Öá
-			ucType			²ÎÊıÀàĞÍ	VEL_VS--ÆğÊ¼ËÙ¶È	VEL_VMAX--×î´óËÙ¶È	VEL_VE--Ä©ËÙ¶È	PLAN_ACC--¼ÓËÙ¶È	PLAN_DEC--¼õËÙ¶Î
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1		Í¨µÀºÅ´íÎó
-			-2		ÖáºÅ´íÎó
-			-3		ÀàĞÍ´íÎó
-			-4		µ±Ç°ÔË¶¯²»ÄÜĞŞ¸ÄËÙ¶ÈÖµ
-			1		Íê³É
-  ±¸    ×¢£º
-  ****************************************/
-int8 setCurSpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
-{
-	uint8 ucCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -1;
-	}
-	if (ucAxis >= AXIS_NUM_MAX && ucAxis != AXIS_ALL)//ÖáºÅÅĞ¶ÏºÏ·¨ĞÔ
-	{
-		return -2;
-	}
-
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï
-	{
-	case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-		return setSG0SpeedPara(dVal, ucChannelNum, ucAxis, ucType);
-	case CMD_MOTION_LINE:		//ºÏ³ÉÔË¶¯
-		return setSG1SpeedPara(dVal, ucChannelNum, ucType);
-	case CMD_MOTION_ARC:		//Ë³Ô²
-	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-		return setSG2SpeedPara(dVal, ucChannelNum, ucType);
-	}
-	return -4;
-}
-
-/*************************************************
-  º¯ÊıÃû³Æ£ºwriteSInputAPI(uint8 ucChannelNum, struct SInput* pSUserData, int8 cType)
-  º¯Êı¹¦ÄÜ  ½«SG0 SG1 SG2µÄSUserData£¨×Ô¶¨Òå²ÎÊı£©»òSPreProcess£¨»º´æÇø£©µÄSUserDataµÄÊı¾İĞ´ÈëSInput½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-		   cType  ÀàĞÍ£º-1 ÕıÔÚÔË¶¯ÖĞ  0£¬1£¬2£¬3´Ó¾²Ö¹µ½ÔË¶¯  0:G0 1:G1 2:G2 3:G3
-  Êä³ö²ÎÊı£º pSUserData  ½ÓÊÜ×Ô¶¨Òå²ÎÊıµÄ½á¹¹Ìå
-  ·µ »Ø Öµ£º-1	  Í¨µÀºÅ´íÎó
-			1	  Íê³É
-			0     Î´Íê³É
-  ±¸    ×¢£º
-  ****************************************/
-int8 writeSInputAPI(uint8 ucChannelNum, struct SInput* pSUserData, int8 cType)//2025.4.30 ĞÜ¿¥
-{
-	struct SChannel* pSChannel;
-	const uint8* ucMapArray;//Ó³Éä
-	int cUserDataCount = 0;
-	pSChannel = &g_SChannel[ucChannelNum];
-	ucMapArray = pSChannel->pMapAxisArray;//Ó³Éä
-	if (cType == -1)
-	{
-		switch (getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï		
-		{
-		default:
-		case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-			for (int i = 0; i < AXIS_NUM_MAX; i++)
-			{
-				if (getbit(pSUserData->ucValStatus, i))
-				{
-					*(pSUserData + cUserDataCount) = pSChannel->SPreProcess.SUserData;;
-					cUserDataCount++;
-					//ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-					pSUserData->ucAccVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[i]].ucAccVelPlanType;
-					pSUserData->ucDecVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[i]].ucDecVelPlanType;
-					//¼Ó¡¢¼õËÙ¶È
-					pSUserData->dAcc = getSingleAxisAcc(i, pSUserData->ucAccVelPlanType, ucMapArray);
-					pSUserData->dDec = getSingleAxisDec(i, pSUserData->ucDecVelPlanType, ucMapArray);
-					//³õËÙ¶È Ä©ËÙ¶È  ĞèÒªÇ°Õ°µÄG0£º³õÄ©ËÙ¶ÈÀ´Ô´»º³åÇø£»²»ĞèÇ°Õ°µÄG0£º³õÄ©ËÙ¶ÈÀ´Ô´ÏµÍ³²ÎÊı
-					pSUserData->dVs = pSChannel->SPreProcess.SUserData.ucAxisNumOfNeedLookAhead == AXIS_NULL ? g_SSystemPara.SAxisPara[ucMapArray[i]].dVs : pSChannel->SPreProcess.SUserData.dMinVs;
-					pSUserData->dPrimalVe = pSChannel->SPreProcess.SUserData.ucAxisNumOfNeedLookAhead == AXIS_NULL ? g_SSystemPara.SAxisPara[ucMapArray[i]].dVe : pSChannel->SPreProcess.SUserData.dPrimalVe;
-					pSUserData->dVs = pSChannel->SG00.pSSingleAxisArray[i].dCurrentSpeed;
-					//pSUserData->dFeedRatio = 1.0;
-				}
-			}
-			break;
-		case CMD_MOTION_LINE:
-			*pSUserData = pSChannel->SPreProcess.SUserData;
-			pSUserData->dVs = pSChannel->SG01.dCurrentSpeed;
-			//pSUserData->dFeedRatio = 1.0;
-			break;
-		case CMD_MOTION_ARC:		//Ë³Ô²
-		case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-			*pSUserData = pSChannel->SPreProcess.SUserData;
-			pSUserData->dVs = pSChannel->SG02.dCurrentSpeed;
-			//pSUserData->dFeedRatio = 1.0;
-			break;
-		}
-	}
-	else
-	{
-		switch (cType)
-		{
-		case 0:
-			for (int i = 0; i < AXIS_NUM_MAX; i++)
-			{
-				if (getbit(pSUserData->ucValStatus, i))
-				{
-					pSChannel->SG00.pSSingleAxisArray[i].SUserData.ucValStatus = pSUserData->ucValStatus;
-					*(pSUserData + cUserDataCount) = pSChannel->SG00.pSSingleAxisArray[i].SUserData;
-					cUserDataCount++;
-				}
-			}
-			break;
-		default://Ä¬ÈÏ G01
-		case 1:
-			*pSUserData = pSChannel->SG01.SUserData;
-			break;
-		case 2:
-		case 3:
-			*pSUserData = pSChannel->SG02.SUserData;
-			break;
-		}
-	}
-
-	return 1;
-}
-
-/* ×îĞ¡Ğ£Ñé£º±£Ö¤²»»á°Ñ¡°±ØÕ¨²ÎÊı¡±ËÍ½ø adjustDec */
-static int8 ValidateAdjustDecInput(const struct SInput* in)
-{
-    if (in == NULL) return -1;
-
-    /* ¹Ø¼ü¸¡µã±ØĞëÓĞÏŞ */
-    if (!isfinite(in->dVs) || !isfinite(in->dFeedrate) || !isfinite(in->dPrimalVe) ||
-        !isfinite(in->dAcc) || !isfinite(in->dDec) || !isfinite(in->dDistance))
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·åˆ¤æ–­åˆæ³•æ€§
     {
         return -1;
     }
 
-    /* ¹Ø¼üÎïÀíÁ¿±ØĞëÎªÕı£¨ÖÁÉÙ´óÓÚEPS£© */
+    SWITCH_SEPPD_PARA(g_SChannel[ucChannelNum].SG01, dVal, ucType); //æ ¹æ®ç±»å‹èµ‹å€¼
+    if (ucType == PLAN_DISTANCE)
+    {
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            getSingleAxisRealTimePoint(&g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i], i,
+                                       g_SChannel[ucChannelNum].pMapAxisArray); //è·å–å½“å‰åæ ‡
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE      //å€¾æ–œYè½´æœº
+            if (g_SChannel[ucChannelNum].bUseVirtualY ==
+                TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+            {
+                if (i == AXIS_X)
+                {
+                    double dY1RealTimeCoord = 0.0;
+                    getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y,
+                                               g_SChannel[ucChannelNum].pMapAxisArray); //è·å–Y1è½´å®æ—¶ç‚¹åæ ‡
+                    g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i] -=
+                        1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
+                }
+                if (i == AXIS_Y)
+                {
+                    g_SChannel[ucChannelNum].SG01.SStartPoint.dArray[i] *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+                }
+            }
+#endif
+        }
+    }
+    g_SChannel[ucChannelNum].SG01.ucInpStatus = INP_ASSIGNMENT_START; //é‡æ–°é€Ÿåº¦è§„åˆ’
+
+    return 1;
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šsetSG2SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®G2é€Ÿåº¦å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šdVal			å‚æ•°å€¼		é€Ÿåº¦å•ä½ä¸º mm/ms   åŠ é€Ÿåº¦å•ä½ä¸ºmm/ms^2
+			ucChannelNum	é€šé“å·
+			ucType			å‚æ•°ç±»å‹	VEL_VS--èµ·å§‹é€Ÿåº¦	VEL_VMAX--æœ€å¤§é€Ÿåº¦	VEL_VE--æœ«é€Ÿåº¦	PLAN_ACC--åŠ é€Ÿåº¦	PLAN_DEC--å‡é€Ÿæ®µ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1		é€šé“å·é”™è¯¯
+			-3		ç±»å‹é”™è¯¯
+			1		å®Œæˆ
+  å¤‡    æ³¨ï¼š
+  ****************************************/
+int8 setSG2SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType)
+{
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -1;
+    }
+
+    SWITCH_SEPPD_PARA(g_SChannel[ucChannelNum].SG02, dVal, ucType); //æ ¹æ®ç±»å‹èµ‹å€¼
+    if (ucType == PLAN_DISTANCE)
+    {
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            getSingleAxisRealTimePoint(&g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i], i,
+                                       g_SChannel[ucChannelNum].pMapAxisArray); //è·å–å½“å‰åæ ‡
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE      //å€¾æ–œYè½´æœº
+            if (g_SChannel[ucChannelNum].bUseVirtualY ==
+                TRUE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+            {
+                if (i == AXIS_X)
+                {
+                    double dY1RealTimeCoord = 0.0;
+                    getSingleAxisRealTimePoint(&dY1RealTimeCoord, AXIS_Y,
+                                               g_SChannel[ucChannelNum].pMapAxisArray); //è·å–Y1è½´å®æ—¶ç‚¹åæ ‡
+                    g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i] -=
+                        1.0 * dY1RealTimeCoord * g_SChannel[ucChannelNum].dSINAngleYY1;
+                }
+                if (i == AXIS_Y)
+                {
+                    g_SChannel[ucChannelNum].SG02.SStartPoint.dArray[i] *= g_SChannel[ucChannelNum].dCOSAngleYY1;
+                }
+            }
+#endif
+        }
+    }
+    g_SChannel[ucChannelNum].SG02.ucInpStatus = INP_ASSIGNMENT_START; //é‡æ–°é€Ÿåº¦è§„åˆ’
+
+    return 1;
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šsetCurSpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®å½“å‰æŒ‡ä»¤çš„é€Ÿåº¦å‚æ•°
+  è¾“å…¥å‚æ•°ï¼šdVal			å‚æ•°å€¼		é€Ÿåº¦å•ä½ä¸º mm/ms   åŠ é€Ÿåº¦å•ä½ä¸ºmm/ms^2
+			ucChannelNum	é€šé“å·
+			ucAxis			è½´å·		AXIS_X   AXIS_Y ...    AXIS_ALL ä¸ºå…¨éƒ¨è½´
+			ucType			å‚æ•°ç±»å‹	VEL_VS--èµ·å§‹é€Ÿåº¦	VEL_VMAX--æœ€å¤§é€Ÿåº¦	VEL_VE--æœ«é€Ÿåº¦	PLAN_ACC--åŠ é€Ÿåº¦	PLAN_DEC--å‡é€Ÿæ®µ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1		é€šé“å·é”™è¯¯
+			-2		è½´å·é”™è¯¯
+			-3		ç±»å‹é”™è¯¯
+			-4		å½“å‰è¿åŠ¨ä¸èƒ½ä¿®æ”¹é€Ÿåº¦å€¼
+			1		å®Œæˆ
+  å¤‡    æ³¨ï¼š
+  ****************************************/
+int8 setCurSpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType)
+{
+    uint8 ucCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -1;
+    }
+    if (ucAxis >= AXIS_NUM_MAX && ucAxis != AXIS_ALL) //è½´å·åˆ¤æ–­åˆæ³•æ€§
+    {
+        return -2;
+    }
+
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+        return setSG0SpeedPara(dVal, ucChannelNum, ucAxis, ucType);
+    case CMD_MOTION_LINE: //åˆæˆè¿åŠ¨
+        return setSG1SpeedPara(dVal, ucChannelNum, ucType);
+    case CMD_MOTION_ARC:      //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC: //é€†åœ†
+        return setSG2SpeedPara(dVal, ucChannelNum, ucType);
+    }
+    return -4;
+}
+
+/*************************************************
+  å‡½æ•°åç§°ï¼šwriteSInputAPI(uint8 ucChannelNum, struct SInput* pSUserData, int8 cType)
+  å‡½æ•°åŠŸèƒ½  å°†SG0 SG1 SG2çš„SUserDataï¼ˆè‡ªå®šä¹‰å‚æ•°ï¼‰æˆ–SPreProcessï¼ˆç¼“å­˜åŒºï¼‰çš„SUserDataçš„æ•°æ®å†™å…¥SInputç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+		   cType  ç±»å‹ï¼š-1 æ­£åœ¨è¿åŠ¨ä¸­  0ï¼Œ1ï¼Œ2ï¼Œ3ä»é™æ­¢åˆ°è¿åŠ¨  0:G0 1:G1 2:G2 3:G3
+  è¾“å‡ºå‚æ•°ï¼š pSUserData  æ¥å—è‡ªå®šä¹‰å‚æ•°çš„ç»“æ„ä½“
+  è¿” å› å€¼ï¼š-1	  é€šé“å·é”™è¯¯
+			1	  å®Œæˆ
+			0     æœªå®Œæˆ
+  å¤‡    æ³¨ï¼š
+  ****************************************/
+int8 writeSInputAPI(uint8 ucChannelNum, struct SInput* pSUserData, int8 cType) //2025.4.30 ç†Šéª
+{
+    struct SChannel* pSChannel;
+    const uint8* ucMapArray; //æ˜ å°„
+    int cUserDataCount = 0;
+    pSChannel = &g_SChannel[ucChannelNum];
+    ucMapArray = pSChannel->pMapAxisArray; //æ˜ å°„
+    if (cType == -1)
+    {
+        switch (getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­
+        {
+        default:
+        case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+            for (int i = 0; i < AXIS_NUM_MAX; i++)
+            {
+                if (getbit(pSUserData->ucValStatus, i))
+                {
+                    *(pSUserData + cUserDataCount) = pSChannel->SPreProcess.SUserData;
+                    ;
+                    cUserDataCount++;
+                    //é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+                    pSUserData->ucAccVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[i]].ucAccVelPlanType;
+                    pSUserData->ucDecVelPlanType = g_SSystemPara.SAxisPara[ucMapArray[i]].ucDecVelPlanType;
+                    //åŠ ã€å‡é€Ÿåº¦
+                    pSUserData->dAcc = getSingleAxisAcc(i, pSUserData->ucAccVelPlanType, ucMapArray);
+                    pSUserData->dDec = getSingleAxisDec(i, pSUserData->ucDecVelPlanType, ucMapArray);
+                    //åˆé€Ÿåº¦ æœ«é€Ÿåº¦  éœ€è¦å‰ç»çš„G0ï¼šåˆæœ«é€Ÿåº¦æ¥æºç¼“å†²åŒºï¼›ä¸éœ€å‰ç»çš„G0ï¼šåˆæœ«é€Ÿåº¦æ¥æºç³»ç»Ÿå‚æ•°
+                    pSUserData->dVs = pSChannel->SPreProcess.SUserData.ucAxisNumOfNeedLookAhead == AXIS_NULL
+                                          ? g_SSystemPara.SAxisPara[ucMapArray[i]].dVs
+                                          : pSChannel->SPreProcess.SUserData.dMinVs;
+                    pSUserData->dPrimalVe = pSChannel->SPreProcess.SUserData.ucAxisNumOfNeedLookAhead == AXIS_NULL
+                                                ? g_SSystemPara.SAxisPara[ucMapArray[i]].dVe
+                                                : pSChannel->SPreProcess.SUserData.dPrimalVe;
+                    pSUserData->dVs = pSChannel->SG00.pSSingleAxisArray[i].dCurrentSpeed;
+                    //pSUserData->dFeedRatio = 1.0;
+                }
+            }
+            break;
+        case CMD_MOTION_LINE:
+            *pSUserData = pSChannel->SPreProcess.SUserData;
+            pSUserData->dVs = pSChannel->SG01.dCurrentSpeed;
+            //pSUserData->dFeedRatio = 1.0;
+            break;
+        case CMD_MOTION_ARC:      //é¡ºåœ†
+        case CMD_MOTION_ANTI_ARC: //é€†åœ†
+            *pSUserData = pSChannel->SPreProcess.SUserData;
+            pSUserData->dVs = pSChannel->SG02.dCurrentSpeed;
+            //pSUserData->dFeedRatio = 1.0;
+            break;
+        }
+    }
+    else
+    {
+        switch (cType)
+        {
+        case 0:
+            for (int i = 0; i < AXIS_NUM_MAX; i++)
+            {
+                if (getbit(pSUserData->ucValStatus, i))
+                {
+                    pSChannel->SG00.pSSingleAxisArray[i].SUserData.ucValStatus = pSUserData->ucValStatus;
+                    *(pSUserData + cUserDataCount) = pSChannel->SG00.pSSingleAxisArray[i].SUserData;
+                    cUserDataCount++;
+                }
+            }
+            break;
+        default: //é»˜è®¤ G01
+        case 1:
+            *pSUserData = pSChannel->SG01.SUserData;
+            break;
+        case 2:
+        case 3:
+            *pSUserData = pSChannel->SG02.SUserData;
+            break;
+        }
+    }
+
+    return 1;
+}
+
+/* æœ€å°æ ¡éªŒï¼šä¿è¯ä¸ä¼šæŠŠâ€œå¿…ç‚¸å‚æ•°â€é€è¿› adjustDec */
+static int8 ValidateAdjustDecInput(const struct SInput* in)
+{
+    if (in == NULL)
+        return -1;
+
+    /* å…³é”®æµ®ç‚¹å¿…é¡»æœ‰é™ */
+    if (!isfinite(in->dVs) || !isfinite(in->dFeedrate) || !isfinite(in->dPrimalVe) || !isfinite(in->dAcc) ||
+        !isfinite(in->dDec) || !isfinite(in->dDistance))
+    {
+        return -1;
+    }
+
+    /* å…³é”®ç‰©ç†é‡å¿…é¡»ä¸ºæ­£ï¼ˆè‡³å°‘å¤§äºEPSï¼‰ */
     if (in->dAcc <= EPSINON || in->dDec <= EPSINON)
         return -1;
 
-    /* ¾àÀë±ØĞëÓĞĞ§£º¾àÀëÌ«Ğ¡»á´¥·¢ ¡°/dDistance¡± ·Å´óÓë²»ÎÈ¶¨ */
+    /* è·ç¦»å¿…é¡»æœ‰æ•ˆï¼šè·ç¦»å¤ªå°ä¼šè§¦å‘ â€œ/dDistanceâ€ æ”¾å¤§ä¸ä¸ç¨³å®š */
 
-    /* ËÙ¶ÈºÏÀíĞÔ£¨°´ÄãËã·¨Ï°¹ß£ºËÙ¶ÈÍ¨³£Ó¦>=0£© */
+    /* é€Ÿåº¦åˆç†æ€§ï¼ˆæŒ‰ä½ ç®—æ³•ä¹ æƒ¯ï¼šé€Ÿåº¦é€šå¸¸åº”>=0ï¼‰ */
     if (in->dVs < -EPSINON || in->dFeedrate < -EPSINON || in->dPrimalVe < -EPSINON)
         return -1;
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºapplyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType)
-  º¯Êı¹¦ÄÜ  ÔË¶¯½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			pInterpPrePointer   ´«ÈëÔË¶¯²ÎÊıµÄ½á¹¹Ìå
-			cType				ÔË¶¯ÀàĞÍ  //0 ¿ìËÙÔË¶¯  1Ö±Ïß  2Ë³Ô² 3ÄæÔ²
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-2		¿ÕÖ¸Õë
-			-1		½á¹¹Ìå×´Ì¬´íÎó
-			 0		Ô²»¡²ÎÊı´íÎó
-			 1		³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šapplyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType)
+  å‡½æ•°åŠŸèƒ½  è¿åŠ¨æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			pInterpPrePointer   ä¼ å…¥è¿åŠ¨å‚æ•°çš„ç»“æ„ä½“
+			cType				è¿åŠ¨ç±»å‹  //0 å¿«é€Ÿè¿åŠ¨  1ç›´çº¿  2é¡ºåœ† 3é€†åœ†
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-2		ç©ºæŒ‡é’ˆ
+			-1		ç»“æ„ä½“çŠ¶æ€é”™è¯¯
+			 0		åœ†å¼§å‚æ•°é”™è¯¯
+			 1		æˆåŠŸ
+  å¤‡    æ³¨ï¼š
   ****************************************/
-int8 applyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType)  //0 ¿ìËÙÔË¶¯  1Ö±Ïß  2Ë³Ô² 3ÄæÔ²//2025.4.30 ĞÜ¿¥
+int8 applyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer,
+                        int8 cType) //0 å¿«é€Ÿè¿åŠ¨  1ç›´çº¿  2é¡ºåœ† 3é€†åœ†//2025.4.30 ç†Šéª
 {
-	struct SChannel* pSchannel;
-	uint32 unCommandType;
-	uint8 ucChannelStatus; //±£´æ½øÈëÊÖ¶¯Ä£Ê½Ê±µÄÏµÍ³×´Ì¬  Çé¿öÒ»£º¿ÕÏĞÊ±ÇĞ»»½øÊÖ¶¯Ä£Ê½(SYS_IDLE) £» Çé¿ö¶ş£º×Ô¶¯Ö´ĞĞÇĞ»»½øÊÖ¶¯Ä£Ê½ 2023/11/1 ºé¹ÚÅô
-	SPointDouble SRelaPoint;
-	int8 cUserDataCount = 0;//ÓĞĞ§Öá¸öÊı
-	int i = 0;
-	int8 cRes = 0;
-	if (pSInputPointer == NULL)
-	{
-		return -2;
-	}
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	pSchannel = &g_SChannel[ucChannelNum];
-	unCommandType = pSchannel->SRun.unCommandType;
-	ucChannelStatus = pSchannel->ucChannelStatus;
-	if (pSchannel->ucChannelStatus == SYS_IDLE)//Èç¹û´¦ÓÚ¿ÕÏĞ×´Ì¬ Æô¶¯   
-	{
-		pSchannel->ucChannelStatus = SYS_RUN;
-	}
+    struct SChannel* pSchannel;
+    uint32 unCommandType;
+    uint8
+        ucChannelStatus; //ä¿å­˜è¿›å…¥æ‰‹åŠ¨æ¨¡å¼æ—¶çš„ç³»ç»ŸçŠ¶æ€  æƒ…å†µä¸€ï¼šç©ºé—²æ—¶åˆ‡æ¢è¿›æ‰‹åŠ¨æ¨¡å¼(SYS_IDLE) ï¼› æƒ…å†µäºŒï¼šè‡ªåŠ¨æ‰§è¡Œåˆ‡æ¢è¿›æ‰‹åŠ¨æ¨¡å¼ 2023/11/1 æ´ªå† é¹
+    SPointDouble SRelaPoint;
+    int8 cUserDataCount = 0; //æœ‰æ•ˆè½´ä¸ªæ•°
+    int i = 0;
+    int8 cRes = 0;
+    if (pSInputPointer == NULL)
+    {
+        return -2;
+    }
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    pSchannel = &g_SChannel[ucChannelNum];
+    unCommandType = pSchannel->SRun.unCommandType;
+    ucChannelStatus = pSchannel->ucChannelStatus;
+    if (pSchannel->ucChannelStatus == SYS_IDLE) //å¦‚æœå¤„äºç©ºé—²çŠ¶æ€ å¯åŠ¨
+    {
+        pSchannel->ucChannelStatus = SYS_RUN;
+    }
 
-	if(pSchannel->SSpindle.pSSpindleAxis == NULL)  //Ã»ÓĞÖ÷ÖáÓ³Éä
-	{
-		if(getbit(pSInputPointer->ucValStatus,AXIS_C)==1)//¿ªÍ¨CÖá
-		{
-			clrbit(pSInputPointer->ucValStatus,AXIS_C);//Çå0CÖá
-			if(pSInputPointer->ucValStatus == 0)//Ã»ÓĞÆäËûÖáÒª¿ªÍ¨
-			{
-				return -1;//ÍË³ö
-			}
+    if (pSchannel->SSpindle.pSSpindleAxis == NULL) //æ²¡æœ‰ä¸»è½´æ˜ å°„
+    {
+        if (getbit(pSInputPointer->ucValStatus, AXIS_C) == 1) //å¼€é€šCè½´
+        {
+            clrbit(pSInputPointer->ucValStatus, AXIS_C); //æ¸…0Cè½´
+            if (pSInputPointer->ucValStatus == 0)        //æ²¡æœ‰å…¶ä»–è½´è¦å¼€é€š
+            {
+                return -1; //é€€å‡º
+            }
+        }
+    }
+    if (g_RunMode != AUTOMATIC_MODE)
+    {
 
-		}
-	}
-	if (g_RunMode != AUTOMATIC_MODE)
-	{
-
-#if(TURRET_AXIS_TEST == 1)
-		//ÊÍ·ÅËùÓĞÍ¨µÀÕ¼ÓÃµÄËùÓĞÖáºÍµ¶Ëş
-		int8 temp = 0;
-		for (temp; temp < CHANNEL_NUM_MAX; temp++)
-		{
-			releaseAllOccupiedAxis(&g_SChannel[temp].SPreProcess);//ÊÍ·Å¸ÃÍ¨µÀËùÓĞÕ¼ÓÃµÄÖá£¨µ¶ËşÖá+·Çµ¶ËşÖá£©;
-			releaseAllOccupiedTurret(&g_SChannel[temp].SPreProcess);//ÊÍ·Å¸ÃÍ¨µÀËùÓĞÕ¼ÓÃµÄµ¶Ëş
-		}
+#if (TURRET_AXIS_TEST == 1)
+        //é‡Šæ”¾æ‰€æœ‰é€šé“å ç”¨çš„æ‰€æœ‰è½´å’Œåˆ€å¡”
+        int8 temp = 0;
+        for (temp; temp < CHANNEL_NUM_MAX; temp++)
+        {
+            releaseAllOccupiedAxis(&g_SChannel[temp].SPreProcess);   //é‡Šæ”¾è¯¥é€šé“æ‰€æœ‰å ç”¨çš„è½´ï¼ˆåˆ€å¡”è½´+éåˆ€å¡”è½´ï¼‰;
+            releaseAllOccupiedTurret(&g_SChannel[temp].SPreProcess); //é‡Šæ”¾è¯¥é€šé“æ‰€æœ‰å ç”¨çš„åˆ€å¡”
+        }
 #else
 
-		for (int i = 0; i < CHANNEL_NUM_MAX; i++)
-		{
-			releaseLastCommandAxis(&g_SChannel[i].SPreProcess);//2023/12/15 ºé¹ÚÅô ÇĞ»»µ½ÊÖ¶¯ÔË¶¯Ê±Ó¦°ÑÖá¶¼ÊÍ·Å£¨³ıµ¶²¹Öá£©£¬·ÀÖ¹ÆäËûÍ¨µÀÕ¼ÓÃÖá¶øÎŞ·¨ÊÖ¶¯
-		}
+        for (int i = 0; i < CHANNEL_NUM_MAX; i++)
+        {
+            releaseLastCommandAxis(
+                &g_SChannel[i]
+                     .SPreProcess); //2023/12/15 æ´ªå† é¹ åˆ‡æ¢åˆ°æ‰‹åŠ¨è¿åŠ¨æ—¶åº”æŠŠè½´éƒ½é‡Šæ”¾ï¼ˆé™¤åˆ€è¡¥è½´ï¼‰ï¼Œé˜²æ­¢å…¶ä»–é€šé“å ç”¨è½´è€Œæ— æ³•æ‰‹åŠ¨
+        }
 #endif
 
+        getRealTimePoint((double*)&pSInputPointer->SStartPoint, AXIS_NUM_MAX, pSchannel->pMapAxisArray,
+                         &pSInputPointer->ucValStatus);
 
-
-		getRealTimePoint((double*)&pSInputPointer->SStartPoint, AXIS_NUM_MAX, pSchannel->pMapAxisArray, &pSInputPointer->ucValStatus);
-
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-		if (g_SSystemPara.bUseVirtualY == TRUE && g_RunMode != RE0_MODE)//Î´¿ªÆôĞéÄâYÖá¼°»ØÔ­µãÄ£Ê½ÏÂ£¬ÒÔÊµ¼Ê»ú´²×ø±êÏµÏÂµÄÊµÊ±µã×÷ÎªÆğµã
-		{
-			//ÆğµãÎªÇãĞ±×ø±êÏµ£¨X1-Y1-Z1£©ÎïÀíÖáµÄÊµÊ±µã£¬ÖÕµãÎªÖ±½Ç×ø±êÏµ(X-Y-Z)»º³åÇøµÄÖµ£¬Òò´ËÒª½«Æğµã»»ËãÖÁÖ±½Ç×ø±êÏµ¡£
-			if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_X))
-			{
-				double dY1Mach;
-				getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pSchannel->pMapAxisArray);
-				pSInputPointer->SStartPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pSchannel->dSINAngleYY1;
-			}
-			if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_Y))
-			{
-				pSInputPointer->SStartPoint.dArray[AXIS_Y] *= pSchannel->dCOSAngleYY1;
-			}
-		}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+        if (g_SSystemPara.bUseVirtualY == TRUE &&
+            g_RunMode != RE0_MODE) //æœªå¼€å¯è™šæ‹ŸYè½´åŠå›åŸç‚¹æ¨¡å¼ä¸‹ï¼Œä»¥å®é™…æœºåºŠåæ ‡ç³»ä¸‹çš„å®æ—¶ç‚¹ä½œä¸ºèµ·ç‚¹
+        {
+            //èµ·ç‚¹ä¸ºå€¾æ–œåæ ‡ç³»ï¼ˆX1-Y1-Z1ï¼‰ç‰©ç†è½´çš„å®æ—¶ç‚¹ï¼Œç»ˆç‚¹ä¸ºç›´è§’åæ ‡ç³»(X-Y-Z)ç¼“å†²åŒºçš„å€¼ï¼Œå› æ­¤è¦å°†èµ·ç‚¹æ¢ç®—è‡³ç›´è§’åæ ‡ç³»ã€‚
+            if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_X))
+            {
+                double dY1Mach;
+                getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pSchannel->pMapAxisArray);
+                pSInputPointer->SStartPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pSchannel->dSINAngleYY1;
+            }
+            if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_Y))
+            {
+                pSInputPointer->SStartPoint.dArray[AXIS_Y] *= pSchannel->dCOSAngleYY1;
+            }
+        }
 #endif
-		//subtractPoint((double*)&pSInputPointer->SEndPoint, (double*)&pSInputPointer->SStartPoint, (double*)&SRelaPoint, AXIS_NUM_MAX, &pSInputPointer->ucValStatus);
-		//Éú³ÉValStatus
-		//for (i = 0; i < AXIS_NUM_MAX; i++)
-		//{
-		//	if (!isZero(SRelaPoint.dArray[i]))
-		//	{
-		//		setbit(pSInputPointer->ucValStatus, i);
-		//	}
-		//}
-		if (pSchannel->pMapAxisArray[pSchannel->SSpindle.pSSpindleAxis->ucAxis] != AXIS_NULL)//2025/2/28 Ö÷ÖáÓ³Éä²»Îª¿ÕÊ±²ÅÊ¹ÄÜ
-		{
-			IOStructToBuff(14, &g_SChannel[ucChannelNum].SIOCommand, NULL);//Ö÷ÖáÊ¹ÄÜ  Ã»ÓĞ×èÈû
-		}
+        //subtractPoint((double*)&pSInputPointer->SEndPoint, (double*)&pSInputPointer->SStartPoint, (double*)&SRelaPoint, AXIS_NUM_MAX, &pSInputPointer->ucValStatus);
+        //ç”ŸæˆValStatus
+        //for (i = 0; i < AXIS_NUM_MAX; i++)
+        //{
+        //	if (!isZero(SRelaPoint.dArray[i]))
+        //	{
+        //		setbit(pSInputPointer->ucValStatus, i);
+        //	}
+        //}
+        if (pSchannel->pMapAxisArray[pSchannel->SSpindle.pSSpindleAxis->ucAxis] !=
+            AXIS_NULL) //2025/2/28 ä¸»è½´æ˜ å°„ä¸ä¸ºç©ºæ—¶æ‰ä½¿èƒ½
+        {
+            IOStructToBuff(14, &g_SChannel[ucChannelNum].SIOCommand, NULL); //ä¸»è½´ä½¿èƒ½  æ²¡æœ‰é˜»å¡
+        }
 
-		if (cType == 2 || cType == 3)
-		{
-			uint8 ucAxis[2] = { 0 };
-			chooseInterpPlane(ucAxis, unCommandType);//Ñ¡Ôñ²å²¹Æ½Ãæ
-			//¸ù¾İ²å²¹Æ½ÃæµÄÖá  ³õÊ¼»¯µ¶²¹µÄÖáÕ¼ÓÃ
-			setbit(pSInputPointer->ucValStatus, ucAxis[0]);
-			setbit(pSInputPointer->ucValStatus, ucAxis[1]);
+        if (cType == 2 || cType == 3)
+        {
+            uint8 ucAxis[2] = {0};
+            chooseInterpPlane(ucAxis, unCommandType); //é€‰æ‹©æ’è¡¥å¹³é¢
+            //æ ¹æ®æ’è¡¥å¹³é¢çš„è½´  åˆå§‹åŒ–åˆ€è¡¥çš„è½´å ç”¨
+            setbit(pSInputPointer->ucValStatus, ucAxis[0]);
+            setbit(pSInputPointer->ucValStatus, ucAxis[1]);
 
-			//if (g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE )
-			//{
-			//	if (isZero(pSInputPointer->dArcMaxChordErrorVmax))
-			//	{
-			//		pSInputPointer->dArcMaxChordErrorVmax = g_SSystemPara.dSysMaxVel;
-			//	}
-			//	if (isZero(pSInputPointer->dArcMaxNormalAccVmax))
-			//	{
-			//		pSInputPointer->dArcMaxNormalAccVmax = g_SSystemPara.dSysMaxVel;
-			//	}
-			//}
-		}
+            //if (g_SSystemPara.ucInterpolationMode != INTERPOLATION_LONGAXIS_MODE )
+            //{
+            //	if (isZero(pSInputPointer->dArcMaxChordErrorVmax))
+            //	{
+            //		pSInputPointer->dArcMaxChordErrorVmax = g_SSystemPara.dSysMaxVel;
+            //	}
+            //	if (isZero(pSInputPointer->dArcMaxNormalAccVmax))
+            //	{
+            //		pSInputPointer->dArcMaxNormalAccVmax = g_SSystemPara.dSysMaxVel;
+            //	}
+            //}
+        }
 
-		////·ÀÖ¹×ÔÊÊÓ¦²å²¹ÏÂ ×î´óËÙ¶ÈÎª0µ¼ÖÂ²»ÔË¶¯
-		//if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE && isZero(pSInputPointer->dCommonVMaxFromSingleAxis))
-		//{
-		//	pSInputPointer->dCommonVMaxFromSingleAxis = g_SSystemPara.dSysMaxVel;
-		//}
+        ////é˜²æ­¢è‡ªé€‚åº”æ’è¡¥ä¸‹ æœ€å¤§é€Ÿåº¦ä¸º0å¯¼è‡´ä¸è¿åŠ¨
+        //if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_ADAPTIVE_PARAMETER_MODE && isZero(pSInputPointer->dCommonVMaxFromSingleAxis))
+        //{
+        //	pSInputPointer->dCommonVMaxFromSingleAxis = g_SSystemPara.dSysMaxVel;
+        //}
 
+        //if (isZero(pSInputPointer->dAcc))//é˜²æ­¢åŠ é€Ÿåº¦ä¸º0å¯¼è‡´ä¸è¿åŠ¨
+        //{
+        //	pSInputPointer->dAcc = (cType == 0) ? 0 : getSysAcc(pSInputPointer->ucAccVelPlanType);
+        //}
+        //if (isZero(pSInputPointer->dDec))
+        //{
+        //	pSInputPointer->dDec = (cType == 0) ? 0 : getSysDec(pSInputPointer->ucDecVelPlanType);
+        //}
 
-
-		//if (isZero(pSInputPointer->dAcc))//·ÀÖ¹¼ÓËÙ¶ÈÎª0µ¼ÖÂ²»ÔË¶¯
-		//{
-		//	pSInputPointer->dAcc = (cType == 0) ? 0 : getSysAcc(pSInputPointer->ucAccVelPlanType);
-		//}
-		//if (isZero(pSInputPointer->dDec))
-		//{
-		//	pSInputPointer->dDec = (cType == 0) ? 0 : getSysDec(pSInputPointer->ucDecVelPlanType);
-		//}
-
-		//¹Ì¶¨²ÎÊı
-		//g_SPreProcess.ucRunStep = 0;//ÔËĞĞ²½Öè
-		//g_SPreProcess.SUserData.dTc = g_SSystemPara.dInterpolationTime;//²å²¹ÖÜÆÚ
-		pSchannel->SPreProcess.ucInpStatus = INP_BLOCKED; //²å²¹½á¹¹Ìå×´Ì¬
-	}
-	//¸ù¾İ¾àÀëµ÷Õû¼õËÙ¶È
-	switch (cType)//2024.12.9ĞÜ¿¥
-	{
-	case 0:
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			if (getbit(pSInputPointer->ucValStatus, i))
-			{
-			 /* **°´µ±Ç°cUserDataCountÈ¡±¾ÖáSInput×öĞ£Ñé** */
-				cRes = ValidateAdjustDecInput(pSInputPointer + cUserDataCount);
-				if (cRes < 0)
-				{
-					parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-					return cRes;
-				} 
-				cRes = adjustDec(ucChannelNum, pSInputPointer, cType, i, cUserDataCount);
-				if (cRes == 3)
-				{
-					parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-					return cRes;
-				} 
-			}
-		}
-		cUserDataCount = 0;
-		break;
-	default://Ä¬ÈÏG01
-	case 1:
-	case 2:
-	case 3:
-	    cRes = ValidateAdjustDecInput(pSInputPointer);
-		if (cRes < 0)
-		{
-			parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-			return cRes;
-		} 
-		cRes = adjustDec(ucChannelNum, pSInputPointer, cType, NULL, 0);
-		if (cRes == 3)
-		{
-			parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-			return cRes;
-		} 
-		break;
-	}
-	switch (cType) //¸ù¾İÀàĞÍ¸³ÓèÖ¸ÁîÀàĞÍ
-	{
-	case 0://¿ìËÙÔË¶¯
-		setBits(unCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			if (getbit(pSInputPointer->ucValStatus, i))
-			{
-				pSchannel->SG00.pSSingleAxisArray[i].SUserData = *(pSInputPointer + cUserDataCount);
-				cUserDataCount++;
-			}
-		}
-		pSchannel->SG00.SUserData.ucValStatus = pSInputPointer->ucValStatus;
-		pSchannel->SG00.SUserData.SEndPoint = pSInputPointer->SEndPoint;
-		pSchannel->SG00.SUserData.cInterpDir = pSInputPointer->cInterpDir;
-		pSchannel->SG00.SUserData.cDealType = DEALTYPE_USER_INPUT;
-		pSchannel->SG00.bIsUserData = TRUE;//2022.12.6  Ê¹ÓÃÓÃ»§Êı¾İ±êÖ¾Î»ÖÃ1
-		pSchannel->SG00.ucRunStep = 0;
-		break;
-	default://Ä¬ÈÏ G01
-	case 1://Ö±Ïß²å²¹
-		setBits(unCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
-		pSchannel->SG01.unCommandType = unCommandType;
-		pSchannel->SG01.SUserData = *pSInputPointer;
-		pSchannel->SG01.bIsUserData = TRUE;   //2022.12.6  Ê¹ÓÃÓÃ»§Êı¾İ±êÖ¾Î»ÖÃ1
-		pSchannel->SG01.ucInpStatus = INP_OCCUPATION;
-		break;
-	case 2://Ë³Ô²
-		setBits(unCommandType, CMD_MOTION_ARC, CMD_MOTION_ADDR);
-		pSchannel->SG02.unCommandType = unCommandType;
-		pSInputPointer->cArcDir = ARC_CW;
-		pSchannel->SG02.SUserData = *pSInputPointer;
-		pSchannel->SG02.bIsUserData = TRUE;   //2022.12.6  Ê¹ÓÃÓÃ»§Êı¾İ±êÖ¾Î»ÖÃ1
-		pSchannel->SG02.ucInpStatus = INP_OCCUPATION;
-		break;
-	case 3://ÄæÔ²
-		setBits(unCommandType, CMD_MOTION_ANTI_ARC, CMD_MOTION_ADDR);
-		pSchannel->SG02.unCommandType = unCommandType;
-		pSInputPointer->cArcDir = ARC_ANTI_CW;
-		pSchannel->SG02.SUserData = *pSInputPointer;
-		pSchannel->SG02.bIsUserData = TRUE;   //2022.12.6  Ê¹ÓÃÓÃ»§Êı¾İ±êÖ¾Î»ÖÃ1
-		pSchannel->SG02.ucInpStatus = INP_OCCUPATION;
-		break;
-	}
-	//¼Ì³ĞÖ¸ÁîÀàĞÍ
-	//pSchannel->SRun.unCommandType = pSchannel->SPreProcess.unCommandType = unCommandType;
-	pSchannel->SRun.unCommandType = unCommandType;
-	if (g_RunMode != AUTOMATIC_MODE && (ucChannelStatus == SYS_IDLE || ucChannelStatus == SYS_RUN))	//³ÂÃô´Ï2023/11/8  //ºé¹ÚÅô 2024/6/5 Ôö¼ÓÌõ¼ş£º·Ç×Ô¶¯Ö´ĞĞÄ£Ê½ÏÂÉèÖÃÊÖ¶¯Í£Ö¹£¬¿ª·Åº¯Êı¹©ÆóÒµÊ¹ÓÃ£¨°Ú±Û»ú£©
-	{
-		setBits(pSchannel->SPreProcess.unCommandType, CMD_PROGRAM_FINISH, CMD_PROGRAM_ADDR);//ÉèÖÃ³ÌĞòÍ£Ö¹
-	}
-	return 1;
+        //å›ºå®šå‚æ•°
+        //g_SPreProcess.ucRunStep = 0;//è¿è¡Œæ­¥éª¤
+        //g_SPreProcess.SUserData.dTc = g_SSystemPara.dInterpolationTime;//æ’è¡¥å‘¨æœŸ
+        pSchannel->SPreProcess.ucInpStatus = INP_BLOCKED; //æ’è¡¥ç»“æ„ä½“çŠ¶æ€
+    }
+    //æ ¹æ®è·ç¦»è°ƒæ•´å‡é€Ÿåº¦
+    switch (cType) //2024.12.9ç†Šéª
+    {
+    case 0:
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            if (getbit(pSInputPointer->ucValStatus, i))
+            {
+                /* **æŒ‰å½“å‰cUserDataCountå–æœ¬è½´SInputåšæ ¡éªŒ** */
+                cRes = ValidateAdjustDecInput(pSInputPointer + cUserDataCount);
+                if (cRes < 0)
+                {
+                    parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+                    return cRes;
+                }
+                cRes = adjustDec(ucChannelNum, pSInputPointer, cType, i, cUserDataCount);
+                if (cRes == 3)
+                {
+                    parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+                    return cRes;
+                }
+            }
+        }
+        cUserDataCount = 0;
+        break;
+    default: //é»˜è®¤G01
+    case 1:
+    case 2:
+    case 3:
+        cRes = ValidateAdjustDecInput(pSInputPointer);
+        if (cRes < 0)
+        {
+            parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+            return cRes;
+        }
+        cRes = adjustDec(ucChannelNum, pSInputPointer, cType, NULL, 0);
+        if (cRes == 3)
+        {
+            parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+            return cRes;
+        }
+        break;
+    }
+    switch (cType) //æ ¹æ®ç±»å‹èµ‹äºˆæŒ‡ä»¤ç±»å‹
+    {
+    case 0: //å¿«é€Ÿè¿åŠ¨
+        setBits(unCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            if (getbit(pSInputPointer->ucValStatus, i))
+            {
+                pSchannel->SG00.pSSingleAxisArray[i].SUserData = *(pSInputPointer + cUserDataCount);
+                cUserDataCount++;
+            }
+        }
+        pSchannel->SG00.SUserData.ucValStatus = pSInputPointer->ucValStatus;
+        pSchannel->SG00.SUserData.SEndPoint = pSInputPointer->SEndPoint;
+        pSchannel->SG00.SUserData.cInterpDir = pSInputPointer->cInterpDir;
+        pSchannel->SG00.SUserData.cDealType = DEALTYPE_USER_INPUT;
+        pSchannel->SG00.bIsUserData = TRUE; //2022.12.6  ä½¿ç”¨ç”¨æˆ·æ•°æ®æ ‡å¿—ä½ç½®1
+        pSchannel->SG00.ucRunStep = 0;
+        break;
+    default: //é»˜è®¤ G01
+    case 1:  //ç›´çº¿æ’è¡¥
+        setBits(unCommandType, CMD_MOTION_LINE, CMD_MOTION_ADDR);
+        pSchannel->SG01.unCommandType = unCommandType;
+        pSchannel->SG01.SUserData = *pSInputPointer;
+        pSchannel->SG01.bIsUserData = TRUE; //2022.12.6  ä½¿ç”¨ç”¨æˆ·æ•°æ®æ ‡å¿—ä½ç½®1
+        pSchannel->SG01.ucInpStatus = INP_OCCUPATION;
+        break;
+    case 2: //é¡ºåœ†
+        setBits(unCommandType, CMD_MOTION_ARC, CMD_MOTION_ADDR);
+        pSchannel->SG02.unCommandType = unCommandType;
+        pSInputPointer->cArcDir = ARC_CW;
+        pSchannel->SG02.SUserData = *pSInputPointer;
+        pSchannel->SG02.bIsUserData = TRUE; //2022.12.6  ä½¿ç”¨ç”¨æˆ·æ•°æ®æ ‡å¿—ä½ç½®1
+        pSchannel->SG02.ucInpStatus = INP_OCCUPATION;
+        break;
+    case 3: //é€†åœ†
+        setBits(unCommandType, CMD_MOTION_ANTI_ARC, CMD_MOTION_ADDR);
+        pSchannel->SG02.unCommandType = unCommandType;
+        pSInputPointer->cArcDir = ARC_ANTI_CW;
+        pSchannel->SG02.SUserData = *pSInputPointer;
+        pSchannel->SG02.bIsUserData = TRUE; //2022.12.6  ä½¿ç”¨ç”¨æˆ·æ•°æ®æ ‡å¿—ä½ç½®1
+        pSchannel->SG02.ucInpStatus = INP_OCCUPATION;
+        break;
+    }
+    //ç»§æ‰¿æŒ‡ä»¤ç±»å‹
+    //pSchannel->SRun.unCommandType = pSchannel->SPreProcess.unCommandType = unCommandType;
+    pSchannel->SRun.unCommandType = unCommandType;
+    if (g_RunMode != AUTOMATIC_MODE &&
+        (ucChannelStatus == SYS_IDLE ||
+         ucChannelStatus ==
+             SYS_RUN)) //é™ˆæ•èª2023/11/8  //æ´ªå† é¹ 2024/6/5 å¢åŠ æ¡ä»¶ï¼šéè‡ªåŠ¨æ‰§è¡Œæ¨¡å¼ä¸‹è®¾ç½®æ‰‹åŠ¨åœæ­¢ï¼Œå¼€æ”¾å‡½æ•°ä¾›ä¼ä¸šä½¿ç”¨ï¼ˆæ‘†è‡‚æœºï¼‰
+    {
+        setBits(pSchannel->SPreProcess.unCommandType, CMD_PROGRAM_FINISH, CMD_PROGRAM_ADDR); //è®¾ç½®ç¨‹åºåœæ­¢
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºadjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, uint8 ucAxis)
-  º¯Êı¹¦ÄÜ  µ÷ÕûSInputµÄ¼õËÙ¶È
-  ÊäÈë²ÎÊı£º	ucChannelNum		Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			pInterpPrePointer   ´«ÈëÔË¶¯²ÎÊıµÄ½á¹¹Ìå
-			cType				ÔË¶¯ÀàĞÍ  //0 ¿ìËÙÔË¶¯  1Ö±Ïß  2Ë³Ô² 3ÄæÔ²
-			ucAxis				ÖáºÅ  //ÓÃÓÚG0£¬¼´cType=0£¬ÆäËûÇé¿öÎŞ×÷ÓÃ£¬¿ÉÖÃÎªNULL
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-			 1		Î´ĞŞ¸Ä¼õËÙ¶È
-			 2		ĞŞ¸ÄÁË¼õËÙ¶È
-			 3      ²ÎÊı´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šadjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, uint8 ucAxis)
+  å‡½æ•°åŠŸèƒ½  è°ƒæ•´SInputçš„å‡é€Ÿåº¦
+  è¾“å…¥å‚æ•°ï¼š	ucChannelNum		é€šé“å· 0~CHANNEL_NUM_MAX-1
+			pInterpPrePointer   ä¼ å…¥è¿åŠ¨å‚æ•°çš„ç»“æ„ä½“
+			cType				è¿åŠ¨ç±»å‹  //0 å¿«é€Ÿè¿åŠ¨  1ç›´çº¿  2é¡ºåœ† 3é€†åœ†
+			ucAxis				è½´å·  //ç”¨äºG0ï¼Œå³cType=0ï¼Œå…¶ä»–æƒ…å†µæ— ä½œç”¨ï¼Œå¯ç½®ä¸ºNULL
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+			 1		æœªä¿®æ”¹å‡é€Ÿåº¦
+			 2		ä¿®æ”¹äº†å‡é€Ÿåº¦
+			 3      å‚æ•°é”™è¯¯
+  å¤‡    æ³¨ï¼š
   ****************************************/
-int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, uint8 ucAxis, int8 cUserDataCount)//2025.4.30 ĞÜ¿¥
+int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, uint8 ucAxis,
+               int8 cUserDataCount) //2025.4.30 ç†Šéª
 {
-	struct SChannel* pSchannel;
-	struct SG2* pSG2Pointer;
-	double dVs, dVmax, dVe;    //ÆğÊ¼£¬×î´ó£¬ÖÕµãËÙ¶È
-	double dAcc, dDec;        //¼ÓËÙ¶Î£¬¼õËÙ¶ÎµÄ¼õËÙ¶È
-	double dDistance;
-	double dAccFactor = 0, dDecFactor = 0; //¼ÓËÙ¹«Ê½ÏµÊı  ¼õËÙ¹«Ê½ÏµÊı  £¨¸ù¾İÇúÏßÀàĞÍÈ¡Öµ£©
-	uint8 ucHorizontalAxis;// ºáÖá
-	uint8 ucVerticalAxis; //×İÖá
-	double dMaxDistance = 0;	//×î´óÎ»ÒÆÁ¿
-	double distance = 0;		//¾àÀëÁÙÊ±±äÁ¿
-	double dRad;//»¡¶È
-	struct SInput* pSInput;
-	int8 cRes;
-	pSchannel = &g_SChannel[ucChannelNum];
-	pSInput = pSInputPointer + cUserDataCount;
+    struct SChannel* pSchannel;
+    struct SG2* pSG2Pointer;
+    double dVs, dVmax, dVe; //èµ·å§‹ï¼Œæœ€å¤§ï¼Œç»ˆç‚¹é€Ÿåº¦
+    double dAcc, dDec;      //åŠ é€Ÿæ®µï¼Œå‡é€Ÿæ®µçš„å‡é€Ÿåº¦
+    double dDistance;
+    double dAccFactor = 0, dDecFactor = 0; //åŠ é€Ÿå…¬å¼ç³»æ•°  å‡é€Ÿå…¬å¼ç³»æ•°  ï¼ˆæ ¹æ®æ›²çº¿ç±»å‹å–å€¼ï¼‰
+    uint8 ucHorizontalAxis;                // æ¨ªè½´
+    uint8 ucVerticalAxis;                  //çºµè½´
+    double dMaxDistance = 0;               //æœ€å¤§ä½ç§»é‡
+    double distance = 0;                   //è·ç¦»ä¸´æ—¶å˜é‡
+    double dRad;                           //å¼§åº¦
+    struct SInput* pSInput;
+    int8 cRes;
+    pSchannel = &g_SChannel[ucChannelNum];
+    pSInput = pSInputPointer + cUserDataCount;
 
-	dVs = pSInput->dVs;		//ÆğÊ¼ËÙ¶È
-	dVmax = pSInput->dFeedrate;		//×î´óËÙ¶È
-	dVe = pSInput->dPrimalVe;		//×îÖÕËÙ¶È
-	dAcc = pSInput->dAcc;		//¼ÓËÙ¶È
-	dDec = pSInput->dDec;		//¼õËÙ¶È
-	dDistance = pSInput->dDistance; //×Ü¾àÀë
+    dVs = pSInput->dVs;             //èµ·å§‹é€Ÿåº¦
+    dVmax = pSInput->dFeedrate;     //æœ€å¤§é€Ÿåº¦
+    dVe = pSInput->dPrimalVe;       //æœ€ç»ˆé€Ÿåº¦
+    dAcc = pSInput->dAcc;           //åŠ é€Ÿåº¦
+    dDec = pSInput->dDec;           //å‡é€Ÿåº¦
+    dDistance = pSInput->dDistance; //æ€»è·ç¦»
 
-    if (!isfinite(dAcc) || !isfinite(dDec) || !isfinite(dDistance) ||
-        !isfinite(dVs)  || !isfinite(dVmax) || !isfinite(dVe))
+    if (!isfinite(dAcc) || !isfinite(dDec) || !isfinite(dDistance) || !isfinite(dVs) || !isfinite(dVmax) ||
+        !isfinite(dVe))
     {
         return 3;
     }
 
-    /* dDistance ¼«Ğ¡£ºÒªÃ´Ö±½Ó±¨´í£¬ÒªÃ´ÈÏÎªÎŞĞèÖØËã */
-  
+    /* dDistance æå°ï¼šè¦ä¹ˆç›´æ¥æŠ¥é”™ï¼Œè¦ä¹ˆè®¤ä¸ºæ— éœ€é‡ç®— */
 
-    /* dAcc/dDec ±ØĞë´óÓÚEPS£¬·ñÔò¾Ü¾øÏÂ·¢ */
+    /* dAcc/dDec å¿…é¡»å¤§äºEPSï¼Œå¦åˆ™æ‹’ç»ä¸‹å‘ */
     if (dAcc <= EPSINON || dDec <= EPSINON)
     {
         return 3;
     }
-	getRealTimePoint((double*)&pSInputPointer->SStartPoint, AXIS_NUM_MAX, pSchannel->pMapAxisArray, &pSInputPointer->ucValStatus);
+    getRealTimePoint((double*)&pSInputPointer->SStartPoint, AXIS_NUM_MAX, pSchannel->pMapAxisArray,
+                     &pSInputPointer->ucValStatus);
 
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú
-	if (g_SSystemPara.bUseVirtualY == TRUE && g_RunMode != RE0_MODE)//¿ªÆôºÏ³ÉĞéÄâYÖá¹¦ÄÜ£º½«ÎïÀíÖáµÄ×ø±ê´Ó ÇãĞ±×ø±êÏµ ×ª»»ÖÁ Ö±½Ç×ø±êÏµ
-	{
-		//ÆğµãÎªÇãĞ±×ø±êÏµ£¨X1-Y1-Z1£©ÎïÀíÖáµÄÊµÊ±µã£¬ÖÕµãÎªÖ±½Ç×ø±êÏµ(X-Y-Z)»º³åÇøµÄÖµ£¬Òò´ËÒª½«Æğµã»»ËãÖÁÖ±½Ç×ø±êÏµ¡£
-		if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_X))
-		{
-			double dY1Mach;
-			getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pSchannel->pMapAxisArray);
-			pSInputPointer->SStartPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pSchannel->dSINAngleYY1;
-		}
-		if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_Y))
-		{
-			pSInputPointer->SStartPoint.dArray[AXIS_Y] *= pSchannel->dCOSAngleYY1;
-		}
-	}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (g_SSystemPara.bUseVirtualY == TRUE &&
+        g_RunMode != RE0_MODE) //å¼€å¯åˆæˆè™šæ‹ŸYè½´åŠŸèƒ½ï¼šå°†ç‰©ç†è½´çš„åæ ‡ä» å€¾æ–œåæ ‡ç³» è½¬æ¢è‡³ ç›´è§’åæ ‡ç³»
+    {
+        //èµ·ç‚¹ä¸ºå€¾æ–œåæ ‡ç³»ï¼ˆX1-Y1-Z1ï¼‰ç‰©ç†è½´çš„å®æ—¶ç‚¹ï¼Œç»ˆç‚¹ä¸ºç›´è§’åæ ‡ç³»(X-Y-Z)ç¼“å†²åŒºçš„å€¼ï¼Œå› æ­¤è¦å°†èµ·ç‚¹æ¢ç®—è‡³ç›´è§’åæ ‡ç³»ã€‚
+        if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_X))
+        {
+            double dY1Mach;
+            getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pSchannel->pMapAxisArray);
+            pSInputPointer->SStartPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pSchannel->dSINAngleYY1;
+        }
+        if (VAL_VALID == getbit(pSInputPointer->ucValStatus, AXIS_Y))
+        {
+            pSInputPointer->SStartPoint.dArray[AXIS_Y] *= pSchannel->dCOSAngleYY1;
+        }
+    }
 #endif
 
-	dAccFactor = getFactor(pSInput->ucAccVelPlanType);//¸ù¾İ¼ÓËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
-	dDecFactor = getFactor(pSInput->ucDecVelPlanType);//¸ù¾İ¼õËÙÇúÏßÀàĞÍ»ñÈ¡ÏµÊı
+    dAccFactor = getFactor(pSInput->ucAccVelPlanType); //æ ¹æ®åŠ é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
+    dDecFactor = getFactor(pSInput->ucDecVelPlanType); //æ ¹æ®å‡é€Ÿæ›²çº¿ç±»å‹è·å–ç³»æ•°
 
-	switch (cType)
-	{
-	case 0:
-		dDistance = fabs(pSInputPointer->SEndPoint.dArray[ucAxis] - pSInputPointer->SStartPoint.dArray[ucAxis]);
-		break;
-	default:
-	case 1:
-		if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE)//³¤ÖáÄ£Ê½ÏÂ
-		{
-			//¼ÆËã³¤ÖáºÍ¾àÀë·ÖÁ¿
-			calVectorAndDistance((double*)&pSInputPointer->SStartPoint, (double*)&pSInputPointer->SEndPoint, &dDistance, (double*)&pSInputPointer->SStartVector,
-				AXIS_NUM_MAX, pSInputPointer->ucValStatus);
-		}
-		else
-		{
-			//¼ÆËã¾àÀëºÍÏòÁ¿
-			calcG1VectorAndDistance(pSInputPointer->SStartPoint, pSInputPointer->SEndPoint, &pSInputPointer->SStartVector, &pSInputPointer->SStartVector, &dDistance,
-				AXIS_NUM_MAX, pSchannel->pMapAxisArray, &pSInputPointer->ucValStatus, pSInputPointer->ucRelaVal);
-		}
-		break;
-	case 2:
-	case 3:
-		pSG2Pointer = &g_SChannel[ucChannelNum].SG02;
-		ucHorizontalAxis = pSG2Pointer->ucAxis[0];// ºáÖá
-		ucVerticalAxis = pSG2Pointer->ucAxis[1]; //×İÖá
+    switch (cType)
+    {
+    case 0:
+        dDistance = fabs(pSInputPointer->SEndPoint.dArray[ucAxis] - pSInputPointer->SStartPoint.dArray[ucAxis]);
+        break;
+    default:
+    case 1:
+        if (g_SSystemPara.ucInterpolationMode == INTERPOLATION_LONGAXIS_MODE) //é•¿è½´æ¨¡å¼ä¸‹
+        {
+            //è®¡ç®—é•¿è½´å’Œè·ç¦»åˆ†é‡
+            calVectorAndDistance((double*)&pSInputPointer->SStartPoint, (double*)&pSInputPointer->SEndPoint, &dDistance,
+                                 (double*)&pSInputPointer->SStartVector, AXIS_NUM_MAX, pSInputPointer->ucValStatus);
+        }
+        else
+        {
+            //è®¡ç®—è·ç¦»å’Œå‘é‡
+            calcG1VectorAndDistance(pSInputPointer->SStartPoint, pSInputPointer->SEndPoint,
+                                    &pSInputPointer->SStartVector, &pSInputPointer->SStartVector, &dDistance,
+                                    AXIS_NUM_MAX, pSchannel->pMapAxisArray, &pSInputPointer->ucValStatus,
+                                    pSInputPointer->ucRelaVal);
+        }
+        break;
+    case 2:
+    case 3:
+        pSG2Pointer = &g_SChannel[ucChannelNum].SG02;
+        ucHorizontalAxis = pSG2Pointer->ucAxis[0]; // æ¨ªè½´
+        ucVerticalAxis = pSG2Pointer->ucAxis[1];   //çºµè½´
 
-		if (pSG2Pointer == NULL)//¿ÕÖ¸Õë
-		{
-			return -1;
-		}
-		//¼ÆËãÔ²ĞÄºÍ»¡¶È
-		cRes = radCalculateR((double*)&pSInputPointer->SStartPoint, (double*)&pSInputPointer->SEndPoint, pSInputPointer->dRadius, (double*)&pSInputPointer->SCenterPoint,pSInputPointer->cArcDir, &dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
-		if (cRes != 1)//Ô²»¡¼ÆËãÊ§°Ü
-		{
-			return 3;
-		}
-		//¼ÆËã³¤ÖáºÍÎ»ÒÆ·ÖÁ¿£¨Ô²»¡£©
-		//¼ÆËãÔ²»¡¾àÀë
-		distance = fabs(dRad * pSInputPointer->dRadius);
-		dMaxDistance = max(dMaxDistance, distance);
-		if (isZero(dMaxDistance))
-		{
-			parseRunningError(9999,GCODE_ERROR_NUM132,9999);
-			return 3;
-		}
-		//Ñ°ÕÒ×î³¤Öá  £¨¾ø¶ÔÖµ£©
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			if (i == ucHorizontalAxis || i == ucVerticalAxis)//Ìø¹ıÔ²»¡µÄºáÖá »ò×İÖá
-			{
-				continue;
-			}
-			//¼ÆËã¾àÀë fabs(ÖÕµã-Æğµã)
-			if (dDistance <= EPSINON) return 3;
-			distance = fabs(pSInputPointer->SEndPoint.dArray[i] - pSInputPointer->SStartPoint.dArray[i]);
-			dMaxDistance = max(dMaxDistance, distance);
-		}
+        if (pSG2Pointer == NULL) //ç©ºæŒ‡é’ˆ
+        {
+            return -1;
+        }
+        //è®¡ç®—åœ†å¿ƒå’Œå¼§åº¦
+        cRes = radCalculateR((double*)&pSInputPointer->SStartPoint, (double*)&pSInputPointer->SEndPoint,
+                             pSInputPointer->dRadius, (double*)&pSInputPointer->SCenterPoint, pSInputPointer->cArcDir,
+                             &dRad, pSG2Pointer->ucAxis[0], pSG2Pointer->ucAxis[1]);
+        if (cRes != 1) //åœ†å¼§è®¡ç®—å¤±è´¥
+        {
+            return 3;
+        }
+        //è®¡ç®—é•¿è½´å’Œä½ç§»åˆ†é‡ï¼ˆåœ†å¼§ï¼‰
+        //è®¡ç®—åœ†å¼§è·ç¦»
+        distance = fabs(dRad * pSInputPointer->dRadius);
+        dMaxDistance = max(dMaxDistance, distance);
+        if (isZero(dMaxDistance))
+        {
+            parseRunningError(9999, GCODE_ERROR_NUM132, 9999);
+            return 3;
+        }
+        //å¯»æ‰¾æœ€é•¿è½´  ï¼ˆç»å¯¹å€¼ï¼‰
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            if (i == ucHorizontalAxis || i == ucVerticalAxis) //è·³è¿‡åœ†å¼§çš„æ¨ªè½´ æˆ–çºµè½´
+            {
+                continue;
+            }
+            //è®¡ç®—è·ç¦» fabs(ç»ˆç‚¹-èµ·ç‚¹)
+            if (dDistance <= EPSINON)
+                return 3;
+            distance = fabs(pSInputPointer->SEndPoint.dArray[i] - pSInputPointer->SStartPoint.dArray[i]);
+            dMaxDistance = max(dMaxDistance, distance);
+        }
 
-		//¼ÆËãÔ²»¡¾àÀë·ÖÁ¿
-		//Ô²»¡µÄ¾àÀë·ÖÁ¿´æ´¢ÔÚºáÖáµÄ¾àÀë·ÖÁ¿
-		pSInputPointer->SStartVector.dArray[ucHorizontalAxis] = dRad * pSInputPointer->dRadius / dMaxDistance;
-		//×İÖáµÄ¾àÀë·ÖÁ¿Îª0
-		pSInputPointer->SStartVector.dArray[ucVerticalAxis] = 0;
+        //è®¡ç®—åœ†å¼§è·ç¦»åˆ†é‡
+        //åœ†å¼§çš„è·ç¦»åˆ†é‡å­˜å‚¨åœ¨æ¨ªè½´çš„è·ç¦»åˆ†é‡
+        pSInputPointer->SStartVector.dArray[ucHorizontalAxis] = dRad * pSInputPointer->dRadius / dMaxDistance;
+        //çºµè½´çš„è·ç¦»åˆ†é‡ä¸º0
+        pSInputPointer->SStartVector.dArray[ucVerticalAxis] = 0;
 
-		//¼ÆËã¾àÀë·ÖÁ¿
-		for (int i = 0; i < AXIS_NUM_MAX; i++)
-		{
-			if (i == ucHorizontalAxis || i == ucVerticalAxis)//Ìø¹ıÔ²»¡µÄºáÖá »ò×İÖá
-			{
-				continue;
-			}
-			//ÆäËûÖ±Ïß¼ÆËã
-			distance = pSInputPointer->SEndPoint.dArray[i] - pSInputPointer->SStartPoint.dArray[i];
-			//¾àÀë·ÖÁ¿ = µ±Ç°ÖáÎ»ÒÆ / ×î³¤ÖáÎ»ÒÆ
-			pSInputPointer->SStartVector.dArray[i] = distance / dMaxDistance;
-		}
+        //è®¡ç®—è·ç¦»åˆ†é‡
+        for (int i = 0; i < AXIS_NUM_MAX; i++)
+        {
+            if (i == ucHorizontalAxis || i == ucVerticalAxis) //è·³è¿‡åœ†å¼§çš„æ¨ªè½´ æˆ–çºµè½´
+            {
+                continue;
+            }
+            //å…¶ä»–ç›´çº¿è®¡ç®—
+            distance = pSInputPointer->SEndPoint.dArray[i] - pSInputPointer->SStartPoint.dArray[i];
+            //è·ç¦»åˆ†é‡ = å½“å‰è½´ä½ç§» / æœ€é•¿è½´ä½ç§»
+            pSInputPointer->SStartVector.dArray[i] = distance / dMaxDistance;
+        }
 
-		//×î³¤ÖáÓÃÓÚËÙ¶È¹æ»®
-		dDistance = pSInputPointer->dTargetDist = dMaxDistance;
-		break;
-	}
-	if (dVe > dVmax)
-	{
-		dVe = dVmax;//ÏŞÖÆÄ©ËÙ¶È
-	}
-	if (dVmax >= dVs)//×î´óËÙ¶È´óÓÚVs,´ËÊ±¼ÆËã¼«ÏŞ¼õËÙ¾àÀëÊ±£¬Ö»Ğè¿¼ÂÇ´ÓVsµ½VeÒÔ¼õËÙ¶È¼õËÙ£¨×î´óËÙ¶Èµ÷ÕûÖÁµÈÓÚVs£©
-	{
-		if (dDec <= EPSINON) return 3;
-		if (dDistance < dDecFactor * (dVs * dVs - dVe * dVe) / dDec)//×Ü¾àÀë±È´ÓÒ»¿ªÊ¼¾ÍÒÔVs¼õËÙµ½VeµÄ¾àÀë»¹Ğ¡
-		{
-			dDec = dDecFactor * (dVs * dVs - dVe * dVe) / dDistance;//ÒÔ¾àÀë·´Ëã¼õËÙ¶È
-		}
-		else
-		{
-		}
-	}
-	else//×î´óËÙ¶ÈĞ¡ÓÚVs,´ËÊ±¼ÆËã¼«ÏŞ¼õËÙ¾àÀëÊ±£¬Ö»Ğè¿¼ÂÇ´ÓVsµ½VmaxÒÔ¼ÓËÙ¶È¼õËÙºÍ´ÓVmaxµ½VeÒÔ¼õËÙ¶È¼õËÙ
-	{
-		if (dDec <= EPSINON) return 3;
-		if (dDistance < dAccFactor * (dVs * dVs - dVmax * dVmax) / dAcc + dDecFactor * (dVmax*dVmax - dVe * dVe) / dDec)
-			//×Ü¾àÀë²»¹»ÏÈ´ÓVs¼õËÙÖÁ×î´óËÙ¶ÈÔÚ¼õËÙµ½Ve
-		{
-			dDec = dDecFactor * (dVs * dVs - dVe * dVe) / dDistance;//ÒÔ¾àÀë·´Ëã¼õËÙ¶È
-		}
-		else
-		{
-		}
-	}
-    /* === »ØĞ´·ÀÏß£º×è¶Ï NaN/Inf/¸ºÊı/¹ı´óÒì³£ÖµÏÂ´« === */
+        //æœ€é•¿è½´ç”¨äºé€Ÿåº¦è§„åˆ’
+        dDistance = pSInputPointer->dTargetDist = dMaxDistance;
+        break;
+    }
+    if (dVe > dVmax)
+    {
+        dVe = dVmax; //é™åˆ¶æœ«é€Ÿåº¦
+    }
+    if (dVmax >= dVs) //æœ€å¤§é€Ÿåº¦å¤§äºVs,æ­¤æ—¶è®¡ç®—æé™å‡é€Ÿè·ç¦»æ—¶ï¼Œåªéœ€è€ƒè™‘ä»Vsåˆ°Veä»¥å‡é€Ÿåº¦å‡é€Ÿï¼ˆæœ€å¤§é€Ÿåº¦è°ƒæ•´è‡³ç­‰äºVsï¼‰
+    {
+        if (dDec <= EPSINON)
+            return 3;
+        if (dDistance < dDecFactor * (dVs * dVs - dVe * dVe) / dDec) //æ€»è·ç¦»æ¯”ä»ä¸€å¼€å§‹å°±ä»¥Vså‡é€Ÿåˆ°Veçš„è·ç¦»è¿˜å°
+        {
+            dDec = dDecFactor * (dVs * dVs - dVe * dVe) / dDistance; //ä»¥è·ç¦»åç®—å‡é€Ÿåº¦
+        }
+        else
+        {
+        }
+    }
+    else //æœ€å¤§é€Ÿåº¦å°äºVs,æ­¤æ—¶è®¡ç®—æé™å‡é€Ÿè·ç¦»æ—¶ï¼Œåªéœ€è€ƒè™‘ä»Vsåˆ°Vmaxä»¥åŠ é€Ÿåº¦å‡é€Ÿå’Œä»Vmaxåˆ°Veä»¥å‡é€Ÿåº¦å‡é€Ÿ
+    {
+        if (dDec <= EPSINON)
+            return 3;
+        if (dDistance <
+            dAccFactor * (dVs * dVs - dVmax * dVmax) / dAcc + dDecFactor * (dVmax * dVmax - dVe * dVe) / dDec)
+        //æ€»è·ç¦»ä¸å¤Ÿå…ˆä»Vså‡é€Ÿè‡³æœ€å¤§é€Ÿåº¦åœ¨å‡é€Ÿåˆ°Ve
+        {
+            dDec = dDecFactor * (dVs * dVs - dVe * dVe) / dDistance; //ä»¥è·ç¦»åç®—å‡é€Ÿåº¦
+        }
+        else
+        {
+        }
+    }
+    /* === å›å†™é˜²çº¿ï¼šé˜»æ–­ NaN/Inf/è´Ÿæ•°/è¿‡å¤§å¼‚å¸¸å€¼ä¸‹ä¼  === */
     if (!isfinite(dDec) || dDec <= EPSINON)
     {
         return 3;
     }
 
-
-    if (!isfinite(dAcc) || dAcc <= EPSINON) return 3;
-	pSInput->dVs = dVs;		//ÆğÊ¼ËÙ¶È
-	pSInput->dFeedrate = dVmax;		//×î´óËÙ¶È
-	pSInput->dPrimalVe = dVe;		//×îÖÕËÙ¶È
-	pSInput->dAcc = dAcc;		//¼ÓËÙ¶È
-	pSInput->dDec = dDec;		//¼õËÙ¶È
-	pSInput->dDistance = dDistance; //×Ü¾àÀë
-	return 1;
-
+    if (!isfinite(dAcc) || dAcc <= EPSINON)
+        return 3;
+    pSInput->dVs = dVs;             //èµ·å§‹é€Ÿåº¦
+    pSInput->dFeedrate = dVmax;     //æœ€å¤§é€Ÿåº¦
+    pSInput->dPrimalVe = dVe;       //æœ€ç»ˆé€Ÿåº¦
+    pSInput->dAcc = dAcc;           //åŠ é€Ÿåº¦
+    pSInput->dDec = dDec;           //å‡é€Ÿåº¦
+    pSInput->dDistance = dDistance; //æ€»è·ç¦»
+    return 1;
 }
 
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºapplyG32MotionParaAPI(struct _SG32* pSG32)
-//  º¯Êı¹¦ÄÜ  ÔË¶¯½Ó¿Úº¯Êı
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º0:ÉÏÒ»´Î²å²¹»¹Î´½áÊø
-//			1£ºG32²å²¹³É¹¦
-//			2£ºÊäÈëµÄÖ¸Õë´æÔÚÎª¿Õ
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šapplyG32MotionParaAPI(struct _SG32* pSG32)
+//  å‡½æ•°åŠŸèƒ½  è¿åŠ¨æ¥å£å‡½æ•°
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š0:ä¸Šä¸€æ¬¡æ’è¡¥è¿˜æœªç»“æŸ
+//			1ï¼šG32æ’è¡¥æˆåŠŸ
+//			2ï¼šè¾“å…¥çš„æŒ‡é’ˆå­˜åœ¨ä¸ºç©º
+//  å¤‡    æ³¨ï¼š
 //  ****************************************/
-//int8 applyG32MotionParaAPI(struct _SG32* pSG32)  //Ã»°ì·¨¼ì²âÁ¬ĞøG32
+//int8 applyG32MotionParaAPI(struct _SG32* pSG32)  //æ²¡åŠæ³•æ£€æµ‹è¿ç»­G32
 //{
 //	if (pSG32 == NULL)
 //	{
@@ -1399,25 +1495,25 @@ int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, ui
 //		g_SystemStatus = SYS_RUN;
 //	}
 //
-//	g_SG32.SUserData.dVs = pSG32->SUserData.dVs;                     //ÆğÊ¼ËÙ¶È
-//	g_SG32.SUserData.dVe = pSG32->SUserData.dVe;                     //×îÖÕËÙ¶È
+//	g_SG32.SUserData.dVs = pSG32->SUserData.dVs;                     //èµ·å§‹é€Ÿåº¦
+//	g_SG32.SUserData.dVe = pSG32->SUserData.dVe;                     //æœ€ç»ˆé€Ÿåº¦
 //	g_SG32.SUserData.dVmax = pSG32->SUserData.dVmax;
-//	g_SG32.SUserData.dAcc = pSG32->SUserData.dAcc;                   //¼ÓËÙ¶È
-//	g_SG32.SUserData.dDec = pSG32->SUserData.dDec;                   //¼õËÙ¶È
-//	g_SG32.SUserData.SStarCutPoint = getRealTimePoint();             //»ñÈ¡ÊµÊ±µã×÷ÎªÇĞÏ÷Æğµã
-//	g_SG32.SUserData.SEndPoint = pSG32->SUserData.SEndPoint;         //ÖÕµã
-//	g_SG32.SUserData.dJ = pSG32->SUserData.dJ;                       //¶ÌÖáÍËÎ²Á¿
-//	g_SG32.SUserData.dK = pSG32->SUserData.dK;                       //³¤ÖáÍËÎ²Á¿
-//	g_SG32.SUserData.dQ = pSG32->SUserData.dQ;                       //ÆğÊ¼½Ç
-//	g_SG32.SUserData.dF = pSG32->SUserData.dF;						 //³¤ÖáÂİÎÆµ¼³Ì
+//	g_SG32.SUserData.dAcc = pSG32->SUserData.dAcc;                   //åŠ é€Ÿåº¦
+//	g_SG32.SUserData.dDec = pSG32->SUserData.dDec;                   //å‡é€Ÿåº¦
+//	g_SG32.SUserData.SStarCutPoint = getRealTimePoint();             //è·å–å®æ—¶ç‚¹ä½œä¸ºåˆ‡å‰Šèµ·ç‚¹
+//	g_SG32.SUserData.SEndPoint = pSG32->SUserData.SEndPoint;         //ç»ˆç‚¹
+//	g_SG32.SUserData.dJ = pSG32->SUserData.dJ;                       //çŸ­è½´é€€å°¾é‡
+//	g_SG32.SUserData.dK = pSG32->SUserData.dK;                       //é•¿è½´é€€å°¾é‡
+//	g_SG32.SUserData.dQ = pSG32->SUserData.dQ;                       //èµ·å§‹è§’
+//	g_SG32.SUserData.dF = pSG32->SUserData.dF;						 //é•¿è½´èºçº¹å¯¼ç¨‹
 //
 //
-//	//¹Ì¶¨²ÎÊı
-//	g_SG32.ucG32Step = 0;                                            //ÔËĞĞ²½Öè
-//	g_SG32.SPlanData.dTc = g_SSystemPara.dInterpolationTime;         //²å²¹ÖÜÆÚ
-//	g_SPreProcess.ucInpStatus = INP_ASSIGNMENT_START;                //²å²¹½á¹¹Ìå×´Ì¬Îª¿ªÊ¼¸³Öµ
-//	setBits(g_SPreProcess.unCommandType, CMD_MOTION_SCREWCUT, CMD_MOTION_ADDR);   //Ö¸ÁîÀàĞÍÎªÂİÑÀÇĞÏ÷
-//	setBits(g_SPreProcess.unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);     //ÉèÖÃ³ÌĞòÍ£Ö¹
+//	//å›ºå®šå‚æ•°
+//	g_SG32.ucG32Step = 0;                                            //è¿è¡Œæ­¥éª¤
+//	g_SG32.SPlanData.dTc = g_SSystemPara.dInterpolationTime;         //æ’è¡¥å‘¨æœŸ
+//	g_SPreProcess.ucInpStatus = INP_ASSIGNMENT_START;                //æ’è¡¥ç»“æ„ä½“çŠ¶æ€ä¸ºå¼€å§‹èµ‹å€¼
+//	setBits(g_SPreProcess.unCommandType, CMD_MOTION_SCREWCUT, CMD_MOTION_ADDR);   //æŒ‡ä»¤ç±»å‹ä¸ºèºç‰™åˆ‡å‰Š
+//	setBits(g_SPreProcess.unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);     //è®¾ç½®ç¨‹åºåœæ­¢
 //
 //	return 1;
 //
@@ -1425,15 +1521,15 @@ int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, ui
 //}
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint8 applyG33ParaAPI(struct SPreProcess* pSPreProcess, struct G33* pSG33)
-//  º¯Êı¹¦ÄÜ  ÔË¶¯½Ó¿Úº¯Êı
-//  ÊäÈë²ÎÊı£ºpSPreProcess   ´«ÈëÔË¶¯²ÎÊıµÄ½á¹¹Ìå
-//		   pSG33	           ´«ÈëG33ÂİÎÆ²ÎÊıµÄ½á¹¹Ìå
-//  Êä³ö²ÎÊı£º
-//  ·µ »Ø Öµ£º0:ÉÏÒ»´Î²å²¹»¹Î´½áÊø
-//			1£ºG33²å²¹³É¹¦
-//			-2£ºÊäÈëµÄÖ¸Õë´æÔÚÎª¿Õ
-//  ±¸    ×¢£º
+//  å‡½æ•°åç§°ï¼šint8 applyG33ParaAPI(struct SPreProcess* pSPreProcess, struct G33* pSG33)
+//  å‡½æ•°åŠŸèƒ½  è¿åŠ¨æ¥å£å‡½æ•°
+//  è¾“å…¥å‚æ•°ï¼špSPreProcess   ä¼ å…¥è¿åŠ¨å‚æ•°çš„ç»“æ„ä½“
+//		   pSG33	           ä¼ å…¥G33èºçº¹å‚æ•°çš„ç»“æ„ä½“
+//  è¾“å‡ºå‚æ•°ï¼š
+//  è¿” å› å€¼ï¼š0:ä¸Šä¸€æ¬¡æ’è¡¥è¿˜æœªç»“æŸ
+//			1ï¼šG33æ’è¡¥æˆåŠŸ
+//			-2ï¼šè¾“å…¥çš„æŒ‡é’ˆå­˜åœ¨ä¸ºç©º
+//  å¤‡    æ³¨ï¼š
 //  ****************************************/
 //int8 applyG33ParaAPI(struct SInterpolationPre* pSPreProcess, struct G33* pSG33)
 //{
@@ -1450,24 +1546,24 @@ int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, ui
 //		g_SystemStatus = SYS_RUN;
 //	}
 //
-//	g_SPreProcess.unCommandType = g_SRun.unCommandType;//Ö¸ÁîÀàĞÍ  ¼Ì³ĞSRun
+//	g_SPreProcess.unCommandType = g_SRun.unCommandType;//æŒ‡ä»¤ç±»å‹  ç»§æ‰¿SRun
 //	g_SPreProcess.unGCodeLineNum = g_SRun.unGCodeLineNum = g_SRun.unGCodeLineNum + 1;
 //
-//	//ÆğµãÖÕµã
-//	g_SPreProcess.SUserData.SStartPoint = getRealTimePoint();                      //»ñÈ¡ÊµÊ±µã×÷ÎªÆğµã
-//	g_SPreProcess.SUserData.SEndPoint = pSPreProcess->SUserData.SEndPoint;         //ÖÕµã
+//	//èµ·ç‚¹ç»ˆç‚¹
+//	g_SPreProcess.SUserData.SStartPoint = getRealTimePoint();                      //è·å–å®æ—¶ç‚¹ä½œä¸ºèµ·ç‚¹
+//	g_SPreProcess.SUserData.SEndPoint = pSPreProcess->SUserData.SEndPoint;         //ç»ˆç‚¹
 //
-//	//¼ÆËã³¤¶ÈºÍÆğµãÏòÁ¿
+//	//è®¡ç®—é•¿åº¦å’Œèµ·ç‚¹å‘é‡
 //	calVectorAndDistance(g_SPreProcess.SUserData.SStartPoint, g_SPreProcess.SUserData.SEndPoint, &g_SPreProcess.SUserData.dDistance, &g_SPreProcess.SUserData.SStartVector);
 //
-//	//¹Ì¶¨²ÎÊı
-//	g_SPreProcess.ucRunStep = 0;//ÔËĞĞ²½Öè
-//	g_SPreProcess.ucInpStatus = INP_BLOCKED; //²å²¹½á¹¹Ìå×´Ì¬
+//	//å›ºå®šå‚æ•°
+//	g_SPreProcess.ucRunStep = 0;//è¿è¡Œæ­¥éª¤
+//	g_SPreProcess.ucInpStatus = INP_BLOCKED; //æ’è¡¥ç»“æ„ä½“çŠ¶æ€
 //
-//	//ÉèÖÃÖ¸ÁîÀàĞÍÎª¹¥ÑÀ
-//	setBits(g_SPreProcess.unCommandType, CMD_MOTION_G33, CMD_MOTION_ADDR);   //Ö¸ÁîÀàĞÍÎªÂİÑÀÇĞÏ÷
+//	//è®¾ç½®æŒ‡ä»¤ç±»å‹ä¸ºæ”»ç‰™
+//	setBits(g_SPreProcess.unCommandType, CMD_MOTION_G33, CMD_MOTION_ADDR);   //æŒ‡ä»¤ç±»å‹ä¸ºèºç‰™åˆ‡å‰Š
 //
-//	//gG33ËùĞè²ÎÊı
+//	//gG33æ‰€éœ€å‚æ•°
 //	gG33.G33StartPoint = g_SPreProcess.SUserData.SStartPoint;
 //	gG33.G33EndPoint = g_SPreProcess.SUserData.SEndPoint;
 //	gG33.G33StartVector = g_SPreProcess.SUserData.SStartVector;
@@ -1475,451 +1571,448 @@ int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, ui
 //	gG33.ucL = pSG33->ucL;
 //
 //	g_SRun.unCommandType = g_SPreProcess.unCommandType;
-//	setBits(g_SPreProcess.unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);//ÉèÖÃ³ÌĞòÍ£Ö¹
+//	setBits(g_SPreProcess.unCommandType, CMD_PROGRAM_STOP, CMD_PROGRAM_ADDR);//è®¾ç½®ç¨‹åºåœæ­¢
 //
 //	return 1;
 //}
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºreturendStartFollowDisAPI()
-  º¯Êı¹¦ÄÜ  ·µ»Ø¿ªÊ¼Ëæ¶¯ËùĞèµÄ³¤¶È(¿ªÊ¼Ëæ¶¯ºó£¬²ÅÄÜ»ñµÃ)
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0:»¹Î´»ñµÃ
-			others: ¸ÃÖµÎª¿ªÊ¼Ëæ¶¯ËùĞèµÄ³¤¶È
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šreturendStartFollowDisAPI()
+  å‡½æ•°åŠŸèƒ½  è¿”å›å¼€å§‹éšåŠ¨æ‰€éœ€çš„é•¿åº¦(å¼€å§‹éšåŠ¨åï¼Œæ‰èƒ½è·å¾—)
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0:è¿˜æœªè·å¾—
+			others: è¯¥å€¼ä¸ºå¼€å§‹éšåŠ¨æ‰€éœ€çš„é•¿åº¦
+  å¤‡    æ³¨ï¼š
   ****************************************/
 double returendStartFollowDisAPI()
 {
-	return g_SChannel[0].SG32.dStartFollowDis;
+    return g_SChannel[0].SG32.dStartFollowDis;
 }
 
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetMotionStatus(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡ÔË¶¯×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0  ÕıÔÚÔË¶¯
-			1  ÔË¶¯Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetMotionStatus(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è·å–è¿åŠ¨çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0  æ­£åœ¨è¿åŠ¨
+			1  è¿åŠ¨å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 getMotionStatus(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ²»ÕıÈ·
-	{
-		return 1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·ä¸æ­£ç¡®
+    {
+        return 1;
+    }
 
-	if (g_SChannel[ucChannelNum].SPreProcess.ucInpStatus == INP_FINISHED
-		&& g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE)//ÔË¶¯Íê³É ÇÒÏµÍ³×´Ì¬¿ÕÏĞ
-	{
-		return 1;
-	}
-	return 0;
+    if (g_SChannel[ucChannelNum].SPreProcess.ucInpStatus == INP_FINISHED &&
+        g_SChannel[ucChannelNum].ucChannelStatus == SYS_IDLE) //è¿åŠ¨å®Œæˆ ä¸”ç³»ç»ŸçŠ¶æ€ç©ºé—²
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºenum RUNMODE getRunMode()
-  º¯Êı¹¦ÄÜ  ·µ»Øg_RunMode
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºEDIT_MODE,            //±à¼­Ä£Ê½
-			AUTOMATIC_MODE,       //×Ô¶¯Ö´ĞĞ
+  å‡½æ•°åç§°ï¼šenum RUNMODE getRunMode()
+  å‡½æ•°åŠŸèƒ½  è¿”å›g_RunMode
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šEDIT_MODE,            //ç¼–è¾‘æ¨¡å¼
+			AUTOMATIC_MODE,       //è‡ªåŠ¨æ‰§è¡Œ
 			MDI_MODE,             //MDI
-			HANDWHEEL_MODE,       //ÊÖÂÖ
-			HAND_MODE             //ÊÖ¶¯
-  ±¸    ×¢£º
+			HANDWHEEL_MODE,       //æ‰‹è½®
+			HAND_MODE             //æ‰‹åŠ¨
+  å¤‡    æ³¨ï¼š
   ****************************************/
 enum RUNMODE getRunMode()
 {
-	return g_RunMode;
+    return g_RunMode;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSpindleStatus(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ö÷Öá×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ·´×ª
-			0  Ö÷ÖáÍ£
-			1  Õı×ª
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSpindleStatus(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è·å–ä¸»è½´çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 åè½¬
+			0  ä¸»è½´åœ
+			1  æ­£è½¬
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 getSpindleStatus(uint8 ucChannelNum)
 {
-	struct SSingleAxis* pSSingleAxisPointer;
-	int8 res = 0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 0;
-	}
-	pSSingleAxisPointer = g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis;
-    if(pSSingleAxisPointer == NULL)
-	return 0;
-	switch (pSSingleAxisPointer->ucRunMode)
-	{
-	case SPINDLE_G97_MODE:				//G97
-	case SPINDLE_G96ANDG0_MODE:			//G96 G0
-	case SPINDLE_G96ANDG1_MODE:			//G96 G1+
-		if (pSSingleAxisPointer->ucInpStatus == INP_FINISHED)
-		{
-			return sgn(pSSingleAxisPointer->SPlanData.dPrimalVe);
-		}
-		else
-		{
-			return (isZero(pSSingleAxisPointer->dCurrentSpeed)) ? 0 : sgn(nextstepPlanningVelCombine(pSSingleAxisPointer->SPlanData.unCurrentT, &pSSingleAxisPointer->SPlanData));
-		}
-	case SPINDLE_COMMONSTOP_MODE:		//¼õËÙÍ£
-	case SPINDLE_PRECISESTOP_MODE:		//×¼Í£
-		return (isZero(pSSingleAxisPointer->dCurrentSpeed)) ? 0 : pSSingleAxisPointer->cSpindleDir;
-	case SPINDLE_SINGLEAXIS_MODE:		//µ¥ÖáÄ£Ê½
-		if (pSSingleAxisPointer->ucInpStatus == INP_FINISHED) //ÓÉÓÚG0¼ÓÈëÇ°Õ°£¬Ö´ĞĞ·Ö¶ÈÖ¸ÁîºóµÄµ±Ç°ËÙ¶ÈÎª×îĞ¡ËÙ¶È¡£µ¥ÖáÄ£Ê½ÏÂÈç¹ûÖ÷ÖáÎ´Ö´ĞĞÔË¶¯Ó¦·µ»ØÖµ0¡£2024/7/15 ºé¹ÚÅô
-		{
-			return 0;
-		}
-		else
-		{
-			return (isZero(pSSingleAxisPointer->dCurrentSpeed)) ? 0 : pSSingleAxisPointer->dStartVector;
-		}
+    struct SSingleAxis* pSSingleAxisPointer;
+    int8 res = 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 0;
+    }
+    pSSingleAxisPointer = g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis;
+    if (pSSingleAxisPointer == NULL)
+        return 0;
+    switch (pSSingleAxisPointer->ucRunMode)
+    {
+    case SPINDLE_G97_MODE:      //G97
+    case SPINDLE_G96ANDG0_MODE: //G96 G0
+    case SPINDLE_G96ANDG1_MODE: //G96 G1+
+        if (pSSingleAxisPointer->ucInpStatus == INP_FINISHED)
+        {
+            return sgn(pSSingleAxisPointer->SPlanData.dPrimalVe);
+        }
+        else
+        {
+            return (isZero(pSSingleAxisPointer->dCurrentSpeed))
+                       ? 0
+                       : sgn(nextstepPlanningVelCombine(pSSingleAxisPointer->SPlanData.unCurrentT,
+                                                        &pSSingleAxisPointer->SPlanData));
+        }
+    case SPINDLE_COMMONSTOP_MODE:  //å‡é€Ÿåœ
+    case SPINDLE_PRECISESTOP_MODE: //å‡†åœ
+        return (isZero(pSSingleAxisPointer->dCurrentSpeed)) ? 0 : pSSingleAxisPointer->cSpindleDir;
+    case SPINDLE_SINGLEAXIS_MODE: //å•è½´æ¨¡å¼
+        if (pSSingleAxisPointer->ucInpStatus ==
+            INP_FINISHED) //ç”±äºG0åŠ å…¥å‰ç»ï¼Œæ‰§è¡Œåˆ†åº¦æŒ‡ä»¤åçš„å½“å‰é€Ÿåº¦ä¸ºæœ€å°é€Ÿåº¦ã€‚å•è½´æ¨¡å¼ä¸‹å¦‚æœä¸»è½´æœªæ‰§è¡Œè¿åŠ¨åº”è¿”å›å€¼0ã€‚2024/7/15 æ´ªå† é¹
+        {
+            return 0;
+        }
+        else
+        {
+            return (isZero(pSSingleAxisPointer->dCurrentSpeed)) ? 0 : pSSingleAxisPointer->dStartVector;
+        }
 
-	case SPINDLE_HANDWHEEL_MODE:		//ÊÖÂÖÄ£Ê½
-	default:
-		if (pSSingleAxisPointer->ucInpStatus == INP_FINISHED)
-		{
-			return 0;
-		}
-		break;
-	}
-	return 0;
+    case SPINDLE_HANDWHEEL_MODE: //æ‰‹è½®æ¨¡å¼
+    default:
+        if (pSSingleAxisPointer->ucInpStatus == INP_FINISHED)
+        {
+            return 0;
+        }
+        break;
+    }
+    return 0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSpindleModeAPI(uint8 ucChannelNum, int8 cMode)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÖ÷ÖáÄ£Ê½ G96 G97,ÓÃÓÚ¿ªÆôÖĞ¶ÏÇ°£¬Óë»ú´²Ö÷ÖáÕı×ªºÍ·´×ª°´Å¥ÓĞ¹Ø
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			cMode			Ä£Ê½ÀàĞÍ  96: Ö¸¶¨G96ºãÏßËÙ¶È    97:Ö¸¶¨G97ºã×ªËÙ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ²ÎÊı´íÎó
-			1  ÉèÖÃÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSpindleModeAPI(uint8 ucChannelNum, int8 cMode)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®ä¸»è½´æ¨¡å¼ G96 G97,ç”¨äºå¼€å¯ä¸­æ–­å‰ï¼Œä¸æœºåºŠä¸»è½´æ­£è½¬å’Œåè½¬æŒ‰é’®æœ‰å…³
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			cMode			æ¨¡å¼ç±»å‹  96: æŒ‡å®šG96æ’çº¿é€Ÿåº¦    97:æŒ‡å®šG97æ’è½¬é€Ÿ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 å‚æ•°é”™è¯¯
+			1  è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 setSpindleModeAPI(uint8 ucChannelNum, int8 cMode)
 {
-	struct _SSpindle* pSSpindle;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	
-	pSSpindle = &g_SChannel[ucChannelNum].SSpindle;
-	switch (cMode)
-	{
-	case 96:
-		setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		break;
-	case 97:
-		setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		break;
+    struct _SSpindle* pSSpindle;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
 
-	default:
-		return -1;
-		break;
-	}
+    pSSpindle = &g_SChannel[ucChannelNum].SSpindle;
+    switch (cMode)
+    {
+    case 96:
+        setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CLV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CLV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CLV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        break;
+    case 97:
+        setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        break;
 
-	if (pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_COMMONSTOP_MODE && pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_PRECISESTOP_MODE)
-	{//²»´¦ÓÚÍ£µÄ¹¦ÄÜ×´Ì¬
-		pSSpindle->pSSpindleAxis->ucInpStatus = INP_INITIATION;//ÖØĞÂ¹æ»®
-	}
+    default:
+        return -1;
+        break;
+    }
 
+    if (pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_COMMONSTOP_MODE &&
+        pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_PRECISESTOP_MODE)
+    {                                                           //ä¸å¤„äºåœçš„åŠŸèƒ½çŠ¶æ€
+        pSSpindle->pSSpindleAxis->ucInpStatus = INP_INITIATION; //é‡æ–°è§„åˆ’
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSpindleModeInInterpolation(uint8 ucChannelNum, int8 cMode)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÖ÷ÖáÄ£Ê½ G96 G97 (Ö÷ÒªÓÃÓÚ²å²¹ÖĞG96,G97×´Ì¬µÄ×ª»»)
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			cMode			Ä£Ê½ÀàĞÍ  96: Ö¸¶¨G96ºãÏßËÙ¶È    97:Ö¸¶¨G97ºã×ªËÙ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1 ²ÎÊı´íÎó
-			1  ÉèÖÃÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSpindleModeInInterpolation(uint8 ucChannelNum, int8 cMode)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®ä¸»è½´æ¨¡å¼ G96 G97 (ä¸»è¦ç”¨äºæ’è¡¥ä¸­G96,G97çŠ¶æ€çš„è½¬æ¢)
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			cMode			æ¨¡å¼ç±»å‹  96: æŒ‡å®šG96æ’çº¿é€Ÿåº¦    97:æŒ‡å®šG97æ’è½¬é€Ÿ
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1 å‚æ•°é”™è¯¯
+			1  è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
-int8 setSpindleModeInInterpolation(uint8 ucChannelNum, int8 cMode)//2024 / 10 / 15 ĞÜ¿¥
+int8 setSpindleModeInInterpolation(uint8 ucChannelNum, int8 cMode) //2024 / 10 / 15 ç†Šéª
 {
-	struct _SSpindle* pSSpindle;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	pSSpindle = &g_SChannel[ucChannelNum].SSpindle;
-	switch (cMode)
-	{
-	case 96:
-		setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		//setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G96
-		break;
-	case 97:
-		setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		//setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//ÉèÖÃÖ÷ÖáÄ£Ê½ G97
-		break;
+    struct _SSpindle* pSSpindle;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    pSSpindle = &g_SChannel[ucChannelNum].SSpindle;
+    switch (cMode)
+    {
+    case 96:
+        setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CLV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        //setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CLV, CMD_SPINDLE_SPEED_ADDR);//è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CLV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G96
+        break;
+    case 97:
+        setBits(pSSpindle->pSChannel->SPreProcess.unCommandType, CMD_SPINDLE_SPEED_CV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        //setBits(pSSpindle->pSSpindleAxis->unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR);//è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        setBits(pSSpindle->pSChannel->SRun.unCommandType, CMD_SPINDLE_SPEED_CV,
+                CMD_SPINDLE_SPEED_ADDR); //è®¾ç½®ä¸»è½´æ¨¡å¼ G97
+        break;
 
-	default:
-		return -1;
-		break;
-	}
+    default:
+        return -1;
+        break;
+    }
 
-	if (pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_COMMONSTOP_MODE && pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_PRECISESTOP_MODE)
-	{//²»´¦ÓÚÍ£µÄ¹¦ÄÜ×´Ì¬
-		pSSpindle->pSSpindleAxis->ucInpStatus = INP_INITIATION;//ÖØĞÂ¹æ»®
-	}
+    if (pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_COMMONSTOP_MODE &&
+        pSSpindle->pSSpindleAxis->ucRunMode != SPINDLE_PRECISESTOP_MODE)
+    {                                                           //ä¸å¤„äºåœçš„åŠŸèƒ½çŠ¶æ€
+        pSSpindle->pSSpindleAxis->ucInpStatus = INP_INITIATION; //é‡æ–°è§„åˆ’
+    }
 
-
-	return 1;
+    return 1;
 }
 
-
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSpindleEncoderSpeed(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ö÷ÖáÕæÊµ×ªËÙ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÖ÷Öá×ªËÙ (r/min) ´ø·½Ïò
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSpindleEncoderSpeed(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è·å–ä¸»è½´çœŸå®è½¬é€Ÿ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šä¸»è½´è½¬é€Ÿ (r/min) å¸¦æ–¹å‘
+  å¤‡    æ³¨ï¼š
   ****************************************/
 double getSpindleEncoderSpeed(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 0.0;
-	}
-	return g_SChannel[ucChannelNum].SSpindleTest.dSpindleAvgSpeed * 60.0 * 1000.0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 0.0;
+    }
+    return g_SChannel[ucChannelNum].SSpindleTest.dSpindleAvgSpeed * 60.0 * 1000.0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetSpindleSpeedAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡Ö÷ÖáÀíÂÛ×ªËÙ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÖ÷Öá×ªËÙ (r/min) ´ø·½Ïò
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetSpindleSpeedAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è·å–ä¸»è½´ç†è®ºè½¬é€Ÿ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šä¸»è½´è½¬é€Ÿ (r/min) å¸¦æ–¹å‘
+  å¤‡    æ³¨ï¼š
   ****************************************/
 double getSpindleSpeedAPI(uint8 ucChannelNum)
 {
-	double dTargetSpeed = 0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 0.0;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL)
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return 0.0;
-	}
-	if(calTargetSpindleSpeed(&g_SChannel[ucChannelNum].SSpindle, &dTargetSpeed)!= 1)
-	{
-		return 0.0;
-	}
-	return dTargetSpeed * 60.0 * 1000.0;
+    double dTargetSpeed = 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 0.0;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return 0.0;
+    }
+    if (calTargetSpindleSpeed(&g_SChannel[ucChannelNum].SSpindle, &dTargetSpeed) != 1)
+    {
+        return 0.0;
+    }
+    return dTargetSpeed * 60.0 * 1000.0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSpindleDirAPI(uint8 ucChannelNum, int8 cDir)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÖ÷Öá×ª¶¯·½Ïò
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			cDir    ARC_CW  Õı×ª £¨1£©   ARC_ANTI_CW·´×ª (-1)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3 Í¨µÀºÅ´íÎó
-			-2  ²ÎÊı´íÎó  ·½Ïò±ØĞëÎª1»ò-1
-			-1  ¿ÕÖ¸Õë
-			0   ·½ÏòÏàÍ¬ ÎŞĞèÉèÖÃ
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSpindleDirAPI(uint8 ucChannelNum, int8 cDir)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®ä¸»è½´è½¬åŠ¨æ–¹å‘
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			cDir    ARC_CW  æ­£è½¬ ï¼ˆ1ï¼‰   ARC_ANTI_CWåè½¬ (-1)
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3 é€šé“å·é”™è¯¯
+			-2  å‚æ•°é”™è¯¯  æ–¹å‘å¿…é¡»ä¸º1æˆ–-1
+			-1  ç©ºæŒ‡é’ˆ
+			0   æ–¹å‘ç›¸åŒ æ— éœ€è®¾ç½®
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 setSpindleDirAPI(uint8 ucChannelNum, int8 cDir)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	return setSpindleDir(&g_SChannel[ucChannelNum].SSpindle, cDir);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
+    return setSpindleDir(&g_SChannel[ucChannelNum].SSpindle, cDir);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleBeginAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ö÷ÖáÆô¶¯½Ó¿Úº¯Êı  £¬µ±Ö÷ÖáÔÚÍ£ÏÂ¹ı³Ì»òÍ£ÏÂÊ±£¬µ÷ÓÃ´Ëº¯Êı¿ÉÈÃÖ÷Öá°´ÕÕÍ£ÏÂÇ°µÄ×´Ì¬ÔË¶¯
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3  Í¨µÀºÅ´íÎó
-			-1  ¿ÕÖ¸Õë
-			0   ÒÑÔÚÆô¶¯¹ı³ÌÖĞ
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleBeginAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  ä¸»è½´å¯åŠ¨æ¥å£å‡½æ•°  ï¼Œå½“ä¸»è½´åœ¨åœä¸‹è¿‡ç¨‹æˆ–åœä¸‹æ—¶ï¼Œè°ƒç”¨æ­¤å‡½æ•°å¯è®©ä¸»è½´æŒ‰ç…§åœä¸‹å‰çš„çŠ¶æ€è¿åŠ¨
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3  é€šé“å·é”™è¯¯
+			-1  ç©ºæŒ‡é’ˆ
+			0   å·²åœ¨å¯åŠ¨è¿‡ç¨‹ä¸­
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 spindleBeginAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	
-	return spindleBegin(&g_SChannel[ucChannelNum].SSpindle);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
+
+    return spindleBegin(&g_SChannel[ucChannelNum].SSpindle);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleCommonStopAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ö÷ÖáÍ£
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3  ¿ÕÖ¸Õë
-			-1	¿ÕÖ¸Õë
-			0   ÒÑÔÚÍ£ÏÂ¹ı³ÌÖĞ
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleCommonStopAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  ä¸»è½´åœ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3  ç©ºæŒ‡é’ˆ
+			-1	ç©ºæŒ‡é’ˆ
+			0   å·²åœ¨åœä¸‹è¿‡ç¨‹ä¸­
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 spindleCommonStopAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	return spindleCommonStop(&g_SChannel[ucChannelNum].SSpindle);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
+    return spindleCommonStop(&g_SChannel[ucChannelNum].SSpindle);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindlePreciseStopAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ö÷Öá×¼Í£
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3  Í¨µÀºÅ´íÎó
-			-2  ´¦ÓÚ²»ÄÜ×¼Í£µÄ×´Ì¬
-			-1  ¿ÕÖ¸Õë
-			0   ÒÑÔÚÍ£ÏÂ¹ı³ÌÖĞ
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindlePreciseStopAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  ä¸»è½´å‡†åœ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3  é€šé“å·é”™è¯¯
+			-2  å¤„äºä¸èƒ½å‡†åœçš„çŠ¶æ€
+			-1  ç©ºæŒ‡é’ˆ
+			0   å·²åœ¨åœä¸‹è¿‡ç¨‹ä¸­
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 spindlePreciseStopAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	return spindlePreciseStop(&g_SChannel[ucChannelNum].SSpindle, NULL);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
+    return spindlePreciseStop(&g_SChannel[ucChannelNum].SSpindle, NULL);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºspindleStopNowAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ö÷ÖáÁ¢¼´Í£½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3 Í¨µÀºÅ´íÎó
-			-1  ¿ÕÖ¸Õë
-			0	´íÎóµÄÄ£Ê½
-			1	Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šspindleStopNowAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  ä¸»è½´ç«‹å³åœæ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3 é€šé“å·é”™è¯¯
+			-1  ç©ºæŒ‡é’ˆ
+			0	é”™è¯¯çš„æ¨¡å¼
+			1	å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 spindleStopNowAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	if (&g_SChannel[ucChannelNum].SSpindle == NULL )
-	{
-		parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
-		return -1;
-	}
-	return spindleStopNow(&g_SChannel[ucChannelNum].SSpindle);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    if (&g_SChannel[ucChannelNum].SSpindle == NULL)
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
+        return -1;
+    }
+    return spindleStopNow(&g_SChannel[ucChannelNum].SSpindle);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÖ÷Öá×ªËÙ
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-			dSpindleSpeed		Ö÷Öá×ªËÙG96(m/min) G97(r/min)
+  å‡½æ•°åç§°ï¼šsetSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®ä¸»è½´è½¬é€Ÿ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+			dSpindleSpeed		ä¸»è½´è½¬é€ŸG96(m/min) G97(r/min)
 			type				CMD_SPINDLE_SPEED_CLV -> G96(m/min)   ; CMD_SPINDLE_SPEED_CV -> G97(r/min)
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3 Í¨µÀºÅ´íÎó
-			-1 ¿ÕÖ¸Õë
-			1  Ö´ĞĞ³É¹¦
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3 é€šé“å·é”™è¯¯
+			-1 ç©ºæŒ‡é’ˆ
+			1  æ‰§è¡ŒæˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 setSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -3;
-	}
-	return setSpindleSpeed(&g_SChannel[ucChannelNum].SSpindle, dSpindleSpeed, type);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -3;
+    }
+    return setSpindleSpeed(&g_SChannel[ucChannelNum].SSpindle, dSpindleSpeed, type);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type)
-  º¯Êı¹¦ÄÜ  »ñµÃ¸ÃÍ¨µÀÖ÷Öá·¢ËÍÂö³åºÍÖ÷Öá±àÂëÆ÷µÄÆ«²î
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3 Í¨µÀºÅ´íÎó
-			-1 ¿ÕÖ¸Õë
-			1  Ö´ĞĞ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type)
+  å‡½æ•°åŠŸèƒ½  è·å¾—è¯¥é€šé“ä¸»è½´å‘é€è„‰å†²å’Œä¸»è½´ç¼–ç å™¨çš„åå·®
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3 é€šé“å·é”™è¯¯
+			-1 ç©ºæŒ‡é’ˆ
+			1  æ‰§è¡ŒæˆåŠŸ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int16 getSpindlePulseDeviation(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 32767;
-	}
-	return g_SChannel[ucChannelNum].lIdealSpindlePulse - g_SChannel[ucChannelNum].pSSpindleEncoder->lEncoderAbsValue;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 32767;
+    }
+    return g_SChannel[ucChannelNum].lIdealSpindlePulse - g_SChannel[ucChannelNum].pSSpindleEncoder->lEncoderAbsValue;
 }
 
-
-////Ê¹ÄÜÖ÷Öá
+////ä½¿èƒ½ä¸»è½´
 //int8 setSpindleEnabledAPI(uint8 ucChannelNum,bool isEnable)
 //{
 //	if (ucChannelNum >= CHANNEL_NUM_MAX)
@@ -1929,21 +2022,18 @@ int16 getSpindlePulseDeviation(uint8 ucChannelNum)
 //	return setSpindleEnabled(&g_SChannel[ucChannelNum].SSpindle, isEnable);
 //}
 
-// Ê¹ÄÜÖ÷Öá
+// ä½¿èƒ½ä¸»è½´
 int8 setSpindleEnabledAPI(uint8 ucChannelNum, bool isEnable)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	uint8 ucIOCommand = (isEnable == TRUE) ? 14 : 15;   //M14 Ö÷ÖáÊ¹ÄÜ  M15Ö÷ÖáÈ¡ÏûÊ¹ÄÜ
-	if (findIO(ucIOCommand, g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff, IO_MAXGROUP_IN_SINGLE_LINE) == 0)
-	{
-		return IOStructToBuff(ucIOCommand, &g_SChannel[ucChannelNum].SIOCommand, NULL);
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    uint8 ucIOCommand = (isEnable == TRUE) ? 14 : 15; //M14 ä¸»è½´ä½¿èƒ½  M15ä¸»è½´å–æ¶ˆä½¿èƒ½
+    if (findIO(ucIOCommand, g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff, IO_MAXGROUP_IN_SINGLE_LINE) == 0)
+    {
+        return IOStructToBuff(ucIOCommand, &g_SChannel[ucChannelNum].SIOCommand, NULL);
+    }
 
-	return 1;
+    return 1;
 }
-
-
-

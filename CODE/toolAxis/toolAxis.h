@@ -3,135 +3,126 @@
 
 #include "common.h"
 
+#define TOOLAXIS_TEST 0     //åˆ€å…·è½´è¿åŠ¨æµ‹è¯•ï¼ˆåˆ€å…·è½´è¿åŠ¨å¼€å…³ï¼‰
+#define TOOLAXIS_DEBUG_32 0 //åˆ€å…·è½´è°ƒè¯•_32æ¨¡å¼ï¼ˆå±å¹•æ˜¾ç¤ºï¼‰
+#define TOOLAXIS_DEBUG_VS 0 //åˆ€å…·è½´è°ƒè¯•_VSæ¨¡å¼ï¼ˆè¾“å‡ºæ–‡æœ¬ï¼‰
 
-#define TOOLAXIS_TEST 0	//µ¶¾ßÖáÔË¶¯²âÊÔ£¨µ¶¾ßÖáÔË¶¯¿ª¹Ø£©
-#define TOOLAXIS_DEBUG_32 0	//µ¶¾ßÖáµ÷ÊÔ_32Ä£Ê½£¨ÆÁÄ»ÏÔÊ¾£©
-#define TOOLAXIS_DEBUG_VS 0 //µ¶¾ßÖáµ÷ÊÔ_VSÄ£Ê½£¨Êä³öÎÄ±¾£©
+//è§„åˆ’æ–¹å¼
+//1ï¼šå¯¹å‰©ä½™è·ç¦»è¿›è¡Œé€Ÿåº¦è§„åˆ’ï¼Œæ—¶é—´èŠ‚ç‚¹ä¸åœ†æ•´ã€‚è‹¥æœ‰åŠ é€Ÿå‘¨æœŸåˆ™åŠ é€Ÿï¼Œè‹¥æœ‰åŒ€é€Ÿå‘¨æœŸåˆ™åŒ€é€Ÿï¼Œè‹¥æœ‰å‡é€Ÿå‘¨æœŸåˆ™å‡é€Ÿ
+//1ï¼šå¯¹å‰©ä½™è·ç¦»ä¸æœªæ¥æ–°å¢è·ç¦»è¿›è¡Œé€Ÿåº¦è§„åˆ’ï¼Œæ—¶é—´èŠ‚ç‚¹ä¸åœ†æ•´ã€‚è‹¥æœ‰åŠ é€Ÿå‘¨æœŸåˆ™åŠ é€Ÿï¼Œè‹¥æœ‰åŒ€é€Ÿå‘¨æœŸåˆ™åŒ€é€Ÿï¼Œè‹¥æœ‰å‡é€Ÿå‘¨æœŸåˆ™å‡é€Ÿ
 
-//¹æ»®·½Ê½
-//1£º¶ÔÊ£Óà¾àÀë½øĞĞËÙ¶È¹æ»®£¬Ê±¼ä½Úµã²»Ô²Õû¡£ÈôÓĞ¼ÓËÙÖÜÆÚÔò¼ÓËÙ£¬ÈôÓĞÔÈËÙÖÜÆÚÔòÔÈËÙ£¬ÈôÓĞ¼õËÙÖÜÆÚÔò¼õËÙ
-//1£º¶ÔÊ£Óà¾àÀëÓëÎ´À´ĞÂÔö¾àÀë½øĞĞËÙ¶È¹æ»®£¬Ê±¼ä½Úµã²»Ô²Õû¡£ÈôÓĞ¼ÓËÙÖÜÆÚÔò¼ÓËÙ£¬ÈôÓĞÔÈËÙÖÜÆÚÔòÔÈËÙ£¬ÈôÓĞ¼õËÙÖÜÆÚÔò¼õËÙ
+//åˆ€å…·è½´è½´å
+#define TOOL_AXIS AXIS_B
+//åˆ€å…·è½´ç¼–ç å™¨å·
+#define TOOLAXIS_ENCODER 2
 
-//µ¶¾ßÖáÖáÃû
-#define TOOL_AXIS			AXIS_B
-//µ¶¾ßÖá±àÂëÆ÷ºÅ
-#define TOOLAXIS_ENCODER	2
+//ucRunModeçš„å€¼  è¡¨ç¤ºä¸»è½´å¤„äºä¸åŒçš„æ¨¡å¼
+#define TOOLAXIS_SINGLE_MODE 0     //å•è½´æ¨¡å¼ï¼ˆç©ºé—²ï¼‰
+#define TOOLAXIS_FOLLOW_MODE 1     //è·Ÿéšæ¨¡å¼
+#define TOOLAXIS_COMMON_MODE 2     //æ’è½¬é€Ÿæ¨¡å¼
+#define TOOLAXIS_COMMONSTOP_MODE 3 //å‡é€Ÿåœæ¨¡å¼
 
-//ucRunModeµÄÖµ  ±íÊ¾Ö÷Öá´¦ÓÚ²»Í¬µÄÄ£Ê½
-#define TOOLAXIS_SINGLE_MODE				0	//µ¥ÖáÄ£Ê½£¨¿ÕÏĞ£©
-#define TOOLAXIS_FOLLOW_MODE				1	//¸úËæÄ£Ê½
-#define TOOLAXIS_COMMON_MODE				2	//ºã×ªËÙÄ£Ê½
-#define TOOLAXIS_COMMONSTOP_MODE			3	//¼õËÙÍ£Ä£Ê½
+#define PARA_EDITABLE 0
+#define WAIT_PERIOD 100 //è·Ÿè¸ªè¯¯å·®æµ‹è¯•å‰ç­‰å¾…å‘¨æœŸ
+#define TEST_PERIOD 50  //è·Ÿè¸ªè¯¯å·®æµ‹è¯•å‘¨æœŸ
 
-#define PARA_EDITABLE 0		
-#define WAIT_PERIOD 100		//¸ú×ÙÎó²î²âÊÔÇ°µÈ´ıÖÜÆÚ
-#define TEST_PERIOD 50		//¸ú×ÙÎó²î²âÊÔÖÜÆÚ
+//è·Ÿéšæ–¹å¼
+#define PLANNING_METHOD 2 //0ï¼š1ï¼šè‡ªé€‚åº”æ’è¡¥2ï¼šè‡ªé€‚åº”æ’è¡¥ï¼ˆäºŒæ¬¡é€Ÿåº¦è§„åˆ’ï¼‰
+#define ENCODER_FOLLOW 0  //0ï¼šè·Ÿéšä¸»è½´åæ ‡å€¼	1ï¼šè·Ÿéšä¸»è½´ç¼–ç å™¨å€¼
 
-//¸úËæ·½Ê½
-#define PLANNING_METHOD 2	//0£º1£º×ÔÊÊÓ¦²å²¹2£º×ÔÊÊÓ¦²å²¹£¨¶ş´ÎËÙ¶È¹æ»®£©
-#define ENCODER_FOLLOW 0	//0£º¸úËæÖ÷Öá×ø±êÖµ	1£º¸úËæÖ÷Öá±àÂëÆ÷Öµ
+#define INP_STAGE_1 11 //åˆ€å…·è½´è·Ÿéšé˜¶æ®µ1ï¼ˆé€Ÿåº¦è¿‡æ¸¡ï¼‰
+#define INP_TEST_1 12  //åˆ€å…·è½´ç¼–ç å™¨æ»åæµ‹è¯•é˜¶æ®µ1ï¼ˆç­‰å¾…åˆ€å…·è½´ç¼–ç å™¨è¾¾åˆ°ç›®æ ‡è½¬é€Ÿï¼‰
+#define INP_TEST_2 13  //åˆ€å…·è½´ç¼–ç å™¨æ»åæµ‹è¯•é˜¶æ®µ2ï¼ˆè®¡ç®—åˆ€å…·è½´ç¼–ç å™¨æ»åè§’åº¦ï¼‰
+#define INP_STAGE_2 14 //åˆ€å…·è½´è·Ÿéšé˜¶æ®µ2ï¼ˆè§’åº¦è¿‡æ¸¡ï¼‰
+#define INP_WAIT 15
 
-#define INP_STAGE_1		11	//µ¶¾ßÖá¸úËæ½×¶Î1£¨ËÙ¶È¹ı¶É£©
-#define INP_TEST_1		12	//µ¶¾ßÖá±àÂëÆ÷ÖÍºó²âÊÔ½×¶Î1£¨µÈ´ıµ¶¾ßÖá±àÂëÆ÷´ïµ½Ä¿±ê×ªËÙ£©
-#define INP_TEST_2		13	//µ¶¾ßÖá±àÂëÆ÷ÖÍºó²âÊÔ½×¶Î2£¨¼ÆËãµ¶¾ßÖá±àÂëÆ÷ÖÍºó½Ç¶È£©
-#define INP_STAGE_2		14	//µ¶¾ßÖá¸úËæ½×¶Î2£¨½Ç¶È¹ı¶É£©
-#define INP_WAIT		15
-
-#define TOOLAXIS_FOLLOWDIR 1	//
-//½Ç¶È¹ı¶É
+#define TOOLAXIS_FOLLOWDIR 1 //
+//è§’åº¦è¿‡æ¸¡
 typedef struct _SToolAxis
 {
-	uint32 unTime;//485²âÊÔÓÃ
+    uint32 unTime; //485æµ‹è¯•ç”¨
 
-	struct SChannel* pSChannel;	//Í¨µÀÖ¸Õë
+    struct SChannel* pSChannel; //é€šé“æŒ‡é’ˆ
 
-	double dCommandRatio;		//Ö¸Áî×ªËÙ±È£¨Ö¸ÁîÔ­Ê¼Êı¾İ£©
-	double dCommandAngle;		//Ö¸Áî½Ç¶È£¨Ö¸ÁîÔ­Ê¼Êı¾İ£©
+    double dCommandRatio; //æŒ‡ä»¤è½¬é€Ÿæ¯”ï¼ˆæŒ‡ä»¤åŸå§‹æ•°æ®ï¼‰
+    double dCommandAngle; //æŒ‡ä»¤è§’åº¦ï¼ˆæŒ‡ä»¤åŸå§‹æ•°æ®ï¼‰
 
-	double dLastCommandRatio;	//ÉÏÒ»Ö¸Áî×ªËÙ±È
-	double dLastCommandAngle;	//ÉÏÒ»Ö¸Áî½Ç¶È
+    double dLastCommandRatio; //ä¸Šä¸€æŒ‡ä»¤è½¬é€Ÿæ¯”
+    double dLastCommandAngle; //ä¸Šä¸€æŒ‡ä»¤è§’åº¦
 
-	double dTotalTwistAngle;			//µ±Ç°×ÜÅ¤×ª½Ç¶È
-	double dCurTwistAngle;				//µ±Ç°Å¤×ª½Ç¶È
-	int8 cTwistCommand;						//Å¤×ªÖ¸Áî
-	double dCommandTwistAngle;			//Ö¸ÁîÅ¤×ª½Ç¶È
+    double dTotalTwistAngle;   //å½“å‰æ€»æ‰­è½¬è§’åº¦
+    double dCurTwistAngle;     //å½“å‰æ‰­è½¬è§’åº¦
+    int8 cTwistCommand;        //æ‰­è½¬æŒ‡ä»¤
+    double dCommandTwistAngle; //æŒ‡ä»¤æ‰­è½¬è§’åº¦
 
-	double dLagAngle;			//ÖÍºó½Ç¶È£¨ËÅ·şÇı¶¯Æ÷´æÔÚÏìÓ¦Ê±¼äµ¼ÖÂ£©
+    double dLagAngle; //æ»åè§’åº¦ï¼ˆä¼ºæœé©±åŠ¨å™¨å­˜åœ¨å“åº”æ—¶é—´å¯¼è‡´ï¼‰
 
-	double dSpindleSpeed;
-	double dLastSpindleSpeed;
+    double dSpindleSpeed;
+    double dLastSpindleSpeed;
 
-	
+    uint32 ucT;
 
-	uint32 ucT;
+    bool bFollowed;
 
-	bool bFollowed;
-	
+    struct SSingleAxis* pSToolAxis; //å•è½´ç»“æ„ä½“æŒ‡é’ˆ
 
-	struct SSingleAxis* pSToolAxis;   //µ¥Öá½á¹¹ÌåÖ¸Õë
-
-}SToolAxis;
+} SToolAxis;
 
 extern SToolAxis g_SToolAxisInfo;
 extern struct SEncoder g_SToolAxisEncoder;
 
-//³õÊ¼»¯µ¶¾ßÖáÄ£¿é
+//åˆå§‹åŒ–åˆ€å…·è½´æ¨¡å—
 int8 initToolAxis(struct SChannel* pSChannel, struct SSingleAxis* pSSingleAxisPointer);
 
-//³õÊ¼»¯µ¶¾ßÖá²ÎÊı
+//åˆå§‹åŒ–åˆ€å…·è½´å‚æ•°
 void initToolAxisPara();
 
-//µ¶¾ßÖáÔË¶¯
+//åˆ€å…·è½´è¿åŠ¨
 int8 toolAxisMotion(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder);
 
-//µ¶¾ßÖá¸úËæÄ£Ê½
-void toolAxisFollowMotion(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder);
-void toolAxisFollowMotion2(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder);
-void toolAxisFollowMotion3(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo, struct SEncoder* pSSpindleEncoder);
+//åˆ€å…·è½´è·Ÿéšæ¨¡å¼
+void toolAxisFollowMotion(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo,
+                          struct SEncoder* pSSpindleEncoder);
+void toolAxisFollowMotion2(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo,
+                           struct SEncoder* pSSpindleEncoder);
+void toolAxisFollowMotion3(SToolAxis* pSToolAxisInfo, struct _SSpindle* pSSpindleInfo,
+                           struct SEncoder* pSSpindleEncoder);
 
-//µ¶¾ßÖá¼õËÙÍ£Ä£Ê½
+//åˆ€å…·è½´å‡é€Ÿåœæ¨¡å¼
 int8 toolAxisCommonStop(SToolAxis* pSToolAxisPointer);
 void toolAxisCommonMotion(SToolAxis* pSToolAxisInfo);
 
 double calcCurCurTwistAngle();
 
-
-
-//ËÙ¶È¹æ»®
+//é€Ÿåº¦è§„åˆ’
 int8 preparePlanningTNewAddForToolAxis(struct SPlan* pSPlanPointer);
 int8 preparePlanningTNewAddForToolAxis_1(struct SPlan* pSPlanPointer);
 int8 preparePlanningTNewAddForToolAxis_2(struct SPlan* pSPlanPointer);
 
-
-//¼ÆËãÔË¶¯½Ç¶È
+//è®¡ç®—è¿åŠ¨è§’åº¦
 double nextStepPlanningAndDistReAvgToolAxis(uint32 unK, struct SPlan* pSPlanPointer);
 double nextStepPlanningAndDistReAvgToolAxis_1(struct SPlan* pSPlanPointer);
 double nextStepPlanningAndDistReAvgToolAxis_2(struct SPlan* pSPlanPointer);
 
 double calcAllowVmax(struct SPlan* pSPlanPointer);
 
-//¸úËæÅĞ¶Ï
+//è·Ÿéšåˆ¤æ–­
 bool checkFollowed(double dDeltaL, struct SPlan* pSPlanPointer);
 
-
-
-
-//»ñÈ¡Öµ¶ÔÓ¦µÄ½Ç¶È
+//è·å–å€¼å¯¹åº”çš„è§’åº¦
 double getEncoderPosByValue(int64 lEncoderValue, uint16 usEncoderCirclePulseNum);
 
-//¼ÆËãÄ¿±ê±àÂëÆ÷µÄ½Ç¶È[0-360)
+//è®¡ç®—ç›®æ ‡ç¼–ç å™¨çš„è§’åº¦[0-360)
 double getEncoderPos(uint8 ucEncoderNum);
 
-//»ñÈ¡µ±Ç°Ö÷Öá±àÂëÆ÷½Ç¶È
+//è·å–å½“å‰ä¸»è½´ç¼–ç å™¨è§’åº¦
 double getSpindleEncoderPos(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°µ¶¾ßÖá±àÂëÆ÷½Ç¶È
+//è·å–å½“å‰åˆ€å…·è½´ç¼–ç å™¨è§’åº¦
 double getToolAxisEncoderPos(uint8 ucChannelNum);
 
-//»ñÈ¡µ¶¾ßÖá±àÂëÆ÷Ä¿±ê½Ç¶È
+//è·å–åˆ€å…·è½´ç¼–ç å™¨ç›®æ ‡è§’åº¦
 double getToolAxisEncoderTargetPos(double ucFollowAngle, bool bFlag);
-
-
 
 #if STM32_MODE
 void toolAxisScreenPrintInit();
@@ -156,8 +147,6 @@ void outputNextPulse();
 #else
 void outputVS();
 void outputVS_2();
-
-
 
 #endif
 

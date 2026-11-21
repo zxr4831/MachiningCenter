@@ -3,119 +3,121 @@
 #include "GCode.h"
 #include "GeneralFunctions.h"
 
-
-//Ìí¼ÓG1¹æÔò½á¹¹Ìå
+//æ·»åŠ G1è§„åˆ™ç»“æž„ä½“
 void addG0RegulationAPI()
 {
-	//Ö¸Áî£ºG1
-	//×é±ð£ºsGa
-	//ÔËÐÐÖ¸Áî×Ö£º32Î»
-	//Ö¸ÁîÕ¼³ÌÐò¶ÎÊý£º1
-	//²ÎÊý½á¹¹Ìå£ºÎÞ
-	//char8* str=¡°¡±
-	addGCommadRegulation(0, sGa, 1, NULL, NULL, NULL, CheckG0, AssignG0);
+    //æŒ‡ä»¤ï¼šG1
+    //ç»„åˆ«ï¼šsGa
+    //è¿è¡ŒæŒ‡ä»¤å­—ï¼š32ä½
+    //æŒ‡ä»¤å ç¨‹åºæ®µæ•°ï¼š1
+    //å‚æ•°ç»“æž„ä½“ï¼šæ— 
+    //char8* str=â€œâ€
+    addGCommadRegulation(0, sGa, 1, NULL, NULL, NULL, CheckG0, AssignG0);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºCheckG0
-  º¯Êý¹¦ÄÜ£º¼ì²é G0 µÄ×ø±êÊäÈë²¢¼ÆËãµ±Ç°¼ì²é¼ÇÂ¼¡£
-  ÊäÈë²ÎÊý£ºÓÐÐ§¼ì²éÅäÖÃºÍ¼ÇÂ¼£»±¾¶Î·ÇÔË¶¯Ä£Ì¬ÒÑ¸üÐÂ£¬É¨Ãè×ø±êÉÐÎ´×ª»»¡£
-  Êä³ö²ÎÊý£ºÑØÓÃÔ­×ø±ê×ª»»ºÍ¼ÇÂ¼Ð´Èë£»G16 ÊäÈë¾Ü¾øÊ±É¨ÃèÊý¾ÝºÍ¼ÇÂ¼²»±ä¡£
-  ·µ »Ø Öµ£º2 ±¾¶Î¼ì²éÍê³É£»-1 G16 ÊäÈë·Ç·¨»òÔ­ÓÐÊ§°Ü·ÖÖ§¡£
-  ±¸    ×¢£º×ø±ê´¦ÀíÇøÏÈÐ£Ñé G16 ÊäÈë£»ÆäËû²ÎÊýºÍ¼¸ºÎ¼ì²éÑØÓÃÔ­Á÷³Ì¡£
+  å‡½æ•°åç§°ï¼šCheckG0
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥ G0 çš„åæ ‡è¾“å…¥å¹¶è®¡ç®—å½“å‰æ£€æŸ¥è®°å½•ã€‚
+  è¾“å…¥å‚æ•°ï¼šæœ‰æ•ˆæ£€æŸ¥é…ç½®å’Œè®°å½•ï¼›æœ¬æ®µéžè¿åŠ¨æ¨¡æ€å·²æ›´æ–°ï¼Œæ‰«æåæ ‡å°šæœªè½¬æ¢ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ²¿ç”¨åŽŸåæ ‡è½¬æ¢å’Œè®°å½•å†™å…¥ï¼›G16 è¾“å…¥æ‹’ç»æ—¶æ‰«ææ•°æ®å’Œè®°å½•ä¸å˜ã€‚
+  è¿” å›ž å€¼ï¼š2 æœ¬æ®µæ£€æŸ¥å®Œæˆï¼›-1 G16 è¾“å…¥éžæ³•æˆ–åŽŸæœ‰å¤±è´¥åˆ†æ”¯ã€‚
+  å¤‡    æ³¨ï¼šåæ ‡å¤„ç†åŒºå…ˆæ ¡éªŒ G16 è¾“å…¥ï¼›å…¶ä»–å‚æ•°å’Œå‡ ä½•æ£€æŸ¥æ²¿ç”¨åŽŸæµç¨‹ã€‚
 **************************************************/
 int8 CheckG0(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//0.ÅÐ¶ÏG0³ÌÐò¶ÎÖÐÊÇ·ñ³öÏÖ×ø±êÐÅÏ¢ 
-	bool bRet = 0;
-	bRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
-	if (bRet == TRUE)
-	{
-		// °´±¾¶Î×ø±êÄ£Ì¬¼ì²éÊäÈë£¬Í¨¹ýºóÔÙ½øÐÐ×ø±ê×ª»»¡£
-		if (checkPolarCoordinateInput(&pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGCodeCurrSysState) < 0)
-		{
-			return -1;
-		}
+    //0.åˆ¤æ–­G0ç¨‹åºæ®µä¸­æ˜¯å¦å‡ºçŽ°åæ ‡ä¿¡æ¯
+    bool bRet = 0;
+    bRet = isSegmentHaveCoordInfo(&pSSyntaxConfig->SScanContainer);
+    if (bRet == TRUE)
+    {
+        // æŒ‰æœ¬æ®µåæ ‡æ¨¡æ€æ£€æŸ¥è¾“å…¥ï¼Œé€šè¿‡åŽå†è¿›è¡Œåæ ‡è½¬æ¢ã€‚
+        if (checkPolarCoordinateInput(&pSSyntaxConfig->SScanContainer, &pSSyntaxConfig->SGCodeCurrSysState) < 0)
+        {
+            return -1;
+        }
 
-		//1.Ö¸Áî×Ö·û¼ì²é
-		checkParaLetter("XYZABCUVW", &pSSyntaxConfig->SScanContainer);
+        //1.æŒ‡ä»¤å­—ç¬¦æ£€æŸ¥
+        checkParaLetter("XYZABCUVW", &pSSyntaxConfig->SScanContainer);
 
-		//2.²ÎÊýÖµ·¶Î§¼ì²é
-		checkParaRange('X', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('Y', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('Z', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('A', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('B', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('C', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('U', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('V', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
-		checkParaRange('W', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        //2.å‚æ•°å€¼èŒƒå›´æ£€æŸ¥
+        checkParaRange('X', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('Y', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('Z', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('A', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('B', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('C', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('U', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('V', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
+        checkParaRange('W', &pSSyntaxConfig->SScanContainer, -99999999, 99999999);
 
-		//1.ÌîÐ´SLineInfo
-		SLine SLineInfo;//´æÖ±Ïß¶ÎÐÅÏ¢£¨¿ÉÄÜÒª½«´Ë±äÁ¿·ÅÔÚ¸³Öµ½á¹¹ÌåÖÐ£©
-		bool bIsAbsMethod;
-		memset(&SLineInfo, 0, sizeof(SLine));
-		//1.1³õÊ¼»¯SLineµÄÆðµãÖÕµã£¨»úÐµ×ø±ê£©
-		SLineInfo.SEndPoint = SLineInfo.SStartPoint = pSSyntaxConfig->SGCodeCurrSysState.SCurrPoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-		//1.2»ñÈ¡SLineµÄÖÕµã£¨»úÐµ×ø±ê£©
-		//»ñÈ¡µ±Ç°µÄ×ø±ê±à³Ì·½Ê½
-		bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSSyntaxConfig->ucChannelNum);
-		//¼ÆËã×ø±êµã
-		getMacCoordByScanInfo(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &SLineInfo.SStartPoint, &SLineInfo.SEndPoint, &pSSyntaxConfig->SGCodeCurrSysState);
-		//1.3
-		SLineInfo.EntityType = isSamePoint(&SLineInfo.SStartPoint, &SLineInfo.SEndPoint) ? DOT : OTHERTYPE;
-		//1.2»ñÈ¡SLineInfoµÄÖ¸ÁîÖµ
-		//SLineInfo.sCommand = G01 * GCOMMAND_DECIMAL_PLACE * 10;
+        //1.å¡«å†™SLineInfo
+        SLine SLineInfo; //å­˜ç›´çº¿æ®µä¿¡æ¯ï¼ˆå¯èƒ½è¦å°†æ­¤å˜é‡æ”¾åœ¨èµ‹å€¼ç»“æž„ä½“ä¸­ï¼‰
+        bool bIsAbsMethod;
+        memset(&SLineInfo, 0, sizeof(SLine));
+        //1.1åˆå§‹åŒ–SLineçš„èµ·ç‚¹ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+        SLineInfo.SEndPoint = SLineInfo.SStartPoint =
+            pSSyntaxConfig->SGCodeCurrSysState.SCurrPoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+        //1.2èŽ·å–SLineçš„ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+        //èŽ·å–å½“å‰çš„åæ ‡ç¼–ç¨‹æ–¹å¼
+        bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSSyntaxConfig->ucChannelNum);
+        //è®¡ç®—åæ ‡ç‚¹
+        getMacCoordByScanInfo(pSSyntaxConfig->ucChannelNum, &pSSyntaxConfig->SScanContainer, &SLineInfo.SStartPoint,
+                              &SLineInfo.SEndPoint, &pSSyntaxConfig->SGCodeCurrSysState);
+        //1.3
+        SLineInfo.EntityType = isSamePoint(&SLineInfo.SStartPoint, &SLineInfo.SEndPoint) ? DOT : OTHERTYPE;
+        //1.2èŽ·å–SLineInfoçš„æŒ‡ä»¤å€¼
+        //SLineInfo.sCommand = G01 * GCOMMAND_DECIMAL_PLACE * 10;
 
-		//2.½«SLineÐ´Èë»º³åÇø
-		writeLineIntoGCodeBuf(&SLineInfo, pGCodeBufUnit);
-		return 2;
-	}
-	return 2;
+        //2.å°†SLineå†™å…¥ç¼“å†²åŒº
+        writeLineIntoGCodeBuf(&SLineInfo, pGCodeBufUnit);
+        return 2;
+    }
+    return 2;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºAssignG0
-  º¯Êý¹¦ÄÜ£º¸ù¾Ý¸³Öµ×´Ì¬¼ÆËã¿ìËÙ¶¨Î»¶Î²¢ÌîÐ´µ±Ç°¼ÇÂ¼
-  ÊäÈë²ÎÊý£ºÓÐÐ§¸³ÖµÅäÖÃÓëÊä³ö¼ÇÂ¼£»É¨ÃèÊäÈëÑØÓÃ×ø±ê×ª»»µÄµ¥Î»ÆõÔ¼
-  Êä³ö²ÎÊý£ºÐ´ÈëÆðÖÕµãºÍÊµÌåÀàÐÍ£»ÆÕÍ¨ÏÔÊ½CÉèÖÃCÖáÓÐÐ§Î»
-  ·µ »Ø Öµ£º2 ±¾¶Î¸³ÖµÍê³É£»-1 G16 ÊäÈë·Ç·¨£¬É¨ÃèÊý¾ÝºÍÊä³ö¼ÇÂ¼²»±ä¡£
-  ±¸    ×¢£ºG16µÄC½ö×÷X/Y¼«½Ç£¬²»¶îÍâÉèÖÃÎïÀíCÖáÓÐÐ§Î»
+  å‡½æ•°åç§°ï¼šAssignG0
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®èµ‹å€¼çŠ¶æ€è®¡ç®—å¿«é€Ÿå®šä½æ®µå¹¶å¡«å†™å½“å‰è®°å½•
+  è¾“å…¥å‚æ•°ï¼šæœ‰æ•ˆèµ‹å€¼é…ç½®ä¸Žè¾“å‡ºè®°å½•ï¼›æ‰«æè¾“å…¥æ²¿ç”¨åæ ‡è½¬æ¢çš„å•ä½å¥‘çº¦
+  è¾“å‡ºå‚æ•°ï¼šå†™å…¥èµ·ç»ˆç‚¹å’Œå®žä½“ç±»åž‹ï¼›æ™®é€šæ˜¾å¼Cè®¾ç½®Cè½´æœ‰æ•ˆä½
+  è¿” å›ž å€¼ï¼š2 æœ¬æ®µèµ‹å€¼å®Œæˆï¼›-1 G16 è¾“å…¥éžæ³•ï¼Œæ‰«ææ•°æ®å’Œè¾“å‡ºè®°å½•ä¸å˜ã€‚
+  å¤‡    æ³¨ï¼šG16çš„Cä»…ä½œX/Yæžè§’ï¼Œä¸é¢å¤–è®¾ç½®ç‰©ç†Cè½´æœ‰æ•ˆä½
 **************************************************/
 int8 AssignG0(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//1.ÌîÐ´SLineInfo
-	SLine SLineInfo;//´æÖ±Ïß¶ÎÐÅÏ¢£¨¿ÉÄÜÒª½«´Ë±äÁ¿·ÅÔÚ¸³Öµ½á¹¹ÌåÖÐ£©
-	bool bIsAbsMethod;
-	memset(&SLineInfo, 0, sizeof(SLine));
-	//1.1³õÊ¼»¯SLineµÄÆðµãÖÕµã£¨»úÐµ×ø±ê£©
-	SLineInfo.SEndPoint = SLineInfo.SStartPoint = pSAssignConfig->SGCodeCurrSysState.SCurrPoint;//ÏµÍ³×´Ì¬½á¹¹ÌåµÄµ±Ç°µã
-	//1.2»ñÈ¡SLineµÄÖÕµã£¨»úÐµ×ø±ê£©
-	//»ñÈ¡µ±Ç°µÄ×ø±ê±à³Ì·½Ê½
-	bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSAssignConfig->ucChannelNum);
-	//¼ÆËã×ø±êµã
-	// ¸³ÖµÖØÐÂÉ¨Ãè²¢ÇóÖµ£¬Ð£Ñé±¾´ÎÊµ¼ÊÓÃÓÚÉú³ÉÔË¶¯µÄÊäÈë¡£
-	if (checkPolarCoordinateInput(&pSAssignConfig->SScanContainer, &pSAssignConfig->SGCodeCurrSysState) < 0)
-	{
-		return -1;
-	}
+    //1.å¡«å†™SLineInfo
+    SLine SLineInfo; //å­˜ç›´çº¿æ®µä¿¡æ¯ï¼ˆå¯èƒ½è¦å°†æ­¤å˜é‡æ”¾åœ¨èµ‹å€¼ç»“æž„ä½“ä¸­ï¼‰
+    bool bIsAbsMethod;
+    memset(&SLineInfo, 0, sizeof(SLine));
+    //1.1åˆå§‹åŒ–SLineçš„èµ·ç‚¹ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SLineInfo.SEndPoint = SLineInfo.SStartPoint =
+        pSAssignConfig->SGCodeCurrSysState.SCurrPoint; //ç³»ç»ŸçŠ¶æ€ç»“æž„ä½“çš„å½“å‰ç‚¹
+    //1.2èŽ·å–SLineçš„ç»ˆç‚¹ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    //èŽ·å–å½“å‰çš„åæ ‡ç¼–ç¨‹æ–¹å¼
+    bIsAbsMethod = isAbsProgrammingMethod(GC_ASSIGN, pSAssignConfig->ucChannelNum);
+    //è®¡ç®—åæ ‡ç‚¹
+    // èµ‹å€¼é‡æ–°æ‰«æå¹¶æ±‚å€¼ï¼Œæ ¡éªŒæœ¬æ¬¡å®žé™…ç”¨äºŽç”Ÿæˆè¿åŠ¨çš„è¾“å…¥ã€‚
+    if (checkPolarCoordinateInput(&pSAssignConfig->SScanContainer, &pSAssignConfig->SGCodeCurrSysState) < 0)
+    {
+        return -1;
+    }
 
-	getMacCoordByScanInfo(pSAssignConfig->ucChannelNum,&pSAssignConfig->SScanContainer, &SLineInfo.SStartPoint, &SLineInfo.SEndPoint, &pSAssignConfig->SGCodeCurrSysState);
-	//1.3
-	SLineInfo.EntityType = isSamePoint(&SLineInfo.SStartPoint, &SLineInfo.SEndPoint) ? DOT : OTHERTYPE;
-	//1.2»ñÈ¡SLineInfoµÄÖ¸ÁîÖµ
-	//SLineInfo.sCommand = G01 * GCOMMAND_DECIMAL_PLACE * 10;
+    getMacCoordByScanInfo(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &SLineInfo.SStartPoint,
+                          &SLineInfo.SEndPoint, &pSAssignConfig->SGCodeCurrSysState);
+    //1.3
+    SLineInfo.EntityType = isSamePoint(&SLineInfo.SStartPoint, &SLineInfo.SEndPoint) ? DOT : OTHERTYPE;
+    //1.2èŽ·å–SLineInfoçš„æŒ‡ä»¤å€¼
+    //SLineInfo.sCommand = G01 * GCOMMAND_DECIMAL_PLACE * 10;
 
-	//Ö÷Öá¼õËÙÍ£Ê±²»ÖªµÀÎ»ÖÃ
-	// G16µÄCÊÇÆ½Ãæ¼«½Ç£¬²»ÇëÇóÎïÀíCÖá²ÎÓëÔË¶¯¡£
-	if (pSAssignConfig->SScanContainer.bABC[2] && !pSAssignConfig->SGCodeCurrSysState.bPolarCoordinateProgramming)
-	{
-		setbit(pGCodeBufUnit->ucValStatus, AXIS_C);
-	}
+    //ä¸»è½´å‡é€Ÿåœæ—¶ä¸çŸ¥é“ä½ç½®
+    // G16çš„Cæ˜¯å¹³é¢æžè§’ï¼Œä¸è¯·æ±‚ç‰©ç†Cè½´å‚ä¸Žè¿åŠ¨ã€‚
+    if (pSAssignConfig->SScanContainer.bABC[2] && !pSAssignConfig->SGCodeCurrSysState.bPolarCoordinateProgramming)
+    {
+        setbit(pGCodeBufUnit->ucValStatus, AXIS_C);
+    }
 
-//2.½«SLineÐ´Èë»º³åÇø
-	writeLineIntoGCodeBuf(&SLineInfo, pGCodeBufUnit);
+    //2.å°†SLineå†™å…¥ç¼“å†²åŒº
+    writeLineIntoGCodeBuf(&SLineInfo, pGCodeBufUnit);
 
-	return 2;
-
+    return 2;
 }

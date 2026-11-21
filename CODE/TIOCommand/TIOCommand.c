@@ -1,42 +1,40 @@
 #include "TIOCommand.h"
 #include "Motion.h"
 
+#if STM32_MODE //32æµ‹è¯•ç¯å¢ƒ
 
-#if STM32_MODE	//32²âÊÔ»·¾³
-
-//Êä³ö×¢ÒâÊÂÏî£ºout[]Êı×éÊÇÆóÒµÎªÁË½ÓÏß»»Ïß×öµÄÓ³ÉäÊı×é£¬Ã¿ÖÜÆÚ×öÒ»´ÎIOÊä³öÖ´ĞĞ£¬       //2025/6/23 ÆóÒµÒªÇó£ºÈ¡ÏûÊ¹ÓÃoutÊı×é£¨ÖĞ¼ä¹ı¶É×÷ÓÃ£©£¬Ö±½Ó¶ÁÈ¡µ×²ãIOÊä³öĞÅºÅ
-//			ÓĞÒ»¸ö±×¶Ë:IO²»ÄÜÊµÊ±Êä³ö£¬ĞèÒªµÈÔËĞĞµ½ÆóÒµµÄIOÊä³öÖ´ĞĞº¯Êı²Å»áÊä³öIOµçÆ½
-//			
-//			ÒòÎªout[]µÄ´æÔÚ£¬outXXºÍPXout(Y)Ö»ÄÜÊµÏÖÒ»Ë²¼äÊä³ö£¬ÔËĞĞµ½ÆóÒµµÄIOÊä³öÖ´ĞĞº¯ÊıÊ±IOµÄÊä³ö»áÇå¿Õ¡£
+//è¾“å‡ºæ³¨æ„äº‹é¡¹ï¼šout[]æ•°ç»„æ˜¯ä¼ä¸šä¸ºäº†æ¥çº¿æ¢çº¿åšçš„æ˜ å°„æ•°ç»„ï¼Œæ¯å‘¨æœŸåšä¸€æ¬¡IOè¾“å‡ºæ‰§è¡Œï¼Œ       //2025/6/23 ä¼ä¸šè¦æ±‚ï¼šå–æ¶ˆä½¿ç”¨outæ•°ç»„ï¼ˆä¸­é—´è¿‡æ¸¡ä½œç”¨ï¼‰ï¼Œç›´æ¥è¯»å–åº•å±‚IOè¾“å‡ºä¿¡å·
+//			æœ‰ä¸€ä¸ªå¼Šç«¯:IOä¸èƒ½å®æ—¶è¾“å‡ºï¼Œéœ€è¦ç­‰è¿è¡Œåˆ°ä¼ä¸šçš„IOè¾“å‡ºæ‰§è¡Œå‡½æ•°æ‰ä¼šè¾“å‡ºIOç”µå¹³
+//
+//			å› ä¸ºout[]çš„å­˜åœ¨ï¼ŒoutXXå’ŒPXout(Y)åªèƒ½å®ç°ä¸€ç¬é—´è¾“å‡ºï¼Œè¿è¡Œåˆ°ä¼ä¸šçš„IOè¾“å‡ºæ‰§è¡Œå‡½æ•°æ—¶IOçš„è¾“å‡ºä¼šæ¸…ç©ºã€‚
 #include "io_exc.h"
-#define TOOLOUTPUT_IO1				outy20//PBout(6)
-#define TOOLOUTPUT_IO2				outy21//PBout(7)
-#define TOOLOUTPUT_IO3				outy22//PBout(12)
-#define TOOLOUTPUT_IO4				outy23//PBout(13)
-#define TOOLCHANGE_TRIGSIGNAL0		outy24//PBout(14)
-#define TOOLCHANGE_TRIGSIGNAL1		outy25//PBout(15)
-#define MODECHANGE_IO				outy26//PDout(2)
-#define VALVE_LOCK_IO				outy27//out27//PGout(15)
-#define TOOLOUTPUT_ENABLE_IO		outy30//out30//PAout(11)
+#define TOOLOUTPUT_IO1 outy20         //PBout(6)
+#define TOOLOUTPUT_IO2 outy21         //PBout(7)
+#define TOOLOUTPUT_IO3 outy22         //PBout(12)
+#define TOOLOUTPUT_IO4 outy23         //PBout(13)
+#define TOOLCHANGE_TRIGSIGNAL0 outy24 //PBout(14)
+#define TOOLCHANGE_TRIGSIGNAL1 outy25 //PBout(15)
+#define MODECHANGE_IO outy26          //PDout(2)
+#define VALVE_LOCK_IO outy27          //out27//PGout(15)
+#define TOOLOUTPUT_ENABLE_IO outy30   //out30//PAout(11)
 
-//ÊäÈë×¢ÒâÊÂÏî£º
-// 1.ÆóÒµµÄIOÊäÈëÒı½ÅÄ¬ÈÏÎª¸ßµçÆ½
-//	2.¿ÉÒÔÖ±½Ó¶ÁÆäËûÌá¹©µÄ½Ó¿Ú	intxXXÀ´¶ÁÊäÈëIOµÄµçÆ½
-//	3.ÆóÒµµÄ½Ó¿Ú<intx == 1>´ú±íÓĞĞÅºÅÊäÈë
-//	4.IOÊäÈëĞèÒª×ö·À¶¶´¦Àí£¬Èç¹ûÊÇ¶ÁÆóÒµµÄ½Ó¿ÚintxXXµÄ»°£¬ÆäÒÑ¾­¾­¹ıÁË·À¶¶´¦Àí
+//è¾“å…¥æ³¨æ„äº‹é¡¹ï¼š
+// 1.ä¼ä¸šçš„IOè¾“å…¥å¼•è„šé»˜è®¤ä¸ºé«˜ç”µå¹³
+//	2.å¯ä»¥ç›´æ¥è¯»å…¶ä»–æä¾›çš„æ¥å£	intxXXæ¥è¯»è¾“å…¥IOçš„ç”µå¹³
+//	3.ä¼ä¸šçš„æ¥å£<intx == 1>ä»£è¡¨æœ‰ä¿¡å·è¾“å…¥
+//	4.IOè¾“å…¥éœ€è¦åšé˜²æŠ–å¤„ç†ï¼Œå¦‚æœæ˜¯è¯»ä¼ä¸šçš„æ¥å£intxXXçš„è¯ï¼Œå…¶å·²ç»ç»è¿‡äº†é˜²æŠ–å¤„ç†
 
-#define TOOLINPUT_IO1				intx20//PEin(15)
-#define TOOLINPUT_IO2				intx21//PFin(13)
-#define TOOLINPUT_IO3				intx22//PFin(14)
-#define TOOLINPUT_IO4				intx23//PFin(15)
-#define TOOLINPUT_IO5				intx24//PGin(0)
+#define TOOLINPUT_IO1 intx20 //PEin(15)
+#define TOOLINPUT_IO2 intx21 //PFin(13)
+#define TOOLINPUT_IO3 intx22 //PFin(14)
+#define TOOLINPUT_IO4 intx23 //PFin(15)
+#define TOOLINPUT_IO5 intx24 //PGin(0)
 
-#define	VALVE_LOCKED_IO				intx25//PGin(14)
-#define VALVE_UNLOCKED_IO			intx26//PCin(14)
-#define TOOLCHANGE_INPLACE_IO		intx27//PCin(4)
+#define VALVE_LOCKED_IO intx25       //PGin(14)
+#define VALVE_UNLOCKED_IO intx26     //PCin(14)
+#define TOOLCHANGE_INPLACE_IO intx27 //PCin(4)
 
-
-#else	//VS²âÊÔ»·¾³
+#else //VSæµ‹è¯•ç¯å¢ƒ
 
 int8 TOOLINPUT_IO1 = 0;
 int8 TOOLINPUT_IO2 = 0;
@@ -70,783 +68,783 @@ int8 ucImageTest_RunStep = 0;
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTIOSTRUCT_InitEditablePara()
-  º¯Êı¹¦ÄÜ£º¿É±à¼­ÏµÍ³²ÎÊı³õÊ¼»¯  ³õÊ¼»¯°´Å¥µ÷ÓÃ´Ëº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šTIOSTRUCT_InitEditablePara()
+  å‡½æ•°åŠŸèƒ½ï¼šå¯ç¼–è¾‘ç³»ç»Ÿå‚æ•°åˆå§‹åŒ–  åˆå§‹åŒ–æŒ‰é’®è°ƒç”¨æ­¤å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 TIOSTRUCT_InitEditablePara()
 {
-	g_SSystemPara.ucToolDevie = TOOL_RAWTOOL_MODE;	//µ¶¾ßÉè±¸£¬ÅÅµ¶»ú/µ¶Ëş»ú
-	g_SSystemPara.ucToolChange_TrigDelayTime = 50;	//»»µ¶´¥·¢ĞÅºÅÎ¬³ÖÊ±¼ä
-	g_SSystemPara.usToolChange_LockDelayTime = 50;	//»»µ¶¼Ğ½ôĞÅºÅÎ¬³ÖÊ±¼ä
-	g_SSystemPara.usToolChange_ReadOrSendIODelayTime = 50;	//»»µ¶¼Ğ½ôĞÅºÅÎ¬³ÖÊ±¼ä
-	g_SSystemPara.usToolChange_AlarmTime = 1000;	//»»µ¶Ê±¼ä¹ı³¤±¨¾¯Ê±¼ä
+    g_SSystemPara.ucToolDevie = TOOL_RAWTOOL_MODE;         //åˆ€å…·è®¾å¤‡ï¼Œæ’åˆ€æœº/åˆ€å¡”æœº
+    g_SSystemPara.ucToolChange_TrigDelayTime = 50;         //æ¢åˆ€è§¦å‘ä¿¡å·ç»´æŒæ—¶é—´
+    g_SSystemPara.usToolChange_LockDelayTime = 50;         //æ¢åˆ€å¤¹ç´§ä¿¡å·ç»´æŒæ—¶é—´
+    g_SSystemPara.usToolChange_ReadOrSendIODelayTime = 50; //æ¢åˆ€å¤¹ç´§ä¿¡å·ç»´æŒæ—¶é—´
+    g_SSystemPara.usToolChange_AlarmTime = 1000;           //æ¢åˆ€æ—¶é—´è¿‡é•¿æŠ¥è­¦æ—¶é—´
 
-	g_SSystemPara.ucToolNum = 1;	//µ¶¾ßºÅ
-	g_SSystemPara.ucToolCompNum = 1;	//µ¶²¹ºÅ
+    g_SSystemPara.ucToolNum = 1;     //åˆ€å…·å·
+    g_SSystemPara.ucToolCompNum = 1; //åˆ€è¡¥å·
 }
 #if STM32_MODE
 /*************************************************
-  º¯ÊıÃû³Æ£ºTIOSTRUCT_InitAfterLoad
-  º¯Êı¹¦ÄÜ£º´ÓFlashÖĞ¼ÓÔØÊı¾İºóÖ´ĞĞµÄ³õÊ¼»¯
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šTIOSTRUCT_InitAfterLoad
+  å‡½æ•°åŠŸèƒ½ï¼šä»Flashä¸­åŠ è½½æ•°æ®åæ‰§è¡Œçš„åˆå§‹åŒ–
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
-int8 ReadToolNum_AfterLoadSysPara(struct _STIOCommand* pSTIOCommand, struct _SRun* pSRun, struct SInterpolationPre* pSPreProcess)
+int8 ReadToolNum_AfterLoadSysPara(struct _STIOCommand* pSTIOCommand, struct _SRun* pSRun,
+                                  struct SInterpolationPre* pSPreProcess)
 {
-	uint8 ucToolNum;
-	uint8 ucToolCompNum;
-	int8 ctempToolNum = 0;
-	ucToolNum = g_SSystemPara.ucToolNum;
-	ucToolCompNum = g_SSystemPara.ucToolCompNum;
-	if (g_SSystemPara.ucToolDevie == TOOL_TURRET_MODE)
-	{
-		struct _SIOReadGroup sTool_InPlaceIO;
-		sTool_InPlaceIO.ucNum = 1;	//¶Áµ¥¶ÀÒ»¸öIO
-		sTool_InPlaceIO.ucIOAlias[0] = 27;	//±ğÃû X2.7
-		sTool_InPlaceIO.unGPIOxArrays[0] = GPIOC;	//GPIOC
-		sTool_InPlaceIO.ucPinArrays[0] = GPIO_PIN_4;	//PC4
-		while (MultiSample(pSTIOCommand->pSChannel, &pSTIOCommand->ucReadIO_Counter, 1, &sTool_InPlaceIO) != 1);
-
-		if (getToolChange_InPlaceStatus())
-		{
-			struct _SIOReadGroup sTool_ToolNumIO =
-			{
-				{5},
-				{GPIOE,GPIOF,GPIOF,GPIOF,GPIOG},
-				{GPIO_PIN_15,GPIO_PIN_13,GPIO_PIN_14,GPIO_PIN_15,GPIO_PIN_0},
-				{0,0,0,0,0},
-				{20,21,22,23,24}
-			};
-			while (MultiSample(pSTIOCommand->pSChannel, &pSTIOCommand->ucReadIO_Counter, 1, &sTool_ToolNumIO) != 1);
-			ctempToolNum = getToolNumFromServo();
-			if(ctempToolNum > TOOl_LOCATION_MAX_NUM-4)
-			{
-				parseErrorC(9999, PLC_ERROR_NUM3955);
-				pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-				return -1;
-			}
-			if (ctempToolNum < 0)
-			{
-				parseErrorC(9999, PLC_ERROR_NUM3978);
-			}
-			else if (ctempToolNum != ucToolNum)
-			{
-				ucToolNum =ctempToolNum;
-				parseErrorC(9999, PLC_ERROR_NUM3842);
-				ucToolCompNum = 1;
-			}
-
-		}
-		else
-		{
-			parseErrorC(9999, PLC_ERROR_NUM3986);
-		}
-	}
-    if(ucToolNum > TOOl_LOCATION_MAX_NUM-4)
+    uint8 ucToolNum;
+    uint8 ucToolCompNum;
+    int8 ctempToolNum = 0;
+    ucToolNum = g_SSystemPara.ucToolNum;
+    ucToolCompNum = g_SSystemPara.ucToolCompNum;
+    if (g_SSystemPara.ucToolDevie == TOOL_TURRET_MODE)
     {
-    	parseErrorC(9999, PLC_ERROR_NUM3842);
-    	return -1;
+        struct _SIOReadGroup sTool_InPlaceIO;
+        sTool_InPlaceIO.ucNum = 1;                   //è¯»å•ç‹¬ä¸€ä¸ªIO
+        sTool_InPlaceIO.ucIOAlias[0] = 27;           //åˆ«å X2.7
+        sTool_InPlaceIO.unGPIOxArrays[0] = GPIOC;    //GPIOC
+        sTool_InPlaceIO.ucPinArrays[0] = GPIO_PIN_4; //PC4
+        while (MultiSample(pSTIOCommand->pSChannel, &pSTIOCommand->ucReadIO_Counter, 1, &sTool_InPlaceIO) != 1)
+            ;
+
+        if (getToolChange_InPlaceStatus())
+        {
+            struct _SIOReadGroup sTool_ToolNumIO = {{5},
+                                                    {GPIOE, GPIOF, GPIOF, GPIOF, GPIOG},
+                                                    {GPIO_PIN_15, GPIO_PIN_13, GPIO_PIN_14, GPIO_PIN_15, GPIO_PIN_0},
+                                                    {0, 0, 0, 0, 0},
+                                                    {20, 21, 22, 23, 24}};
+            while (MultiSample(pSTIOCommand->pSChannel, &pSTIOCommand->ucReadIO_Counter, 1, &sTool_ToolNumIO) != 1)
+                ;
+            ctempToolNum = getToolNumFromServo();
+            if (ctempToolNum > TOOl_LOCATION_MAX_NUM - 4)
+            {
+                parseErrorC(9999, PLC_ERROR_NUM3955);
+                pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+                return -1;
+            }
+            if (ctempToolNum < 0)
+            {
+                parseErrorC(9999, PLC_ERROR_NUM3978);
+            }
+            else if (ctempToolNum != ucToolNum)
+            {
+                ucToolNum = ctempToolNum;
+                parseErrorC(9999, PLC_ERROR_NUM3842);
+                ucToolCompNum = 1;
+            }
+        }
+        else
+        {
+            parseErrorC(9999, PLC_ERROR_NUM3986);
+        }
     }
-	g_SSystemPara.ucToolNum = pSPreProcess->ucToolNum = pSRun->ucToolNum = ucToolNum;
-	g_SSystemPara.ucToolCompNum = pSPreProcess->ucToolCompNum = pSRun->ucToolCompNum = ucToolCompNum;
-	//¼ÆËãĞÂµÄÆ«ÒÆ×ø±ê
-	TChangeTotalOffset(pSPreProcess->pSChannel->ucChannelNum, pSRun->ucToolCompNum, pSRun->cWorkpieceCoordNum, &pSRun->SCurrentOffset, &pSRun->SWorkPieceOffsetByG50);
-	pSTIOCommand->ucToolNum = ucToolNum;
-	pSTIOCommand->ucToolCompNum = ucToolCompNum;
-	return 1;
+    if (ucToolNum > TOOl_LOCATION_MAX_NUM - 4)
+    {
+        parseErrorC(9999, PLC_ERROR_NUM3842);
+        return -1;
+    }
+    g_SSystemPara.ucToolNum = pSPreProcess->ucToolNum = pSRun->ucToolNum = ucToolNum;
+    g_SSystemPara.ucToolCompNum = pSPreProcess->ucToolCompNum = pSRun->ucToolCompNum = ucToolCompNum;
+    //è®¡ç®—æ–°çš„åç§»åæ ‡
+    TChangeTotalOffset(pSPreProcess->pSChannel->ucChannelNum, pSRun->ucToolCompNum, pSRun->cWorkpieceCoordNum,
+                       &pSRun->SCurrentOffset, &pSRun->SWorkPieceOffsetByG50);
+    pSTIOCommand->ucToolNum = ucToolNum;
+    pSTIOCommand->ucToolCompNum = ucToolCompNum;
+    return 1;
 }
 #endif
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºIOStructToBuff(UMcode ucIOCommand)
-  º¯Êı¹¦ÄÜ  ½«T´úÂëµÄµ¶¾ßºÅ·ÅÈëµ¶¾ßIOÔËĞĞ½á¹¹ÌåÖĞ
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ·ÅÈë³É¹¦
-			0 ·ÅÈëÊ§°Ü
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šIOStructToBuff(UMcode ucIOCommand)
+  å‡½æ•°åŠŸèƒ½  å°†Tä»£ç çš„åˆ€å…·å·æ”¾å…¥åˆ€å…·IOè¿è¡Œç»“æ„ä½“ä¸­
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ”¾å…¥æˆåŠŸ
+			0 æ”¾å…¥å¤±è´¥
+  å¤‡    æ³¨ï¼š
 **************************************************/
 uint8 TIOToRunBuff(uint8 ucTIOCommand, uint8 ucToolCompNum, struct _STIOCommand* pSTIOCommand)
 {
-	if (pSTIOCommand->ucTIORun == 0)  //¶Á³öµÄÊı¾İÎª0  ±íÊ¾Îª¿Õ
-	{
-		if ((ucTIOCommand > TOOl_LOCATION_MAX_NUM - 4))	//ÊäÈëµÄµ¶¾ßºÅ´íÎó
-		{
-			return -1;
-		}
-		else
-		{
-			pSTIOCommand->ucTIORun = ucTIOCommand;//½«Ä¿±êM´úÂë·ÅÈëÆäÖĞ
-			pSTIOCommand->ucToolCompNumRun = ucToolCompNum;
-		}
-		return 1;//·ÅÈë³É¹¦
-	}
-	return 0;//·ÅÈëÊ§°Ü
+    if (pSTIOCommand->ucTIORun == 0) //è¯»å‡ºçš„æ•°æ®ä¸º0  è¡¨ç¤ºä¸ºç©º
+    {
+        if ((ucTIOCommand > TOOl_LOCATION_MAX_NUM - 4)) //è¾“å…¥çš„åˆ€å…·å·é”™è¯¯
+        {
+            return -1;
+        }
+        else
+        {
+            pSTIOCommand->ucTIORun = ucTIOCommand; //å°†ç›®æ ‡Mä»£ç æ”¾å…¥å…¶ä¸­
+            pSTIOCommand->ucToolCompNumRun = ucToolCompNum;
+        }
+        return 1; //æ”¾å…¥æˆåŠŸ
+    }
+    return 0; //æ”¾å…¥å¤±è´¥
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunTIO
-  º¯Êı¹¦ÄÜ£ºÖ´ĞĞÊäÈëµÄT´úÂë
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3	ÊäÈëµÄT´úÂë´úÂë²»ÕıÈ·
-			-2	ÎŞĞèÒªÖ´ĞĞµÄ»»µ¶Ö¸Áî
-			-1	ÊäÈëµÄµ¶¾ßÔËĞĞ½á¹¹ÌåÎª¿Õ
-			0	ÅÅµ¶»úÄ£Ê½²»ÔËĞĞ
-			1	ÕıÔÚÖ´ĞĞ»»µ¶
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrunTIO
+  å‡½æ•°åŠŸèƒ½ï¼šæ‰§è¡Œè¾“å…¥çš„Tä»£ç 
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3	è¾“å…¥çš„Tä»£ç ä»£ç ä¸æ­£ç¡®
+			-2	æ— éœ€è¦æ‰§è¡Œçš„æ¢åˆ€æŒ‡ä»¤
+			-1	è¾“å…¥çš„åˆ€å…·è¿è¡Œç»“æ„ä½“ä¸ºç©º
+			0	æ’åˆ€æœºæ¨¡å¼ä¸è¿è¡Œ
+			1	æ­£åœ¨æ‰§è¡Œæ¢åˆ€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 runTIO(struct _STIOCommand* pSTIOCommand)
 {
-	int ToolNumFromServo = 0;
-	int ret = 0;
-	if (pSTIOCommand == NULL || pSTIOCommand->pSChannel == NULL)
-	{
-		return -1;
-	}
-	if(pSTIOCommand->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP)return 0;//¼±Í£×´Ì¬²»Ö´ĞĞ
-	if (g_SSystemPara.ucToolDevie == TOOL_RAWTOOL_MODE)
-	{
-		if (pSTIOCommand->ucToolChangeStatus == TOOLCHANGE_ERROR)	//µ¶Ëş×´Ì¬»ú´¦ÓÚ±¨´í×´Ì¬ÏÂÇĞ»»ÖÁÅÅµ¶»úÄ£Ê½ºó³õÊ¼»¯µ¶Ëş×´Ì¬»ú	6/15 CMC
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
-		}
-		return 0;
-	}
+    int ToolNumFromServo = 0;
+    int ret = 0;
+    if (pSTIOCommand == NULL || pSTIOCommand->pSChannel == NULL)
+    {
+        return -1;
+    }
+    if (pSTIOCommand->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP)
+        return 0; //æ€¥åœçŠ¶æ€ä¸æ‰§è¡Œ
+    if (g_SSystemPara.ucToolDevie == TOOL_RAWTOOL_MODE)
+    {
+        if (pSTIOCommand->ucToolChangeStatus ==
+            TOOLCHANGE_ERROR) //åˆ€å¡”çŠ¶æ€æœºå¤„äºæŠ¥é”™çŠ¶æ€ä¸‹åˆ‡æ¢è‡³æ’åˆ€æœºæ¨¡å¼ååˆå§‹åŒ–åˆ€å¡”çŠ¶æ€æœº	6/15 CMC
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
+        }
+        return 0;
+    }
 
-	if (pSTIOCommand->ucTIORun == 0)//0±íÊ¾¿Õ ²»Ö´ĞĞ  ·µ»Ø
-	{
-		return -2;
-	}
+    if (pSTIOCommand->ucTIORun == 0) //0è¡¨ç¤ºç©º ä¸æ‰§è¡Œ  è¿”å›
+    {
+        return -2;
+    }
 
-	if (pSTIOCommand->ucToolChangeStatus != TOOLCHANGE_ERROR)
-	{
-		//»»µ¶³¬Ê±±¨¾¯
-		if (delays_ms(g_SSystemPara.usToolChange_AlarmTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime) == 1)
-		{
-			parseErrorC(9999, PLC_ERROR_NUM1000);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-		}
-	}
+    if (pSTIOCommand->ucToolChangeStatus != TOOLCHANGE_ERROR)
+    {
+        //æ¢åˆ€è¶…æ—¶æŠ¥è­¦
+        if (delays_ms(g_SSystemPara.usToolChange_AlarmTime,
+                      &pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime) == 1)
+        {
+            parseErrorC(9999, PLC_ERROR_NUM1000);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+        }
+    }
 
-	switch (pSTIOCommand->ucToolChangeStatus)
-	{
-	case TOOLCHANGE_IDLE:
-	{
-		if (pSTIOCommand->ucTIORun != 0)
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_SETSERVO_ENABLED;
-		}
-		else
-		{
-			break;
-		}
-	}
+    switch (pSTIOCommand->ucToolChangeStatus)
+    {
+    case TOOLCHANGE_IDLE:
+    {
+        if (pSTIOCommand->ucTIORun != 0)
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_SETSERVO_ENABLED;
+        }
+        else
+        {
+            break;
+        }
+    }
 
-	case TOOLCHANGE_SETSERVO_ENABLED:
-	{
-		if (pSTIOCommand->ucToolNum == pSTIOCommand->ucTIORun)	//»»µ¶µÄÄ¿±êµ¶¾ßºÅÊÇ·ñºÍµ±Ç°µÄµ¶¾ßºÅÏàÍ¬
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_DONE;
-		}
-		else
-		{
-			//ÅĞ¶Ïµ¶¼Ü£¨µç´Å·§£©ÊÇ·ñËø½ô
-			if (getToolCarrier_LockedStatus() != LOCK)
-			{
-				parseErrorC(9999, PLC_ERROR_NUM3987);
-				pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-				break;
-			}
+    case TOOLCHANGE_SETSERVO_ENABLED:
+    {
+        if (pSTIOCommand->ucToolNum == pSTIOCommand->ucTIORun) //æ¢åˆ€çš„ç›®æ ‡åˆ€å…·å·æ˜¯å¦å’Œå½“å‰çš„åˆ€å…·å·ç›¸åŒ
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_DONE;
+        }
+        else
+        {
+            //åˆ¤æ–­åˆ€æ¶ï¼ˆç”µç£é˜€ï¼‰æ˜¯å¦é”ç´§
+            if (getToolCarrier_LockedStatus() != LOCK)
+            {
+                parseErrorC(9999, PLC_ERROR_NUM3987);
+                pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+                break;
+            }
 
-			//¼ì²â¶¨Î»Íê³ÉĞÅºÅÊÇ·ñÕı³£
-			if (!getToolChange_InPlaceStatus())
-			{
-				parseErrorC(9999, PLC_ERROR_NUM3986);
-				pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-				break;
-			}
+            //æ£€æµ‹å®šä½å®Œæˆä¿¡å·æ˜¯å¦æ­£å¸¸
+            if (!getToolChange_InPlaceStatus())
+            {
+                parseErrorC(9999, PLC_ERROR_NUM3986);
+                pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+                break;
+            }
 
-			//µ¶¼ÜËÉ¿ª/Ê¹ÄÜ
-			setToolCarrier_Locked(UNLOCK);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_OUTPUT_TOOLNUM;
-		}
-	}
-	case TOOLCHANGE_OUTPUT_TOOLNUM:
-	{
-		int8 cRet = getToolCarrier_LockedStatus();
-		if (cRet == UNLOCK)
-		{
-			set_ToolServo_EnabledStatus(IO_SET);
-			SelectToolNum(pSTIOCommand->ucTIORun);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAITFOR_SENDTRIG;
-		}
-		else if (cRet == -1)
-		{
-			parseErrorC(9999, PLC_ERROR_NUM3988);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-		}
-		else
-		{
-			break;
-		}
-	}
-	case TOOLCHANGE_WAITFOR_SENDTRIG:
-	{
-		//ËµÃ÷ÊéÉÏÏÔÊ¾£¬Ñ¡¶¨µ¶ºÅºóĞèÑÓÊ±Ò»¶¨µÄÊ±¼ä£¬>2ms
-		if (WaitFor_SendTrigSignal(pSTIOCommand) == 1)
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_SEND_TRIGSIGN;
-		}
-		else
-		{
-			break;
-		}
-	}
-	case TOOLCHANGE_SEND_TRIGSIGN:
-	{
-		//·¢ËÍ³ÖĞøÒ»¶ÎÊ±¼äµÄ¸ßµçÆ½´¥·¢ĞÅºÅ
-		if (Trig_ToolChange(pSTIOCommand) == 1)
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GET_INPLACESIGN;
-		}
-		else
-		{
-			break;
-		}
-	}
+            //åˆ€æ¶æ¾å¼€/ä½¿èƒ½
+            setToolCarrier_Locked(UNLOCK);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_OUTPUT_TOOLNUM;
+        }
+    }
+    case TOOLCHANGE_OUTPUT_TOOLNUM:
+    {
+        int8 cRet = getToolCarrier_LockedStatus();
+        if (cRet == UNLOCK)
+        {
+            set_ToolServo_EnabledStatus(IO_SET);
+            SelectToolNum(pSTIOCommand->ucTIORun);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAITFOR_SENDTRIG;
+        }
+        else if (cRet == -1)
+        {
+            parseErrorC(9999, PLC_ERROR_NUM3988);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+        }
+        else
+        {
+            break;
+        }
+    }
+    case TOOLCHANGE_WAITFOR_SENDTRIG:
+    {
+        //è¯´æ˜ä¹¦ä¸Šæ˜¾ç¤ºï¼Œé€‰å®šåˆ€å·åéœ€å»¶æ—¶ä¸€å®šçš„æ—¶é—´ï¼Œ>2ms
+        if (WaitFor_SendTrigSignal(pSTIOCommand) == 1)
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_SEND_TRIGSIGN;
+        }
+        else
+        {
+            break;
+        }
+    }
+    case TOOLCHANGE_SEND_TRIGSIGN:
+    {
+        //å‘é€æŒç»­ä¸€æ®µæ—¶é—´çš„é«˜ç”µå¹³è§¦å‘ä¿¡å·
+        if (Trig_ToolChange(pSTIOCommand) == 1)
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GET_INPLACESIGN;
+        }
+        else
+        {
+            break;
+        }
+    }
 
-	case TOOLCHANGE_WAIT_GET_INPLACESIGN:
-	{
-		ret = getToolChangeStatus(pSTIOCommand);	//»ñÈ¡»»µ¶ËÅ·şµ¶Î»µ½Î»×´Ì¬
-		if (ret == TRUE)
-		{
-			//¾­Êµ»ú²âÊÔ£¬µ½Î»ĞÅºÅ½ÓÊÕµ½ºó£¬ĞèÒªÑÓÊ±Ò»¶¨µÄÊ±¼ä²ÅÄÜ¼ì²âµ½ÕıÈ·µ¶ºÅ,ÑÓÊ±Ê±¼äÔİÊ±ÓÃ´¥·¢Ê±¼ä´úÌæ
-			if (delays_ms(g_SSystemPara.usToolChange_ReadOrSendIODelayTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)
-			{
-				pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GET_TOOLNUM;
-			}
-			else
-			{
-				break;
-			}
-		}
-		else
-		{
-			pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
-			break;
-		}
-	}
-	case TOOLCHANGE_WAIT_GET_TOOLNUM:
-	{
-		ToolNumFromServo = getToolNumFromServo();			//¶ÁÈ¡µ¶ºÅ
-		if(ToolNumFromServo > TOOl_LOCATION_MAX_NUM-4)
-		{
-			parseErrorC(9999, PLC_ERROR_NUM3955);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-			return -1;
-		}
-		else if(ToolNumFromServo <0)
-		{
-			if(ToolNumFromServo == -2)
-			parseErrorC(9999, PLC_ERROR_NUM1001);
-			else
-			parseErrorC(9999, PLC_ERROR_NUM3988);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-			return -1;
-		}
-		if (ToolNumFromServo == pSTIOCommand->ucTIORun)		//¶ÁÈ¡µÄµ¶ºÅÓëÄ¿±êµ¶ºÅÏàÍ¬
-		{
-			set_ToolServo_EnabledStatus(IO_RESET);			//Ê§ÄÜËÅ·ş
+    case TOOLCHANGE_WAIT_GET_INPLACESIGN:
+    {
+        ret = getToolChangeStatus(pSTIOCommand); //è·å–æ¢åˆ€ä¼ºæœåˆ€ä½åˆ°ä½çŠ¶æ€
+        if (ret == TRUE)
+        {
+            //ç»å®æœºæµ‹è¯•ï¼Œåˆ°ä½ä¿¡å·æ¥æ”¶åˆ°åï¼Œéœ€è¦å»¶æ—¶ä¸€å®šçš„æ—¶é—´æ‰èƒ½æ£€æµ‹åˆ°æ­£ç¡®åˆ€å·,å»¶æ—¶æ—¶é—´æš‚æ—¶ç”¨è§¦å‘æ—¶é—´ä»£æ›¿
+            if (delays_ms(g_SSystemPara.usToolChange_ReadOrSendIODelayTime,
+                          &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)
+            {
+                pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GET_TOOLNUM;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else
+        {
+            pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
+            break;
+        }
+    }
+    case TOOLCHANGE_WAIT_GET_TOOLNUM:
+    {
+        ToolNumFromServo = getToolNumFromServo(); //è¯»å–åˆ€å·
+        if (ToolNumFromServo > TOOl_LOCATION_MAX_NUM - 4)
+        {
+            parseErrorC(9999, PLC_ERROR_NUM3955);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+            return -1;
+        }
+        else if (ToolNumFromServo < 0)
+        {
+            if (ToolNumFromServo == -2)
+                parseErrorC(9999, PLC_ERROR_NUM1001);
+            else
+                parseErrorC(9999, PLC_ERROR_NUM3988);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+            return -1;
+        }
+        if (ToolNumFromServo == pSTIOCommand->ucTIORun) //è¯»å–çš„åˆ€å·ä¸ç›®æ ‡åˆ€å·ç›¸åŒ
+        {
+            set_ToolServo_EnabledStatus(IO_RESET); //å¤±èƒ½ä¼ºæœ
 
-			if (delays_ms(g_SSystemPara.usToolChange_ReadOrSendIODelayTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)	//Ê§ÄÜ»òÊ¹ÄÜËÅ·şĞèÒªÒ»¶ÎÊ±¼äÑÓÊ±²ÅÄÜ±»ËÅ·şÇı¶¯Ê¶±ğµ½
-			{
+            if (delays_ms(g_SSystemPara.usToolChange_ReadOrSendIODelayTime,
+                          &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) ==
+                1) //å¤±èƒ½æˆ–ä½¿èƒ½ä¼ºæœéœ€è¦ä¸€æ®µæ—¶é—´å»¶æ—¶æ‰èƒ½è¢«ä¼ºæœé©±åŠ¨è¯†åˆ«åˆ°
+            {
+            }
+            else
+            {
+                break;
+            }
 
-			}
-			else
-			{
-				break;
-			}
+            setToolCarrier_Locked(LOCK); //é”ç´§åˆ€æ¶
 
-			setToolCarrier_Locked(LOCK);					//Ëø½ôµ¶¼Ü
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GETLOCK;
+        }
+        else if (ToolNumFromServo == 0)
+        {
+            //æ¢åˆ€ä¼ºæœæŠ¥é”™
+            parseErrorC(9999, PLC_ERROR_NUM3978);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+            break;
+        }
+        else
+        {
+            //è¯»å–çš„åˆ€å·å’Œç›®æ ‡ä¸åŒï¼ŒæŠ¥é”™
+            parseErrorC(9999, PLC_ERROR_NUM3955);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+            break;
+        }
+    }
+    case TOOLCHANGE_WAIT_GETLOCK:
+    {
+        //åº”ä¼ä¸šè¦æ±‚ï¼Œå¢åŠ åˆ€æ¶é”ç´§åˆ¤æ–­æ—¶é—´
+        if (delays_ms(g_SSystemPara.usToolChange_LockDelayTime,
+                      &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_LOCKED;
+        }
+        else
+        {
+            break;
+        }
+    }
+    case TOOLCHANGE_WAIT_LOCKED:
+    {
+        int8 cRet = getToolCarrier_LockedStatus();
+        //å¦‚æœåˆ€æ¶å·²é”ï¼Œåˆ™å¯ä»¥åˆ¤æ–­æ¢åˆ€å·²å®Œæˆ
+        if (cRet == LOCK)
+        {
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_DONE;
+        }
+        else if (cRet == -1)
+        {
+            parseErrorC(9999, PLC_ERROR_NUM3988);
+            pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
+        }
+        else
+        {
+            break;
+        }
+    }
 
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_GETLOCK;
-		}
-		else if (ToolNumFromServo == 0)
-		{
-			//»»µ¶ËÅ·ş±¨´í
-			parseErrorC(9999, PLC_ERROR_NUM3978);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-			break;
-		}
-		else
-		{
-			//¶ÁÈ¡µÄµ¶ºÅºÍÄ¿±ê²»Í¬£¬±¨´í
-			parseErrorC(9999, PLC_ERROR_NUM3955);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-			break;
-		}
-	}
-	case TOOLCHANGE_WAIT_GETLOCK:
-	{
-		//Ó¦ÆóÒµÒªÇó£¬Ôö¼Óµ¶¼ÜËø½ôÅĞ¶ÏÊ±¼ä
-		if (delays_ms(g_SSystemPara.usToolChange_LockDelayTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_WAIT_LOCKED;
-		}
-		else
-		{
-			break;
-		}
+    case TOOLCHANGE_DONE:
+    {
+        //æ¢åˆ€å®Œæˆåæ¸…ç©ºå˜é‡å€¼
+        pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime = 0;
+        pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
+        g_SSystemPara.ucToolNum = pSTIOCommand->ucToolNum = pSTIOCommand->ucTIORun;
+        g_SSystemPara.ucToolCompNum = pSTIOCommand->ucToolCompNum = pSTIOCommand->ucToolCompNumRun;
+        pSTIOCommand->ucTIORun = 0;
+        pSTIOCommand->ucToolCompNumRun = 0;
+        pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
+    }
+    break;
 
-	}
-	case TOOLCHANGE_WAIT_LOCKED:
-	{
-		int8 cRet = getToolCarrier_LockedStatus();
-		//Èç¹ûµ¶¼ÜÒÑËø£¬Ôò¿ÉÒÔÅĞ¶Ï»»µ¶ÒÑÍê³É
-		if (cRet == LOCK)
-		{
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_DONE;
-		}
-		else if (cRet == -1)
-		{
-			parseErrorC(9999, PLC_ERROR_NUM3988);
-			pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_ERROR;
-		}
-		else
-		{
-			break;
-		}
-	}
+    case TOOLCHANGE_ERROR:
+    {
+        pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime = 0;
+        pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
+        //è¿˜æ²¡æƒ³å¥½æ€ä¹ˆå¤„ç†
+        if (pSTIOCommand->pSChannel->SPreProcess.ucInpStatus == INP_FINISHED)
+        {
+            //ä¸»è½´å‡é€Ÿåœ
+            spindleCommonStop(&pSTIOCommand->pSChannel->SSpindle);
 
-	case TOOLCHANGE_DONE:
-	{
-		//»»µ¶Íê³ÉºóÇå¿Õ±äÁ¿Öµ
-		pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime = 0;
-		pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
-		g_SSystemPara.ucToolNum = pSTIOCommand->ucToolNum = pSTIOCommand->ucTIORun;
-		g_SSystemPara.ucToolCompNum = pSTIOCommand->ucToolCompNum = pSTIOCommand->ucToolCompNumRun;
-		pSTIOCommand->ucTIORun = 0;
-		pSTIOCommand->ucToolCompNumRun = 0;
-		pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
-	}
-	break;
-
-	case TOOLCHANGE_ERROR:
-	{
-		pSTIOCommand->pSChannel->SApplyTime.unToolChange_AlarmTime = 0;
-		pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime = 0;
-		//»¹Ã»ÏëºÃÔõÃ´´¦Àí
-		if (pSTIOCommand->pSChannel->SPreProcess.ucInpStatus == INP_FINISHED)
-		{
-			//Ö÷Öá¼õËÙÍ£
-			spindleCommonStop(&pSTIOCommand->pSChannel->SSpindle);
-
-			//¶¯Á¦µ¶¼õËÙÍ£
-			spindleCommonStop(&pSTIOCommand->pSChannel->SSecondSpindle);
-			channelStopToIDLE(pSTIOCommand->pSChannel);
-		}
-		//pSTIOCommand->ucTIORun = 0;
-		//pSTIOCommand->ucToolCompNumRun = 0;
-		//pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
-	}
-	break;
-	default:
-		break;
-	}
-	return 1;
+            //åŠ¨åŠ›åˆ€å‡é€Ÿåœ
+            spindleCommonStop(&pSTIOCommand->pSChannel->SSecondSpindle);
+            channelStopToIDLE(pSTIOCommand->pSChannel);
+        }
+        //pSTIOCommand->ucTIORun = 0;
+        //pSTIOCommand->ucToolCompNumRun = 0;
+        //pSTIOCommand->ucToolChangeStatus = TOOLCHANGE_IDLE;
+    }
+    break;
+    default:
+        break;
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolNumFromServo
-  º¯Êı¹¦ÄÜ£ºÖ´ĞĞÊäÈëµÄT´úÂë
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-3	¶¨Î»Î´Íê³É
-			-2	¶ÁÈ¡µÄĞÅºÅÎŞĞ§
-			0	ËÅ·ş¹ÊÕÏ
-			1~12	µ¶ºÅ
+  å‡½æ•°åç§°ï¼šgetToolNumFromServo
+  å‡½æ•°åŠŸèƒ½ï¼šæ‰§è¡Œè¾“å…¥çš„Tä»£ç 
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-3	å®šä½æœªå®Œæˆ
+			-2	è¯»å–çš„ä¿¡å·æ— æ•ˆ
+			0	ä¼ºæœæ•…éšœ
+			1~12	åˆ€å·
 
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getToolNumFromServo()
 {
-	int8 cToolInput_8BIT = 0;
-	cToolInput_8BIT = (TOOLINPUT_IO1) | (TOOLINPUT_IO2 << 1) | (TOOLINPUT_IO3 << 2) | (TOOLINPUT_IO4 << 3) | (TOOLINPUT_IO5 << 4);
+    int8 cToolInput_8BIT = 0;
+    cToolInput_8BIT =
+        (TOOLINPUT_IO1) | (TOOLINPUT_IO2 << 1) | (TOOLINPUT_IO3 << 2) | (TOOLINPUT_IO4 << 3) | (TOOLINPUT_IO5 << 4);
 
-#if(TOOLCHANGE_TEST == 1)
-	cToolInput_8BIT = 7;	//3ºÅµ¶
-#endif // TOOLCHANGE_TEST
+#if (TOOLCHANGE_TEST == 1)
+    cToolInput_8BIT = 7; //3å·åˆ€
+#endif                   // TOOLCHANGE_TEST
 
-	if (cToolInput_8BIT > 4)
-	{
-		if(cToolInput_8BIT > TOOl_LOCATION_MAX_NUM-4)
-		{
-			return -2;
-		}
-		else
-		return cToolInput_8BIT - 4;	//·µ»Øµ¶ºÅ
-	}
-	else
-	{
-		if (cToolInput_8BIT != 0)
-		{
-			if (cToolInput_8BIT == 4)
-			{
-				return -3;	//¶¨Î»Î´Íê³É
-			}
-			else
-			{
-				return -2;	//ÎŞĞ§
-			}
-		}
-		else
-		{
-			return 0;	//ËÅ·ş¹ÊÕÏ
-		}
-
-	}
-	return 0;	//ËÅ·ş¹ÊÕÏ
+    if (cToolInput_8BIT > 4)
+    {
+        if (cToolInput_8BIT > TOOl_LOCATION_MAX_NUM - 4)
+        {
+            return -2;
+        }
+        else
+            return cToolInput_8BIT - 4; //è¿”å›åˆ€å·
+    }
+    else
+    {
+        if (cToolInput_8BIT != 0)
+        {
+            if (cToolInput_8BIT == 4)
+            {
+                return -3; //å®šä½æœªå®Œæˆ
+            }
+            else
+            {
+                return -2; //æ— æ•ˆ
+            }
+        }
+        else
+        {
+            return 0; //ä¼ºæœæ•…éšœ
+        }
+    }
+    return 0; //ä¼ºæœæ•…éšœ
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºSelectToolNum
-  º¯Êı¹¦ÄÜ£º¸ù¾İÊäÈëµÄµ¶¾ßºÅÊä³öµ¶¾ßÑ¡ÔñµÄIO
-  ÊäÈë²ÎÊı£ºcToolNum		µ¶¾ßºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šSelectToolNum
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®è¾“å…¥çš„åˆ€å…·å·è¾“å‡ºåˆ€å…·é€‰æ‹©çš„IO
+  è¾“å…¥å‚æ•°ï¼šcToolNum		åˆ€å…·å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 SelectToolNum(int8 cToolNum)
 {
-	//10½øÖÆ×ª»»³É¶ş½øÖÆ
-	TOOLOUTPUT_IO1 = (cToolNum % 2);
-	TOOLOUTPUT_IO2 = ((cToolNum / 2) % 2);
-	TOOLOUTPUT_IO3 = ((cToolNum / 4) % 2);
-	TOOLOUTPUT_IO4 = ((cToolNum / 8) % 2);
+    //10è¿›åˆ¶è½¬æ¢æˆäºŒè¿›åˆ¶
+    TOOLOUTPUT_IO1 = (cToolNum % 2);
+    TOOLOUTPUT_IO2 = ((cToolNum / 2) % 2);
+    TOOLOUTPUT_IO3 = ((cToolNum / 4) % 2);
+    TOOLOUTPUT_IO4 = ((cToolNum / 8) % 2);
 #if STM32_MODE
-	//Éı¼¶H7×¢ÊÍ
-	//PEout(15) = TOOLOUTPUT_IO1;
-	//PFout(13) = TOOLOUTPUT_IO2;
-	//PFout(14) = TOOLOUTPUT_IO3;
-	//PFout(15) = TOOLOUTPUT_IO4;
+    //å‡çº§H7æ³¨é‡Š
+    //PEout(15) = TOOLOUTPUT_IO1;
+    //PFout(13) = TOOLOUTPUT_IO2;
+    //PFout(14) = TOOLOUTPUT_IO3;
+    //PFout(15) = TOOLOUTPUT_IO4;
 #endif
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºClearSelectedToolNumIO
-  º¯Êı¹¦ÄÜ£ºÇå³ıµ¶¾ßÑ¡ÔñIO
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šClearSelectedToolNumIO
+  å‡½æ•°åŠŸèƒ½ï¼šæ¸…é™¤åˆ€å…·é€‰æ‹©IO
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void ClearSelectedToolNumIO()
 {
-	//10½øÖÆ×ª»»³É¶ş½øÖÆ
-	TOOLOUTPUT_IO1 = IO_RESET;
-	TOOLOUTPUT_IO2 = IO_RESET;
-	TOOLOUTPUT_IO3 = IO_RESET;
-	TOOLOUTPUT_IO4 = IO_RESET;
+    //10è¿›åˆ¶è½¬æ¢æˆäºŒè¿›åˆ¶
+    TOOLOUTPUT_IO1 = IO_RESET;
+    TOOLOUTPUT_IO2 = IO_RESET;
+    TOOLOUTPUT_IO3 = IO_RESET;
+    TOOLOUTPUT_IO4 = IO_RESET;
 
 #if STM32_MODE
-	PEout(15) = IO_RESET;
-	PFout(13) = IO_RESET;
-	PFout(14) = IO_RESET;
-	PFout(15) = IO_RESET;
+    PEout(15) = IO_RESET;
+    PFout(13) = IO_RESET;
+    PFout(14) = IO_RESET;
+    PFout(15) = IO_RESET;
 #endif
-
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºWaitFor_SendTrigSignal
-  º¯Êı¹¦ÄÜ£º¸ù¾İµ¶ËşËÅ·şËµÃ÷Êé£¬·¢ËÍÑ¡µ¶ĞÅºÅºó£¬ĞèÒªÒ»¶¨Ê±¼äµÄÑÓÊ±²ÅÄÜ¼ÌĞø·¢ËÍ´¥·¢ĞÅºÅ¡£
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	´¥·¢ĞÅºÅ·¢ËÍÍê³É
-			0	´¥·¢ĞÅºÅ·¢ËÍÖĞ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šWaitFor_SendTrigSignal
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®åˆ€å¡”ä¼ºæœè¯´æ˜ä¹¦ï¼Œå‘é€é€‰åˆ€ä¿¡å·åï¼Œéœ€è¦ä¸€å®šæ—¶é—´çš„å»¶æ—¶æ‰èƒ½ç»§ç»­å‘é€è§¦å‘ä¿¡å·ã€‚
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	è§¦å‘ä¿¡å·å‘é€å®Œæˆ
+			0	è§¦å‘ä¿¡å·å‘é€ä¸­
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 WaitFor_SendTrigSignal(struct _STIOCommand* pSTIOCommand)
 {
-	if (delays_ms(g_SSystemPara.ucToolChange_TrigDelayTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-	{
-		return 1;
-	}
-	return 0;
-
+    if (delays_ms(g_SSystemPara.ucToolChange_TrigDelayTime,
+                  &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTrig_ToolChange
-  º¯Êı¹¦ÄÜ£º»»µ¶·¢ËÍ´¥·¢ĞÅºÅ£¬»»µ¶Ç°ĞèÒªÀ­¸ß´¥·¢ĞÅºÅ£¬²¢Î¬³ÖÒ»¶ÎÊ±¼äÔÙÀ­µÍ¡£
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	´¥·¢ĞÅºÅ·¢ËÍÍê³É
-			0	´¥·¢ĞÅºÅ·¢ËÍÖĞ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šTrig_ToolChange
+  å‡½æ•°åŠŸèƒ½ï¼šæ¢åˆ€å‘é€è§¦å‘ä¿¡å·ï¼Œæ¢åˆ€å‰éœ€è¦æ‹‰é«˜è§¦å‘ä¿¡å·ï¼Œå¹¶ç»´æŒä¸€æ®µæ—¶é—´å†æ‹‰ä½ã€‚
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	è§¦å‘ä¿¡å·å‘é€å®Œæˆ
+			0	è§¦å‘ä¿¡å·å‘é€ä¸­
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 Trig_ToolChange(struct _STIOCommand* pSTIOCommand)
 {
-	TOOLCHANGE_TRIGSIGNAL1 = IO_SET;
-	if (delays_ms(g_SSystemPara.ucToolChange_TrigDelayTime, &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1)//ÑÓÊ±ÊÇ·ñÍê³É
-	{
-		TOOLCHANGE_TRIGSIGNAL1 = IO_RESET;
-		return 1;
-	}
-	return 0;
-
+    TOOLCHANGE_TRIGSIGNAL1 = IO_SET;
+    if (delays_ms(g_SSystemPara.ucToolChange_TrigDelayTime,
+                  &pSTIOCommand->pSChannel->SApplyTime.unToolChange_TrigRunTime) == 1) //å»¶æ—¶æ˜¯å¦å®Œæˆ
+    {
+        TOOLCHANGE_TRIGSIGNAL1 = IO_RESET;
+        return 1;
+    }
+    return 0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolChangeStatus
-  º¯Êı¹¦ÄÜ£º²é¿´»»µ¶ÊÇ·ñµ½Î»
-  ÊäÈë²ÎÊı£ºpSTIOCommand		µ¶¾ßÔËĞĞ½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	»»µ¶Íê³É
-			0	ÕıÔÚ»»µ¶
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolChangeStatus
+  å‡½æ•°åŠŸèƒ½ï¼šæŸ¥çœ‹æ¢åˆ€æ˜¯å¦åˆ°ä½
+  è¾“å…¥å‚æ•°ï¼špSTIOCommand		åˆ€å…·è¿è¡Œç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ¢åˆ€å®Œæˆ
+			0	æ­£åœ¨æ¢åˆ€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getToolChangeStatus(struct _STIOCommand* pSTIOCommand)
 {
-	int8 cToolChangDone_Flag = 0;
-	cToolChangDone_Flag = TOOLCHANGE_INPLACE_IO;
-#if(TOOLCHANGE_TEST == 1)
-	cToolChangDone_Flag = 1;
+    int8 cToolChangDone_Flag = 0;
+    cToolChangDone_Flag = TOOLCHANGE_INPLACE_IO;
+#if (TOOLCHANGE_TEST == 1)
+    cToolChangDone_Flag = 1;
 #endif // TOOLCHANGE_TEST
 
-	if (cToolChangDone_Flag == IO_SET)
-	{
-		return 1;
-	}
+    if (cToolChangDone_Flag == IO_SET)
+    {
+        return 1;
+    }
 
-	return 0;
+    return 0;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolCarrier_LockedStatus
-  º¯Êı¹¦ÄÜ£º»ñÈ¡µ¶¼Ü(µç´Å·§£©Ëø½ô×´Ì¬
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Ëø½ô
-			0 ËÉ¿ª
-			-1 Î´Öª×´Ì¬
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolCarrier_LockedStatus
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–åˆ€æ¶(ç”µç£é˜€ï¼‰é”ç´§çŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 é”ç´§
+			0 æ¾å¼€
+			-1 æœªçŸ¥çŠ¶æ€
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getToolCarrier_LockedStatus()
 {
-#if(TOOLCHANGE_TEST == 1)
-	if (ucImageTest_RunStep == 0)
-	{
-		VALVE_LOCKED_IO = IO_SET;
-		VALVE_UNLOCKED_IO = IO_RESET;
-		ucImageTest_RunStep++;
-	}
-	else
-	{
-		VALVE_LOCKED_IO = IO_RESET;
-		VALVE_UNLOCKED_IO = IO_SET;
-		ucImageTest_RunStep = 0;
-
-	}
+#if (TOOLCHANGE_TEST == 1)
+    if (ucImageTest_RunStep == 0)
+    {
+        VALVE_LOCKED_IO = IO_SET;
+        VALVE_UNLOCKED_IO = IO_RESET;
+        ucImageTest_RunStep++;
+    }
+    else
+    {
+        VALVE_LOCKED_IO = IO_RESET;
+        VALVE_UNLOCKED_IO = IO_SET;
+        ucImageTest_RunStep = 0;
+    }
 #endif // TOOLCHANGE_TEST
-	if (VALVE_LOCKED_IO == IO_SET && VALVE_UNLOCKED_IO == IO_RESET)
-	{
-		return LOCK;
-	}
-	else if (VALVE_LOCKED_IO == IO_RESET && VALVE_UNLOCKED_IO == IO_SET)
-	{
-		return UNLOCK;
-	}
-	else
-	{
-		return -1;
-	}
+    if (VALVE_LOCKED_IO == IO_SET && VALVE_UNLOCKED_IO == IO_RESET)
+    {
+        return LOCK;
+    }
+    else if (VALVE_LOCKED_IO == IO_RESET && VALVE_UNLOCKED_IO == IO_SET)
+    {
+        return UNLOCK;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetToolCarrier_Locked
-  º¯Êı¹¦ÄÜ£ºÊ¹µ¶¼Ü(µç´Å·§£©Ëø½ô»òËÉ¿ª
-  ÊäÈë²ÎÊı£ºcCommand Ëø½ô/ËÉ¿ªµÄÖ¸Áî
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÒÑÊä³ö	-1 ÊäÈëÖ¸Áî´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetToolCarrier_Locked
+  å‡½æ•°åŠŸèƒ½ï¼šä½¿åˆ€æ¶(ç”µç£é˜€ï¼‰é”ç´§æˆ–æ¾å¼€
+  è¾“å…¥å‚æ•°ï¼šcCommand é”ç´§/æ¾å¼€çš„æŒ‡ä»¤
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 å·²è¾“å‡º	-1 è¾“å…¥æŒ‡ä»¤é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 setToolCarrier_Locked(int8 cCommand)
 {
-	if (cCommand == LOCK)
-	{
-		VALVE_LOCK_IO = LOCK_ELECTRICAL_LEVEL;
+    if (cCommand == LOCK)
+    {
+        VALVE_LOCK_IO = LOCK_ELECTRICAL_LEVEL;
 #if STM32_MODE
-		outy27 = LOCK_ELECTRICAL_LEVEL;
+        outy27 = LOCK_ELECTRICAL_LEVEL;
 #endif
-		return 1;
-	}
-	else if (cCommand == UNLOCK)
-	{
-		VALVE_LOCK_IO = UNLOCK_ELECTRICAL_LEVEL;
+        return 1;
+    }
+    else if (cCommand == UNLOCK)
+    {
+        VALVE_LOCK_IO = UNLOCK_ELECTRICAL_LEVEL;
 #if STM32_MODE
-		outy27 = UNLOCK_ELECTRICAL_LEVEL;
+        outy27 = UNLOCK_ELECTRICAL_LEVEL;
 #endif
-		return 1;
-	}
-	else
-	{
-		return -1;
-	}
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºgetToolChange_InPlaceStatus
-  º¯Êı¹¦ÄÜ£º»ñÈ¡»»µ¶¶¨Î»ĞÅºÅ
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	»»µ¶¶¨Î»Íê³É
-			0	»»µ¶¶¨Î»Î´Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šgetToolChange_InPlaceStatus
+  å‡½æ•°åŠŸèƒ½ï¼šè·å–æ¢åˆ€å®šä½ä¿¡å·
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	æ¢åˆ€å®šä½å®Œæˆ
+			0	æ¢åˆ€å®šä½æœªå®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 getToolChange_InPlaceStatus()
 {
-#if(TOOLCHANGE_TEST == 1)
-	TOOLCHANGE_INPLACE_IO = IO_SET;
+#if (TOOLCHANGE_TEST == 1)
+    TOOLCHANGE_INPLACE_IO = IO_SET;
 #endif // TOOLCHANGE_TEST
-	if (TOOLCHANGE_INPLACE_IO == IO_SET)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+    if (TOOLCHANGE_INPLACE_IO == IO_SET)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºset_ToolServo_EnabledStatus
-  º¯Êı¹¦ÄÜ£ºµ¶¾ßËÅ·şÊ¹ÄÜ/Ê§ÄÜ
-  ÊäÈë²ÎÊı£ºIO_SET/ SET/1	Ê¹ÄÜ
-			IO_RESET/ RESET/0	Ê§ÄÜ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šset_ToolServo_EnabledStatus
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ€å…·ä¼ºæœä½¿èƒ½/å¤±èƒ½
+  è¾“å…¥å‚æ•°ï¼šIO_SET/ SET/1	ä½¿èƒ½
+			IO_RESET/ RESET/0	å¤±èƒ½
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void set_ToolServo_EnabledStatus(int8 cCommand)
 {
-	if (cCommand == IO_SET)
-	{
-		TOOLOUTPUT_ENABLE_IO = IO_SET;
+    if (cCommand == IO_SET)
+    {
+        TOOLOUTPUT_ENABLE_IO = IO_SET;
 #if STM32_MODE
-		outy30 = IO_SET;
+        outy30 = IO_SET;
 #endif
-	}
-	else
-	{
-		TOOLOUTPUT_ENABLE_IO = IO_RESET;
+    }
+    else
+    {
+        TOOLOUTPUT_ENABLE_IO = IO_RESET;
 #if STM32_MODE
-		outy30 = IO_RESET;
+        outy30 = IO_RESET;
 #endif
-	}
-
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºMultiSample
-  º¯Êı¹¦ÄÜ£ºÄ£·ÂÆóÒµµÄÏû¶¶´¦Àí
-			ÒòÎªÆóÒµµÄIOÊÇ¾­¹ıÏû¶¶´¦Àí£¬µ«Æä¼ì²é¹Ü½ÅIO×´Ì¬µÄº¯ÊıÊÇÔÚÑ­»·while(1)ÖĞµ÷ÓÃ£¬
-			¶øÎÒÃÇĞèÒªÔÚ»¹Ã»½øÈëÑ­»·Ç°¡¢¿ª»ú¶ÁÍêÏµÍ³²ÎÊıºó¶Ôµ¶Ëş×´Ì¬¼ì²é£¬Ò²¾ÍÊÇ¶ÔIO½øĞĞ¶à´Î²ÉÑùÏû¶¶¶ÁÈ¡¡£
-  ÊäÈë²ÎÊı£ºIO_SET/ SET/1	Ê¹ÄÜ
-			IO_RESET/ RESET/0	Ê§ÄÜ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šMultiSample
+  å‡½æ•°åŠŸèƒ½ï¼šæ¨¡ä»¿ä¼ä¸šçš„æ¶ˆæŠ–å¤„ç†
+			å› ä¸ºä¼ä¸šçš„IOæ˜¯ç»è¿‡æ¶ˆæŠ–å¤„ç†ï¼Œä½†å…¶æ£€æŸ¥ç®¡è„šIOçŠ¶æ€çš„å‡½æ•°æ˜¯åœ¨å¾ªç¯while(1)ä¸­è°ƒç”¨ï¼Œ
+			è€Œæˆ‘ä»¬éœ€è¦åœ¨è¿˜æ²¡è¿›å…¥å¾ªç¯å‰ã€å¼€æœºè¯»å®Œç³»ç»Ÿå‚æ•°åå¯¹åˆ€å¡”çŠ¶æ€æ£€æŸ¥ï¼Œä¹Ÿå°±æ˜¯å¯¹IOè¿›è¡Œå¤šæ¬¡é‡‡æ ·æ¶ˆæŠ–è¯»å–ã€‚
+  è¾“å…¥å‚æ•°ï¼šIO_SET/ SET/1	ä½¿èƒ½
+			IO_RESET/ RESET/0	å¤±èƒ½
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 MultiSample(struct SChannel* pSChannel, uint8* ptimes, uint8 ucDuration, struct _SIOReadGroup* pIOReadGroup)
 {
-	if (ptimes == NULL || pIOReadGroup == NULL)
-	{
-		return -1;
-	}
-	if(pIOReadGroup->ucNum == 0||pIOReadGroup->ucNum >READIO_NUM_MAX)
-	return -1;
-	uint8 ucCounter;
-	if (delays_ms(ucDuration, &pSChannel->SApplyTime.unSampleIntervalRunTime) == 1)
-	{
-#if STM32_MODE	//32²âÊÔ»·¾³
-		for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
-		{
-			if ((uint32)(pIOReadGroup->unGPIOxArrays[ucCounter]) < (uint32)GPIOA || (pIOReadGroup->unGPIOxArrays[ucCounter]) > (uint32)GPIOI)
-			return -1;
-			if (HAL_GPIO_ReadPin((GPIO_TypeDef*)pIOReadGroup->unGPIOxArrays[ucCounter], pIOReadGroup->ucPinArrays[ucCounter])==IO_RESET)
-			//if (BIT_ADDR(pIOReadGroup->unGPIOxArrays[ucCounter], pIOReadGroup->ucPinArrays[ucCounter]) == IO_RESET)
-			{
-				pIOReadGroup->ucIOLowLevelTimesArray[ucCounter]++;
-			}
-		}
+    if (ptimes == NULL || pIOReadGroup == NULL)
+    {
+        return -1;
+    }
+    if (pIOReadGroup->ucNum == 0 || pIOReadGroup->ucNum > READIO_NUM_MAX)
+        return -1;
+    uint8 ucCounter;
+    if (delays_ms(ucDuration, &pSChannel->SApplyTime.unSampleIntervalRunTime) == 1)
+    {
+#if STM32_MODE //32æµ‹è¯•ç¯å¢ƒ
+        for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
+        {
+            if ((uint32)(pIOReadGroup->unGPIOxArrays[ucCounter]) < (uint32)GPIOA ||
+                (pIOReadGroup->unGPIOxArrays[ucCounter]) > (uint32)GPIOI)
+                return -1;
+            if (HAL_GPIO_ReadPin((GPIO_TypeDef*)pIOReadGroup->unGPIOxArrays[ucCounter],
+                                 pIOReadGroup->ucPinArrays[ucCounter]) == IO_RESET)
+            //if (BIT_ADDR(pIOReadGroup->unGPIOxArrays[ucCounter], pIOReadGroup->ucPinArrays[ucCounter]) == IO_RESET)
+            {
+                pIOReadGroup->ucIOLowLevelTimesArray[ucCounter]++;
+            }
+        }
 #endif
-		(*ptimes)++;
-	}
+        (*ptimes)++;
+    }
 
-	if ((*ptimes) >= ELIMINATEDITHERING_SAMPLING_TIMES)
-	{
+    if ((*ptimes) >= ELIMINATEDITHERING_SAMPLING_TIMES)
+    {
 
-		for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
-		{
-			if (pIOReadGroup->ucIOLowLevelTimesArray[ucCounter] > JUDGE_LOW_LEVEL_TIMES)
-			{
-#if STM32_MODE	//32²âÊÔ»·¾³
-				switch (pIOReadGroup->ucIOAlias[ucCounter])
-				{
-				case 20:
-					intx20 = IO_SET;
-					break;
-				case 21:
-					intx21 = IO_SET;
-					break;
-				case 22:
-					intx22 = IO_SET;
-					break;
-				case 23:
-					intx23 = IO_SET;
-					break;
-				case 24:
-					intx24 = IO_SET;
-					break;
-				case 25:
-					intx25 = IO_SET;
-					break;
-				case 26:
-					intx26 = IO_SET;
-					break;
-				case 27:
-					intx27 = IO_SET;
-					break;
-				default:
-					break;
-				}
+        for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
+        {
+            if (pIOReadGroup->ucIOLowLevelTimesArray[ucCounter] > JUDGE_LOW_LEVEL_TIMES)
+            {
+#if STM32_MODE //32æµ‹è¯•ç¯å¢ƒ
+                switch (pIOReadGroup->ucIOAlias[ucCounter])
+                {
+                case 20:
+                    intx20 = IO_SET;
+                    break;
+                case 21:
+                    intx21 = IO_SET;
+                    break;
+                case 22:
+                    intx22 = IO_SET;
+                    break;
+                case 23:
+                    intx23 = IO_SET;
+                    break;
+                case 24:
+                    intx24 = IO_SET;
+                    break;
+                case 25:
+                    intx25 = IO_SET;
+                    break;
+                case 26:
+                    intx26 = IO_SET;
+                    break;
+                case 27:
+                    intx27 = IO_SET;
+                    break;
+                default:
+                    break;
+                }
 #endif
-			}
-		}
-		(*ptimes) = 0;
-		for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
-		{
-			if(pIOReadGroup->ucNum >READIO_NUM_MAX)
-			break;
-		pIOReadGroup->ucIOLowLevelTimesArray[ucCounter] = 0;
-		}
+            }
+        }
+        (*ptimes) = 0;
+        for (ucCounter = 0; ucCounter < pIOReadGroup->ucNum; ucCounter++)
+        {
+            if (pIOReadGroup->ucNum > READIO_NUM_MAX)
+                break;
+            pIOReadGroup->ucIOLowLevelTimesArray[ucCounter] = 0;
+        }
 
-		return 1;
-	}
+        return 1;
+    }
 
-	return 0;
-
+    return 0;
 }

@@ -18,8 +18,8 @@
 #include "Spindle.h"
 #include "toolAxis.h"
 #include "G32.h"
-#include "G1.h" 
-#include "G0.h"  
+#include "G1.h"
+#include "G0.h"
 #include <string.h>
 #include "G2.h"
 #include "Channel.h"
@@ -31,355 +31,364 @@
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 enum HANDWHEEL_SIM_REQUEST
 {
-    HANDWHEEL_SIM_NONE = 0, /**< Ã»ÓĞ½»½ÓÇëÇó¡£ */
-    HANDWHEEL_SIM_ENABLE_REQUESTED, /**< Ç°Ì¨ÇëÇó¿ªÆô£¬ÉĞÎ´ÅĞ¶ÏĞøĞĞ×Ê¸ñ¡£ */
-    HANDWHEEL_SIM_ENABLE_HOLD, /**< µÈÔ­ÔİÍ£Íê³ÉÔÙ¿ªÆô£¬µ«²»µÃ×Ô¶¯ĞøĞĞ¡£ */
-    HANDWHEEL_SIM_ENABLE_RESUME, /**< ÎªÇĞÈëÄ£ÄâÔİÍ££¬½»½ÓºóÉêÇë»Ö¸´¡£ */
-    HANDWHEEL_SIM_CLOSE_REQUESTED, /**< Ç°Ì¨ÇëÇó¹Ø±Õ£¬ÉĞÎ´ÅĞ¶ÏĞøĞĞ×Ê¸ñ¡£ */
-    HANDWHEEL_SIM_CLOSE_HOLD, /**< ¹Ø±Õºó±£³ÖÔİÍ££¬ÖØ¸´°´¼ü²»ÄÜÉı¼¶¡£ */
-    HANDWHEEL_SIM_CLOSE_RESUME, /**< Õı³£ÍË³ö£¬½»½ÓºóÉêÇë»Ö¸´×Ô¶¯¼Ó¹¤¡£ */
-    HANDWHEEL_SIM_STOP_CLOSE /**< ¸´Î»/±¨¾¯/¼±Í£ºóµÄ¹Ø±Õ£¬µÈ´ıÔ­Í£³µÊÕÎ²¡£ */
+    HANDWHEEL_SIM_NONE = 0,         /**< æ²¡æœ‰äº¤æ¥è¯·æ±‚ã€‚ */
+    HANDWHEEL_SIM_ENABLE_REQUESTED, /**< å‰å°è¯·æ±‚å¼€å¯ï¼Œå°šæœªåˆ¤æ–­ç»­è¡Œèµ„æ ¼ã€‚ */
+    HANDWHEEL_SIM_ENABLE_HOLD,      /**< ç­‰åŸæš‚åœå®Œæˆå†å¼€å¯ï¼Œä½†ä¸å¾—è‡ªåŠ¨ç»­è¡Œã€‚ */
+    HANDWHEEL_SIM_ENABLE_RESUME,    /**< ä¸ºåˆ‡å…¥æ¨¡æ‹Ÿæš‚åœï¼Œäº¤æ¥åç”³è¯·æ¢å¤ã€‚ */
+    HANDWHEEL_SIM_CLOSE_REQUESTED,  /**< å‰å°è¯·æ±‚å…³é—­ï¼Œå°šæœªåˆ¤æ–­ç»­è¡Œèµ„æ ¼ã€‚ */
+    HANDWHEEL_SIM_CLOSE_HOLD,       /**< å…³é—­åä¿æŒæš‚åœï¼Œé‡å¤æŒ‰é”®ä¸èƒ½å‡çº§ã€‚ */
+    HANDWHEEL_SIM_CLOSE_RESUME,     /**< æ­£å¸¸é€€å‡ºï¼Œäº¤æ¥åç”³è¯·æ¢å¤è‡ªåŠ¨åŠ å·¥ã€‚ */
+    HANDWHEEL_SIM_STOP_CLOSE        /**< å¤ä½/æŠ¥è­¦/æ€¥åœåçš„å…³é—­ï¼Œç­‰å¾…åŸåœè½¦æ”¶å°¾ã€‚ */
 };
-/* °´Í¨µÀ±£´æÎ¨Ò»¿ª¹ØÇëÇó£»Ç°Ì¨´®ĞĞ·¢²¼µ¥×Ö½Ú£¬ÖĞ¶Ï½ÓÊÕ²¢Íê³ÉÔË¶¯½»½Ó¡£
- * ÉÏµçÎª NONE£»ÔİÍ£¡¢Ä£Ê½±ä»¯³·ÏúĞøĞĞ£»STOP_CLOSE ²»±»ÆÕÍ¨°´¼ü¸²¸Ç¡£
- * ²»Ê¹ÓÃ BUILDING ÈÃ¾É²âËÙºÍ handleSystemPause ÔÚ½»½ÓÇ°¸Ä±ä±¶ÂÊ»ò×Ô¶¯Æô¶¯¡£ */
+/* æŒ‰é€šé“ä¿å­˜å”¯ä¸€å¼€å…³è¯·æ±‚ï¼›å‰å°ä¸²è¡Œå‘å¸ƒå•å­—èŠ‚ï¼Œä¸­æ–­æ¥æ”¶å¹¶å®Œæˆè¿åŠ¨äº¤æ¥ã€‚
+ * ä¸Šç”µä¸º NONEï¼›æš‚åœã€æ¨¡å¼å˜åŒ–æ’¤é”€ç»­è¡Œï¼›STOP_CLOSE ä¸è¢«æ™®é€šæŒ‰é”®è¦†ç›–ã€‚
+ * ä¸ä½¿ç”¨ BUILDING è®©æ—§æµ‹é€Ÿå’Œ handleSystemPause åœ¨äº¤æ¥å‰æ”¹å˜å€ç‡æˆ–è‡ªåŠ¨å¯åŠ¨ã€‚ */
 static volatile uint8 g_ucHandwheelSimRequestArray[CHANNEL_NUM_MAX];
 #endif
 #if STM32_MODE
-#include"app_draw.h"
+#include "app_draw.h"
 extern uint8 SpindleB;
 #endif
-#if !STM32_MODE 
-uint8 out[30];					//ÆóÒµµÄÊä³öIOÊı×é,ÓëÆóÒµÍ¬Ãû
-uint8 SpindleB;                  //ÆóÒµÊÖÂÖÄ£Ê½µÄÃû³Æ,ÓëÆóÒµÍ¬Ãû
+#if !STM32_MODE
+uint8 out[30];  //ä¼ä¸šçš„è¾“å‡ºIOæ•°ç»„,ä¸ä¼ä¸šåŒå
+uint8 SpindleB; //ä¼ä¸šæ‰‹è½®æ¨¡å¼çš„åç§°,ä¸ä¼ä¸šåŒå
 #endif
 /*************************************************
-  º¯ÊıÃû³Æ£ºpauseButtonAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ÔİÍ£°´¼ü½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 Ö´ĞĞÍê³É
-			0 ·ÇÔËĞĞ×´Ì¬ ²»ÄÜÔİÍ£
-			-1 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼špauseButtonAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  æš‚åœæŒ‰é”®æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 æ‰§è¡Œå®Œæˆ
+			0 éè¿è¡ŒçŠ¶æ€ ä¸èƒ½æš‚åœ
+			-1 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 pauseButtonAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//´íÎóµÄÍ¨µÀºÅ
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é”™è¯¯çš„é€šé“å·
+    {
+        return -1;
+    }
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* g_ucHandwheelSimRequestArray ÕæÊµÔİÍ£È¡ÏûÉĞÎ´Íê³ÉµÄ¿ªÆô£¬±£Áô¹Ø±Õ²¢³·Ïú×Ô¶¯ĞøĞĞ¡£
-     * »Ö¸´ÔË¶¯²»ÔÚÕâÀïÇ¿¸Ä×´Ì¬£»Ô­»Ö¸´Íê³Éºó£¬ÓÉÍË³ö´¦ÀíÇëÇóÕı³£ÔİÍ£¡£ */
-    if (g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE
-        && g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_STOP_CLOSE)
+    /* g_ucHandwheelSimRequestArray çœŸå®æš‚åœå–æ¶ˆå°šæœªå®Œæˆçš„å¼€å¯ï¼Œä¿ç•™å…³é—­å¹¶æ’¤é”€è‡ªåŠ¨ç»­è¡Œã€‚
+     * æ¢å¤è¿åŠ¨ä¸åœ¨è¿™é‡Œå¼ºæ”¹çŠ¶æ€ï¼›åŸæ¢å¤å®Œæˆåï¼Œç”±é€€å‡ºå¤„ç†è¯·æ±‚æ­£å¸¸æš‚åœã€‚ */
+    if (g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE &&
+        g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_STOP_CLOSE)
     {
         g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_CLOSE_HOLD;
     }
 #endif
-	g_SChannel[ucChannelNum].bChipBreakStart = FALSE;//¿ªÊ¼¶ÏĞ¼±êÖ¾Î»ÖÃFALSE
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN)//Ö»ÓĞÔÚÔËĞĞ×´Ì¬ÏÂ²ÅÄÜÔİÍ£
-	{
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN_TO_PAUSE;//½«ÏµÍ³×´Ì¬ÖÃÎªRUN_TO_PAUSE
-		return 1;
-	}
-	if (g_SChannel[ucChannelNum].bProgramStop == FALSE)  //M01Ö´ĞĞÆÚ¼ä°´ÏÂ³ÌĞòÔİÍ£  2023/10/7 ºé¹ÚÅô
-	{
-		for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
-		{
-			if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 && g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_DETECT)
-			{
-				g_SChannel[ucChannelNum].bProgramStop = TRUE;
-			}
-		}
-	}
+    g_SChannel[ucChannelNum].bChipBreakStart = FALSE;        //å¼€å§‹æ–­å±‘æ ‡å¿—ä½ç½®FALSE
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN) //åªæœ‰åœ¨è¿è¡ŒçŠ¶æ€ä¸‹æ‰èƒ½æš‚åœ
+    {
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN_TO_PAUSE; //å°†ç³»ç»ŸçŠ¶æ€ç½®ä¸ºRUN_TO_PAUSE
+        return 1;
+    }
+    if (g_SChannel[ucChannelNum].bProgramStop == FALSE) //M01æ‰§è¡ŒæœŸé—´æŒ‰ä¸‹ç¨‹åºæš‚åœ  2023/10/7 æ´ªå† é¹
+    {
+        for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
+        {
+            if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 &&
+                g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_DETECT)
+            {
+                g_SChannel[ucChannelNum].bProgramStop = TRUE;
+            }
+        }
+    }
 
-	return 0;
+    return 0;
 }
-#define RESET_SECONDTIMES_STOP_NOW  0
+#define RESET_SECONDTIMES_STOP_NOW 0
 /*************************************************
-  º¯ÊıÃû³Æ£ºresetButtonAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ¸´Î»°´¼ü½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 ´íÎóÍ¨µÀºÅ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šresetButtonAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å¤ä½æŒ‰é”®æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é”™è¯¯é€šé“å·
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 resetButtonAPI(uint8 ucChannelNum)
 {
-	bool bAlarmStop = FALSE;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//´íÎóµÄÍ¨µÀºÅ
-	{
-		return -1;
-	}
+    bool bAlarmStop = FALSE;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é”™è¯¯çš„é€šé“å·
+    {
+        return -1;
+    }
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* g_ucHandwheelSimRequestArray ¼ÇÂ¼±£»¤ºó¹Ø±Õ£»Ô­Í£³µÈÔ¸ºÔğËÙ¶È½»½Ó¼°ÖáÊÍ·Å¡£
-     * ¼´Ê¹ÏÂÃæÒò±¨¾¯ÌáÇ°·µ»Ø£¬Ò²²»ÄÜ¶ªÊ§¹Ø±ÕÒâÍ¼»òÁôÏÂ×Ô¶¯ĞøĞĞÇëÇó¡£ */
+    /* g_ucHandwheelSimRequestArray è®°å½•ä¿æŠ¤åå…³é—­ï¼›åŸåœè½¦ä»è´Ÿè´£é€Ÿåº¦äº¤æ¥åŠè½´é‡Šæ”¾ã€‚
+     * å³ä½¿ä¸‹é¢å› æŠ¥è­¦æå‰è¿”å›ï¼Œä¹Ÿä¸èƒ½ä¸¢å¤±å…³é—­æ„å›¾æˆ–ç•™ä¸‹è‡ªåŠ¨ç»­è¡Œè¯·æ±‚ã€‚ */
     g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_STOP_CLOSE;
 #endif
-	switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	{
-	case SYS_RESET://±¾À´¾Í´¦ÓÚ¸´Î»×´Ì¬
-#if RESET_SECONDTIMES_STOP_NOW == 1	//³ÂÃô´Ï	8/17
-		g_SChannel[ucChannelNum].SPreProcess.ucRunStep += 1; // Á¢¼´Í£
+    switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    {
+    case SYS_RESET:                                          //æœ¬æ¥å°±å¤„äºå¤ä½çŠ¶æ€
+#if RESET_SECONDTIMES_STOP_NOW == 1                          //é™ˆæ•èª	8/17
+        g_SChannel[ucChannelNum].SPreProcess.ucRunStep += 1; // ç«‹å³åœ
 #endif
-		break;
-	case SYS_EMERGENCY_STOP:	//2025/9/9 ÔÚ¼±Í£×´Ì¬ÏÂ£¬°´ÏÂ¸´Î»°´¼ü²»ĞŞ¸ÄÎª¸´Î»×´Ì¬
-		break;
-	default: //¼õËÙÍ£ 
+        break;
+    case SYS_EMERGENCY_STOP: //2025/9/9 åœ¨æ€¥åœçŠ¶æ€ä¸‹ï¼ŒæŒ‰ä¸‹å¤ä½æŒ‰é”®ä¸ä¿®æ”¹ä¸ºå¤ä½çŠ¶æ€
+        break;
+    default: //å‡é€Ÿåœ
 #if STM32_MODE
-		if(Check_bootwarning() == 0)   // ÓĞËÅ·ş/Ö÷Öá/ÏŞÎ»/³¬Ê±±¨¾¯
-    	{
-       		 bAlarmStop = TRUE;
-    	}//ÓĞ±¨¾¯ÔòÍË³öº¯Êı£¬¼à¿ØÆóÒµ¹ÜÀíµÄÖ÷Öá±¨¾¯¡¢ËÅ·ş±¨¾¯¡¢³¬Ê±±¨¾¯¡¢ÏŞÎ»±¨¾¯
+        if (Check_bootwarning() == 0) // æœ‰ä¼ºæœ/ä¸»è½´/é™ä½/è¶…æ—¶æŠ¥è­¦
+        {
+            bAlarmStop = TRUE;
+        } //æœ‰æŠ¥è­¦åˆ™é€€å‡ºå‡½æ•°ï¼Œç›‘æ§ä¼ä¸šç®¡ç†çš„ä¸»è½´æŠ¥è­¦ã€ä¼ºæœæŠ¥è­¦ã€è¶…æ—¶æŠ¥è­¦ã€é™ä½æŠ¥è­¦
 #endif
-	if ((bAlarmStop || isErrorHasBeenWritten() == TRUE) && g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE)//ÓĞ±¨¾¯ÔòÍË³öº¯Êı£¬¼à¿ØÑ§Ğ£¹ÜÀíµÄ±¨¾¯
-		{
-			return 1; //ÓĞ´íÎóÓÅÏÈÍê³É±¨¾¯ÖáÍ£ÔË¶¯ //Ôö¼ÓÅĞ¶Ï2026.5.7
-		}
-		g_SChannel[ucChannelNum].cSubRunMode = 1;
-		g_SChannel[ucChannelNum].SPreProcess.ucRunStep = 0;
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_RESET;
-		//if (ucChannelNum == 0)//ÆóÒµÒªÇó£¬¸´Î»¹Ø±ÕÖ÷Öá¹Ø±ÕÀäÈ´Òº¹¦ÄÜ½öÔÚÍ¨µÀ0ÉúĞ§   ºé¹ÚÅô 2024/6/18  //2024/7/25 ÆóÒµÈ¡Ïû½ö¸´Î»Í¨µÀ0µÄÒªÇó
-		//{
-			g_SChannel[ucChannelNum].bIsStopSpindleAndCoolantwhileReset = g_SSystemPara.bIsStopSpindleAndCoolantwhileReset;//±êÖ¾Î»ÔÚ°´ÏÂ¸´Î»°´¼üºó´ÓÏµÍ³²ÎÊı»ñÈ¡
-		//}
-		break;
-	}
-	return 1;
+        if ((bAlarmStop || isErrorHasBeenWritten() == TRUE) &&
+            g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE) //æœ‰æŠ¥è­¦åˆ™é€€å‡ºå‡½æ•°ï¼Œç›‘æ§å­¦æ ¡ç®¡ç†çš„æŠ¥è­¦
+        {
+            return 1; //æœ‰é”™è¯¯ä¼˜å…ˆå®ŒæˆæŠ¥è­¦è½´åœè¿åŠ¨ //å¢åŠ åˆ¤æ–­2026.5.7
+        }
+        g_SChannel[ucChannelNum].cSubRunMode = 1;
+
+        g_SChannel[ucChannelNum].SPreProcess.ucRunStep = 0;
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_RESET;
+        //if (ucChannelNum == 0)//ä¼ä¸šè¦æ±‚ï¼Œå¤ä½å…³é—­ä¸»è½´å…³é—­å†·å´æ¶²åŠŸèƒ½ä»…åœ¨é€šé“0ç”Ÿæ•ˆ   æ´ªå† é¹ 2024/6/18  //2024/7/25 ä¼ä¸šå–æ¶ˆä»…å¤ä½é€šé“0çš„è¦æ±‚
+        //{
+        g_SChannel[ucChannelNum].bIsStopSpindleAndCoolantwhileReset =
+            g_SSystemPara.bIsStopSpindleAndCoolantwhileReset; //æ ‡å¿—ä½åœ¨æŒ‰ä¸‹å¤ä½æŒ‰é”®åä»ç³»ç»Ÿå‚æ•°è·å–
+        //}
+
+        break;
+    }
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºrunButtonAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ÔËĞĞ°´¼ü½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º 1 Ö´ĞĞ³É¹¦
-            0 ÊÖÂÖ½»½ÓÎ´Íê³É£¬µ÷ÓÃ·½ĞëµÈ´ı
-			-1 ´íÎóµÄÏµÍ³×´Ì¬
-			-2 ÉÏÒ»´ÎG´úÂëÔËĞĞ»¹Î´½áÊø
-			-3 ´íÎóÍ¨µÀºÅ
-			-4 µ±Ç°Í¨µÀ²»Âú×ãÔËĞĞÌõ¼ş
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šrunButtonAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è¿è¡ŒæŒ‰é”®æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š 1 æ‰§è¡ŒæˆåŠŸ
+            0 æ‰‹è½®äº¤æ¥æœªå®Œæˆï¼Œè°ƒç”¨æ–¹é¡»ç­‰å¾…
+			-1 é”™è¯¯çš„ç³»ç»ŸçŠ¶æ€
+			-2 ä¸Šä¸€æ¬¡Gä»£ç è¿è¡Œè¿˜æœªç»“æŸ
+			-3 é”™è¯¯é€šé“å·
+			-4 å½“å‰é€šé“ä¸æ»¡è¶³è¿è¡Œæ¡ä»¶
+  å¤‡    æ³¨ï¼š
 ****************************************/
-int8 runButtonAPI(uint8 ucChannelNum,uint8 ucIsGetBeforeProgram)
+int8 runButtonAPI(uint8 ucChannelNum, uint8 ucIsGetBeforeProgram)
 {
-	int16 sCounter;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//´íÎóµÄÍ¨µÀºÅ
-	{
-		return -3;
-	}
+    int16 sCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é”™è¯¯çš„é€šé“å·
+    {
+        return -3;
+    }
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* g_ucHandwheelSimRequestArray µÄ½»½ÓÉĞÎ´Íê³ÉÊ±£¬Íâ²¿Æô¶¯²»µÃÔ½¹ıÔİÍ£»ØĞ´¡£
-     * ÖĞ¶ÏÍê³É½»½Ó»áÏÈÇåÇëÇó£¬ÔÙµ÷ÓÃ±¾Èë¿Ú£»·µ»Ø 0 ±íÊ¾µÈ´ı£¬²»ÊÇÒÑÆô¶¯¡£ */
+    /* g_ucHandwheelSimRequestArray çš„äº¤æ¥å°šæœªå®Œæˆæ—¶ï¼Œå¤–éƒ¨å¯åŠ¨ä¸å¾—è¶Šè¿‡æš‚åœå›å†™ã€‚
+     * ä¸­æ–­å®Œæˆäº¤æ¥ä¼šå…ˆæ¸…è¯·æ±‚ï¼Œå†è°ƒç”¨æœ¬å…¥å£ï¼›è¿”å› 0 è¡¨ç¤ºç­‰å¾…ï¼Œä¸æ˜¯å·²å¯åŠ¨ã€‚ */
     if (g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE)
     {
         return 0;
     }
 #endif
-	if (!judgeRunCondition(ucChannelNum))	//ÅĞ¶Ïµ±Ç°Í¨µÀ»·¾³ÊÇ·ñÄÜÔËĞĞ	³ÂÃô´Ï 2023/6/15
-	{
-		return -4;
-	}
+    if (!judgeRunCondition(ucChannelNum)) //åˆ¤æ–­å½“å‰é€šé“ç¯å¢ƒæ˜¯å¦èƒ½è¿è¡Œ	é™ˆæ•èª 2023/6/15
+    {
+        return -4;
+    }
 
-	switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	{
-	case SYS_IDLE://¿ÕÏĞ×´Ì¬ÏÂ°´Æô¶¯  ³õÊ¼»¯ ½øĞĞÒ»²¿·Ö½âÎö¡¢µ¶²¹ ËÙ¶ÈÇ°Õ° ÔÙÆô¶¯²å²¹£¨ÖÃRUN£©
-	{
-		//setSpindleEnabledAPI(ucChannelNum, TRUE);//Ê¹ÄÜÖ÷Öá
-		//³õÊ¼»¯¼Æ¼ş
-		initWorkpieceNum(ucChannelNum);
-		//setShowByDiameter(g_SChannel[ucChannelNum].pMapAxisArray[AXIS_X], TRUE);//XÖáÖ±¾¶ÏÔÊ¾  //ºé¹ÚÅô×¢ÊÍ 2024/5/20 ÏÔÊ¾·½Ê½ÓÉÏµÍ³²ÎÊıÉè¶¨
+    switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    {
+    case SYS_IDLE: //ç©ºé—²çŠ¶æ€ä¸‹æŒ‰å¯åŠ¨  åˆå§‹åŒ– è¿›è¡Œä¸€éƒ¨åˆ†è§£æã€åˆ€è¡¥ é€Ÿåº¦å‰ç» å†å¯åŠ¨æ’è¡¥ï¼ˆç½®RUNï¼‰
+    {
+        //setSpindleEnabledAPI(ucChannelNum, TRUE);//ä½¿èƒ½ä¸»è½´
+        //åˆå§‹åŒ–è®¡ä»¶
+        initWorkpieceNum(ucChannelNum);
+        //setShowByDiameter(g_SChannel[ucChannelNum].pMapAxisArray[AXIS_X], TRUE);//Xè½´ç›´å¾„æ˜¾ç¤º  //æ´ªå† é¹æ³¨é‡Š 2024/5/20 æ˜¾ç¤ºæ–¹å¼ç”±ç³»ç»Ÿå‚æ•°è®¾å®š
 
-		g_SChannel[ucChannelNum].SSpindle.toDisableAxis = FALSE;//ÖáÍ£ÏÂ ÎŞ¶¯×÷
+        g_SChannel[ucChannelNum].SSpindle.toDisableAxis = FALSE; //è½´åœä¸‹ æ— åŠ¨ä½œ
 
-		if (g_RunMode != AUTOMATIC_MODE && g_RunMode != MDI_MODE && g_RunMode != HAND_MODE) return -1;
-		if (g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0) return -2;
+        if (g_RunMode != AUTOMATIC_MODE && g_RunMode != MDI_MODE && g_RunMode != HAND_MODE)
+            return -1;
+        if (g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0)
+            return -2;
 
-		//g_SChannel[ucChannelNum].ucChannelStatus = SYS_PREPARE;//½«ÏµÍ³×´Ì¬ÖÃÎªRUN
+        //g_SChannel[ucChannelNum].ucChannelStatus = SYS_PREPARE;//å°†ç³»ç»ŸçŠ¶æ€ç½®ä¸ºRUN
 
-	//1.G´úÂë½âÎöÄ£¿éÔÚrunButtonAPI()ÖĞĞèÒªÖ´ĞĞµÄÄÚÈİ
-		//1.1G´úÂë½âÎö³õÊ¼»¯
-		gcodeInit(ucChannelNum,TRUE,ucIsGetBeforeProgram);
+        //1.Gä»£ç è§£ææ¨¡å—åœ¨runButtonAPI()ä¸­éœ€è¦æ‰§è¡Œçš„å†…å®¹
+        //1.1Gä»£ç è§£æåˆå§‹åŒ–
+        gcodeInit(ucChannelNum, TRUE, ucIsGetBeforeProgram);
 
-		//1.2ËùÓĞÍ¨µÀµÄÍ¨µÀ½á¹¹ÌåÖĞÌí¼ÓÖ÷ÔËĞĞ³ÌĞò
-		if (addMainProgramNode(ucChannelNum) != 1)
-		{
-			g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
-			g_SChannel[ucChannelNum].cSubRunMode = 1;//0 »­Í¼ 1 ÔË¶¯	ÂŞÏéçâ20250528
-			return -1;
-		}
+        //1.2æ‰€æœ‰é€šé“çš„é€šé“ç»“æ„ä½“ä¸­æ·»åŠ ä¸»è¿è¡Œç¨‹åº
+        if (addMainProgramNode(ucChannelNum) != 1)
+        {
+            g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
+            g_SChannel[ucChannelNum].cSubRunMode = 1; //0 ç”»å›¾ 1 è¿åŠ¨	ç½—ç¥¥ç®20250528
+            return -1;
+        }
 
 #if STM32_MODE
-		prepareProgramBeginLine(ucChannelNum);
+        prepareProgramBeginLine(ucChannelNum);
 #endif
 
+        //1.3Gä»£ç è§£æçŠ¶æ€ç½®ä¸ºGCODE_RUN
+        changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
+        changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
 
-		//1.3G´úÂë½âÎö×´Ì¬ÖÃÎªGCODE_RUN
-		changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
-		changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
+        //2.åˆ€è¡¥è®¡ç®—æ¨¡å—åœ¨runButtonAPI()ä¸­éœ€è¦æ‰§è¡Œçš„å†…å®¹
+        toolCompensationInit(ucChannelNum); //åˆ€è¡¥åˆå§‹åŒ–
 
-	//2.µ¶²¹¼ÆËãÄ£¿éÔÚrunButtonAPI()ÖĞĞèÒªÖ´ĞĞµÄÄÚÈİ
-		toolCompensationInit(ucChannelNum);	//µ¶²¹³õÊ¼»¯
+        lookAheadInit(&g_SChannel[ucChannelNum]); //é€Ÿåº¦å‰ç»åˆå§‹åŒ–
 
-		lookAheadInit(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°³õÊ¼»¯
+        interpolationInit(&g_SChannel[ucChannelNum].SPreProcess); //æ’è¡¥åˆå§‹åŒ–
 
-		interpolationInit(&g_SChannel[ucChannelNum].SPreProcess);//²å²¹³õÊ¼»¯
+        initAllBuffer(ucChannelNum); //å¤ä½  æŠŠç¼“å†²åŒºåˆå§‹åŒ–
 
-		initAllBuffer(ucChannelNum); //¸´Î»  °Ñ»º³åÇø³õÊ¼»¯
+        //é™ˆæ•èª	2023/9/1	é™ˆæ•èªæ³¨é‡Šï¼Œæå‰è¿è¡ŒGä»£ç ä¼šè®©Gä»£ç çŠ¶æ€æœºæ··ä¹±
+        //for (sCounter = 0; sCounter <= 10; sCounter++)//åœ¨IDLEçŠ¶æ€ä¸‹ è¿è¡Œ6æ¬¡Gä»£ç åˆ€è¡¥å’Œå‰ç»
+        //{
+        //	//assignSegments(NULL, &g_GcodeRelatedObj.unLineNum, g_GcodeRelatedObj.unEndLineNum);  //ä¸€è¡ŒGä»£ç èµ‹å€¼åˆ°è§£æç»“æ„ä½“
+        //	if (mainFuncGCode(ucChannelNum))
+        //	{
+        //		return -1;
+        //	}
+        //	ToolCompensation_Caculate(ucChannelNum);//åˆ€è¡¥è®¡ç®—
+        //	velocityLookAhead(&g_SChannel[ucChannelNum]);//é€Ÿåº¦å‰ç»
+        //}
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
+        g_SChannel[ucChannelNum].cSubRunMode = 1; //0 ç”»å›¾ 1 è¿åŠ¨	ç½—ç¥¥ç®20250528
+    }
 
-		//³ÂÃô´Ï	2023/9/1	³ÂÃô´Ï×¢ÊÍ£¬ÌáÇ°ÔËĞĞG´úÂë»áÈÃG´úÂë×´Ì¬»ú»ìÂÒ
-		//for (sCounter = 0; sCounter <= 10; sCounter++)//ÔÚIDLE×´Ì¬ÏÂ ÔËĞĞ6´ÎG´úÂëµ¶²¹ºÍÇ°Õ°
-		//{
-		//	//assignSegments(NULL, &g_GcodeRelatedObj.unLineNum, g_GcodeRelatedObj.unEndLineNum);  //Ò»ĞĞG´úÂë¸³Öµµ½½âÎö½á¹¹Ìå
-		//	if (mainFuncGCode(ucChannelNum))
-		//	{
-		//		return -1;
-		//	}
-		//	ToolCompensation_Caculate(ucChannelNum);//µ¶²¹¼ÆËã
-		//	velocityLookAhead(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°
-		//}
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
-		g_SChannel[ucChannelNum].cSubRunMode = 1;//0 »­Í¼ 1 ÔË¶¯	ÂŞÏéçâ20250528
-	}
+    case SYS_RUN:
+        if (g_SChannel[ucChannelNum].cSubRunMode == 0) //ç”»å›¾ä¸è¿åŠ¨äº’æ–¥
+            return -1;
+        break;
 
+    case SYS_PAUSE: //æš‚åœçŠ¶æ€ä¸‹æŒ‰å¯åŠ¨ å°†ç³»ç»ŸçŠ¶æ€æ”¹ä¸ºPAUSE_TO_RUN
 
-	case  SYS_RUN:
-		if (g_SChannel[ucChannelNum].cSubRunMode == 0)//»­Í¼ÓëÔË¶¯»¥³â
-			return -1;
- 		break;
+        if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE) //M01å•èŠ‚æ‰§è¡Œçš„å¤„ç†  2024/4/27 æ´ªå† é¹
+        {
+            for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
+            {
+                if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 &&
+                    g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0)
+                {
+                    if (g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus ==
+                        VARIABLE_IO_FINISH) //M01ç«¯å£æœ‰è¾“å…¥ï¼Œå¤„äºå®ŒæˆçŠ¶æ€æ—¶æŒ‰è¿è¡Œåœåœ¨å½“å‰è¡Œ
+                    {
+                        g_SChannel[ucChannelNum].ucRunCounter = 0;
+                        g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
+                    }
+                    else //M01ç«¯å£æ— è¾“å…¥ï¼Œå¤„äºæš‚åœæ£€æµ‹çŠ¶æ€æ—¶æŒ‰è¿è¡Œæ— æ•ˆ
+                    {
+                        return 1;
+                    }
+                }
+            }
+        }
+        if (g_SChannel[ucChannelNum].bProgramStop == TRUE) //M01æ‰§è¡ŒæœŸé—´æŒ‰ä¸‹ç¨‹åºæš‚åœåçš„é‡å¯  2023/10/9 æ´ªå† é¹
+        {
+            for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
+            {
+                if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 &&
+                    g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_WAIT)
+                {
+                    g_SChannel[ucChannelNum].bProgramStop = FALSE;
+                    return 1;
+                }
+            }
+        }
+        for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE;
+             ucounter++) //M01æ‰§è¡ŒæœŸé—´æŒ‰ä¸‹ç¨‹åºå¯åŠ¨é”®æ— æ•ˆï¼Œä¿æŒç»§ç»­æ‰§è¡Œ  2023/10/11 æ´ªå† é¹
+        {
+            if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 &&
+                g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0 &&
+                g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus != VARIABLE_IO_FINISH)
+            {
+                return 1;
+            }
+        }
 
-	case SYS_PAUSE://ÔİÍ£×´Ì¬ÏÂ°´Æô¶¯ ½«ÏµÍ³×´Ì¬¸ÄÎªPAUSE_TO_RUN
+        if (g_SChannel[ucChannelNum].bSelectableStop == TRUE) //é€‰æ‹©åœæ­¢ï¼ˆM01ï¼‰  2023/9/25 æ´ªå† é¹
+        {
+            for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
+            {
+                if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 &&
+                    g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_WAIT)
+                {
+                    g_SChannel[ucChannelNum].ucChannelStatus = SYS_PAUSE;
+                    return 1;
+                }
+            }
+        }
 
-		if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE)  //M01µ¥½ÚÖ´ĞĞµÄ´¦Àí  2024/4/27 ºé¹ÚÅô
-		{
-			for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
-			{
-				if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 && g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0)	
-				{
-					if (g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_FINISH)  //M01¶Ë¿ÚÓĞÊäÈë£¬´¦ÓÚÍê³É×´Ì¬Ê±°´ÔËĞĞÍ£ÔÚµ±Ç°ĞĞ
-					{
-						g_SChannel[ucChannelNum].ucRunCounter = 0;
-						g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
-					}
-					else //M01¶Ë¿ÚÎŞÊäÈë£¬´¦ÓÚÔİÍ£¼ì²â×´Ì¬Ê±°´ÔËĞĞÎŞĞ§
-					{
-						return 1;
-					}
-				}
-			}
-		}
-		if (g_SChannel[ucChannelNum].bProgramStop == TRUE)  //M01Ö´ĞĞÆÚ¼ä°´ÏÂ³ÌĞòÔİÍ£ºóµÄÖØÆô  2023/10/9 ºé¹ÚÅô
-		{
-			for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
-			{
-				if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 && g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_WAIT)
-				{
-					g_SChannel[ucChannelNum].bProgramStop = FALSE;
-					return 1;
-				}
-			}
-		}
-		for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++) //M01Ö´ĞĞÆÚ¼ä°´ÏÂ³ÌĞòÆô¶¯¼üÎŞĞ§£¬±£³Ö¼ÌĞøÖ´ĞĞ  2023/10/11 ºé¹ÚÅô
-		{
-			if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 && g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter != 0 && g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus != VARIABLE_IO_FINISH)
-			{
-				return 1;
-			}
-		}
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_PAUSE_TO_RUN;
 
-		if (g_SChannel[ucChannelNum].bSelectableStop == TRUE)  //Ñ¡ÔñÍ£Ö¹£¨M01£©  2023/9/25 ºé¹ÚÅô
-		{
-			for (int8 ucounter = 0; ucounter < IO_MAXGROUP_IN_SINGLE_LINE; ucounter++)
-			{
-				if (g_SChannel[ucChannelNum].SIOCommand.ucIORunBuff[ucounter] == 1 && g_SChannel[ucChannelNum].SIOCommand.SVaribleIOInfoArray[ucounter].ucStatus == VARIABLE_IO_WAIT)
-				{
-					g_SChannel[ucChannelNum].ucChannelStatus = SYS_PAUSE;
-					return 1;
-				}
-			}
-		}
+        break;
 
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_PAUSE_TO_RUN;
+    case SYS_PAUSE_TO_RUN: //ä¸¤ç§çŠ¶æ€æŒ‰RUNé”®æ— æ“ä½œ
+    case SYS_RUN_TO_PAUSE:
+        break;
+    default:
+        return -1;
+    }
 
-		break;
-
-	case SYS_PAUSE_TO_RUN://Á½ÖÖ×´Ì¬°´RUN¼üÎŞ²Ù×÷
-	case SYS_RUN_TO_PAUSE:
-		break;
-	default:
-		return -1;
-	}
-
-	//ÖìÎÈÖĞ 2023.5.19
-	//if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE || g_SChannel[ucChannelNum].bSelectableStop == TRUE)
-	//{
-	if (g_SChannel[ucChannelNum].bSingleLineModeUnFinished == FALSE)
-	{
-		g_SChannel[ucChannelNum].ucRunCounter = 1;
-	}
-	//}
-	return 1;
+    //æœ±ç¨³ä¸­ 2023.5.19
+    //if (g_SChannel[ucChannelNum].bSingleLineMode == TRUE || g_SChannel[ucChannelNum].bSelectableStop == TRUE)
+    //{
+    if (g_SChannel[ucChannelNum].bSingleLineModeUnFinished == FALSE)
+    {
+        g_SChannel[ucChannelNum].ucRunCounter = 1;
+    }
+    //}
+    return 1;
 }
-
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 /*************************************************
-  º¯ÊıÃû³Æ£ºisHandwheelSimSelectedAPI
-  º¯Êı¹¦ÄÜ£º²éÑ¯±¾Í¨µÀÒÑ¿ªÆô»òÈÔ´ı½»½ÓµÄÄ£ÄâÑ¡Ôñ£¬¹©Ãæ°å¾ö¶¨¹²Í¬Ä¿±ê
-  ÊäÈë²ÎÊı£ºucChannelNum - Í¨µÀºÅ£¬0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£ºTRUE - ÒÑÑ¡ÖĞ»òÇëÇóÎ´ÊÕÎ²£»FALSE - ÒÑ¹Ø±Õ»òÍ¨µÀºÅÎŞĞ§
-  ±¸    ×¢£ºÖ»¶Á¹²Ïí×´Ì¬£»ÇëÇó´æÔÚ²»´ú±íÒÑ¾­½Ó¹ÜÔË¶¯»ò»úĞµÒÑÍ£ÎÈ
+  å‡½æ•°åç§°ï¼šisHandwheelSimSelectedAPI
+  å‡½æ•°åŠŸèƒ½ï¼šæŸ¥è¯¢æœ¬é€šé“å·²å¼€å¯æˆ–ä»å¾…äº¤æ¥çš„æ¨¡æ‹Ÿé€‰æ‹©ï¼Œä¾›é¢æ¿å†³å®šå…±åŒç›®æ ‡
+  è¾“å…¥å‚æ•°ï¼šucChannelNum - é€šé“å·ï¼Œ0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼šTRUE - å·²é€‰ä¸­æˆ–è¯·æ±‚æœªæ”¶å°¾ï¼›FALSE - å·²å…³é—­æˆ–é€šé“å·æ— æ•ˆ
+  å¤‡    æ³¨ï¼šåªè¯»å…±äº«çŠ¶æ€ï¼›è¯·æ±‚å­˜åœ¨ä¸ä»£è¡¨å·²ç»æ¥ç®¡è¿åŠ¨æˆ–æœºæ¢°å·²åœç¨³
 ****************************************/
 bool isHandwheelSimSelectedAPI(uint8 ucChannelNum)
 {
-    /* g_SChannel ÊÇÊµ¼ÊÑ¡Ôñ£¬g_ucHandwheelSimRequestArray °üº¬ÉĞÎ´ÉúĞ§µÄ¿ª¹ØÒâÍ¼¡£ */
+    /* g_SChannel æ˜¯å®é™…é€‰æ‹©ï¼Œg_ucHandwheelSimRequestArray åŒ…å«å°šæœªç”Ÿæ•ˆçš„å¼€å…³æ„å›¾ã€‚ */
     if (ucChannelNum >= CHANNEL_NUM_MAX)
     {
         return FALSE;
     }
-    return g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE
-        || g_SChannel[ucChannelNum].cHandWheelSimulaStatus != HANWHEELSIMULA_OFF;
+    return g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE ||
+           g_SChannel[ucChannelNum].cHandWheelSimulaStatus != HANWHEELSIMULA_OFF;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºisHandwheelSimSwitchPendingAPI
-  º¯Êı¹¦ÄÜ£º²éÑ¯Ö¸¶¨Í¨µÀÊÇ·ñÈÔÔÚ½»½ÓÊÖÂÖÄ£Äâ¿ª¹Ø£¬¹©Æô¶¯Á÷³ÌÇø·ÖµÈ´ıÓëÊ§°Ü
-  ÊäÈë²ÎÊı£ºucChannelNum - Í¨µÀºÅ£¬0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£ºTRUE - ¿ª¹Ø»ò±£»¤¹Ø±ÕÎ´Íê³É£»FALSE - ÎŞ´ı´¦ÀíÇëÇó»òÍ¨µÀºÅÎŞĞ§
-  ±¸    ×¢£ºÖ»¶ÁÇëÇó£»²»±íÊ¾Ä£ÄâÊÇ·ñ¿ªÆô£¬Ò²²»Ìæ´úÔËĞĞÈë¿ÚµÄ¶¯Ì¬¼ì²é
+  å‡½æ•°åç§°ï¼šisHandwheelSimSwitchPendingAPI
+  å‡½æ•°åŠŸèƒ½ï¼šæŸ¥è¯¢æŒ‡å®šé€šé“æ˜¯å¦ä»åœ¨äº¤æ¥æ‰‹è½®æ¨¡æ‹Ÿå¼€å…³ï¼Œä¾›å¯åŠ¨æµç¨‹åŒºåˆ†ç­‰å¾…ä¸å¤±è´¥
+  è¾“å…¥å‚æ•°ï¼šucChannelNum - é€šé“å·ï¼Œ0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼šTRUE - å¼€å…³æˆ–ä¿æŠ¤å…³é—­æœªå®Œæˆï¼›FALSE - æ— å¾…å¤„ç†è¯·æ±‚æˆ–é€šé“å·æ— æ•ˆ
+  å¤‡    æ³¨ï¼šåªè¯»è¯·æ±‚ï¼›ä¸è¡¨ç¤ºæ¨¡æ‹Ÿæ˜¯å¦å¼€å¯ï¼Œä¹Ÿä¸æ›¿ä»£è¿è¡Œå…¥å£çš„åŠ¨æ€æ£€æŸ¥
 ****************************************/
 bool isHandwheelSimSwitchPendingAPI(uint8 ucChannelNum)
 {
-    /* g_ucHandwheelSimRequestArray ÓÉÇ°Ì¨Ìá½»¡¢ÖĞ¶ÏÍÆ½ø£»´Ë´¦²»Ïû·Ñ»òÇå³ıÇëÇó¡£ */
-    return ucChannelNum < CHANNEL_NUM_MAX
-        && g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE;
+    /* g_ucHandwheelSimRequestArray ç”±å‰å°æäº¤ã€ä¸­æ–­æ¨è¿›ï¼›æ­¤å¤„ä¸æ¶ˆè´¹æˆ–æ¸…é™¤è¯·æ±‚ã€‚ */
+    return ucChannelNum < CHANNEL_NUM_MAX && g_ucHandwheelSimRequestArray[ucChannelNum] != HANDWHEEL_SIM_NONE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetHandwheelSimEnabledAPI
-  º¯Êı¹¦ÄÜ£ºÌá½»Ã÷È·¿ª¹ØÒâÍ¼£»²»ÔÚÇ°Ì¨ĞŞ¸ÄÔË¶¯Ñ¡Ôñ¡¢±¶ÂÊ»òÔİÍ£×´Ì¬
-  ÊäÈë²ÎÊı£ºucChannelNum - Í¨µÀºÅ£»bEnabled - TRUE ¿ªÆô£¬FALSE ¹Ø±Õ
-  Êä³ö²ÎÊı£ºÎŞÖ¸Õë»ØĞ´£»¸üĞÂ±¾Í¨µÀ´ı´¦ÀíÇëÇó
-  ·µ »Ø Öµ£º-1 - Í¨µÀºÅÎŞĞ§£»0 - ÒÑ¹Ø±Õ»ò¾Ü¾ø¿ªÆô£»1 - ÒÑÑ¡ÖĞ»ò½»½Ó´ı´¦Àí
-  ±¸    ×¢£ºÇ°Ì¨´®ĞĞµ÷ÓÃ£»¹Ø±ÕÓÅÏÈÓÚ¿ªÆô£¬¸´Î»/±¨¾¯ÇåÀí²»µÃ±»°´¼ü¸²¸Ç
+  å‡½æ•°åç§°ï¼šsetHandwheelSimEnabledAPI
+  å‡½æ•°åŠŸèƒ½ï¼šæäº¤æ˜ç¡®å¼€å…³æ„å›¾ï¼›ä¸åœ¨å‰å°ä¿®æ”¹è¿åŠ¨é€‰æ‹©ã€å€ç‡æˆ–æš‚åœçŠ¶æ€
+  è¾“å…¥å‚æ•°ï¼šucChannelNum - é€šé“å·ï¼›bEnabled - TRUE å¼€å¯ï¼ŒFALSE å…³é—­
+  è¾“å‡ºå‚æ•°ï¼šæ— æŒ‡é’ˆå›å†™ï¼›æ›´æ–°æœ¬é€šé“å¾…å¤„ç†è¯·æ±‚
+  è¿” å› å€¼ï¼š-1 - é€šé“å·æ— æ•ˆï¼›0 - å·²å…³é—­æˆ–æ‹’ç»å¼€å¯ï¼›1 - å·²é€‰ä¸­æˆ–äº¤æ¥å¾…å¤„ç†
+  å¤‡    æ³¨ï¼šå‰å°ä¸²è¡Œè°ƒç”¨ï¼›å…³é—­ä¼˜å…ˆäºå¼€å¯ï¼Œå¤ä½/æŠ¥è­¦æ¸…ç†ä¸å¾—è¢«æŒ‰é”®è¦†ç›–
 ****************************************/
 int8 setHandwheelSimEnabledAPI(uint8 ucChannelNum, bool bEnabled)
 {
-    /* g_SChannel ½öÓÃÓÚµ±Ç°Ñ¡ÔñÓë¾Ü¾ø¼ì²é£»ÖĞ¶Ï½ÓÊÕÊ±ÔÙ´ÎÅĞ¶Ï¶¯Ì¬Ìõ¼ş¡£ */
+    /* g_SChannel ä»…ç”¨äºå½“å‰é€‰æ‹©ä¸æ‹’ç»æ£€æŸ¥ï¼›ä¸­æ–­æ¥æ”¶æ—¶å†æ¬¡åˆ¤æ–­åŠ¨æ€æ¡ä»¶ã€‚ */
     if (ucChannelNum >= CHANNEL_NUM_MAX)
     {
         return -1;
     }
-    /* ¹Ø±ÕÖ»³·Ïú¿ªÆôÄ¿±ê£¬²»ÄÜ°ÑÇĞ»»×ÔÉíÒıÆğµÄÔİÍ£µ±³ÉÓÃ»§ÔİÍ£¡£
-     * ÒÑ±»ÕæÊµÔİÍ£½µÎª HOLD µÄÇëÇóÈÔ±£³Ö HOLD£»ÖØ¸´¹Ø±ÕÒ²²»ÖØÊÚĞøĞĞ×Ê¸ñ¡£ */
+    /* å…³é—­åªæ’¤é”€å¼€å¯ç›®æ ‡ï¼Œä¸èƒ½æŠŠåˆ‡æ¢è‡ªèº«å¼•èµ·çš„æš‚åœå½“æˆç”¨æˆ·æš‚åœã€‚
+     * å·²è¢«çœŸå®æš‚åœé™ä¸º HOLD çš„è¯·æ±‚ä»ä¿æŒ HOLDï¼›é‡å¤å…³é—­ä¹Ÿä¸é‡æˆç»­è¡Œèµ„æ ¼ã€‚ */
     if (!bEnabled)
     {
         if (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_REQUESTED)
@@ -408,19 +417,19 @@ int8 setHandwheelSimEnabledAPI(uint8 ucChannelNum, bool bEnabled)
         g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_CLOSE_REQUESTED;
         return 1;
     }
-    /* ¹ÊÕÏ¡¢¸´Î»¡¢¼±Í£ºÍ·Ç¼Ó¹¤Ä£Ê½¾Ü¾øĞÂ¿ªÆô£¬²»ÄÜÒÔ°´¼üÇå³ı±£»¤¡£ */
-    if ((g_RunMode != AUTOMATIC_MODE && g_RunMode != MDI_MODE)
-        || g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET
-        || g_SChannel[ucChannelNum].ucChannelStatus == SYS_EMERGENCY_STOP
-        || g_SChannel[ucChannelNum].SHandwheelSim.bFault || isErrorHasBeenWritten()
+    /* æ•…éšœã€å¤ä½ã€æ€¥åœå’ŒéåŠ å·¥æ¨¡å¼æ‹’ç»æ–°å¼€å¯ï¼Œä¸èƒ½ä»¥æŒ‰é”®æ¸…é™¤ä¿æŠ¤ã€‚ */
+    if ((g_RunMode != AUTOMATIC_MODE && g_RunMode != MDI_MODE) ||
+        g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET ||
+        g_SChannel[ucChannelNum].ucChannelStatus == SYS_EMERGENCY_STOP ||
+        g_SChannel[ucChannelNum].SHandwheelSim.bFault || isErrorHasBeenWritten()
 #if STM32_MODE
         || Check_bootwarning() == 0
 #endif
-        )
+    )
     {
         return 0;
     }
-    /* ÖØ¸´¿ªÆô²»ÇåÕË±¾¡¢²»¸Ä±¶ÂÊ£¬Ò²²»¸²¸ÇÕıÔÚ½øĞĞµÄ¹Ø±Õ»òÍ£³µ½»½Ó¡£ */
+    /* é‡å¤å¼€å¯ä¸æ¸…è´¦æœ¬ã€ä¸æ”¹å€ç‡ï¼Œä¹Ÿä¸è¦†ç›–æ­£åœ¨è¿›è¡Œçš„å…³é—­æˆ–åœè½¦äº¤æ¥ã€‚ */
     if (isHandwheelSimSelectedAPI(ucChannelNum))
     {
         return 1;
@@ -431,141 +440,139 @@ int8 setHandwheelSimEnabledAPI(uint8 ucChannelNum, bool bEnabled)
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsimulaButtonAPI
-  º¯Êı¹¦ÄÜ£º±£Áôµ¥Í¨µÀÇĞ»»Èë¿Ú£»¾àÀëÄ£Äâ¹²ÓÃÃ÷È·¿ª¹ØÇëÇóÊµÏÖ
-  ÊäÈë²ÎÊı£ºucChannelNum - Í¨µÀºÅ£¬0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£ºÎŞÖ¸Õë»ØĞ´£»¸üĞÂÄ£ÄâÑ¡Ôñ»ò¹Ø±ÕÇëÇó
-  ·µ »Ø Öµ£º-1 - Í¨µÀºÅ´íÎó£»0 - ÒÑ¹Ø±Õ»ò¾Ü¾ø¿ªÆô£»1 - ÒÑÑ¡ÖĞ»ò¹Ø±Õ´ı´¦Àí
-  ±¸    ×¢£º¶àÍ¨µÀ¹²Í¬°´¼üÊ¹ÓÃÃ÷È·ÉèÖÃ½Ó¿Ú£»ºê¹Ø±ÕÊ±±£ÁôÔ­ĞĞÎª
+  å‡½æ•°åç§°ï¼šsimulaButtonAPI
+  å‡½æ•°åŠŸèƒ½ï¼šä¿ç•™å•é€šé“åˆ‡æ¢å…¥å£ï¼›è·ç¦»æ¨¡æ‹Ÿå…±ç”¨æ˜ç¡®å¼€å…³è¯·æ±‚å®ç°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum - é€šé“å·ï¼Œ0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼šæ— æŒ‡é’ˆå›å†™ï¼›æ›´æ–°æ¨¡æ‹Ÿé€‰æ‹©æˆ–å…³é—­è¯·æ±‚
+  è¿” å› å€¼ï¼š-1 - é€šé“å·é”™è¯¯ï¼›0 - å·²å…³é—­æˆ–æ‹’ç»å¼€å¯ï¼›1 - å·²é€‰ä¸­æˆ–å…³é—­å¾…å¤„ç†
+  å¤‡    æ³¨ï¼šå¤šé€šé“å…±åŒæŒ‰é”®ä½¿ç”¨æ˜ç¡®è®¾ç½®æ¥å£ï¼›å®å…³é—­æ—¶ä¿ç•™åŸè¡Œä¸º
 ****************************************/
 int8 simulaButtonAPI(uint8 ucChannelNum)
 {
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* g_SChannel Ìá¹©µ±Ç°Ä£ÄâÑ¡Ôñ£»¹Ø±ÕÖĞµÄÖØ¸´ÇĞ»»ÈÔÈ»±íÊ¾¹Ø±Õ¡£ */
+    /* g_SChannel æä¾›å½“å‰æ¨¡æ‹Ÿé€‰æ‹©ï¼›å…³é—­ä¸­çš„é‡å¤åˆ‡æ¢ä»ç„¶è¡¨ç¤ºå…³é—­ã€‚ */
     if (ucChannelNum >= CHANNEL_NUM_MAX)
     {
         return -1;
     }
     return setHandwheelSimEnabledAPI(ucChannelNum, !isHandwheelSimSelectedAPI(ucChannelNum));
 #else
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
 
-	//switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	//{
-	//case SYS_PAUSE:
+    //switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    //{
+    //case SYS_PAUSE:
 
+    switch (g_SChannel[ucChannelNum].cHandWheelSimulaStatus)
+    {
+    case HANWHEELSIMULA_OFF:
+        if (g_SChannel[ucChannelNum].ucChannelStatus ==
+            SYS_RUN) //è¿è¡Œè¿‡ç¨‹ä¸­æŒ‰ä¸‹æ‰‹è½®æ¨¡ç­‰å¾…æš‚åœç»“æŸåæ‰‹è½®æ¨¡æ‹Ÿçš„é™åˆ¶å‚æ•°æ‰ç”Ÿæ•ˆ  2023/12/21 æ´ªå† é¹
+        {
+            g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_BUILDING; //æ‰‹è½®æ¨¡æ‹ŸåŠŸèƒ½æ­£åœ¨å»ºç«‹
+            pauseButtonAPI(ucChannelNum);
+        }
+        else //éè¿è¡ŒçŠ¶æ€ä¸‹æŒ‰ä¸‹æ‰‹è½®æ¨¡æ‹Ÿåï¼Œæ‰‹è½®æ¨¡æ‹Ÿçš„é™åˆ¶å‚æ•°ç«‹å³ç”Ÿæ•ˆ
+        {
+            g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_ON;
+        }
+        break;
+    case HANWHEELSIMULA_BUILDING:
+    case HANWHEELSIMULA_ON:
+    default:
+        g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_OFF; //å…³é—­æ‰‹è½®æ¨¡æ‹ŸåŠŸèƒ½
+        break;
+    }
+    g_SChannel[ucChannelNum].SRun.dHandWheelSpeedRatio =
+        (g_SChannel[ucChannelNum].cHandWheelSimulaStatus == HANWHEELSIMULA_OFF) ? 1.0 : 0.0; //éæ‰‹è½®æ¨¡æ‹Ÿæ—¶  å€ç‡ä¸º1
+    g_SChannel[ucChannelNum].SPreProcess.cInterpDir = INP_GO_AHEAD;                          // è¿åŠ¨æ–¹å‘ï¼šå‘å‰è¿åŠ¨
+                                                                                             //	break;
+                                                                                             //default:
+                                                                                             //	return 0;
+                                                                                             //}
 
-
-    switch(g_SChannel[ucChannelNum].cHandWheelSimulaStatus)
-	{
-	case HANWHEELSIMULA_OFF:
-		if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN) //ÔËĞĞ¹ı³ÌÖĞ°´ÏÂÊÖÂÖÄ£µÈ´ıÔİÍ£½áÊøºóÊÖÂÖÄ£ÄâµÄÏŞÖÆ²ÎÊı²ÅÉúĞ§  2023/12/21 ºé¹ÚÅô
-		{
-			g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_BUILDING;	//ÊÖÂÖÄ£Äâ¹¦ÄÜÕıÔÚ½¨Á¢
-			pauseButtonAPI(ucChannelNum);
-		}
-		else //·ÇÔËĞĞ×´Ì¬ÏÂ°´ÏÂÊÖÂÖÄ£Äâºó£¬ÊÖÂÖÄ£ÄâµÄÏŞÖÆ²ÎÊıÁ¢¼´ÉúĞ§
-		{
-			g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_ON;
-		}
-		break;
-	case HANWHEELSIMULA_BUILDING:
-	case HANWHEELSIMULA_ON:
-	default:
-		g_SChannel[ucChannelNum].cHandWheelSimulaStatus = HANWHEELSIMULA_OFF;	//¹Ø±ÕÊÖÂÖÄ£Äâ¹¦ÄÜ
-		break;
-	}
-	g_SChannel[ucChannelNum].SRun.dHandWheelSpeedRatio = (g_SChannel[ucChannelNum].cHandWheelSimulaStatus == HANWHEELSIMULA_OFF) ? 1.0 : 0.0;//·ÇÊÖÂÖÄ£ÄâÊ±  ±¶ÂÊÎª1
-	g_SChannel[ucChannelNum].SPreProcess.cInterpDir = INP_GO_AHEAD; // ÔË¶¯·½Ïò£ºÏòÇ°ÔË¶¯
-//	break;
-//default:
-//	return 0;
-//}
-
-	return g_SChannel[ucChannelNum].cHandWheelSimulaStatus != HANWHEELSIMULA_OFF ? 1 : 0;
+    return g_SChannel[ucChannelNum].cHandWheelSimulaStatus != HANWHEELSIMULA_OFF ? 1 : 0;
 #endif
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºsingleLineButtonAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  µ¥½ÚÖ´ĞĞ ½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1  Ö´ĞĞ³É¹¦
-			-1 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsingleLineButtonAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  å•èŠ‚æ‰§è¡Œ æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1  æ‰§è¡ŒæˆåŠŸ
+			-1 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
-int8 singleLineButtonAPI(uint8 ucChannelNum) //zxr bSingleLineModeÖÃÎªFALSE´ú±íÁ¬ĞøÖ´ĞĞÄ£Ê½£¬TRUE´ú±íµ¥½ÚÖ´ĞĞ
+int8 singleLineButtonAPI(uint8 ucChannelNum) //zxr bSingleLineModeç½®ä¸ºFALSEä»£è¡¨è¿ç»­æ‰§è¡Œæ¨¡å¼ï¼ŒTRUEä»£è¡¨å•èŠ‚æ‰§è¡Œ
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	g_SChannel[ucChannelNum].bSingleLineModeUnFinished = FALSE;	//ºé¹ÚÅô2024/5/20 ³õÊ¼»¯µ±Ç°ĞĞÎ´Íê³É±êÖ¾Î»FALSE  zxr FALSE´ú±íÃ»ÓĞÕıÔÚÖ´ĞĞ¡¢ÉĞÎ´½áÊøµÄµ¥½Ú£¬TRUE´ú±íµ±Ç°µ¥½ÚÒÑ¾­¿ªÊ¼£¬µ«»¹Ã»½áÊø
-	g_SChannel[ucChannelNum].bSingleLineMode = g_SChannel[ucChannelNum].bSingleLineMode == TRUE ? FALSE : TRUE;
-	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN)//ºé¹ÚÅô 2024/5/29 ÔËĞĞ¹ı³ÌÖĞ´¥·¢µ¥½ÚÖ´ĞĞÁ¢¼´ÉúĞ§
-	{
-		g_SChannel[ucChannelNum].ucRunCounter = 0;
-	}
-	return g_SChannel[ucChannelNum].bSingleLineMode == TRUE ? 1 : 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    g_SChannel[ucChannelNum].bSingleLineModeUnFinished =
+        FALSE; //æ´ªå† é¹2024/5/20 åˆå§‹åŒ–å½“å‰è¡Œæœªå®Œæˆæ ‡å¿—ä½FALSE  zxr FALSEä»£è¡¨æ²¡æœ‰æ­£åœ¨æ‰§è¡Œã€å°šæœªç»“æŸçš„å•èŠ‚ï¼ŒTRUEä»£è¡¨å½“å‰å•èŠ‚å·²ç»å¼€å§‹ï¼Œä½†è¿˜æ²¡ç»“æŸ
+    g_SChannel[ucChannelNum].bSingleLineMode = g_SChannel[ucChannelNum].bSingleLineMode == TRUE ? FALSE : TRUE;
+    if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN) //æ´ªå† é¹ 2024/5/29 è¿è¡Œè¿‡ç¨‹ä¸­è§¦å‘å•èŠ‚æ‰§è¡Œç«‹å³ç”Ÿæ•ˆ
+    {
+        g_SChannel[ucChannelNum].ucRunCounter = 0;
+    }
+    return g_SChannel[ucChannelNum].bSingleLineMode == TRUE ? 1 : 0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºselectableStopAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  Ñ¡ÔñÍ£Ö¹½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1  Ö´ĞĞ³É¹¦
-			-1 Í¨µÀºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šselectableStopAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  é€‰æ‹©åœæ­¢æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1  æ‰§è¡ŒæˆåŠŸ
+			-1 é€šé“å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 selectableStopAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	g_SChannel[ucChannelNum].bSelectableStop = g_SChannel[ucChannelNum].bSelectableStop == TRUE ? FALSE : TRUE;
-	return g_SChannel[ucChannelNum].bSelectableStop == TRUE ? 1 : 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    g_SChannel[ucChannelNum].bSelectableStop = g_SChannel[ucChannelNum].bSelectableStop == TRUE ? FALSE : TRUE;
+    return g_SChannel[ucChannelNum].bSelectableStop == TRUE ? 1 : 0;
 }
 
-//¼±Í£ ½Ó¿Úº¯Êı
-int8 emergencyStopAPI(uint8 ucChannelNum)//2025.5.7ĞÜ¿¥
+//æ€¥åœ æ¥å£å‡½æ•°
+int8 emergencyStopAPI(uint8 ucChannelNum) //2025.5.7ç†Šéª
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* g_ucHandwheelSimRequestArray ¼ÇÂ¼±£»¤ºó¹Ø±Õ£»Ô­Í£³µÈÔ¸ºÔğËÙ¶È½»½Ó¼°ÖáÊÍ·Å¡£
-     * ¼´Ê¹ÏÂÃæÒò±¨¾¯ÌáÇ°·µ»Ø£¬Ò²²»ÄÜ¶ªÊ§¹Ø±ÕÒâÍ¼»òÁôÏÂ×Ô¶¯ĞøĞĞÇëÇó¡£ */
+    /* g_ucHandwheelSimRequestArray è®°å½•ä¿æŠ¤åå…³é—­ï¼›åŸåœè½¦ä»è´Ÿè´£é€Ÿåº¦äº¤æ¥åŠè½´é‡Šæ”¾ã€‚
+     * å³ä½¿ä¸‹é¢å› æŠ¥è­¦æå‰è¿”å›ï¼Œä¹Ÿä¸èƒ½ä¸¢å¤±å…³é—­æ„å›¾æˆ–ç•™ä¸‹è‡ªåŠ¨ç»­è¡Œè¯·æ±‚ã€‚ */
     g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_STOP_CLOSE;
 #endif
-	switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	{
-	case SYS_EMERGENCY_STOP://±¾À´¾Í´¦ÓÚ¼±Í£×´Ì¬
-		break;
-	default:
-		g_SChannel[ucChannelNum].SPreProcess.ucRunStep = 0;
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_EMERGENCY_STOP;
-		if (g_SSystemPara.bNowStopflag)
-		{
-			//Çå¿ÕXYZABCÖáµÄÂö³åÔöÁ¿»º´æÇø 0011 1111
-			initSRunPulseBuf(&g_SChannel[ucChannelNum].SRun, 0x3F);
-		}
-		parseRunningError(9999, GCODE_ERROR_NUM01, 9999);
-		break;
-	}
-	return 1;
-
+    switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    {
+    case SYS_EMERGENCY_STOP: //æœ¬æ¥å°±å¤„äºæ€¥åœçŠ¶æ€
+        break;
+    default:
+        g_SChannel[ucChannelNum].SPreProcess.ucRunStep = 0;
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_EMERGENCY_STOP;
+        if (g_SSystemPara.bNowStopflag)
+        {
+            //æ¸…ç©ºXYZABCè½´çš„è„‰å†²å¢é‡ç¼“å­˜åŒº 0011 1111
+            initSRunPulseBuf(&g_SChannel[ucChannelNum].SRun, 0x3F);
+        }
+        parseRunningError(9999, GCODE_ERROR_NUM01, 9999);
+        break;
+    }
+    return 1;
 }
 
-////ÏµÍ³×¼±¸×´Ì¬ 2023.4.3ÖìÎÈÖĞ
+////ç³»ç»Ÿå‡†å¤‡çŠ¶æ€ 2023.4.3æœ±ç¨³ä¸­
 //int8 sysPrepare(uint8 ucChannelNum)
 //{
 //	int i;
@@ -576,18 +583,18 @@ int8 emergencyStopAPI(uint8 ucChannelNum)//2025.5.7ĞÜ¿¥
 //	}
 //	pSChannel = &g_SChannel[ucChannelNum];
 //	if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_PREPARE)
-//	{//ÏµÍ³×¼±¸×´Ì¬
-//		//uint8 ucPhysicalAxis;//ÎïÀíÖá
-//		////¼ì²éËùÓĞÖá  ¶¼È·ÊµÊ¹ÄÜÖ®ºóÔÙÆô¶¯
+//	{//ç³»ç»Ÿå‡†å¤‡çŠ¶æ€
+//		//uint8 ucPhysicalAxis;//ç‰©ç†è½´
+//		////æ£€æŸ¥æ‰€æœ‰è½´  éƒ½ç¡®å®ä½¿èƒ½ä¹‹åå†å¯åŠ¨
 //		//for ( i = 0; i < AXIS_NUM_MAX; i++)
 //		//{
 //
-//		//	ucPhysicalAxis = pSChannel->pMapAxisArray[i];			
-//		//	if (ucPhysicalAxis >= AXIS_NUM_MAX)//Ó³ÉäÎª¿Õ  ²»ÅĞ¶Ï
+//		//	ucPhysicalAxis = pSChannel->pMapAxisArray[i];
+//		//	if (ucPhysicalAxis >= AXIS_NUM_MAX)//æ˜ å°„ä¸ºç©º  ä¸åˆ¤æ–­
 //		//	{
 //		//		continue;
 //		//	}
-//		//	if (((g_ucAxisExactEnable>> ucPhysicalAxis)& 0x01) != 0x01) //ÖáÃ»ÓĞÊ¹ÄÜ ²»Æô¶¯
+//		//	if (((g_ucAxisExactEnable>> ucPhysicalAxis)& 0x01) != 0x01) //è½´æ²¡æœ‰ä½¿èƒ½ ä¸å¯åŠ¨
 //		//	{
 //		//		return 0;
 //		//	}
@@ -595,25 +602,25 @@ int8 emergencyStopAPI(uint8 ucChannelNum)//2025.5.7ĞÜ¿¥
 //
 //		gcodeInit(ucChannelNum);
 //
-//		initAllBuffer(ucChannelNum); //¸´Î»  °Ñ»º³åÇø³õÊ¼»¯
+//		initAllBuffer(ucChannelNum); //å¤ä½  æŠŠç¼“å†²åŒºåˆå§‹åŒ–
 //
-//		toolCompensationInit(ucChannelNum);	//µ¶²¹³õÊ¼»¯
+//		toolCompensationInit(ucChannelNum);	//åˆ€è¡¥åˆå§‹åŒ–
 //
-//		lookAheadInit(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°³õÊ¼»¯
+//		lookAheadInit(&g_SChannel[ucChannelNum]);//é€Ÿåº¦å‰ç»åˆå§‹åŒ–
 //
-//		interpolationInit(&g_SChannel[ucChannelNum].SPreProcess);//²å²¹³õÊ¼»¯
+//		interpolationInit(&g_SChannel[ucChannelNum].SPreProcess);//æ’è¡¥åˆå§‹åŒ–
 //
 //
 //
-//		for (i = 0; i <= 10; i++)//ÔÚIDLE×´Ì¬ÏÂ ÔËĞĞ6´ÎG´úÂëµ¶²¹ºÍÇ°Õ°
+//		for (i = 0; i <= 10; i++)//åœ¨IDLEçŠ¶æ€ä¸‹ è¿è¡Œ6æ¬¡Gä»£ç åˆ€è¡¥å’Œå‰ç»
 //		{
-//			//parseALineToGCodeStruct(NULL, &g_GcodeRelatedObj.unLineNum, g_GcodeRelatedObj.unEndLineNum);  //Ò»ĞĞG´úÂë¸³Öµµ½½âÎö½á¹¹Ìå
+//			//parseALineToGCodeStruct(NULL, &g_GcodeRelatedObj.unLineNum, g_GcodeRelatedObj.unEndLineNum);  //ä¸€è¡ŒGä»£ç èµ‹å€¼åˆ°è§£æç»“æ„ä½“
 //			if (mainFuncGCode(ucChannelNum))
 //			{
 //				return -1;
 //			}
-//			ToolCompensation_Caculate(ucChannelNum);//µ¶²¹¼ÆËã
-//			velocityLookAhead(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°
+//			ToolCompensation_Caculate(ucChannelNum);//åˆ€è¡¥è®¡ç®—
+//			velocityLookAhead(&g_SChannel[ucChannelNum]);//é€Ÿåº¦å‰ç»
 //		}
 //		pSChannel->ucChannelStatus = SYS_RUN;
 //	}
@@ -621,143 +628,144 @@ int8 emergencyStopAPI(uint8 ucChannelNum)//2025.5.7ĞÜ¿¥
 //}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºGCodeRunAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ÔË¶¯½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1  Ö´ĞĞ³É¹¦
-			-1 Í¨µÀºÅ´íÎó
-			-2 Óï·¨¼ì²é²»Í¨¹ı  ²»ÔËĞĞ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šGCodeRunAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  è¿åŠ¨æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1  æ‰§è¡ŒæˆåŠŸ
+			-1 é€šé“å·é”™è¯¯
+			-2 è¯­æ³•æ£€æŸ¥ä¸é€šè¿‡  ä¸è¿è¡Œ
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 GCodeRunAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX || g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (isErrorHasBeenWritten() == TRUE)//Óï·¨¼ì²é´íÎó  ²»Ö´ĞĞ
-	{
-		return -2;
-	}
-	
-	//ÏµÍ³×¼±¸×´Ì¬  2023.4.3 ÖìÎÈÖĞ
-	//sysPrepare(ucChannelNum);
+    if (ucChannelNum >= CHANNEL_NUM_MAX || g_SChannel[ucChannelNum].ucChannelStatus == SYS_RESET) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (isErrorHasBeenWritten() == TRUE) //è¯­æ³•æ£€æŸ¥é”™è¯¯  ä¸æ‰§è¡Œ
+    {
+        return -2;
+    }
 
+    //ç³»ç»Ÿå‡†å¤‡çŠ¶æ€  2023.4.3 æœ±ç¨³ä¸­
+    //sysPrepare(ucChannelNum);
 
-	switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	{
-	case SYS_IDLE://¿ÕÏĞ
-		runIOBuff(&g_SChannel[ucChannelNum].SIOCommand);
-		runTIO(&(g_SChannel[ucChannelNum].STIOCommand));
-		break;
-	case SYS_EMERGENCY_STOP://¼±Í£
-		break;
-	default:
-		mainFuncGCode(ucChannelNum);//G´úÂë
-		ToolCompensation_Caculate(ucChannelNum);//µ¶²¹¼ÆËã
-		if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN || g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN)
-		{
-			velocityLookAhead(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°
-		}
-		runIOBuff(&g_SChannel[ucChannelNum].SIOCommand);
-		runTIO(&(g_SChannel[ucChannelNum].STIOCommand));
-		break;
-	}
+    switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    {
+    case SYS_IDLE: //ç©ºé—²
+        runIOBuff(&g_SChannel[ucChannelNum].SIOCommand);
+        runTIO(&(g_SChannel[ucChannelNum].STIOCommand));
+        break;
+    case SYS_EMERGENCY_STOP: //æ€¥åœ
+        break;
+    default:
+        mainFuncGCode(ucChannelNum);             //Gä»£ç 
+        ToolCompensation_Caculate(ucChannelNum); //åˆ€è¡¥è®¡ç®—
+        if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN ||
+            g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN)
+        {
+            velocityLookAhead(&g_SChannel[ucChannelNum]); //é€Ÿåº¦å‰ç»
+        }
+        runIOBuff(&g_SChannel[ucChannelNum].SIOCommand);
+        runTIO(&(g_SChannel[ucChannelNum].STIOCommand));
+        break;
+    }
 
-	//if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE)
-	//{
-	//	mainFuncGCode(ucChannelNum);
-	//}
+    //if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE)
+    //{
+    //	mainFuncGCode(ucChannelNum);
+    //}
 
-	//if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE)
-	//{
-	//	ToolCompensation_Caculate(ucChannelNum);//µ¶²¹¼ÆËã
-	//}
+    //if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE)
+    //{
+    //	ToolCompensation_Caculate(ucChannelNum);//åˆ€è¡¥è®¡ç®—
+    //}
 
-	//if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN || g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN)//SYS_PAUSE_TO_RUN½øÈëËÙ¶ÈÇ°Õ°½«flagÖÃTRUE
-	//{
-	//	velocityLookAhead(&g_SChannel[ucChannelNum]);//ËÙ¶ÈÇ°Õ°
-	//}
+    //if (g_SChannel[ucChannelNum].ucChannelStatus == SYS_RUN || g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN)//SYS_PAUSE_TO_RUNè¿›å…¥é€Ÿåº¦å‰ç»å°†flagç½®TRUE
+    //{
+    //	velocityLookAhead(&g_SChannel[ucChannelNum]);//é€Ÿåº¦å‰ç»
+    //}
 
-
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºGCodeRunLoopAPI()
-  º¯Êı¹¦ÄÜ  Ñ­»·Ö´ĞĞG´úÂë  µ¶²¹  ½Ó¿Úº¯Êı
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÄÚ²¿·ÖÎª ÔË¶¯µÄG´úÂë½âÎö Óë »­Í¼µÄG´úÂë½âÎö
+  å‡½æ•°åç§°ï¼šGCodeRunLoopAPI()
+  å‡½æ•°åŠŸèƒ½  å¾ªç¯æ‰§è¡ŒGä»£ç   åˆ€è¡¥  æ¥å£å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šå†…éƒ¨åˆ†ä¸º è¿åŠ¨çš„Gä»£ç è§£æ ä¸ ç”»å›¾çš„Gä»£ç è§£æ
 ****************************************/
 void GCodeRunLoopAPI()
 {
-	int i;
-	for (i = 0; i < CHANNEL_NUM_MAX; i++)
-	{	
-		//ÔËĞĞ»­Í¼Ê±£¬Ö´ĞĞ»­Í¼G´úÂë½âÎö
-		if (g_SChannel[i].cSubRunMode == 0)//
-		{
-			if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType)
-			{//¼±Í£ÅĞ¶Ï//ÖìÎÈÖĞ 2023.6.24
-				emergencyStopAPI(g_SChannel[i].ucChannelNum);
-			}
-			//ÒëÂë
-			for (int j = 0; j < 20; j++)//»­Í¼¹ıÂı£¬Ôö¼ÓÒëÂëÑ­»·´ÎÊı
-			{
-				if (isErrorHasBeenWritten() == TRUE)//Óï·¨¼ì²é´íÎó  ²»Ö´ĞĞ
-				{
-					return;
-				}
-				mainFuncGCodeAuto(i);
-			}
-			//µ¶²¹
-			ToolCompensation_Caculate(i);
-		}
-		//ÔËĞĞÔË¶¯Ê±£¬Ö´ĞĞÔË¶¯G´úÂë½âÎö
-		else
-		{
-			GCodeRunAPI(i);
-		}
-	}
+    int i;
+    for (i = 0; i < CHANNEL_NUM_MAX; i++)
+    {
+        //è¿è¡Œç”»å›¾æ—¶ï¼Œæ‰§è¡Œç”»å›¾Gä»£ç è§£æ
+        if (g_SChannel[i].cSubRunMode == 0) //
+        {
+            if (ioEMERGENCY_STOP == !g_SSystemPara.ucEmergencyStopType)
+            { //æ€¥åœåˆ¤æ–­//æœ±ç¨³ä¸­ 2023.6.24
+                emergencyStopAPI(g_SChannel[i].ucChannelNum);
+            }
+            //è¯‘ç 
+            for (int j = 0; j < 20; j++) //ç”»å›¾è¿‡æ…¢ï¼Œå¢åŠ è¯‘ç å¾ªç¯æ¬¡æ•°
+            {
+                if (isErrorHasBeenWritten() == TRUE) //è¯­æ³•æ£€æŸ¥é”™è¯¯  ä¸æ‰§è¡Œ
+                {
+                    return;
+                }
+                mainFuncGCodeAuto(i);
+            }
+            //åˆ€è¡¥
+            ToolCompensation_Caculate(i);
+        }
+        //è¿è¡Œè¿åŠ¨æ—¶ï¼Œæ‰§è¡Œè¿åŠ¨Gä»£ç è§£æ
+        else
+        {
+            GCodeRunAPI(i);
+        }
+    }
 }
-//Ä£Äâ±àÂëÆ÷Âö³å²¨¶¯
-int wave(int center, int range) {
-	int min = center - range;
-	int max = center + range;
+//æ¨¡æ‹Ÿç¼–ç å™¨è„‰å†²æ³¢åŠ¨
+int wave(int center, int range)
+{
+    int min = center - range;
+    int max = center + range;
 
-	// Éú³ÉÁ½¸öËæ»úÊıÈ¡Æ½¾ù£¬Ìá¸ßÖĞ¼ä¼¯ÖĞ¸ÅÂÊ
-	int r1 = rand() % (max - min + 1) + min;
-	int r2 = rand() % (max - min + 1) + min;
-	return (r1 + r2) / 2;
+    // ç”Ÿæˆä¸¤ä¸ªéšæœºæ•°å–å¹³å‡ï¼Œæé«˜ä¸­é—´é›†ä¸­æ¦‚ç‡
+    int r1 = rand() % (max - min + 1) + min;
+    int r2 = rand() % (max - min + 1) + min;
+    return (r1 + r2) / 2;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºsimulateGetEncoder
-  º¯Êı¹¦ÄÜ£º°´ÉÏÒ»ÅÄÒÑÌá½»µÄÖ÷ÖáÂö³åÉú³É VS ÀíÏë±àÂëÆ÷·´À¡
-  ÊäÈë²ÎÊı£ºpSChannel - ÒÑ³õÊ¼»¯µÄÍ¨µÀ£¬Ö÷ÖáÓë±àÂëÆ÷Ó³ÉäĞëÓĞĞ§
-  Êä³ö²ÎÊı£º¸üĞÂÖ÷Öá±àÂëÆ÷·½Ïò¡¢ÔöÁ¿¡¢ÀÛ¼Æ¼ÆÊı¼°ÑÇ¼ÆÊıÓàÁ¿
-  ·µ »Ø Öµ£ºÎŞ£»ÎŞĞ§Ó³Éä»òÊıÖµÑØÔ­ÔËĞĞ±¨¾¯½Ó¿Ú´¦Àí
-  ±¸    ×¢£ºÔÚ±¾ÅÄÇåÂö³å»º´æÇ°µ÷ÓÃÒ»´Î£»²»´ú±íÊµÎïËÅ·ş¶¯Ì¬»ò Renode ·´À¡
+  å‡½æ•°åç§°ï¼šsimulateGetEncoder
+  å‡½æ•°åŠŸèƒ½ï¼šæŒ‰ä¸Šä¸€æ‹å·²æäº¤çš„ä¸»è½´è„‰å†²ç”Ÿæˆ VS ç†æƒ³ç¼–ç å™¨åé¦ˆ
+  è¾“å…¥å‚æ•°ï¼špSChannel - å·²åˆå§‹åŒ–çš„é€šé“ï¼Œä¸»è½´ä¸ç¼–ç å™¨æ˜ å°„é¡»æœ‰æ•ˆ
+  è¾“å‡ºå‚æ•°ï¼šæ›´æ–°ä¸»è½´ç¼–ç å™¨æ–¹å‘ã€å¢é‡ã€ç´¯è®¡è®¡æ•°åŠäºšè®¡æ•°ä½™é‡
+  è¿” å› å€¼ï¼šæ— ï¼›æ— æ•ˆæ˜ å°„æˆ–æ•°å€¼æ²¿åŸè¿è¡ŒæŠ¥è­¦æ¥å£å¤„ç†
+  å¤‡    æ³¨ï¼šåœ¨æœ¬æ‹æ¸…è„‰å†²ç¼“å­˜å‰è°ƒç”¨ä¸€æ¬¡ï¼›ä¸ä»£è¡¨å®ç‰©ä¼ºæœåŠ¨æ€æˆ– Renode åé¦ˆ
 ****************************************/
+
 void simulateGetEncoder(struct SChannel* pSChannel)
 {
 #if !STM32_MODE
-    struct SEncoder* pEncoder; /**< ÒıÓÃÍ¨µÀ°ó¶¨µÄ¹²Ïí±àÂëÆ÷£¬ÓÉ±¾ÖÜÆÚĞ´Èë·´À¡¡£ */
+    struct SEncoder* pEncoder; /**< å¼•ç”¨é€šé“ç»‘å®šçš„å…±äº«ç¼–ç å™¨ï¼Œç”±æœ¬å‘¨æœŸå†™å…¥åé¦ˆã€‚ */
     uint8 ucSpindleAxis, ucPhysicalAxis;
     double dPulseToDegree, dEncoderCounts, dWholeCounts;
     int nEncoderCounts;
 
-    /* Í¨µÀ¼°Ö÷Öá¶ÔÏó±ØĞëÒÑ°ó¶¨£¬½ûÖ¹ÓÉ¿ÕÖ¸ÕëÍÆ²â·´À¡¶ÔÏó¡£ */
-    if (pSChannel == NULL || pSChannel->pSSpindleEncoder == NULL
-        || pSChannel->SSpindle.pSSpindleAxis == NULL || pSChannel->pMapAxisArray == NULL)
+    /* é€šé“åŠä¸»è½´å¯¹è±¡å¿…é¡»å·²ç»‘å®šï¼Œç¦æ­¢ç”±ç©ºæŒ‡é’ˆæ¨æµ‹åé¦ˆå¯¹è±¡ã€‚ */
+    if (pSChannel == NULL || pSChannel->pSSpindleEncoder == NULL || pSChannel->SSpindle.pSSpindleAxis == NULL ||
+        pSChannel->pMapAxisArray == NULL)
     {
         parseRunningError(9999, GCODE_ERROR_NUM300, 9999);
         return;
     }
     ucSpindleAxis = pSChannel->SSpindle.pSSpindleAxis->ucAxis;
-    /* ÏÈ¼ì²éÍ¨µÀºÍÂß¼­Öá±àºÅ£¬ÔÙ·ÃÎÊÂö³åÊı×éÓëÎïÀíÓ³Éä¡£ */
+    /* å…ˆæ£€æŸ¥é€šé“å’Œé€»è¾‘è½´ç¼–å·ï¼Œå†è®¿é—®è„‰å†²æ•°ç»„ä¸ç‰©ç†æ˜ å°„ã€‚ */
     if (pSChannel->ucChannelNum >= CHANNEL_NUM_MAX || ucSpindleAxis >= AXIS_NUM_MAX)
     {
         parseRunningError(pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
@@ -767,35 +775,35 @@ void simulateGetEncoder(struct SChannel* pSChannel)
     pEncoder->cEncoderDir = 0;
     pEncoder->usDelta = 0;
     ucPhysicalAxis = pSChannel->pMapAxisArray[ucSpindleAxis];
-    /* Y Öá¸¨ÖúÍ¨µÀÔÊĞí²»ÅäÖÃÖ÷Öá£»Ã»ÓĞÊä³öÊ±±£³Ö¾²Ö¹£¬²»·ÃÎÊ AXIS_NULL ²ÎÊı¡£ */
+    /* Y è½´è¾…åŠ©é€šé“å…è®¸ä¸é…ç½®ä¸»è½´ï¼›æ²¡æœ‰è¾“å‡ºæ—¶ä¿æŒé™æ­¢ï¼Œä¸è®¿é—® AXIS_NULL å‚æ•°ã€‚ */
     if (ucPhysicalAxis == AXIS_NULL && pSChannel->SRun.sAxisDeltaPulse[ucSpindleAxis] == 0)
     {
-        /* ±£Áô¸Ã±àÂëÆ÷Ô­ÓĞ»úĞµÏàÎ»¼°ÑÇ¼ÆÊıÓàÁ¿¡£ */
+        /* ä¿ç•™è¯¥ç¼–ç å™¨åŸæœ‰æœºæ¢°ç›¸ä½åŠäºšè®¡æ•°ä½™é‡ã€‚ */
     }
     else
     {
-        /* Î´Ó³ÉäÖá²»µÃ²úÉúÂö³å£¬ÆäËûÔ½½çÓ³ÉäÍ¬ÑùÑØ²ÎÊı±¨¾¯Â·¾¶ÍË³ö¡£ */
+        /* æœªæ˜ å°„è½´ä¸å¾—äº§ç”Ÿè„‰å†²ï¼Œå…¶ä»–è¶Šç•Œæ˜ å°„åŒæ ·æ²¿å‚æ•°æŠ¥è­¦è·¯å¾„é€€å‡ºã€‚ */
         if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
         {
             parseRunningError(pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
             return;
         }
-        /* Ö»¶ÁÏµÍ³ÖĞµÄÎïÀíÖá½Ç¶Èµ±Á¿£»sAxisDeltaPulse ´ËÊ±ÈÔÊÇÉÏÒ»ÅÄÌá½»Öµ¡£ */
+        /* åªè¯»ç³»ç»Ÿä¸­çš„ç‰©ç†è½´è§’åº¦å½“é‡ï¼›sAxisDeltaPulse æ­¤æ—¶ä»æ˜¯ä¸Šä¸€æ‹æäº¤å€¼ã€‚ */
         dPulseToDegree = g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm;
-        /* Ö÷ÖáĞëÊ¹ÓÃÓĞĞ§½Ç¶Èµ±Á¿¼°Ã¿È¦¼ÆÊı£¬ÓàÁ¿²»¿É°üº¬·ÇÓĞÏŞÊıÖµ¡£ */
-        if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType != ROTATION_AXIS
-            || !isfinite(dPulseToDegree) || dPulseToDegree <= 0.0
-            || pEncoder->usEncoderCirclePulseNum == 0 || !isfinite(pEncoder->m_dSimCountRemainder))
+        /* ä¸»è½´é¡»ä½¿ç”¨æœ‰æ•ˆè§’åº¦å½“é‡åŠæ¯åœˆè®¡æ•°ï¼Œä½™é‡ä¸å¯åŒ…å«éæœ‰é™æ•°å€¼ã€‚ */
+        if (g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType != ROTATION_AXIS || !isfinite(dPulseToDegree) ||
+            dPulseToDegree <= 0.0 || pEncoder->usEncoderCirclePulseNum == 0 ||
+            !isfinite(pEncoder->m_dSimCountRemainder))
         {
             parseRunningError(pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
             return;
         }
-        dEncoderCounts = pSChannel->SRun.sAxisDeltaPulse[ucSpindleAxis]
-            * dPulseToDegree * pEncoder->usEncoderCirclePulseNum / DEGREE_OF_CIRCLE
-            + pEncoder->m_dSimCountRemainder;
-        /* ¹Ì¶¨°ë¼ÆÊıÈ¡Õû·½Ïò£¬±ÜÃâ¾²Ö¹Ê± +/-0.5 ÓàÁ¿½»Ìæ²úÉúĞé¼Ù·´À¡¡£ */
+        dEncoderCounts = pSChannel->SRun.sAxisDeltaPulse[ucSpindleAxis] * dPulseToDegree *
+                             pEncoder->usEncoderCirclePulseNum / DEGREE_OF_CIRCLE +
+                         pEncoder->m_dSimCountRemainder;
+        /* å›ºå®šåŠè®¡æ•°å–æ•´æ–¹å‘ï¼Œé¿å…é™æ­¢æ—¶ +/-0.5 ä½™é‡äº¤æ›¿äº§ç”Ÿè™šå‡åé¦ˆã€‚ */
         dWholeCounts = floor(dEncoderCounts + 0.5);
-        /* ±àÂëÆ÷ÔöÁ¿×Ö¶ÎÎª uint16£»ÏÈ¼ì²éÔÙ×ª»»£¬½ûÖ¹»ØÈÆÎ±Ôì·´À¡¡£ */
+        /* ç¼–ç å™¨å¢é‡å­—æ®µä¸º uint16ï¼›å…ˆæ£€æŸ¥å†è½¬æ¢ï¼Œç¦æ­¢å›ç»•ä¼ªé€ åé¦ˆã€‚ */
         if (!isfinite(dWholeCounts) || fabs(dWholeCounts) > MAXIMUM_OF_UINT16)
         {
             parseRunningError(pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
@@ -814,14 +822,16 @@ void simulateGetEncoder(struct SChannel* pSChannel)
     pSChannel->pSSpindleEncoder->lEncoderAbsValue += pSChannel->SRun.sLastDeltaPulse[ucSpindleAxis];
 #endif
 
-    //µ¶¾ßÖá
+    //åˆ€å…·è½´
 #if TOOLAXIS_TEST
     g_SEncoder[1].cEncoderDir = sgn(pSChannel->SRun.sLastDeltaPulse[g_SToolAxisInfo.pSToolAxis->ucAxis]);
     g_SEncoder[1].lEncoderAbsValue += pSChannel->SRun.sLastDeltaPulse[g_SToolAxisInfo.pSToolAxis->ucAxis];
     g_SEncoder[1].usDelta = abs(pSChannel->SRun.sLastDeltaPulse[g_SToolAxisInfo.pSToolAxis->ucAxis]);
+
+    //è®°å½•ä¸Šä¸€å‘¨æœŸè„‰å†²æ•°
 #endif
 #if STM32_MODE || TOOLAXIS_TEST
-    /* ±£Áô¾É°å¶ËºÍµ¶¾ßÖá²âÊÔµÄ»º´æĞĞÎª£»ÆÕÍ¨ VS Â·¾¶ÓÉ initSRunPulseBuf Î¬»¤¡£ */
+    /* ä¿ç•™æ—§æ¿ç«¯å’Œåˆ€å…·è½´æµ‹è¯•çš„ç¼“å­˜è¡Œä¸ºï¼›æ™®é€š VS è·¯å¾„ç”± initSRunPulseBuf ç»´æŠ¤ã€‚ */
     for (int i = 0; i < AXIS_NUM_MAX; i++)
     {
         pSChannel->SRun.sLastDeltaPulse[i] = pSChannel->SRun.sAxisDeltaPulse[i];
@@ -831,41 +841,40 @@ void simulateGetEncoder(struct SChannel* pSChannel)
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 /*************************************************
-  º¯ÊıÃû³Æ£ºprocessHandwheelSimRequest
-  º¯Êı¹¦ÄÜ£ºÔÚÔ­ÔË¶¯ÖĞ¶ÏÍÆ½ø¿ª¹Ø½»½Ó£¬²¢ÔÚ±£»¤Í£³µºóÇå³ıÄ£ÄâÑ¡Ôñ
-  ÊäÈë²ÎÊı£ºucChannelNum - ÒÑĞ£ÑéÍ¨µÀºÅ£¬0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£ºÎŞÖ¸Õë»ØĞ´£»¸üĞÂÍ¨µÀÑ¡Ôñ¡¢±¶ÂÊ¡¢ÇëÇó£¬±ØÒªÊ±ÉêÇëÔ­ÔËĞĞÈë¿Ú
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£ºÔ­µ÷¶ÈÇ°ºóµ÷ÓÃ£»²»Ö´ĞĞ²å²¹¡¢²»ÇÀÕ¼Öá¡¢²»¸Ä±ä¶¨Ê±Æ÷»òÇå³ı±¨¾¯
+  å‡½æ•°åç§°ï¼šprocessHandwheelSimRequest
+  å‡½æ•°åŠŸèƒ½ï¼šåœ¨åŸè¿åŠ¨ä¸­æ–­æ¨è¿›å¼€å…³äº¤æ¥ï¼Œå¹¶åœ¨ä¿æŠ¤åœè½¦åæ¸…é™¤æ¨¡æ‹Ÿé€‰æ‹©
+  è¾“å…¥å‚æ•°ï¼šucChannelNum - å·²æ ¡éªŒé€šé“å·ï¼Œ0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼šæ— æŒ‡é’ˆå›å†™ï¼›æ›´æ–°é€šé“é€‰æ‹©ã€å€ç‡ã€è¯·æ±‚ï¼Œå¿…è¦æ—¶ç”³è¯·åŸè¿è¡Œå…¥å£
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼šåŸè°ƒåº¦å‰åè°ƒç”¨ï¼›ä¸æ‰§è¡Œæ’è¡¥ã€ä¸æŠ¢å è½´ã€ä¸æ”¹å˜å®šæ—¶å™¨æˆ–æ¸…é™¤æŠ¥è­¦
 ****************************************/
 static void processHandwheelSimRequest(uint8 ucChannelNum)
 {
-    /* pChannel ÒıÓÃ g_SChannel£»ÓÉÔË¶¯ÖÜÆÚÏû·ÑÇëÇó£¬µ÷ÓÃ·½°´Ô­ API µ÷¶È´®ĞĞÌá½»¡£ */
+    /* pChannel å¼•ç”¨ g_SChannelï¼›ç”±è¿åŠ¨å‘¨æœŸæ¶ˆè´¹è¯·æ±‚ï¼Œè°ƒç”¨æ–¹æŒ‰åŸ API è°ƒåº¦ä¸²è¡Œæäº¤ã€‚ */
     struct SChannel* pChannel = &g_SChannel[ucChannelNum];
     uint32 unProgram, unMotion;
     bool bEnabled, bResume;
-    /* ±£»¤È¡Ïû¿ª¹Ø¼°ĞøĞĞ£¬µ«±£ÁôÔ­ÔË¶¯Ñ¡ÔñÈÃÇ°ÃæµÄ²ÉÑùÈë¿ÚÏÈ½»½ÓÍ£³µËÙ¶È¡£ */
-    if (pChannel->ucChannelStatus == SYS_RESET || pChannel->ucChannelStatus == SYS_EMERGENCY_STOP
-        || pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten()
+    /* ä¿æŠ¤å–æ¶ˆå¼€å…³åŠç»­è¡Œï¼Œä½†ä¿ç•™åŸè¿åŠ¨é€‰æ‹©è®©å‰é¢çš„é‡‡æ ·å…¥å£å…ˆäº¤æ¥åœè½¦é€Ÿåº¦ã€‚ */
+    if (pChannel->ucChannelStatus == SYS_RESET || pChannel->ucChannelStatus == SYS_EMERGENCY_STOP ||
+        pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten()
 #if STM32_MODE
         || Check_bootwarning() == 0
 #endif
-        )
+    )
     {
         if (isHandwheelSimSelectedAPI(ucChannelNum))
         {
             g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_STOP_CLOSE;
         }
     }
-    /* ²»Í¨¹ıĞŞ¸Ä×´Ì¬Î±ÔìÍ£³µÍê³É£»Ô­¸´Î»/±¨¾¯Â·¾¶½øÈë¿ÕÏĞ»ò¼±Í£ÊÕÎ²ºó²ÅÇåÀí¡£ */
+    /* ä¸é€šè¿‡ä¿®æ”¹çŠ¶æ€ä¼ªé€ åœè½¦å®Œæˆï¼›åŸå¤ä½/æŠ¥è­¦è·¯å¾„è¿›å…¥ç©ºé—²æˆ–æ€¥åœæ”¶å°¾åæ‰æ¸…ç†ã€‚ */
     if (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_STOP_CLOSE)
     {
-        if ((pChannel->ucChannelStatus != SYS_IDLE
-                && !(pChannel->ucChannelStatus == SYS_EMERGENCY_STOP && pChannel->SPreProcess.ucRunStep == 2))
-            || pChannel->SG00.ucCurrentSigned != pChannel->SG00.ucFinishedSigned
-            || pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.SPath.bBound
-            || pChannel->SHandwheelSim.SPath.bPreparing
-            || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
+        if ((pChannel->ucChannelStatus != SYS_IDLE &&
+             !(pChannel->ucChannelStatus == SYS_EMERGENCY_STOP && pChannel->SPreProcess.ucRunStep == 2)) ||
+            pChannel->SG00.ucCurrentSigned != pChannel->SG00.ucFinishedSigned ||
+            pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.SPath.bBound ||
+            pChannel->SHandwheelSim.SPath.bPreparing || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
         {
             return;
         }
@@ -877,104 +886,98 @@ static void processHandwheelSimRequest(uint8 ucChannelNum)
         g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_NONE;
         return;
     }
-    /* Ã»ÓĞÒâÍ¼Ê±²»½éÈëÔ­ÔËĞĞ¡£ */
+    /* æ²¡æœ‰æ„å›¾æ—¶ä¸ä»‹å…¥åŸè¿è¡Œã€‚ */
     if (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_NONE)
     {
         return;
     }
-    /* ¿ªÆôÖ»ÔÚ±¾´ÎÔ­ÔËĞĞ/»Ö¸´ĞèÒªÔİÍ£Ê±ÔÊĞíĞøĞĞ£»¼ÈÓĞ¼õËÙ»òÔİÍ£±£³ÖÔİÍ£¡£ */
+    /* å¼€å¯åªåœ¨æœ¬æ¬¡åŸè¿è¡Œ/æ¢å¤éœ€è¦æš‚åœæ—¶å…è®¸ç»­è¡Œï¼›æ—¢æœ‰å‡é€Ÿæˆ–æš‚åœä¿æŒæš‚åœã€‚ */
     if (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_REQUESTED)
     {
         bResume = pChannel->ucChannelStatus == SYS_RUN || pChannel->ucChannelStatus == SYS_PAUSE_TO_RUN;
-        g_ucHandwheelSimRequestArray[ucChannelNum] =
-            bResume ? HANDWHEEL_SIM_ENABLE_RESUME : HANDWHEEL_SIM_ENABLE_HOLD;
+        g_ucHandwheelSimRequestArray[ucChannelNum] = bResume ? HANDWHEEL_SIM_ENABLE_RESUME : HANDWHEEL_SIM_ENABLE_HOLD;
     }
-    /* ¹Ø±ÕµÄĞøĞĞ×Ê¸ñÖ»ÅĞÒ»´Î£»ÖØ¸´¹Ø±Õ²»»áÖØĞÂ¸³Óè×Ê¸ñ¡£ */
+    /* å…³é—­çš„ç»­è¡Œèµ„æ ¼åªåˆ¤ä¸€æ¬¡ï¼›é‡å¤å…³é—­ä¸ä¼šé‡æ–°èµ‹äºˆèµ„æ ¼ã€‚ */
     if (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_CLOSE_REQUESTED)
     {
-        /* ÔËĞĞÖĞµÄ×Ô¶¯ÅÔÂ·¶Î¡¢ÉĞÎ´ÉúĞ§¾ÍÈ¡ÏûµÄ¿ªÆôÒ²Ó¦½»½ÓºóĞøĞĞ¡£
-         * ÊÇ·ñÔÊĞíĞøĞĞÓÉÔ­ÔËĞĞ×´Ì¬¼°ÏÂ·½±£»¤¾ö¶¨£¬²»È¡¾öÓÚ±¾¶Î²å²¹Ëã·¨¡£ */
+        /* è¿è¡Œä¸­çš„è‡ªåŠ¨æ—è·¯æ®µã€å°šæœªç”Ÿæ•ˆå°±å–æ¶ˆçš„å¼€å¯ä¹Ÿåº”äº¤æ¥åç»­è¡Œã€‚
+         * æ˜¯å¦å…è®¸ç»­è¡Œç”±åŸè¿è¡ŒçŠ¶æ€åŠä¸‹æ–¹ä¿æŠ¤å†³å®šï¼Œä¸å–å†³äºæœ¬æ®µæ’è¡¥ç®—æ³•ã€‚ */
         bResume = pChannel->ucChannelStatus == SYS_RUN || pChannel->ucChannelStatus == SYS_PAUSE_TO_RUN;
-        g_ucHandwheelSimRequestArray[ucChannelNum] =
-            bResume ? HANDWHEEL_SIM_CLOSE_RESUME : HANDWHEEL_SIM_CLOSE_HOLD;
+        g_ucHandwheelSimRequestArray[ucChannelNum] = bResume ? HANDWHEEL_SIM_CLOSE_RESUME : HANDWHEEL_SIM_CLOSE_HOLD;
     }
-    /* Ä£Ê½±ä»¯È¡Ïû¿ªÆôºÍĞøĞĞ£¬½öÍê³É±ØÒª¹Ø±Õ¡£ */
+    /* æ¨¡å¼å˜åŒ–å–æ¶ˆå¼€å¯å’Œç»­è¡Œï¼Œä»…å®Œæˆå¿…è¦å…³é—­ã€‚ */
     if (g_RunMode != AUTOMATIC_MODE && g_RunMode != MDI_MODE)
     {
         g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_CLOSE_HOLD;
     }
-    bEnabled = g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_HOLD
-        || g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_RESUME;
+    bEnabled = g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_HOLD ||
+               g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_RESUME;
     unMotion = getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR);
     unProgram = getBits(pChannel->SPreProcess.unCommandType, CMD_PROGRAM_ADDR);
-    /* Ïû·ÑÔİÍ£/³ÌĞò½áÊøÇ°Ëø¶¨²»ĞøĞĞ£»±¶ÂÊºóÀ´»Ö¸´Ò²²»ÄÜ×Ô¶¯½â³ı¡£ */
-    if (pChannel->ucChannelStatus == SYS_IDLE || pChannel->SRun.cSoftLimitedOn != 0
-        || pChannel->bProgramStop || (pChannel->bSingleLineMode && pChannel->ucRunCounter == 0)
-        || (getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
-            ? (!isfinite(pChannel->SRun.dQuickMoveFeedRatio) || pChannel->SRun.dQuickMoveFeedRatio <= 0.0)
-            : (!isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0))
-        || ((pChannel->SPreProcess.ucInpStatus == INP_FINISHED || pChannel->SPreProcess.ucInpStatus == INP_PAUSING)
-            && (unProgram == CMD_PROGRAM_PAUSE || unProgram == CMD_PROGRAM_OPTION_PAUSE
-                || unProgram == CMD_PROGRAM_STOP || unProgram == CMD_PROGRAM_STOP_M02)))
+    /* æ¶ˆè´¹æš‚åœ/ç¨‹åºç»“æŸå‰é”å®šä¸ç»­è¡Œï¼›å€ç‡åæ¥æ¢å¤ä¹Ÿä¸èƒ½è‡ªåŠ¨è§£é™¤ã€‚ */
+    if (pChannel->ucChannelStatus == SYS_IDLE || pChannel->SRun.cSoftLimitedOn != 0 || pChannel->bProgramStop ||
+        (pChannel->bSingleLineMode && pChannel->ucRunCounter == 0) ||
+        (getBits(pChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_QUICKMOVE
+             ? (!isfinite(pChannel->SRun.dQuickMoveFeedRatio) || pChannel->SRun.dQuickMoveFeedRatio <= 0.0)
+             : (!isfinite(pChannel->SRun.dCommonFeedRatio) || pChannel->SRun.dCommonFeedRatio <= 0.0)) ||
+        ((pChannel->SPreProcess.ucInpStatus == INP_FINISHED || pChannel->SPreProcess.ucInpStatus == INP_PAUSING) &&
+         (unProgram == CMD_PROGRAM_PAUSE || unProgram == CMD_PROGRAM_OPTION_PAUSE || unProgram == CMD_PROGRAM_STOP ||
+          unProgram == CMD_PROGRAM_STOP_M02)))
     {
-        g_ucHandwheelSimRequestArray[ucChannelNum] =
-            bEnabled ? HANDWHEEL_SIM_ENABLE_HOLD : HANDWHEEL_SIM_CLOSE_HOLD;
+        g_ucHandwheelSimRequestArray[ucChannelNum] = bEnabled ? HANDWHEEL_SIM_ENABLE_HOLD : HANDWHEEL_SIM_CLOSE_HOLD;
     }
-    /* »Ö¸´ÔË¶¯²»ÄÜÖĞÍ¾¸Ä±¶ÂÊ»òÑ¡Ôñ£»Íê³ÉºóÔÙÑØÕı³£ÔİÍ£Â·¾¶½»½Ó¡£ */
+    /* æ¢å¤è¿åŠ¨ä¸èƒ½ä¸­é€”æ”¹å€ç‡æˆ–é€‰æ‹©ï¼›å®Œæˆåå†æ²¿æ­£å¸¸æš‚åœè·¯å¾„äº¤æ¥ã€‚ */
     if (pChannel->ucChannelStatus == SYS_PAUSE_TO_RUN)
     {
         return;
     }
-    /* ¿ªÆôÇ°ÈÔ±£³Ö OFF ÓëÔ­×Ô¶¯±¶ÂÊ£»¹Ø±ÕÇ°ÈÔ±£³ÖÔ­¾àÀë¿ØÖÆ£¬·Ö±ğÑØÔ­Â·¾¶¼õËÙ¡£ */
+    /* å¼€å¯å‰ä»ä¿æŒ OFF ä¸åŸè‡ªåŠ¨å€ç‡ï¼›å…³é—­å‰ä»ä¿æŒåŸè·ç¦»æ§åˆ¶ï¼Œåˆ†åˆ«æ²¿åŸè·¯å¾„å‡é€Ÿã€‚ */
     if (pChannel->ucChannelStatus == SYS_RUN)
     {
         pChannel->bChipBreakStart = FALSE;
         pChannel->ucChannelStatus = SYS_RUN_TO_PAUSE;
         return;
     }
-    /* µÈÔİÍ£»ØĞ´ºÍ½â°ó£»ÊÖ¶¯ G0 µÄ 3 ÎªÔË¶¯Íê³É£¬5 Îª³õÊ¼»¯/¸´Î»ºóµÄ¿ÕÏĞ¡£
-     * channelStopToIDLE ²»ÖØÖÃÔ¤´¦Àí²å²¹±êÖ¾£»½ö¸´Î»ÊÕÎ²µÄÍêÕû¿ÕÏĞÖÕÌ¬¿É²»µÈ¸Ã¾ÉÖµ¡£
-     * ²»Çå bIsUserData£¬²»Î±Ôì²å²¹Íê³É£¬±£ÁôÊÖ¶¯ÒÆ¶¯ºóµÄ·µ»ØµãÓïÒå¡£ */
-    if ((pChannel->ucChannelStatus != SYS_PAUSE && pChannel->ucChannelStatus != SYS_IDLE)
-        || (pChannel->SPreProcess.ucInpStatus != INP_FINISHED
-            && !(pChannel->ucChannelStatus == SYS_IDLE && pChannel->SPreProcess.ucRunStep == 0
-                && pChannel->SG00.ucRunStep == 5
-                && pChannel->SG00.ucCurrentSigned == pChannel->SG00.ucFinishedSigned
-                && pChannel->SG01.ucInpStatus == INP_FINISHED
-                && pChannel->SG02.ucInpStatus == INP_FINISHED))
-        || pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.SPath.bBound
-        || pChannel->SHandwheelSim.SPath.bPreparing
-        || (pChannel->SG00.bIsUserData
-            && ((pChannel->SG00.ucRunStep != 3 && pChannel->SG00.ucRunStep != 5)
-                || pChannel->SG00.ucCurrentSigned != pChannel->SG00.ucFinishedSigned))
-        || (bEnabled && unMotion == CMD_MOTION_LINE && pChannel->SG01.ucInpStatus != INP_FINISHED)
-        || (bEnabled && (unMotion == CMD_MOTION_ARC || unMotion == CMD_MOTION_ANTI_ARC)
-            && pChannel->SG02.ucInpStatus != INP_FINISHED)
-        || !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
+    /* ç­‰æš‚åœå›å†™å’Œè§£ç»‘ï¼›æ‰‹åŠ¨ G0 çš„ 3 ä¸ºè¿åŠ¨å®Œæˆï¼Œ5 ä¸ºåˆå§‹åŒ–/å¤ä½åçš„ç©ºé—²ã€‚
+     * channelStopToIDLE ä¸é‡ç½®é¢„å¤„ç†æ’è¡¥æ ‡å¿—ï¼›ä»…å¤ä½æ”¶å°¾çš„å®Œæ•´ç©ºé—²ç»ˆæ€å¯ä¸ç­‰è¯¥æ—§å€¼ã€‚
+     * ä¸æ¸… bIsUserDataï¼Œä¸ä¼ªé€ æ’è¡¥å®Œæˆï¼Œä¿ç•™æ‰‹åŠ¨ç§»åŠ¨åçš„è¿”å›ç‚¹è¯­ä¹‰ã€‚ */
+    if ((pChannel->ucChannelStatus != SYS_PAUSE && pChannel->ucChannelStatus != SYS_IDLE) ||
+        (pChannel->SPreProcess.ucInpStatus != INP_FINISHED &&
+         !(pChannel->ucChannelStatus == SYS_IDLE && pChannel->SPreProcess.ucRunStep == 0 &&
+           pChannel->SG00.ucRunStep == 5 && pChannel->SG00.ucCurrentSigned == pChannel->SG00.ucFinishedSigned &&
+           pChannel->SG01.ucInpStatus == INP_FINISHED && pChannel->SG02.ucInpStatus == INP_FINISHED)) ||
+        pChannel->SHandwheelSim.bInstructionBound || pChannel->SHandwheelSim.SPath.bBound ||
+        pChannel->SHandwheelSim.SPath.bPreparing ||
+        (pChannel->SG00.bIsUserData && ((pChannel->SG00.ucRunStep != 3 && pChannel->SG00.ucRunStep != 5) ||
+                                        pChannel->SG00.ucCurrentSigned != pChannel->SG00.ucFinishedSigned)) ||
+        (bEnabled && unMotion == CMD_MOTION_LINE && pChannel->SG01.ucInpStatus != INP_FINISHED) ||
+        (bEnabled && (unMotion == CMD_MOTION_ARC || unMotion == CMD_MOTION_ANTI_ARC) &&
+         pChannel->SG02.ucInpStatus != INP_FINISHED) ||
+        !isHandwheelSimGroupStopped(&pChannel->SHandwheelSim))
     {
         return;
     }
-    bResume = pChannel->ucChannelStatus == SYS_PAUSE
-        && (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_RESUME
-            || g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_CLOSE_RESUME);
-    /* ÊÖ¶¯ÒÆ¶¯ºóµÄ¹Ø±Õ²»×Ô¶¯·µ»Ø¼Ó¹¤µã£»Íê³É¹Ø±ÕºóÔÙÓÉÏÔÊ½Æô¶¯»Ö¸´¡£ */
+    bResume = pChannel->ucChannelStatus == SYS_PAUSE &&
+              (g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_ENABLE_RESUME ||
+               g_ucHandwheelSimRequestArray[ucChannelNum] == HANDWHEEL_SIM_CLOSE_RESUME);
+    /* æ‰‹åŠ¨ç§»åŠ¨åçš„å…³é—­ä¸è‡ªåŠ¨è¿”å›åŠ å·¥ç‚¹ï¼›å®Œæˆå…³é—­åå†ç”±æ˜¾å¼å¯åŠ¨æ¢å¤ã€‚ */
     if (!bEnabled && bResume && pChannel->SG00.bIsUserData)
     {
         bResume = FALSE;
     }
     leaveHandwheelSim(pChannel);
-    /* ½»½Óº¯ÊıÊ§°Ü±£Áô±£»¤£¬ÓÉÏÂÒ»ÅÄÔ­±¨¾¯Í£³µ½Ó¹Ü£¬²»Î±×°¿ª¹Ø³É¹¦¡£ */
+    /* äº¤æ¥å‡½æ•°å¤±è´¥ä¿ç•™ä¿æŠ¤ï¼Œç”±ä¸‹ä¸€æ‹åŸæŠ¥è­¦åœè½¦æ¥ç®¡ï¼Œä¸ä¼ªè£…å¼€å…³æˆåŠŸã€‚ */
     if (pChannel->SHandwheelSim.bFault || isErrorHasBeenWritten())
     {
         g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_STOP_CLOSE;
         return;
     }
-    /* Ô­²å²¹ÒÑÍê³ÉÔİÍ££¬Ä©ÅÄÆ½¾ùËÙ¶È²»×÷ÎªĞÂ¾àÀë¶ÎÆğËÙ£»²»Çå»î¶¯Öá»òÄ©ÅÄÂö³å¡£
-     * ·ÇÓĞÏŞ/¸ºÖµÈÔ½»¸øÔ­°ó¶¨Ğ£Ñé±¨´í£¬²»ÄÜ½èÇĞ»»ÑÚ¸Ç·Ç·¨ÊıÖµ¡£ */
-    if (bEnabled && pChannel->ucChannelStatus == SYS_PAUSE
-        && (unMotion == CMD_MOTION_QUICKMOVE || unMotion == CMD_MOTION_LINE
-            || unMotion == CMD_MOTION_ARC || unMotion == CMD_MOTION_ANTI_ARC)
-        && isfinite(pChannel->SRun.dCurrentSpeed) && pChannel->SRun.dCurrentSpeed >= 0.0)
+    /* åŸæ’è¡¥å·²å®Œæˆæš‚åœï¼Œæœ«æ‹å¹³å‡é€Ÿåº¦ä¸ä½œä¸ºæ–°è·ç¦»æ®µèµ·é€Ÿï¼›ä¸æ¸…æ´»åŠ¨è½´æˆ–æœ«æ‹è„‰å†²ã€‚
+     * éæœ‰é™/è´Ÿå€¼ä»äº¤ç»™åŸç»‘å®šæ ¡éªŒæŠ¥é”™ï¼Œä¸èƒ½å€Ÿåˆ‡æ¢æ©ç›–éæ³•æ•°å€¼ã€‚ */
+    if (bEnabled && pChannel->ucChannelStatus == SYS_PAUSE &&
+        (unMotion == CMD_MOTION_QUICKMOVE || unMotion == CMD_MOTION_LINE || unMotion == CMD_MOTION_ARC ||
+         unMotion == CMD_MOTION_ANTI_ARC) &&
+        isfinite(pChannel->SRun.dCurrentSpeed) && pChannel->SRun.dCurrentSpeed >= 0.0)
     {
         pChannel->SRun.dCurrentSpeed = 0.0;
     }
@@ -982,7 +985,7 @@ static void processHandwheelSimRequest(uint8 ucChannelNum)
     pChannel->SPreProcess.cInterpDir = INP_GO_AHEAD;
     pChannel->cHandWheelSimulaStatus = bEnabled ? HANWHEELSIMULA_ON : HANWHEELSIMULA_OFF;
     g_ucHandwheelSimRequestArray[ucChannelNum] = HANDWHEEL_SIM_NONE;
-    /* Ô­ÔËĞĞÈë¿ÚÔÙ´Î¼ì²é IO ÓëÔËĞĞÌõ¼ş£»¾Ü¾øºó²»×Ô¶¯ÖØÊÔ¡£ */
+    /* åŸè¿è¡Œå…¥å£å†æ¬¡æ£€æŸ¥ IO ä¸è¿è¡Œæ¡ä»¶ï¼›æ‹’ç»åä¸è‡ªåŠ¨é‡è¯•ã€‚ */
     if (bResume)
     {
         runButtonAPI(ucChannelNum, TRUE);
@@ -991,389 +994,390 @@ static void processHandwheelSimRequest(uint8 ucChannelNum)
 #endif
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinterruptFuncAPI(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ  ÖĞ¶Ïº¯Êı½Ó¿Ú
-  ÊäÈë²ÎÊı£ºucChannelNum	Í¨µÀºÅ 0~CHANNEL_NUM_MAX-1
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinterruptFuncAPI(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½  ä¸­æ–­å‡½æ•°æ¥å£
+  è¾“å…¥å‚æ•°ï¼šucChannelNum	é€šé“å· 0~CHANNEL_NUM_MAX-1
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 ****************************************/
 void interruptFuncAPI(uint8 ucChannelNum)
 {
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* ÖĞ¶Ï´¦ÀíÇ°¼ÇÂ¼»Ö¸´×´Ì¬£¬½öÔÚ±¾ÅÄ¸ÕÍê³É»Ö¸´¼Ó¹¤Ê±£¬²ÅÔÊĞíÇå³ı»Ö¸´Ä©ÅÄµÄÆ½¾ùËÙ¶È¡£ */
-    bool bHandwheelRecovery = g_SChannel[ucChannelNum].cHandWheelSimulaStatus == HANWHEELSIMULA_ON
-        && g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN
-        && g_SChannel[ucChannelNum].SG00.bIsUserData;
+    /* ä¸­æ–­å¤„ç†å‰è®°å½•æ¢å¤çŠ¶æ€ï¼Œä»…åœ¨æœ¬æ‹åˆšå®Œæˆæ¢å¤åŠ å·¥æ—¶ï¼Œæ‰å…è®¸æ¸…é™¤æ¢å¤æœ«æ‹çš„å¹³å‡é€Ÿåº¦ã€‚ */
+    bool bHandwheelRecovery = g_SChannel[ucChannelNum].cHandWheelSimulaStatus == HANWHEELSIMULA_ON &&
+                              g_SChannel[ucChannelNum].ucChannelStatus == SYS_PAUSE_TO_RUN &&
+                              g_SChannel[ucChannelNum].SG00.bIsUserData;
 #endif
 
 #if !ENCODER_MODE
-	simulateGetEncoder(&g_SChannel[ucChannelNum]);
+    simulateGetEncoder(&g_SChannel[ucChannelNum]);
 #endif
 
 #if SECONDSPINDLE_USE_NOENCODER
-	uint8 ucSpindleAxis = g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis;
-	g_SChannel[ucChannelNum].pSSecondSpindleEncoder->cEncoderDir = sgn(g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis]);
-	g_SChannel[ucChannelNum].pSSecondSpindleEncoder->lEncoderAbsValue += g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis];
-	g_SChannel[ucChannelNum].pSSecondSpindleEncoder->usDelta = abs(g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis]);
+    uint8 ucSpindleAxis = g_SChannel[ucChannelNum].SSecondSpindle.pSSpindleAxis->ucAxis;
+    g_SChannel[ucChannelNum].pSSecondSpindleEncoder->cEncoderDir =
+        sgn(g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis]);
+    g_SChannel[ucChannelNum].pSSecondSpindleEncoder->lEncoderAbsValue +=
+        g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis];
+    g_SChannel[ucChannelNum].pSSecondSpindleEncoder->usDelta =
+        abs(g_SChannel[ucChannelNum].SRun.sAxisDeltaPulse[ucSpindleAxis]);
 #endif
 
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
     if (isHandwheelDistanceControlActive(&g_SChannel[ucChannelNum]))
     {
-        /* °å¶Ë¶¨Ê±Æ÷ÒÑ¸üĞÂ±¾ÅÄÑù±¾£»Ã¿Í¨µÀÖ»Ïû·ÑÒ»´Î£¬²»ÇåÁã¹²Ïí±àÂëÆ÷¡£ */
+        /* æ¿ç«¯å®šæ—¶å™¨å·²æ›´æ–°æœ¬æ‹æ ·æœ¬ï¼›æ¯é€šé“åªæ¶ˆè´¹ä¸€æ¬¡ï¼Œä¸æ¸…é›¶å…±äº«ç¼–ç å™¨ã€‚ */
         processHandwheelInput(&g_SChannel[ucChannelNum]);
     }
     else
     {
         leaveHandwheelSim(&g_SChannel[ucChannelNum]);
 #endif
-	softLimitForHandWheel(ucChannelNum); //ÊÖÂÖÈíÏŞÎ»¼ì²â 
-	handWheelSpeedTest(&g_SChannel[ucChannelNum]);//ÊÖÂÖ±àÂëÆ÷ËÙ¶È¼ì²â
+        softLimitForHandWheel(ucChannelNum);           //æ‰‹è½®è½¯é™ä½æ£€æµ‹
+        handWheelSpeedTest(&g_SChannel[ucChannelNum]); //æ‰‹è½®ç¼–ç å™¨é€Ÿåº¦æ£€æµ‹
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
     }
 #endif
-	spindleSpeedTest(&g_SChannel[ucChannelNum].SSpindleTest, &g_SChannel[ucChannelNum].SSpindle);//Ö÷Öá±àÂëÆ÷ËÙ¶È¼ì²â
-	SecondspindleSpeedTest(&g_SChannel[ucChannelNum].SSecondSpindleTest, &g_SChannel[ucChannelNum].SSecondSpindle);//µÚ¶ş×ªÖá±àÂëÆ÷ËÙ¶È¼ì²â
-	resetProgram(&g_SChannel[ucChannelNum]);//¸´Î»ÔË¶¯
-	stopAxisAfterError(&g_SChannel[ucChannelNum]);//±¨¾¯ºóÖáÍ£
+    spindleSpeedTest(&g_SChannel[ucChannelNum].SSpindleTest, &g_SChannel[ucChannelNum].SSpindle); //ä¸»è½´ç¼–ç å™¨é€Ÿåº¦æ£€æµ‹
+    SecondspindleSpeedTest(&g_SChannel[ucChannelNum].SSecondSpindleTest,
+                           &g_SChannel[ucChannelNum].SSecondSpindle); //ç¬¬äºŒè½¬è½´ç¼–ç å™¨é€Ÿåº¦æ£€æµ‹
+    resetProgram(&g_SChannel[ucChannelNum]);                          //å¤ä½è¿åŠ¨
+    stopAxisAfterError(&g_SChannel[ucChannelNum]);                    //æŠ¥è­¦åè½´åœ
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-    /* ÔÚÔ­µ÷¶ÈÏû·Ñ³ÌĞòÔİÍ£±ê¼ÇÇ°³·ÏúĞøĞĞ£¬±£Áô M0/M1 ºÍ³ÌĞò½áÊø±£»¤¡£ */
+    /* åœ¨åŸè°ƒåº¦æ¶ˆè´¹ç¨‹åºæš‚åœæ ‡è®°å‰æ’¤é”€ç»­è¡Œï¼Œä¿ç•™ M0/M1 å’Œç¨‹åºç»“æŸä¿æŠ¤ã€‚ */
     processHandwheelSimRequest(ucChannelNum);
 #endif
-	switch (g_RunMode)
-	{
-	case HANDWHEEL_MODE:
-		if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_RESET)
-		{
-			if (ucChannelNum == SpindleB)			//SpindleBÊÇÆóÒµµÄÍ¨µÀÑ¡ÔñÃû×Ö£¬Èç¹ûÍ¨µÀÃûºÍÆóÒµµÄÍ¨µÀÑ¡ÔñÃû×Ö¶ÔÉÏ²Å»á×ßÊÖÂÖµ¥ÖáÔË¶¯	³ÂÃô´Ï	2023/7/21
-				getHandWheelData(&g_SChannel[ucChannelNum]);
-		}
-		break;
-	default:
-		IRQHandler(&g_SChannel[ucChannelNum]);//ÖĞ¶Ï·şÎñº¯Êı
-		break;
-	}
+    switch (g_RunMode)
+    {
+    case HANDWHEEL_MODE:
+        if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_RESET)
+        {
+            if (ucChannelNum ==
+                SpindleB) //SpindleBæ˜¯ä¼ä¸šçš„é€šé“é€‰æ‹©åå­—ï¼Œå¦‚æœé€šé“åå’Œä¼ä¸šçš„é€šé“é€‰æ‹©åå­—å¯¹ä¸Šæ‰ä¼šèµ°æ‰‹è½®å•è½´è¿åŠ¨	é™ˆæ•èª	2023/7/21
+                getHandWheelData(&g_SChannel[ucChannelNum]);
+        }
+        break;
+    default:
+        IRQHandler(&g_SChannel[ucChannelNum]); //ä¸­æ–­æœåŠ¡å‡½æ•°
+        break;
+    }
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
     clearHandwheelAverageSpeedAfterRecovery(&g_SChannel[ucChannelNum], bHandwheelRecovery);
     processHandwheelSimRequest(ucChannelNum);
 #endif
-    /* ËÕÏò±ê 2026-10-14£ºÍ£Ö¹ÏÈ½ÓÊÕ£»ºóÌ¨Ö÷Öá IO Ö»ÔÚ±¾ÖÜÆÚÖ´ĞĞ¡£ */
+    /* è‹å‘æ ‡ 2026-10-14ï¼šåœæ­¢å…ˆæ¥æ”¶ï¼›åå°ä¸»è½´ IO åªåœ¨æœ¬å‘¨æœŸæ‰§è¡Œã€‚ */
     processSpindleRequests(&g_SChannel[ucChannelNum].SSpindle);
     processSpindleRequests(&g_SChannel[ucChannelNum].SSecondSpindle);
     processSpindleIORequest(&g_SChannel[ucChannelNum].SIOCommand);
-	spindleMotion(&g_SChannel[ucChannelNum].SSpindle);// Ö÷ÖáÔË¶¯
-	SecondspindleMotion(&g_SChannel[ucChannelNum].SSecondSpindle);	//µÚ¶şÖá/¶¯Á¦µ¶ÔË¶¯
+    spindleMotion(&g_SChannel[ucChannelNum].SSpindle);             // ä¸»è½´è¿åŠ¨
+    SecondspindleMotion(&g_SChannel[ucChannelNum].SSecondSpindle); //ç¬¬äºŒè½´/åŠ¨åŠ›åˆ€è¿åŠ¨
 #if TOOLAXIS_TEST
-	toolAxisMotion(&g_SToolAxisInfo, &g_SChannel[ucChannelNum].SSpindle, g_SChannel[ucChannelNum].pSSpindleEncoder);
+    toolAxisMotion(&g_SToolAxisInfo, &g_SChannel[ucChannelNum].SSpindle, g_SChannel[ucChannelNum].pSSpindleEncoder);
 #endif
-#if ERROR_COMP_TYPE == TWOWAY_SCREW_COMP//Ë«ÏòÂİ¾àÎó²î²¹³¥  ÔÚ´Ë´¦¼ÆËãÂö³å  Ö÷ÖáÔİÊ±Ã»ÓĞ²¹³¥
-	BilateralScrewComp(&g_SChannel[ucChannelNum].SRun, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray);
+#if ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //åŒå‘èºè·è¯¯å·®è¡¥å¿  åœ¨æ­¤å¤„è®¡ç®—è„‰å†²  ä¸»è½´æš‚æ—¶æ²¡æœ‰è¡¥å¿
+    BilateralScrewComp(&g_SChannel[ucChannelNum].SRun, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray);
 #endif // ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
 #if !MC_PROFILE_XYZ
-	calculatePWMValue(&g_SChannel[ucChannelNum].SRun, g_SChannel[ucChannelNum].pMapAxisArray,g_SChannel[ucChannelNum].pPWMMapAxisArray,TRUE);//¼ÆËãPWMÖµ
-#endif // XYZ ×ÜÏßÅäÖÃ·¢²¼Î»ÖÃÄ¿±ê£¬PWM Ê±ĞòÓÉ¶ÔÓ¦Âö³åÊä³öÅäÖÃ´¦Àí¡£
+    calculatePWMValue(&g_SChannel[ucChannelNum].SRun, g_SChannel[ucChannelNum].pMapAxisArray,
+                      g_SChannel[ucChannelNum].pPWMMapAxisArray, TRUE); //è®¡ç®—PWMå€¼
+#endif // XYZ æ€»çº¿é…ç½®å‘å¸ƒä½ç½®ç›®æ ‡ï¼ŒPWM æ—¶åºç”±å¯¹åº”è„‰å†²è¾“å‡ºé…ç½®å¤„ç†ã€‚
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºinterruptFuncLoopAPI()
-  º¯Êı¹¦ÄÜ  Ñ­»·Ö´ĞĞG´úÂëÖĞ¶Ï
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinterruptFuncLoopAPI()
+  å‡½æ•°åŠŸèƒ½  å¾ªç¯æ‰§è¡ŒGä»£ç ä¸­æ–­
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 ****************************************/
 void interruptFuncLoopAPI()
 {
-	int i;
-	//¶ÔÓÚ×ÜÏßĞÍ²»ÓÃ½øĞĞ»»Ïò´¦Àí£¬Âö³åĞÍĞèÒª
-	for (i = 0; i < CHANNEL_NUM_MAX; i++)
-	{
-		interruptFuncAPI(i); //ÖĞ¶Ï·şÎñº¯Êı£¬¼ÆËãÂö³åÖµ
+    int i;
+    //å¯¹äºæ€»çº¿å‹ä¸ç”¨è¿›è¡Œæ¢å‘å¤„ç†ï¼Œè„‰å†²å‹éœ€è¦
+    for (i = 0; i < CHANNEL_NUM_MAX; i++)
+    {
+        interruptFuncAPI(i); //ä¸­æ–­æœåŠ¡å‡½æ•°ï¼Œè®¡ç®—è„‰å†²å€¼
 #if !MC_PROFILE_XYZ
-		isMotionChangeDirection(i);//ÅĞ¶ÏÖá»»Ïò£¬ÇÒĞŞ¸ÄÖáÂö³å
+        isMotionChangeDirection(i); //åˆ¤æ–­è½´æ¢å‘ï¼Œä¸”ä¿®æ”¹è½´è„‰å†²
 #endif
-	}
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºRunIOBuffAPI()
-  º¯Êı¹¦ÄÜ  ÔËĞĞ»º´æÖĞµÄIO´úÂë
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šRunIOBuffAPI()
+  å‡½æ•°åŠŸèƒ½  è¿è¡Œç¼“å­˜ä¸­çš„IOä»£ç 
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 ****************************************/
 //void RunIOBuffAPI()
 //{
 //	//runIOBuff();
 //}
 
-
-
-
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºinputCoorOffset(uint8 ucNum, uint8 ucAxis, double dOffset)
-  º¯Êı¹¦ÄÜ  ÊÖ¶¯»»µ¶º¯Êı
-  ÊäÈë²ÎÊı£ºucToolNum	µ¶ºÅ  1~TOOL_NUM_MAX
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1 ÉèÖÃÍê³É
-			-1 Í¨µÀºÅ´íÎó
-			-2 ´íÎóµÄ×´Ì¬
-			-3 µ¶ºÅ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šinputCoorOffset(uint8 ucNum, uint8 ucAxis, double dOffset)
+  å‡½æ•°åŠŸèƒ½  æ‰‹åŠ¨æ¢åˆ€å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šucToolNum	åˆ€å·  1~TOOL_NUM_MAX
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1 è®¾ç½®å®Œæˆ
+			-1 é€šé“å·é”™è¯¯
+			-2 é”™è¯¯çš„çŠ¶æ€
+			-3 åˆ€å·é”™è¯¯
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 manualChangeToolAPI(uint8 ucChannelNum, uint8 ucToolNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)//Í¨µÀºÅ´íÎó
-	{
-		return -1;
-	}
-	if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE && g_SChannel[ucChannelNum].ucChannelStatus != SYS_PAUSE)//ÆäËû×´Ì¬²»ÄÜÊÖ¶¯»»µ¶
-	{
-		return -2;
-	}
-	if (ucToolNum > TOOL_NUM_MAX || ucToolNum < 1)//µ¶ºÅ³¬¹ı×Üµ¶ÊıÄ¿
-	{
-		return -3;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX) //é€šé“å·é”™è¯¯
+    {
+        return -1;
+    }
+    if (g_SChannel[ucChannelNum].ucChannelStatus != SYS_IDLE &&
+        g_SChannel[ucChannelNum].ucChannelStatus != SYS_PAUSE) //å…¶ä»–çŠ¶æ€ä¸èƒ½æ‰‹åŠ¨æ¢åˆ€
+    {
+        return -2;
+    }
+    if (ucToolNum > TOOL_NUM_MAX || ucToolNum < 1) //åˆ€å·è¶…è¿‡æ€»åˆ€æ•°ç›®
+    {
+        return -3;
+    }
 
-	g_SChannel[ucChannelNum].SPreProcess.ucToolNum = ucToolNum;
-	return 1;
+    g_SChannel[ucChannelNum].SPreProcess.ucToolNum = ucToolNum;
+    return 1;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºchangeFeedRatioAPI(float fNewRatio, bool bIsDelta,uint8 ucType)
-  º¯Êı¹¦ÄÜ  ¸Ä±ä±¶ÂÊº¯Êı £¨°üº¬¿ìËÙÔË¶¯±¶ÂÊ ºÏ³ÉÔË¶¯±¶ÂÊ Ö÷Öá±¶ÂÊ£©
-  ÊäÈë²ÎÊı£ºucType		0:¿ìËÙÔË¶¯±¶ÂÊ; 1:ºÏ³ÉÔË¶¯±¶ÂÊ; 2:Ö÷Öá±¶ÂÊ
-			fNewRatio	ÊäÈëÖµ£¨ÔöÁ¿»ò¾ø¶Ô£©
-			bIsDelta	ÊÇ·ñÎªÔöÁ¿
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šchangeFeedRatioAPI(float fNewRatio, bool bIsDelta,uint8 ucType)
+  å‡½æ•°åŠŸèƒ½  æ”¹å˜å€ç‡å‡½æ•° ï¼ˆåŒ…å«å¿«é€Ÿè¿åŠ¨å€ç‡ åˆæˆè¿åŠ¨å€ç‡ ä¸»è½´å€ç‡ï¼‰
+  è¾“å…¥å‚æ•°ï¼šucType		0:å¿«é€Ÿè¿åŠ¨å€ç‡; 1:åˆæˆè¿åŠ¨å€ç‡; 2:ä¸»è½´å€ç‡
+			fNewRatio	è¾“å…¥å€¼ï¼ˆå¢é‡æˆ–ç»å¯¹ï¼‰
+			bIsDelta	æ˜¯å¦ä¸ºå¢é‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 ****************************************/
 void changeFeedRatioAPI(uint8 ucChannelNum, float fNewRatio, bool bIsDelta, uint8 ucType)
 {
-	double* pdTargetRatio;
-	double dMaxVal = 1.0, dMinVal = 1.0;
-	struct _SRun* pSRun;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return;
-	}
-	pSRun = &g_SChannel[ucChannelNum].SRun;
-	switch (ucType)
-	{
-	case 0://¿ìËÙÔË¶¯±¶ÂÊ
-		pdTargetRatio = &pSRun->dQuickMoveFeedRatio;
-		dMaxVal = MAX_FEED_RATIO;
-		dMinVal = MIN_FEED_RATIO;
-		break;
-	case 1://ºÏ³ÉÔË¶¯±¶ÂÊ
-		pdTargetRatio = &pSRun->dCommonFeedRatio;
-		dMaxVal = MAX_FEED_RATIO;
-		dMinVal = MIN_FEED_RATIO;
-		break;
-	case 2://Ö÷Öá±¶ÂÊ
-		pdTargetRatio = &pSRun->dSpindleSpeedRatio;
-		dMaxVal = MAX_SPINDLE_RATIO;
-		dMinVal = MIN_SPINDLE_RATIO;
-		break;
-	default:
-		pdTargetRatio = &pSRun->dCommonFeedRatio;
-		break;
-	}
-	double dCurRatio = *pdTargetRatio;// ¶ÁÈ¡µ±Ç°±¶ÂÊ
-	if (!(ucType == 2 && (getBits(g_SChannel[ucChannelNum].SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT || getBits(g_SChannel[ucChannelNum].SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_G33)))	//³ÂÃô´Ï	2023/10/16	G32»òG33ÔËĞĞÊ±²»ÄÜ¸Ä±äÖ÷Öá±¶ÂÊ
-	{
-		if (bIsDelta)//ÊÇ²»ÊÇÏà¶ÔÖµ
-		{
-			dCurRatio += fNewRatio;//Ïà¶ÔÖµ
-		}
-		else
-		{
-			dCurRatio = fNewRatio;//¾ø¶ÔÖµ
-		}
-	}
-	dCurRatio = max(dMinVal, dCurRatio);//ÏÂÏŞÏŞÖÆ
-	dCurRatio = min(dMaxVal, dCurRatio);//ÉÏÏŞÏŞÖÆ
-	*pdTargetRatio = dCurRatio;//´«³ö²ÎÊı
+    double* pdTargetRatio;
+    double dMaxVal = 1.0, dMinVal = 1.0;
+    struct _SRun* pSRun;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return;
+    }
+    pSRun = &g_SChannel[ucChannelNum].SRun;
+    switch (ucType)
+    {
+    case 0: //å¿«é€Ÿè¿åŠ¨å€ç‡
+        pdTargetRatio = &pSRun->dQuickMoveFeedRatio;
+        dMaxVal = MAX_FEED_RATIO;
+        dMinVal = MIN_FEED_RATIO;
+        break;
+    case 1: //åˆæˆè¿åŠ¨å€ç‡
+        pdTargetRatio = &pSRun->dCommonFeedRatio;
+        dMaxVal = MAX_FEED_RATIO;
+        dMinVal = MIN_FEED_RATIO;
+        break;
+    case 2: //ä¸»è½´å€ç‡
+        pdTargetRatio = &pSRun->dSpindleSpeedRatio;
+        dMaxVal = MAX_SPINDLE_RATIO;
+        dMinVal = MIN_SPINDLE_RATIO;
+        break;
+    default:
+        pdTargetRatio = &pSRun->dCommonFeedRatio;
+        break;
+    }
+    double dCurRatio = *pdTargetRatio; // è¯»å–å½“å‰å€ç‡
+    if (!(ucType == 2 &&
+          (getBits(g_SChannel[ucChannelNum].SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT ||
+           getBits(g_SChannel[ucChannelNum].SPreProcess.unCommandType, CMD_MOTION_ADDR) ==
+               CMD_MOTION_G33))) //é™ˆæ•èª	2023/10/16	G32æˆ–G33è¿è¡Œæ—¶ä¸èƒ½æ”¹å˜ä¸»è½´å€ç‡
+    {
+        if (bIsDelta) //æ˜¯ä¸æ˜¯ç›¸å¯¹å€¼
+        {
+            dCurRatio += fNewRatio; //ç›¸å¯¹å€¼
+        }
+        else
+        {
+            dCurRatio = fNewRatio; //ç»å¯¹å€¼
+        }
+    }
+    dCurRatio = max(dMinVal, dCurRatio); //ä¸‹é™é™åˆ¶
+    dCurRatio = min(dMaxVal, dCurRatio); //ä¸Šé™é™åˆ¶
+    *pdTargetRatio = dCurRatio;          //ä¼ å‡ºå‚æ•°
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetHandwheelMode(uint8 ucAxis, uint8 ucWheelMultiple)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÊÖÂÖÖá ±¶ÂÊ
-  ÊäÈë²ÎÊı£ºucAxis	ÖáºÅ
-			ucWheelMultiple ÊÖÂÖ±¶ÂÊ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	ÏµÍ³ÔËĞĞ×´Ì¬´íÎó
-			-2	CÖáÎ´Í£ÏÂ
-			-3	ÖáºÅ´íÎó
-			1	ÉèÖÃ³É¹¦
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šsetHandwheelMode(uint8 ucAxis, uint8 ucWheelMultiple)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®æ‰‹è½®è½´ å€ç‡
+  è¾“å…¥å‚æ•°ï¼šucAxis	è½´å·
+			ucWheelMultiple æ‰‹è½®å€ç‡
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	ç³»ç»Ÿè¿è¡ŒçŠ¶æ€é”™è¯¯
+			-2	Cè½´æœªåœä¸‹
+			-3	è½´å·é”™è¯¯
+			1	è®¾ç½®æˆåŠŸ
+  å¤‡    æ³¨ï¼š
 ****************************************/
 int8 setHandwheelMode(uint8 ucChannelNum, uint8 ucAxis, uint8 ucWheelMultiple)
 {
-	if (g_RunMode != HANDWHEEL_MODE) return -1;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -2;
-	}
-	switch (ucAxis)
-	{
-	case AXIS_C:
-		if (g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode == SPINDLE_SINGLEAXIS_MODE
-			&& g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
-		{ // µ¥ÖáÄ£Ê½ÏÂ Ö÷Öá×´Ì¬ÎªÍê³É ¿ÉÇĞ»»³ÉÊÖÂÖÄ£Ê½
-			g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode = SPINDLE_HANDWHEEL_MODE;
-		}
-		else
-		{//  ÆäËûÄ£Ê½ ÈÃÖ÷ÖáÏÈÍ£ÏÂÀ´
-			g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode = SPINDLE_COMMONSTOP_MODE;
-			if (g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus != INP_OCCUPATION)
-			{
-				g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus = INP_INITIATION;
-			}
-			return -2;
-		}
-	case AXIS_X:
-	case AXIS_Y:
-	case AXIS_Z:
-	case AXIS_A:
-	case AXIS_B:
+    if (g_RunMode != HANDWHEEL_MODE)
+        return -1;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -2;
+    }
+    switch (ucAxis)
+    {
+    case AXIS_C:
+        if (g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode == SPINDLE_SINGLEAXIS_MODE &&
+            g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
+        { // å•è½´æ¨¡å¼ä¸‹ ä¸»è½´çŠ¶æ€ä¸ºå®Œæˆ å¯åˆ‡æ¢æˆæ‰‹è½®æ¨¡å¼
+            g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode = SPINDLE_HANDWHEEL_MODE;
+        }
+        else
+        { //  å…¶ä»–æ¨¡å¼ è®©ä¸»è½´å…ˆåœä¸‹æ¥
+            g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucRunMode = SPINDLE_COMMONSTOP_MODE;
+            if (g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus != INP_OCCUPATION)
+            {
+                g_SChannel[ucChannelNum].SSpindle.pSSpindleAxis->ucInpStatus = INP_INITIATION;
+            }
+            return -2;
+        }
+    case AXIS_X:
+    case AXIS_Y:
+    case AXIS_Z:
+    case AXIS_A:
+    case AXIS_B:
 
-		g_SEncoder[HANDEWHEEL_ENCODER - 1].AXISNum = ucAxis;
-		break;
-	default:
-		return -3;
-	}
+        g_SEncoder[HANDEWHEEL_ENCODER - 1].AXISNum = ucAxis;
+        break;
+    default:
+        return -3;
+    }
 
-	g_SEncoder[HANDEWHEEL_ENCODER - 1].ucWheelMultiple = ucWheelMultiple;
+    g_SEncoder[HANDEWHEEL_ENCODER - 1].ucWheelMultiple = ucWheelMultiple;
 
-	return 1;
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºsetSysRunMode(enum SYSTEMSTATUS runMode)
-  º¯Êı¹¦ÄÜ  ÉèÖÃÏµÍ³Ä£Ê½
-  ÊäÈë²ÎÊı£ºrunMode
-			EDIT_MODE,			//±à¼­Ä£Ê½
-			AUTOMATIC_MODE,		//×Ô¶¯Ö´ĞĞ
+  å‡½æ•°åç§°ï¼šsetSysRunMode(enum SYSTEMSTATUS runMode)
+  å‡½æ•°åŠŸèƒ½  è®¾ç½®ç³»ç»Ÿæ¨¡å¼
+  è¾“å…¥å‚æ•°ï¼šrunMode
+			EDIT_MODE,			//ç¼–è¾‘æ¨¡å¼
+			AUTOMATIC_MODE,		//è‡ªåŠ¨æ‰§è¡Œ
 			MDI_MODE,			//MDI
-			HANDWHEEL_MODE,		//ÊÖÂÖ
-			HAND_MODE			//ÊÖ¶¯
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		ÉèÖÃÍê³É
-  ±¸    ×¢£º
+			HANDWHEEL_MODE,		//æ‰‹è½®
+			HAND_MODE			//æ‰‹åŠ¨
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		è®¾ç½®å®Œæˆ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 int8 setSysRunMode(enum SYSTEMSTATUS runMode)
 {
-	if (runMode == EDIT_MODE || runMode == AUTOMATIC_MODE || runMode == MDI_MODE || runMode == HANDWHEEL_MODE || runMode == HAND_MODE || runMode == RE0_MODE)
-	{
+    if (runMode == EDIT_MODE || runMode == AUTOMATIC_MODE || runMode == MDI_MODE || runMode == HANDWHEEL_MODE ||
+        runMode == HAND_MODE || runMode == RE0_MODE)
+    {
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-        /* g_ucHandwheelSimRequestArray µÄĞøĞĞ×Ê¸ñÊôÓÚÔ­Ä£Ê½£»g_SChannel Ìá¹©Êµ¼ÊÑ¡Ôñ¡£
-         * ÍË³ö×Ô¶¯/MDI Ê±£¬ÒÑÉúĞ§ÇÒÎŞÇëÇóµÄÍ¨µÀÒ²Ğë¹Ø±Õ£¬²»ÄÜÖ»Òş²ØÃæ°åµÆ¡£ */
+        /* g_ucHandwheelSimRequestArray çš„ç»­è¡Œèµ„æ ¼å±äºåŸæ¨¡å¼ï¼›g_SChannel æä¾›å®é™…é€‰æ‹©ã€‚
+         * é€€å‡ºè‡ªåŠ¨/MDI æ—¶ï¼Œå·²ç”Ÿæ•ˆä¸”æ— è¯·æ±‚çš„é€šé“ä¹Ÿé¡»å…³é—­ï¼Œä¸èƒ½åªéšè—é¢æ¿ç¯ã€‚ */
         if ((int)g_RunMode != (int)runMode)
         {
             for (uint8 ucChannel = 0; ucChannel < CHANNEL_NUM_MAX; ++ucChannel)
             {
-                /* Ä£Ê½ÍË³öÍ³Ò»¹Ø±Õ£¬ÒÑÓĞ½»½ÓÈ¡ÏûĞøĞĞ£»±£»¤¹Ø±Õ²»µÃ½µ¼¶¡£ */
-                if (g_ucHandwheelSimRequestArray[ucChannel] != HANDWHEEL_SIM_STOP_CLOSE
-                    && (g_ucHandwheelSimRequestArray[ucChannel] != HANDWHEEL_SIM_NONE
-                        || (((int)runMode != (int)AUTOMATIC_MODE && (int)runMode != (int)MDI_MODE)
-                            && isHandwheelSimSelectedAPI(ucChannel))))
+                /* æ¨¡å¼é€€å‡ºç»Ÿä¸€å…³é—­ï¼Œå·²æœ‰äº¤æ¥å–æ¶ˆç»­è¡Œï¼›ä¿æŠ¤å…³é—­ä¸å¾—é™çº§ã€‚ */
+                if (g_ucHandwheelSimRequestArray[ucChannel] != HANDWHEEL_SIM_STOP_CLOSE &&
+                    (g_ucHandwheelSimRequestArray[ucChannel] != HANDWHEEL_SIM_NONE ||
+                     (((int)runMode != (int)AUTOMATIC_MODE && (int)runMode != (int)MDI_MODE) &&
+                      isHandwheelSimSelectedAPI(ucChannel))))
                 {
                     g_ucHandwheelSimRequestArray[ucChannel] = HANDWHEEL_SIM_CLOSE_HOLD;
                 }
             }
         }
 #endif
-		g_RunMode = runMode;
-		return 1;
-	}
-	else
-	{
-		return -1;
-	}
-
+        g_RunMode = runMode;
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
-
-//»­Í¼°´Å¥API
+//ç”»å›¾æŒ‰é’®API
 int8 drawBtnAPI(uint8 ucChannelNum)
 {
-	switch (g_SChannel[ucChannelNum].ucChannelStatus)
-	{
-	case SYS_IDLE://¿ÕÏĞ×´Ì¬ÏÂ°´Æô¶¯  ³õÊ¼»¯ ½øĞĞÒ»²¿·Ö½âÎö¡¢µ¶²¹ ËÙ¶ÈÇ°Õ° ÔÙÆô¶¯²å²¹£¨ÖÃRUN£©
-	{
-		//0.¿ªÆô»­Í¼±êÖ¾Î»
-		g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
-		g_SChannel[ucChannelNum].cSubRunMode = 0;//0 »­Í¼ 1ÔË¶¯
+    switch (g_SChannel[ucChannelNum].ucChannelStatus)
+    {
+    case SYS_IDLE: //ç©ºé—²çŠ¶æ€ä¸‹æŒ‰å¯åŠ¨  åˆå§‹åŒ– è¿›è¡Œä¸€éƒ¨åˆ†è§£æã€åˆ€è¡¥ é€Ÿåº¦å‰ç» å†å¯åŠ¨æ’è¡¥ï¼ˆç½®RUNï¼‰
+    {
+        //0.å¼€å¯ç”»å›¾æ ‡å¿—ä½
+        g_SChannel[ucChannelNum].ucChannelStatus = SYS_RUN;
+        g_SChannel[ucChannelNum].cSubRunMode = 0; //0 ç”»å›¾ 1è¿åŠ¨
 
+        //1.Gä»£ç è§£ææ¨¡å—åœ¨runButtonAPI()ä¸­éœ€è¦æ‰§è¡Œçš„å†…å®¹
+        //1.1Gä»£ç è§£æåˆå§‹åŒ–
+        gcodeInit(ucChannelNum, 0, 0);
 
-		//1.G´úÂë½âÎöÄ£¿éÔÚrunButtonAPI()ÖĞĞèÒªÖ´ĞĞµÄÄÚÈİ
-		//1.1G´úÂë½âÎö³õÊ¼»¯
-		gcodeInit(ucChannelNum, 0, 0);
-
-		//1.2ËùÓĞÍ¨µÀµÄÍ¨µÀ½á¹¹ÌåÖĞÌí¼ÓÖ÷ÔËĞĞ³ÌĞò
-		if (addMainProgramNode(ucChannelNum) != 1)
-		{
-			g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
-			g_SChannel[ucChannelNum].cSubRunMode = 1;//0 »­Í¼ 1 ÔË¶¯	ÂŞÏéçâ20250528
-			return -1;
-		}
+        //1.2æ‰€æœ‰é€šé“çš„é€šé“ç»“æ„ä½“ä¸­æ·»åŠ ä¸»è¿è¡Œç¨‹åº
+        if (addMainProgramNode(ucChannelNum) != 1)
+        {
+            g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
+            g_SChannel[ucChannelNum].cSubRunMode = 1; //0 ç”»å›¾ 1 è¿åŠ¨	ç½—ç¥¥ç®20250528
+            return -1;
+        }
 #if STM32_MODE
-		prepareProgramBeginLine(ucChannelNum);
+        prepareProgramBeginLine(ucChannelNum);
 #endif
-		//1.3G´úÂë½âÎö×´Ì¬ÖÃÎªGCODE_RUN
-		changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
-		changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0);   //Æô¶¯¶ÔÓ¦µÄÍ¨µÀ
+        //1.3Gä»£ç è§£æçŠ¶æ€ç½®ä¸ºGCODE_RUN
+        changeGCodeStatus(GC_SYNTAX, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
+        changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0); //å¯åŠ¨å¯¹åº”çš„é€šé“
 
-		//2.µ¶²¹¼ÆËãÄ£¿éÔÚrunButtonAPI()ÖĞĞèÒªÖ´ĞĞµÄÄÚÈİ
-		toolCompensationInit(ucChannelNum);	//µ¶²¹³õÊ¼»¯
+        //2.åˆ€è¡¥è®¡ç®—æ¨¡å—åœ¨runButtonAPI()ä¸­éœ€è¦æ‰§è¡Œçš„å†…å®¹
+        toolCompensationInit(ucChannelNum); //åˆ€è¡¥åˆå§‹åŒ–
 
-		//3.³õÊ¼»¯»º³åÇøË÷Òı
-		initAllBuffer(ucChannelNum); //¸´Î»  °Ñ»º³åÇø³õÊ¼»¯
+        //3.åˆå§‹åŒ–ç¼“å†²åŒºç´¢å¼•
+        initAllBuffer(ucChannelNum); //å¤ä½  æŠŠç¼“å†²åŒºåˆå§‹åŒ–
 
+        extern int8 cGetDrawData_Step;
+        cGetDrawData_Step = 0;
 
-		extern int8 cGetDrawData_Step;
-		cGetDrawData_Step = 0;
-
-		return 1;
-	}
-	case SYS_RUN:
-	{
-		if (g_SChannel[ucChannelNum].cSubRunMode == 0)//0 »­Í¼ 1ÔË¶¯
-			return 1;
-		else if (g_SChannel[ucChannelNum].cSubRunMode == 1)
-			return -1;
-	}
-	default:
-		return -1;
-	}
-	return -1;
+        return 1;
+    }
+    case SYS_RUN:
+    {
+        if (g_SChannel[ucChannelNum].cSubRunMode == 0) //0 ç”»å›¾ 1è¿åŠ¨
+            return 1;
+        else if (g_SChannel[ucChannelNum].cSubRunMode == 1)
+            return -1;
+    }
+    default:
+        return -1;
+    }
+    return -1;
 }
 void drawInitAPI(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	return;
-	extern int8 cGetDrawData_Step;
-	cGetDrawData_Step = 0;
-	g_SChannel[ucChannelNum].cSubRunMode = 1;
-	g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
-	//drawBtnAPI(ucChannelNum);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+        return;
+    extern int8 cGetDrawData_Step;
+    cGetDrawData_Step = 0;
+    g_SChannel[ucChannelNum].cSubRunMode = 1;
+    g_SChannel[ucChannelNum].ucChannelStatus = SYS_IDLE;
+    //drawBtnAPI(ucChannelNum);
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid gCodeDrawLoop()
-  º¯Êı¹¦ÄÜ£º»æÍ¼Ñ­»·
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºÆúÓÃ
+  å‡½æ•°åç§°ï¼švoid gCodeDrawLoop()
+  å‡½æ•°åŠŸèƒ½ï¼šç»˜å›¾å¾ªç¯
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šå¼ƒç”¨
   ****************************************/
 //void gCodeDrawLoop()
 //{
@@ -1393,313 +1397,314 @@ void drawInitAPI(uint8 ucChannelNum)
 //}
 //#endif
 
-//µ÷ÊÔAPI
-//²å²¹Ô¤´¦Àí×´Ì¬
+//è°ƒè¯•API
+//æ’è¡¥é¢„å¤„ç†çŠ¶æ€
 int8 getSInterPreStatus(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 111;
-	}
-	return g_SChannel[ucChannelNum].SPreProcess.ucInpStatus;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 111;
+    }
+    return g_SChannel[ucChannelNum].SPreProcess.ucInpStatus;
 }
 
-//×èÈûËø
+//é˜»å¡é”
 uint8 getIOBlockedCounter(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return 111;
-	}
-	return g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return 111;
+    }
+    return g_SChannel[ucChannelNum].SIOCommand.ucIOBlockedCounter;
 }
 
-
-//»ñÈ¡ÔË¶¯×´Ì¬
+//è·å–è¿åŠ¨çŠ¶æ€
 int8 getMotionTESTStatus(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï  2024/10/15 ĞÜ¿¥
-	{
-	case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-		return g_SChannel[ucChannelNum].SG00.ucRunStep;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­  2024/10/15 ç†Šéª
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+        return g_SChannel[ucChannelNum].SG00.ucRunStep;
 
-	case CMD_MOTION_LINE:		//ºÏ³ÉÔË¶¯
-		return g_SChannel[ucChannelNum].SG01.ucInpStatus;
+    case CMD_MOTION_LINE: //åˆæˆè¿åŠ¨
+        return g_SChannel[ucChannelNum].SG01.ucInpStatus;
 
-	case CMD_MOTION_ARC:		//Ë³Ô²
-	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-	case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-	case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
+    case CMD_MOTION_ARC:              //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC:         //é€†åœ†
+    case CMD_MOTION_ELLIPSE_ARC:      //é¡ºæ¤­åœ†
+    case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
 
-		return g_SChannel[ucChannelNum].SG02.ucInpStatus;
+        return g_SChannel[ucChannelNum].SG02.ucInpStatus;
 
-	case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-	case CMD_MOTION_SCREWCUT_VP:
-	case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-		return g_SChannel[ucChannelNum].SG32.ucG32Step;
-	case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-		return g_SChannel[ucChannelNum].SG33.G33MotionState;
-	case CMD_MOTION_G10://G10×Ô¶¯µ¶¾ß²¹³¥¹¦ÄÜ
-		return g_SChannel[ucChannelNum].SPreProcess.ucInpStatus;
-	default:
-		return -1;
-	}
+    case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    case CMD_MOTION_SCREWCUT_VP:
+    case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+        return g_SChannel[ucChannelNum].SG32.ucG32Step;
+    case CMD_MOTION_G33: //G33èºçº¹æ”»ç‰™å¾ªç¯
+        return g_SChannel[ucChannelNum].SG33.G33MotionState;
+    case CMD_MOTION_G10: //G10è‡ªåŠ¨åˆ€å…·è¡¥å¿åŠŸèƒ½
+        return g_SChannel[ucChannelNum].SPreProcess.ucInpStatus;
+    default:
+        return -1;
+    }
 }
 
-//µ±Ç°ËÙ¶È
+//å½“å‰é€Ÿåº¦
 int getCurrentSpeed(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï  2024/10/15 ĞÜ¿¥
-	{
-		case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-		case CMD_MOTION_SCREWCUT_VP:
-		case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-			return (int)(g_SChannel[ucChannelNum].SG32.dCurrentSpeed*1000*60);
-		case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-			return (int)(g_SChannel[ucChannelNum].SG33.dCurrentSpeed*1000*60);
-		default:
-			return (int)(g_SChannel[ucChannelNum].SRun.dCurrentSpeed*1000*60);
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­  2024/10/15 ç†Šéª
+    {
+    case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    case CMD_MOTION_SCREWCUT_VP:
+    case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+        return (int)(g_SChannel[ucChannelNum].SG32.dCurrentSpeed * 1000 * 60);
+    case CMD_MOTION_G33: //G33èºçº¹æ”»ç‰™å¾ªç¯
+        return (int)(g_SChannel[ucChannelNum].SG33.dCurrentSpeed * 1000 * 60);
+    default:
+        return (int)(g_SChannel[ucChannelNum].SRun.dCurrentSpeed * 1000 * 60);
+    }
 }
 
-//Ö÷Öá×ªËÙÎó²î°Ù·Ö±È
+//ä¸»è½´è½¬é€Ÿè¯¯å·®ç™¾åˆ†æ¯”
 double getSpindleSpeedErrorRatio(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	return g_SChannel[ucChannelNum].dSpindleSpeedRatio;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    return g_SChannel[ucChannelNum].dSpindleSpeedRatio;
 }
 
-//µ±Ç°Ö¸Áî¼ÓËÙ¶È  m/s2
+//å½“å‰æŒ‡ä»¤åŠ é€Ÿåº¦  m/s2
 double getMotionAcc(uint8 ucChannelNum)
 {
-	double dAcc;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel == NULL)
-	{
-		return -1;
-	}
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï  2024/10/15 ĞÜ¿¥
-	{
-	case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-		dAcc = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.dAcc;
-		break;
-	case CMD_MOTION_LINE:		//ºÏ³ÉÔË¶¯
-		dAcc = g_SChannel[ucChannelNum].SG01.SPlanData.dAcc;
-		break;
-	case CMD_MOTION_ARC:		//Ë³Ô²
-	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-	case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-	case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
-		dAcc = g_SChannel[ucChannelNum].SG02.SPlanData.dAcc;
-		break;
-	case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-	case CMD_MOTION_SCREWCUT_VP:
-	case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-		dAcc = g_SChannel[ucChannelNum].SG32.SPlanData.dAcc;
-		break;
-	case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-		dAcc = g_SChannel[ucChannelNum].SG33.SPlanData.dAcc;
-		break;
-	case CMD_MOTION_G10://G10×Ô¶¯µ¶¾ß²¹³¥¹¦ÄÜ
-	default:
-		return -1;
-	}
-	return dAcc * 1000;
+    double dAcc;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel == NULL)
+    {
+        return -1;
+    }
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­  2024/10/15 ç†Šéª
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+        dAcc = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.dAcc;
+        break;
+    case CMD_MOTION_LINE: //åˆæˆè¿åŠ¨
+        dAcc = g_SChannel[ucChannelNum].SG01.SPlanData.dAcc;
+        break;
+    case CMD_MOTION_ARC:              //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC:         //é€†åœ†
+    case CMD_MOTION_ELLIPSE_ARC:      //é¡ºæ¤­åœ†
+    case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
+        dAcc = g_SChannel[ucChannelNum].SG02.SPlanData.dAcc;
+        break;
+    case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    case CMD_MOTION_SCREWCUT_VP:
+    case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+        dAcc = g_SChannel[ucChannelNum].SG32.SPlanData.dAcc;
+        break;
+    case CMD_MOTION_G33: //G33èºçº¹æ”»ç‰™å¾ªç¯
+        dAcc = g_SChannel[ucChannelNum].SG33.SPlanData.dAcc;
+        break;
+    case CMD_MOTION_G10: //G10è‡ªåŠ¨åˆ€å…·è¡¥å¿åŠŸèƒ½
+    default:
+        return -1;
+    }
+    return dAcc * 1000;
 }
 
-//µ±Ç°Ö¸Áî¼õËÙ¶È  m/s2
+//å½“å‰æŒ‡ä»¤å‡é€Ÿåº¦  m/s2
 double getMotionDec(uint8 ucChannelNum)
 {
-	double dDec;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel == NULL)
-	{
-		return -1;
-	}
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï  2024/10/15 ĞÜ¿¥
-	{
-	case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-		dDec = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.dDec;
-		break;
-	case CMD_MOTION_LINE:		//ºÏ³ÉÔË¶¯
-		dDec = g_SChannel[ucChannelNum].SG01.SPlanData.dDec;
-		break;
-	case CMD_MOTION_ARC:		//Ë³Ô²
-	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-	case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-	case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
-		dDec = g_SChannel[ucChannelNum].SG02.SPlanData.dDec;
-		break;
-	case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-	case CMD_MOTION_SCREWCUT_VP:
-	case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-		dDec = g_SChannel[ucChannelNum].SG32.SPlanData.dDec;
-		break;
-	case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-		dDec = g_SChannel[ucChannelNum].SG33.SPlanData.dDec;
-		break;
-	case CMD_MOTION_G10://G10×Ô¶¯µ¶¾ß²¹³¥¹¦ÄÜ
-	default:
-		return -1;
-	}
-	return dDec * 1000;
-
+    double dDec;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel == NULL)
+    {
+        return -1;
+    }
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­  2024/10/15 ç†Šéª
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+        dDec = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.dDec;
+        break;
+    case CMD_MOTION_LINE: //åˆæˆè¿åŠ¨
+        dDec = g_SChannel[ucChannelNum].SG01.SPlanData.dDec;
+        break;
+    case CMD_MOTION_ARC:              //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC:         //é€†åœ†
+    case CMD_MOTION_ELLIPSE_ARC:      //é¡ºæ¤­åœ†
+    case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
+        dDec = g_SChannel[ucChannelNum].SG02.SPlanData.dDec;
+        break;
+    case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    case CMD_MOTION_SCREWCUT_VP:
+    case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+        dDec = g_SChannel[ucChannelNum].SG32.SPlanData.dDec;
+        break;
+    case CMD_MOTION_G33: //G33èºçº¹æ”»ç‰™å¾ªç¯
+        dDec = g_SChannel[ucChannelNum].SG33.SPlanData.dDec;
+        break;
+    case CMD_MOTION_G10: //G10è‡ªåŠ¨åˆ€å…·è¡¥å¿åŠŸèƒ½
+    default:
+        return -1;
+    }
+    return dDec * 1000;
 }
 
-//µ±Ç°Ö¸ÁîËÙ¶È¹æ»®µÄunT5
+//å½“å‰æŒ‡ä»¤é€Ÿåº¦è§„åˆ’çš„unT5
 uint32 getUINT5(uint8 ucChannelNum)
 {
-	uint32 unT5;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if (g_SChannel == NULL)
-	{
-		return -1;
-	}
-	switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR))//Ö¸ÁîÀàĞÍÅĞ¶Ï  2024/10/15 ĞÜ¿¥
-	{
-	case CMD_MOTION_QUICKMOVE:	//¿ìËÙÔË¶¯
-		unT5 = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.unT5;
-		break;
-	case CMD_MOTION_LINE:		//ºÏ³ÉÔË¶¯
-		unT5 = g_SChannel[ucChannelNum].SG01.SPlanData.unT5;
-		break;
-	case CMD_MOTION_ARC:		//Ë³Ô²
-	case CMD_MOTION_ANTI_ARC:	//ÄæÔ²
-	case CMD_MOTION_ELLIPSE_ARC:	//Ë³ÍÖÔ²
-	case CMD_MOTION_ELLIPSE_ANTI_ARC: //ÄæÍÖÔ²
-		unT5 = g_SChannel[ucChannelNum].SG02.SPlanData.unT5;
-		break;
-	case CMD_MOTION_SCREWCUT_LOOP: //Ñ­»·ÂİÎÆÇĞÏ÷
-	case CMD_MOTION_SCREWCUT_VP:
-	case CMD_MOTION_SCREWCUT:  //ÂİÎÆÇĞÏ÷
-		unT5 = g_SChannel[ucChannelNum].SG32.SPlanData.unT5;
-		break;
-	case CMD_MOTION_G33://G33ÂİÎÆ¹¥ÑÀÑ­»·
-		unT5 = g_SChannel[ucChannelNum].SG33.SPlanData.unT5;
-		break;
-	case CMD_MOTION_G10://G10×Ô¶¯µ¶¾ß²¹³¥¹¦ÄÜ
-	default:
-		return -1;
-	}
-	return unT5;
+    uint32 unT5;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (g_SChannel == NULL)
+    {
+        return -1;
+    }
+    switch (getBits(g_SChannel[ucChannelNum].SRun.unCommandType, CMD_MOTION_ADDR)) //æŒ‡ä»¤ç±»å‹åˆ¤æ–­  2024/10/15 ç†Šéª
+    {
+    case CMD_MOTION_QUICKMOVE: //å¿«é€Ÿè¿åŠ¨
+        unT5 = g_SChannel[ucChannelNum].SG00.pSSingleAxisArray->SPlanData.unT5;
+        break;
+    case CMD_MOTION_LINE: //åˆæˆè¿åŠ¨
+        unT5 = g_SChannel[ucChannelNum].SG01.SPlanData.unT5;
+        break;
+    case CMD_MOTION_ARC:              //é¡ºåœ†
+    case CMD_MOTION_ANTI_ARC:         //é€†åœ†
+    case CMD_MOTION_ELLIPSE_ARC:      //é¡ºæ¤­åœ†
+    case CMD_MOTION_ELLIPSE_ANTI_ARC: //é€†æ¤­åœ†
+        unT5 = g_SChannel[ucChannelNum].SG02.SPlanData.unT5;
+        break;
+    case CMD_MOTION_SCREWCUT_LOOP: //å¾ªç¯èºçº¹åˆ‡å‰Š
+    case CMD_MOTION_SCREWCUT_VP:
+    case CMD_MOTION_SCREWCUT: //èºçº¹åˆ‡å‰Š
+        unT5 = g_SChannel[ucChannelNum].SG32.SPlanData.unT5;
+        break;
+    case CMD_MOTION_G33: //G33èºçº¹æ”»ç‰™å¾ªç¯
+        unT5 = g_SChannel[ucChannelNum].SG33.SPlanData.unT5;
+        break;
+    case CMD_MOTION_G10: //G10è‡ªåŠ¨åˆ€å…·è¡¥å¿åŠŸèƒ½
+    default:
+        return -1;
+    }
+    return unT5;
 }
 
-//»ñÈ¡µ±Ç°ĞĞ»º³åÇøµÄ¼ÓËÙ¶È
+//è·å–å½“å‰è¡Œç¼“å†²åŒºçš„åŠ é€Ÿåº¦
 double getCurrentBuffAcc(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if(getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
-	{
-		return getSToolCompPointerByIndex(getSToolCompPointerIndex(INTERPOLATION_READ, ucChannelNum) - 1, ucChannelNum)->dAcc * 1000;
-	}
-	else
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
+    {
+        return getSToolCompPointerByIndex(getSToolCompPointerIndex(INTERPOLATION_READ, ucChannelNum) - 1, ucChannelNum)
+                   ->dAcc *
+               1000;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
-//»ñÈ¡µ±Ç°ĞĞ»º³åÇøµÄ¼õËÙ¶È
+//è·å–å½“å‰è¡Œç¼“å†²åŒºçš„å‡é€Ÿåº¦
 double getCurrentBuffDec(uint8 ucChannelNum)
 {
-	double dDec;
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if(getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
-	{
-		return getSToolCompPointerByIndex(getSToolCompPointerIndex(INTERPOLATION_READ, ucChannelNum)-1, ucChannelNum)->dDec*1000;
-	}
-	else
-	{
-		return -1;
-	}
+    double dDec;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
+    {
+        return getSToolCompPointerByIndex(getSToolCompPointerIndex(INTERPOLATION_READ, ucChannelNum) - 1, ucChannelNum)
+                   ->dDec *
+               1000;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
-
-//»ñÈ¡Ç°Õ°µ±Ç°ĞĞºÅ
+//è·å–å‰ç»å½“å‰è¡Œå·
 int getLookAheadCurrentLine(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if(getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, ucChannelNum) > 0)
-	{
-		return getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum)->unGCodeLineNum;
-	}
-	else
-	{
-		return -1;
-	}
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (getSToolCompPointerBufRes(LOOKAHEAD_READWRITE, ucChannelNum) > 0)
+    {
+        return getSToolCompPointerByType(LOOKAHEAD_READWRITE, ucChannelNum)->unGCodeLineNum;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
-//»ñÈ¡²å²¹µ±Ç°ĞĞºÅ
+//è·å–æ’è¡¥å½“å‰è¡Œå·
 int getInterpLine(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		return -1;
-	}
-	if(getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
-	{
-		return getSToolCompPointerByType(INTERPOLATION_READ, ucChannelNum)->unGCodeLineNum;
-	}
-	else
-	{
-		return -1;
-	}
-	
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        return -1;
+    }
+    if (getSToolCompPointerBufRes(INTERPOLATION_READ, ucChannelNum) > 0)
+    {
+        return getSToolCompPointerByType(INTERPOLATION_READ, ucChannelNum)->unGCodeLineNum;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºjudgeRunCondition
-  º¯Êı¹¦ÄÜ  ÅĞ¶Ïµ±Ç°Í¨µÀ»·¾³ÄÜ·ñÔËĞĞ
-  ÊäÈë²ÎÊı£ºucChannelNum
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1		ÄÜÔËĞĞ
-			-1		²»ÄÜÔËĞĞ
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šjudgeRunCondition
+  å‡½æ•°åŠŸèƒ½  åˆ¤æ–­å½“å‰é€šé“ç¯å¢ƒèƒ½å¦è¿è¡Œ
+  è¾“å…¥å‚æ•°ï¼šucChannelNum
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1		èƒ½è¿è¡Œ
+			-1		ä¸èƒ½è¿è¡Œ
+  å¤‡    æ³¨ï¼š
   ****************************************/
 bool judgeRunCondition(uint8 ucChannelNum)
 {
 #if (DRAW_TEST == 1)
-	if (g_bGCodeDraw[ucChannelNum])//23.4.28 fyh  »æÍ¼ÖĞ£¬²»ÄÜ°´ÔËĞĞ¼ü
-	{
-		return 0;
-	}
+    if (g_bGCodeDraw[ucChannelNum]) //23.4.28 fyh  ç»˜å›¾ä¸­ï¼Œä¸èƒ½æŒ‰è¿è¡Œé”®
+    {
+        return 0;
+    }
 #endif
-	if (g_SChannel == NULL)return 0;
-	if (ucChannelNum >= CHANNEL_NUM_MAX) return 0;
-	if (g_SChannel[ucChannelNum].STIOCommand.ucToolChangeStatus == TOOLCHANGE_ERROR)	//µ¶Ëş»úÄ£Ê½ÏÂ´¦ÓÚ³ö´í×´Ì¬£¬²»ÔËĞĞ
-	{
-		parseErrorC(9999, PLC_ERROR_NUM1000);
-		return 0;
-	}
+    if (g_SChannel == NULL)
+        return 0;
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+        return 0;
+    if (g_SChannel[ucChannelNum].STIOCommand.ucToolChangeStatus == TOOLCHANGE_ERROR) //åˆ€å¡”æœºæ¨¡å¼ä¸‹å¤„äºå‡ºé”™çŠ¶æ€ï¼Œä¸è¿è¡Œ
+    {
+        parseErrorC(9999, PLC_ERROR_NUM1000);
+        return 0;
+    }
 
-	return 1;
-
+    return 1;
 }

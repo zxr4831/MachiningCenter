@@ -12,274 +12,267 @@
 #include "GeneralFunctions.h"
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTree * creatTree()
-  º¯Êı¹¦ÄÜ: ´´½¨Ê÷
-  ÊäÈë²ÎÊı£º
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
+  å‡½æ•°åç§°ï¼šTree * creatTree()
+  å‡½æ•°åŠŸèƒ½: åˆ›å»ºæ ‘
+  è¾“å…¥å‚æ•°ï¼š
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 Tree* creatTree(int16 tree_ORAM_NUM)
 {
-	Tree* tree;
-	tree = (Tree*)mallocGCode(sizeof(Tree), tree_ORAM_NUM);
-	if (tree == NULL)
-	{
-		return NULL;
-	}
-	tree->cize = 0;
-	tree->Root = NULL;
-	return tree;
+    Tree* tree;
+    tree = (Tree*)mallocGCode(sizeof(Tree), tree_ORAM_NUM);
+    if (tree == NULL)
+    {
+        return NULL;
+    }
+    tree->cize = 0;
+    tree->Root = NULL;
+    return tree;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºTreeNode* mallocTreeNode(void* data, double nIDentifier)
-  º¯Êı¹¦ÄÜ: Ìí¼ÓG´úÂëÖ¸Áî×Öµ½G´úÂë¹æÔòÊ÷ÖĞ
-  ÊäÈë²ÎÊı£ºvoid* dataÊı¾İÓòÖ¸Õë   double dIDentifier Ê¶±ğ·û
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º·µ»ØÖµÎªÖ¸ÏòÕâ¸ö½ÚµãµÄÖ¸Õë
+  å‡½æ•°åç§°ï¼šTreeNode* mallocTreeNode(void* data, double nIDentifier)
+  å‡½æ•°åŠŸèƒ½: æ·»åŠ Gä»£ç æŒ‡ä»¤å­—åˆ°Gä»£ç è§„åˆ™æ ‘ä¸­
+  è¾“å…¥å‚æ•°ï¼švoid* dataæ•°æ®åŸŸæŒ‡é’ˆ   double dIDentifier è¯†åˆ«ç¬¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šè¿”å›å€¼ä¸ºæŒ‡å‘è¿™ä¸ªèŠ‚ç‚¹çš„æŒ‡é’ˆ
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 TreeNode* mallocTreeNode(void* data, double nIDentifier, int16 node_ORAM_NUM)
 {
-	TreeNode* node = (TreeNode*)mallocGCode(sizeof(TreeNode), node_ORAM_NUM);   //mallocGCode(uint64 ulSize,int8 ORAM_NUM)
+    TreeNode* node = (TreeNode*)mallocGCode(sizeof(TreeNode), node_ORAM_NUM); //mallocGCode(uint64 ulSize,int8 ORAM_NUM)
 
-	if (node == NULL)
-	{
-		return NULL;
-	}
+    if (node == NULL)
+    {
+        return NULL;
+    }
 
-	node->STreeNodeData.nIDentifier = nIDentifier;
-	node->STreeNodeData.pData = data;
+    node->STreeNodeData.nIDentifier = nIDentifier;
+    node->STreeNodeData.pData = data;
 
-	node->height = 1;
-	node->left = NULL;
-	node->right = NULL;
-	return node;
+    node->height = 1;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getTreeNodeHeight(TreeNode* node)
-  º¯Êı¹¦ÄÜ: »ñÈ¡Ê÷¸ß
-  ÊäÈë²ÎÊı£ºTreeNode* nodeÊ÷½Úµã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÊ÷¸ß
+  å‡½æ•°åç§°ï¼šint8 getTreeNodeHeight(TreeNode* node)
+  å‡½æ•°åŠŸèƒ½: è·å–æ ‘é«˜
+  è¾“å…¥å‚æ•°ï¼šTreeNode* nodeæ ‘èŠ‚ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ ‘é«˜
 
-  ±¸    ×¢£º
+  å¤‡    æ³¨ï¼š
 **************************************************/
 
 int8 getTreeNodeHeight(TreeNode* node)
 {
-	if (node == NULL)
-	{
-		return 0;
-	}
-	return node->height;
+    if (node == NULL)
+    {
+        return 0;
+    }
+    return node->height;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTreeNode* leftRotate(TreeNode* root)
-  º¯Êı¹¦ÄÜ: ×óĞıº¯Êı
-  ÊäÈë²ÎÊı£ºTreeNode*rootÊ÷½Úµã
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºÊ÷¸ß
+  å‡½æ•°åç§°ï¼šTreeNode* leftRotate(TreeNode* root)
+  å‡½æ•°åŠŸèƒ½: å·¦æ—‹å‡½æ•°
+  è¾“å…¥å‚æ•°ï¼šTreeNode*rootæ ‘èŠ‚ç‚¹
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šæ ‘é«˜
 
-  ±¸    ×¢£º//1.¾É¸ù½Úµã³ÉÎªĞÂ¸ù½ÚµãµÄ×ó×ÓÊ÷
-//2.¾É¸ù½ÚµãµÄÓÒ×ÓÊ÷³ÉÎªĞÂ¸ù½Úµã
-//3.ĞÂ¸ù½ÚµãÔ­À´µÄ×ó½Úµã³ÉÎª¾É¸ù½ÚµãµÄÓÒ×ÓÊ÷
+  å¤‡    æ³¨ï¼š//1.æ—§æ ¹èŠ‚ç‚¹æˆä¸ºæ–°æ ¹èŠ‚ç‚¹çš„å·¦å­æ ‘
+//2.æ—§æ ¹èŠ‚ç‚¹çš„å³å­æ ‘æˆä¸ºæ–°æ ¹èŠ‚ç‚¹
+//3.æ–°æ ¹èŠ‚ç‚¹åŸæ¥çš„å·¦èŠ‚ç‚¹æˆä¸ºæ—§æ ¹èŠ‚ç‚¹çš„å³å­æ ‘
 **************************************************/
 
 TreeNode* leftRotate(TreeNode* root)
 {
-	if (root == NULL)
-	{
-		return NULL;
-	}
+    if (root == NULL)
+    {
+        return NULL;
+    }
 
-	TreeNode* newRoot = root->right;
-	//ÓÃtemp±£´æĞÂ¸ù½ÚµãÔ­À´µÄ×ó½Úµã
-	TreeNode* temp = newRoot->left;
+    TreeNode* newRoot = root->right;
+    //ç”¨tempä¿å­˜æ–°æ ¹èŠ‚ç‚¹åŸæ¥çš„å·¦èŠ‚ç‚¹
+    TreeNode* temp = newRoot->left;
 
-	//1.¾É¸ù½Úµã³ÉÎªĞÂ¸ù½ÚµãµÄ×ó×ÓÊ÷
-	//2.¾É¸ù½ÚµãµÄÓÒ×ÓÊ÷³ÉÎªĞÂ¸ù½Úµã
-   //3.ĞÂ¸ù½ÚµãÔ­À´µÄ×ó½Úµã³ÉÎª¾É¸ù½ÚµãµÄÓÒ×ÓÊ÷
-	newRoot->left = root;
-	root->right = temp;
+    //1.æ—§æ ¹èŠ‚ç‚¹æˆä¸ºæ–°æ ¹èŠ‚ç‚¹çš„å·¦å­æ ‘
+    //2.æ—§æ ¹èŠ‚ç‚¹çš„å³å­æ ‘æˆä¸ºæ–°æ ¹èŠ‚ç‚¹
+    //3.æ–°æ ¹èŠ‚ç‚¹åŸæ¥çš„å·¦èŠ‚ç‚¹æˆä¸ºæ—§æ ¹èŠ‚ç‚¹çš„å³å­æ ‘
+    newRoot->left = root;
+    root->right = temp;
 
-	//¸üĞÂĞÂ¾É¸ù½ÚµãµÄÊ÷¸ß
-	root->height = 1 + max(getTreeNodeHeight(root->left), getTreeNodeHeight(root->right));
-	newRoot->height = 1 + max(getTreeNodeHeight(newRoot->left), getTreeNodeHeight(newRoot->right));
-	return newRoot;
+    //æ›´æ–°æ–°æ—§æ ¹èŠ‚ç‚¹çš„æ ‘é«˜
+    root->height = 1 + max(getTreeNodeHeight(root->left), getTreeNodeHeight(root->right));
+    newRoot->height = 1 + max(getTreeNodeHeight(newRoot->left), getTreeNodeHeight(newRoot->right));
+    return newRoot;
 }
 
-//ÓÒĞıº¯Êı
-//1.¾É¸ù½Úµã³ÉÎªĞÂ¸ù½ÚµãµÄÓÒ½Úµã
-//2.¾É¸ù½ÚµãµÄ×ó×ÓÊ÷³ÉÎªĞÂ¸ù½Úµã
-//3.ĞÂ¸ù½ÚµãÔ­À´µÄÓÒ½Úµã³ÉÎª¾É¸ù½ÚµãµÄ×ó×ÓÊ÷
+//å³æ—‹å‡½æ•°
+//1.æ—§æ ¹èŠ‚ç‚¹æˆä¸ºæ–°æ ¹èŠ‚ç‚¹çš„å³èŠ‚ç‚¹
+//2.æ—§æ ¹èŠ‚ç‚¹çš„å·¦å­æ ‘æˆä¸ºæ–°æ ¹èŠ‚ç‚¹
+//3.æ–°æ ¹èŠ‚ç‚¹åŸæ¥çš„å³èŠ‚ç‚¹æˆä¸ºæ—§æ ¹èŠ‚ç‚¹çš„å·¦å­æ ‘
 TreeNode* rightRotate(TreeNode* root)
 {
 
-	if (root == NULL)
-	{
-		return NULL;
-	}
-	TreeNode* newRoot = root->left;
-	TreeNode* temp = newRoot->right;
+    if (root == NULL)
+    {
+        return NULL;
+    }
+    TreeNode* newRoot = root->left;
+    TreeNode* temp = newRoot->right;
 
-	newRoot->right = root;
-	root->left = temp;
+    newRoot->right = root;
+    root->left = temp;
 
-	root->height = 1 + max(getTreeNodeHeight(root->left), getTreeNodeHeight(root->right));
-	newRoot->height = 1 + max(getTreeNodeHeight(newRoot->left), getTreeNodeHeight(newRoot->right));
-	return newRoot;
+    root->height = 1 + max(getTreeNodeHeight(root->left), getTreeNodeHeight(root->right));
+    newRoot->height = 1 + max(getTreeNodeHeight(newRoot->left), getTreeNodeHeight(newRoot->right));
+    return newRoot;
 }
 
-//»ñÈ¡¸ù½ÚµãµÄÆ½ºâÒò×Ó
+//è·å–æ ¹èŠ‚ç‚¹çš„å¹³è¡¡å› å­
 int8 getBalance(TreeNode* root)
 {
 
-	if (root == NULL)
-	{
-		return 0;
-	}
-	int8 cBalance = getTreeNodeHeight(root->left) - getTreeNodeHeight(root->right);
-	return cBalance;
+    if (root == NULL)
+    {
+        return 0;
+    }
+    int8 cBalance = getTreeNodeHeight(root->left) - getTreeNodeHeight(root->right);
+    return cBalance;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTreeNode* insertTreeNode(TreeNode* root, void* date, int32 nIDentifier, int8* cErrorSign)
-  º¯Êı¹¦ÄÜ: ²åÈë¹æÔò½á¹¹Ìå½ÚµãµÄº¯Êı(¼ÓÈë¼ì²é°æ)
-  ÊäÈë²ÎÊı£ºTreeNode*rootÊ÷½Úµã   GCodeReguration date¹æÔò½á¹¹Ìå  int8* cErrorSign´íÎó±ê×¼Î»
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º cErrorSign=1Ê±£¬ÄÚ´æ²»×ã
+  å‡½æ•°åç§°ï¼šTreeNode* insertTreeNode(TreeNode* root, void* date, int32 nIDentifier, int8* cErrorSign)
+  å‡½æ•°åŠŸèƒ½: æ’å…¥è§„åˆ™ç»“æ„ä½“èŠ‚ç‚¹çš„å‡½æ•°(åŠ å…¥æ£€æŸ¥ç‰ˆ)
+  è¾“å…¥å‚æ•°ï¼šTreeNode*rootæ ‘èŠ‚ç‚¹   GCodeReguration dateè§„åˆ™ç»“æ„ä½“  int8* cErrorSigné”™è¯¯æ ‡å‡†ä½
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š cErrorSign=1æ—¶ï¼Œå†…å­˜ä¸è¶³
 **************************************************/
 TreeNode* insertTreeNode(TreeNode* root, void* date, int32 nIDentifier, int8* cErrorSign, int16 node_ORAM_NUM)
 {
 
-	//¸ù½ÚµãÎª¿Õ£¬´´½¨½Úµã²¢·µ»ØµØÖ·
-	if (root == NULL)
-	{
-		TreeNode* node = mallocTreeNode(date, nIDentifier, node_ORAM_NUM);
+    //æ ¹èŠ‚ç‚¹ä¸ºç©ºï¼Œåˆ›å»ºèŠ‚ç‚¹å¹¶è¿”å›åœ°å€
+    if (root == NULL)
+    {
+        TreeNode* node = mallocTreeNode(date, nIDentifier, node_ORAM_NUM);
 
-		if (node == NULL)
-		{
-			*cErrorSign = 1;
-		}
-		return node;//·µ»Ø½ÚµãµØÖ·
-	}
+        if (node == NULL)
+        {
+            *cErrorSign = 1;
+        }
+        return node; //è¿”å›èŠ‚ç‚¹åœ°å€
+    }
 
-	//TreeNodeData* pTreeNodedata = (TreeNodeData*)mallocGCode(sizeof(TreeNodeData), ORAM_NUM129);
+    //TreeNodeData* pTreeNodedata = (TreeNodeData*)mallocGCode(sizeof(TreeNodeData), ORAM_NUM129);
 
-	//²åÈë½Úµã
-	//1.²åÈëµÄÖµ´óÓÚ¸ù½ÚµãµÄÖµ£¬²åÈë¸ù½ÚµãµÄÓÒ×ÓÊ÷
+    //æ’å…¥èŠ‚ç‚¹
+    //1.æ’å…¥çš„å€¼å¤§äºæ ¹èŠ‚ç‚¹çš„å€¼ï¼Œæ’å…¥æ ¹èŠ‚ç‚¹çš„å³å­æ ‘
 
-	if (nIDentifier > root->STreeNodeData.nIDentifier)
-	{
-		root->right = insertTreeNode(root->right, date, nIDentifier, cErrorSign, node_ORAM_NUM);//µü´ú²åÈë
-	}
+    if (nIDentifier > root->STreeNodeData.nIDentifier)
+    {
+        root->right = insertTreeNode(root->right, date, nIDentifier, cErrorSign, node_ORAM_NUM); //è¿­ä»£æ’å…¥
+    }
 
+    //2.æ’å…¥çš„å€¼å°äºæ ¹èŠ‚ç‚¹çš„å€¼ï¼Œæ’å…¥æ ¹èŠ‚ç‚¹çš„å·¦å­æ ‘
+    else if (nIDentifier < root->STreeNodeData.nIDentifier)
+    {
+        root->left = insertTreeNode(root->left, date, nIDentifier, cErrorSign, node_ORAM_NUM); //è¿­ä»£æ’å…¥
+    }
+    //3.æ’å…¥çš„å€¼ç­‰äºæ ¹èŠ‚ç‚¹çš„å€¼ï¼Œè¿”å›æ ¹èŠ‚ç‚¹åœ°å€
+    else
+    {
 
-	//2.²åÈëµÄÖµĞ¡ÓÚ¸ù½ÚµãµÄÖµ£¬²åÈë¸ù½ÚµãµÄ×ó×ÓÊ÷
-	else if (nIDentifier < root->STreeNodeData.nIDentifier)
-	{
-		root->left = insertTreeNode(root->left, date, nIDentifier, cErrorSign, node_ORAM_NUM);//µü´ú²åÈë
+        return root;
+    }
 
-	}
-	//3.²åÈëµÄÖµµÈÓÚ¸ù½ÚµãµÄÖµ£¬·µ»Ø¸ù½ÚµãµØÖ·
-	else
-	{
+    if (*cErrorSign != 1)
+    {
+        //æ’å…¥èŠ‚ç‚¹åï¼Œæ›´æ–°æ ¹èŠ‚ç‚¹çš„æ ‘é«˜
+        (root)->height = 1 + max(getTreeNodeHeight((root)->left), getTreeNodeHeight((root)->right));
 
-		return  root;
-	}
+        //åˆ¤æ–­æ’å…¥èŠ‚ç‚¹åï¼Œæ ¹èŠ‚ç‚¹æ˜¯å¦å¤±è¡¡
 
-	if (*cErrorSign != 1)
-	{
-		//²åÈë½Úµãºó£¬¸üĞÂ¸ù½ÚµãµÄÊ÷¸ß
-		(root)->height = 1 + max(getTreeNodeHeight((root)->left), getTreeNodeHeight((root)->right));
+        //è·å–æ ¹èŠ‚ç‚¹çš„å¹³è¡¡å› å­
+        int8 rootbalance = getBalance((root));
+        //è·å–æ ¹èŠ‚ç‚¹çš„å·¦èŠ‚ç‚¹çš„å¹³è¡¡å› å­
+        int8 leftBalance = getBalance((root)->left);
+        //è·å–æ ¹èŠ‚ç‚¹çš„å³èŠ‚ç‚¹çš„å¹³è¡¡å› å­
+        int8 rightBalance = getBalance((root)->right);
 
-		//ÅĞ¶Ï²åÈë½Úµãºó£¬¸ù½ÚµãÊÇ·ñÊ§ºâ
+        //4ç§å¤±è¡¡
+        //1.LL
+        if (rootbalance > 1 && leftBalance > 0)
+        {
+            //TreeNode* temp = leftRotate(root);
+            TreeNode* temp = rightRotate((root));
+            return temp; //è¿”å›ä¿®æ­£åçš„æ ¹èŠ‚ç‚¹çš„åœ°å€
+        }
 
-		//»ñÈ¡¸ù½ÚµãµÄÆ½ºâÒò×Ó
-		int8 rootbalance = getBalance((root));
-		//»ñÈ¡¸ù½ÚµãµÄ×ó½ÚµãµÄÆ½ºâÒò×Ó
-		int8 leftBalance = getBalance((root)->left);
-		//»ñÈ¡¸ù½ÚµãµÄÓÒ½ÚµãµÄÆ½ºâÒò×Ó
-		int8 rightBalance = getBalance((root)->right);
+        //2.LR
+        if (rootbalance > 1 && leftBalance < 0)
+        {
+            (root)->left = leftRotate((root)->left);
+            TreeNode* temp = rightRotate((root));
+            return temp;
+        }
 
-		//4ÖÖÊ§ºâ
-		//1.LL
-		if (rootbalance > 1 && leftBalance > 0)
-		{
-			//TreeNode* temp = leftRotate(root);
-			TreeNode* temp = rightRotate((root));
-			return temp;//·µ»ØĞŞÕıºóµÄ¸ù½ÚµãµÄµØÖ·
-		}
+        //3.RR
+        if (rootbalance < -1 && rightBalance < 0)
+        {
 
-		//2.LR
-		if (rootbalance > 1 && leftBalance < 0)
-		{
-			(root)->left = leftRotate((root)->left);
-			TreeNode* temp = rightRotate((root));
-			return temp;
-		}
+            TreeNode* temp = leftRotate(root);
+            return temp; //è¿”å›ä¿®æ­£åçš„æ ¹èŠ‚ç‚¹çš„åœ°å€
+        }
 
-		//3.RR
-		if (rootbalance < -1 && rightBalance < 0)
-		{
+        //4.RL
+        if (rootbalance < -1 && rightBalance > 0)
+        {
+            (root)->right = rightRotate((root)->right);
+            TreeNode* temp = leftRotate((root));
+            return temp; //è¿”å›ä¿®æ­£åçš„æ ¹èŠ‚ç‚¹çš„åœ°å€
+        }
 
-			TreeNode* temp = leftRotate(root);
-			return temp;//·µ»ØĞŞÕıºóµÄ¸ù½ÚµãµÄµØÖ·
-		}
-
-		//4.RL
-		if (rootbalance < -1 && rightBalance>0)
-		{
-			(root)->right = rightRotate((root)->right);
-			TreeNode* temp = leftRotate((root));
-			return temp;//·µ»ØĞŞÕıºóµÄ¸ù½ÚµãµÄµØÖ·
-		}
-
-		//Ã»ÓĞÊ§ºâ£¬·µ»ØÌí¼Ó½ÚµãºóµÄ¸ù½ÚµãµØÖ·
-		return root;
-	}
-	return root;
-
+        //æ²¡æœ‰å¤±è¡¡ï¼Œè¿”å›æ·»åŠ èŠ‚ç‚¹åçš„æ ¹èŠ‚ç‚¹åœ°å€
+        return root;
+    }
+    return root;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºTreeNode* find(TreeNode* root, double dGCodeNum, int* counter)
-  º¯Êı¹¦ÄÜ:Ñ°ÕÒ¶ÔÓ¦GÖ¸Áî×ÖµÄ¹æÔò½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºTreeNode*rootÊ÷½ÚµãÖ¸Õë    double dGCodeNum GÖ¸Áî×Ö
-  Êä³ö²ÎÊı£º ¹æÔò½á¹¹ÌåÖ¸Õë
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šTreeNode* find(TreeNode* root, double dGCodeNum, int* counter)
+  å‡½æ•°åŠŸèƒ½:å¯»æ‰¾å¯¹åº”GæŒ‡ä»¤å­—çš„è§„åˆ™ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šTreeNode*rootæ ‘èŠ‚ç‚¹æŒ‡é’ˆ    double dGCodeNum GæŒ‡ä»¤å­—
+  è¾“å‡ºå‚æ•°ï¼š è§„åˆ™ç»“æ„ä½“æŒ‡é’ˆ
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void* findTreeNodeData(TreeNode* root, int32 dGCodeNum)
 {
-	TreeNode* pCur = root;
-	while (pCur != NULL)
-	{
-		if (dGCodeNum < pCur->STreeNodeData.nIDentifier)
-		{
-			pCur = pCur->left;
-			//(*counter)++;
-		}
-		else if (dGCodeNum > pCur->STreeNodeData.nIDentifier)
-		{
-			pCur = pCur->right;
-			//(*counter)++;
-		}
-		else
-		{
-			return pCur->STreeNodeData.pData;//ÕÒµ½£¬·µ»ØÕÒµ½µÄ½ÚµãµÄµØÖ·
-		}
-	}
+    TreeNode* pCur = root;
+    while (pCur != NULL)
+    {
+        if (dGCodeNum < pCur->STreeNodeData.nIDentifier)
+        {
+            pCur = pCur->left;
+            //(*counter)++;
+        }
+        else if (dGCodeNum > pCur->STreeNodeData.nIDentifier)
+        {
+            pCur = pCur->right;
+            //(*counter)++;
+        }
+        else
+        {
+            return pCur->STreeNodeData.pData; //æ‰¾åˆ°ï¼Œè¿”å›æ‰¾åˆ°çš„èŠ‚ç‚¹çš„åœ°å€
+        }
+    }
 
-	//ÕÒ²»µ½£¬½øĞĞ±¨¾¯
-	return NULL;
+    //æ‰¾ä¸åˆ°ï¼Œè¿›è¡ŒæŠ¥è­¦
+    return NULL;
 }
-
-
-
-

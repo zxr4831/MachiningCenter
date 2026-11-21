@@ -1,24 +1,21 @@
 #ifndef __GCODE_G33_H
 #define __GCODE_G33_H
 
-
 void addG33RegulationAPI();
 
 typedef struct _SG33Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	SPointDouble SStartPoint;
-	SPointDouble SEndPoint;
+    SPointDouble SStartPoint;
+    SPointDouble SEndPoint;
 
-	double dF;          //µ¼³Ì£¨Ä£Ì¬£©
-	uint16  usL;     //ÂİÎÆÍ·Êı 
-	int8 G33RotateAxis;//  G33 Ğı×ªÖá  ¿ÉÑ¡AÖá»òCÖá
-	int8 G33TappingMode;		//G33¹¥ÑÀÄ£Ê½ 0:¸ÕĞÔ¹¥ÑÀ 1:ÈáĞÔ¹¥ÑÀ
+    double dF;           //å¯¼ç¨‹ï¼ˆæ¨¡æ€ï¼‰
+    uint16 usL;          //èºçº¹å¤´æ•°
+    int8 G33RotateAxis;  //  G33 æ—‹è½¬è½´  å¯é€‰Aè½´æˆ–Cè½´
+    int8 G33TappingMode; //G33æ”»ç‰™æ¨¡å¼ 0:åˆšæ€§æ”»ç‰™ 1:æŸ”æ€§æ”»ç‰™
 
-}SG33Para;
-
-
+} SG33Para;
 
 void addG33RegulationAPI();
 
@@ -28,6 +25,5 @@ int8 getG33Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCode
 
 int8 CheckG33(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pGCodeBufUnit);
 int8 AssignG33(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit);
-
 
 #endif

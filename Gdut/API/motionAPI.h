@@ -6,68 +6,66 @@
 #include "G32.h"
 #include "G33.h"
 
-#define GCODE_GROUP_MOTION			1 //(ÔË¶¯×éG0 G1 G2 ¡£¡£¡£
-#define GCODE_GROUP_PLANE			2 // Æ½ÃæÑ¡ÔñG17 G18 G19 
-#define GCODE_GROUP_TOOLCOMP		3 // µ¶²¹ G40 G41 G42
-#define GCODE_GROUP_WORKPIECE		4 //Æ«ÒÆG54 G55 ¡£¡£¡£
-#define GCODE_GROUP_SPINDLE_SPEED	5 //Ö÷ÖáËÙ¶È G96 G97
-#define GCODE_GROUP_FEED_TYPE		6 //(½ø¸øG98 G99
+#define GCODE_GROUP_MOTION 1        //(è¿åŠ¨ç»„G0 G1 G2 ã€‚ã€‚ã€‚
+#define GCODE_GROUP_PLANE 2         // å¹³é¢é€‰æ‹©G17 G18 G19
+#define GCODE_GROUP_TOOLCOMP 3      // åˆ€è¡¥ G40 G41 G42
+#define GCODE_GROUP_WORKPIECE 4     //åç§»G54 G55 ã€‚ã€‚ã€‚
+#define GCODE_GROUP_SPINDLE_SPEED 5 //ä¸»è½´é€Ÿåº¦ G96 G97
+#define GCODE_GROUP_FEED_TYPE 6     //(è¿›ç»™G98 G99
 #define GCODE_GROUP_
 
-/*  ¶¨ÒåIOCommand.h
-#define MCODE_GROUP_NUM					3 //M´úÂë×éÊı
-#define MCODE_GROUP_SPINDLE				0 //Ö÷Öá M3 M4 M5
-#define MCODE_GROUP_FUILD				1 //ÀäÈ´Òº M8 M9
-#define MCODE_GROUP_CHUCK				2 //¼ĞÍ·M10¡¢M11
+/*  å®šä¹‰IOCommand.h
+#define MCODE_GROUP_NUM					3 //Mä»£ç ç»„æ•°
+#define MCODE_GROUP_SPINDLE				0 //ä¸»è½´ M3 M4 M5
+#define MCODE_GROUP_FUILD				1 //å†·å´æ¶² M8 M9
+#define MCODE_GROUP_CHUCK				2 //å¤¹å¤´M10ã€M11
 */
 
+/********************************çŠ¶æ€æ¥å£*******************************/
 
-
-/********************************×´Ì¬½Ó¿Ú*******************************/
-
-//»ñÈ¡µ±Ç°ÕæÊµËÙÂÊ0~100
+//è·å–å½“å‰çœŸå®é€Ÿç‡0~100
 int getRealFeedRatio(uint8 ucChannelNum);
 
-//»ñÈ¡µ±Ç°½ø¸øËÙ¶È
+//è·å–å½“å‰è¿›ç»™é€Ÿåº¦
 double getCurrentFeedRate(uint8 ucChannelNum, uint8 ucAxis);
 
-//»ñÈ¡µ±Ç°ÕæÊµ½ø¸øËÙ¶È
+//è·å–å½“å‰çœŸå®è¿›ç»™é€Ÿåº¦
 double getCurrentRealFeedRate(uint8 ucChannelNum, uint8* pMaxAxis);
 
-//»ñÈ¡Ê£Óà¾àÀë
+//è·å–å‰©ä½™è·ç¦»
 double getCurLeftDist(uint8 ucChannelNum, uint8 ucAxis);
 
-//»ñÈ¡¸÷ÖáÎ´¹æ»®µÄÂö³åÊı
+//è·å–å„è½´æœªè§„åˆ’çš„è„‰å†²æ•°
 int32 getAxisAccmulate(uint8 ucChannelNum, uint8 ucAxis);
 
-//»ñÈ¡G´úÂë×´Ì¬
+//è·å–Gä»£ç çŠ¶æ€
 int getGCodeStatusAPI(uint8 ucChannelNum, uint8 ucGroupNum);
 
-//»ñÈ¡M´úÂë×´Ì¬
+//è·å–Mä»£ç çŠ¶æ€
 int getMCodeStatusAPI(uint8 ucChannelNum, uint8 ucGroupNum);
 
-//»ñÈ¡µ¥Öá×´Ì¬
+//è·å–å•è½´çŠ¶æ€
 int8 getSingleAxisStatus(uint8 ucChannelNum, uint8 ucAxis);
 
-/********************************ÔË¶¯½Ó¿Ú*******************************/
+/********************************è¿åŠ¨æ¥å£*******************************/
 
-//ÉèÖÃG0¼õËÙÍ£ Á¢¼´Í£
+//è®¾ç½®G0å‡é€Ÿåœ ç«‹å³åœ
 int8 setSingleAxisStop(uint8 ucChannelNum, uint8 ucAxis, uint8 mode, double dDec);
 
-//ÉèÖÃG0µÄËÙ¶È²ÎÊı
+//è®¾ç½®G0çš„é€Ÿåº¦å‚æ•°
 int8 setSG0SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType);
 
-//ÉèÖÃG1µÄËÙ¶È²ÎÊı
+//è®¾ç½®G1çš„é€Ÿåº¦å‚æ•°
 int8 setSG1SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType);
 
-//ÉèÖÃG2µÄËÙ¶È²ÎÊı
+//è®¾ç½®G2çš„é€Ÿåº¦å‚æ•°
 int8 setSG2SpeedPara(double dVal, uint8 ucChannelNum, uint8 ucType);
 
-//ÉèÖÃµ±Ç°µÄËÙ¶È²ÎÊı
-int8 setCurSpeedPara(double dVal ,uint8 ucChannelNum, uint8 ucAxis, uint8 ucType);
+//è®¾ç½®å½“å‰çš„é€Ÿåº¦å‚æ•°
+int8 setCurSpeedPara(double dVal, uint8 ucChannelNum, uint8 ucAxis, uint8 ucType);
 
-//½«SG0 SG1 SG2µÄSUserData£¨×Ô¶¨Òå²ÎÊı£©»òSPreProcess£¨»º´æÇø£©µÄSUserDataµÄÊı¾İĞ´ÈëSInput½á¹¹Ìå
-/*×Ô¶¨Òå±í£º
+//å°†SG0 SG1 SG2çš„SUserDataï¼ˆè‡ªå®šä¹‰å‚æ•°ï¼‰æˆ–SPreProcessï¼ˆç¼“å­˜åŒºï¼‰çš„SUserDataçš„æ•°æ®å†™å…¥SInputç»“æ„ä½“
+/*è‡ªå®šä¹‰è¡¨ï¼š
 struct|ucAccVelPlanType |ucDecVelPlanType |        dVs        |      dFeedrate     |     dPrimalVe     |dFeedRatio|    dAcc     |    dDec     |  SEndPoint  |
 ------|-----------------|-----------------|-------------------|--------------------|-------------------|----------|-------------|-------------|-------------|
    |X |VEL_PLAN_S4_CURVE|VEL_PLAN_S4_CURVE|   200.0/60/1000   |  18000.0/60/1000   |   200.0/60/1000   |   1.0    |    0.004    |    0.004    |{0,0,0,0,0,0}|
@@ -88,66 +86,66 @@ SG0|Z |VEL_PLAN_S4_CURVE|VEL_PLAN_S4_CURVE|   200.0/60/1000   |  18000.0/60/1000
 */
 int8 writeSInputAPI(uint8 ucChannelNum, struct SInput* pSUserData, int8 cType);
 
-//G123½Ó¿Úº¯Êı
-int8 applyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType);  //0 ¿ìËÙÔË¶¯  1Ö±Ïß  2Ë³Ô² 3ÄæÔ²
+//G123æ¥å£å‡½æ•°
+int8 applyMotionParaAPI(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType); //0 å¿«é€Ÿè¿åŠ¨  1ç›´çº¿  2é¡ºåœ† 3é€†åœ†
 
-//¼õËÙ¶Èµ÷Õû
+//å‡é€Ÿåº¦è°ƒæ•´
 int8 adjustDec(uint8 ucChannelNum, struct SInput* pSInputPointer, int8 cType, uint8 ucAxis, int8 cUserDataCount);
 
-//G32½Ó¿Úº¯Êı
+//G32æ¥å£å‡½æ•°
 int8 applyG32MotionParaAPI(struct _SG32* pSG32);
 
-//G33½Ó¿Úº¯Êı
+//G33æ¥å£å‡½æ•°
 int8 applyG33ParaAPI(struct SInterpolationPre* pSPreProcess, struct G33* pSG33);
 
-//·µ»Ø¿ªÊ¼Ëæ¶¯ËùĞèµÄ³¤¶È(¿ªÊ¼Ëæ¶¯ºó£¬²ÅÄÜ»ñµÃ)
+//è¿”å›å¼€å§‹éšåŠ¨æ‰€éœ€çš„é•¿åº¦(å¼€å§‹éšåŠ¨åï¼Œæ‰èƒ½è·å¾—)
 double returendStartFollowDisAPI();
 
-//»ñÈ¡ÔË¶¯×´Ì¬
+//è·å–è¿åŠ¨çŠ¶æ€
 int8 getMotionStatus(uint8 ucChannelNum);
 
-//·µ»Øg_RunMode
+//è¿”å›g_RunMode
 enum RUNMODE getRunMode();
 
-/*******************************Ö÷Öá½Ó¿Ú*********************************/
+/*******************************ä¸»è½´æ¥å£*********************************/
 
-//»ñÈ¡Ö÷Öá×´Ì¬
+//è·å–ä¸»è½´çŠ¶æ€
 int8 getSpindleStatus(uint8 ucChannelNum);
 
-//ÉèÖÃÖ÷ÖáÄ£Ê½ G96 G97,¿ªÆôÖĞ¶ÏÇ°£¬Óë»ú´²Ö÷ÖáÕı×ªºÍ·´×ª°´Å¥ÓĞ¹Ø
+//è®¾ç½®ä¸»è½´æ¨¡å¼ G96 G97,å¼€å¯ä¸­æ–­å‰ï¼Œä¸æœºåºŠä¸»è½´æ­£è½¬å’Œåè½¬æŒ‰é’®æœ‰å…³
 int8 setSpindleModeAPI(uint8 ucChannelNum, int8 cMode);
 
-//²å²¹ÖĞÉèÖÃÖ÷ÖáÄ£Ê½ G96 G97£¬
+//æ’è¡¥ä¸­è®¾ç½®ä¸»è½´æ¨¡å¼ G96 G97ï¼Œ
 int8 setSpindleModeInInterpolation(uint8 ucChannelNum, int8 cMode);
 
-// »ñÈ¡Ö÷Öá±àÂëÆ÷×ªËÙ
+// è·å–ä¸»è½´ç¼–ç å™¨è½¬é€Ÿ
 double getSpindleEncoderSpeed(uint8 ucChannelNum);
 
-// »ñÈ¡Ö÷ÖáÀíÂÛ×ªËÙ
+// è·å–ä¸»è½´ç†è®ºè½¬é€Ÿ
 double getSpindleSpeedAPI(uint8 ucChannelNum);
 
-//ÉèÖÃÖ÷Öá·½Ïò½Ó¿Ú
+//è®¾ç½®ä¸»è½´æ–¹å‘æ¥å£
 int8 setSpindleDirAPI(uint8 ucChannelNum, int8 cDir);
 
-//Ö÷ÖáÆô¶¯½Ó¿Ú
+//ä¸»è½´å¯åŠ¨æ¥å£
 int8 spindleBeginAPI(uint8 ucChannelNum);
 
-//Ö÷ÖáÍ£½Ó¿Ú
+//ä¸»è½´åœæ¥å£
 int8 spindleCommonStopAPI(uint8 ucChannelNum);
 
-//Ö÷Öá×¼Í£½Ó¿Ú
+//ä¸»è½´å‡†åœæ¥å£
 int8 spindlePreciseStopAPI(uint8 ucChannelNum);
 
-//Ö÷ÖáÁ¢¼´Í£½Ó¿Ú
+//ä¸»è½´ç«‹å³åœæ¥å£
 int8 spindleStopNowAPI(uint8 ucChannelNum);
 
-//ÉèÖÃÖ÷Öá×ªËÙ
+//è®¾ç½®ä¸»è½´è½¬é€Ÿ
 int8 setSpindleSpeedAPI(uint8 ucChannelNum, double dSpindleSpeed, uint16 type);
 
-//»ñµÃ¸ÃÍ¨µÀÖ÷Öá·¢ËÍÂö³åºÍÖ÷Öá±àÂëÆ÷µÄÆ«²î
+//è·å¾—è¯¥é€šé“ä¸»è½´å‘é€è„‰å†²å’Œä¸»è½´ç¼–ç å™¨çš„åå·®
 int16 getSpindlePulseDeviation(uint8 ucChannelNum);
 
-////Ê¹ÄÜÖ÷Öá
+////ä½¿èƒ½ä¸»è½´
 //int8 setSpindleEnabledAPI(uint8 ucChannelNum,bool isEnable);
 
 int8 setSpindleEnabledAPI(uint8 ucChannelNum, bool isEnable);

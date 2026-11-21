@@ -3,41 +3,38 @@
 
 #include "common.h"
 
-/*typedefµÄ¹¦ÄÜÊÇ¶¨ÒåĞÂµÄÀàĞÍ¡£µÚÒ»¾ä¾ÍÊÇ¶¨ÒåÁËÒ»ÖÖPrintNodeµÄÀàĞÍ£¬²¢¶¨ÒåÕâÖÖÀàĞÍÎªÖ¸ÏòÄ³ÖÖº¯ÊıµÄÖ¸Õë£¬ÕâÖÖº¯ÊıÒÔÒ»¸övoid*Îª²ÎÊı²¢·µ»ØvoidÀàĞÍ¡£*/
-typedef void(*PrintNode)(void*);
-typedef void(*FreeData)(void*);
+/*typedefçš„åŠŸèƒ½æ˜¯å®šä¹‰æ–°çš„ç±»å‹ã€‚ç¬¬ä¸€å¥å°±æ˜¯å®šä¹‰äº†ä¸€ç§PrintNodeçš„ç±»å‹ï¼Œå¹¶å®šä¹‰è¿™ç§ç±»å‹ä¸ºæŒ‡å‘æŸç§å‡½æ•°çš„æŒ‡é’ˆï¼Œè¿™ç§å‡½æ•°ä»¥ä¸€ä¸ªvoid*ä¸ºå‚æ•°å¹¶è¿”å›voidç±»å‹ã€‚*/
+typedef void (*PrintNode)(void*);
+typedef void (*FreeData)(void*);
 
-typedef struct _SNode  //Á´±í½Úµã
+typedef struct _SNode //é“¾è¡¨èŠ‚ç‚¹
 {
-	void* pData;               //Ö¸ÏòÈÎÒâÊı¾İÀàĞÍ
-	struct _SNode* pNextNode;  //ÏÂÒ»¸ö½Úµã
-}SNode;
+    void* pData;              //æŒ‡å‘ä»»æ„æ•°æ®ç±»å‹
+    struct _SNode* pNextNode; //ä¸‹ä¸€ä¸ªèŠ‚ç‚¹
+} SNode;
 
-typedef struct _SList   //Á´±í
+typedef struct _SList //é“¾è¡¨
 {
-	SNode* pHead;    //Í·½áµã
-	int16 cSize;     //Á´±í³¤¶È
+    SNode* pHead; //å¤´ç»“ç‚¹
+    int16 cSize;  //é“¾è¡¨é•¿åº¦
 
-}SList;
+} SList;
 #define INT16_MAX 32767
 
+/*typedefçš„åŠŸèƒ½æ˜¯å®šä¹‰æ–°çš„ç±»å‹ã€‚ç¬¬ä¸€å¥å°±æ˜¯å®šä¹‰äº†ä¸€ç§PrintNodeçš„ç±»å‹ï¼Œå¹¶å®šä¹‰è¿™ç§ç±»å‹ä¸ºæŒ‡å‘æŸç§å‡½æ•°çš„æŒ‡é’ˆï¼Œè¿™ç§å‡½æ•°ä»¥ä¸€ä¸ªvoid*ä¸ºå‚æ•°å¹¶è¿”å›voidç±»å‹ã€‚*/
+typedef void (*PrintNode)(void*);
+typedef void (*FreeData)(void*);
 
-/*typedefµÄ¹¦ÄÜÊÇ¶¨ÒåĞÂµÄÀàĞÍ¡£µÚÒ»¾ä¾ÍÊÇ¶¨ÒåÁËÒ»ÖÖPrintNodeµÄÀàĞÍ£¬²¢¶¨ÒåÕâÖÖÀàĞÍÎªÖ¸ÏòÄ³ÖÖº¯ÊıµÄÖ¸Õë£¬ÕâÖÖº¯ÊıÒÔÒ»¸övoid*Îª²ÎÊı²¢·µ»ØvoidÀàĞÍ¡£*/
-typedef void(*PrintNode)(void*);
-typedef void(*FreeData)(void*);
-
-
-
-//³õÊ¼»¯Á´±í
+//åˆå§‹åŒ–é“¾è¡¨
 SList* initList(int16 list_ORAM_NUM, int16 node_ORAM_NUM);
 
-//Éú³É½Úµã£¬²åÈëÊı¾İ
+//ç”ŸæˆèŠ‚ç‚¹ï¼Œæ’å…¥æ•°æ®
 bool insertList(SList* pList, int16 cPos, void* SData, int16 node_ORAM_NUM);
 
-//²åÈë½Úµã
+//æ’å…¥èŠ‚ç‚¹
 bool insertNode(SList* pList, int16 cPos, SNode* pNode);
 
-//ÕÒµ½Á´±íÖĞµÄ½Úµã
+//æ‰¾åˆ°é“¾è¡¨ä¸­çš„èŠ‚ç‚¹
 void* FindNodeData(SList* pList, int pos);
 
 //
@@ -45,29 +42,26 @@ int16 findNodePosByData(SList* pList, int16 cTargetVal);
 
 SNode* FindNode(SList* pList, int pos);
 
-//É¾³ı½Úµã
+//åˆ é™¤èŠ‚ç‚¹
 bool removeNode(SList* pList, int16 cPos, bool bSaveNodeFlag);
 
-//·µ»ØÁ´±í´óĞ¡
+//è¿”å›é“¾è¡¨å¤§å°
 int16 getListSize(SList* pList);
 
-//ÊÍ·ÅÁ´±í
+//é‡Šæ”¾é“¾è¡¨
 void freeList(SList** pList);
 
 void freeList_2(SList** ppList, FreeData customFree);
 
-//É¾³ıÁ´±íÔªËØ
+//åˆ é™¤é“¾è¡¨å…ƒç´ 
 bool removeNode_2(SList* pList, int16 cPos, bool bSaveNodeFlag, FreeData customFree);
 
-//ÊÍ·ÅÁ´±í 
+//é‡Šæ”¾é“¾è¡¨
 void freeList_2(SList** pList, FreeData customFree);
 
-//´òÓ¡Á´±í
+//æ‰“å°é“¾è¡¨
 void printList(SList* pList, PrintNode print);
 
 void printData(void* data);
-
-
-
 
 #endif

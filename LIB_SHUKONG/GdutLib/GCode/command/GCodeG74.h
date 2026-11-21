@@ -3,26 +3,25 @@
 
 typedef struct _SG74Para
 {
-	int8 cStep;                 //ÇĞÆ¬¸¨Öú±êÖ¾
+    int8 cStep; //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
 
-	SCoord SCoordInfo;
-	SPointDouble SStartPoint;	//Ö¸ÁîÆğµã
-	SPointDouble SEndPoint;		//Ö¸ÁîÖÕµã
+    SCoord SCoordInfo;
+    SPointDouble SStartPoint; //æŒ‡ä»¤èµ·ç‚¹
+    SPointDouble SEndPoint;   //æŒ‡ä»¤ç»ˆç‚¹
 
-	int8 cDir_X;		//XÖá¼Ó¹¤·½Ïò
-	int8 cDir_Z;		//ZÖá¼Ó¹¤·½Ïò
+    int8 cDir_X; //Xè½´åŠ å·¥æ–¹å‘
+    int8 cDir_Z; //Zè½´åŠ å·¥æ–¹å‘
 
-	double dFeed_X;		//XÖá½øµ¶Á¿
-	double dRetract_X;	//XÖáÍËµ¶Á¿
+    double dFeed_X;    //Xè½´è¿›åˆ€é‡
+    double dRetract_X; //Xè½´é€€åˆ€é‡
 
-	double dFeed_Z;		//ZÖá½øµ¶Á¿
-	double dRetract_Z;	//ZÖáÍËµ¶Á¿
+    double dFeed_Z;    //Zè½´è¿›åˆ€é‡
+    double dRetract_Z; //Zè½´é€€åˆ€é‡
 
-	bool bFirstFeed_Z;	//ZÖáÊ×´Î½øµ¶
-	bool bLastFeed;		//×îºóÒ»´ÎÑ­»·
+    bool bFirstFeed_Z; //Zè½´é¦–æ¬¡è¿›åˆ€
+    bool bLastFeed;    //æœ€åä¸€æ¬¡å¾ªç¯
 
-}SG74Para;
-
+} SG74Para;
 
 void addG74RegulationAPI();
 
@@ -35,7 +34,5 @@ int8 getG74Para(uint8 ucMode, SScan* pSScanContainer, uint8 ucChannelNum, SGCode
 int8 CheckG74(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 
 int8 AssignG74(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
-
-
 
 #endif

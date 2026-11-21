@@ -1,479 +1,482 @@
 #ifndef __GCODECHECKANDASSIGN_H
 #define __GCODECHECKANDASSIGN_H
 
-//lxw:Í·ÎÄ¼ş°üº¬¹ØÏµ
+//lxw:å¤´æ–‡ä»¶åŒ…å«å…³ç³»
 //#include "GCodeRegulation.h"
 
 #include "GCodeRegulation.h"
-#include"common.h"
+#include "common.h"
 /**********************/
-//½á¹¹Ìå¶¨Òå
+//ç»“æ„ä½“å®šä¹‰
 /**********************/
 
-//Ä£Ì¬Ö¸Áî½á¹¹Ìå
+//æ¨¡æ€æŒ‡ä»¤ç»“æ„ä½“
 typedef struct _SGCodeModalInfo
 {
-	//Ga×é£ºG0¡¢G1¡¢G2¡¢G3¡¢G6.2¡¢G6.3¡¢G32¡¢G33¡¢G34¡¢G92¡¢G93¡¢G94¡¢G82¡¢G83¡¢G84¡¢G85¡¢G86¡¢G87¡¢G88¡¢G89
-	//Gz×é£ºG4¡¢G10¡¢G50¡¢G65¡¢G66¡¢G67¡¢G70¡¢G71¡¢G72¡¢G73¡¢G74¡¢G75¡¢G76¡¢G78¡¢G28
-	//Ge×é£ºG20¡¢G21
-	//Gc×é£ºG17¡¢G18¡¢G19
-	//Gb×é£ºG54¡¢G55¡¢G56¡¢G57¡¢G58¡¢G59
-	//Gd×é£ºG40¡¢G41¡¢G42
-	//Gh×é£ºG90¡¢G91
-	//Gf×é£ºG96¡¢G97
-	//Gg×é£ºG98¡¢G99
-	//Gx×é£ºG80
-	
-	int16 sGb, sGc, sGd, sGe, sGf, sGg, sGh;//ÊıÖµÎªÖ¸ÁîµÄ10±¶£¬G1->G10£¬G10->G100
+    //Gaç»„ï¼šG0ã€G1ã€G2ã€G3ã€G6.2ã€G6.3ã€G32ã€G33ã€G34ã€G92ã€G93ã€G94ã€G82ã€G83ã€G84ã€G85ã€G86ã€G87ã€G88ã€G89
+    //Gzç»„ï¼šG4ã€G10ã€G50ã€G65ã€G66ã€G67ã€G70ã€G71ã€G72ã€G73ã€G74ã€G75ã€G76ã€G78ã€G28
+    //Geç»„ï¼šG20ã€G21
+    //Gcç»„ï¼šG17ã€G18ã€G19
+    //Gbç»„ï¼šG54ã€G55ã€G56ã€G57ã€G58ã€G59
+    //Gdç»„ï¼šG40ã€G41ã€G42
+    //Ghç»„ï¼šG90ã€G91
+    //Gfç»„ï¼šG96ã€G97
+    //Ggç»„ï¼šG98ã€G99
+    //Gxç»„ï¼šG80
 
-	//lxw£ºGzÎª·ÇÄ£Ì¬Ö¸Áî£¬µ«·ÅÔÚÄ£Ì¬½á¹¹ÌåÌåÖĞ£¬±ãÓÚ¶Ô±ÈGa×é¡¢Gz×éÖ¸Áî
-	//lxw£º»º³åÇøµ¥Ôª´ÓÏµÍ³×´Ì¬ÖĞSGCodeModalInfoºóÒªµ¥¶ÀÈ¡ÏûGz×éÖ¸ÁîµÄ¼Ì³Ğ
-	int16 sGa,sGz;
-	const SGCommandRegulation* pSGaRegulation;
-	const SGCommandRegulation* pSGzRegulation;
-}SGCodeModalInfo;
+    int16 sGb, sGc, sGd, sGe, sGf, sGg, sGh; //æ•°å€¼ä¸ºæŒ‡ä»¤çš„10å€ï¼ŒG1->G10ï¼ŒG10->G100
 
+    //lxwï¼šGzä¸ºéæ¨¡æ€æŒ‡ä»¤ï¼Œä½†æ”¾åœ¨æ¨¡æ€ç»“æ„ä½“ä½“ä¸­ï¼Œä¾¿äºå¯¹æ¯”Gaç»„ã€Gzç»„æŒ‡ä»¤
+    //lxwï¼šç¼“å†²åŒºå•å…ƒä»ç³»ç»ŸçŠ¶æ€ä¸­SGCodeModalInfoåè¦å•ç‹¬å–æ¶ˆGzç»„æŒ‡ä»¤çš„ç»§æ‰¿
+    int16 sGa, sGz;
+    const SGCommandRegulation* pSGaRegulation;
+    const SGCommandRegulation* pSGzRegulation;
+} SGCodeModalInfo;
 
-//É¨ÃèÄ£Ì¬½á¹¹Ìå
+//æ‰«ææ¨¡æ€ç»“æ„ä½“
 typedef struct _SScanModalInfo
 {
-//	int16 sGa, sGb, sGc, sGd, sGe, sGf, sGg, sGh;
-	const SGCommandRegulation* pSGaRegulation;
-	const SGCommandRegulation* pSGbRegulation;
-	const SGCommandRegulation* pSGcRegulation;
-	const SGCommandRegulation* pSGdRegulation;
-	const SGCommandRegulation* pSGeRegulation;
-	const SGCommandRegulation* pSGfRegulation;
-	const SGCommandRegulation* pSGgRegulation;
-	const SGCommandRegulation* pSGjRegulation;
-	const SGCommandRegulation* pSGhRegulation;
+    //	int16 sGa, sGb, sGc, sGd, sGe, sGf, sGg, sGh;
+    const SGCommandRegulation* pSGaRegulation;
+    const SGCommandRegulation* pSGbRegulation;
+    const SGCommandRegulation* pSGcRegulation;
+    const SGCommandRegulation* pSGdRegulation;
+    const SGCommandRegulation* pSGeRegulation;
+    const SGCommandRegulation* pSGfRegulation;
+    const SGCommandRegulation* pSGgRegulation;
+    const SGCommandRegulation* pSGjRegulation;
+    const SGCommandRegulation* pSGhRegulation;
 
+    const SGCommandRegulation* pSGzRegulation; //Gzç»„ä¸ºéæ¨¡æ€ï¼Œæ”¾åœ¨è¿™ä¾¿äºä¸Gaç»„å¯¹æ¯”
+                                               /// Gä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+                                               /// sGaï¼šè¿åŠ¨ç±» G00ï¼ŒG01ï¼ŒG02ï¼ŒG03ï¼ŒG32,G33,G76,G92						MOCTION
+                                               /// sGbï¼šå·¥ä»¶åæ ‡ç³» G54-G59												COOR
+                                               /// sGcï¼šå®šä¹‰æ’è¡¥å¹³é¢ G17-G19
+                                               /// sGdï¼šåˆ€å…·è¡¥å¿ G40-G42												TOOLCOMP
+                                               /// sGeï¼šå•ä½é€‰æ‹©ï¼šè‹±åˆ¶/å…¬åˆ¶ G20ï¼ŒG21									UNITS   INCHS MM
+    /****** æ–°å¢æ¨¡æ€ç»„ *******/                //2021-9-13  å†¯è‹±å
+    /// sGf: æ’çº¿é€Ÿæ§åˆ¶ G96ã€æ’è½¬é€Ÿæ§åˆ¶ G97									            SPINDLE_SPEED
+    /// sGg: ç»™å®šæ¯åˆ†è¿›ç»™é€Ÿåº¦ G98 ã€ä»¥æ¯«ç±³/è½¬ä¸ºå•ä½ç»™å®šåˆ‡å‰Šè¿›ç»™é€Ÿåº¦ G99	ã€æ–­å‰ŠæŒ‡ä»¤G4.9	FEED
+    /// sGh: ç»å¯¹ç¼–ç¨‹G90/ ç›¸å¯¹ç¼–ç¨‹G91  é»˜è®¤G90
+    //int8 cDecimalVal;  //é’ˆå¯¹sGaç»„ï¼Œåˆ¤æ–­å°æ•°åä¸€ä½ï¼Œä¾‹å¦‚ï¼šG32.1æ—¶ï¼Œå€¼ä¸º1ï¼Œ G32.2æ—¶ï¼Œå€¼ä¸º2
+} SScanModalInfo;
 
-	const SGCommandRegulation* pSGzRegulation;//Gz×éÎª·ÇÄ£Ì¬£¬·ÅÔÚÕâ±ãÓÚÓëGa×é¶Ô±È
-	/// G´úÂë·ÖÀà²ÎÊı£¬
-	/// sGa£ºÔË¶¯Àà G00£¬G01£¬G02£¬G03£¬G32,G33,G76,G92						MOCTION
-	/// sGb£º¹¤¼ş×ø±êÏµ G54-G59												COOR
-	/// sGc£º¶¨Òå²å²¹Æ½Ãæ G17-G19
-	/// sGd£ºµ¶¾ß²¹³¥ G40-G42												TOOLCOMP
-	/// sGe£ºµ¥Î»Ñ¡Ôñ£ºÓ¢ÖÆ/¹«ÖÆ G20£¬G21									UNITS   INCHS MM
-	/****** ĞÂÔöÄ£Ì¬×é *******/  //2021-9-13  ·ëÓ¢»ª
-	/// sGf: ºãÏßËÙ¿ØÖÆ G96¡¢ºã×ªËÙ¿ØÖÆ G97									            SPINDLE_SPEED
-	/// sGg: ¸ø¶¨Ã¿·Ö½ø¸øËÙ¶È G98 ¡¢ÒÔºÁÃ×/×ªÎªµ¥Î»¸ø¶¨ÇĞÏ÷½ø¸øËÙ¶È G99	¡¢¶ÏÏ÷Ö¸ÁîG4.9	FEED
-	/// sGh: ¾ø¶Ô±à³ÌG90/ Ïà¶Ô±à³ÌG91  Ä¬ÈÏG90
-	//int8 cDecimalVal;  //Õë¶ÔsGa×é£¬ÅĞ¶ÏĞ¡ÊıºóÒ»Î»£¬ÀıÈç£ºG32.1Ê±£¬ÖµÎª1£¬ G32.2Ê±£¬ÖµÎª2
-}SScanModalInfo;
-
-//É¨Ãè·ÇÄ£Ì¬½á¹¹Ìå
+//æ‰«æéæ¨¡æ€ç»“æ„ä½“
 typedef struct _SScanNonModalInfo
 {
-	//int16 sGz;  //ÎŞ:0;  G04 G50  G71 G72 G73
-	/// sGz£º·ÇÄ£Ì¬×é±ğG04(³ÌĞòÔİÍ£)¡¢G50
-	//int16 sGx;	//G80
-	/// sGx: ·ÇÄ£Ì¬×é±ğ£¬ÓÃÓÚG83~G89µÄÄ£Ì¬È¡Ïû
+    //int16 sGz;  //æ— :0;  G04 G50  G71 G72 G73
+    /// sGzï¼šéæ¨¡æ€ç»„åˆ«G04(ç¨‹åºæš‚åœ)ã€G50
+    //int16 sGx;	//G80
+    /// sGx: éæ¨¡æ€ç»„åˆ«ï¼Œç”¨äºG83~G89çš„æ¨¡æ€å–æ¶ˆ
 
-//	const SGCommandRegulation* pSGzRegulation;
-	const SGCommandRegulation* pSGxRegulation;
+    //	const SGCommandRegulation* pSGzRegulation;
+    const SGCommandRegulation* pSGxRegulation;
 
-	//bool ;//sMb³õÊ¼ÖµÎª-1
-	//int8 cDecimalVal;  //¼ÇÂ¼Ğ¡ÊıºóÒ»Î»£¬ÀıÈç£ºG32.1Ê±£¬ÖµÎª1£¬ G32.2Ê±£¬ÖµÎª2	//ÆúÓÃ£ºÖ¸ÁîÒÑ·Å´ó£¬°´ÕûÊı´¦Àí
+    //bool ;//sMbåˆå§‹å€¼ä¸º-1
+    //int8 cDecimalVal;  //è®°å½•å°æ•°åä¸€ä½ï¼Œä¾‹å¦‚ï¼šG32.1æ—¶ï¼Œå€¼ä¸º1ï¼Œ G32.2æ—¶ï¼Œå€¼ä¸º2	//å¼ƒç”¨ï¼šæŒ‡ä»¤å·²æ”¾å¤§ï¼ŒæŒ‰æ•´æ•°å¤„ç†
 
-	int8 cMLetterCnt;
-	bool bMa, bMb, bMc, bMe, bMf, bMh, bMi, bMj, bMk, bMg;
-	const SMCommandRegulation* pSMCommandArray[6];
+    int8 cMLetterCnt;
+    bool bMa, bMb, bMc, bMe, bMf, bMh, bMi, bMj, bMk, bMg;
+    const SMCommandRegulation* pSMCommandArray[6];
 
+    /// Mä»£ç åˆ†ç±»å‚æ•°ï¼Œ
+    /// cMaï¼šä¸»è½´æ­£/åè½¬/åœ		/M03/M04/M05(éæ¨¡æ€ï¼‰
+    /// sMbï¼šç¨‹åºåœ/ç¨‹åºç»“æŸ	/M00/M01/M02/M30(éæ¨¡æ€)	M96 M97 M98 M99		M100~M199
+    /// cMcï¼šå†·å´æ¶²å¼€/å…³		/M08/M09(éæ¨¡æ€)
+    /// cMeï¼šæ¶¦æ»‘æ²¹å¼€/å…³        /M32/M33
+    /// cMfï¼šå·¥ä»¶å¤¹ç´§ / æ¾å¼€ / M10 / M11
+    /// cMgï¼šM14 / M15
+    /// cMhï¼šåŠ¨åŠ›åˆ€æ­£/åè½¬/åœ		/M50/M51/M52(éæ¨¡æ€ï¼‰
+    /// cMiï¼šM38 / M39
+    /// cMjï¼šM35 / M36 /M20 / M21 / M22	//è‡ªåŠ¨é‡å¤ä¸Šæ–™åŠŸèƒ½	M35æ§åˆ¶é«˜ç”µå¹³è¾“å‡º/M36æ§åˆ¶ä½ç”µå¹³è¾“å‡º
+    /// cMk: M80/M81/M82/M83/M84/M85/M86/M87 //æœºæ¢°è‡‚
+} SScanNonModalInfo;
 
-	/// M´úÂë·ÖÀà²ÎÊı£¬
-	/// cMa£ºÖ÷ÖáÕı/·´×ª/Í£		/M03/M04/M05(·ÇÄ£Ì¬£©
-	/// sMb£º³ÌĞòÍ£/³ÌĞò½áÊø	/M00/M01/M02/M30(·ÇÄ£Ì¬)	M96 M97 M98 M99		M100~M199
-	/// cMc£ºÀäÈ´Òº¿ª/¹Ø		/M08/M09(·ÇÄ£Ì¬)
-	/// cMe£ºÈó»¬ÓÍ¿ª/¹Ø        /M32/M33
-	/// cMf£º¹¤¼ş¼Ğ½ô / ËÉ¿ª / M10 / M11
-	/// cMg£ºM14 / M15
-	/// cMh£º¶¯Á¦µ¶Õı/·´×ª/Í£		/M50/M51/M52(·ÇÄ£Ì¬£©
-	/// cMi£ºM38 / M39
-	/// cMj£ºM35 / M36 /M20 / M21 / M22	//×Ô¶¯ÖØ¸´ÉÏÁÏ¹¦ÄÜ	M35¿ØÖÆ¸ßµçÆ½Êä³ö/M36¿ØÖÆµÍµçÆ½Êä³ö
-	/// cMk: M80/M81/M82/M83/M84/M85/M86/M87 //»úĞµ±Û
-}SScanNonModalInfo;
-
-//É¨Ãè½á¹¹Ìå
+//æ‰«æç»“æ„ä½“
 typedef struct _SScan
 {
-	uint32 unLineNum;   //µ±Ç°ĞĞºÅ
+    uint32 unLineNum; //å½“å‰è¡Œå·
 
-	SScanModalInfo SScanModalInfo;			//Ä£Ì¬Ö¸Áî
-	SScanNonModalInfo SScanNonModalInfo;     //·ÇÄ£Ì¬ĞÅÏ¢
-	int8 cMacroType;//ºê¹Ø¼ü×ÖÀàĞÍ
+    SScanModalInfo SScanModalInfo;       //æ¨¡æ€æŒ‡ä»¤
+    SScanNonModalInfo SScanNonModalInfo; //éæ¨¡æ€ä¿¡æ¯
+    int8 cMacroType;                     //å®å…³é”®å­—ç±»å‹
 
-	uint8 ucScanStep;
-	double dLexicalUnitValue;   //´Ê·¨µ¥ÔªµÄÖµ(¿ç²½ÖèÊ¹ÓÃ£¬±ØĞë±£´æÔÚÕâ£¬·ñÔòÔì³ÉÊı¾İ¶ªÊ§)
+    uint8 ucScanStep;
+    double dLexicalUnitValue; //è¯æ³•å•å…ƒçš„å€¼(è·¨æ­¥éª¤ä½¿ç”¨ï¼Œå¿…é¡»ä¿å­˜åœ¨è¿™ï¼Œå¦åˆ™é€ æˆæ•°æ®ä¸¢å¤±)
 
-	int8 cScanFinishFlag;
+    int8 cScanFinishFlag;
 
+    bool bA2Z[26];
+    double dA2Z[26];
 
-	bool bA2Z[26];
-	double dA2Z[26];
+    bool bABC[3];
+    double dABC[3];
+    bool bXYZ[3];
+    double dXYZ[3];
+    bool bUVW[3];
+    double dUVW[3];
+    bool bRIJK[4];
+    double dRIJK[4];
+    bool bPoundP;
+    uint16 usPoundP; //P#iä¸­çš„iå€¼å¤§å°
+    bool bPoundQ;
+    uint16 usPoundQ; //Q#jä¸­çš„jå€¼å¤§å°
+    bool bPoundR;
+    uint16 usPoundR; //R#kä¸­çš„kå€¼å¤§å°
 
-	bool  bABC[3]; double dABC[3];
-	bool  bXYZ[3]; double dXYZ[3];
-	bool  bUVW[3]; double dUVW[3];
-	bool  bRIJK[4]; double dRIJK[4];
-	bool bPoundP; uint16 usPoundP;//P#iÖĞµÄiÖµ´óĞ¡
-	bool bPoundQ; uint16 usPoundQ;//Q#jÖĞµÄjÖµ´óĞ¡
-	bool bPoundR; uint16 usPoundR;//R#kÖĞµÄkÖµ´óĞ¡
+    bool bF, bS, bT;
+    double dF, dS, dT;
+    bool bP, bH;
+    bool bPFirst, bHFirst;
+    double dP, dH;
 
-	bool bF, bS, bT; double dF, dS, dT;
-	bool bP, bH; bool bPFirst, bHFirst; double dP, dH;
+    bool bN, bQ, bL, bD, bO;
+    double dN, dQ, dL, dD, dO;
 
-	bool bN, bQ, bL, bD, bO;
-	double  dN, dQ, dL, dD, dO;
+    bool bGOTO;
+    double dGOTO;
 
-	bool bGOTO; double dGOTO;
+    bool bIF;
+    double dIF;
+    bool bELSEIF;
+    double dELSEIF;
+    bool bELSE;
+    bool bENDIF;
+    bool bTHEN;
 
-	bool bIF; double dIF;
-	bool bELSEIF; double dELSEIF;
-	bool bELSE;
-	bool bENDIF;
-	bool bTHEN;
+    bool bWHILE;
+    double dWHILE;
+    bool bENDWHILE;
+    bool bDO;
+} SScan;
 
-	bool bWHILE; double dWHILE;
-	bool bENDWHILE;
-	bool bDO;
-}SScan;
-
-
-
-//G´úÂë»º³åÇøµ¥Ôª½á¹¹Ìå
+//Gä»£ç ç¼“å†²åŒºå•å…ƒç»“æ„ä½“
 struct SGCodeParse
 {
-	int8 cFilename[FILENAME_LENGTH_LIMIT];//ÎÄ¼şÃû
-	uint32 unGCodeLineNum;    // ½âÎöµ½µÚ¼¸ĞĞG´úÂë
-	//struct SGCodeModalInfo SModalInfo;	         //Ä£Ì¬ĞÅÏ¢     //2021-8-16  ·ëÓ¢»ª
-	SGCodeModalInfo SModalInfo;
-	//struct SGCodeNonModalInfo SNonModalInfo;     //·ÇÄ£Ì¬ĞÅÏ¢   //2021-8-16  ·ëÓ¢»ª	// lxwºóĞøÉ¾³ı
+    int8 cFilename[FILENAME_LENGTH_LIMIT]; //æ–‡ä»¶å
+    uint32 unGCodeLineNum;                 // è§£æåˆ°ç¬¬å‡ è¡ŒGä»£ç 
+    //struct SGCodeModalInfo SModalInfo;	         //æ¨¡æ€ä¿¡æ¯     //2021-8-16  å†¯è‹±å
+    SGCodeModalInfo SModalInfo;
+    //struct SGCodeNonModalInfo SNonModalInfo;     //éæ¨¡æ€ä¿¡æ¯   //2021-8-16  å†¯è‹±å	// lxwåç»­åˆ é™¤
 
-	SPointDouble* pSG50Offset;			//lxwÌí¼Ó£¬ÓÃÓÚ¼ÇÂ¼G50Æ«ÖÃ,·ÏÆú
+    SPointDouble* pSG50Offset; //lxwæ·»åŠ ï¼Œç”¨äºè®°å½•G50åç½®,åºŸå¼ƒ
 
+    int8 cPointType;         //1(G50)  2(G10)
+    uint8 uG10ToolID;        //G10çš„åˆ€å…·å·
+    SPointDouble SPointInfo; //è®°å½•G50G10ç­‰åæ ‡ä¿¡æ¯
 
-	int8 cPointType;//1(G50)  2(G10)
-	uint8 uG10ToolID;//G10µÄµ¶¾ßºÅ
-	SPointDouble SPointInfo; /**< G50Îª¾ø¶ÔÆ«ÖÃ£»G10Îª±¾ÌõÄ¥ºÄÔöÁ¿£¬µ¥Î»mm£¬XÎª¾¶ÏòÁ¿¡£ */
+    //bool bG50Appear;  //G50å‡ºç°æ ‡å¿—ä½ Trueï¼šå½“å‰ç¨‹åºæ®µæœ‰G50å‡ºç°   Falseï¼šå½“å‰ç¨‹åºæ®µæ²¡æœ‰G50å‡ºç°
 
-	//bool bG50Appear;  //G50³öÏÖ±êÖ¾Î» True£ºµ±Ç°³ÌĞò¶ÎÓĞG50³öÏÖ   False£ºµ±Ç°³ÌĞò¶ÎÃ»ÓĞG50³öÏÖ
+    bool bG65SystemMacroWait; //G65ç³»ç»Ÿå®ç­‰å¾…æ ‡å¿—
 
-	bool bG65SystemMacroWait;//G65ÏµÍ³ºêµÈ´ı±êÖ¾
+    uint32 unCommandType; //æŒ‡ä»¤ç±»å‹	2021-09-17 æœ±ç¨³ä¸­ uint8 ->uint16
+    //ï¼ˆæŒ‡ä»¤ç±»å‹å˜é‡ä¸åˆ©äºå®ç°æ¨¡å—åŒ–ï¼Œæˆ–è€…åœ¨è§„åˆ™ç»“æ„ä½“ä¸­åŠ å…¥æŒ‡ä»¤åœ°å€ä¸æŒ‡ä»¤å¯¹åº”çš„ä½ï¼‰
 
-	uint32 unCommandType;     //Ö¸ÁîÀàĞÍ	2021-09-17 ÖìÎÈÖĞ uint8 ->uint16
-	//£¨Ö¸ÁîÀàĞÍ±äÁ¿²»ÀûÓÚÊµÏÖÄ£¿é»¯£¬»òÕßÔÚ¹æÔò½á¹¹ÌåÖĞ¼ÓÈëÖ¸ÁîµØÖ·ÓëÖ¸Áî¶ÔÓ¦µÄÎ»£©
+    //int8 cInterpolationState;	//æ—§ï¼š0:æ™®é€šæ¨¡å¼ 1:G13 2:G12 3:æåæ ‡æ¨¡å¼ 4:G7 5:åœ†æŸ±æ¨¡å¼
+    int8 cInterpolationState; //æ–°ï¼š0:æ™®é€šæ¨¡å¼ 1:æåæ ‡æ¨¡å¼ 2:åœ†æŸ±æ¨¡å¼
 
-	//int8 cInterpolationState;	//¾É£º0:ÆÕÍ¨Ä£Ê½ 1:G13 2:G12 3:¼«×ø±êÄ£Ê½ 4:G7 5:Ô²ÖùÄ£Ê½
-	int8 cInterpolationState;	//ĞÂ£º0:ÆÕÍ¨Ä£Ê½ 1:¼«×ø±êÄ£Ê½ 2:Ô²ÖùÄ£Ê½
+    VAL_STRUCT_TYPE ucRelaVal; //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡  2022-4-20  æœ±ç¨³ä¸­	//lxwæ–°æ¡†æ¶æœªä½¿ç”¨è¯¥å˜é‡
 
-	VAL_STRUCT_TYPE	ucRelaVal;		//Ïà¶ÔÖµ±êÊ¶±äÁ¿  2022-4-20  ÖìÎÈÖĞ	//lxwĞÂ¿ò¼ÜÎ´Ê¹ÓÃ¸Ã±äÁ¿
+    enum ENTITY EntityType; //å®ä½“ç±»å‹ï¼ŒLINE:1, CIRCLE:2, ARC:3
+    int8 cArcDir;           //åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
 
-	enum ENTITY EntityType;		//ÊµÌåÀàĞÍ£¬LINE:1, CIRCLE:2, ARC:3
-	int8 cArcDir;	         //Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
+    double
+        dRadius; //[åŠå¾„ï¼Œå•ä½ï¼šmm]  [G92 åˆ‡å‰Šèµ·ç‚¹ä¸åˆ‡å‰Šç»ˆç‚¹Xè½´ç»å¯¹åæ ‡çš„å·®å€¼(åŠå¾„å€¼)] [G76:ç¬¬1è¡Œï¼ŒR(d)ï¼šèºçº¹ç²¾è½¦çš„åˆ‡å‰Šé‡ï¼Œç¬¬2è¡Œï¼ŒR(i) ï¼šèºçº¹é”¥åº¦ï¼Œèºçº¹èµ·ç‚¹ä¸èºçº¹ç»ˆç‚¹X è½´ç»å¯¹åæ ‡çš„å·®å€¼]
+    SPointDouble SCenterPoint; //åœ†å¿ƒï¼Œå•ä½ï¼šmm
+    SPointDouble SStartPoint;  //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;    //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    float dEllipseFactorA;     // æ¤­åœ†å‚æ•°A   2023.3.29 æœ±ç¨³ä¸­
+    float dEllipseFactorB;     // æ¤­åœ†å‚æ•°B   2023.3.29 æœ±ç¨³ä¸­
+    float fCylinderRadius;     // åœ†æŸ±åŠå¾„ mm  2023.3.29 æœ±ç¨³ä¸­
 
-	double dRadius;			//[°ë¾¶£¬µ¥Î»£ºmm]  [G92 ÇĞÏ÷ÆğµãÓëÇĞÏ÷ÖÕµãXÖá¾ø¶Ô×ø±êµÄ²îÖµ(°ë¾¶Öµ)] [G76:µÚ1ĞĞ£¬R(d)£ºÂİÎÆ¾«³µµÄÇĞÏ÷Á¿£¬µÚ2ĞĞ£¬R(i) £ºÂİÎÆ×¶¶È£¬ÂİÎÆÆğµãÓëÂİÎÆÖÕµãX Öá¾ø¶Ô×ø±êµÄ²îÖµ]
-	SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm
-	SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
-	float  dEllipseFactorA; // ÍÖÔ²²ÎÊıA   2023.3.29 ÖìÎÈÖĞ
-	float  dEllipseFactorB; // ÍÖÔ²²ÎÊıB   2023.3.29 ÖìÎÈÖĞ
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ÖìÎÈÖĞ
+    //SToolParaInfo SToolPara;	//åˆ€å…·å‚æ•° å¼ƒç”¨ 2023.6.9 å†¯è‹±å
+    uint8 ucToolID;      //åˆ€å…·ID 2023.6.9 å†¯è‹±å
+    uint8 ucToolCompNum; //åˆ€è¡¥å·
+    uint8 ucTurretNum;   //åˆ€å¡”å·ï¼ˆåˆ€åº§å·ï¼‰
+    //int16 sWorkpieceCoordNum; //å·¥ä»¶åæ ‡å·
 
-	//SToolParaInfo SToolPara;	//µ¶¾ß²ÎÊı ÆúÓÃ 2023.6.9 ·ëÓ¢»ª
-	uint8 ucToolID;     //µ¶¾ßID 2023.6.9 ·ëÓ¢»ª
-	uint8 ucToolCompNum;//µ¶²¹ºÅ
-	uint8 ucTurretNum;//µ¶ËşºÅ£¨µ¶×ùºÅ£©
-	//int16 sWorkpieceCoordNum; //¹¤¼ş×ø±êºÅ
+    double dSpindleSpeed; //ä¸»è½´é€Ÿåº¦  G96ï¼Œå•ä½m/min  G97ï¼Œå•ä½r/min
 
+    double dSecondSpindleSpeed; //ç¬¬äºŒè½¬è½´é€Ÿåº¦/åŠ¨åŠ›åˆ€ï¼Œr/min
 
-	double dSpindleSpeed; //Ö÷ÖáËÙ¶È  G96£¬µ¥Î»m/min  G97£¬µ¥Î»r/min
+    int8 cToolAxisMod;           //åˆ€å…·è½´æ¨¡å¼
+    double dToolAxisFollowRatio; //åˆ€å…·è½´è½¬é€ŸG51.2å¤šè¾¹å½¢åŠ å·¥ï¼ˆè½¬é€Ÿæ¯”ï¼‰
+    double dToolAxisPhase;       //åˆ€å…·è½´ç›¸ä½è§’
+    int8 cTwistCommand;          //åˆ€å…·è½´æ‰­è½¬æŒ‡ä»¤ï¼ˆG0,G1,G2ï¼‰
+    double dTwistAngle;          //åˆ€å…·è½´æ‰­è½¬è§’
 
-	double dSecondSpindleSpeed;	//µÚ¶ş×ªÖáËÙ¶È/¶¯Á¦µ¶£¬r/min
+    double dFeedrate; //è¿›ç»™é€Ÿåº¦  mm/ms   é•¿è½´è¿›ç»™é‡ï¼ˆèºçº¹å¯¼ç¨‹ï¼‰
 
-	int8 cToolAxisMod;//µ¶¾ßÖáÄ£Ê½
-	double dToolAxisFollowRatio;//µ¶¾ßÖá×ªËÙG51.2¶à±ßĞÎ¼Ó¹¤£¨×ªËÙ±È£©
-	double dToolAxisPhase;//µ¶¾ßÖáÏàÎ»½Ç
-	int8 cTwistCommand;//µ¶¾ßÖáÅ¤×ªÖ¸Áî£¨G0,G1,G2£©
-	double dTwistAngle;//µ¶¾ßÖáÅ¤×ª½Ç
+    double dLimitedSpindleSpeed; // G50 é™åˆ¶çš„ä¸»è½´è½¬é€Ÿ(r/min)  æœ±ç¨³ä¸­ 2022-1-17  -1
 
-	double dFeedrate; //½ø¸øËÙ¶È  mm/ms   ³¤Öá½ø¸øÁ¿£¨ÂİÎÆµ¼³Ì£©
+    int8 cChannelBufNum; //é€šé“ç­‰å¾…ä¿¡å·æ•°ç»„ä¸‹æ ‡ï¼ˆ-1ä¸ºæ— æ•ˆ èŒƒå›´1~MAX ï¼‰
 
-	double dLimitedSpindleSpeed;// G50 ÏŞÖÆµÄÖ÷Öá×ªËÙ(r/min)  ÖìÎÈÖĞ 2022-1-17  -1
+    uint8 ucIOCommandArray
+        [IO_MAXGROUP_IN_SINGLE_LINE]; //IOç±»å‹çš„Mä»£ç ç»“æ„ä½“æ•°ç»„ //æœ±ç¨³ä¸­ 2021-11-09   (UIOCommandArray æ”¹ä¸º ucIOCommandArray 2021-12-9)
 
-	int8 cChannelBufNum;//Í¨µÀµÈ´ıĞÅºÅÊı×éÏÂ±ê£¨-1ÎªÎŞĞ§ ·¶Î§1~MAX £©
+    uint32 unDelayTime; //å»¶æ—¶,å•ä½:ms   G04 Pï¼ˆXUï¼‰_
 
-	uint8 ucIOCommandArray[IO_MAXGROUP_IN_SINGLE_LINE]; //IOÀàĞÍµÄM´úÂë½á¹¹ÌåÊı×é //ÖìÎÈÖĞ 2021-11-09   (UIOCommandArray ¸ÄÎª ucIOCommandArray 2021-12-9)
+    uint32 unChipBreakDelayTime; //æ–­å±‘æš‚åœæ—¶é—´,å•ä½ms      P
+    double dChipBreakLength;     //æ–­å±‘é•¿åº¦,å•ä½:mm         Q
+    bool bChipBreakFlag;         //æ–­å±‘æ ‡å¿—ä½,TRUE:å¼€å¯ FALSE:å…³é—­
 
+    bool bG31Flag; //G31è·³æ®µ
 
-	uint32 unDelayTime;	//ÑÓÊ±,µ¥Î»:ms   G04 P£¨XU£©_
+    SChannelCommand sChannelCommand; //é€šé“æŒ‡ä»¤ä¿¡æ¯ï¼ˆM97-M100ï¼‰
 
-	uint32 unChipBreakDelayTime;//¶ÏĞ¼ÔİÍ£Ê±¼ä,µ¥Î»ms      P
-	double dChipBreakLength;	//¶ÏĞ¼³¤¶È,µ¥Î»:mm         Q
-	bool bChipBreakFlag;		//¶ÏĞ¼±êÖ¾Î»,TRUE:¿ªÆô FALSE:¹Ø±Õ
+    //**************åˆ˜æ³“æº-G32è§£ææ‰€æ·»å‚æ•°*********2021â€”9â€”1**********
+    double dJ; //[çŸ­è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€]  [G76 0ï½99999999Ã—æœ€å°è¾“å…¥å¢é‡ éæ¨¡æ€]
+    double dK; //[é•¿è½´é€€å°¾é‡   G32å‚æ•°æ¨¡æ€  G92æ¨¡æ€]  [G76 0ï½99999999Ã—æœ€å°è¾“å…¥å¢é‡ éæ¨¡æ€]
+    double
+        dQ; //[G32:1.èµ·å§‹è§’åº¦ éæ¨¡æ€]   [G76: ç¬¬1è¡Œ.Q(â–³dmin):èºçº¹ç²—è½¦æ—¶çš„æœ€å°åˆ‡å‰Šé‡ 0ï½99999,  ç¬¬2è¡Œ.Q(â–³d):ç¬¬ä¸€æ¬¡èºçº¹åˆ‡å‰Šæ·±åº¦ 1ï½99999999]
+    uint16 usL;            //[G92ã€G33:å¤šå¤´èºçº¹å¤´æ•°1-99  æ¨¡æ€]
+    bool bRepeatG32Flag;   //TRUE:è¿ç»­G32 FALSE:éè¿ç»­G32bool bRepeatG32Flag;    //TRUE:è¿ç»­G32 FALSE:éè¿ç»­G32
+    bool bG34RunFlag;      //G34è¿è¡Œæ ‡å¿—ä½ï¼ˆç”¨äºèºçº¹ç»“æ„ä½“ï¼‰
+    bool bG34BackTailFlag; //G34é€€å°¾æ ‡å¿—ä½
+    bool bG32LetterQ;      //G32æ˜¯å¦å‡ºç°Qçš„æ ‡å¿—ä½
+    uint8 ucG32SubMode;    //G32çš„å­ç±»	ç”¨äºåŒºåˆ†G32.2/G32.3/G32.4 é™ˆæ•èªå¢ 2023/6/13
 
-	bool bG31Flag;//G31Ìø¶Î
+    bool bLastLineMark; //æœ€åä¸€è¡Œæ ‡è®°ä½ é€‰æ‹©åœæ­¢åŠŸèƒ½ä½¿ç”¨  å·¥ä»¶è®¡æ•°æ ‡è®°ä½(M30 M02 M99 ç¬¬äºŒä¸ª%)
 
-	SChannelCommand sChannelCommand; //Í¨µÀÖ¸ÁîĞÅÏ¢£¨M97-M100£©
+    int8 cQuickHandleType; //Gä»£ç å¿«é€Ÿå¤„ç†ç±»å‹
+    int8 cMergedCounter;   //è¯¥è¡ŒGä»£ç åˆå¹¶çš„æ¬¡æ•°
 
-//**************Áõãüâı-G32½âÎöËùÌí²ÎÊı*********2021¡ª9¡ª1**********
-	double dJ;      //[¶ÌÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬]  [G76 0¡«99999999¡Á×îĞ¡ÊäÈëÔöÁ¿ ·ÇÄ£Ì¬]
-	double dK;      //[³¤ÖáÍËÎ²Á¿   G32²ÎÊıÄ£Ì¬  G92Ä£Ì¬]  [G76 0¡«99999999¡Á×îĞ¡ÊäÈëÔöÁ¿ ·ÇÄ£Ì¬]
-	double dQ;      //[G32:1.ÆğÊ¼½Ç¶È ·ÇÄ£Ì¬]   [G76: µÚ1ĞĞ.Q(¡÷dmin):ÂİÎÆ´Ö³µÊ±µÄ×îĞ¡ÇĞÏ÷Á¿ 0¡«99999,  µÚ2ĞĞ.Q(¡÷d):µÚÒ»´ÎÂİÎÆÇĞÏ÷Éî¶È 1¡«99999999]
-	uint16  usL;     //[G92¡¢G33:¶àÍ·ÂİÎÆÍ·Êı1-99  Ä£Ì¬]
-	bool bRepeatG32Flag;    //TRUE:Á¬ĞøG32 FALSE:·ÇÁ¬ĞøG32bool bRepeatG32Flag;    //TRUE:Á¬ĞøG32 FALSE:·ÇÁ¬ĞøG32
-	bool bG34RunFlag;       //G34ÔËĞĞ±êÖ¾Î»£¨ÓÃÓÚÂİÎÆ½á¹¹Ìå£©
-	bool bG34BackTailFlag;  //G34ÍËÎ²±êÖ¾Î»
-	bool bG32LetterQ;//G32ÊÇ·ñ³öÏÖQµÄ±êÖ¾Î»
-	uint8 ucG32SubMode;		//G32µÄ×ÓÀà	ÓÃÓÚÇø·ÖG32.2/G32.3/G32.4 ³ÂÃô´ÏÔö 2023/6/13
+    int8 G33RotateAxis;  //G33 æ—‹è½¬è½´  å¯é€‰Aè½´æˆ–Cè½´
+    int8 G33TappingMode; //G33æ”»ç‰™æ¨¡å¼ 0:åˆšæ€§æ”»ç‰™ 1:æŸ”æ€§æ”»ç‰™
 
-	bool bLastLineMark;//×îºóÒ»ĞĞ±ê¼ÇÎ» Ñ¡ÔñÍ£Ö¹¹¦ÄÜÊ¹ÓÃ  ¹¤¼ş¼ÆÊı±ê¼ÇÎ»(M30 M02 M99 µÚ¶ş¸ö%)
+    SIOContrlInfo SIOContrlInfo; //IOæ§åˆ¶ä¿¡æ¯	//é™ˆæ•èª	2023/7/10
+    double dHorMax;              //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å¤§å€¼   //è®¡ç®—å¹³é¢åœ†å¼§çš„æœ€å€¼   æ´ªå† é¹ 2024/4/19
+    double dVerMax;              //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å¤§å€¼
+    double dHorMin;              //æ’è¡¥æ¨ªè½´æ–¹å‘çš„æœ€å°å€¼
+    double dVerMin;              //æ’è¡¥çºµè½´æ–¹å‘çš„æœ€å°å€¼
+    bool bValidQ;                // Qå€¼æœ‰æ•ˆ 2024/7/12
 
-	int8 cQuickHandleType;		//G´úÂë¿ìËÙ´¦ÀíÀàĞÍ
-	int8 cMergedCounter;		//¸ÃĞĞG´úÂëºÏ²¢µÄ´ÎÊı
+    //ZXD20251115
+    double dG84Ratio; //ç”¨äºG84å€ç‡è®¡ç®—
 
-	int8 G33RotateAxis;			//G33 Ğı×ªÖá  ¿ÉÑ¡AÖá»òCÖá
-	int8 G33TappingMode;		//G33¹¥ÑÀÄ£Ê½ 0:¸ÕĞÔ¹¥ÑÀ 1:ÈáĞÔ¹¥ÑÀ
+    //lxw:åˆ é™¤æ­¤å˜é‡ï¼Œç›®æ ‡å ç”¨è½´ï¼Œä¸åœ¨Gä»£ç ä¸­è·å–ï¼Œåœ¨è¿åŠ¨é¢„å¤„ç†ä¸­è·å–
+    //lxw:Gä»£ç è§£æåï¼Œåœ¨åç»­çš„åˆ€è¡¥ã€å€’è§’è®¡ç®—ä¸­ä¼šæ–°å¢çº¿æ®µï¼Œæ–°å¢çš„çº¿æ®µä¸­ä»éœ€å¤„ç†ç›®æ ‡å ç”¨è½´
+    //lxw:æ‰€ä»¥åœ¨è¿åŠ¨é¢„å¤„ç†æ—¶ï¼Œç»Ÿä¸€å¯¹ç›®æ ‡å ç”¨è½´è¿›è¡Œè·å–å¹¶å ç”¨
+    VAL_STRUCT_TYPE ucValStatus;  //æœ‰æ•ˆè½´ï¼ˆç»“æ„ä½“è½´ï¼‰ï¼šåŠ å·¥ç¨‹åºæ®µæ—¶äº§ç”Ÿè¿åŠ¨çš„è½´ï¼Œè¯¥å€¼ç”±å®ä½“ç±»å‹è¿åŠ¨å†³å®š
+    VAL_STRUCT_TYPE ucTurretAxis; //åˆ€å¡”è½´ï¼ˆç‰©ç†è½´ï¼Ÿï¼‰ï¼šåŠ å·¥ç¨‹åºæ®µæ—¶ä¼šå½±å“åŠ å·¥çš„è½´ï¼Œè¯¥å€¼ç”±æœºåºŠç»“æ„å†³å®š
 
-	SIOContrlInfo SIOContrlInfo;	//IO¿ØÖÆĞÅÏ¢	//³ÂÃô´Ï	2023/7/10
-	double dHorMax;		//²å²¹ºáÖá·½ÏòµÄ×î´óÖµ   //¼ÆËãÆ½ÃæÔ²»¡µÄ×îÖµ   ºé¹ÚÅô 2024/4/19
-	double dVerMax;		//²å²¹×İÖá·½ÏòµÄ×î´óÖµ
-	double dHorMin;		//²å²¹ºáÖá·½ÏòµÄ×îĞ¡Öµ
-	double dVerMin;		//²å²¹×İÖá·½ÏòµÄ×îĞ¡Öµ
-	bool bValidQ;		// QÖµÓĞĞ§ 2024/7/12
-
-
-	//ZXD20251115
-	double dG84Ratio;  //ÓÃÓÚG84±¶ÂÊ¼ÆËã
-
-
-	//lxw:É¾³ı´Ë±äÁ¿£¬Ä¿±êÕ¼ÓÃÖá£¬²»ÔÚG´úÂëÖĞ»ñÈ¡£¬ÔÚÔË¶¯Ô¤´¦ÀíÖĞ»ñÈ¡
-	//lxw:G´úÂë½âÎöºó£¬ÔÚºóĞøµÄµ¶²¹¡¢µ¹½Ç¼ÆËãÖĞ»áĞÂÔöÏß¶Î£¬ĞÂÔöµÄÏß¶ÎÖĞÈÔĞè´¦ÀíÄ¿±êÕ¼ÓÃÖá
-	//lxw:ËùÒÔÔÚÔË¶¯Ô¤´¦ÀíÊ±£¬Í³Ò»¶ÔÄ¿±êÕ¼ÓÃÖá½øĞĞ»ñÈ¡²¢Õ¼ÓÃ
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öá£¨½á¹¹ÌåÖá£©£º¼Ó¹¤³ÌĞò¶ÎÊ±²úÉúÔË¶¯µÄÖá£¬¸ÃÖµÓÉÊµÌåÀàĞÍÔË¶¯¾ö¶¨
-	VAL_STRUCT_TYPE ucTurretAxis;	//µ¶ËşÖá£¨ÎïÀíÖá£¿£©£º¼Ó¹¤³ÌĞò¶ÎÊ±»áÓ°Ïì¼Ó¹¤µÄÖá£¬¸ÃÖµÓÉ»ú´²½á¹¹¾ö¶¨
-
-	double dChamferLen;     //L²ÎÊı:×Ô¶¯µ¹½ÇÇĞ½Ç³¤¶È(mm), 0=ÎŞµ¹½ÇÇëÇó
-	double dRoundedRadius;  //D²ÎÊı:×Ô¶¯µ¹Ô²°ë¾¶(mm), 0=ÎŞµ¹Ô²ÇëÇó
+    double dChamferLen;    //Lå‚æ•°:è‡ªåŠ¨å€’è§’åˆ‡è§’é•¿åº¦(mm), 0=æ— å€’è§’è¯·æ±‚
+    double dRoundedRadius; //Då‚æ•°:è‡ªåŠ¨å€’åœ†åŠå¾„(mm), 0=æ— å€’åœ†è¯·æ±‚
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-	bool bHandwheelAuto; /**< ×ª»»Îª G0/G1 Ç°±£´æµÄÕû¶Î×Ô¶¯Ö´ĞĞ±ê¼Ç¡£ */
+    bool bHandwheelAuto; /**< è½¬æ¢ä¸º G0/G1 å‰ä¿å­˜çš„æ•´æ®µè‡ªåŠ¨æ‰§è¡Œæ ‡è®°ã€‚ */
 #endif
-
 };
 
-
-
-//G´úÂëµ±Ç°ÏµÍ³×´Ì¬½á¹¹Ìå£¨Ô­£º»º³åÇøĞ´Íêºó²Å½øĞĞ¸üĞÂ	ĞÂ£º×¼±¸ÊµÊ±¸üĞÂ£¨Ä¿Ç°Ö»¶ÔÆ«ÖÃÊµÊ±¸úĞÂ£©£©
+//Gä»£ç å½“å‰ç³»ç»ŸçŠ¶æ€ç»“æ„ä½“ï¼ˆåŸï¼šç¼“å†²åŒºå†™å®Œåæ‰è¿›è¡Œæ›´æ–°	æ–°ï¼šå‡†å¤‡å®æ—¶æ›´æ–°ï¼ˆç›®å‰åªå¯¹åç½®å®æ—¶è·Ÿæ–°ï¼‰ï¼‰
 typedef struct _SGCodeSysState
 {
-	uint8 ucToolID;			//µ¶¾ßºÅ£¨ÊµÊ±¸üĞÂ£©
-	uint8 ucToolCompNum;	//µ¶²¹ºÅ£¨ÊµÊ±¸üĞÂ£©
-	int16 sWorkpieceCoordNum;      //G54~G59 ¹¤¼ş×ø±êºÅ£¨ÊµÊ±¸üĞÂ£©
+    uint8 ucToolID;           //åˆ€å…·å·ï¼ˆå®æ—¶æ›´æ–°ï¼‰
+    uint8 ucToolCompNum;      //åˆ€è¡¥å·ï¼ˆå®æ—¶æ›´æ–°ï¼‰
+    int16 sWorkpieceCoordNum; //G54~G59 å·¥ä»¶åæ ‡å·ï¼ˆå®æ—¶æ›´æ–°ï¼‰
 
-	struct 
-	{
-		SPointDouble SToolSettingOffset; // zxr: Íâ²¿Æ«ÒÆ£¬±£Áô²ÎÊıµ¥Î»¡£
-		SPointDouble SG50Offset;		//G50ÊµÊ±Æ«ÖÃÖµ£¨ÊµÊ±¸üĞÂ£©
-		SPointDouble SToolWearOffset;    //µ¶¾ßÄ¥ËğÆ«ÒÆÖµ£¨ÊµÊ±¸üĞÂ£©ÆúÓÃ
-		SPointDouble SToolLengthOffset; //µ¶¾ß³¤¶ÈÆ«ÒÆÖµ£¨ÊµÊ±¸üĞÂ£©
-		SPointDouble SWorkPieceOffset;   //¹¤¼ş×ø±êÏµÁãµãÆ«ÒÆÖµ,G54-G59,ÏÂ±ê0-5ÒÀ´Î¶ÔÓ¦G54-G59 (ÊµÊ±¸üĞÂ)
-		SPointDouble STotalOffset;		//ÊµÊ±×ÜÆ«ÖÃ£¨ÊµÊ±¸üĞÂ£©
-	}SAllOffsetOfCoord; //¸÷ÖÖ×ø±êÆ«ÒÆ¼¯ºÏ£¬½âÎöºóĞèÒª´«µİµ½ÔË¶¯ÓÃ×÷ÊµÊ±ÏÔÊ¾
+    struct
+    {
+        SPointDouble SToolSettingOffset; // zxr: å¤–éƒ¨åç§»ï¼Œä¿ç•™å‚æ•°å•ä½ã€‚
+        SPointDouble SG50Offset;         //G50å®æ—¶åç½®å€¼ï¼ˆå®æ—¶æ›´æ–°ï¼‰
+        SPointDouble SToolWearOffset;    //åˆ€å…·ç£¨æŸåç§»å€¼ï¼ˆå®æ—¶æ›´æ–°ï¼‰å¼ƒç”¨
+        SPointDouble SToolLengthOffset;  //åˆ€å…·é•¿åº¦åç§»å€¼ï¼ˆå®æ—¶æ›´æ–°ï¼‰
+        SPointDouble SWorkPieceOffset;   //å·¥ä»¶åæ ‡ç³»é›¶ç‚¹åç§»å€¼,G54-G59,ä¸‹æ ‡0-5ä¾æ¬¡å¯¹åº”G54-G59 (å®æ—¶æ›´æ–°)
+        SPointDouble STotalOffset;       //å®æ—¶æ€»åç½®ï¼ˆå®æ—¶æ›´æ–°ï¼‰
+    } SAllOffsetOfCoord;                 //å„ç§åæ ‡åç§»é›†åˆï¼Œè§£æåéœ€è¦ä¼ é€’åˆ°è¿åŠ¨ç”¨ä½œå®æ—¶æ˜¾ç¤º
 
-	//µ¶¾ßÄ¥ºÄ£¨XZÖá£©³õÊ¼»¯Ê±´ÓÏµÍ³²ÎÊı¶ÁÈ¡
-	SPointDouble SToolWearPara[TOOL_NUM_MAX];
+    //åˆ€å…·ç£¨è€—ï¼ˆXZè½´ï¼‰åˆå§‹åŒ–æ—¶ä»ç³»ç»Ÿå‚æ•°è¯»å–
+    SPointDouble SToolWearPara[TOOL_NUM_MAX];
 
+    //ç›¸å¯¹å€¼ç¼–ç¨‹æ ‡å¿—
+    bool bRelativeCoordinateProgramming;
+    //æåæ ‡ç¼–ç¨‹æ ‡å¿—
+    bool bPolarCoordinateProgramming;
+    //è‹±åˆ¶è¾“å…¥æ ‡å¿—
+    bool bImperialProgramming;
+    //æ’è¡¥æ¨¡å¼
+    int8 cInterpolationState; //æ’è¡¥çŠ¶æ€ï¼›	0ï¼šæ™®é€šæ’è¡¥		1:æåæ ‡çŠ¶æ€		2.åœ†æŸ±æ’è¡¥çŠ¶æ€
+    float fCylinderRadius;
+    ///////////////////////////////////////////////////////////////éœ€è¦ç»§æ‰¿åˆ°Gä»£ç ç¼“å†²åŒº/////////////////
 
-	//Ïà¶ÔÖµ±à³Ì±êÖ¾
-	bool bRelativeCoordinateProgramming;
-	//¼«×ø±ê±à³Ì±êÖ¾
-	bool bPolarCoordinateProgramming;
-	//Ó¢ÖÆÊäÈë±êÖ¾
-	bool bImperialProgramming;
-	//²å²¹Ä£Ê½
-	int8 cInterpolationState;//²å²¹×´Ì¬£»	0£ºÆÕÍ¨²å²¹		1:¼«×ø±ê×´Ì¬		2.Ô²Öù²å²¹×´Ì¬
-	float fCylinderRadius;
-	///////////////////////////////////////////////////////////////ĞèÒª¼Ì³Ğµ½G´úÂë»º³åÇø/////////////////
+    SGCodeModalInfo SModalInfo; //æ¨¡æ€æŒ‡ä»¤
+    //struct SGCodeNonModalInfo SNonModalInfo;	//éæ¨¡æ€ä¿¡æ¯ï¼šåªå†™å…¥ï¼Œç”¨äºè®°å½•ä¸Šä¸€è¿åŠ¨æŒ‡ä»¤å€¼ï¼Œåˆ¤æ–­è¿åŠ¨æŒ‡ä»¤æ˜¯å¦å‘ç”Ÿå˜åŒ–
 
+    SPointDouble SCurrPoint; //å½“å‰åæ ‡ç‚¹ä½ç½®ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
-	SGCodeModalInfo SModalInfo;			//Ä£Ì¬Ö¸Áî
-	//struct SGCodeNonModalInfo SNonModalInfo;	//·ÇÄ£Ì¬ĞÅÏ¢£ºÖ»Ğ´Èë£¬ÓÃÓÚ¼ÇÂ¼ÉÏÒ»ÔË¶¯Ö¸ÁîÖµ£¬ÅĞ¶ÏÔË¶¯Ö¸ÁîÊÇ·ñ·¢Éú±ä»¯
+    int8 cSpindleStatus;  //ä¸»è½´çŠ¶æ€
+    double dSpindleSpeed; //ä¸»è½´é€Ÿåº¦(å®æ—¶æ›´æ–°)
 
-	SPointDouble SCurrPoint;		//µ±Ç°×ø±êµãÎ»ÖÃ£¨»úĞµ×ø±ê£©
+    int8 cSecondSpindleStatus;  //ç¬¬äºŒä¸»è½´çŠ¶æ€
+    double dSecondSpindleSpeed; //ç¬¬äºŒä¸»è½´é€Ÿåº¦ï¼ˆå®æ—¶æ›´æ–°ï¼‰
 
-	int8 cSpindleStatus;			//Ö÷Öá×´Ì¬
-	double dSpindleSpeed;			//Ö÷ÖáËÙ¶È(ÊµÊ±¸üĞÂ)
+    double dTappingSpeed; // æ·»åŠ G84æ”»ä¸è½¬é€Ÿ
 
-	int8 cSecondSpindleStatus;		//µÚ¶şÖ÷Öá×´Ì¬
-	double dSecondSpindleSpeed;		//µÚ¶şÖ÷ÖáËÙ¶È£¨ÊµÊ±¸üĞÂ£©
+    int8 cToolAxisStatus;        //åˆ€å…·è½´çŠ¶æ€
+    double dLimitedSpindleSpeed; //ä¸»è½´è½¬é€Ÿé™åˆ¶
+    double dFeedrate;            //è¿›ç»™é€Ÿåº¦  mm/ms
 
-	double dTappingSpeed;          // Ìí¼ÓG84¹¥Ë¿×ªËÙ
+    //æŒ‡ä»¤ç±»å‹æ˜¯å¦éœ€è¦ç»§æ‰¿
 
-	int8 cToolAxisStatus;			//µ¶¾ßÖá×´Ì¬
-	double dLimitedSpindleSpeed;	//Ö÷Öá×ªËÙÏŞÖÆ
-	double dFeedrate;          //½ø¸øËÙ¶È  mm/ms
+    //æ–­å±‘å‚æ•°
+    uint32 unChipBreakDelayTime; //æ–­å±‘æš‚åœæ—¶é—´,å•ä½ms        P
+    double dChipBreakLength;     //æ–­å±‘é•¿åº¦,å•ä½mm             Q
+    bool bChipBreakFlag;         //æ–­å±‘æ ‡å¿—ä½ TRUE:å¼€å¯ FALSE:å…³é—­
 
+    int16 sMb; //æš‚æ—¶ä¿ç•™ï¼Œé˜²æŠ¥é”™
+    int8 cMa;  //æš‚æ—¶ä¿ç•™ï¼Œé˜²æŠ¥é”™
+    int8 cMh;  //æš‚æ—¶ä¿ç•™ï¼Œé˜²æŠ¥é”™
 
-	//Ö¸ÁîÀàĞÍÊÇ·ñĞèÒª¼Ì³Ğ
+} SGCodeSysState;
 
-
-	//¶ÏĞ¼²ÎÊı
-	uint32 unChipBreakDelayTime; //¶ÏĞ¼ÔİÍ£Ê±¼ä,µ¥Î»ms        P
-	double dChipBreakLength;	//¶ÏĞ¼³¤¶È,µ¥Î»mm             Q
-	bool bChipBreakFlag;		//¶ÏĞ¼±êÖ¾Î» TRUE:¿ªÆô FALSE:¹Ø±Õ
-
-	int16 sMb;//ÔİÊ±±£Áô£¬·À±¨´í
-	int8 cMa;//ÔİÊ±±£Áô£¬·À±¨´í
-	int8 cMh;//ÔİÊ±±£Áô£¬·À±¨´í
-
-
-}SGCodeSysState;
-
-//»ñÈ¡ÎÄ±¾×´Ì¬½á¹¹Ìå
+//è·å–æ–‡æœ¬çŠ¶æ€ç»“æ„ä½“
 typedef struct _SGetTextStateInfo
 {
-	uint32 unGetLineNum;						//»ñÈ¡ĞĞºÅ£¨½öÓÃÓÚ»ñÈ¡ÎÄ±¾£©************************* unGetLineNum¾ö¶¨»ñÈ¡µÄÄ¿±êĞĞºÅ
-	uint32 unCurrLineNum;						//µ±Ç°ĞĞºÅ£¨µ±Ç°½âÎöµÄĞĞºÅ£¬ÓÃÓÚ±¨´í£©
+    uint32 unGetLineNum;  //è·å–è¡Œå·ï¼ˆä»…ç”¨äºè·å–æ–‡æœ¬ï¼‰************************* unGetLineNumå†³å®šè·å–çš„ç›®æ ‡è¡Œå·
+    uint32 unCurrLineNum; //å½“å‰è¡Œå·ï¼ˆå½“å‰è§£æçš„è¡Œå·ï¼Œç”¨äºæŠ¥é”™ï¼‰
 
-	uint32 nEndLineNum;     //MDi½áÊøÅĞ¶ÏÊ¹ÓÃ CYN
+    uint32 nEndLineNum; //MDiç»“æŸåˆ¤æ–­ä½¿ç”¨ CYN
 
+    int8 cOriginalStr[MAX_LENGTH_OF_LINE]; //è¡Œå­—ç¬¦ä¸²å†…å­˜
+    uint8
+        ucOriStrIndex; //è¡Œå­—ç¬¦ä¸²å†…å­˜è¯»ç´¢å¼•********************************* ucOriStrIndexå†³å®šä»è¡Œå­—ç¬¦ä¸²ä¸­è·å–ç¨‹åºæ®µçš„ç´¢å¼•
+    int8 cStr[MAX_LENGTH_OF_LINE]; //ç¨‹åºæ®µå­—ç¬¦å†…å­˜
+    uint8 ucInsertIndex;           //ç¨‹åºæ®µå­—ç¬¦å†…å­˜å†™ç´¢å¼•
+    bool bIgnored;                 //æ‹¬å·å¿½ç•¥æ ‡å¿—
+    uint8 ucStep;                  //å½“å‰å¤„ç†ç¨‹åºæ–‡æœ¬æ­¥éª¤(åˆå§‹å€¼ä¸º0)
 
-	int8 cOriginalStr[MAX_LENGTH_OF_LINE];		//ĞĞ×Ö·û´®ÄÚ´æ
-	uint8 ucOriStrIndex;						//ĞĞ×Ö·û´®ÄÚ´æ¶ÁË÷Òı********************************* ucOriStrIndex¾ö¶¨´ÓĞĞ×Ö·û´®ÖĞ»ñÈ¡³ÌĞò¶ÎµÄË÷Òı
-	int8 cStr[MAX_LENGTH_OF_LINE];				//³ÌĞò¶Î×Ö·ûÄÚ´æ
-	uint8 ucInsertIndex;						//³ÌĞò¶Î×Ö·ûÄÚ´æĞ´Ë÷Òı
-	bool bIgnored;								//À¨ºÅºöÂÔ±êÖ¾
-	uint8 ucStep;								//µ±Ç°´¦Àí³ÌĞòÎÄ±¾²½Öè(³õÊ¼ÖµÎª0)
+    int8* pCurrPtr;  //å½“å‰å­—ç¬¦çš„æŒ‡é’ˆï¼Œç”¨äºç§»åŠ¨
+    int8* pStartPtr; //æŒ‡é’ˆæŒ‡å‘è¯æ³•å•å…ƒå¼€å¤´
+    int8* pEndPtr;   //æŒ‡é’ˆæŒ‡å‘è¯æ³•å•å…ƒç»“å°¾çš„åä¸€ä½
 
-	int8* pCurrPtr;                                  //µ±Ç°×Ö·ûµÄÖ¸Õë£¬ÓÃÓÚÒÆ¶¯
-	int8* pStartPtr;                                 //Ö¸ÕëÖ¸Ïò´Ê·¨µ¥Ôª¿ªÍ·
-	int8* pEndPtr;                                   //Ö¸ÕëÖ¸Ïò´Ê·¨µ¥Ôª½áÎ²µÄºóÒ»Î»
+} SGetTextStateInfo;
 
-}SGetTextStateInfo;
-
-//Æ«ÖÃ½á¹¹Ìå
+//åç½®ç»“æ„ä½“
 typedef struct _SAllOffset
 {
-	//µ¶¾ßÆ«ÖÃ
-	SPointDouble SToolOffset;
-	//¹¤¼ş×ø±êÆ«ÖÃ
-	SPointDouble SWorkPieceOffset;
-	//G50Æ«ÖÃ
-	SPointDouble SOffsetByG50;
-	//×ÜÆ«ÖÃ
-	SPointDouble STotalOffset;
+    //åˆ€å…·åç½®
+    SPointDouble SToolOffset;
+    //å·¥ä»¶åæ ‡åç½®
+    SPointDouble SWorkPieceOffset;
+    //G50åç½®
+    SPointDouble SOffsetByG50;
+    //æ€»åç½®
+    SPointDouble STotalOffset;
 
-}SAllOffset;
-
-
+} SAllOffset;
 
 /**********************/
-//º¯ÊıÉùÃ÷
+//å‡½æ•°å£°æ˜
 /**********************/
 
-//³õÊ¼»¯»ñÈ¡ÎÄ±¾×´Ì¬½á¹¹Ìå
+//åˆå§‹åŒ–è·å–æ–‡æœ¬çŠ¶æ€ç»“æ„ä½“
 void initGetTextStateInfo(SGetTextStateInfo* pSGetTextStateInfo);
 
-//³õÊ¼»¯G´úÂëÏµÍ³×´Ì¬½á¹¹Ìå
+//åˆå§‹åŒ–Gä»£ç ç³»ç»ŸçŠ¶æ€ç»“æ„ä½“
 void initGCodeSystemState(SGCodeSysState* pSGCodeSysState, uint8 ucChannelNum);
 
-//³õÊ¼»¯G´úÂë»º³åÇø½á¹¹Ìå
+//åˆå§‹åŒ–Gä»£ç ç¼“å†²åŒºç»“æ„ä½“
 void initGCodeBufUnit(struct SGCodeParse* pSGCodeParseUnit);
 
-//³õÊ¼»¯Ä£Ì¬½á¹¹Ìå
+//åˆå§‹åŒ–æ¨¡æ€ç»“æ„ä½“
 void initGCodeModalInfo(SGCodeModalInfo* pSGCodeModalInfo);
 
-//³õÊ¼»¯É¨ÃèÄ£Ì¬½á¹¹Ìå
+//åˆå§‹åŒ–æ‰«ææ¨¡æ€ç»“æ„ä½“
 void initScanModalInfo(SScanModalInfo* pSScanModalInfo);
 
-//³õÊ¼»¯É¨Ãè·ÇÄ£Ì¬½á¹¹Ìå
+//åˆå§‹åŒ–æ‰«æéæ¨¡æ€ç»“æ„ä½“
 void initScanNonModalInfo(SScanNonModalInfo* pSScanNonModalInfo);
 
-//³õÊ¼»¯É¨Ãè½á¹¹Ìå
+//åˆå§‹åŒ–æ‰«æç»“æ„ä½“
 void initScanContainer(SScan* pSScanContainer, bool bClearAll);
 
-//»ñÈ¡µ±Ç°G´úÂëÏµÍ³×´Ì¬½á¹¹Ìå
+//è·å–å½“å‰Gä»£ç ç³»ç»ŸçŠ¶æ€ç»“æ„ä½“
 SGCodeSysState* getCurrSystemState(uint8 ucChannelNum, uint8 ucMod);
 
-//´¦Àí³ÌĞòÎÄ±¾
-int8 processProgramText(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum, SProgram* pSCurrProgram);
+//å¤„ç†ç¨‹åºæ–‡æœ¬
+int8 processProgramText(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum,
+                        SProgram* pSCurrProgram);
 
-//»ñÈ¡³ÌĞò¶Î
+//è·å–ç¨‹åºæ®µ
 uint8 getProgramSegment(SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum, SProgram* pSCurrProgram);
 
-//»ñÈ¡Ò»ĞĞ×Ö·û´®
+//è·å–ä¸€è¡Œå­—ç¬¦ä¸²
 void getGCodeStr(int8* pString, uint8 ucIdx, uint16 usStrSize);
 
-//´¦ÀíµÚ¶ş¸ö°Ù·ÖºÅ
+//å¤„ç†ç¬¬äºŒä¸ªç™¾åˆ†å·
 int8 processSecondPercentSign(uint8 ucMod, uint8 ucChannelNum);
 
-//É¨Ãè³ÌĞò¶Î
-bool scanSegment(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer, SProgram* pCurrProgram, uint8 ucChannelNum);
+//æ‰«æç¨‹åºæ®µ
+bool scanSegment(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer, SProgram* pCurrProgram,
+                 uint8 ucChannelNum);
 
-//¼ÇÂ¼Ö¸Áî×Ö
-void recordLexicalUnit(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer, double dLexicalUnitValue);
+//è®°å½•æŒ‡ä»¤å­—
+void recordLexicalUnit(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer,
+                       double dLexicalUnitValue);
 
-//¼ÇÂ¼GÖ¸Áî×Ö
-void recordGLetter(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer, double dLexicalUnitValue);
+//è®°å½•GæŒ‡ä»¤å­—
+void recordGLetter(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer,
+                   double dLexicalUnitValue);
 
-//¼ÇÂ¼MÖ¸Áî×Ö
-void recordMLetter(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer, double dLexicalUnitValue);
+//è®°å½•MæŒ‡ä»¤å­—
+void recordMLetter(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan* pSScanContainer,
+                   double dLexicalUnitValue);
 
-//ÅĞ¶ÏÊÇ·ñÎª³ÌĞò¶Î½áÊø±êÊ¶·û
+//åˆ¤æ–­æ˜¯å¦ä¸ºç¨‹åºæ®µç»“æŸæ ‡è¯†ç¬¦
 int8 isSegmentFinishSign(const char* pChar);
 
-//ÅĞ¶ÏÊÇ·ñÎªĞĞ½áÊø±êÊ¶·û
+//åˆ¤æ–­æ˜¯å¦ä¸ºè¡Œç»“æŸæ ‡è¯†ç¬¦
 int8 isLineFinishSign(const char* pChar);
 
-//¸üĞÂµ±Ç°×ÜÆ«ÖÃ
-int8 TChangeTotalOffset(uint8 ucChannelNum, uint8 ucToolCompNum, int8 sGb, SPointDouble* STotalOffset, SPointDouble* SWorkPieceOffsetByG50);
+//æ›´æ–°å½“å‰æ€»åç½®
+int8 TChangeTotalOffset(uint8 ucChannelNum, uint8 ucToolCompNum, int8 sGb, SPointDouble* STotalOffset,
+                        SPointDouble* SWorkPieceOffsetByG50);
 
-//¸üĞÂG´úÂëÍ¨µÀ×´Ì¬
+//æ›´æ–°Gä»£ç é€šé“çŠ¶æ€
 void updateGCodeChannelStatus(uint8 ucChannelNum);
 
-//¸Ä±ä¼ì²éor¸³Öµ×´Ì¬
-void changeGCodeStatus(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, uint8 ucTargetStatus, bool bReport, uint32 unLineNum);
+//æ”¹å˜æ£€æŸ¥orèµ‹å€¼çŠ¶æ€
+void changeGCodeStatus(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, uint8 ucTargetStatus, bool bReport,
+                       uint32 unLineNum);
 
-//»ñÈ¡¼ì²éor¸³Öµ×´Ì¬
+//è·å–æ£€æŸ¥orèµ‹å€¼çŠ¶æ€
 uint8 getGCodeStatus(uint8 ucSyntaxOrAssign, uint8 ucChannelNum);
 
-//´ÓSRunÖĞ¶ÁÈ¡Ä£Ì¬ĞÅÏ¢
+//ä»SRunä¸­è¯»å–æ¨¡æ€ä¿¡æ¯
 void getModalInfoFromSRun(struct SGCodeModalInfo* pSGCodeModalInfo, uint8 ucChannelNum);
 
-//»ñÈ¡³ÌĞò¶Î(part1)
+//è·å–ç¨‹åºæ®µ(part1)
 uint8 getProgramSegment(SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum, SProgram* pSCurrProgram);
 
-int8 processProgramText(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum, SProgram* pSCurrProgram);
+int8 processProgramText(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, uint8 ucChannelNum,
+                        SProgram* pSCurrProgram);
 
-
-//»ñÈ¡Ò»ĞĞ×Ö·û´®(part1)
+//è·å–ä¸€è¡Œå­—ç¬¦ä¸²(part1)
 void getGCodeStr(int8* pString, uint8 ucIdx, uint16 usStrSize);
 
-//È¥³ı×Ö·û´®ÖĞµÄ¿Õ¸ñ(part1)
+//å»é™¤å­—ç¬¦ä¸²ä¸­çš„ç©ºæ ¼(part1)
 void eliminateBlank(int8* pString, uint16 usStrSize);
 
-//±È¶Ô×Ö·û´®(part2)
+//æ¯”å¯¹å­—ç¬¦ä¸²(part2)
 bool isTagetStr_B(const int8* cStr, const int8* pCurrPtr);
 
 int8 isSegmentFinishSign(const char* pChar);
 int8 isLineFinishSign(const char* pChar);
 
-//¼Ì³Ğµ±Ç°Í¨µÀG´úÂëÏµÍ³×´Ì¬(part4)
+//ç»§æ‰¿å½“å‰é€šé“Gä»£ç ç³»ç»ŸçŠ¶æ€(part4)
 void inheritFromGCodeSystemState(struct _SGCodeSysState* pSGCodeSysState, struct SGCodeParse* pSGCodeParseUnit);
 
-//¸üĞÂµ±Ç°Í¨µÀG´úÂëÏµÍ³×´Ì¬(part7)
+//æ›´æ–°å½“å‰é€šé“Gä»£ç ç³»ç»ŸçŠ¶æ€(part7)
 void updataGCodeSystemState(struct _SGCodeSysState* pSGCodeSysState, struct SGCodeParse* pSGCodeParseUnit);
 
-//G´úÂë»º³åÇø×ª»»
+//Gä»£ç ç¼“å†²åŒºè½¬æ¢
 void convertGCodeBuff(struct SGCodeParse* pSGCodeBuff);
-/* ½öË¢ĞÂÊµÌå¡¢Ö¸ÁîÎ»¼°ÓĞĞ§Öá£»µ¹½ÇÄ£¿é¸´ÓÃ£¬²»ÔÙ´Î×ª»»Ä£Ì¬¡£ */
+/* ä»…åˆ·æ–°å®ä½“ã€æŒ‡ä»¤ä½åŠæœ‰æ•ˆè½´ï¼›å€’è§’æ¨¡å—å¤ç”¨ï¼Œä¸å†æ¬¡è½¬æ¢æ¨¡æ€ã€‚ */
 void refreshGCodeGeometry(struct SGCodeParse* pSGCodeBuffUnit);
 
-//ÒÆ¶¯G´úÂë»·ĞÎ»º³åÇøĞ´Ö¸Õë
+//ç§»åŠ¨Gä»£ç ç¯å½¢ç¼“å†²åŒºå†™æŒ‡é’ˆ
 void moveGCodeWritePtr(uint8 ucChannelNum);
 
-//ÊÊÅäÆóÒµ²»´ÓµÚÒ»ĞĞ¿ªÊ¼ÔËĞĞ
+//é€‚é…ä¼ä¸šä¸ä»ç¬¬ä¸€è¡Œå¼€å§‹è¿è¡Œ
 int32 scanRealProgramBeginLine(uint8 ucChannelNum, SProgram* pSCurrProgram);
 int8 prepareProgramBeginLine(uint8 ucChannelNum);
 #endif

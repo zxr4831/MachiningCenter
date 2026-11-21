@@ -4,956 +4,966 @@
 
 #include "Gcode.h"
 #if STM32_MODE
-#include"dy_link.h"
+#include "dy_link.h"
 #endif
 
-SMacroCalculate g_SMacroCalCheck[CHANNEL_NUM_MAX];   //ÓëºêÔËËãÓĞ¹ØµÄ½á¹¹Ìå£¨ÄÚº¬¶¯Ì¬ÄÚ´æ£©
+SMacroCalculate g_SMacroCalCheck[CHANNEL_NUM_MAX]; //ä¸å®è¿ç®—æœ‰å…³çš„ç»“æ„ä½“ï¼ˆå†…å«åŠ¨æ€å†…å­˜ï¼‰
 SMacroCalculate g_SMacroCalAssign[CHANNEL_NUM_MAX];
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid initCalculate(SMacroCalculate* pSMacroCalculate)
-  º¯Êı¹¦ÄÜ: ³õÊ¼»¯¼ÆËãÄ£¿é
-  ÊäÈë²ÎÊı£ºpSMacroCalculate	¼ÆËã½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º³õÊ¼»¯½á¹¹Ìå±äÁ¿µÄ²½ÖèÈçÏÂ
-			1.ÊÍ·Å½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-			2.½á¹¹ÌåÄÚÈ«²¿ÖÃ0
-			3.¶Ô³õÊ¼Öµ·Ç0µÄ±äÁ¿¸³Öµ
+  å‡½æ•°åç§°ï¼švoid initCalculate(SMacroCalculate* pSMacroCalculate)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–è®¡ç®—æ¨¡å—
+  è¾“å…¥å‚æ•°ï¼špSMacroCalculate	è®¡ç®—ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šåˆå§‹åŒ–ç»“æ„ä½“å˜é‡çš„æ­¥éª¤å¦‚ä¸‹
+			1.é‡Šæ”¾ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+			2.ç»“æ„ä½“å†…å…¨éƒ¨ç½®0
+			3.å¯¹åˆå§‹å€¼é0çš„å˜é‡èµ‹å€¼
 **************************************************/
 void initAllCalculate(uint8 ucChannelNum)
 {
-	initCalculate(&g_SMacroCalCheck[ucChannelNum]);
-	initCalculate(&g_SMacroCalAssign[ucChannelNum]);
+    initCalculate(&g_SMacroCalCheck[ucChannelNum]);
+    initCalculate(&g_SMacroCalAssign[ucChannelNum]);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid initCalculate(SMacroCalculate* pSMacroCalculate)
-  º¯Êı¹¦ÄÜ: ³õÊ¼»¯¼ÆËãÄ£¿é
-  ÊäÈë²ÎÊı£ºpSMacroCalculate	¼ÆËã½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º³õÊ¼»¯½á¹¹Ìå±äÁ¿µÄ²½ÖèÈçÏÂ
-			1.ÊÍ·Å½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-			2.½á¹¹ÌåÄÚÈ«²¿ÖÃ0
-			3.¶Ô³õÊ¼Öµ·Ç0µÄ±äÁ¿¸³Öµ
+  å‡½æ•°åç§°ï¼švoid initCalculate(SMacroCalculate* pSMacroCalculate)
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–è®¡ç®—æ¨¡å—
+  è¾“å…¥å‚æ•°ï¼špSMacroCalculate	è®¡ç®—ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šåˆå§‹åŒ–ç»“æ„ä½“å˜é‡çš„æ­¥éª¤å¦‚ä¸‹
+			1.é‡Šæ”¾ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+			2.ç»“æ„ä½“å†…å…¨éƒ¨ç½®0
+			3.å¯¹åˆå§‹å€¼é0çš„å˜é‡èµ‹å€¼
 **************************************************/
 void initCalculate(SMacroCalculate* pSMacroCalculate)
 {
-	if (pSMacroCalculate == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    if (pSMacroCalculate == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.ÊÍ·Å¼ÆËã½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-	freeMemCalculate(pSMacroCalculate);
-	
-	//2.Çå¿Õºê¼ÆËã½á¹¹Ìå
-	memset(pSMacroCalculate, 0, sizeof(SMacroCalculate));
+    //1.é‡Šæ”¾è®¡ç®—ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+    freeMemCalculate(pSMacroCalculate);
 
-	//3.³õÊ¼»¯½á¹¹Ìå±äÁ¿
-	//3.1³õÊ¼»¯ºó×º±í´ïÊ½Á´±í
-	if (pSMacroCalculate->pList == NULL)
-	{
-		pSMacroCalculate->pList = initList(ORAM_NUM314, ORAM_NUM315); 
-		if (pSMacroCalculate->pList == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-			return;
-		}
-	}
+    //2.æ¸…ç©ºå®è®¡ç®—ç»“æ„ä½“
+    memset(pSMacroCalculate, 0, sizeof(SMacroCalculate));
 
-	//3.2³õÊ¼»¯Õ»
-	if (pSMacroCalculate->pStack == NULL)
-	{
-		pSMacroCalculate->pStack = initList(ORAM_NUM316, ORAM_NUM317);  //³õÊ¼»¯Á´±í
-		if (pSMacroCalculate->pStack == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM406);
-			return;
-		}
-	}
+    //3.åˆå§‹åŒ–ç»“æ„ä½“å˜é‡
+    //3.1åˆå§‹åŒ–åç¼€è¡¨è¾¾å¼é“¾è¡¨
+    if (pSMacroCalculate->pList == NULL)
+    {
+        pSMacroCalculate->pList = initList(ORAM_NUM314, ORAM_NUM315);
+        if (pSMacroCalculate->pList == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return;
+        }
+    }
 
-	//3.3³õÊ¼»¯¼ÆËãµ¥Ôª½á¹¹Ìå
-	memset(&pSMacroCalculate->SCurrUnit, 0, sizeof(SCalculateUnit));
+    //3.2åˆå§‹åŒ–æ ˆ
+    if (pSMacroCalculate->pStack == NULL)
+    {
+        pSMacroCalculate->pStack = initList(ORAM_NUM316, ORAM_NUM317); //åˆå§‹åŒ–é“¾è¡¨
+        if (pSMacroCalculate->pStack == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM406);
+            return;
+        }
+    }
 
-	//4.³õÊ¼»¯·Ç½á¹¹Ìå±äÁ¿
-	//...
+    //3.3åˆå§‹åŒ–è®¡ç®—å•å…ƒç»“æ„ä½“
+    memset(&pSMacroCalculate->SCurrUnit, 0, sizeof(SCalculateUnit));
+
+    //4.åˆå§‹åŒ–éç»“æ„ä½“å˜é‡
+    //...
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid freeMemCalculate(SMacroCalculate* pSMacroCalculate)
-  º¯Êı¹¦ÄÜ: ÊÍ·Å¼ÆËã½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-  ÊäÈë²ÎÊı£ºpSMacroCalculate	¼ÆËã½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.ÊÍ·ÅpList
-			2.ÊÍ·ÅpStack
+  å‡½æ•°åç§°ï¼švoid freeMemCalculate(SMacroCalculate* pSMacroCalculate)
+  å‡½æ•°åŠŸèƒ½: é‡Šæ”¾è®¡ç®—ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+  è¾“å…¥å‚æ•°ï¼špSMacroCalculate	è®¡ç®—ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.é‡Šæ”¾pList
+			2.é‡Šæ”¾pStack
 **************************************************/
 void freeMemCalculate(SMacroCalculate* pSMacroCalculate)
 {
-	//pSMacroCalculate²»ÄÜÎª¿Õ
-	if (pSMacroCalculate == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    //pSMacroCalculateä¸èƒ½ä¸ºç©º
+    if (pSMacroCalculate == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//1.ÊÍ·ÅpList
-	freeList(&pSMacroCalculate->pList);//ÂŞÏéçâ241006£º¼ÆËã½á¹¹ÌåÖĞµÄpListµÄÊı¾İ½ÚµãÖĞÎ´¿ª±ÙÄÚ´æ£¬²»ĞèÒªÓÃfreeList_2()½øĞĞÊÍ·Å
-	//freeList_2(&pSMacroCalculate->pList, freeCalculateData);
-	
-	//2.¿ª±ÙpStack
-	freeList(&pSMacroCalculate->pStack);//ÂŞÏéçâ241006£º¼ÆËã½á¹¹ÌåÖĞµÄpStackµÄÊı¾İ½ÚµãÖĞÎ´¿ª±ÙÄÚ´æ£¬²»ĞèÒªÓÃfreeList_2()½øĞĞÊÍ·Å
-	//freeList_2(&pSMacroCalculate->pStack, freeCalculateData);
+    //1.é‡Šæ”¾pList
+    freeList(&pSMacroCalculate
+                  ->pList); //ç½—ç¥¥ç®241006ï¼šè®¡ç®—ç»“æ„ä½“ä¸­çš„pListçš„æ•°æ®èŠ‚ç‚¹ä¸­æœªå¼€è¾Ÿå†…å­˜ï¼Œä¸éœ€è¦ç”¨freeList_2()è¿›è¡Œé‡Šæ”¾
+    //freeList_2(&pSMacroCalculate->pList, freeCalculateData);
+
+    //2.å¼€è¾ŸpStack
+    freeList(&pSMacroCalculate
+                  ->pStack); //ç½—ç¥¥ç®241006ï¼šè®¡ç®—ç»“æ„ä½“ä¸­çš„pStackçš„æ•°æ®èŠ‚ç‚¹ä¸­æœªå¼€è¾Ÿå†…å­˜ï¼Œä¸éœ€è¦ç”¨freeList_2()è¿›è¡Œé‡Šæ”¾
+                             //freeList_2(&pSMacroCalculate->pStack, freeCalculateData);
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 calculateExpression(const int8* pExpression, uint8 ucLen, SMacroCalculate* pMacroCal, struct _SLocalMacroVar* pSLocalMacroVar, double* pResult
+  å‡½æ•°åç§°ï¼šint8 calculateExpression(const int8* pExpression, uint8 ucLen, SMacroCalculate* pMacroCal, struct _SLocalMacroVar* pSLocalMacroVar, double* pResult
 			, uint8* pPoundVal, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ£º¼ÆËã±í´ïÊ½µÄÖµ£¨×Ü½Ó¿Ú£¬º¯ÊıÄÚ·Ö²½Ö´ĞĞ£©
-  ÊäÈë²ÎÊı£ºpExpression		±í´ïÊ½Ê××Ö·ûµØÖ·
-			ucLen			±í´ïÊ½³¤¶È
-			pMacroCal		¼ÆËã½á¹¹Ìå
-			pSLocalMacroVar	ºê±äÁ¿½á¹¹Ìå
-			*pResult		¼ÆËã½á¹û
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—è¡¨è¾¾å¼çš„å€¼ï¼ˆæ€»æ¥å£ï¼Œå‡½æ•°å†…åˆ†æ­¥æ‰§è¡Œï¼‰
+  è¾“å…¥å‚æ•°ï¼špExpression		è¡¨è¾¾å¼é¦–å­—ç¬¦åœ°å€
+			ucLen			è¡¨è¾¾å¼é•¿åº¦
+			pMacroCal		è®¡ç®—ç»“æ„ä½“
+			pSLocalMacroVar	å®å˜é‡ç»“æ„ä½“
+			*pResult		è®¡ç®—ç»“æœ
 
-			pPoundVal		#Öµ£¨ÓÃÓÚ¼ÇÂ¼G65µÄµÄPQR£©
+			pPoundVal		#å€¼ï¼ˆç”¨äºè®°å½•G65çš„çš„PQRï¼‰
 
-			unLineNum		ĞĞºÅÓÃÓÚ±¨´í
+			unLineNum		è¡Œå·ç”¨äºæŠ¥é”™
 
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º<0:³ö´í
-			0:Î´¼ÆËãÍê³É
-			1:¼ÆËãÍê³É£¬½á¹û²»Ğè½âÒıÓÃ£¬Í¨¹ıpResultÊä³ö¼ÆËã½á¹û
-			2:¼ÆËãÍê³É£¬½á¹ûĞèÒª½âÒıÓÃ£¬ÇÒ½âÒıÓÃºó²»ÎªNULL,Í¨¹ıpResultÊä³ö½âÒıÓÃºóµÄÖµ
-			3:¼ÆËãÍê³É£¬½á¹ûĞèÒª½âÒıÓÃ£¬ÇÒ½âÒıÓÃºóÎªNULL,Í¨¹ıpResultÊä³ö0
-  ±¸    ×¢£ºG65µÄAÀàºê£¬²»ÔÚ´Ë¼ÇÂ¼PQRÔ­Ê¼#iµÄiÖµ
-			¼ì²é¸³Öµ¼ÆËã±í´ïÊ½£¬´«ÈëµÄºê±äÁ¿½á¹¹Ìå²»Í¬
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š<0:å‡ºé”™
+			0:æœªè®¡ç®—å®Œæˆ
+			1:è®¡ç®—å®Œæˆï¼Œç»“æœä¸éœ€è§£å¼•ç”¨ï¼Œé€šè¿‡pResultè¾“å‡ºè®¡ç®—ç»“æœ
+			2:è®¡ç®—å®Œæˆï¼Œç»“æœéœ€è¦è§£å¼•ç”¨ï¼Œä¸”è§£å¼•ç”¨åä¸ä¸ºNULL,é€šè¿‡pResultè¾“å‡ºè§£å¼•ç”¨åçš„å€¼
+			3:è®¡ç®—å®Œæˆï¼Œç»“æœéœ€è¦è§£å¼•ç”¨ï¼Œä¸”è§£å¼•ç”¨åä¸ºNULL,é€šè¿‡pResultè¾“å‡º0
+  å¤‡    æ³¨ï¼šG65çš„Aç±»å®ï¼Œä¸åœ¨æ­¤è®°å½•PQRåŸå§‹#içš„iå€¼
+			æ£€æŸ¥èµ‹å€¼è®¡ç®—è¡¨è¾¾å¼ï¼Œä¼ å…¥çš„å®å˜é‡ç»“æ„ä½“ä¸åŒ
 **************************************************/
-int8 calculateExpression(const int8* pExpression, uint8 ucLen, SMacroCalculate* pMacroCal, struct _SLocalMacroVar*pSLocalMacroVar, double* pResult
-	, uint16* pPoundVal, uint32 unLineNum)
+int8 calculateExpression(const int8* pExpression, uint8 ucLen, SMacroCalculate* pMacroCal,
+                         struct _SLocalMacroVar* pSLocalMacroVar, double* pResult, uint16* pPoundVal, uint32 unLineNum)
 {
-	int16 cRet = 0;
-	int8  cNumOrSymbol = 0;   //ÔËËã·û:0 Êı×Ö:1
+    int16 cRet = 0;
+    int8 cNumOrSymbol = 0; //è¿ç®—ç¬¦:0 æ•°å­—:1
 
-	if (!pExpression || !pResult || !pMacroCal)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (!pExpression || !pResult || !pMacroCal)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	//¸ù¾İÔËËã·û»òÔËËãÖµ£¬ÌîĞ´SCurrUnit
-	switch (pMacroCal->ucMacroStep)
-	{
-		//¸ù¾İµ±Ç°ÔËËãµ¥Ôª£¬Íê³ÉpMacroCal->SCurrUnitµÄ¸³Öµ
-	case 0:    //Ê¶±ğÊı×Ö¡¢ÔËËã·û
-	{
-		//±í´ïÊ½ÒÑ¾­±»É¨Íê
-		if (pMacroCal->ucMacroPos >= ucLen)
-		{
-			//Èç¹ûÔËËã·ûÕ»²»ÊÇ¿ÕµÄ£¬ÄÚÈİÈ«²¿µ¯µ½Á´±íÖĞ
-			if (pMacroCal->pStack->cSize > 0)
-			{
-				SCalculateUnit* pTopUnit = FindNodeData(pMacroCal->pStack, 0);   //¶ÁÕ»¶¥
-				if (!pTopUnit)
-				{
-					parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-					break;
-				}
+    //æ ¹æ®è¿ç®—ç¬¦æˆ–è¿ç®—å€¼ï¼Œå¡«å†™SCurrUnit
+    switch (pMacroCal->ucMacroStep)
+    {
+        //æ ¹æ®å½“å‰è¿ç®—å•å…ƒï¼Œå®ŒæˆpMacroCal->SCurrUnitçš„èµ‹å€¼
+    case 0: //è¯†åˆ«æ•°å­—ã€è¿ç®—ç¬¦
+    {
+        //è¡¨è¾¾å¼å·²ç»è¢«æ‰«å®Œ
+        if (pMacroCal->ucMacroPos >= ucLen)
+        {
+            //å¦‚æœè¿ç®—ç¬¦æ ˆä¸æ˜¯ç©ºçš„ï¼Œå†…å®¹å…¨éƒ¨å¼¹åˆ°é“¾è¡¨ä¸­
+            if (pMacroCal->pStack->cSize > 0)
+            {
+                SCalculateUnit* pTopUnit = FindNodeData(pMacroCal->pStack, 0); //è¯»æ ˆé¡¶
+                if (!pTopUnit)
+                {
+                    parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                    break;
+                }
 
-				moveUnitFromStackTopToListTail(pMacroCal, unLineNum);
-				break;
-			}
-			else //Èç¹ûÎª¿Õ£¬½øÈëÄæ²¨À¼µÄ¼ÆËã
-			{
-				pMacroCal->ucMacroStep = 3;
-				break;
-			}
-		}
+                moveUnitFromStackTopToListTail(pMacroCal, unLineNum);
+                break;
+            }
+            else //å¦‚æœä¸ºç©ºï¼Œè¿›å…¥é€†æ³¢å…°çš„è®¡ç®—
+            {
+                pMacroCal->ucMacroStep = 3;
+                break;
+            }
+        }
 
-		//¸ù¾İÊı×Ö»òÔËËã·ûµÄÀàĞÍ£¬Íê³É¼ÆËãµ¥ÔªµÄÌîĞ´
-		switch (*(pExpression + pMacroCal->ucMacroPos))
-		{
+        //æ ¹æ®æ•°å­—æˆ–è¿ç®—ç¬¦çš„ç±»å‹ï¼Œå®Œæˆè®¡ç®—å•å…ƒçš„å¡«å†™
+        switch (*(pExpression + pMacroCal->ucMacroPos))
+        {
 
-		case '[':case'(':
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_0;
-			pMacroCal->SCurrUnit.ucType = MACRO_L_BRACKET;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '[':
+        case '(':
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_0;
+            pMacroCal->SCurrUnit.ucType = MACRO_L_BRACKET;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case'=':
-		{
-			if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=')   // '==' EQ µÈÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
-				pMacroCal->SCurrUnit.ucType = MACRO_EQ;
-				pMacroCal->ucMacroPos += 2;  //ÒÆ¶¯Á½¸ö×Ö·û
-			}
-			else  // ¡®=¡¯ ¸³Öµ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_1;
-				pMacroCal->SCurrUnit.ucType = MACRO_ASSIGN;
-				pMacroCal->ucMacroPos++;
-			}
+        case '=':
+        {
+            if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=') // '==' EQ ç­‰äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
+                pMacroCal->SCurrUnit.ucType = MACRO_EQ;
+                pMacroCal->ucMacroPos += 2; //ç§»åŠ¨ä¸¤ä¸ªå­—ç¬¦
+            }
+            else // â€˜=â€™ èµ‹å€¼
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_1;
+                pMacroCal->SCurrUnit.ucType = MACRO_ASSIGN;
+                pMacroCal->ucMacroPos++;
+            }
 
-			break;
-		}
+            break;
+        }
 
-		case'>':
-		{
-			if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=')   // >= ´óÓÚµÈÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_GE;
-				pMacroCal->ucMacroPos += 2;  //ÒÆ¶¯Á½¸ö×Ö·û
-			}
+        case '>':
+        {
+            if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=') // >= å¤§äºç­‰äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_GE;
+                pMacroCal->ucMacroPos += 2; //ç§»åŠ¨ä¸¤ä¸ªå­—ç¬¦
+            }
 
-			else  // >´óÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_GT;
-				pMacroCal->ucMacroPos++;
-			}
-			break;
-		}
-		case'<':
-		{
-			if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=')   // <= Ğ¡ÓÚµÈÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_LE;
-				pMacroCal->ucMacroPos += 2;  //ÒÆ¶¯Á½¸ö×Ö·û
-			}
-			else if (*(pExpression + pMacroCal->ucMacroPos + 1) == '>')   // <> ²»µÈÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
-				pMacroCal->SCurrUnit.ucType = MACRO_NE;
-				pMacroCal->ucMacroPos += 2;  //ÒÆ¶¯Á½¸ö×Ö·û
-			}
-			else  // <Ğ¡ÓÚ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_LT;
-				pMacroCal->ucMacroPos++;
-			}
-			break;
-		}
-		case '+':
-		{
-			//ÓÉÓÚÃ¿´Î¼ÇÂ¼¼ÆËãµ¥ÔªpMacroCal->SCurrUnitÎ´³õÊ¼»¯£¬ËùÒÔ´ËÊ±ÎªÉÏÒ»¼ÆËãµ¥ÔªµÄĞÅÏ¢
-			//ÉÏÒ»¼ÆËãµ¥ÔªÎª£ºË«Ä¿+  Ë«Ä¿-
-			if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_7)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			}
-			//ÉÏÒ»¼ÆËãµ¥ÔªÎª£ºµ¥Ä¿+  µ¥Ä¿-	//20240921×¢ÊÍ£¬ÔÊĞíÁ¬Ğø³öÏÖµ¥Ä¿+-£¬Èç:++5Îª5£¬--5Îª5
-			//else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 && pMacroCal->SCurrUnit.ucType >= 0 && pMacroCal->SCurrUnit.ucType <= 2)
-			//{
-			//	parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			//}
-			//ÉÏÒ»¼ÆËãµ¥Ôª²»Îª£ºÊıÖµ
-			else if (pMacroCal->SCurrUnit.ucLevel < MACRO_LEVEL_11)   //µ¥Ä¿ '+'ºÅ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_SINGLE_ADD;
-			}
-			else  //Ë«Ä¿'+'ºÅ
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_7;
-				pMacroCal->SCurrUnit.ucType = MACRO_DOUBLE_ADD;
-			}
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+            else // >å¤§äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_GT;
+                pMacroCal->ucMacroPos++;
+            }
+            break;
+        }
+        case '<':
+        {
+            if (*(pExpression + pMacroCal->ucMacroPos + 1) == '=') // <= å°äºç­‰äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_LE;
+                pMacroCal->ucMacroPos += 2; //ç§»åŠ¨ä¸¤ä¸ªå­—ç¬¦
+            }
+            else if (*(pExpression + pMacroCal->ucMacroPos + 1) == '>') // <> ä¸ç­‰äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
+                pMacroCal->SCurrUnit.ucType = MACRO_NE;
+                pMacroCal->ucMacroPos += 2; //ç§»åŠ¨ä¸¤ä¸ªå­—ç¬¦
+            }
+            else // <å°äº
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_LT;
+                pMacroCal->ucMacroPos++;
+            }
+            break;
+        }
+        case '+':
+        {
+            //ç”±äºæ¯æ¬¡è®°å½•è®¡ç®—å•å…ƒpMacroCal->SCurrUnitæœªåˆå§‹åŒ–ï¼Œæ‰€ä»¥æ­¤æ—¶ä¸ºä¸Šä¸€è®¡ç®—å•å…ƒçš„ä¿¡æ¯
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ºï¼šåŒç›®+  åŒç›®-
+            if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_7)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            }
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ºï¼šå•ç›®+  å•ç›®-	//20240921æ³¨é‡Šï¼Œå…è®¸è¿ç»­å‡ºç°å•ç›®+-ï¼Œå¦‚:++5ä¸º5ï¼Œ--5ä¸º5
+            //else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 && pMacroCal->SCurrUnit.ucType >= 0 && pMacroCal->SCurrUnit.ucType <= 2)
+            //{
+            //	parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            //}
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ä¸ºï¼šæ•°å€¼
+            else if (pMacroCal->SCurrUnit.ucLevel < MACRO_LEVEL_11) //å•ç›® '+'å·
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_SINGLE_ADD;
+            }
+            else //åŒç›®'+'å·
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_7;
+                pMacroCal->SCurrUnit.ucType = MACRO_DOUBLE_ADD;
+            }
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '-':
-		{
-			//ÓÉÓÚÃ¿´Î¼ÇÂ¼¼ÆËãµ¥ÔªpMacroCal->SCurrUnitÎ´³õÊ¼»¯£¬ËùÒÔ´ËÊ±ÎªÉÏÒ»¼ÆËãµ¥ÔªµÄĞÅÏ¢
-			//ÉÏÒ»¼ÆËãµ¥ÔªÎª£ºË«Ä¿+  Ë«Ä¿-
-			if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_7)//ÉÏÒ»¸ö×Ö·ûÎªË«Ä¿ÔËËã·û£¬±¨´í
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			}
-			//ÉÏÒ»¼ÆËãµ¥ÔªÎª£ºµ¥Ä¿+  µ¥Ä¿-	//20240921×¢ÊÍ£¬ÔÊĞíÁ¬Ğø³öÏÖµ¥Ä¿+-£¬Èç:++5Îª5£¬--5Îª5
-			//else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 && pMacroCal->SCurrUnit.ucType >= 0 && pMacroCal->SCurrUnit.ucType <= 2)//ÉÏÒ»¸ö×Ö·ûÎªµ¥Ä¿ÔËËã·ûµÄ+ - #£¬±¨´í
-			//{
-			//	parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			//}
-			//ÉÏÒ»¼ÆËãµ¥Ôª²»Îª£ºÊıÖµ
-			else if (pMacroCal->SCurrUnit.ucLevel < MACRO_LEVEL_11) //µ¥Ä¿µÄ¸ººÅ Ã»Ïëµ½¸üºÃµÄÅĞ¶Ï·½·¨ ÉÏÒ»¸ö×Ö·û²»ÎªÊı×Ö£¬ÄÇÃ´-ºÅÎªµ¥Ä¿ÔËËã·û
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_SINGLE_SUB;
-			}
-			else  //Ë«Ä¿'-'ºÅ  //Èç¹ûÉÏÒ»¸ö×Ö·ûÎªÊı×Ö£¬ÄÇÃ´-ºÅÎªË«Ä¿ÔËËã·û
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_7;
-				pMacroCal->SCurrUnit.ucType = MACRO_DOUBLE_SUB;
-			}
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '-':
+        {
+            //ç”±äºæ¯æ¬¡è®°å½•è®¡ç®—å•å…ƒpMacroCal->SCurrUnitæœªåˆå§‹åŒ–ï¼Œæ‰€ä»¥æ­¤æ—¶ä¸ºä¸Šä¸€è®¡ç®—å•å…ƒçš„ä¿¡æ¯
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ºï¼šåŒç›®+  åŒç›®-
+            if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_7) //ä¸Šä¸€ä¸ªå­—ç¬¦ä¸ºåŒç›®è¿ç®—ç¬¦ï¼ŒæŠ¥é”™
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            }
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ºï¼šå•ç›®+  å•ç›®-	//20240921æ³¨é‡Šï¼Œå…è®¸è¿ç»­å‡ºç°å•ç›®+-ï¼Œå¦‚:++5ä¸º5ï¼Œ--5ä¸º5
+            //else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 && pMacroCal->SCurrUnit.ucType >= 0 && pMacroCal->SCurrUnit.ucType <= 2)//ä¸Šä¸€ä¸ªå­—ç¬¦ä¸ºå•ç›®è¿ç®—ç¬¦çš„+ - #ï¼ŒæŠ¥é”™
+            //{
+            //	parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            //}
+            //ä¸Šä¸€è®¡ç®—å•å…ƒä¸ä¸ºï¼šæ•°å€¼
+            else if (pMacroCal->SCurrUnit.ucLevel <
+                     MACRO_LEVEL_11) //å•ç›®çš„è´Ÿå· æ²¡æƒ³åˆ°æ›´å¥½çš„åˆ¤æ–­æ–¹æ³• ä¸Šä¸€ä¸ªå­—ç¬¦ä¸ä¸ºæ•°å­—ï¼Œé‚£ä¹ˆ-å·ä¸ºå•ç›®è¿ç®—ç¬¦
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_SINGLE_SUB;
+            }
+            else //åŒç›®'-'å·  //å¦‚æœä¸Šä¸€ä¸ªå­—ç¬¦ä¸ºæ•°å­—ï¼Œé‚£ä¹ˆ-å·ä¸ºåŒç›®è¿ç®—ç¬¦
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_7;
+                pMacroCal->SCurrUnit.ucType = MACRO_DOUBLE_SUB;
+            }
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '*':
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
-			pMacroCal->SCurrUnit.ucType = MACRO_MUL;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '*':
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
+            pMacroCal->SCurrUnit.ucType = MACRO_MUL;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '/':
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
-			pMacroCal->SCurrUnit.ucType = MACRO_DIV;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '/':
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
+            pMacroCal->SCurrUnit.ucType = MACRO_DIV;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '%':
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
-			pMacroCal->SCurrUnit.ucType = MACRO_MODULAR;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '%':
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_8;
+            pMacroCal->SCurrUnit.ucType = MACRO_MODULAR;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '#':
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_10;
-			pMacroCal->SCurrUnit.ucType = MACRO_POUND;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        case '#':
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_10;
+            pMacroCal->SCurrUnit.ucType = MACRO_POUND;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case ']':case')':
+        case ']':
+        case ')':
 
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_11;
-			pMacroCal->SCurrUnit.ucType = MACRO_R_BRACKET;
-			pMacroCal->ucMacroPos++;
-			break;
-		}
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_11;
+            pMacroCal->SCurrUnit.ucType = MACRO_R_BRACKET;
+            pMacroCal->ucMacroPos++;
+            break;
+        }
 
-		case '0':case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':case '.':   //Êı×Ö
-		{
-			pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_12;
-			pMacroCal->SCurrUnit.ucType = MACRO_NUM;
-			cNumOrSymbol = 1;
-			double dValue;
-			cRet = getNumbers(pExpression, &pMacroCal->ucMacroPos, &dValue, unLineNum);
-			if (cRet < 0)
-			{
-				return -1;
-			}
-			pMacroCal->SCurrUnit.fVal = (double)dValue;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '.': //æ•°å­—
+        {
+            pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_12;
+            pMacroCal->SCurrUnit.ucType = MACRO_NUM;
+            cNumOrSymbol = 1;
+            double dValue;
+            cRet = getNumbers(pExpression, &pMacroCal->ucMacroPos, &dValue, unLineNum);
+            if (cRet < 0)
+            {
+                return -1;
+            }
+            pMacroCal->SCurrUnit.fVal = (double)dValue;
 
-			break;
-		}
+            break;
+        }
 
-		case'A':    // AND ABS ASIN ACOS ATAN
-		{
-			uint8 remain = (ucLen > pMacroCal->ucMacroPos) ? (ucLen - pMacroCal->ucMacroPos) : 0;
-			cRet = whichAWord(pExpression + pMacroCal->ucMacroPos, remain,unLineNum);    ///ÄÄ¸öÒÔA¿ªÍ·µÄ²Ù×÷·û Î´ÍêÉÆ
-			switch (cRet)
-			{
-			case 1:  //AND
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_2;
-				pMacroCal->SCurrUnit.ucType = MACRO_AND;
-				pMacroCal->ucMacroPos += 3;
-				break;
-			}
-			case 2:  //ABS
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_ABS;
-				pMacroCal->ucMacroPos += 3;
-				break;
-			}
-			case 3:  //ASIN
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_ASIN;
-				pMacroCal->ucMacroPos += 4;
-				break;
-			}
-			case 4:  //ACOS
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_ACOS;
-				pMacroCal->ucMacroPos += 4;
-				break;
-			}
-			case 5:  //ATAN
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_ATAN;
-				pMacroCal->ucMacroPos += 4;
-				break;
-			}
-			default:
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-				break;
-			}
+        case 'A': // AND ABS ASIN ACOS ATAN
+        {
+            uint8 remain = (ucLen > pMacroCal->ucMacroPos) ? (ucLen - pMacroCal->ucMacroPos) : 0;
+            cRet = whichAWord(pExpression + pMacroCal->ucMacroPos, remain, unLineNum); ///å“ªä¸ªä»¥Aå¼€å¤´çš„æ“ä½œç¬¦ æœªå®Œå–„
+            switch (cRet)
+            {
+            case 1: //AND
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_2;
+                pMacroCal->SCurrUnit.ucType = MACRO_AND;
+                pMacroCal->ucMacroPos += 3;
+                break;
+            }
+            case 2: //ABS
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_ABS;
+                pMacroCal->ucMacroPos += 3;
+                break;
+            }
+            case 3: //ASIN
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_ASIN;
+                pMacroCal->ucMacroPos += 4;
+                break;
+            }
+            case 4: //ACOS
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_ACOS;
+                pMacroCal->ucMacroPos += 4;
+                break;
+            }
+            case 5: //ATAN
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_ATAN;
+                pMacroCal->ucMacroPos += 4;
+                break;
+            }
+            default:
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+                break;
+            }
 
-			break;
-		}
+            break;
+        }
 
-		case'B':  //BIN BCD
-		{
-			if (isTagetStr_A("BIN", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_BIN;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else if (isTagetStr_A("BCD", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_BCD;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'B': //BIN BCD
+        {
+            if (isTagetStr_A("BIN", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_BIN;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else if (isTagetStr_A("BCD", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_BCD;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'C':    //COS
-		{
-			if (isTagetStr_A("COS", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_COS;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'C': //COS
+        {
+            if (isTagetStr_A("COS", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_COS;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'E':    //EQ EXP
-		{
+        case 'E': //EQ EXP
+        {
 
-			if (isTagetStr_A("EQ", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
-				pMacroCal->SCurrUnit.ucType = MACRO_EQ;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else if (isTagetStr_A("EXP", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_EXP;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
-		case 'F':    //FUP FIX
-		{
-			if (isTagetStr_A("FUP", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_FUP;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else if (isTagetStr_A("FIX", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_FIX;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+            if (isTagetStr_A("EQ", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
+                pMacroCal->SCurrUnit.ucType = MACRO_EQ;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else if (isTagetStr_A("EXP", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_EXP;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
+        case 'F': //FUP FIX
+        {
+            if (isTagetStr_A("FUP", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_FUP;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else if (isTagetStr_A("FIX", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_FIX;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'G':    //GT GE
-		{
-			if (isTagetStr_A("GT", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_GT;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else if (isTagetStr_A("GE", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_GE;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'G': //GT GE
+        {
+            if (isTagetStr_A("GT", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_GT;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else if (isTagetStr_A("GE", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_GE;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'L':    //LT LE LN
-		{
-			if (isTagetStr_A("LT", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_LT;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else if (isTagetStr_A("LE", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
-				pMacroCal->SCurrUnit.ucType = MACRO_LE;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else if (isTagetStr_A("LN", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_LN;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'L': //LT LE LN
+        {
+            if (isTagetStr_A("LT", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_LT;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else if (isTagetStr_A("LE", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_6;
+                pMacroCal->SCurrUnit.ucType = MACRO_LE;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else if (isTagetStr_A("LN", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_LN;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'N':    //NE
-		{
-			if (isTagetStr_A("NE", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
-				pMacroCal->SCurrUnit.ucType = MACRO_NE;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
-		case 'O':    //OR
-		{
-			if (isTagetStr_A("OR", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_4;
-				pMacroCal->SCurrUnit.ucType = MACRO_OR;
-				pMacroCal->ucMacroPos += 2;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'N': //NE
+        {
+            if (isTagetStr_A("NE", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_5;
+                pMacroCal->SCurrUnit.ucType = MACRO_NE;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
+        case 'O': //OR
+        {
+            if (isTagetStr_A("OR", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_4;
+                pMacroCal->SCurrUnit.ucType = MACRO_OR;
+                pMacroCal->ucMacroPos += 2;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'R':    //ROUND 
-		{
-			if (isTagetStr_A("ROUND", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_ROUND;
-				pMacroCal->ucMacroPos += 5;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+        case 'R': //ROUND
+        {
+            if (isTagetStr_A("ROUND", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_ROUND;
+                pMacroCal->ucMacroPos += 5;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		case 'S':    //SQRT SIN
-		{
-			if (isTagetStr_A("SQRT", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_SQRT;
-				pMacroCal->ucMacroPos += 4;
-			}
-			else if (isTagetStr_A("SIN", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_SIN;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
+        case 'S': //SQRT SIN
+        {
+            if (isTagetStr_A("SQRT", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_SQRT;
+                pMacroCal->ucMacroPos += 4;
+            }
+            else if (isTagetStr_A("SIN", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_SIN;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
 
-			break;
-		}
-		case 'T':    //TAN
-		{
-			if (isTagetStr_A("TAN", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
-				pMacroCal->SCurrUnit.ucType = MACRO_TAN;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
-		case'X':   //XOR
-		{
-			if (isTagetStr_A("XOR", pExpression + pMacroCal->ucMacroPos))
-			{
-				pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_3;
-				pMacroCal->SCurrUnit.ucType = MACRO_XOR;
-				pMacroCal->ucMacroPos += 3;
-			}
-			else
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			}
-			break;
-		}
+            break;
+        }
+        case 'T': //TAN
+        {
+            if (isTagetStr_A("TAN", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_9;
+                pMacroCal->SCurrUnit.ucType = MACRO_TAN;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
+        case 'X': //XOR
+        {
+            if (isTagetStr_A("XOR", pExpression + pMacroCal->ucMacroPos))
+            {
+                pMacroCal->SCurrUnit.ucLevel = MACRO_LEVEL_3;
+                pMacroCal->SCurrUnit.ucType = MACRO_XOR;
+                pMacroCal->ucMacroPos += 3;
+            }
+            else
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            }
+            break;
+        }
 
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			break;
-		}
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            break;
+        }
 
+        if (cNumOrSymbol == 1) //å¦‚æœæ˜¯æ•°å­—
+        {
+            pMacroCal->ucMacroStep = 1;
+        }
+        else //å¦‚æœæ˜¯è¿ç®—ç¬¦
+        {
+            pMacroCal->ucMacroStep = 2;
+        }
+        break;
+    }
 
-		if (cNumOrSymbol == 1)    //Èç¹ûÊÇÊı×Ö
-		{
-			pMacroCal->ucMacroStep = 1;
-		}
-		else    //Èç¹ûÊÇÔËËã·û
-		{
-			pMacroCal->ucMacroStep = 2;
-		}
-		break;
-	}
+    //è¿ç®—å•å…ƒä¸ºæ•°å­—ï¼šå°†pMacroCal->SCurrUnitå°¾æ’å…¥é“¾è¡¨
+    case 1: //å¤„ç†æ•°å­—   å¤„ç†å®Œåä¸è¦ä¿®æ”¹pMacroCal->SCurrUnit!!!
+    {
+        //1.å¼€è¾Ÿè®¡ç®—å•å…ƒå†…å­˜
+        SCalculateUnit* pCalUnit = mallocGCode(sizeof(SCalculateUnit), ORAM_NUM318); //å †åŒºåˆ†é…å†…å­˜
+        if (!pCalUnit)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
+            break;
+        }
+        //2.å°†è®°å½•çš„è®¡ç®—å•å…ƒä¿¡æ¯å†™å…¥å†…å­˜
+        *pCalUnit = pMacroCal->SCurrUnit;
 
-	//ÔËËãµ¥ÔªÎªÊı×Ö£º½«pMacroCal->SCurrUnitÎ²²åÈëÁ´±í
-	case 1:  //´¦ÀíÊı×Ö   ´¦ÀíÍêºó²»ÒªĞŞ¸ÄpMacroCal->SCurrUnit!!!
-	{
-		//1.¿ª±Ù¼ÆËãµ¥ÔªÄÚ´æ
-		SCalculateUnit* pCalUnit = mallocGCode(sizeof(SCalculateUnit), ORAM_NUM318);    //¶ÑÇø·ÖÅäÄÚ´æ
-		if (!pCalUnit)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
-			break;
-		}
-		//2.½«¼ÇÂ¼µÄ¼ÆËãµ¥ÔªĞÅÏ¢Ğ´ÈëÄÚ´æ
-		*pCalUnit = pMacroCal->SCurrUnit;
+        //3.å°†è®¡ç®—å•å…ƒå†…å­˜æ’å…¥é“¾è¡¨å°¾éƒ¨
+        cRet = insertList(pMacroCal->pList, -1, pCalUnit, ORAM_NUM315); //å°¾æ’å…¥è¡¨è¾¾å¼é“¾è¡¨
+        if (!cRet)
+        {
+            freeGCode(pCalUnit);
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+            break;
+        }
 
-		//3.½«¼ÆËãµ¥ÔªÄÚ´æ²åÈëÁ´±íÎ²²¿
-		cRet = insertList(pMacroCal->pList, -1, pCalUnit, ORAM_NUM315);    //Î²²åÈë±í´ïÊ½Á´±í
-		if (!cRet)
-		{
-			freeGCode(pCalUnit);
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-			break;
-		}
+        //4.ç»§ç»­æ‰«æè¡¨è¾¾å¼
+        pMacroCal->ucMacroStep = 0; //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+        break;
+    }
 
-		//4.¼ÌĞøÉ¨Ãè±í´ïÊ½
-		pMacroCal->ucMacroStep = 0;  //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-		break;
-	}
+    //è¿ç®—å•å…ƒä¸ºè¿ç®—ç¬¦ï¼šå°†pMacroCal->SCurrUnitåˆ†æƒ…å†µè®¨è®º
+    case 2: //å¤„ç†è¿ç®—ç¬¦   å¤„ç†å®Œåä¸è¦ä¿®æ”¹pMacroCal->SCurrUnit!!!
+    {
+        const SCalculateUnit* pTopUnit = NULL;
+        cRet = getListSize(pMacroCal->pStack);
 
-	//ÔËËãµ¥ÔªÎªÔËËã·û£º½«pMacroCal->SCurrUnit·ÖÇé¿öÌÖÂÛ
-	case 2:   //´¦ÀíÔËËã·û   ´¦ÀíÍêºó²»ÒªĞŞ¸ÄpMacroCal->SCurrUnit!!!
-	{
-		const SCalculateUnit* pTopUnit = NULL;
-		cRet = getListSize(pMacroCal->pStack);
+        if (cRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+            break;
+        }
 
-		if (cRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-			break;
-		}
+        //1.æ ˆå†…æœ‰å…ƒç´ 
+        if (getListSize(pMacroCal->pStack) > 0)
+        {
+            pTopUnit = FindNodeData(pMacroCal->pStack, 0); //è¯»æ ˆé¡¶
+            if (!pTopUnit)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                break;
+            }
+            //1.1å½“å‰ä¸ºå³æ‹¬å·
+            if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_11)
+            {
+                //1.1.1 æ ˆé¡¶ä¸ºå·¦æ‹¬å·æ—¶ ï¼Œåˆ é™¤å·¦æ‹¬å·ï¼Œå³æ‹¬å·ä¸éœ€è¦å‹æ ˆ
+                if (pTopUnit->ucLevel == MACRO_LEVEL_0)
+                {
+                    cRet = removeNode(pMacroCal->pStack, 0, FALSE); //åˆ é™¤æ ˆé¡¶çš„è®¡ç®—å•å…ƒï¼š [
+                    if (!cRet)
+                    {
+                        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                        break;
+                    }
+                    pMacroCal->ucMacroStep = 0; //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+                }
+                //1.1.2 æ ˆé¡¶ä¸ºå…¶å®ƒ
+                else
+                {
+                    //ç§»é™¤æ ˆé¡¶å…ƒç´ ï¼Œå¹¶å°†è¯¥å…ƒç´ å°¾æ’å…¥é“¾è¡¨
+                    moveUnitFromStackTopToListTail(pMacroCal, unLineNum);
+                }
+            }
 
-		//1.Õ»ÄÚÓĞÔªËØ
-		if (getListSize(pMacroCal->pStack) > 0)
-		{
-			pTopUnit = FindNodeData(pMacroCal->pStack, 0);   //¶ÁÕ»¶¥
-			if (!pTopUnit)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-				break;
-			}
-			//1.1µ±Ç°ÎªÓÒÀ¨ºÅ
-			if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_11)
-			{
-				//1.1.1 Õ»¶¥Îª×óÀ¨ºÅÊ± £¬É¾³ı×óÀ¨ºÅ£¬ÓÒÀ¨ºÅ²»ĞèÒªÑ¹Õ»
-				if (pTopUnit->ucLevel == MACRO_LEVEL_0)
-				{
-					cRet = removeNode(pMacroCal->pStack, 0, FALSE);  //É¾³ıÕ»¶¥µÄ¼ÆËãµ¥Ôª£º [
-					if (!cRet)
-					{
-						parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-						break;
-					}
-					pMacroCal->ucMacroStep = 0;  //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-				}
-				//1.1.2 Õ»¶¥ÎªÆäËü
-				else
-				{
-					//ÒÆ³ıÕ»¶¥ÔªËØ£¬²¢½«¸ÃÔªËØÎ²²åÈëÁ´±í
-					moveUnitFromStackTopToListTail(pMacroCal, unLineNum);
-				}
-			}
+            //1.2 å½“å‰ä¸ºå·¦æ‹¬å·ï¼Œç›´æ¥å‹æ ˆ
+            else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_0)
+            {
+                pushUnitIntoStack(pMacroCal, unLineNum); //å‹æ ˆ
+                pMacroCal->ucMacroStep = 0;              //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+            }
 
-			//1.2 µ±Ç°Îª×óÀ¨ºÅ£¬Ö±½ÓÑ¹Õ»
-			else if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_0)
-			{
-				pushUnitIntoStack(pMacroCal, unLineNum);    //Ñ¹Õ»
-				pMacroCal->ucMacroStep = 0;   //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-			}
+            //1.3 å½“å‰çš„ç­‰çº§æ˜¯å¦å°äºç­‰äºæ ˆé¡¶çš„ç­‰çº§
+            else if (pMacroCal->SCurrUnit.ucLevel <= pTopUnit->ucLevel)
+            {
+                //1.3.1 ç­‰çº§ç›¸åŒæ—¶ï¼Œè‹¥ä¸ºå•ç›®è¿ç®—ç¬¦ä¸èµ‹å€¼è¿ç®—ç¬¦ åº”ç»§ç»­å‹æ ˆã€‚å¤„ç†è¿ç»­å•ç›®è¿ç®—ç¬¦è®¡ç®—ï¼šSQRT SQRT 81 = 3
+                if ((pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 || pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_1) &&
+                    pMacroCal->SCurrUnit.ucLevel == pTopUnit->ucLevel)
+                {
+                    //å‹æ ˆ
+                    pushUnitIntoStack(pMacroCal, unLineNum); //å‹æ ˆ
+                    pMacroCal->ucMacroStep = 0;              //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+                }
+                //1.3.2 å…¶ä»–
+                else
+                {
+                    moveUnitFromStackTopToListTail(
+                        pMacroCal,
+                        unLineNum); //ç§»é™¤æ ˆé¡¶å…ƒç´ ï¼Œå¹¶å°†è¯¥å…ƒç´ å°¾æ’å…¥é“¾è¡¨  æ³¨æ„è¿™é‡Œå¹¶æ²¡æœ‰æŠŠpMacroCal->ucMacroStepç½®ä¸º1ï¼ï¼ï¼ï¼Œè®©ä¸‹ä¸€æ¬¡ç»§ç»­è¿›è¡Œç¬¦å·åˆ¤æ–­
+                }
+            }
 
-			//1.3 µ±Ç°µÄµÈ¼¶ÊÇ·ñĞ¡ÓÚµÈÓÚÕ»¶¥µÄµÈ¼¶
-			else if (pMacroCal->SCurrUnit.ucLevel <= pTopUnit->ucLevel)
-			{
-				//1.3.1 µÈ¼¶ÏàÍ¬Ê±£¬ÈôÎªµ¥Ä¿ÔËËã·ûÓë¸³ÖµÔËËã·û Ó¦¼ÌĞøÑ¹Õ»¡£´¦ÀíÁ¬Ğøµ¥Ä¿ÔËËã·û¼ÆËã£ºSQRT SQRT 81 = 3
-				if ((pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_9 || pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_1) &&
-					pMacroCal->SCurrUnit.ucLevel == pTopUnit->ucLevel)
-				{
-					//Ñ¹Õ»
-					pushUnitIntoStack(pMacroCal, unLineNum);    //Ñ¹Õ»
-					pMacroCal->ucMacroStep = 0;   //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-				}
-				//1.3.2 ÆäËû
-				else
-				{
-					moveUnitFromStackTopToListTail(pMacroCal, unLineNum);   //ÒÆ³ıÕ»¶¥ÔªËØ£¬²¢½«¸ÃÔªËØÎ²²åÈëÁ´±í  ×¢ÒâÕâÀï²¢Ã»ÓĞ°ÑpMacroCal->ucMacroStepÖÃÎª1£¡£¡£¡£¬ÈÃÏÂÒ»´Î¼ÌĞø½øĞĞ·ûºÅÅĞ¶Ï
+            //1.4å½“å‰pCalUnitçš„ç­‰çº§å¤§äºæ ˆé¡¶çš„ç­‰çº§
+            else
+            {
+                pushUnitIntoStack(pMacroCal, unLineNum); //å‹æ ˆ
+                pMacroCal->ucMacroStep = 0;              //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+            }
+        }
+        //2.æ ˆå†…æ²¡æœ‰å…ƒç´ ï¼Œç›´æ¥å‹æ ˆ
+        else
+        {
+            //			//æ ˆå†…æ²¡æœ‰å…ƒç´ ï¼Œå‡ºç°å³æ‹¬å·æƒ…å†µåº”è¯¥é”™è¯¯ï¼Ÿï¼Ÿï¼Ÿ
+            //			if (pMacroCal->SCurrUnit.ucLevel != MACRO_LEVEL_11)   //å³æ‹¬å·ä¸å‹æ ˆ
+            //			{
+            //				pushUnitIntoStack(pMacroCal, unLineNum);
+            //				pMacroCal->ucMacroStep = 0;   //è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+            //			}
+            // æ ˆä¸ºç©ºæ—¶é‡åˆ°å³æ‹¬å·ï¼šå¿…é”™ï¼ˆæ²¡æœ‰å¯åŒ¹é…çš„å·¦æ‹¬å·ï¼‰
+            if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_11) // ')'/']'
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+                return -1;
+            }
 
-				}
-			}
+            // æ ˆä¸ºç©ºä¸”ä¸æ˜¯å³æ‹¬å·ï¼šæ­£å¸¸å‹æ ˆï¼ˆä¾‹å¦‚é‡åˆ°å·¦æ‹¬å·ã€é‡åˆ°è¿ç®—ç¬¦ç­‰ï¼‰
+            pushUnitIntoStack(pMacroCal, unLineNum);
+            pMacroCal->ucMacroStep = 0; // è¿”å›ç»§ç»­å¤„ç†è¡¨è¾¾å¼
+        }
 
-			//1.4µ±Ç°pCalUnitµÄµÈ¼¶´óÓÚÕ»¶¥µÄµÈ¼¶
-			else
-			{
-				pushUnitIntoStack(pMacroCal, unLineNum);    //Ñ¹Õ»
-				pMacroCal->ucMacroStep = 0;   //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-			}
+        break;
+    }
 
-		}
-		//2.Õ»ÄÚÃ»ÓĞÔªËØ£¬Ö±½ÓÑ¹Õ»
-		else
-		{
-//			//Õ»ÄÚÃ»ÓĞÔªËØ£¬³öÏÖÓÒÀ¨ºÅÇé¿öÓ¦¸Ã´íÎó£¿£¿£¿
-//			if (pMacroCal->SCurrUnit.ucLevel != MACRO_LEVEL_11)   //ÓÒÀ¨ºÅ²»Ñ¹Õ»
-//			{
-//				pushUnitIntoStack(pMacroCal, unLineNum);
-//				pMacroCal->ucMacroStep = 0;   //·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-//			}
-		    // Õ»Îª¿ÕÊ±Óöµ½ÓÒÀ¨ºÅ£º±Ø´í£¨Ã»ÓĞ¿ÉÆ¥ÅäµÄ×óÀ¨ºÅ£©
-		    if (pMacroCal->SCurrUnit.ucLevel == MACRO_LEVEL_11)  // ')'/']'
-		    {
-		        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-		        return -1;
-		    }
-
-		    // Õ»Îª¿ÕÇÒ²»ÊÇÓÒÀ¨ºÅ£ºÕı³£Ñ¹Õ»£¨ÀıÈçÓöµ½×óÀ¨ºÅ¡¢Óöµ½ÔËËã·ûµÈ£©
-				pushUnitIntoStack(pMacroCal, unLineNum);
-		    pMacroCal->ucMacroStep = 0;   // ·µ»Ø¼ÌĞø´¦Àí±í´ïÊ½
-		}
-
-		break;
-	}
-
-	//Äæ²¨À¼±í´ïÊ½ÒÑ¾­Éú³É£¬Õ»Ä¿Ç°ÊÇ¿ÕµÄ£¬¿ªÊ¼¼ÆËãÄæ²¨À¼±í´ïÊ½£¬¼ÆËã½á¹ûÑ¹µ½Õ»ÖĞ¡£
-	case 3:
-	{
+    //é€†æ³¢å…°è¡¨è¾¾å¼å·²ç»ç”Ÿæˆï¼Œæ ˆç›®å‰æ˜¯ç©ºçš„ï¼Œå¼€å§‹è®¡ç®—é€†æ³¢å…°è¡¨è¾¾å¼ï¼Œè®¡ç®—ç»“æœå‹åˆ°æ ˆä¸­ã€‚
+    case 3:
+    {
 #if GCodeCalcExpression_Debug
-		printCalculateUnitList(pMacroCal->pList);
+        printCalculateUnitList(pMacroCal->pList);
 #endif
-		//1.È¡Á´±íµÚÒ»¸öÔªËØ
-		SNode* pFirstNode = FindNode(pMacroCal->pList, 0);
-		const SCalculateUnit* pFirstUnit = NULL;
-		if (!pFirstNode)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-			break;
-		}
+        //1.å–é“¾è¡¨ç¬¬ä¸€ä¸ªå…ƒç´ 
+        SNode* pFirstNode = FindNode(pMacroCal->pList, 0);
+        const SCalculateUnit* pFirstUnit = NULL;
+        if (!pFirstNode)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+            break;
+        }
 
-		pFirstUnit = (SCalculateUnit*)pFirstNode->pData;
+        pFirstUnit = (SCalculateUnit*)pFirstNode->pData;
 
-		//2.´ÓÕ»ÖĞÈ¡Êı½øĞĞÔËËã
-		//2.1Êı×Ö£ºÈ¡ÏÂÁ´±íÍ·½ÚµãÑ¹ÈëÕ»ÖĞ
-		if (pFirstUnit->ucLevel == MACRO_LEVEL_12)
-		{
-			///ÒòÎª²åÈë½Úµãº¯Êı»á¸Ä±ä½ÚµãµÄÏÂÒ»¸ö½ÚµãµÄÖ¸Ïò£¬ËùÒÔÒªÏÈÉ¾³ı£¬ÔÙ²åÈë
-			cRet = removeNode(pMacroCal->pList, 0, TRUE);   //ÒÆ³ıÁ´±íµÚÒ»¸ö½Úµã £¬²»ÊÍ·ÅÄÚ´æ
-			if (!cRet)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-				break;
-			}
+        //2.ä»æ ˆä¸­å–æ•°è¿›è¡Œè¿ç®—
+        //2.1æ•°å­—ï¼šå–ä¸‹é“¾è¡¨å¤´èŠ‚ç‚¹å‹å…¥æ ˆä¸­
+        if (pFirstUnit->ucLevel == MACRO_LEVEL_12)
+        {
+            ///å› ä¸ºæ’å…¥èŠ‚ç‚¹å‡½æ•°ä¼šæ”¹å˜èŠ‚ç‚¹çš„ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„æŒ‡å‘ï¼Œæ‰€ä»¥è¦å…ˆåˆ é™¤ï¼Œå†æ’å…¥
+            cRet = removeNode(pMacroCal->pList, 0, TRUE); //ç§»é™¤é“¾è¡¨ç¬¬ä¸€ä¸ªèŠ‚ç‚¹ ï¼Œä¸é‡Šæ”¾å†…å­˜
+            if (!cRet)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                break;
+            }
 
-			cRet = insertNode(pMacroCal->pStack, 0, pFirstNode);  //Ñ¹Õ»
-			if (!cRet)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-				break;
-			}
+            cRet = insertNode(pMacroCal->pStack, 0, pFirstNode); //å‹æ ˆ
+            if (!cRet)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                break;
+            }
+        }
+        //2.2è¿ç®—ç¬¦
+        else
+        {
+            SNode* pCalNode_1 = NULL;              //ç¬¬ä¸€ä¸ªèŠ‚ç‚¹ï¼ˆæ ˆé¡¶ï¼‰
+            SNode* pCalNode_2 = NULL;              //ç¬¬äºŒä¸ªèŠ‚ç‚¹
+            SCalculateUnit* pLeftInputUnit = NULL; //è®¡ç®—ç»“æœä¿ç•™åœ¨è¿™
+            SCalculateUnit* pRightInputUnit = NULL;
 
-		}
-		//2.2ÔËËã·û
-		else
-		{
-			SNode* pCalNode_1 = NULL;   //µÚÒ»¸ö½Úµã£¨Õ»¶¥£©
-			SNode* pCalNode_2 = NULL;   //µÚ¶ş¸ö½Úµã
-			SCalculateUnit* pLeftInputUnit = NULL;   //¼ÆËã½á¹û±£ÁôÔÚÕâ
-			SCalculateUnit* pRightInputUnit = NULL;
+            pCalNode_1 = FindNode(pMacroCal->pStack, 0); //è·å–æ ˆé¡¶èŠ‚ç‚¹
+            if (!pCalNode_1)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+                break;
+            }
 
-			pCalNode_1 = FindNode(pMacroCal->pStack, 0);  //»ñÈ¡Õ»¶¥½Úµã
-			if (!pCalNode_1)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-				break;
-			}
+            cRet = isUnaryOrBinary(pFirstUnit->ucLevel); //åˆ¤æ–­å•åŒç›®
+            //2.2.1å•ç›®
+            if (cRet == 1)
+            {
+                pLeftInputUnit = (SCalculateUnit*)pCalNode_1->pData; //å•ç›®æ—¶ï¼Œè¾“å‡ºæ•°æ®çš„èŠ‚ç‚¹åœ¨ç¬¬ä¸€ä¸ªèŠ‚ç‚¹ï¼ˆæ ˆé¡¶ï¼‰
+                calculateMacro(pFirstUnit->ucLevel, pFirstUnit->ucType, pSLocalMacroVar, pLeftInputUnit,
+                               pRightInputUnit, unLineNum); //è®¡ç®—
+            }
 
-			cRet = isUnaryOrBinary(pFirstUnit->ucLevel);  //ÅĞ¶Ïµ¥Ë«Ä¿
-			//2.2.1µ¥Ä¿
-			if (cRet == 1)
-			{
-				pLeftInputUnit = (SCalculateUnit*)pCalNode_1->pData;  //µ¥Ä¿Ê±£¬Êä³öÊı¾İµÄ½ÚµãÔÚµÚÒ»¸ö½Úµã£¨Õ»¶¥£©
-				calculateMacro(pFirstUnit->ucLevel, pFirstUnit->ucType, pSLocalMacroVar, pLeftInputUnit, pRightInputUnit, unLineNum);   //¼ÆËã
-			}
+            //2.2.2åŒç›®
+            else
+            {
+                pCalNode_2 = FindNode(pMacroCal->pStack, 1);
+                if (!pCalNode_2)
+                {
+                    parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+                    break;
+                }
 
-			//2.2.2Ë«Ä¿
-			else
-			{
-				pCalNode_2 = FindNode(pMacroCal->pStack, 1);
-				if (!pCalNode_2)
-				{
-					parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-					break;
-				}
+                pLeftInputUnit = (SCalculateUnit*)pCalNode_2->pData; //åŒç›®ï¼Œè¾“å‡ºæ•°æ®çš„èŠ‚ç‚¹åœ¨ç¬¬äºŒä¸ªèŠ‚ç‚¹
+                pRightInputUnit = (SCalculateUnit*)pCalNode_1->pData;
 
-				pLeftInputUnit = (SCalculateUnit*)pCalNode_2->pData;    //Ë«Ä¿£¬Êä³öÊı¾İµÄ½ÚµãÔÚµÚ¶ş¸ö½Úµã
-				pRightInputUnit = (SCalculateUnit*)pCalNode_1->pData;
+                calculateMacro(pFirstUnit->ucLevel, pFirstUnit->ucType, pSLocalMacroVar, pLeftInputUnit,
+                               pRightInputUnit, unLineNum); //è®¡ç®—
 
-				calculateMacro(pFirstUnit->ucLevel, pFirstUnit->ucType, pSLocalMacroVar, pLeftInputUnit, pRightInputUnit, unLineNum);   //¼ÆËã
+                cRet = removeNode(pMacroCal->pStack, 0, FALSE); //åˆ é™¤æ ˆé¡¶,é‡Šæ”¾å†…å­˜
+                if (!cRet)
+                {
+                    parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                    break;
+                }
+            }
 
-				cRet = removeNode(pMacroCal->pStack, 0, FALSE);  //É¾³ıÕ»¶¥,ÊÍ·ÅÄÚ´æ
-				if (!cRet)
-				{
-					parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-					break;
-				}
-			}
+            //2.2.3è®¡ç®—å®Œæˆï¼Œåˆ é™¤é“¾è¡¨ç¬¬ä¸€ä¸ªå…ƒç´ 
+            cRet = removeNode(pMacroCal->pList, 0, FALSE); //ç§»é™¤é“¾è¡¨ç¬¬ä¸€ä¸ªèŠ‚ç‚¹,é‡Šæ”¾å†…å­˜
+            if (!cRet)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                break;
+            }
+        }
 
-			//2.2.3¼ÆËãÍê³É£¬É¾³ıÁ´±íµÚÒ»¸öÔªËØ
-			cRet = removeNode(pMacroCal->pList, 0, FALSE);   //ÒÆ³ıÁ´±íµÚÒ»¸ö½Úµã,ÊÍ·ÅÄÚ´æ
-			if (!cRet)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-				break;
-			}
-		}
+        //3.åˆ¤æ–­è¡¨è¾¾å¼æ˜¯å¦è®¡ç®—å®Œæˆ
+        if (pMacroCal->pList->cSize == 0)
+        {
+            //æ ˆå¤§å°å¿…é¡»ä¸º1ï¼Œä¸ç„¶å°±æ˜¯è¡¨è¾¾å¼æœ‰é—®é¢˜
+            if (pMacroCal->pStack->cSize == 1)
+            {
+                pFirstUnit = FindNodeData(pMacroCal->pStack, 0); //è·å–æ ˆé¡¶æ•°æ®
+                if (pFirstUnit == NULL)
+                {
+                    parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                    break;
+                }
+                //åˆ›å»ºè®¡ç®—å•å…ƒï¼Œç”¨äºå­˜æ”¾è®¡ç®—ç»“æœ
+                SCalculateUnit SResultUnit = *pFirstUnit;
+                //3.1åˆ é™¤æ ˆé¡¶
+                if (!removeNode(pMacroCal->pStack, 0, FALSE))
+                {
+                    parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+                    break;
+                }
 
-		//3.ÅĞ¶Ï±í´ïÊ½ÊÇ·ñ¼ÆËãÍê³É
-		if (pMacroCal->pList->cSize == 0)
-		{
-			//Õ»´óĞ¡±ØĞëÎª1£¬²»È»¾ÍÊÇ±í´ïÊ½ÓĞÎÊÌâ
-			if (pMacroCal->pStack->cSize == 1)
-			{
-				pFirstUnit = FindNodeData(pMacroCal->pStack, 0);  //»ñÈ¡Õ»¶¥Êı¾İ
-				if (pFirstUnit == NULL)
-				{
-					parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-					break;
-				}
-				//´´½¨¼ÆËãµ¥Ôª£¬ÓÃÓÚ´æ·Å¼ÆËã½á¹û
-				SCalculateUnit SResultUnit = *pFirstUnit;
-				//3.1É¾³ıÕ»¶¥
-				if (!removeNode(pMacroCal->pStack, 0, FALSE))
-				{
-					parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-					break;
-				}
+                //è®¡ç®—å·²å®Œæˆï¼Œä»¥ä¸‹å¯¹è®¡ç®—ç»“æœè¿›è¡Œåˆ†æ
+                //3.2è®¡ç®—ç»“æœä¸éœ€è¦è§£å¼•ç”¨
+                if (SResultUnit.bPound == FALSE)
+                {
+                    *pResult = SResultUnit.fVal;
+                    return 1;
+                }
 
-				//¼ÆËãÒÑÍê³É£¬ÒÔÏÂ¶Ô¼ÆËã½á¹û½øĞĞ·ÖÎö
-				//3.2¼ÆËã½á¹û²»ĞèÒª½âÒıÓÃ
-				if (SResultUnit.bPound == FALSE)
-				{
-					*pResult = SResultUnit.fVal;
-					return 1;
-				}
+                //3.3è®¡ç®—ç»“æœéœ€è¦è§£å¼•ç”¨
+                else
+                {
+                    float fTemp;
+                    uint8* pTemp2 = NULL;
+                    *pPoundVal = (uint16)SResultUnit.fVal;
+                    //è§£å¼•ç”¨ä¸ä¸ºNULL
+                    if (getMacroVar(pSLocalMacroVar, (uint16)SResultUnit.fVal, &fTemp, &pTemp2, unLineNum) > 0)
+                    {
+                        //å±€éƒ¨å®å˜é‡
+                        if (SResultUnit.fVal <= 33)
+                        {
+                            *pResult = fTemp;
+                        }
+                        //ç³»ç»Ÿå®å˜é‡
+                        else if (SResultUnit.fVal >= 1000)
+                        {
+                            *pResult = *pTemp2;
+                        }
+                        return 2;
+                    }
+                    //è§£å¼•ç”¨ä¸ºNULL
+                    else
+                    {
+                        *pResult = 0;
+                        return 3;
+                    }
+                }
+            }
+            //æŠ¥é”™
+            else
+            {
+                //pMacroCal->ucMacroStep = 123;
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+                break;
+            }
+        }
 
-				//3.3¼ÆËã½á¹ûĞèÒª½âÒıÓÃ
-				else
-				{
-					float fTemp;
-					uint8* pTemp2 = NULL;
-					*pPoundVal = (uint16)SResultUnit.fVal;
-					//½âÒıÓÃ²»ÎªNULL
-					if (getMacroVar(pSLocalMacroVar, (uint16)SResultUnit.fVal, &fTemp, &pTemp2, unLineNum) >0)
-					{
-						//¾Ö²¿ºê±äÁ¿
-						if (SResultUnit.fVal <= 33)
-						{
-							*pResult = fTemp;
-						}
-						//ÏµÍ³ºê±äÁ¿
-						else if (SResultUnit.fVal >= 1000)
-						{
-							*pResult = *pTemp2;
-						}
-						return 2;
-					}
-					//½âÒıÓÃÎªNULL
-					else
-					{
-						*pResult = 0;
-						return 3;
-					}
-				}
-			}
-			//±¨´í
-			else
-			{
-				//pMacroCal->ucMacroStep = 123;
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-				break;
-			}
-		}
+        break;
+    }
 
-		break;
-	}
+    default:
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+        break;
+    }
 
-
-
-	default:
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-		break;
-	}
-
-
-	return 0;
+    return 0;
 }
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºbool isAssignable(int8 const* pCurrPtr)
-  º¯Êı¹¦ÄÜ£ºÅĞ¶Ï±í´ïÊ½ÊÇ·ñº¬ÓĞ¸³Öµ·û=
-  ÊäÈë²ÎÊı£º
+  å‡½æ•°åç§°ï¼šbool isAssignable(int8 const* pCurrPtr)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­è¡¨è¾¾å¼æ˜¯å¦å«æœ‰èµ‹å€¼ç¬¦=
+  è¾“å…¥å‚æ•°ï¼š
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	º¬ÓĞ¸³Öµ=
-			FALSE	²»º¬¸³Öµ=
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	å«æœ‰èµ‹å€¼=
+			FALSE	ä¸å«èµ‹å€¼=
+  å¤‡    æ³¨ï¼š
 **************************************************/
 bool isAssignable(int8 const* pCurrPtr)
 {
@@ -963,48 +973,48 @@ bool isAssignable(int8 const* pCurrPtr)
         return FALSE;
     }
     while (1)
-	{
-        // ***¸´ÓÃÄãÏîÄ¿µÄ¡°¶Î/ĞĞ½áÊø¡±ÓïÒå£ºÓöµ½½áÊø¾ÍÍ£Ö¹É¨Ãè***
+    {
+        // ***å¤ç”¨ä½ é¡¹ç›®çš„â€œæ®µ/è¡Œç»“æŸâ€è¯­ä¹‰ï¼šé‡åˆ°ç»“æŸå°±åœæ­¢æ‰«æ***
         if (isSegmentFinishSign((const char*)pCurrPtr) || isLineFinishSign((const char*)pCurrPtr))
-		{
-			return FALSE;
-		}
+        {
+            return FALSE;
+        }
 
         if (*pCurrPtr == '\0' || *pCurrPtr == '\r' || *pCurrPtr == '\n')
         {
             return FALSE;
-	}
+        }
 
         if (*pCurrPtr == '=')
         {
-            const char prev = (pCurrPtr > (const int8*)0) ? *(pCurrPtr - 1) : 0; // prev ½öÓÃÓÚ±È½Ï£¬±ÜÃâÎóÓÃ
+            const char prev = (pCurrPtr > (const int8*)0) ? *(pCurrPtr - 1) : 0; // prev ä»…ç”¨äºæ¯”è¾ƒï¼Œé¿å…è¯¯ç”¨
             const char next = *(pCurrPtr + 1);
 
-            // ***ÅÅ³ı±È½ÏÔËËã·û£º==¡¢<=¡¢>=¡¢<>***
-            if (next == '=')          // ==
+            // ***æ’é™¤æ¯”è¾ƒè¿ç®—ç¬¦ï¼š==ã€<=ã€>=ã€<>***
+            if (next == '=') // ==
                 return FALSE;
-            if (prev == '<' || prev == '>')  // <= »ò >= »ò <>£¨ÆäÖĞ <> µÄ '=' ²»´æÔÚ£¬µ« prev ±£»¤²»ÉË£©
+            if (prev == '<' || prev == '>') // <= æˆ– >= æˆ– <>ï¼ˆå…¶ä¸­ <> çš„ '=' ä¸å­˜åœ¨ï¼Œä½† prev ä¿æŠ¤ä¸ä¼¤ï¼‰
                 return FALSE;
 
-            // ÕâÀï²ÅÈÏÎªÊÇ¸³Öµ '='
-		return TRUE;
-	}
+            // è¿™é‡Œæ‰è®¤ä¸ºæ˜¯èµ‹å€¼ '='
+            return TRUE;
+        }
 
         pCurrPtr++;
     }
 
-	return FALSE;
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 isNeedCalculate(int8* pExpression, uint8 ucLen)
-  º¯Êı¹¦ÄÜ: ÅĞ¶Ï±í´ïÊ½ExpressionÊÇ·ñĞèÒª½øĞĞºê¼ÆËã
-  ÊäÈë²ÎÊı£ºpExpression		±í´ïÊ½Ê××Ö·ûµØÖ·
-			ucLen			±í´ïÊ½×Ö·û´®³¤¶È
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºTRUE	ĞèÒªºê¼ÆËã
-			FALSE	²»ĞèÒªºê¼ÆËã
-  ±¸    ×¢£º×Ö·û´®´ÓµÚ2Î»¿ªÊ¼½öÓÉ0ÖÁ9ºÍ.×é³ÉÔò²»ĞèÒª¼ÆËã£¨+10Óë-10²»ĞèÒª¼ÆËã£©
+  å‡½æ•°åç§°ï¼šint8 isNeedCalculate(int8* pExpression, uint8 ucLen)
+  å‡½æ•°åŠŸèƒ½: åˆ¤æ–­è¡¨è¾¾å¼Expressionæ˜¯å¦éœ€è¦è¿›è¡Œå®è®¡ç®—
+  è¾“å…¥å‚æ•°ï¼špExpression		è¡¨è¾¾å¼é¦–å­—ç¬¦åœ°å€
+			ucLen			è¡¨è¾¾å¼å­—ç¬¦ä¸²é•¿åº¦
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šTRUE	éœ€è¦å®è®¡ç®—
+			FALSE	ä¸éœ€è¦å®è®¡ç®—
+  å¤‡    æ³¨ï¼šå­—ç¬¦ä¸²ä»ç¬¬2ä½å¼€å§‹ä»…ç”±0è‡³9å’Œ.ç»„æˆåˆ™ä¸éœ€è¦è®¡ç®—ï¼ˆ+10ä¸-10ä¸éœ€è¦è®¡ç®—ï¼‰
 **************************************************/
 int8 isNeedCalculate(int8* pExpression, uint8 ucExpressionLen)
 {
@@ -1012,1381 +1022,1382 @@ int8 isNeedCalculate(int8* pExpression, uint8 ucExpressionLen)
     {
         return -1;
     }
-	uint8 i = 0;
-    uint8 digitCnt = 0;     // **ÖÁÉÙÒ»Î»Êı×Ö**
-    uint8 pointCnt = 0;     // **×î¶àÒ»¸öĞ¡Êıµã**
-    uint8 signCnt  = 0;     // **×î¶àÒ»¸ö·ûºÅ£¬ÇÒÖ»ÄÜÔÚÊ×Î»**
-	//±í´ïÊ½µÚ1Î»²»Îª + or - or Êı×Ö or Ğ¡Êıµã
-    // 1) Ê××Ö·ûÔÊĞí + - . Êı×Ö
-     //    µ«·ûºÅÖ»ÄÜ³öÏÖÔÚ¿ªÍ·
-     if (pExpression[0] == '+' || pExpression[0] == '-')
-     {
-         signCnt = 1;
-         i = 1;
-         // ±í´ïÊ½½öÒ»¸ö·ûºÅ£ºÈç "+" "-"£¬¿Ï¶¨²»ÊÇºÏ·¨´¿Êı×Ö
-         if (i >= ucExpressionLen) return TRUE;
-	}
-     // 2) É¨ÃèÊ£Óà×Ö·û£ºÖ»ÄÜÊÇ Êı×Ö »ò '.'
-        for (; i < ucExpressionLen; i++)
-	{
-            char c = pExpression[i];
-
-            if (c >= '0' && c <= '9')
-            {
-                digitCnt++;
-            }
-            else if (c == '.')
-		{
-                pointCnt++;
-                if (pointCnt > 1) return TRUE;   // ¶à¸öµã£º²»ÊÇ´¿Êı×Ö
-            }
-            else if ((c == '+' || c == '-') )
-            {
-                // ÖĞ¼äÔÙ³öÏÖ·ûºÅ£ºÒ»¶¨²»ÊÇ´¿Êı×Ö£¨ÀıÈç "1-2" ĞèÒª¼ÆËã£©
-                return TRUE;
-		}
-		else
-		{
-                // ³öÏÖÆäËü×Ö·û£¨#¡¢[]¡¢º¯ÊıÃûµÈ£©£ºĞèÒª¼ÆËã
-			return TRUE;
-		}
-        }
-		
-        // 3) **¹Ø¼ü£º±ØĞëÖÁÉÙÒ»Î»Êı×Ö**£¬·ñÔòÈÃºóĞøÁ÷³Ì±¨´í£¨²»Òª×ß atof£©
-        if (digitCnt == 0)
-        {
+    uint8 i = 0;
+    uint8 digitCnt = 0; // **è‡³å°‘ä¸€ä½æ•°å­—**
+    uint8 pointCnt = 0; // **æœ€å¤šä¸€ä¸ªå°æ•°ç‚¹**
+    uint8 signCnt = 0;  // **æœ€å¤šä¸€ä¸ªç¬¦å·ï¼Œä¸”åªèƒ½åœ¨é¦–ä½**
+                        //è¡¨è¾¾å¼ç¬¬1ä½ä¸ä¸º + or - or æ•°å­— or å°æ•°ç‚¹
+                        // 1) é¦–å­—ç¬¦å…è®¸ + - . æ•°å­—
+    //    ä½†ç¬¦å·åªèƒ½å‡ºç°åœ¨å¼€å¤´
+    if (pExpression[0] == '+' || pExpression[0] == '-')
+    {
+        signCnt = 1;
+        i = 1;
+        // è¡¨è¾¾å¼ä»…ä¸€ä¸ªç¬¦å·ï¼šå¦‚ "+" "-"ï¼Œè‚¯å®šä¸æ˜¯åˆæ³•çº¯æ•°å­—
+        if (i >= ucExpressionLen)
             return TRUE;
-	}
+    }
+    // 2) æ‰«æå‰©ä½™å­—ç¬¦ï¼šåªèƒ½æ˜¯ æ•°å­— æˆ– '.'
+    for (; i < ucExpressionLen; i++)
+    {
+        char c = pExpression[i];
 
-        // ÄÜ×ßµ½ÕâÀï£º±íÊ¾ÊÇºÏ·¨´¿Êı×Ö×ÖÃæÁ¿£¨ÀıÈç "10" "-3.5" ".5" "12."£©
-	return FALSE;
+        if (c >= '0' && c <= '9')
+        {
+            digitCnt++;
+        }
+        else if (c == '.')
+        {
+            pointCnt++;
+            if (pointCnt > 1)
+                return TRUE; // å¤šä¸ªç‚¹ï¼šä¸æ˜¯çº¯æ•°å­—
+        }
+        else if ((c == '+' || c == '-'))
+        {
+            // ä¸­é—´å†å‡ºç°ç¬¦å·ï¼šä¸€å®šä¸æ˜¯çº¯æ•°å­—ï¼ˆä¾‹å¦‚ "1-2" éœ€è¦è®¡ç®—ï¼‰
+            return TRUE;
+        }
+        else
+        {
+            // å‡ºç°å…¶å®ƒå­—ç¬¦ï¼ˆ#ã€[]ã€å‡½æ•°åç­‰ï¼‰ï¼šéœ€è¦è®¡ç®—
+            return TRUE;
+        }
+    }
+
+    // 3) **å…³é”®ï¼šå¿…é¡»è‡³å°‘ä¸€ä½æ•°å­—**ï¼Œå¦åˆ™è®©åç»­æµç¨‹æŠ¥é”™ï¼ˆä¸è¦èµ° atofï¼‰
+    if (digitCnt == 0)
+    {
+        return TRUE;
+    }
+
+    // èƒ½èµ°åˆ°è¿™é‡Œï¼šè¡¨ç¤ºæ˜¯åˆæ³•çº¯æ•°å­—å­—é¢é‡ï¼ˆä¾‹å¦‚ "10" "-3.5" ".5" "12."ï¼‰
+    return FALSE;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int8 movePtrOnPureNum(uint8 ucType, const int8** pExpression, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: *pExpressionÒÆ¶¯Ö¸Õëµ½Êı×ÖµÄºóÒ»Î»
-  ÊäÈë²ÎÊı£ºucType:0¸¡µã£¬1ÓĞ·ûºÅÕûĞÍ£¬2ÎŞ·ûºÅÕûĞÍ,*pExpressionµ±Ç°×Ö·ûµÄµØÖ·£¬unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºbErrorFlag Õæ:ÓĞ´íÎó ¼Ù£ºÎŞ´íÎó
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstatic int8 movePtrOnPureNum(uint8 ucType, const int8** pExpression, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: *pExpressionç§»åŠ¨æŒ‡é’ˆåˆ°æ•°å­—çš„åä¸€ä½
+  è¾“å…¥å‚æ•°ï¼šucType:0æµ®ç‚¹ï¼Œ1æœ‰ç¬¦å·æ•´å‹ï¼Œ2æ— ç¬¦å·æ•´å‹,*pExpressionå½“å‰å­—ç¬¦çš„åœ°å€ï¼ŒunLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šbErrorFlag çœŸ:æœ‰é”™è¯¯ å‡ï¼šæ— é”™è¯¯
+  å¤‡    æ³¨ï¼š
 **************************************************/
- int8 movePtrOnPureNum(uint8 ucType, const int8** pExpression, uint32 unLineNum)
+int8 movePtrOnPureNum(uint8 ucType, const int8** pExpression, uint32 unLineNum)
 {
-	uint8 nSignCounter = 0;     //Õı¸ººÅ³öÏÖ´ÎÊı
-	uint8 nPointCounter = 0;    //Ğ¡Êıµã³öÏÖ´ÎÊı
-	uint8 digitCnt = 0;
-	const int8* pTemp = NULL;
-	bool bErrorFlag = FALSE;
+    uint8 nSignCounter = 0;  //æ­£è´Ÿå·å‡ºç°æ¬¡æ•°
+    uint8 nPointCounter = 0; //å°æ•°ç‚¹å‡ºç°æ¬¡æ•°
+    uint8 digitCnt = 0;
+    const int8* pTemp = NULL;
+    bool bErrorFlag = FALSE;
 
-	if (!pExpression || !(*pExpression))
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return TRUE;
-	}
-	pTemp = *pExpression;
+    if (!pExpression || !(*pExpression))
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return TRUE;
+    }
+    pTemp = *pExpression;
 
-	while ((*pTemp == '+') || (*pTemp == '-'))
-	{
-        nSignCounter++;                         // ***Ô­´úÂëÈ±Ê§++***
-        if (nSignCounter > 1) bErrorFlag = TRUE;
-        if (ucType == 2 && *pTemp == '-') bErrorFlag = TRUE;   // ÎŞ·ûºÅ²»ÔÊĞí¸ººÅ
+    while ((*pTemp == '+') || (*pTemp == '-'))
+    {
+        nSignCounter++; // ***åŸä»£ç ç¼ºå¤±++***
+        if (nSignCounter > 1)
+            bErrorFlag = TRUE;
+        if (ucType == 2 && *pTemp == '-')
+            bErrorFlag = TRUE; // æ— ç¬¦å·ä¸å…è®¸è´Ÿå·
 
         pTemp++;
-	}
-	nSignCounter = 0;
+    }
+    nSignCounter = 0;
 
+    while ((((*pTemp >= '0') && (*pTemp <= '9')) || (*pTemp == '.'))) //è·å–0-9åŠå°æ•°ç‚¹
+    {
+        if (*pTemp == '.')
+        {
+            nPointCounter++;
+        }
+        else
+        {
+            digitCnt++; // ***ç»Ÿè®¡æ•°å­—***
+        }
+        if (nPointCounter > 1 || ucType > 0)
+        {
+            if (nPointCounter > 2)
+            {
+                pTemp += 1;
+                continue;
+            }
+            bErrorFlag = TRUE;
+            nPointCounter++;
+        }
 
-	while ((((*pTemp >= '0') && (*pTemp <= '9')) || (*pTemp == '.')))   //»ñÈ¡0-9¼°Ğ¡Êıµã
-	{
-		if (*pTemp == '.')
-		{
-			nPointCounter++;
-		}
-	    else
-		{
-			digitCnt++;                          // ***Í³¼ÆÊı×Ö***
-		}
-		if (nPointCounter > 1 || ucType > 0)
-		{
-			if (nPointCounter > 2)
-			{
-				pTemp += 1;
-				continue;
-			}
-			bErrorFlag = TRUE;
-			nPointCounter++;
-		}
-
-		pTemp += 1;
-	}
-    // 3) ***ÖÁÉÙÒ»Î»Êı×ÖĞ£Ñé£º+¡¢-¡¢.¡¢-.¡¢+. Ö±½ÓÅĞ´í***
+        pTemp += 1;
+    }
+    // 3) ***è‡³å°‘ä¸€ä½æ•°å­—æ ¡éªŒï¼š+ã€-ã€.ã€-.ã€+. ç›´æ¥åˆ¤é”™***
     if (digitCnt == 0)
     {
         bErrorFlag = TRUE;
     }
-	*pExpression = pTemp;
+    *pExpression = pTemp;
 
-	return bErrorFlag;
+    return bErrorFlag;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 movePtrOnExpression(const int8 **pExpression, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: *pExpressionÒÆ¶¯Ö¸Õëµ½(ÒÔÀ¨ºÅ·â±ÕµÄ)±í´ïÊ½µÄºóÒ»Î»£¬±ØÈ»ÊÇÓÒÀ¨ºÅµÄºóÒ»Î»
-  ÊäÈë²ÎÊı£º*pExpressionµ±Ç°×Ö·ûµÄµØÖ·£¬unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1,-2³ö´í  1Íê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šint8 movePtrOnExpression(const int8 **pExpression, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: *pExpressionç§»åŠ¨æŒ‡é’ˆåˆ°(ä»¥æ‹¬å·å°é—­çš„)è¡¨è¾¾å¼çš„åä¸€ä½ï¼Œå¿…ç„¶æ˜¯å³æ‹¬å·çš„åä¸€ä½
+  è¾“å…¥å‚æ•°ï¼š*pExpressionå½“å‰å­—ç¬¦çš„åœ°å€ï¼ŒunLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1,-2å‡ºé”™  1å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 int8 movePtrOnExpression(const int8** pExpression, uint32 unLineNum)
 {
-	int8 cCnt = 1;   //À¨ºÅ¼ÆÊıÆ÷  Îª0ËµÃ÷ÒÆ¶¯Íê³É
-	const int8* pTemp = (*pExpression) + 1; //ÏÈÒÆµ½×óÀ¨ºÅµÄºóÒ»Î»
+    int8 cCnt = 1;                          //æ‹¬å·è®¡æ•°å™¨  ä¸º0è¯´æ˜ç§»åŠ¨å®Œæˆ
+    const int8* pTemp = (*pExpression) + 1; //å…ˆç§»åˆ°å·¦æ‹¬å·çš„åä¸€ä½
 
-	if (!pExpression || !(*pExpression))
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (!pExpression || !(*pExpression))
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	while (cCnt != 0)
-	{
-		if ((*pTemp == '[') || (*pTemp == '('))
-		{
-			cCnt++;
-		}
-		else if ((*pTemp == ']') || (*pTemp == ')'))
-		{
-			cCnt--;
-		}
-		else if (*pTemp == 0 || *pTemp == '\r' || *pTemp == '\n' || *pTemp == ';')
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			return -2;
-		}
-		pTemp++;
-	}
+    while (cCnt != 0)
+    {
+        if ((*pTemp == '[') || (*pTemp == '('))
+        {
+            cCnt++;
+        }
+        else if ((*pTemp == ']') || (*pTemp == ')'))
+        {
+            cCnt--;
+        }
+        else if (*pTemp == 0 || *pTemp == '\r' || *pTemp == '\n' || *pTemp == ';')
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            return -2;
+        }
+        pTemp++;
+    }
 
-	if (*pTemp == ']' || *pTemp == ')')
-	{
-		pTemp++;
-	}
-	else
-	*pExpression = pTemp;//ÒÆµ½ÓÒÀ¨ºÅµÄºóÒ»Î»
-	return 1;
+    if (*pTemp == ']' || *pTemp == ')')
+    {
+        pTemp++;
+    }
+    else
+        *pExpression = pTemp; //ç§»åˆ°å³æ‹¬å·çš„åä¸€ä½
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic bool isUnaryOperator(const int8 **pExpression, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: ÅĞ¶ÏÊÇ²»ÊÇµ¥Ä¿ÔËËã·û£¬Èç¹ûÊÇ£¬ÒÆ¶¯Ö¸Õëµ½µ¥Ä¿ÔËËã·ûµÄºóÒ»Î»
-  ÊäÈë²ÎÊı£º*pExpressionµ±Ç°×Ö·ûµÄµØÖ·£¬unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE:³ö´í»ò²»ÊÇµ¥Ä¿ÔËËã·û
-			TRUE :´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstatic bool isUnaryOperator(const int8 **pExpression, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: åˆ¤æ–­æ˜¯ä¸æ˜¯å•ç›®è¿ç®—ç¬¦ï¼Œå¦‚æœæ˜¯ï¼Œç§»åŠ¨æŒ‡é’ˆåˆ°å•ç›®è¿ç®—ç¬¦çš„åä¸€ä½
+  è¾“å…¥å‚æ•°ï¼š*pExpressionå½“å‰å­—ç¬¦çš„åœ°å€ï¼ŒunLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE:å‡ºé”™æˆ–ä¸æ˜¯å•ç›®è¿ç®—ç¬¦
+			TRUE :å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 static bool isUnaryOperator(const int8** pExpression, uint32 unLineNum)
 {
-	if (pExpression == NULL || *pExpression == NULL)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return FALSE;
-	}
+    if (pExpression == NULL || *pExpression == NULL)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return FALSE;
+    }
 
-	if (**pExpression == '+' || **pExpression == '-' || **pExpression == '#')
-	{
-		*pExpression += 1;
-		return TRUE;
-	}
-	else if (isTagetStr_B("LN", *pExpression))
-	{
-		*pExpression += 2;
-		return TRUE;
-	}
-	else if (isTagetStr_B("ABS", *pExpression) || isTagetStr_B("FUP", *pExpression) || isTagetStr_B("FIX", *pExpression)
-		|| isTagetStr_B("EXP", *pExpression) || isTagetStr_B("SIN", *pExpression) || isTagetStr_B("COS", *pExpression)
-		|| isTagetStr_B("TAN", *pExpression) || isTagetStr_B("BIN", *pExpression) || isTagetStr_B("BCD", *pExpression))
-	{
-		*pExpression += 3;
-		return TRUE;
-	}
-	else if (isTagetStr_B("SQRT", *pExpression) || isTagetStr_B("ASIN", *pExpression) || isTagetStr_B("ACOS", *pExpression)
-		|| isTagetStr_B("ATAN", *pExpression))
-	{
-		*pExpression += 4;
-		return TRUE;
-	}
-	else if (isTagetStr_B("ROUND", *pExpression))
-	{
-		*pExpression += 5;
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
+    if (**pExpression == '+' || **pExpression == '-' || **pExpression == '#')
+    {
+        *pExpression += 1;
+        return TRUE;
+    }
+    else if (isTagetStr_B("LN", *pExpression))
+    {
+        *pExpression += 2;
+        return TRUE;
+    }
+    else if (isTagetStr_B("ABS", *pExpression) || isTagetStr_B("FUP", *pExpression) ||
+             isTagetStr_B("FIX", *pExpression) || isTagetStr_B("EXP", *pExpression) ||
+             isTagetStr_B("SIN", *pExpression) || isTagetStr_B("COS", *pExpression) ||
+             isTagetStr_B("TAN", *pExpression) || isTagetStr_B("BIN", *pExpression) ||
+             isTagetStr_B("BCD", *pExpression))
+    {
+        *pExpression += 3;
+        return TRUE;
+    }
+    else if (isTagetStr_B("SQRT", *pExpression) || isTagetStr_B("ASIN", *pExpression) ||
+             isTagetStr_B("ACOS", *pExpression) || isTagetStr_B("ATAN", *pExpression))
+    {
+        *pExpression += 4;
+        return TRUE;
+    }
+    else if (isTagetStr_B("ROUND", *pExpression))
+    {
+        *pExpression += 5;
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic bool isBinaryOperator(const int8 **pExpression, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: ÅĞ¶ÏÊÇ²»ÊÇË«Ä¿ÔËËã·û£¬Èç¹ûÊÇ£¬ÒÆ¶¯Ö¸Õëµ½Ë«Ä¿ÔËËã·ûµÄºóÒ»Î»
-  ÊäÈë²ÎÊı£º*pExpressionµ±Ç°×Ö·ûµÄµØÖ·£¬unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£ºFALSE:³ö´í»ò²»ÊÇË«Ä¿ÔËËã·û
-			TRUE :´¦ÀíÍê³É
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstatic bool isBinaryOperator(const int8 **pExpression, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: åˆ¤æ–­æ˜¯ä¸æ˜¯åŒç›®è¿ç®—ç¬¦ï¼Œå¦‚æœæ˜¯ï¼Œç§»åŠ¨æŒ‡é’ˆåˆ°åŒç›®è¿ç®—ç¬¦çš„åä¸€ä½
+  è¾“å…¥å‚æ•°ï¼š*pExpressionå½“å‰å­—ç¬¦çš„åœ°å€ï¼ŒunLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼šFALSE:å‡ºé”™æˆ–ä¸æ˜¯åŒç›®è¿ç®—ç¬¦
+			TRUE :å¤„ç†å®Œæˆ
+  å¤‡    æ³¨ï¼š
 **************************************************/
 static bool isBinaryOperator(const int8** pExpression, uint32 unLineNum)
 {
-	if (pExpression == NULL || *pExpression == NULL)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return FALSE;
-	}
+    if (pExpression == NULL || *pExpression == NULL)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return FALSE;
+    }
 
-	if (**pExpression == '+' || **pExpression == '-' || **pExpression == '*' || **pExpression == '/' || **pExpression == '%')
-	{
-		*pExpression += 1;
-		return TRUE;
-	}
-	else if (isTagetStr_B("AND", *pExpression) || isTagetStr_B("XOR", *pExpression))
-	{
-		*pExpression += 3;
-		return TRUE;
-	}
-	else if (isTagetStr_B("OR", *pExpression) || isTagetStr_B("NE", *pExpression) || isTagetStr_B("EQ", *pExpression) || isTagetStr_B("GT", *pExpression)
-		|| isTagetStr_B("GE", *pExpression) || isTagetStr_B("LT", *pExpression) || isTagetStr_B("LE", *pExpression) || isTagetStr_B(">=", *pExpression)
-		|| isTagetStr_B("<=", *pExpression) || isTagetStr_B("<>", *pExpression) || isTagetStr_B("==", *pExpression))
-	{
-		*pExpression += 2;
-		return TRUE;
-	}
-	else if (**pExpression == '>' || **pExpression == '<' || **pExpression == '=')
-	{
-		*pExpression += 1;
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
+    if (**pExpression == '+' || **pExpression == '-' || **pExpression == '*' || **pExpression == '/' ||
+        **pExpression == '%')
+    {
+        *pExpression += 1;
+        return TRUE;
+    }
+    else if (isTagetStr_B("AND", *pExpression) || isTagetStr_B("XOR", *pExpression))
+    {
+        *pExpression += 3;
+        return TRUE;
+    }
+    else if (isTagetStr_B("OR", *pExpression) || isTagetStr_B("NE", *pExpression) || isTagetStr_B("EQ", *pExpression) ||
+             isTagetStr_B("GT", *pExpression) || isTagetStr_B("GE", *pExpression) || isTagetStr_B("LT", *pExpression) ||
+             isTagetStr_B("LE", *pExpression) || isTagetStr_B(">=", *pExpression) || isTagetStr_B("<=", *pExpression) ||
+             isTagetStr_B("<>", *pExpression) || isTagetStr_B("==", *pExpression))
+    {
+        *pExpression += 2;
+        return TRUE;
+    }
+    else if (**pExpression == '>' || **pExpression == '<' || **pExpression == '=')
+    {
+        *pExpression += 1;
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 getWholeExpression(const int8 **pExpression, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: pExpressionÒÆ¶¯µ½ÍêÕûµÄ±í´ïÊ½ºóÒ»Î»
-  ÊäÈë²ÎÊı£ºpExpression±í´ïÊ½Ê××Ö·ûµØÖ·
-			unLineNumĞĞºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º<0  ³ö´í£¬±í´ïÊ½´íÎó
-			1   Íê³É
-  ±¸    ×¢£º´Ëº¯ÊıÄÜ³õ²½ÅĞ¶Ï±í´ïÊ½ÊÇ·ñÕıÈ·
+  å‡½æ•°åç§°ï¼šint8 getWholeExpression(const int8 **pExpression, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: pExpressionç§»åŠ¨åˆ°å®Œæ•´çš„è¡¨è¾¾å¼åä¸€ä½
+  è¾“å…¥å‚æ•°ï¼špExpressionè¡¨è¾¾å¼é¦–å­—ç¬¦åœ°å€
+			unLineNumè¡Œå·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š<0  å‡ºé”™ï¼Œè¡¨è¾¾å¼é”™è¯¯
+			1   å®Œæˆ
+  å¤‡    æ³¨ï¼šæ­¤å‡½æ•°èƒ½åˆæ­¥åˆ¤æ–­è¡¨è¾¾å¼æ˜¯å¦æ­£ç¡®
 **************************************************/
 int8 getWholeExpression(const int8** pExpression, uint32 unLineNum)
 {
-	int8 cRet = 0;
-	if (pExpression == NULL || *pExpression == NULL)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	//ÊıÖµ£¬°Ñµ±Ç°Ö¸ÕëÒÆµ½×îºóÒ»Î»Êı×ÖµÄºóÃæ
-	if ((**pExpression >= '0' && **pExpression <= '9') || **pExpression == '.')   
-	{
-		cRet = movePtrOnPureNum(0, pExpression, unLineNum);
-		if (cRet)
-		{
-			setErrorType(GCODE_ERROR_NUM84);
-			findError(*pExpression, unLineNum);
-			return -2;
-		}
-	}
-	// ±í´ïÊ½£¬°Ñµ±Ç°Ö¸ÕëÒÆµ½ÓÒÀ¨ºÅµÄºóÒ»Î»
-	else if ((**pExpression == '[') || (**pExpression == '(')) 
-	{
-		cRet = movePtrOnExpression(pExpression, unLineNum);
-		if (cRet < 0)
-		{
-			setErrorType(GCODE_ERROR_NUM134);
-			findError(*pExpression, unLineNum);
-			return -3;
-		}
-	}
-	//µ¥Ä¿ÔËËã·û£¬°Ñµ±Ç°Ö¸ÕëÒÆµ½µ¥Ä¿ÔËËã·ûµÄºóÒ»Î»  ²»ÄÜÁ¬Ğø³öÏÖÁ½¸öµ¥Ä¿ÔËËã·û
-	else if (isUnaryOperator(pExpression, unLineNum))     // £¬ÕâÀïÅĞ¶Ï²»³ä·Ö ¿ÉÄÜ³öÏÖ##»ò++µÈÖ¸Áî£¬·Åµ½ºóÃæ¼ÆËãÊ±´¦Àí£¬
-	{
-		if(getWholeExpression(pExpression, unLineNum) <= 0)  //µİ¹é  ÔÙ½øĞĞÒÆµ½Ö¸Õë²Ù×÷
-		{
-			setErrorType(GCODE_ERROR_NUM134);
-			findError(*pExpression, unLineNum);
-			return -3;
-		}
-	}
-	//´íÎó//lxw:²»¼ì²é±í´ïÊ½ÊÇ·ñÕıÈ·£¬Èô±í´ïÊ½´íÎó£¬Ôò¼ÆËãÊ±»á±¨´í
-	//else
-	//{
-	//	setErrorType(GCODE_ERROR_NUM134);
-	//	findError(*pExpression, unLineNum);
-	//	return -3;
-	//}
-	
-	//Ë«Ä¿ÔËËã·û£¬°Ñµ±Ç°Ö¸ÕëÒÆµ½µ¥Ä¿ÔËËã·ûµÄºóÒ»Î»
-	if (isBinaryOperator(pExpression, unLineNum))  //±í´ïÊ½»¹Ã»½áÊø  ÒÆµ½Ë«Ä¿ÔËËã·ûµÄºóÒ»Î»
-	{
-		if(getWholeExpression(pExpression, unLineNum) <= 0)  //µİ¹é
-		{
-			setErrorType(GCODE_ERROR_NUM134);
-			findError(*pExpression, unLineNum);
-			return -3;
-		}
-	}
+    int8 cRet = 0;
+    if (pExpression == NULL || *pExpression == NULL)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    //æ•°å€¼ï¼ŒæŠŠå½“å‰æŒ‡é’ˆç§»åˆ°æœ€åä¸€ä½æ•°å­—çš„åé¢
+    if ((**pExpression >= '0' && **pExpression <= '9') || **pExpression == '.')
+    {
+        cRet = movePtrOnPureNum(0, pExpression, unLineNum);
+        if (cRet)
+        {
+            setErrorType(GCODE_ERROR_NUM84);
+            findError(*pExpression, unLineNum);
+            return -2;
+        }
+    }
+    // è¡¨è¾¾å¼ï¼ŒæŠŠå½“å‰æŒ‡é’ˆç§»åˆ°å³æ‹¬å·çš„åä¸€ä½
+    else if ((**pExpression == '[') || (**pExpression == '('))
+    {
+        cRet = movePtrOnExpression(pExpression, unLineNum);
+        if (cRet < 0)
+        {
+            setErrorType(GCODE_ERROR_NUM134);
+            findError(*pExpression, unLineNum);
+            return -3;
+        }
+    }
+    //å•ç›®è¿ç®—ç¬¦ï¼ŒæŠŠå½“å‰æŒ‡é’ˆç§»åˆ°å•ç›®è¿ç®—ç¬¦çš„åä¸€ä½  ä¸èƒ½è¿ç»­å‡ºç°ä¸¤ä¸ªå•ç›®è¿ç®—ç¬¦
+    else if (isUnaryOperator(pExpression, unLineNum)) // ï¼Œè¿™é‡Œåˆ¤æ–­ä¸å……åˆ† å¯èƒ½å‡ºç°##æˆ–++ç­‰æŒ‡ä»¤ï¼Œæ”¾åˆ°åé¢è®¡ç®—æ—¶å¤„ç†ï¼Œ
+    {
+        if (getWholeExpression(pExpression, unLineNum) <= 0) //é€’å½’  å†è¿›è¡Œç§»åˆ°æŒ‡é’ˆæ“ä½œ
+        {
+            setErrorType(GCODE_ERROR_NUM134);
+            findError(*pExpression, unLineNum);
+            return -3;
+        }
+    }
+    //é”™è¯¯//lxw:ä¸æ£€æŸ¥è¡¨è¾¾å¼æ˜¯å¦æ­£ç¡®ï¼Œè‹¥è¡¨è¾¾å¼é”™è¯¯ï¼Œåˆ™è®¡ç®—æ—¶ä¼šæŠ¥é”™
+    //else
+    //{
+    //	setErrorType(GCODE_ERROR_NUM134);
+    //	findError(*pExpression, unLineNum);
+    //	return -3;
+    //}
 
+    //åŒç›®è¿ç®—ç¬¦ï¼ŒæŠŠå½“å‰æŒ‡é’ˆç§»åˆ°å•ç›®è¿ç®—ç¬¦çš„åä¸€ä½
+    if (isBinaryOperator(pExpression, unLineNum)) //è¡¨è¾¾å¼è¿˜æ²¡ç»“æŸ  ç§»åˆ°åŒç›®è¿ç®—ç¬¦çš„åä¸€ä½
+    {
+        if (getWholeExpression(pExpression, unLineNum) <= 0) //é€’å½’
+        {
+            setErrorType(GCODE_ERROR_NUM134);
+            findError(*pExpression, unLineNum);
+            return -3;
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ¸ù¾İÔËËã·ûÀàĞÍ£¬È¡¼ÆËãµ¥ÔªµÄÖµ½øĞĞ¼ÆËã£¬¼ÆËã½á¹û±£Áôµ½×óÊäÈëÖµ
-  ÊäÈë²ÎÊı£ºucLevel			ÔËËã·ûµÄÓÅÏÈ¼¶
-			ucType			ÔËËã·ûµÄÀàĞÍ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: æ ¹æ®è¿ç®—ç¬¦ç±»å‹ï¼Œå–è®¡ç®—å•å…ƒçš„å€¼è¿›è¡Œè®¡ç®—ï¼Œè®¡ç®—ç»“æœä¿ç•™åˆ°å·¦è¾“å…¥å€¼
+  è¾“å…¥å‚æ•°ï¼šucLevel			è¿ç®—ç¬¦çš„ä¼˜å…ˆçº§
+			ucType			è¿ç®—ç¬¦çš„ç±»å‹
 
-			pSLocalMacroVar		¾Ö²¿ºê±äÁ¿½á¹¹ÌåµØÖ·£¬ÓÃÓÚ½âÒıÓÃ
+			pSLocalMacroVar		å±€éƒ¨å®å˜é‡ç»“æ„ä½“åœ°å€ï¼Œç”¨äºè§£å¼•ç”¨
 
-			pLeftInputUnit	×ó¼ÆËãµ¥Ôª£¨¼ÆËãµ¥Ôª½á¹¹Ìå£©
-			pRightInputUnit	ÓÒ¼ÆËãµ¥Ôª£¨¼ÆËãµ¥Ôª½á¹¹Ìå£©
-			unLineNum		ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º1.Ò»¶¨ÓĞ×ó¼ÆËãµ¥Ôª£¬²»Ò»¶¨ÓĞÓÒ¼ÆËãµ¥Ôª
-			2.×óÓÒ¼ÆËãµ¥Ôª¼ÆËãÍê³Éºó£¬½á¹ûĞ´Èë×ó¼ÆËãµ¥Ôª£¬¸²¸Ç×ó¼ÆËãµ¥ÔªÔ­ÓĞÖµ
-			3.¼ÆËãÍê³É²»É¾³ıÓÒ¼ÆËãµ¥Ôª
+			pLeftInputUnit	å·¦è®¡ç®—å•å…ƒï¼ˆè®¡ç®—å•å…ƒç»“æ„ä½“ï¼‰
+			pRightInputUnit	å³è®¡ç®—å•å…ƒï¼ˆè®¡ç®—å•å…ƒç»“æ„ä½“ï¼‰
+			unLineNum		è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š1.ä¸€å®šæœ‰å·¦è®¡ç®—å•å…ƒï¼Œä¸ä¸€å®šæœ‰å³è®¡ç®—å•å…ƒ
+			2.å·¦å³è®¡ç®—å•å…ƒè®¡ç®—å®Œæˆåï¼Œç»“æœå†™å…¥å·¦è®¡ç®—å•å…ƒï¼Œè¦†ç›–å·¦è®¡ç®—å•å…ƒåŸæœ‰å€¼
+			3.è®¡ç®—å®Œæˆä¸åˆ é™¤å³è®¡ç®—å•å…ƒ
 **************************************************/
-void calculateMacro(uint8 ucLevel, uint8 ucType, struct _SLocalMacroVar* pSLocalMacroVar, SCalculateUnit* pLeftInputUnit, SCalculateUnit* pRightInputUnit,  uint32 unLineNum)
+void calculateMacro(uint8 ucLevel, uint8 ucType, struct _SLocalMacroVar* pSLocalMacroVar,
+                    SCalculateUnit* pLeftInputUnit, SCalculateUnit* pRightInputUnit, uint32 unLineNum)
 {
-	float fLeftVal = 0;   //×óÖµ£¬½Ó×ó¼ÆËãµ¥ÔªµÄÖµ£¨½âÒıÓÃºóµÄÖµ£©
-	float fRightVal = 0;  //ÓÒÖµ£¬½ÓÓÒ¼ÆËãµ¥ÔªµÄÖµ£¨½âÒıÓÃºóµÄÖµ£©
+    float fLeftVal = 0;  //å·¦å€¼ï¼Œæ¥å·¦è®¡ç®—å•å…ƒçš„å€¼ï¼ˆè§£å¼•ç”¨åçš„å€¼ï¼‰
+    float fRightVal = 0; //å³å€¼ï¼Œæ¥å³è®¡ç®—å•å…ƒçš„å€¼ï¼ˆè§£å¼•ç”¨åçš„å€¼ï¼‰
 
-	//ËùÓĞÔËËãÖĞ×óÊäÈëÖµ²»ÄÜÎª¿Õ£¬ÓÒÊäÈëÖµºóĞø¸ù¾İÔËËã·ûÅĞ¶ÏÊÇ·ñÔÊĞíÎª¿Õ
-	if (pLeftInputUnit == NULL)  
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    //æ‰€æœ‰è¿ç®—ä¸­å·¦è¾“å…¥å€¼ä¸èƒ½ä¸ºç©ºï¼Œå³è¾“å…¥å€¼åç»­æ ¹æ®è¿ç®—ç¬¦åˆ¤æ–­æ˜¯å¦å…è®¸ä¸ºç©º
+    if (pLeftInputUnit == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	switch (ucLevel)
-	{
-	//ÔËËã·û£º=
-	case MACRO_LEVEL_1:  
-	{
-		if (pRightInputUnit == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+    switch (ucLevel)
+    {
+    //è¿ç®—ç¬¦ï¼š=
+    case MACRO_LEVEL_1:
+    {
+        if (pRightInputUnit == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		int8 cRet;			//getMacroVar·µ»ØÖµ£¬ÓÃÓÚÅĞ¶Ï¶ÁÈ¡ºê±äÁ¿ÊÇ·ñÎªNULL
+        int8 cRet; //getMacroVarè¿”å›å€¼ï¼Œç”¨äºåˆ¤æ–­è¯»å–å®å˜é‡æ˜¯å¦ä¸ºNULL
 
-		//×ó¼ÆËãµ¥Ôª±ØĞëÎªºê±äÁ¿£¬¼´´øÓĞ#
-		if (pLeftInputUnit->bPound == TRUE)  
-		{
-			//×ó¼ÆËãµ¥ÔªÎª ÏµÍ³ºê±äÁ¿ or #0
-			if (pLeftInputUnit->fVal > 1000 || pLeftInputUnit->fVal == 0)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);//ÏµÍ³ºê or #0 ²»ÄÜ±»¸³Öµ
-			}
-			//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-			cRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
-			if (cRet > 0)
-			{
-				setMacroVar(pSLocalMacroVar, (uint16)pLeftInputUnit->fVal, &fRightVal, unLineNum);  //ĞŞ¸Ä×óÖµµÄºê±äÁ¿
-			}
-			//1.2ÓÒ¼ÆËãµ¥Ôª½âÒıÓÃºóÎªNULL
-			else if(cRet == 0)
-			{
-				//ÊÖ²á£º#2ÎªNULL£¬#1 = #2¡£#1±»¸³ÖµÎªNULL
-				setMacroVar(pSLocalMacroVar, (uint16)pLeftInputUnit->fVal, NULL, unLineNum); //ĞŞ¸Ä×óÖµµÄºê±äÁ¿
-			}
-			else
-			{
-				return;
-			}
-		}
-		//×ó¼ÆËãµ¥Ôª²»Îªºê±äÁ¿£¬±¨´í
-		else
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-		}
+        //å·¦è®¡ç®—å•å…ƒå¿…é¡»ä¸ºå®å˜é‡ï¼Œå³å¸¦æœ‰#
+        if (pLeftInputUnit->bPound == TRUE)
+        {
+            //å·¦è®¡ç®—å•å…ƒä¸º ç³»ç»Ÿå®å˜é‡ or #0
+            if (pLeftInputUnit->fVal > 1000 || pLeftInputUnit->fVal == 0)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131); //ç³»ç»Ÿå® or #0 ä¸èƒ½è¢«èµ‹å€¼
+            }
+            //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+            cRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+            if (cRet > 0)
+            {
+                setMacroVar(pSLocalMacroVar, (uint16)pLeftInputUnit->fVal, &fRightVal, unLineNum); //ä¿®æ”¹å·¦å€¼çš„å®å˜é‡
+            }
+            //1.2å³è®¡ç®—å•å…ƒè§£å¼•ç”¨åä¸ºNULL
+            else if (cRet == 0)
+            {
+                //æ‰‹å†Œï¼š#2ä¸ºNULLï¼Œ#1 = #2ã€‚#1è¢«èµ‹å€¼ä¸ºNULL
+                setMacroVar(pSLocalMacroVar, (uint16)pLeftInputUnit->fVal, NULL, unLineNum); //ä¿®æ”¹å·¦å€¼çš„å®å˜é‡
+            }
+            else
+            {
+                return;
+            }
+        }
+        //å·¦è®¡ç®—å•å…ƒä¸ä¸ºå®å˜é‡ï¼ŒæŠ¥é”™
+        else
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+        }
 
-		break;
-	}
-	
-	//ÔËËã·û£º&  ^  |
-	case MACRO_LEVEL_2:case MACRO_LEVEL_3:case MACRO_LEVEL_4:  
-	{
-		int32 nTemp_1, nTemp_2;
-		int8 cRet;
-		if (pRightInputUnit == NULL)   //ÓÒÊäÈëÖµ²»ÄÜÎª¿Õ
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+        break;
+    }
 
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
-		if(cRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return;
-		}
-		//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-		cRet =getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
-		if(cRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return;
-		}
-		nTemp_1 = (int32)fLeftVal;
-		nTemp_2 = (int32)fRightVal;
+    //è¿ç®—ç¬¦ï¼š&  ^  |
+    case MACRO_LEVEL_2:
+    case MACRO_LEVEL_3:
+    case MACRO_LEVEL_4:
+    {
+        int32 nTemp_1, nTemp_2;
+        int8 cRet;
+        if (pRightInputUnit == NULL) //å³è¾“å…¥å€¼ä¸èƒ½ä¸ºç©º
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		if (ucLevel == MACRO_LEVEL_2)    //°´Î»Óë
-		{
-			pLeftInputUnit->fVal = (float)(nTemp_1 & nTemp_2);
-		}
-		else if (ucLevel == MACRO_LEVEL_3)   //°´Î»Òì»ò
-		{
-			pLeftInputUnit->fVal = (float)(nTemp_1 ^ nTemp_2);
-		}
-		else   //°´Î»»ò
-		{
-			pLeftInputUnit->fVal = (float)(nTemp_1 | nTemp_2);
-		}
-		break;
-	}
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (cRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+        cRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+        if (cRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        nTemp_1 = (int32)fLeftVal;
+        nTemp_2 = (int32)fRightVal;
 
-	//ÔËËã·û£º==  !=
-	case MACRO_LEVEL_5:
-	{
-		int8 cLeftRet;
-		int8 cRightRet;
+        if (ucLevel == MACRO_LEVEL_2) //æŒ‰ä½ä¸
+        {
+            pLeftInputUnit->fVal = (float)(nTemp_1 & nTemp_2);
+        }
+        else if (ucLevel == MACRO_LEVEL_3) //æŒ‰ä½å¼‚æˆ–
+        {
+            pLeftInputUnit->fVal = (float)(nTemp_1 ^ nTemp_2);
+        }
+        else //æŒ‰ä½æˆ–
+        {
+            pLeftInputUnit->fVal = (float)(nTemp_1 | nTemp_2);
+        }
+        break;
+    }
 
-		if (pRightInputUnit == NULL)   //ÓÒÊäÈëÖµ²»ÄÜÎª¿Õ
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+    //è¿ç®—ç¬¦ï¼š==  !=
+    case MACRO_LEVEL_5:
+    {
+        int8 cLeftRet;
+        int8 cRightRet;
 
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (pRightInputUnit == NULL) //å³è¾“å…¥å€¼ä¸èƒ½ä¸ºç©º
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-		cRightRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
 
-		switch (ucType)
-		{
-		case MACRO_NE:   //²»µÈÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ!=ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ!=ÓÒÖµ³ÉÁ¢£¬½á¹ûÎª1
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 1;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				pLeftInputUnit->fVal = (float)(isZero(fLeftVal - fRightVal) ? 0 : 1);  //µÃµ½½á¹û
-			}
-			break;
-		}
+        //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+        cRightRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
 
-		case MACRO_EQ:   //µÈÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ==ÓÒÖµ³ÉÁ¢£¬½á¹ûÎª1
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 1;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ==ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				pLeftInputUnit->fVal = (float)(isZero(fLeftVal - fRightVal) ? 1 : 0);  //µÃµ½½á¹û
-			}
-			break;
-		}
+        switch (ucType)
+        {
+        case MACRO_NE: //ä¸ç­‰äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼!=å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼!=å³å€¼æˆç«‹ï¼Œç»“æœä¸º1
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 1;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                pLeftInputUnit->fVal = (float)(isZero(fLeftVal - fRightVal) ? 0 : 1); //å¾—åˆ°ç»“æœ
+            }
+            break;
+        }
 
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
-		break;
-	}
+        case MACRO_EQ: //ç­‰äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼==å³å€¼æˆç«‹ï¼Œç»“æœä¸º1
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 1;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼==å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                pLeftInputUnit->fVal = (float)(isZero(fLeftVal - fRightVal) ? 1 : 0); //å¾—åˆ°ç»“æœ
+            }
+            break;
+        }
 
-	//ÔËËã·û£º>  >=  <  <=
-	case MACRO_LEVEL_6:
-	{
-		int8 cLeftRet;
-		int8 cRightRet;
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
+        break;
+    }
 
-		if (pRightInputUnit == NULL)   //ÓÒÊäÈëÖµ²»ÄÜÎª¿Õ
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+    //è¿ç®—ç¬¦ï¼š>  >=  <  <=
+    case MACRO_LEVEL_6:
+    {
+        int8 cLeftRet;
+        int8 cRightRet;
 
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (pRightInputUnit == NULL) //å³è¾“å…¥å€¼ä¸èƒ½ä¸ºç©º
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-		cRightRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
 
-		switch (ucType)
-		{
-		case MACRO_GT:   //´óÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ>ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ>ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				pLeftInputUnit->fVal = (float)(fLeftVal > fRightVal ? 1 : 0);  //µÃµ½½á¹û
-			}
-			break;
-		}
+        //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+        cRightRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
 
-		case MACRO_GE:    //´óÓÚµÈÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ>=ÓÒÖµ³ÉÁ¢£¬½á¹ûÎª1
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 1;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ>=ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				if (fLeftVal > fRightVal || isZero(fLeftVal - fRightVal))
-				{
-					pLeftInputUnit->fVal = 1;
-				}
-				else
-				{
-					pLeftInputUnit->fVal = 0;
-				}
-			}
-			break;
-		}
+        switch (ucType)
+        {
+        case MACRO_GT: //å¤§äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼>å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼>å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                pLeftInputUnit->fVal = (float)(fLeftVal > fRightVal ? 1 : 0); //å¾—åˆ°ç»“æœ
+            }
+            break;
+        }
 
+        case MACRO_GE: //å¤§äºç­‰äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼>=å³å€¼æˆç«‹ï¼Œç»“æœä¸º1
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 1;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼>=å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                if (fLeftVal > fRightVal || isZero(fLeftVal - fRightVal))
+                {
+                    pLeftInputUnit->fVal = 1;
+                }
+                else
+                {
+                    pLeftInputUnit->fVal = 0;
+                }
+            }
+            break;
+        }
 
+        case MACRO_LT: //å°äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼<å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼<å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                pLeftInputUnit->fVal = (float)(fLeftVal < fRightVal ? 1 : 0); //å¾—åˆ°ç»“æœ
+            }
+            break;
+        }
 
-		case MACRO_LT:    //Ğ¡ÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ<ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ<ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				pLeftInputUnit->fVal = (float)(fLeftVal < fRightVal ? 1 : 0);  //µÃµ½½á¹û
-			}
-			break;
-		}
+        case MACRO_LE: //å°äºç­‰äº
+        {
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ºNULLï¼Œåˆ™å·¦å€¼<=å³å€¼æˆç«‹ï¼Œç»“æœä¸º1
+            if (cLeftRet == 0 && cRightRet == 0) //éƒ½ä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 1;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™å·¦å€¼<=å³å€¼ä¸æˆç«‹ï¼Œç»“æœä¸º0
+            else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0)) //å…¶ä¸­ä¸€ä¸ªä¸ºç©ºå˜é‡
+            {
+                pLeftInputUnit->fVal = 0;
+            }
+            //æ‰‹å†Œï¼šå·¦å€¼ä¸ä¸ºNULLï¼Œå³å€¼ä¸ä¸ºNULLï¼Œåˆ™æ­£å¸¸åˆ¤æ–­
+            else
+            {
+                if (fLeftVal < fRightVal || isZero(fLeftVal - fRightVal))
+                {
+                    pLeftInputUnit->fVal = 1;
+                }
+                else
+                {
+                    pLeftInputUnit->fVal = 0;
+                }
+            }
+            break;
+        }
 
-		case MACRO_LE:   //Ğ¡ÓÚµÈÓÚ
-		{
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµÎªNULL£¬Ôò×óÖµ<=ÓÒÖµ³ÉÁ¢£¬½á¹ûÎª1
-			if (cLeftRet == 0 && cRightRet == 0)    //¶¼Îª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 1;
-			}
-			//ÊÖ²á£º×óÖµÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬Ôò×óÖµ<=ÓÒÖµ²»³ÉÁ¢£¬½á¹ûÎª0
-			else if ((cLeftRet == 0 && cRightRet == 1) || (cLeftRet == 1 && cRightRet == 0))  //ÆäÖĞÒ»¸öÎª¿Õ±äÁ¿
-			{
-				pLeftInputUnit->fVal = 0;
-			}
-			//ÊÖ²á£º×óÖµ²»ÎªNULL£¬ÓÒÖµ²»ÎªNULL£¬ÔòÕı³£ÅĞ¶Ï
-			else
-			{
-				if (fLeftVal < fRightVal || isZero(fLeftVal - fRightVal))
-				{
-					pLeftInputUnit->fVal = 1;
-				}
-				else
-				{
-					pLeftInputUnit->fVal = 0;
-				}
-			}
-			break;
-		}
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
 
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
+        break;
+    }
 
-		break;
-	}
-	
-	//ÔËËã·û£ºË«Ä¿+  Ë«Ä¿-
-	case MACRO_LEVEL_7:
-	{
-		int8 cLeftRet;
-		if (pRightInputUnit == NULL)   //ÓÒÊäÈëÖµ²»ÄÜÎª¿Õ
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
-		if(cLeftRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return ;
-		}
-		//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
-		if(cLeftRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return ;
-		}
-		switch (ucType)
-		{
-		case MACRO_DOUBLE_ADD:   //Ë«Ä¿+
-		{
-			pLeftInputUnit->fVal = fLeftVal + fRightVal;  //µÃµ½½á¹û
-			break;
-		}
-		case MACRO_DOUBLE_SUB:   //Ë«Ä¿-
-		{
-			pLeftInputUnit->fVal = fLeftVal - fRightVal;  //µÃµ½½á¹û
-			break;		
-		}
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
-		break;
-	}
-	//ÔËËã·û£º*  /  %
-	case MACRO_LEVEL_8:
-	{
-		int8 cLeftRet;
-		if (pRightInputUnit == NULL)   //ÓÒÊäÈëÖµ²»ÄÜÎª¿Õ
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
-		if(cLeftRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return;
-		}
-		//»ñÈ¡ÓÒ¼ÆËãµ¥ÔªµÄÖµ
-		cLeftRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
-		if(cLeftRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return ;
-		}
-		switch (ucType)
-		{
-		case MACRO_MUL:				//³Ë·¨
-		{
-			pLeftInputUnit->fVal = fLeftVal * fRightVal;  //µÃµ½½á¹û
-			break;
-		}
-		case MACRO_DIV:				//³ı·¨
-		{
-			if (isZero(fRightVal))
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM132);   //³ıÊı²»ÄÜÎª0
-				break;
-			}
-			pLeftInputUnit->fVal = fLeftVal / fRightVal;  //µÃµ½½á¹û
-			break;		
-		}
-		case MACRO_MODULAR:			//È¡Óà
-		{
-			if (isZero(fRightVal))
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM132);   //³ıÊı²»ÄÜÎª0
-				break;
-			}
-			pLeftInputUnit->fVal = (float)(fmod(fLeftVal, fRightVal));//Á½¸ö¸¡µãÊıÈ¡Óà
-			break;		
-		}
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
-		break;
-	}
-	
-	//ÔËËã·û£ºËùÓĞµ¥Ä¿ÔËËã·û
-	case MACRO_LEVEL_9:
-	{
-		int8 cRet;
-		//»ñÈ¡×ó¼ÆËãµ¥ÔªµÄÖµ
-		cRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
-		if(cRet < 0)
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-			return;
-		}
-		switch (ucType)
-		{
-		case MACRO_SINGLE_ADD:		//µ¥Ä¿+ ,¿ÉºöÂÔ
-			break;
-		case MACRO_SINGLE_SUB:		//µ¥Ä¿-
-		{
-			pLeftInputUnit->fVal = -fLeftVal;
-			break;
-		}
-		case MACRO_SQRT:			//¿ª¸ùºÅ
-		{
-			if (fLeftVal < 0)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
-				return;
-			}
-			pLeftInputUnit->fVal = (float)(sqrt(fLeftVal));
-			break;
-		}
-		case MACRO_ABS:				//È¡¾ø¶ÔÖµ
-		{
-			pLeftInputUnit->fVal = (float)(fabs(fLeftVal));
-			break;
-		}
-		case MACRO_ROUND:			//ËÄÉáÎåÈë
-		{
-			pLeftInputUnit->fVal = (float)(round(fLeftVal));
-			break;
-		}
-		case MACRO_FUP:				//ÕıÊıÏòÉÏÈ¡Õû£¬¸ºÊıÏòÏÂÈ¡Õû
-		{
-			bool isNegative = fLeftVal < 0 ? TRUE : FALSE;    //ÊÇ·ñĞ¡ÓÚ0
-			float fTemp = (float)fabs(fLeftVal);    //È¡¾ø¶ÔÖµ
-			fTemp = (float)(ceil(fTemp));    //ÏòÉÏÈ¡Õû£¬¼´´óÓÚxµÄ×îĞ¡ÕûÊı
-			//ÕıÊı
-			if (isNegative == FALSE)
-			{
-				pLeftInputUnit->fVal = fTemp;
-			}
-			//¸ºÊı
-			else
-			{
-				pLeftInputUnit->fVal = -fTemp;
-			}
-			break;
-		}
-		case MACRO_FIX:				//ÕıÊıÏòÏÂÈ¡Õû£¬¸ºÊıÏòÉÏÈ¡Õû
-		{
-			bool isNegative = fLeftVal < 0 ? TRUE : FALSE;    //ÊÇ·ñĞ¡ÓÚ0
-			float fTemp = (float)fabs(fLeftVal);    //È¡¾ø¶ÔÖµ
-			fTemp = (float)(floor(fTemp));    //ÏòÏÂÈ¡Õû£¬floor(x)·µ»ØµÄÊÇĞ¡ÓÚ»òµÈÓÚxµÄ×î´óÕûÊı
-			if (isNegative == FALSE)
-			{
-				pLeftInputUnit->fVal = fTemp;
-			}
-			else
-			{
-				pLeftInputUnit->fVal = -fTemp;
-			}
-			break;
-		}
-		case MACRO_LN:				//È¡¶ÔÊı
-		{
-			//1.double log(double x) ÇóµÄÊÇlnx(log(e)(x))
-			//2.double log10(double x) Çólog(10)(x)
-			if (fLeftVal < 0 || isZero(fLeftVal))   //xĞèÒª´óÓÚµÈÓÚ0
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
-				return;
-			}
-			pLeftInputUnit->fVal = (float)(log(fLeftVal));
+    //è¿ç®—ç¬¦ï¼šåŒç›®+  åŒç›®-
+    case MACRO_LEVEL_7:
+    {
+        int8 cLeftRet;
+        if (pRightInputUnit == NULL) //å³è¾“å…¥å€¼ä¸èƒ½ä¸ºç©º
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (cLeftRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+        if (cLeftRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        switch (ucType)
+        {
+        case MACRO_DOUBLE_ADD: //åŒç›®+
+        {
+            pLeftInputUnit->fVal = fLeftVal + fRightVal; //å¾—åˆ°ç»“æœ
+            break;
+        }
+        case MACRO_DOUBLE_SUB: //åŒç›®-
+        {
+            pLeftInputUnit->fVal = fLeftVal - fRightVal; //å¾—åˆ°ç»“æœ
+            break;
+        }
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
+        break;
+    }
+    //è¿ç®—ç¬¦ï¼š*  /  %
+    case MACRO_LEVEL_8:
+    {
+        int8 cLeftRet;
+        if (pRightInputUnit == NULL) //å³è¾“å…¥å€¼ä¸èƒ½ä¸ºç©º
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (cLeftRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        //è·å–å³è®¡ç®—å•å…ƒçš„å€¼
+        cLeftRet = getUnitVal(pSLocalMacroVar, pRightInputUnit, &fRightVal, unLineNum);
+        if (cLeftRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        switch (ucType)
+        {
+        case MACRO_MUL: //ä¹˜æ³•
+        {
+            pLeftInputUnit->fVal = fLeftVal * fRightVal; //å¾—åˆ°ç»“æœ
+            break;
+        }
+        case MACRO_DIV: //é™¤æ³•
+        {
+            if (isZero(fRightVal))
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM132); //é™¤æ•°ä¸èƒ½ä¸º0
+                break;
+            }
+            pLeftInputUnit->fVal = fLeftVal / fRightVal; //å¾—åˆ°ç»“æœ
+            break;
+        }
+        case MACRO_MODULAR: //å–ä½™
+        {
+            if (isZero(fRightVal))
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM132); //é™¤æ•°ä¸èƒ½ä¸º0
+                break;
+            }
+            pLeftInputUnit->fVal = (float)(fmod(fLeftVal, fRightVal)); //ä¸¤ä¸ªæµ®ç‚¹æ•°å–ä½™
+            break;
+        }
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
+        break;
+    }
 
-			break;
-		}
-		case MACRO_EXP:				//×ÔÈ»Ö¸Êı
-		{
-			pLeftInputUnit->fVal = (float)(exp(fLeftVal));
-			break;
-		}
-		case MACRO_SIN:				//ÕıÏÒ
-		{
-			pLeftInputUnit->fVal = (float)(sin(ANGLE_TO_RAD(fLeftVal)));
-			break;
-		}
-		case MACRO_ASIN:			//·´ÕıÏÒ
-		{
-			float fRad = 0;
-			if (fLeftVal < -1 || fLeftVal > 1 || isZero(fLeftVal - 1) || isZero(fLeftVal + 1))
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
-				return;
-			}
-			fRad = (float)asin(fLeftVal);    //Çó»¡¶È  ¸Ãº¯Êı·µ»ØÒÔ»¡¶È±íÊ¾µÄ x µÄ·´ÕıÏÒ£¬»¡¶ÈÇø¼äÎª [-pi/2,+pi/2]¡£
-			//pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad) + 180 * TEMP_PARA_NO180);    //No.180ÉèÎª1Ê±£¬90¡ã~ 270¡ã£»ÉèÎª0Ê±£¬-90¡ã~ 90¡ã£»
-			pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad)) + (float)((90 - RAD_TO_ANGEL(fRad)) * 2);//No.180ÉèÎª1Ê±£¬90¡ã~ 270¡ã£»ÉèÎª0Ê±£¬-90¡ã~ 90¡ã£»
-			break;
-		}
-		case MACRO_COS:				//ÓàÏÒ
-		{
-			pLeftInputUnit->fVal = (float)cos(ANGLE_TO_RAD(fLeftVal));
-			break;
-		}
-		case MACRO_ACOS:			//·´ÓàÏÒ
-		{
-			float fRad = 0;
-			if (fLeftVal < -1 || fLeftVal > 1 || isZero(fLeftVal - 1) || isZero(fLeftVal + 1))
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
-				return;
-			}
-			fRad = (float)acos(fLeftVal);    //Çó»¡¶È ¸Ãº¯Êı·µ»ØÒÔ»¡¶È±íÊ¾µÄ x µÄ·´ÓàÏÒ£¬»¡¶ÈÇø¼äÎª [0, pi]¡£
-			pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad));    //ÊäÈë·¶Î§[-1,1]£¬Êä³ö·¶Î§Ö»ÓĞ0~180¡ã
-			break;
-		}
-		case MACRO_TAN:				//ÕıÇĞ
-		{
-			pLeftInputUnit->fVal = (float)tan(ANGLE_TO_RAD(fLeftVal));
-			break;
-		}
-		case MACRO_ATAN:			//·´ÕıÇĞ
-		{
-			float fRad = (float)atan(fLeftVal);
-			pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad) + 180 * TEMP_PARA_NO180);//No.180ÉèÎª1Ê±£¬90¡ã~ 270¡ã£»ÉèÎª0Ê±£¬-90¡ã~ 90¡ã£»
-			break;
-		}
-		//case MACRO_BIN:
-		//{
-		//	break;
-		//}
-		//case MACRO_BCD:
-		//{
-		//	break;
-		//}
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
-		break;
-	}
-	
-	//ÔËËã·û£º#
-	case MACRO_LEVEL_10:
-	{
-		switch (ucType)
-		{
-		//²Ù×÷·û£º#
-		case MACRO_POUND:    
-		{
-			//×óÖµÒÑ±»ÒıÓÃ£¬±¨´í
-			if (pLeftInputUnit->bPound == TRUE)
-			{
-				parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			}
-			pLeftInputUnit->bPound = TRUE;
-			break;
-		}
-		default:
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-			break;
-		}
-		break;
+    //è¿ç®—ç¬¦ï¼šæ‰€æœ‰å•ç›®è¿ç®—ç¬¦
+    case MACRO_LEVEL_9:
+    {
+        int8 cRet;
+        //è·å–å·¦è®¡ç®—å•å…ƒçš„å€¼
+        cRet = getUnitVal(pSLocalMacroVar, pLeftInputUnit, &fLeftVal, unLineNum);
+        if (cRet < 0)
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+            return;
+        }
+        switch (ucType)
+        {
+        case MACRO_SINGLE_ADD: //å•ç›®+ ,å¯å¿½ç•¥
+            break;
+        case MACRO_SINGLE_SUB: //å•ç›®-
+        {
+            pLeftInputUnit->fVal = -fLeftVal;
+            break;
+        }
+        case MACRO_SQRT: //å¼€æ ¹å·
+        {
+            if (fLeftVal < 0)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
+                return;
+            }
+            pLeftInputUnit->fVal = (float)(sqrt(fLeftVal));
+            break;
+        }
+        case MACRO_ABS: //å–ç»å¯¹å€¼
+        {
+            pLeftInputUnit->fVal = (float)(fabs(fLeftVal));
+            break;
+        }
+        case MACRO_ROUND: //å››èˆäº”å…¥
+        {
+            pLeftInputUnit->fVal = (float)(round(fLeftVal));
+            break;
+        }
+        case MACRO_FUP: //æ­£æ•°å‘ä¸Šå–æ•´ï¼Œè´Ÿæ•°å‘ä¸‹å–æ•´
+        {
+            bool isNegative = fLeftVal < 0 ? TRUE : FALSE; //æ˜¯å¦å°äº0
+            float fTemp = (float)fabs(fLeftVal);           //å–ç»å¯¹å€¼
+            fTemp = (float)(ceil(fTemp));                  //å‘ä¸Šå–æ•´ï¼Œå³å¤§äºxçš„æœ€å°æ•´æ•°
+            //æ­£æ•°
+            if (isNegative == FALSE)
+            {
+                pLeftInputUnit->fVal = fTemp;
+            }
+            //è´Ÿæ•°
+            else
+            {
+                pLeftInputUnit->fVal = -fTemp;
+            }
+            break;
+        }
+        case MACRO_FIX: //æ­£æ•°å‘ä¸‹å–æ•´ï¼Œè´Ÿæ•°å‘ä¸Šå–æ•´
+        {
+            bool isNegative = fLeftVal < 0 ? TRUE : FALSE; //æ˜¯å¦å°äº0
+            float fTemp = (float)fabs(fLeftVal);           //å–ç»å¯¹å€¼
+            fTemp = (float)(floor(fTemp));                 //å‘ä¸‹å–æ•´ï¼Œfloor(x)è¿”å›çš„æ˜¯å°äºæˆ–ç­‰äºxçš„æœ€å¤§æ•´æ•°
+            if (isNegative == FALSE)
+            {
+                pLeftInputUnit->fVal = fTemp;
+            }
+            else
+            {
+                pLeftInputUnit->fVal = -fTemp;
+            }
+            break;
+        }
+        case MACRO_LN: //å–å¯¹æ•°
+        {
+            //1.double log(double x) æ±‚çš„æ˜¯lnx(log(e)(x))
+            //2.double log10(double x) æ±‚log(10)(x)
+            if (fLeftVal < 0 || isZero(fLeftVal)) //xéœ€è¦å¤§äºç­‰äº0
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
+                return;
+            }
+            pLeftInputUnit->fVal = (float)(log(fLeftVal));
 
-	}
+            break;
+        }
+        case MACRO_EXP: //è‡ªç„¶æŒ‡æ•°
+        {
+            pLeftInputUnit->fVal = (float)(exp(fLeftVal));
+            break;
+        }
+        case MACRO_SIN: //æ­£å¼¦
+        {
+            pLeftInputUnit->fVal = (float)(sin(ANGLE_TO_RAD(fLeftVal)));
+            break;
+        }
+        case MACRO_ASIN: //åæ­£å¼¦
+        {
+            float fRad = 0;
+            if (fLeftVal < -1 || fLeftVal > 1 || isZero(fLeftVal - 1) || isZero(fLeftVal + 1))
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
+                return;
+            }
+            fRad = (float)asin(fLeftVal); //æ±‚å¼§åº¦  è¯¥å‡½æ•°è¿”å›ä»¥å¼§åº¦è¡¨ç¤ºçš„ x çš„åæ­£å¼¦ï¼Œå¼§åº¦åŒºé—´ä¸º [-pi/2,+pi/2]ã€‚
+            //pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad) + 180 * TEMP_PARA_NO180);    //No.180è®¾ä¸º1æ—¶ï¼Œ90Â°~ 270Â°ï¼›è®¾ä¸º0æ—¶ï¼Œ-90Â°~ 90Â°ï¼›
+            pLeftInputUnit->fVal =
+                (float)(RAD_TO_ANGEL(fRad)) +
+                (float)((90 - RAD_TO_ANGEL(fRad)) * 2); //No.180è®¾ä¸º1æ—¶ï¼Œ90Â°~ 270Â°ï¼›è®¾ä¸º0æ—¶ï¼Œ-90Â°~ 90Â°ï¼›
+            break;
+        }
+        case MACRO_COS: //ä½™å¼¦
+        {
+            pLeftInputUnit->fVal = (float)cos(ANGLE_TO_RAD(fLeftVal));
+            break;
+        }
+        case MACRO_ACOS: //åä½™å¼¦
+        {
+            float fRad = 0;
+            if (fLeftVal < -1 || fLeftVal > 1 || isZero(fLeftVal - 1) || isZero(fLeftVal + 1))
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM452);
+                return;
+            }
+            fRad = (float)acos(fLeftVal); //æ±‚å¼§åº¦ è¯¥å‡½æ•°è¿”å›ä»¥å¼§åº¦è¡¨ç¤ºçš„ x çš„åä½™å¼¦ï¼Œå¼§åº¦åŒºé—´ä¸º [0, pi]ã€‚
+            pLeftInputUnit->fVal = (float)(RAD_TO_ANGEL(fRad)); //è¾“å…¥èŒƒå›´[-1,1]ï¼Œè¾“å‡ºèŒƒå›´åªæœ‰0~180Â°
+            break;
+        }
+        case MACRO_TAN: //æ­£åˆ‡
+        {
+            pLeftInputUnit->fVal = (float)tan(ANGLE_TO_RAD(fLeftVal));
+            break;
+        }
+        case MACRO_ATAN: //åæ­£åˆ‡
+        {
+            float fRad = (float)atan(fLeftVal);
+            pLeftInputUnit->fVal =
+                (float)(RAD_TO_ANGEL(fRad) + 180 * TEMP_PARA_NO180); //No.180è®¾ä¸º1æ—¶ï¼Œ90Â°~ 270Â°ï¼›è®¾ä¸º0æ—¶ï¼Œ-90Â°~ 90Â°ï¼›
+            break;
+        }
+        //case MACRO_BIN:
+        //{
+        //	break;
+        //}
+        //case MACRO_BCD:
+        //{
+        //	break;
+        //}
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
+        break;
+    }
 
-	default:
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
-		break;
-	}
+    //è¿ç®—ç¬¦ï¼š#
+    case MACRO_LEVEL_10:
+    {
+        switch (ucType)
+        {
+        //æ“ä½œç¬¦ï¼š#
+        case MACRO_POUND:
+        {
+            //å·¦å€¼å·²è¢«å¼•ç”¨ï¼ŒæŠ¥é”™
+            if (pLeftInputUnit->bPound == TRUE)
+            {
+                parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            }
+            pLeftInputUnit->bPound = TRUE;
+            break;
+        }
+        default:
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+            break;
+        }
+        break;
+    }
 
-
+    default:
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM134);
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic void moveUnitFromStackTopToListTail(const SMacroCalculate* pMacroCal, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ£ºÉú³Éºó×º±í´ïÊ½Ê±,½«Õ»¶¥ÔªËØÒÆ¶¯µ½Á´±íÎ²²¿
-  ÊäÈë²ÎÊı£ºpMacroCal		¼ÆËã½á¹¹Ìå
-			unLineNum		ĞĞºÅÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstatic void moveUnitFromStackTopToListTail(const SMacroCalculate* pMacroCal, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½ï¼šç”Ÿæˆåç¼€è¡¨è¾¾å¼æ—¶,å°†æ ˆé¡¶å…ƒç´ ç§»åŠ¨åˆ°é“¾è¡¨å°¾éƒ¨
+  è¾“å…¥å‚æ•°ï¼špMacroCal		è®¡ç®—ç»“æ„ä½“
+			unLineNum		è¡Œå·ç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 static void moveUnitFromStackTopToListTail(const SMacroCalculate* pMacroCal, uint32 unLineNum)
 {
-	SNode* pDel = FindNode(pMacroCal->pStack, 0);   //ÏÈ»ñÈ¡¸Ã½Úµã
+    SNode* pDel = FindNode(pMacroCal->pStack, 0); //å…ˆè·å–è¯¥èŠ‚ç‚¹
 
-	if (!removeNode(pMacroCal->pStack, 0, TRUE))  //´ÓÁ´±íÖĞÒÆ³ı½Úµã£¬²»ÊÍ·ÅÄÚ´æ
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-		return;
-	}
+    if (!removeNode(pMacroCal->pStack, 0, TRUE)) //ä»é“¾è¡¨ä¸­ç§»é™¤èŠ‚ç‚¹ï¼Œä¸é‡Šæ”¾å†…å­˜
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+        return;
+    }
 
-
-	if (!insertNode(pMacroCal->pList, -1, pDel))   //½ÚµãÎ²²åÈëÊı×ÖÁ´±í
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
-		return;
-	}
+    if (!insertNode(pMacroCal->pList, -1, pDel)) //èŠ‚ç‚¹å°¾æ’å…¥æ•°å­—é“¾è¡¨
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM303);
+        return;
+    }
 }
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic void pushUnitIntoStack(const SMacroCalculate* pMacroCal, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ£º¿ª±ÙÄÚ´æ£¬¼ÇÂ¼ÔËËã·ûĞÅÏ¢ºóÑ¹ÈëÕ»ÖĞ
-  ÊäÈë²ÎÊı£ºpMacroCal		¼ÆËã½á¹¹Ìå
-			unLineNum		ĞĞºÅÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼šstatic void pushUnitIntoStack(const SMacroCalculate* pMacroCal, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½ï¼šå¼€è¾Ÿå†…å­˜ï¼Œè®°å½•è¿ç®—ç¬¦ä¿¡æ¯åå‹å…¥æ ˆä¸­
+  è¾“å…¥å‚æ•°ï¼špMacroCal		è®¡ç®—ç»“æ„ä½“
+			unLineNum		è¡Œå·ç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 static void pushUnitIntoStack(const SMacroCalculate* pMacroCal, uint32 unLineNum)
 {
-	SCalculateUnit* pCalUnit = mallocGCode(sizeof(SCalculateUnit), ORAM_NUM318);    //¶ÑÇø·ÖÅäÄÚ´æ
-	if (!pCalUnit)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
-		return;
-	}
+    SCalculateUnit* pCalUnit = mallocGCode(sizeof(SCalculateUnit), ORAM_NUM318); //å †åŒºåˆ†é…å†…å­˜
+    if (!pCalUnit)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
+        return;
+    }
 
-	*pCalUnit = pMacroCal->SCurrUnit;
+    *pCalUnit = pMacroCal->SCurrUnit;
 
-	if (!insertList(pMacroCal->pStack, 0, pCalUnit, ORAM_NUM317))  //Ñ¹µ½·ûºÅÕ»
-	{
-		freeGCode(pCalUnit);
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
-		return;
-	}
+    if (!insertList(pMacroCal->pStack, 0, pCalUnit, ORAM_NUM317)) //å‹åˆ°ç¬¦å·æ ˆ
+    {
+        freeGCode(pCalUnit);
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM406);
+        return;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int8 getNumOnExpression(const int8* pCurrPtr, uint8* pPos, double* pOutput, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ£º´Ó±í´ïÊ½µÄpPosÎ»ÖÃ¿ªÊ¼»ñÈ¡Êı×Ö£¬²¢½«Êı×Ö´Ó×Ö·û´®ĞÎÊ½×ªÎªÊıÖµĞÎÊ½
-  ÊäÈë²ÎÊı£ºpExpression		±í´ïÊ½Ê××Ö·û
-			pPos			µ±Ç°±í´ïÊ½É¨ÃèÎ»ÖÃ
-			pOutput			ÊıÖµµØÖ·£¨ÓÃÓÚÊä³ö£©
-			unLineNum		ĞĞºÅÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º0	»ñÈ¡³É¹¦
-			-1	»ñÈ¡Ê§°Ü
-  ±¸    ×¢£º»ñÈ¡Êı×ÖÍ¬Ê±½øĞĞ¼ì²é£¬×î¶àÔÊĞí³öÏÖÒ»¸öĞ¡Êıµã
+  å‡½æ•°åç§°ï¼šstatic int8 getNumOnExpression(const int8* pCurrPtr, uint8* pPos, double* pOutput, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½ï¼šä»è¡¨è¾¾å¼çš„pPosä½ç½®å¼€å§‹è·å–æ•°å­—ï¼Œå¹¶å°†æ•°å­—ä»å­—ç¬¦ä¸²å½¢å¼è½¬ä¸ºæ•°å€¼å½¢å¼
+  è¾“å…¥å‚æ•°ï¼špExpression		è¡¨è¾¾å¼é¦–å­—ç¬¦
+			pPos			å½“å‰è¡¨è¾¾å¼æ‰«æä½ç½®
+			pOutput			æ•°å€¼åœ°å€ï¼ˆç”¨äºè¾“å‡ºï¼‰
+			unLineNum		è¡Œå·ç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š0	è·å–æˆåŠŸ
+			-1	è·å–å¤±è´¥
+  å¤‡    æ³¨ï¼šè·å–æ•°å­—åŒæ—¶è¿›è¡Œæ£€æŸ¥ï¼Œæœ€å¤šå…è®¸å‡ºç°ä¸€ä¸ªå°æ•°ç‚¹
   +60.1
 **************************************************/
 int8 getNumbers(const int8* pExpression, uint8* pPos, double* pOutput, uint32 unLineNum)
 {
-	uint8 cPointCnt = 0;       //Ğ¡Êıµã¼ÆÊı
-	uint8 digitCnt = 0;   // ***ĞÂÔö£ºÊı×Ö¼ÆÊıÆ÷***
-	int8 cTempArr[MAX_LENGTH_OF_LEXICAL_UNIT+1] = { 0 };
-	uint8 ucIdx = 0;
-	int8 cCurr;
+    uint8 cPointCnt = 0; //å°æ•°ç‚¹è®¡æ•°
+    uint8 digitCnt = 0;  // ***æ–°å¢ï¼šæ•°å­—è®¡æ•°å™¨***
+    int8 cTempArr[MAX_LENGTH_OF_LEXICAL_UNIT + 1] = {0};
+    uint8 ucIdx = 0;
+    int8 cCurr;
 
-	if (!pExpression || !pOutput || !pPos)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return -1;
-	}
-
-	cCurr = *(pExpression + *pPos);
-
-	//1.ÅĞ¶ÏÊ×¸ö×Ö·ûÊÇ·ñÎª + or -
-	if (cCurr == '+' || cCurr == '-')
-	{
-		if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
-		{
-			setErrorType(GCODE_ERROR_NUM85);
-			findError(pExpression, unLineNum);
-			return -1;
-		}
-		cTempArr[ucIdx++] = cCurr;  //±£´æµ½Êı×éÖĞ
-
-		*pPos += 1;
-		cCurr = *(pExpression + *pPos);
-	}
-
-	//2.
-	while ((cCurr >= '0' && cCurr <= '9') || cCurr == '.') //ÕÒÊı×ÖµÄºóÒ»¸ö×Ö·û
-	{
-		if (*(pExpression + *pPos) == '.')
-		{
-			cPointCnt += 1;
-		}
-        else
-        {
-            digitCnt++;   // ***ĞÂÔö£ºÍ³¼ÆÊı×Ö***
-        }
-
-		if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
-		{
-			setErrorType(GCODE_ERROR_NUM85);
-			findError(pExpression, unLineNum);
-			return -1;
-		}
-		cTempArr[ucIdx++] = cCurr;  //±£´æµ½Êı×éÖĞ
-
-		*pPos += 1;
-		cCurr = *(pExpression + *pPos);
-	}
-
-	if (cPointCnt > 1)
-	{
-		setErrorType(GCODE_ERROR_NUM84);
-		findError(pExpression, unLineNum);
-		return -1;
-	}
-
-    // 4) ***ÖÁÉÙÒ»Î»Êı×ÖĞ£Ñé£¨ºËĞÄ£©***
-    if (digitCnt == 0)
+    if (!pExpression || !pOutput || !pPos)
     {
-        setErrorType(GCODE_ERROR_NUM84);           // »òÕßÄãÃÇ¸üºÏÊÊµÄ¡°Êı×Ö¸ñÊ½´íÎó¡±Âë
-        findError(pExpression + *pPos, unLineNum); // Ö¸Ïò·Ç·¨×ÖÃæÁ¿Î»ÖÃ
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
         return -1;
     }
 
-	if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
-	{
-		setErrorType(GCODE_ERROR_NUM85);
-		findError(pExpression, unLineNum);
-		return -1;
-	}
-	cTempArr[ucIdx] = 0;
-	*pOutput = atof(cTempArr);
+    cCurr = *(pExpression + *pPos);
 
-	return 0;
+    //1.åˆ¤æ–­é¦–ä¸ªå­—ç¬¦æ˜¯å¦ä¸º + or -
+    if (cCurr == '+' || cCurr == '-')
+    {
+        if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
+        {
+            setErrorType(GCODE_ERROR_NUM85);
+            findError(pExpression, unLineNum);
+            return -1;
+        }
+        cTempArr[ucIdx++] = cCurr; //ä¿å­˜åˆ°æ•°ç»„ä¸­
+
+        *pPos += 1;
+        cCurr = *(pExpression + *pPos);
+    }
+
+    //2.
+    while ((cCurr >= '0' && cCurr <= '9') || cCurr == '.') //æ‰¾æ•°å­—çš„åä¸€ä¸ªå­—ç¬¦
+    {
+        if (*(pExpression + *pPos) == '.')
+        {
+            cPointCnt += 1;
+        }
+        else
+        {
+            digitCnt++; // ***æ–°å¢ï¼šç»Ÿè®¡æ•°å­—***
+        }
+
+        if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
+        {
+            setErrorType(GCODE_ERROR_NUM85);
+            findError(pExpression, unLineNum);
+            return -1;
+        }
+        cTempArr[ucIdx++] = cCurr; //ä¿å­˜åˆ°æ•°ç»„ä¸­
+
+        *pPos += 1;
+        cCurr = *(pExpression + *pPos);
+    }
+
+    if (cPointCnt > 1)
+    {
+        setErrorType(GCODE_ERROR_NUM84);
+        findError(pExpression, unLineNum);
+        return -1;
+    }
+
+    // 4) ***è‡³å°‘ä¸€ä½æ•°å­—æ ¡éªŒï¼ˆæ ¸å¿ƒï¼‰***
+    if (digitCnt == 0)
+    {
+        setErrorType(GCODE_ERROR_NUM84);           // æˆ–è€…ä½ ä»¬æ›´åˆé€‚çš„â€œæ•°å­—æ ¼å¼é”™è¯¯â€ç 
+        findError(pExpression + *pPos, unLineNum); // æŒ‡å‘éæ³•å­—é¢é‡ä½ç½®
+        return -1;
+    }
+
+    if (ucIdx >= MAX_LENGTH_OF_LEXICAL_UNIT)
+    {
+        setErrorType(GCODE_ERROR_NUM85);
+        findError(pExpression, unLineNum);
+        return -1;
+    }
+    cTempArr[ucIdx] = 0;
+    *pOutput = atof(cTempArr);
+
+    return 0;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºint8 isUnaryOrBinary(uint8 cLevel)
-  º¯Êı¹¦ÄÜ£º
-  ÊäÈë²ÎÊı£ºcLevel	ÔËËã·ûÓÅÏÈ¼¶
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	µ¥Ä¿
-			2	Ë«Ä¿
-  ±¸    ×¢£ºËùÓĞµ¥Ä¿ÔËËã·ûµÄÓÅÏÈ¼¶Îª9»ò10
+  å‡½æ•°åç§°ï¼šint8 isUnaryOrBinary(uint8 cLevel)
+  å‡½æ•°åŠŸèƒ½ï¼š
+  è¾“å…¥å‚æ•°ï¼šcLevel	è¿ç®—ç¬¦ä¼˜å…ˆçº§
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å•ç›®
+			2	åŒç›®
+  å¤‡    æ³¨ï¼šæ‰€æœ‰å•ç›®è¿ç®—ç¬¦çš„ä¼˜å…ˆçº§ä¸º9æˆ–10
 **************************************************/
 int8 isUnaryOrBinary(uint8 cLevel)
 {
-	if (cLevel == MACRO_LEVEL_9 || cLevel == MACRO_LEVEL_10)
-	{
-		return 1;  //µ¥Ä¿
-	}
-	return 2;  //Ë«Ä¿
+    if (cLevel == MACRO_LEVEL_9 || cLevel == MACRO_LEVEL_10)
+    {
+        return 1; //å•ç›®
+    }
+    return 2; //åŒç›®
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic void getLeftAndRightVal(SLocalMacroVar* pSLocalMacroVar, SCalculateUnit* pSLeftInputUnit, SCalculateUnit* pSRightInputUnit
+  å‡½æ•°åç§°ï¼šstatic void getLeftAndRightVal(SLocalMacroVar* pSLocalMacroVar, SCalculateUnit* pSLeftInputUnit, SCalculateUnit* pSRightInputUnit
 			, float* pLeftVal, float* pRightVal, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ  »ñÈ¡¼ÆËãµ¥ÔªµÄÖµ
-  ÊäÈë²ÎÊı£ºpSLocalMacroVar		¾Ö²¿ºê±äÁ¿½á¹¹ÌåµØÖ·£¨ºê±äÁ¿ĞèÒªÓÃµ½£©
-			pCalculateUnit		¼ÆËãµ¥Ôª½á¹¹Ìå
-			pUnitVal			¼ÆËãµ¥ÔªÖµ£¨ÓÃÓÚÊä³ö£©
-			unLineNum			ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º-1	´íÎó
-			1	ÒÑ»ñÈ¡¼ÆËãµ¥ÔªµÄ²Ù×÷Êı
-			0	ºê±äÁ¿ÎªNULL
-  ±¸    ×¢£º1.¼ÆËãµ¥Ôª´ø#£¬ÔòpUnitValÎª½âÒıÓÃºóµÄÖµ
-			2.¼ÆËãµ¥Ôª²»´ø#
-			»ñÈ¡µÄÖµÎªÒÑ½âÒıÓÃºóµÄÖµ£¬Ò»µ©µ÷ÓÃ´Ëº¯Êı£¬¼ÆËãµ¥ÔªµÄ#ºÅ»á±»Çå³ı
-			pCalculateUnitµÄfValÖµ:1  bPound:TRUE (¶ÔÓ¦#1µÄÖµÎª10)   ---->   *pUnitVal±»¸³ÖµÎª10£¬fValÖµ:1  bPound:FALSE
+  å‡½æ•°åŠŸèƒ½  è·å–è®¡ç®—å•å…ƒçš„å€¼
+  è¾“å…¥å‚æ•°ï¼špSLocalMacroVar		å±€éƒ¨å®å˜é‡ç»“æ„ä½“åœ°å€ï¼ˆå®å˜é‡éœ€è¦ç”¨åˆ°ï¼‰
+			pCalculateUnit		è®¡ç®—å•å…ƒç»“æ„ä½“
+			pUnitVal			è®¡ç®—å•å…ƒå€¼ï¼ˆç”¨äºè¾“å‡ºï¼‰
+			unLineNum			è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š-1	é”™è¯¯
+			1	å·²è·å–è®¡ç®—å•å…ƒçš„æ“ä½œæ•°
+			0	å®å˜é‡ä¸ºNULL
+  å¤‡    æ³¨ï¼š1.è®¡ç®—å•å…ƒå¸¦#ï¼Œåˆ™pUnitValä¸ºè§£å¼•ç”¨åçš„å€¼
+			2.è®¡ç®—å•å…ƒä¸å¸¦#
+			è·å–çš„å€¼ä¸ºå·²è§£å¼•ç”¨åçš„å€¼ï¼Œä¸€æ—¦è°ƒç”¨æ­¤å‡½æ•°ï¼Œè®¡ç®—å•å…ƒçš„#å·ä¼šè¢«æ¸…é™¤
+			pCalculateUnitçš„fValå€¼:1  bPound:TRUE (å¯¹åº”#1çš„å€¼ä¸º10)   ---->   *pUnitValè¢«èµ‹å€¼ä¸º10ï¼ŒfValå€¼:1  bPound:FALSE
 **************************************************/
-static int8 getUnitVal(SLocalMacroVar* pSLocalMacroVar, SCalculateUnit* pCalculateUnit, float* pUnitVal, uint32 unLineNum)
+static int8 getUnitVal(SLocalMacroVar* pSLocalMacroVar, SCalculateUnit* pCalculateUnit, float* pUnitVal,
+                       uint32 unLineNum)
 {
-	if (pSLocalMacroVar == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSLocalMacroVar == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	if (pCalculateUnit == NULL || pUnitVal == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
-	//¼ÆËãµ¥ÔªÖĞfValĞèÒª½âÒıÓÃ
-	if (pCalculateUnit->bPound == TRUE)
-	{
-		float fTemp;			//½Ó¾Ö²¿ºê±äÁ¿
-		uint8* pTemp2 = NULL;	//½ÓÏµÍ³ºê±äÁ¿
-		int8 cRet;
-		cRet = getMacroVar(pSLocalMacroVar, (uint16)pCalculateUnit->fVal, &fTemp, &pTemp2, unLineNum);  //»ñÈ¡×óÖµµÄµØÖ·
-		if(cRet < 0)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		//Îª¾Ö²¿ºê±äÁ¿
-		if (pCalculateUnit->fVal <= 33)
-		{
-			*pUnitVal = fTemp;
-		}
-		//ÎªÏµÍ³ºê±äÁ¿
-		else if (pCalculateUnit->fVal >= 1000)
-		{
-			*pUnitVal = *pTemp2;//???ÓÃ¸¡µãĞÍ½ÓÕûĞÎ
-		}
-		pCalculateUnit->bPound = FALSE;  //Ïû³ı#ºÅ±ê¼Ç
-		return cRet;
-	}
-	//¼ÆËãµ¥ÔªfVal²»Ğè½âÒıÓÃ
-	else
-	{
-		*pUnitVal = pCalculateUnit->fVal;
-		return 1;
-	}
+    if (pCalculateUnit == NULL || pUnitVal == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
+    //è®¡ç®—å•å…ƒä¸­fValéœ€è¦è§£å¼•ç”¨
+    if (pCalculateUnit->bPound == TRUE)
+    {
+        float fTemp;          //æ¥å±€éƒ¨å®å˜é‡
+        uint8* pTemp2 = NULL; //æ¥ç³»ç»Ÿå®å˜é‡
+        int8 cRet;
+        cRet = getMacroVar(pSLocalMacroVar, (uint16)pCalculateUnit->fVal, &fTemp, &pTemp2, unLineNum); //è·å–å·¦å€¼çš„åœ°å€
+        if (cRet < 0)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        //ä¸ºå±€éƒ¨å®å˜é‡
+        if (pCalculateUnit->fVal <= 33)
+        {
+            *pUnitVal = fTemp;
+        }
+        //ä¸ºç³»ç»Ÿå®å˜é‡
+        else if (pCalculateUnit->fVal >= 1000)
+        {
+            *pUnitVal = *pTemp2; //???ç”¨æµ®ç‚¹å‹æ¥æ•´å½¢
+        }
+        pCalculateUnit->bPound = FALSE; //æ¶ˆé™¤#å·æ ‡è®°
+        return cRet;
+    }
+    //è®¡ç®—å•å…ƒfValä¸éœ€è§£å¼•ç”¨
+    else
+    {
+        *pUnitVal = pCalculateUnit->fVal;
+        return 1;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic void getMacroVar(uint16 usTargetMacroVarName,float **pOutput, uint32 unLineNum, uint8 ucChannelNum, uint8 ucSyntaxOrAssign)
-  º¯Êı¹¦ÄÜ  ¶ÁÈ¡±äÁ¿#usTargetMacroVarName¶ÔÓ¦µÄÖµ
-  ÊäÈë²ÎÊı£ºpSLocalMacroVar			¾Ö²¿ºê±äÁ¿½á¹¹ÌåµØÖ·
-			usTargetMacroVarName	Ä¿±êºê±äÁ¿Ãû
-			pOutput					¾Ö²¿ºê±äÁ¿ÃûµÄÖµ£¨¸¡µãĞÍ£¬ÓÃÓÚÊä³ö£©
-			pOutput2				ÏµÍ³ºê±äÁ¿ÃûµÄÖµ£¨ÕûĞÎ£¬ÓÃÓÚÊä³ö£©
-			unLineNum				ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	ºê±äÁ¿²»ÎªNULL
-			0	ºê±äÁ¿ÎªNULL
-			-1	´íÎó
-  ±¸    ×¢£º1.»ñÈ¡µÄºê±äÁ¿ÎªNULL£¬Êä³ö0¡£¼ÆËãÊ±NULL°´0´¦Àí£¬ÆäËûÇé¿öĞèÒª°´NULL´¦Àí£¬
-			2.²»ÒªĞŞ¸ÄpOutputµÄÀàĞÍ
+  å‡½æ•°åç§°ï¼šstatic void getMacroVar(uint16 usTargetMacroVarName,float **pOutput, uint32 unLineNum, uint8 ucChannelNum, uint8 ucSyntaxOrAssign)
+  å‡½æ•°åŠŸèƒ½  è¯»å–å˜é‡#usTargetMacroVarNameå¯¹åº”çš„å€¼
+  è¾“å…¥å‚æ•°ï¼špSLocalMacroVar			å±€éƒ¨å®å˜é‡ç»“æ„ä½“åœ°å€
+			usTargetMacroVarName	ç›®æ ‡å®å˜é‡å
+			pOutput					å±€éƒ¨å®å˜é‡åçš„å€¼ï¼ˆæµ®ç‚¹å‹ï¼Œç”¨äºè¾“å‡ºï¼‰
+			pOutput2				ç³»ç»Ÿå®å˜é‡åçš„å€¼ï¼ˆæ•´å½¢ï¼Œç”¨äºè¾“å‡ºï¼‰
+			unLineNum				è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	å®å˜é‡ä¸ä¸ºNULL
+			0	å®å˜é‡ä¸ºNULL
+			-1	é”™è¯¯
+  å¤‡    æ³¨ï¼š1.è·å–çš„å®å˜é‡ä¸ºNULLï¼Œè¾“å‡º0ã€‚è®¡ç®—æ—¶NULLæŒ‰0å¤„ç†ï¼Œå…¶ä»–æƒ…å†µéœ€è¦æŒ‰NULLå¤„ç†ï¼Œ
+			2.ä¸è¦ä¿®æ”¹pOutputçš„ç±»å‹
 **************************************************/
- int8 getMacroVar(SLocalMacroVar* pSLocalMacroVar, uint16 usTargetMacroVarName, float* pOutput, uint8** pOutput2, uint32 unLineNum)
+int8 getMacroVar(SLocalMacroVar* pSLocalMacroVar, uint16 usTargetMacroVarName, float* pOutput, uint8** pOutput2,
+                 uint32 unLineNum)
 {
-	if (pSLocalMacroVar == NULL && pOutput == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSLocalMacroVar == NULL && pOutput == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	if (usTargetMacroVarName > 33 && usTargetMacroVarName < 1000)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-		return -1;
-	}
-	//¾Ö²¿ºê±äÁ¿#1-#33
-	if (usTargetMacroVarName >= 0 && usTargetMacroVarName <= 33)
-	{
-		//#0 
-		if (usTargetMacroVarName == 0)  
-		{
-			*pOutput = 0;
-			return 0;
-		}
-		//#1-#33
-		else    
-		{
-			//#iÎªNULL
-			if (GETBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1)) == 1)
-			{
-				*pOutput = 0;  
-				return 0;
-			}
-			//#i²»ÎªNULL
-			else
-			{
-				*pOutput = pSLocalMacroVar->dValArr[usTargetMacroVarName - 1];
-				return 1;
-			}
-		}
-	}
+    if (usTargetMacroVarName > 33 && usTargetMacroVarName < 1000)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+        return -1;
+    }
+    //å±€éƒ¨å®å˜é‡#1-#33
+    if (usTargetMacroVarName >= 0 && usTargetMacroVarName <= 33)
+    {
+        //#0
+        if (usTargetMacroVarName == 0)
+        {
+            *pOutput = 0;
+            return 0;
+        }
+        //#1-#33
+        else
+        {
+            //#iä¸ºNULL
+            if (GETBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1)) == 1)
+            {
+                *pOutput = 0;
+                return 0;
+            }
+            //#iä¸ä¸ºNULL
+            else
+            {
+                *pOutput = pSLocalMacroVar->dValArr[usTargetMacroVarName - 1];
+                return 1;
+            }
+        }
+    }
 
-	//ÏµÍ³ºê±äÁ¿#1000-#1037
-	else if (usTargetMacroVarName >= 1000 && usTargetMacroVarName <= 1037)
-	{
-		uint16 Index = usTargetMacroVarName;
-		if (Index % 10 == 8 || Index % 10 == 9)//Î²Êı²»ÄÜÎª8¡¢9 ???
-		{
-			parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-			return -1;
-		}
-		Index %= 100;//È¡ºóÃæÁ½Î»Êı
-		if (Index >= 10 && Index <= 17)
-		{
-			Index -= 2;
-		}
-		else if (Index >= 20 && Index <= 27)
-		{
-			Index -= 4;
-		}
-		else if (Index >= 30 && Index <= 37)
-		{
-			Index -= 6;
-		}
-		else if (Index >= 0 && Index <= 7)
-		{
-		}
-		//	printf("%p", (g_SystemMacro.MarcoAdd[Index]));
-		*pOutput2 = g_SystemMacro.MarcoAdd[Index];
-		return 1;
-	}
-	else
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-		return -1;
-	}
-	return 1;
+    //ç³»ç»Ÿå®å˜é‡#1000-#1037
+    else if (usTargetMacroVarName >= 1000 && usTargetMacroVarName <= 1037)
+    {
+        uint16 Index = usTargetMacroVarName;
+        if (Index % 10 == 8 || Index % 10 == 9) //å°¾æ•°ä¸èƒ½ä¸º8ã€9 ???
+        {
+            parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+            return -1;
+        }
+        Index %= 100; //å–åé¢ä¸¤ä½æ•°
+        if (Index >= 10 && Index <= 17)
+        {
+            Index -= 2;
+        }
+        else if (Index >= 20 && Index <= 27)
+        {
+            Index -= 4;
+        }
+        else if (Index >= 30 && Index <= 37)
+        {
+            Index -= 6;
+        }
+        else if (Index >= 0 && Index <= 7)
+        {
+        }
+        //	printf("%p", (g_SystemMacro.MarcoAdd[Index]));
+        *pOutput2 = g_SystemMacro.MarcoAdd[Index];
+        return 1;
+    }
+    else
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+        return -1;
+    }
+    return 1;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int8 setMacroVar(uint16 unTarget,float fVal)
-  º¯Êı¹¦ÄÜ  ½«ÖµfValĞ´Èëºê±äÁ¿#usTargetMacroVarNameÖĞ
-  ÊäÈë²ÎÊı£ºpSLocalMacroVar			¾Ö²¿ºê±äÁ¿½á¹¹ÌåµØÖ·
-			usTargetMacroVarName	Ä¿±êĞ´Èëºê±äÁ¿Ãû
-			fVal					Ä¿±êĞ´ÈëÖµ
+  å‡½æ•°åç§°ï¼šstatic int8 setMacroVar(uint16 unTarget,float fVal)
+  å‡½æ•°åŠŸèƒ½  å°†å€¼fValå†™å…¥å®å˜é‡#usTargetMacroVarNameä¸­
+  è¾“å…¥å‚æ•°ï¼špSLocalMacroVar			å±€éƒ¨å®å˜é‡ç»“æ„ä½“åœ°å€
+			usTargetMacroVarName	ç›®æ ‡å†™å…¥å®å˜é‡å
+			fVal					ç›®æ ‡å†™å…¥å€¼
 			
-			unLineNum			ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º½öºê±äÁ¿#1-#33¿É½øĞĞ¸³Öµ
+			unLineNum			è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šä»…å®å˜é‡#1-#33å¯è¿›è¡Œèµ‹å€¼
 **************************************************/
- void setMacroVar(SLocalMacroVar* pSLocalMacroVar, uint16 usTargetMacroVarName, const float* pVal, uint32 unLineNum) ///ÔİÊ±Ö»×ö¾Ö²¿±äÁ¿£¬È«¾Ö±äÁ¿Ó¦¸ÃÓï·¨¼ì²éºÍ¸³ÖµÓ¦¸ÃÒª·Ö¿ª!!!!
+void setMacroVar(SLocalMacroVar* pSLocalMacroVar, uint16 usTargetMacroVarName, const float* pVal,
+                 uint32 unLineNum) ///æš‚æ—¶åªåšå±€éƒ¨å˜é‡ï¼Œå…¨å±€å˜é‡åº”è¯¥è¯­æ³•æ£€æŸ¥å’Œèµ‹å€¼åº”è¯¥è¦åˆ†å¼€!!!!
 {
-	//SProgram* pCurrProgram = NULL;   //µ±Ç°³ÌĞò½á¹¹Ìå
-	if (pSLocalMacroVar == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
+    //SProgram* pCurrProgram = NULL;   //å½“å‰ç¨‹åºç»“æ„ä½“
+    if (pSLocalMacroVar == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
 
-	//Ö»ÄÜ¶Ôºê±äÁ¿#1-#33½øĞĞ¸³Öµ
-	if (usTargetMacroVarName > 33 || usTargetMacroVarName < 1)  //²»ÄÜ¶Ô#0Ğ´Èë
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
-		return;
-	}
+    //åªèƒ½å¯¹å®å˜é‡#1-#33è¿›è¡Œèµ‹å€¼
+    if (usTargetMacroVarName > 33 || usTargetMacroVarName < 1) //ä¸èƒ½å¯¹#0å†™å…¥
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM131);
+        return;
+    }
 
-	if (pVal == NULL)
-	{
-		pSLocalMacroVar->dValArr[usTargetMacroVarName - 1] = 0;   //ÖµÖÃ0
-		SETBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1));  //±ê¼ÇÎ»ÖÃ1
-
-	}
-	else
-	{
-		pSLocalMacroVar->dValArr[usTargetMacroVarName - 1] = *pVal;
-		CLRBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1));  //±ê¼ÇÎ»ÖÃ0
-	}
+    if (pVal == NULL)
+    {
+        pSLocalMacroVar->dValArr[usTargetMacroVarName - 1] = 0;          //å€¼ç½®0
+        SETBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1)); //æ ‡è®°ä½ç½®1
+    }
+    else
+    {
+        pSLocalMacroVar->dValArr[usTargetMacroVarName - 1] = *pVal;
+        CLRBIT64(pSLocalMacroVar->ulIsNull, (usTargetMacroVarName - 1)); //æ ‡è®°ä½ç½®0
+    }
 }
 
+// è¿”å› TRUE è¡¨ç¤ºï¼šå®Œå…¨åŒ¹é…å…³é”®å­—ï¼Œä¸”å…³é”®å­—åä¸æ˜¯ [A-Za-z0-9_]
+static bool isTagetStr_A_N(const char* kw, uint8 kwLen, const int8* p, uint8 remainLen)
+{
+    if (!kw || !p)
+        return FALSE;
+    if (remainLen < kwLen)
+        return FALSE;
 
- // ·µ»Ø TRUE ±íÊ¾£ºÍêÈ«Æ¥Åä¹Ø¼ü×Ö£¬ÇÒ¹Ø¼ü×Öºó²»ÊÇ [A-Za-z0-9_]
- static bool isTagetStr_A_N(const char* kw, uint8 kwLen,
-                            const int8* p, uint8 remainLen)
- {
-     if (!kw || !p) return FALSE;
-     if (remainLen < kwLen) return FALSE;
+    // 1) å…³é”®å­—æœ¬ä½“å®Œå…¨åŒ¹é…ï¼ˆåªè¯» remainLen èŒƒå›´å†…ï¼‰
+    for (uint8 i = 0; i < kwLen; i++)
+    {
+        if ((char)p[i] != kw[i])
+            return FALSE;
+    }
 
-     // 1) ¹Ø¼ü×Ö±¾ÌåÍêÈ«Æ¥Åä£¨Ö»¶Á remainLen ·¶Î§ÄÚ£©
-     for (uint8 i = 0; i < kwLen; i++)
-     {
-         if ((char)p[i] != kw[i]) return FALSE;
-     }
+    // 2) å…³é”®å­—åè¾¹ç•Œæ ¡éªŒï¼šé¿å… ANDX / ABSX
+    // remainLen == kwLenï¼šåˆšå¥½åˆ°æœ«å°¾ï¼Œåˆæ³•
+    if (remainLen == kwLen)
+        return TRUE;
 
-     // 2) ¹Ø¼ü×Öºó±ß½çĞ£Ñé£º±ÜÃâ ANDX / ABSX
-     // remainLen == kwLen£º¸ÕºÃµ½Ä©Î²£¬ºÏ·¨
-     if (remainLen == kwLen) return TRUE;
+    char c = (char)p[kwLen];
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')
+    {
+        return FALSE;
+    }
 
-     char c = (char)p[kwLen];
-     if ((c >= 'A' && c <= 'Z') ||
-         (c >= 'a' && c <= 'z') ||
-         (c >= '0' && c <= '9') ||
-         c == '_')
-     {
-         return FALSE;
-     }
-
-     return TRUE;
- }
+    return TRUE;
+}
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºstatic int8 whichAWord(const int8  *pCurrPtr, uint32 unLineNum)
-  º¯Êı¹¦ÄÜ: ÅĞ¶ÏÊÇÄÄÒ»¸öÒÔA¿ªÍ·µÄ²Ù×÷·û
-  ÊäÈë²ÎÊı£ºpCurrPtr	µ±Ç°×Ö·ûµÄµØÖ·
-			unLineNum	ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	AND
+  å‡½æ•°åç§°ï¼šstatic int8 whichAWord(const int8  *pCurrPtr, uint32 unLineNum)
+  å‡½æ•°åŠŸèƒ½: åˆ¤æ–­æ˜¯å“ªä¸€ä¸ªä»¥Aå¼€å¤´çš„æ“ä½œç¬¦
+  è¾“å…¥å‚æ•°ï¼špCurrPtr	å½“å‰å­—ç¬¦çš„åœ°å€
+			unLineNum	è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	AND
 			2	ABS  
 			3	ASIN 
 			4	ACOS 
 			5	ATAN
-			-1	¿ÕÖ¸Õë´íÎó
-			-2	ÔËËã·û´íÎó
-  ±¸    ×¢£ºÓÉÓÚÊ××Ö·ûÎªAµÄÔËËã·û½Ï¶à£¬½øĞĞÍ³Ò»¹ÜÀí
+			-1	ç©ºæŒ‡é’ˆé”™è¯¯
+			-2	è¿ç®—ç¬¦é”™è¯¯
+  å¤‡    æ³¨ï¼šç”±äºé¦–å­—ç¬¦ä¸ºAçš„è¿ç®—ç¬¦è¾ƒå¤šï¼Œè¿›è¡Œç»Ÿä¸€ç®¡ç†
 **************************************************/
 
-static int8 whichAWord(const int8* pCurrPtr, uint8 ucRemainLen ,uint32 unLineNum)
+static int8 whichAWord(const int8* pCurrPtr, uint8 ucRemainLen, uint32 unLineNum)
 {
-	if (!pCurrPtr)
-	{
-		parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (!pCurrPtr)
+    {
+        parseGCodeErrorB(unLineNum, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-    // ×¢Òâ£ºÕâÀïÒÀÀµ¡°´ø³¤¶È&±ß½ç¡±µÄ isTagetStr_A_N£¨¼ûÏÂÎÄµÚ2½Ú£©
+    // æ³¨æ„ï¼šè¿™é‡Œä¾èµ–â€œå¸¦é•¿åº¦&è¾¹ç•Œâ€çš„ isTagetStr_A_Nï¼ˆè§ä¸‹æ–‡ç¬¬2èŠ‚ï¼‰
     if (isTagetStr_A_N("AND", 3, pCurrPtr, ucRemainLen))
-		return 1;
+        return 1;
     if (isTagetStr_A_N("ABS", 3, pCurrPtr, ucRemainLen))
-		return 2;
+        return 2;
     if (isTagetStr_A_N("ASIN", 4, pCurrPtr, ucRemainLen))
-		return 3;
+        return 3;
     if (isTagetStr_A_N("ACOS", 4, pCurrPtr, ucRemainLen))
-		return 4;
+        return 4;
     if (isTagetStr_A_N("ATAN", 4, pCurrPtr, ucRemainLen))
-		return 5;
+        return 5;
 
-		return -2;
+    return -2;
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ´òÓ¡ºó×º±í´ïÊ½
-  ÊäÈë²ÎÊı£º
-			unLineNum	ĞĞºÅ£¬ÓÃÓÚ±¨´í
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º1	AND
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: æ‰“å°åç¼€è¡¨è¾¾å¼
+  è¾“å…¥å‚æ•°ï¼š
+			unLineNum	è¡Œå·ï¼Œç”¨äºæŠ¥é”™
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š1	AND
 			2	ABS
 			3	ASIN
 			4	ACOS
 			5	ATAN
-			-1	¿ÕÖ¸Õë´íÎó
-			-2	ÔËËã·û´íÎó
-  ±¸    ×¢£ºÓÉÓÚÊ××Ö·ûÎªAµÄÔËËã·û½Ï¶à£¬½øĞĞÍ³Ò»¹ÜÀí
+			-1	ç©ºæŒ‡é’ˆé”™è¯¯
+			-2	è¿ç®—ç¬¦é”™è¯¯
+  å¤‡    æ³¨ï¼šç”±äºé¦–å­—ç¬¦ä¸ºAçš„è¿ç®—ç¬¦è¾ƒå¤šï¼Œè¿›è¡Œç»Ÿä¸€ç®¡ç†
 **************************************************/
 //static void printCalculateUnitList(SList* pList)
 //{
@@ -2394,18 +2405,18 @@ static int8 whichAWord(const int8* pCurrPtr, uint8 ucRemainLen ,uint32 unLineNum
 //	for (i; i < pList->cSize; i++)
 //	{
 //		SCalculateUnit* pCurrUnit = (SCalculateUnit*)FindNodeData(pList, i);
-//		printf("µ±Ç°½Úµã£º%d\n", i);
-//		printf("µ¥ÔªµÈ¼¶£º%d\n", (int32)pCurrUnit->ucLevel);
-//		//²Ù×÷Êı
+//		printf("å½“å‰èŠ‚ç‚¹ï¼š%d\n", i);
+//		printf("å•å…ƒç­‰çº§ï¼š%d\n", (int32)pCurrUnit->ucLevel);
+//		//æ“ä½œæ•°
 //		if (pCurrUnit->ucLevel == 12)
 //		{
-//			printf("ÊıÖµ£º%f\n", pCurrUnit->fVal);
+//			printf("æ•°å€¼ï¼š%f\n", pCurrUnit->fVal);
 //
 //		}
-//		//²Ù×÷·û
+//		//æ“ä½œç¬¦
 //		else
 //		{
-//			printf("µ¥ÔªÀàĞÍ£º%d\n", (int32)pCurrUnit->ucType);
+//			printf("å•å…ƒç±»å‹ï¼š%d\n", (int32)pCurrUnit->ucType);
 //		}
 //		printf("\n");
 //	}
@@ -2413,213 +2424,209 @@ static int8 whichAWord(const int8* pCurrPtr, uint8 ucRemainLen ,uint32 unLineNum
 //}
 
 #if GCodeCalcExpression_Debug
-//´òÓ¡Äæ²¨À¼
-void printReversePolishExpression(SList* pList)  //²ÎÊıÊÇÄæ²¨À¼Á´±í
+//æ‰“å°é€†æ³¢å…°
+void printReversePolishExpression(SList* pList) //å‚æ•°æ˜¯é€†æ³¢å…°é“¾è¡¨
 {
-	printf("Äæ²¨À¼:");
-	int pos = 0;
-	while (pos < pList->cSize)
-	{
-		SCalculateUnit* pUnit = (SCalculateUnit*)FindNodeData(pList, pos);
-		int level = pUnit->ucLevel;
-		int type = pUnit->ucType;
+    printf("é€†æ³¢å…°:");
+    int pos = 0;
+    while (pos < pList->cSize)
+    {
+        SCalculateUnit* pUnit = (SCalculateUnit*)FindNodeData(pList, pos);
+        int level = pUnit->ucLevel;
+        int type = pUnit->ucType;
 
-		switch (level)
-		{
-		case MACRO_LEVEL_0:
-		{
-			printf("[");
-			break;
-		}
-		case MACRO_LEVEL_1:
-		{
-			printf("=");
-			break;
-		}
-		case MACRO_LEVEL_2:
-		{
-			printf("&&");
-			break;
-		}
-		case MACRO_LEVEL_3:
-		{
-			printf("^");
-			break;
-		}
-		case MACRO_LEVEL_4:
-		{
-			printf("||");
-			break;
-		}
-		case MACRO_LEVEL_5:
-		{
-			switch (type)
-			{
-			case 0:
-			{
-				printf("<>");
-				break;
-			}
-			case 1:
-			{
-				printf("==");
-				break;
-			}
-			default:
-				printf("Äæ²¨À¼´íÎó");
-				break;
-			}
+        switch (level)
+        {
+        case MACRO_LEVEL_0:
+        {
+            printf("[");
+            break;
+        }
+        case MACRO_LEVEL_1:
+        {
+            printf("=");
+            break;
+        }
+        case MACRO_LEVEL_2:
+        {
+            printf("&&");
+            break;
+        }
+        case MACRO_LEVEL_3:
+        {
+            printf("^");
+            break;
+        }
+        case MACRO_LEVEL_4:
+        {
+            printf("||");
+            break;
+        }
+        case MACRO_LEVEL_5:
+        {
+            switch (type)
+            {
+            case 0:
+            {
+                printf("<>");
+                break;
+            }
+            case 1:
+            {
+                printf("==");
+                break;
+            }
+            default:
+                printf("é€†æ³¢å…°é”™è¯¯");
+                break;
+            }
 
-			break;
-		}
+            break;
+        }
 
-		case MACRO_LEVEL_6:
-		{
-			switch (type)
-			{
-			case 0:
-				printf(">");
-				break;
-			case 1:
-				printf(">=");
-				break;
-			case 2:
-				printf("<");
-				break;
-			case 3:
-				printf("<=");
-				break;
-			default:
-				printf("Äæ²¨À¼´íÎó");
-				break;
-			}
-			break;
-		}
+        case MACRO_LEVEL_6:
+        {
+            switch (type)
+            {
+            case 0:
+                printf(">");
+                break;
+            case 1:
+                printf(">=");
+                break;
+            case 2:
+                printf("<");
+                break;
+            case 3:
+                printf("<=");
+                break;
+            default:
+                printf("é€†æ³¢å…°é”™è¯¯");
+                break;
+            }
+            break;
+        }
 
-		case MACRO_LEVEL_7:
-		{
-			switch (type)
-			{
-			case 0:
-				printf("+");
-				break;
-			case 1:
-				printf("-");
-				break;
-			default:
-				printf("Äæ²¨À¼´íÎó");
-				break;
-			}
-			break;
-		}
+        case MACRO_LEVEL_7:
+        {
+            switch (type)
+            {
+            case 0:
+                printf("+");
+                break;
+            case 1:
+                printf("-");
+                break;
+            default:
+                printf("é€†æ³¢å…°é”™è¯¯");
+                break;
+            }
+            break;
+        }
 
+        case MACRO_LEVEL_8:
+        {
+            switch (type)
+            {
+            case 0:
+                printf("*");
+                break;
+            case 1:
+                printf("/");
+                break;
+            case 2:
+                printf("%%");
+                break;
+            default:
+                printf("é€†æ³¢å…°é”™è¯¯");
+                break;
+            }
+            break;
+        }
 
+        case MACRO_LEVEL_9:
+        {
+            switch (type)
+            {
+            case 0:
+                printf("+");
+                break;
+            case 1:
+                printf("-");
+                break;
 
+            case 3:
+                printf(" SQRT");
+                break;
+            case 4:
+                printf(" ABS");
+                break;
+            case 5:
+                printf(" ROUND");
+            case 6:
+                printf(" FUP");
+                break;
+            case 7:
+                printf(" FIX");
+                break;
+            case 8:
+                printf("LN");
+                break;
+            case 9:
+                printf(" EXP");
+                break;
+            case 10:
+                printf(" SIN");
+                break;
+            case 11:
+                printf(" ASIN");
+                break;
+            case 12:
+                printf(" COS");
+                break;
+            case 13:
+                printf(" ACOS");
+                break;
+            case 14:
+                printf(" TAN");
+                break;
+            case 15:
+                printf(" ATAN");
+                break;
+            case 16:
+                printf(" BIN");
+                break;
+            case 17:
+                printf(" BCD");
+                break;
+            default:
+                printf("é€†æ³¢å…°æœªæ·»åŠ ");
+                break;
+            }
+            break;
+        }
+        case MACRO_LEVEL_10:
+            printf("#");
+            break;
+        case MACRO_LEVEL_11:
+        {
+            printf("]");
+            break;
+        }
+        case MACRO_LEVEL_12:
+        {
+            printf("%f", pUnit->fVal);
+            break;
+        }
 
-		case MACRO_LEVEL_8:
-		{
-			switch (type)
-			{
-			case 0:
-				printf("*");
-				break;
-			case 1:
-				printf("/");
-				break;
-			case 2:
-				printf("%%");
-				break;
-			default:
-				printf("Äæ²¨À¼´íÎó");
-				break;
-			}
-			break;
-		}
+        default:
+            printf("é€†æ³¢å…°æœªæ·»åŠ ");
+            break;
+        }
 
-
-		case MACRO_LEVEL_9:
-		{
-			switch (type)
-			{
-			case 0:
-				printf("+");
-				break;
-			case 1:
-				printf("-");
-				break;
-
-			case 3:
-				printf(" SQRT");
-				break;
-			case 4:
-				printf(" ABS");
-				break;
-			case 5:
-				printf(" ROUND");
-			case 6:
-				printf(" FUP");
-				break;
-			case 7:
-				printf(" FIX");
-				break;
-			case 8:
-				printf("LN");
-				break;
-			case 9:
-				printf(" EXP");
-				break;
-			case 10:
-				printf(" SIN");
-				break;
-			case 11:
-				printf(" ASIN");
-				break;
-			case 12:
-				printf(" COS");
-				break;
-			case 13:
-				printf(" ACOS");
-				break;
-			case 14:
-				printf(" TAN");
-				break;
-			case 15:
-				printf(" ATAN");
-				break;
-			case 16:
-				printf(" BIN");
-				break;
-			case 17:
-				printf(" BCD");
-				break;
-			default:
-				printf("Äæ²¨À¼Î´Ìí¼Ó");
-				break;
-			}
-			break;
-		}
-		case MACRO_LEVEL_10:
-			printf("#");
-			break;
-		case MACRO_LEVEL_11:
-		{
-			printf("]");
-			break;
-		}
-		case MACRO_LEVEL_12:
-		{
-			printf("%f", pUnit->fVal);
-			break;
-		}
-
-		default:
-			printf("Äæ²¨À¼Î´Ìí¼Ó");
-			break;
-		}
-
-		pos++;
-	}
-	printf("\n");
+        pos++;
+    }
+    printf("\n");
 }
 
 #endif

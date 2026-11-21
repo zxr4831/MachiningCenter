@@ -3,263 +3,281 @@
 #include "GCodeCommandAPI.h"
 #include "RoundGeometry.h"
 
-/* ÎÞ³Ö¾Ã×´Ì¬£»ÕâÀïÖ»¼ÆËãÏàÁÚÁ½¶Î£¬²»·ÃÎÊ»º³å¡¢±¨¾¯»òÊÍ·ÅÊäÈë×ÊÔ´¡£ */
+/* æ— æŒä¹…çŠ¶æ€ï¼›è¿™é‡Œåªè®¡ç®—ç›¸é‚»ä¸¤æ®µï¼Œä¸è®¿é—®ç¼“å†²ã€æŠ¥è­¦æˆ–é‡Šæ”¾è¾“å…¥èµ„æºã€‚ */
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic bool isCornerMotionSupported(const struct SGCodeParse *p)
-  º¯Êý¹¦ÄÜ£º¼ì²éµ¥¶ÎÊÇ·ñÂú×ãµ±Ç°µ¹Ô²°æ±¾µÄÔË¶¯ºÍ¸½´øÖ¸ÁîÏÞÖÆ¡£
-  ÊäÈë²ÎÊý£ºp ÒÑ×ª»»Ä£Ì¬µÄ»º³å¼ÇÂ¼£¬²»ÄÜÎª¿Õ¡£
-  Êä³ö²ÎÊý£ºÎÞ¡£
-  ·µ »Ø Öµ£ºTRUE Ö§³Ö£»FALSE ´æÔÚ²»Ö§³ÖµÄÄ£Ì¬¡¢¸½´ø¶¯×÷»ò×ø±ê¡£
-  ±¸    ×¢£ºÏÞ¶¨ G18/G21/G40¡¢ÆÕÍ¨ G1/G2/G3 ºÍ·ÇÆ½ÃæÖá²»¶¯£»¼¸ºÎ¿É½âÐÔÁíÐÐ¼ì²é¡£
+  å‡½æ•°åç§°ï¼šstatic bool isCornerMotionSupported(const struct SGCodeParse *p)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥å•æ®µæ˜¯å¦æ»¡è¶³å½“å‰å€’åœ†ç‰ˆæœ¬çš„è¿åŠ¨å’Œé™„å¸¦æŒ‡ä»¤é™åˆ¶ã€‚
+  è¾“å…¥å‚æ•°ï¼šp å·²è½¬æ¢æ¨¡æ€çš„ç¼“å†²è®°å½•ï¼Œä¸èƒ½ä¸ºç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å›ž å€¼ï¼šTRUE æ”¯æŒï¼›FALSE å­˜åœ¨ä¸æ”¯æŒçš„æ¨¡æ€ã€é™„å¸¦åŠ¨ä½œæˆ–åæ ‡ã€‚
+  å¤‡    æ³¨ï¼šé™å®š G18/G21/G40ã€æ™®é€š G1/G2/G3 å’Œéžå¹³é¢è½´ä¸åŠ¨ï¼›å‡ ä½•å¯è§£æ€§å¦è¡Œæ£€æŸ¥ã€‚
 **************************************************/
-static bool isCornerMotionSupported(const struct SGCodeParse *p)
+static bool isCornerMotionSupported(const struct SGCodeParse* p)
 {
     int i;
-    if (p->SModalInfo.sGa < 1 || p->SModalInfo.sGa > 3
-        || (p->EntityType != L1NE && p->EntityType != ARC)
-        || p->SModalInfo.sGc != G18 || p->SModalInfo.sGd != G40
-        || p->SModalInfo.sGe != G21 || p->cInterpolationState != 0
-        || p->pSG50Offset || p->cPointType || p->bG65SystemMacroWait
-        || p->unDelayTime || p->bG31Flag || p->cTwistCommand
-        || p->bChipBreakFlag || p->cToolAxisMod
-        || (p->unCommandType & CMD_PROGRAM_ADDR)
-        || p->sChannelCommand.ucType != UNASSIGNED_VALUE)
+    if (p->SModalInfo.sGa < 1 || p->SModalInfo.sGa > 3 || (p->EntityType != L1NE && p->EntityType != ARC) ||
+        p->SModalInfo.sGc != G18 || p->SModalInfo.sGd != G40 || p->SModalInfo.sGe != G21 ||
+        p->cInterpolationState != 0 || p->pSG50Offset || p->cPointType || p->bG65SystemMacroWait || p->unDelayTime ||
+        p->bG31Flag || p->cTwistCommand || p->bChipBreakFlag || p->cToolAxisMod ||
+        (p->unCommandType & CMD_PROGRAM_ADDR) || p->sChannelCommand.ucType != UNASSIGNED_VALUE)
         return FALSE;
-    for (i=0; i<IO_MAXGROUP_IN_SINGLE_LINE; ++i)
-        if (p->ucIOCommandArray[i]) return FALSE;
-    for (i=0; i<AXIS_NUM_MAX; ++i) {
+    for (i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; ++i)
+        if (p->ucIOCommandArray[i])
+            return FALSE;
+    for (i = 0; i < AXIS_NUM_MAX; ++i)
+    {
         if (!isRoundValueFinite(p->SStartPoint.dArray[i]) || !isRoundValueFinite(p->SEndPoint.dArray[i]))
             return FALSE;
-        if (i != AXIS_Z && i != AXIS_X
-            && fabs(p->SStartPoint.dArray[i]-p->SEndPoint.dArray[i]) > RG_TOL)
+        if (i != AXIS_Z && i != AXIS_X && fabs(p->SStartPoint.dArray[i] - p->SEndPoint.dArray[i]) > RG_TOL)
             return FALSE;
     }
     return TRUE;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºbool isCornerPairCompatible(const struct SGCodeParse *a, const struct SGCodeParse *b)
-  º¯Êý¹¦ÄÜ£º¼ì²éÇ°ºó¶ÎÊÇ·ñÁ¬ÐøÇÒÔÊÐíÔÚÁ¬½Ó´¦Éú³Éµ¹½Ç»òÔ²½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°¶Î¡¢b ºó¶Î£¬¾ùÎªÒÑ×ª»»Ä£Ì¬µÄ·Ç¿Õ¼ÇÂ¼¡£
-  Êä³ö²ÎÊý£ºÎÞ¡£
-  ·µ »Ø Öµ£ºTRUE ¿É¼ÌÐøÇó½â£»FALSE ´æÔÚ±ß½ç»ò²»Á¬Ðø¡£
-  ±¸    ×¢£º¼ì²éµ¶¾ß¡¢Ïà¹ØÄ£Ì¬¼°Ö÷Öá×´Ì¬£»²»ÔÊÐíÔ½¹ýÇ°¶Î½áÊø±êÖ¾¡£
+  å‡½æ•°åç§°ï¼šbool isCornerPairCompatible(const struct SGCodeParse *a, const struct SGCodeParse *b)
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥å‰åŽæ®µæ˜¯å¦è¿žç»­ä¸”å…è®¸åœ¨è¿žæŽ¥å¤„ç”Ÿæˆå€’è§’æˆ–åœ†è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰æ®µã€b åŽæ®µï¼Œå‡ä¸ºå·²è½¬æ¢æ¨¡æ€çš„éžç©ºè®°å½•ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å›ž å€¼ï¼šTRUE å¯ç»§ç»­æ±‚è§£ï¼›FALSE å­˜åœ¨è¾¹ç•Œæˆ–ä¸è¿žç»­ã€‚
+  å¤‡    æ³¨ï¼šæ£€æŸ¥åˆ€å…·ã€ç›¸å…³æ¨¡æ€åŠä¸»è½´çŠ¶æ€ï¼›ä¸å…è®¸è¶Šè¿‡å‰æ®µç»“æŸæ ‡å¿—ã€‚
 **************************************************/
-bool isCornerPairCompatible(const struct SGCodeParse *a, const struct SGCodeParse *b)
+bool isCornerPairCompatible(const struct SGCodeParse* a, const struct SGCodeParse* b)
 {
     int i;
-    if (!isCornerMotionSupported(a) || !isCornerMotionSupported(b) || a->bLastLineMark
-        || a->ucToolID != b->ucToolID || a->ucToolCompNum != b->ucToolCompNum
-        || a->ucTurretNum != b->ucTurretNum
-        || a->SModalInfo.sGb != b->SModalInfo.sGb
-        || a->SModalInfo.sGf != b->SModalInfo.sGf
-        || a->SModalInfo.sGg != b->SModalInfo.sGg
-        || a->dSpindleSpeed != b->dSpindleSpeed
-        || a->dSecondSpindleSpeed != b->dSecondSpindleSpeed)
+    if (!isCornerMotionSupported(a) || !isCornerMotionSupported(b) || a->bLastLineMark || a->ucToolID != b->ucToolID ||
+        a->ucToolCompNum != b->ucToolCompNum || a->ucTurretNum != b->ucTurretNum ||
+        a->SModalInfo.sGb != b->SModalInfo.sGb || a->SModalInfo.sGf != b->SModalInfo.sGf ||
+        a->SModalInfo.sGg != b->SModalInfo.sGg || a->dSpindleSpeed != b->dSpindleSpeed ||
+        a->dSecondSpindleSpeed != b->dSecondSpindleSpeed)
         return FALSE;
-    for (i=0; i<AXIS_NUM_MAX; ++i)
-        if (fabs(a->SEndPoint.dArray[i]-b->SStartPoint.dArray[i]) > RG_TOL)
+    for (i = 0; i < AXIS_NUM_MAX; ++i)
+        if (fabs(a->SEndPoint.dArray[i] - b->SStartPoint.dArray[i]) > RG_TOL)
             return FALSE;
     return TRUE;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic int8 calcCornerRoundArc(const struct SGCodeParse *a, const struct SGCodeParse *b, double r, SArc *out)
-  º¯Êý¹¦ÄÜ£º°´Á½¶ÎÊµÌåÀàÐÍ·Ö·¢ËÄÖÖ×Ô¶¯µ¹Ô²¼ÆËã¡£
-  ÊäÈë²ÎÊý£ºa Ç°¶Î£»b ºó¶Î£»r ÕæÊµºÁÃ×°ë¾¶£¬¼ÇÂ¼²»ÄÜÎª¿Õ¡£
-  Êä³ö²ÎÊý£ºout ½öÔÚ³É¹¦Ê±Ð´Èë¹ý¶ÉÔ²»¡¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 Í¬Ïò¹²ÏßÎÞÐèµ¹Ô²£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£ºÖ»¹¹Ôì¼¸ºÎÊäÈë£¬²»²Ã¼ôÔ­¼ÇÂ¼£¬²»ÍÆ½ø»º³åÖ¸Õë¡£
+  å‡½æ•°åç§°ï¼šstatic int8 calcCornerRoundArc(const struct SGCodeParse *a, const struct SGCodeParse *b, double r, SArc *out)
+  å‡½æ•°åŠŸèƒ½ï¼šæŒ‰ä¸¤æ®µå®žä½“ç±»åž‹åˆ†å‘å››ç§è‡ªåŠ¨å€’åœ†è®¡ç®—ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰æ®µï¼›b åŽæ®µï¼›r çœŸå®žæ¯«ç±³åŠå¾„ï¼Œè®°å½•ä¸èƒ½ä¸ºç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šout ä»…åœ¨æˆåŠŸæ—¶å†™å…¥è¿‡æ¸¡åœ†å¼§ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 åŒå‘å…±çº¿æ— éœ€å€’åœ†ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šåªæž„é€ å‡ ä½•è¾“å…¥ï¼Œä¸è£å‰ªåŽŸè®°å½•ï¼Œä¸æŽ¨è¿›ç¼“å†²æŒ‡é’ˆã€‚
 **************************************************/
-static int8 calcCornerRoundArc(const struct SGCodeParse *a, const struct SGCodeParse *b,
-                              double r, SArc *out)
+static int8 calcCornerRoundArc(const struct SGCodeParse* a, const struct SGCodeParse* b, double r, SArc* out)
 {
     SLine la = {0}, lb = {0};
     SArc aa = {0}, ab = {0};
-    la.EntityType=lb.EntityType=L1NE;
-    la.SStartPoint=a->SStartPoint; la.SEndPoint=a->SEndPoint;
-    lb.SStartPoint=b->SStartPoint; lb.SEndPoint=b->SEndPoint;
-    aa.EntityType=ab.EntityType=ARC;
-    aa.SStartPoint=a->SStartPoint; aa.SEndPoint=a->SEndPoint;
-    aa.SCenterPoint=a->SCenterPoint; aa.dRadius=a->dRadius; aa.cArcDir=a->cArcDir;
-    ab.SStartPoint=b->SStartPoint; ab.SEndPoint=b->SEndPoint;
-    ab.SCenterPoint=b->SCenterPoint; ab.dRadius=b->dRadius; ab.cArcDir=b->cArcDir;
+    la.EntityType = lb.EntityType = L1NE;
+    la.SStartPoint = a->SStartPoint;
+    la.SEndPoint = a->SEndPoint;
+    lb.SStartPoint = b->SStartPoint;
+    lb.SEndPoint = b->SEndPoint;
+    aa.EntityType = ab.EntityType = ARC;
+    aa.SStartPoint = a->SStartPoint;
+    aa.SEndPoint = a->SEndPoint;
+    aa.SCenterPoint = a->SCenterPoint;
+    aa.dRadius = a->dRadius;
+    aa.cArcDir = a->cArcDir;
+    ab.SStartPoint = b->SStartPoint;
+    ab.SEndPoint = b->SEndPoint;
+    ab.SCenterPoint = b->SCenterPoint;
+    ab.dRadius = b->dRadius;
+    ab.cArcDir = b->cArcDir;
     if (a->EntityType == L1NE && b->EntityType == L1NE)
-        return calAngleRoundedInfoInLineAndLine(&la,&lb,r,out);
+        return calAngleRoundedInfoInLineAndLine(&la, &lb, r, out);
     if (a->EntityType == L1NE && b->EntityType == ARC)
-        return calAngleRoundedInfoInLineAndArc(&la,&ab,r,out);
+        return calAngleRoundedInfoInLineAndArc(&la, &ab, r, out);
     if (a->EntityType == ARC && b->EntityType == L1NE)
-        return calAngleRoundedInfoInArcAndLine(&aa,&lb,r,out);
+        return calAngleRoundedInfoInArcAndLine(&aa, &lb, r, out);
     if (a->EntityType == ARC && b->EntityType == ARC)
-        return calAngleRoundedInfoInArcAndArc(&aa,&ab,r,out);
+        return calAngleRoundedInfoInArcAndArc(&aa, &ab, r, out);
     return RG_INVALID;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic void updateCornerBounds(struct SGCodeParse *p)
-  º¯Êý¹¦ÄÜ£ºÖØËã²Ã¼ô¶Î»òÐÂÔö¶ÎÔÚ G18 Æ½ÃæÖÐµÄ×ø±ê¼«Öµ¡£
-  ÊäÈë²ÎÊý£ºp ¼¸ºÎÒÑ¶¨ÐÍµÄÖ±Ïß»òÔ²»¡¼ÇÂ¼£¬²»ÄÜÎª¿Õ¡£
-  Êä³ö²ÎÊý£ºp µÄ dHorMax/dHorMin/dVerMax/dVerMin¡£
-  ·µ »Ø Öµ£ºÎÞ¡£
-  ±¸    ×¢£ººáÖáÎª Z¡¢×ÝÖáÎª X£»Ô²»¡²»ÄÜÖ»ÓÃÆðÖÕµã¹À¼Æ¼«Öµ¡£
+  å‡½æ•°åç§°ï¼šstatic void updateCornerBounds(struct SGCodeParse *p)
+  å‡½æ•°åŠŸèƒ½ï¼šé‡ç®—è£å‰ªæ®µæˆ–æ–°å¢žæ®µåœ¨ G18 å¹³é¢ä¸­çš„åæ ‡æžå€¼ã€‚
+  è¾“å…¥å‚æ•°ï¼šp å‡ ä½•å·²å®šåž‹çš„ç›´çº¿æˆ–åœ†å¼§è®°å½•ï¼Œä¸èƒ½ä¸ºç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šp çš„ dHorMax/dHorMin/dVerMax/dVerMinã€‚
+  è¿” å›ž å€¼ï¼šæ— ã€‚
+  å¤‡    æ³¨ï¼šæ¨ªè½´ä¸º Zã€çºµè½´ä¸º Xï¼›åœ†å¼§ä¸èƒ½åªç”¨èµ·ç»ˆç‚¹ä¼°è®¡æžå€¼ã€‚
 **************************************************/
-static void updateCornerBounds(struct SGCodeParse *p)
+static void updateCornerBounds(struct SGCodeParse* p)
 {
-    if (p->EntityType == ARC) {
+    if (p->EntityType == ARC)
+    {
         SGetAxisMaxAndMin bounds = {0};
-        bounds.cArcDir=p->cArcDir; bounds.dRadius=p->dRadius;
-        bounds.SStartPoint=&p->SStartPoint; bounds.SEndPoint=&p->SEndPoint;
-        bounds.SCenterPoint=&p->SCenterPoint;
-        bounds.ucHor=AXIS_Z; bounds.ucVer=AXIS_X;
+        bounds.cArcDir = p->cArcDir;
+        bounds.dRadius = p->dRadius;
+        bounds.SStartPoint = &p->SStartPoint;
+        bounds.SEndPoint = &p->SEndPoint;
+        bounds.SCenterPoint = &p->SCenterPoint;
+        bounds.ucHor = AXIS_Z;
+        bounds.ucVer = AXIS_X;
         getAxisMaxAndMin(&bounds);
-        p->dHorMax=bounds.dHorMax; p->dHorMin=bounds.dHorMin;
-        p->dVerMax=bounds.dVerMax; p->dVerMin=bounds.dVerMin;
-    } else {
-        p->dHorMax=fmax(p->SStartPoint.dArray[AXIS_Z],p->SEndPoint.dArray[AXIS_Z]);
-        p->dHorMin=fmin(p->SStartPoint.dArray[AXIS_Z],p->SEndPoint.dArray[AXIS_Z]);
-        p->dVerMax=fmax(p->SStartPoint.dArray[AXIS_X],p->SEndPoint.dArray[AXIS_X]);
-        p->dVerMin=fmin(p->SStartPoint.dArray[AXIS_X],p->SEndPoint.dArray[AXIS_X]);
+        p->dHorMax = bounds.dHorMax;
+        p->dHorMin = bounds.dHorMin;
+        p->dVerMax = bounds.dVerMax;
+        p->dVerMin = bounds.dVerMin;
+    }
+    else
+    {
+        p->dHorMax = fmax(p->SStartPoint.dArray[AXIS_Z], p->SEndPoint.dArray[AXIS_Z]);
+        p->dHorMin = fmin(p->SStartPoint.dArray[AXIS_Z], p->SEndPoint.dArray[AXIS_Z]);
+        p->dVerMax = fmax(p->SStartPoint.dArray[AXIS_X], p->SEndPoint.dArray[AXIS_X]);
+        p->dVerMin = fmin(p->SStartPoint.dArray[AXIS_X], p->SEndPoint.dArray[AXIS_X]);
     }
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic void buildCornerTransition(struct SGCodeParse *out, const struct SGCodeParse *owner, const SArc *arc)
-  º¯Êý¹¦ÄÜ£º´ÓÇó½â½á¹û¹¹ÔìÍêÕûµÄÐÂÔö¹ý¶ÉÔË¶¯¼ÇÂ¼¡£
-  ÊäÈë²ÎÊý£ºowner ÇëÇóËùÊôÇ°¶Î£»arc Çó½â½á¹û£¬¾ù²»ÄÜÎª¿Õ¡£
-  Êä³ö²ÎÊý£ºout È«ÐÂ¼ÇÂ¼£¬¼Ì³ÐÇ°¶Î½ø¸ø¡¢µ¶¾ßºÍÀ´Ô´ÐÅÏ¢¡£
-  ·µ »Ø Öµ£ºÎÞ¡£
-  ±¸    ×¢£ºout ±ØÐëÊÇ²»³ÖÓÐ´ýÊÍ·Å×ÊÔ´µÄÐÂ¶ÔÏó£»²»¸´ÖÆÒ»´ÎÐÔ¶¯×÷¡¢½áÊø±êÖ¾ºÍ D/L ÇëÇó¡£
+  å‡½æ•°åç§°ï¼šstatic void buildCornerTransition(struct SGCodeParse *out, const struct SGCodeParse *owner, const SArc *arc)
+  å‡½æ•°åŠŸèƒ½ï¼šä»Žæ±‚è§£ç»“æžœæž„é€ å®Œæ•´çš„æ–°å¢žè¿‡æ¸¡è¿åŠ¨è®°å½•ã€‚
+  è¾“å…¥å‚æ•°ï¼šowner è¯·æ±‚æ‰€å±žå‰æ®µï¼›arc æ±‚è§£ç»“æžœï¼Œå‡ä¸èƒ½ä¸ºç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šout å…¨æ–°è®°å½•ï¼Œç»§æ‰¿å‰æ®µè¿›ç»™ã€åˆ€å…·å’Œæ¥æºä¿¡æ¯ã€‚
+  è¿” å›ž å€¼ï¼šæ— ã€‚
+  å¤‡    æ³¨ï¼šout å¿…é¡»æ˜¯ä¸æŒæœ‰å¾…é‡Šæ”¾èµ„æºçš„æ–°å¯¹è±¡ï¼›ä¸å¤åˆ¶ä¸€æ¬¡æ€§åŠ¨ä½œã€ç»“æŸæ ‡å¿—å’Œ D/L è¯·æ±‚ã€‚
 **************************************************/
-static void buildCornerTransition(struct SGCodeParse *out, const struct SGCodeParse *owner,
-                             const SArc *arc)
+static void buildCornerTransition(struct SGCodeParse* out, const struct SGCodeParse* owner, const SArc* arc)
 {
-    /* ÐÂ½¨¾Ö²¿¶ÔÏóÖ»ÇåÁã£¬²»ÄÜµ÷ÓÃ»áÊÍ·Å¾ÉÖ¸ÕëµÄ²ÛÎ»³õÊ¼»¯½Ó¿Ú¡£ */
-    memset(out,0,sizeof(*out));
-    out->sChannelCommand.ucType=UNASSIGNED_VALUE;
-    out->SModalInfo=owner->SModalInfo;
-    out->SModalInfo.pSGaRegulation=NULL;
-    out->SModalInfo.sGa=owner->dRoundedRadius > 0 ? (arc->cArcDir == ARC_CW ? G02 : G03) : G01;
-    out->EntityType=owner->dRoundedRadius > 0 ? ARC : L1NE;
-    out->SStartPoint=arc->SStartPoint; out->SEndPoint=arc->SEndPoint;
-    out->SCenterPoint=arc->SCenterPoint; out->dRadius=arc->dRadius;
-    out->cArcDir=arc->cArcDir;
-    out->ucToolID=owner->ucToolID; out->ucToolCompNum=owner->ucToolCompNum;
-    out->ucTurretNum=owner->ucTurretNum; out->ucTurretAxis=owner->ucTurretAxis;
-    out->dFeedrate=owner->dFeedrate;
-    out->dSpindleSpeed=owner->dSpindleSpeed;
-    out->dSecondSpindleSpeed=owner->dSecondSpindleSpeed;
-    out->dLimitedSpindleSpeed=owner->dLimitedSpindleSpeed;
-    out->unGCodeLineNum=owner->unGCodeLineNum;
-    memcpy(out->cFilename,owner->cFilename,sizeof(out->cFilename));
+    /* æ–°å»ºå±€éƒ¨å¯¹è±¡åªæ¸…é›¶ï¼Œä¸èƒ½è°ƒç”¨ä¼šé‡Šæ”¾æ—§æŒ‡é’ˆçš„æ§½ä½åˆå§‹åŒ–æŽ¥å£ã€‚ */
+    memset(out, 0, sizeof(*out));
+    out->sChannelCommand.ucType = UNASSIGNED_VALUE;
+    out->SModalInfo = owner->SModalInfo;
+    out->SModalInfo.pSGaRegulation = NULL;
+    out->SModalInfo.sGa = owner->dRoundedRadius > 0 ? (arc->cArcDir == ARC_CW ? G02 : G03) : G01;
+    out->EntityType = owner->dRoundedRadius > 0 ? ARC : L1NE;
+    out->SStartPoint = arc->SStartPoint;
+    out->SEndPoint = arc->SEndPoint;
+    out->SCenterPoint = arc->SCenterPoint;
+    out->dRadius = arc->dRadius;
+    out->cArcDir = arc->cArcDir;
+    out->ucToolID = owner->ucToolID;
+    out->ucToolCompNum = owner->ucToolCompNum;
+    out->ucTurretNum = owner->ucTurretNum;
+    out->ucTurretAxis = owner->ucTurretAxis;
+    out->dFeedrate = owner->dFeedrate;
+    out->dSpindleSpeed = owner->dSpindleSpeed;
+    out->dSecondSpindleSpeed = owner->dSecondSpindleSpeed;
+    out->dLimitedSpindleSpeed = owner->dLimitedSpindleSpeed;
+    out->unGCodeLineNum = owner->unGCodeLineNum;
+    memcpy(out->cFilename, owner->cFilename, sizeof(out->cFilename));
     refreshGCodeGeometry(out);
     updateCornerBounds(out);
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic int8 calcLineLineChamfer(const struct SGCodeParse *a, const struct SGCodeParse *b, SArc *geometry)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÁ½Ö±ÏßÖ®¼ä°´µÈ¾àÍËÈÃÔ¼¶¨Éú³ÉµÄ L µ¹½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°¶Î£¬dChamferLen ÎªÁ¬½ÓÖ±Ïß³¤¶È£»b ºó¶Î£¬¾ù²»ÄÜÎª¿Õ¡£
-  Êä³ö²ÎÊý£ºgeometry ³É¹¦Ê±Ð´ÈëÁ½¸ö²Ã¼ôµã£¬ÆäÓà×Ö¶ÎÇåÁã¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 Í¬Ïò¹²Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊµÌå»òÁã³¤¶È¡£
-  ±¸    ×¢£ºµ÷ÓÃÇ°ÒÑÑéÖ¤Õý L ºÍ¶Î¼æÈÝÐÔ£»Ê§°Ü»òÎÞÐèµ¹½ÇÊ±²»Ð´ geometry¡£
+  å‡½æ•°åç§°ï¼šstatic int8 calcLineLineChamfer(const struct SGCodeParse *a, const struct SGCodeParse *b, SArc *geometry)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤ç›´çº¿ä¹‹é—´æŒ‰ç­‰è·é€€è®©çº¦å®šç”Ÿæˆçš„ L å€’è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰æ®µï¼ŒdChamferLen ä¸ºè¿žæŽ¥ç›´çº¿é•¿åº¦ï¼›b åŽæ®µï¼Œå‡ä¸èƒ½ä¸ºç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šgeometry æˆåŠŸæ—¶å†™å…¥ä¸¤ä¸ªè£å‰ªç‚¹ï¼Œå…¶ä½™å­—æ®µæ¸…é›¶ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 åŒå‘å…±çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•å®žä½“æˆ–é›¶é•¿åº¦ã€‚
+  å¤‡    æ³¨ï¼šè°ƒç”¨å‰å·²éªŒè¯æ­£ L å’Œæ®µå…¼å®¹æ€§ï¼›å¤±è´¥æˆ–æ— éœ€å€’è§’æ—¶ä¸å†™ geometryã€‚
 **************************************************/
-static int8 
-calcLineLineChamfer(const struct SGCodeParse *a, const struct SGCodeParse *b,
-                             SArc *geometry)
+static int8 calcLineLineChamfer(const struct SGCodeParse* a, const struct SGCodeParse* b, SArc* geometry)
 {
     RGPoint u, v, p, t1, t2;
-    double l1,l2,dot,trim;
-    if (a->EntityType != L1NE || b->EntityType != L1NE) return RG_INVALID;
-    p=makeRoundPoint(a->SEndPoint.dArray[AXIS_Z],a->SEndPoint.dArray[AXIS_X]);
-    u=subtractRoundPoints(p,makeRoundPoint(a->SStartPoint.dArray[AXIS_Z],a->SStartPoint.dArray[AXIS_X]));
-    v=subtractRoundPoints(makeRoundPoint(b->SEndPoint.dArray[AXIS_Z],b->SEndPoint.dArray[AXIS_X]),p);
-    l1=calcRoundVectorLength(u); l2=calcRoundVectorLength(v);
-    if (l1 <= RG_TOL || l2 <= RG_TOL) return RG_INVALID;
-    u=scaleRoundPoint(u,1.0/l1); v=scaleRoundPoint(v,1.0/l2); dot=calcRoundDotProduct(u,v);
-    if (fabs(calcRoundCrossProduct(u,v)) <= RG_ANGLE_TOL)
+    double l1, l2, dot, trim;
+    if (a->EntityType != L1NE || b->EntityType != L1NE)
+        return RG_INVALID;
+    p = makeRoundPoint(a->SEndPoint.dArray[AXIS_Z], a->SEndPoint.dArray[AXIS_X]);
+    u = subtractRoundPoints(p, makeRoundPoint(a->SStartPoint.dArray[AXIS_Z], a->SStartPoint.dArray[AXIS_X]));
+    v = subtractRoundPoints(makeRoundPoint(b->SEndPoint.dArray[AXIS_Z], b->SEndPoint.dArray[AXIS_X]), p);
+    l1 = calcRoundVectorLength(u);
+    l2 = calcRoundVectorLength(v);
+    if (l1 <= RG_TOL || l2 <= RG_TOL)
+        return RG_INVALID;
+    u = scaleRoundPoint(u, 1.0 / l1);
+    v = scaleRoundPoint(v, 1.0 / l2);
+    dot = calcRoundDotProduct(u, v);
+    if (fabs(calcRoundCrossProduct(u, v)) <= RG_ANGLE_TOL)
         return dot > 0 ? RG_UNCHANGED : RG_NO_SOLUTION;
-    /* L ÊÇÁ¬½ÓÖ±ÏßµÄÊµ¼Ê³¤¶È£»Á½±ßµÈ¾àÍËÈÃÁ¿Îª L / (2*cos(×ª½Ç/2))¡£ */
-    trim=a->dChamferLen/sqrt(2.0+2.0*dot);
-    if (!isRoundValueFinite(trim) || trim >= l1-RG_TOL || trim >= l2-RG_TOL)
+    /* L æ˜¯è¿žæŽ¥ç›´çº¿çš„å®žé™…é•¿åº¦ï¼›ä¸¤è¾¹ç­‰è·é€€è®©é‡ä¸º L / (2*cos(è½¬è§’/2))ã€‚ */
+    trim = a->dChamferLen / sqrt(2.0 + 2.0 * dot);
+    if (!isRoundValueFinite(trim) || trim >= l1 - RG_TOL || trim >= l2 - RG_TOL)
         return RG_NO_SOLUTION;
-    t1=subtractRoundPoints(p,scaleRoundPoint(u,trim)); t2=addRoundPoints(p,scaleRoundPoint(v,trim));
-    memset(geometry,0,sizeof(*geometry));
-    geometry->SStartPoint=geometry->SEndPoint=a->SEndPoint;
-    geometry->SStartPoint.dArray[AXIS_Z]=t1.x;
-    geometry->SStartPoint.dArray[AXIS_X]=t1.y;
-    geometry->SEndPoint.dArray[AXIS_Z]=t2.x;
-    geometry->SEndPoint.dArray[AXIS_X]=t2.y;
+    t1 = subtractRoundPoints(p, scaleRoundPoint(u, trim));
+    t2 = addRoundPoints(p, scaleRoundPoint(v, trim));
+    memset(geometry, 0, sizeof(*geometry));
+    geometry->SStartPoint = geometry->SEndPoint = a->SEndPoint;
+    geometry->SStartPoint.dArray[AXIS_Z] = t1.x;
+    geometry->SStartPoint.dArray[AXIS_X] = t1.y;
+    geometry->SEndPoint.dArray[AXIS_Z] = t2.x;
+    geometry->SEndPoint.dArray[AXIS_X] = t2.y;
     return RG_OK;
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºbool isCornerRequestValid(const struct SGCodeParse *pSegment)
-  º¯Êý¹¦ÄÜ£ºÐ£ÑéÒÑ×ª»»¶ÎÉÏµÄ D/L ²ÎÊý¼°µ¹½ÇÊÊÓÃÌõ¼þ¡£
-  ÊäÈë²ÎÊý£ºpSegment ÒÑ×ª»»Ä£Ì¬µÄ¶Î£»¿ÕÖ¸ÕëÅÐÎª·Ç·¨¡£
-  Êä³ö²ÎÊý£ºÎÞ¡£
-  ·µ »Ø Öµ£ºTRUE ºÏ·¨£»FALSE ²ÎÊý¡¢ÔË¶¯»ò½áÊø±êÖ¾²»Ö§³Ö¡£
-  ±¸    ×¢£ºD/L ¾ùÎªÁãÔÊÐíÍ¨¹ý£»ÊÇ·ñ´æÔÚÇëÇóÓÉµ÷ÓÃ·½ÅÐ¶Ï¡£
+  å‡½æ•°åç§°ï¼šbool isCornerRequestValid(const struct SGCodeParse *pSegment)
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¡éªŒå·²è½¬æ¢æ®µä¸Šçš„ D/L å‚æ•°åŠå€’è§’é€‚ç”¨æ¡ä»¶ã€‚
+  è¾“å…¥å‚æ•°ï¼špSegment å·²è½¬æ¢æ¨¡æ€çš„æ®µï¼›ç©ºæŒ‡é’ˆåˆ¤ä¸ºéžæ³•ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å›ž å€¼ï¼šTRUE åˆæ³•ï¼›FALSE å‚æ•°ã€è¿åŠ¨æˆ–ç»“æŸæ ‡å¿—ä¸æ”¯æŒã€‚
+  å¤‡    æ³¨ï¼šD/L å‡ä¸ºé›¶å…è®¸é€šè¿‡ï¼›æ˜¯å¦å­˜åœ¨è¯·æ±‚ç”±è°ƒç”¨æ–¹åˆ¤æ–­ã€‚
 **************************************************/
-bool isCornerRequestValid(const struct SGCodeParse *pSegment)
+bool isCornerRequestValid(const struct SGCodeParse* pSegment)
 {
-    return pSegment && isCornerMotionSupported(pSegment) && !pSegment->bLastLineMark
-        && isRoundValueFinite(pSegment->dRoundedRadius)
-        && pSegment->dRoundedRadius >= 0 && pSegment->dRoundedRadius <= 1000
-        && isRoundValueFinite(pSegment->dChamferLen)
-        && pSegment->dChamferLen >= 0 && pSegment->dChamferLen <= 1000
-        && !(pSegment->dRoundedRadius > 0 && pSegment->dChamferLen > 0);
+    return pSegment && isCornerMotionSupported(pSegment) && !pSegment->bLastLineMark &&
+           isRoundValueFinite(pSegment->dRoundedRadius) && pSegment->dRoundedRadius >= 0 &&
+           pSegment->dRoundedRadius <= 1000 && isRoundValueFinite(pSegment->dChamferLen) &&
+           pSegment->dChamferLen >= 0 && pSegment->dChamferLen <= 1000 &&
+           !(pSegment->dRoundedRadius > 0 && pSegment->dChamferLen > 0);
 }
 
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 calcCornerTransition(...)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÁ½¶ÎÁ¬½Ó´¦µÄ D µ¹Ô²»ò L µ¹½Ç£¬¹¹Ôì²Ã¼ô¶ÎºÍ¹ý¶É¶Î¡£
-  ÊäÈë²ÎÊý£ºpPrevSegment¡¢pNextSegment ÎªÒÑ×ª»»Ä£Ì¬µÄ¶Î£¬Ç°¶ÎÐëÓÐÕý D »ò L¡£
-  Êä³ö²ÎÊý£ºpTrimmedPrev¡¢pTransition¡¢pTrimmedNext£¬½ö·µ»Ø 1 Ê±Ð´Èë¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 Í¬Ïò¹²ÏßÎÞÐè¹ý¶É£»-1 ÎÞ½â£»-2 ·Ç·¨»ò²»Ö§³Ö¡£
-  ±¸    ×¢£ºÊäÈëºÍÊä³ö¶ÔÏó²»µÃÖØµþ£¬Êä³ö²»µÃ³ÖÓÐ´ýÊÍ·Å×ÊÔ´¡£
-            Êä³öÖÐµÄÔ­¶ÎÖ¸ÕëÖ»ÊÇ½èÓÃ£»½ö»º³åÌá½»·½×ªÒÆËùÓÐÈ¨¡£
-            ²»×ª»»Ä£Ì¬¡¢²»ÐÞ¸ÄÊäÈë¡¢²»±¨¾¯¡¢²»ÍÆ½øÖ¸Õë£¬²»·ÖÅä»òÊÍ·ÅÄÚ´æ¡£
+  å‡½æ•°åç§°ï¼šint8 calcCornerTransition(...)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ä¸¤æ®µè¿žæŽ¥å¤„çš„ D å€’åœ†æˆ– L å€’è§’ï¼Œæž„é€ è£å‰ªæ®µå’Œè¿‡æ¸¡æ®µã€‚
+  è¾“å…¥å‚æ•°ï¼špPrevSegmentã€pNextSegment ä¸ºå·²è½¬æ¢æ¨¡æ€çš„æ®µï¼Œå‰æ®µé¡»æœ‰æ­£ D æˆ– Lã€‚
+  è¾“å‡ºå‚æ•°ï¼špTrimmedPrevã€pTransitionã€pTrimmedNextï¼Œä»…è¿”å›ž 1 æ—¶å†™å…¥ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 åŒå‘å…±çº¿æ— éœ€è¿‡æ¸¡ï¼›-1 æ— è§£ï¼›-2 éžæ³•æˆ–ä¸æ”¯æŒã€‚
+  å¤‡    æ³¨ï¼šè¾“å…¥å’Œè¾“å‡ºå¯¹è±¡ä¸å¾—é‡å ï¼Œè¾“å‡ºä¸å¾—æŒæœ‰å¾…é‡Šæ”¾èµ„æºã€‚
+            è¾“å‡ºä¸­çš„åŽŸæ®µæŒ‡é’ˆåªæ˜¯å€Ÿç”¨ï¼›ä»…ç¼“å†²æäº¤æ–¹è½¬ç§»æ‰€æœ‰æƒã€‚
+            ä¸è½¬æ¢æ¨¡æ€ã€ä¸ä¿®æ”¹è¾“å…¥ã€ä¸æŠ¥è­¦ã€ä¸æŽ¨è¿›æŒ‡é’ˆï¼Œä¸åˆ†é…æˆ–é‡Šæ”¾å†…å­˜ã€‚
 **************************************************/
-int8 calcCornerTransition(const struct SGCodeParse *pPrevSegment,
-    const struct SGCodeParse *pNextSegment, struct SGCodeParse *pTrimmedPrev,
-    struct SGCodeParse *pTransition, struct SGCodeParse *pTrimmedNext)
+int8 calcCornerTransition(const struct SGCodeParse* pPrevSegment, const struct SGCodeParse* pNextSegment,
+                          struct SGCodeParse* pTrimmedPrev, struct SGCodeParse* pTransition,
+                          struct SGCodeParse* pTrimmedNext)
 {
     SArc sArc = {0};
     int8 cStatus;
-    //Ö¸ÕëºÏ·¨ÐÔÐ£Ñé£¨·ÀÖØÃû±ðÃû£©
-    if (!pPrevSegment || !pNextSegment || !pTrimmedPrev || !pTransition || !pTrimmedNext
-        || pPrevSegment == pNextSegment
-        || pTrimmedPrev == pTransition || pTrimmedPrev == pTrimmedNext || pTransition == pTrimmedNext
-        || pTrimmedPrev == pPrevSegment || pTrimmedPrev == pNextSegment
-        || pTransition == pPrevSegment || pTransition == pNextSegment
-        || pTrimmedNext == pPrevSegment || pTrimmedNext == pNextSegment)
+    //æŒ‡é’ˆåˆæ³•æ€§æ ¡éªŒï¼ˆé˜²é‡ååˆ«åï¼‰
+    if (!pPrevSegment || !pNextSegment || !pTrimmedPrev || !pTransition || !pTrimmedNext ||
+        pPrevSegment == pNextSegment || pTrimmedPrev == pTransition || pTrimmedPrev == pTrimmedNext ||
+        pTransition == pTrimmedNext || pTrimmedPrev == pPrevSegment || pTrimmedPrev == pNextSegment ||
+        pTransition == pPrevSegment || pTransition == pNextSegment || pTrimmedNext == pPrevSegment ||
+        pTrimmedNext == pNextSegment)
         return RG_INVALID;
 
-    //ÓïÒåÐ£Ñé£¨ÇëÇóÊÇ·ñºÏÀí + Á½¶ÎÊÇ·ñ¼æÈÝ£©  
-    if (!isCornerRequestValid(pPrevSegment)
-        || !(pPrevSegment->dRoundedRadius > 0 || pPrevSegment->dChamferLen > 0)
-        || !isCornerPairCompatible(pPrevSegment,pNextSegment)
-        || ((pNextSegment->dRoundedRadius != 0 || pNextSegment->dChamferLen != 0)
-            && !isCornerRequestValid(pNextSegment)))
+    //è¯­ä¹‰æ ¡éªŒï¼ˆè¯·æ±‚æ˜¯å¦åˆç† + ä¸¤æ®µæ˜¯å¦å…¼å®¹ï¼‰
+    if (!isCornerRequestValid(pPrevSegment) || !(pPrevSegment->dRoundedRadius > 0 || pPrevSegment->dChamferLen > 0) ||
+        !isCornerPairCompatible(pPrevSegment, pNextSegment) ||
+        ((pNextSegment->dRoundedRadius != 0 || pNextSegment->dChamferLen != 0) && !isCornerRequestValid(pNextSegment)))
         return RG_INVALID;
 
-    //¼¸ºÎÇó½â
+    //å‡ ä½•æ±‚è§£
     cStatus = pPrevSegment->dRoundedRadius > 0
-        ? calcCornerRoundArc(pPrevSegment,pNextSegment,pPrevSegment->dRoundedRadius,&sArc)
-        : calcLineLineChamfer(pPrevSegment,pNextSegment,&sArc);
-    if (cStatus != RG_OK) return cStatus;
+                  ? calcCornerRoundArc(pPrevSegment, pNextSegment, pPrevSegment->dRoundedRadius, &sArc)
+                  : calcLineLineChamfer(pPrevSegment, pNextSegment, &sArc);
+    if (cStatus != RG_OK)
+        return cStatus;
 
-    // È«²¿¿ÉÄÜÊ§°ÜµÄ¼ì²éÒÑÍê³É£¬²Ã¼ô¾É¶Î£¬¹¹ÔìÐÂ¶Î£»ÒÔÏÂÖ»¹¹Ôì½á¹û£¬²»·¢²¼ÖÁÈ«¾Ö»º³å¡£
+    // å…¨éƒ¨å¯èƒ½å¤±è´¥çš„æ£€æŸ¥å·²å®Œæˆï¼Œè£å‰ªæ—§æ®µï¼Œæž„é€ æ–°æ®µï¼›ä»¥ä¸‹åªæž„é€ ç»“æžœï¼Œä¸å‘å¸ƒè‡³å…¨å±€ç¼“å†²ã€‚
     *pTrimmedPrev = *pPrevSegment;
     *pTrimmedNext = *pNextSegment;
     pTrimmedPrev->SEndPoint = sArc.SStartPoint;
     pTrimmedPrev->dRoundedRadius = pTrimmedPrev->dChamferLen = 0.0;
     pTrimmedNext->SStartPoint = sArc.SEndPoint;
-    buildCornerTransition(pTransition,pPrevSegment,&sArc);
-    //Èô²»Îªµ¹Ô²£¬¹ý¶É¶ÎÇ¿ÖÆ×ªÎª G01 Ö±Ïß
-    if (pPrevSegment->dRoundedRadius <= 0) {
-        pTransition->EntityType=L1NE; pTransition->SModalInfo.sGa=G01;
-        pTransition->cArcDir=0; pTransition->dRadius=0;
+    buildCornerTransition(pTransition, pPrevSegment, &sArc);
+    //è‹¥ä¸ä¸ºå€’åœ†ï¼Œè¿‡æ¸¡æ®µå¼ºåˆ¶è½¬ä¸º G01 ç›´çº¿
+    if (pPrevSegment->dRoundedRadius <= 0)
+    {
+        pTransition->EntityType = L1NE;
+        pTransition->SModalInfo.sGa = G01;
+        pTransition->cArcDir = 0;
+        pTransition->dRadius = 0;
         refreshGCodeGeometry(pTransition);
         updateCornerBounds(pTransition);
     }
-    //Ë¢ÐÂ¼¸ºÎ»º´æ
-    refreshGCodeGeometry(pTrimmedPrev); updateCornerBounds(pTrimmedPrev);
-    refreshGCodeGeometry(pTrimmedNext); updateCornerBounds(pTrimmedNext);
+    //åˆ·æ–°å‡ ä½•ç¼“å­˜
+    refreshGCodeGeometry(pTrimmedPrev);
+    updateCornerBounds(pTrimmedPrev);
+    refreshGCodeGeometry(pTrimmedNext);
+    updateCornerBounds(pTrimmedNext);
     return RG_OK;
 }

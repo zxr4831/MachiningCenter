@@ -3,82 +3,85 @@
 
 #include "common.h"
 
+#define ROTATION_AXIS_DIST_CAL_MODE 0 //æ—‹è½¬è½´è·ç¦»è®¡ç®—æ–¹å¼   0  çŸ­è·ç¦»ä¼˜å…ˆ     1 æ ¹æ®ç¬¦å·
 
-#define ROTATION_AXIS_DIST_CAL_MODE  0  //Ğı×ªÖá¾àÀë¼ÆËã·½Ê½   0  ¶Ì¾àÀëÓÅÏÈ     1 ¸ù¾İ·ûºÅ
-
-/* Ã¿Í¨µÀ G84 Í¬²½×´Ì¬£¬Ëæ¼ÈÓĞ SChannel ¶¯Ì¬ÄÚ´æÉú´æ£»ÖĞ¶ÏÄÚ²»ÉêÇëÊÍ·Å¡£ */
-
-struct SG1     // 2022.3.14    G1 Ö´ĞĞ½á¹¹Ìå
+struct SG1 // 2022.3.14    G1 æ‰§è¡Œç»“æ„ä½“
 {
-	struct SChannel* pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
 
-	uint32 unCommandType;			//Ö¸ÁîÀàĞÍ
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
+    uint32 unCommandType;        //æŒ‡ä»¤ç±»å‹
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
 
-	struct SInput SUserData;	// ÓÃ»§£¨ÊäÈë£©²ÎÊı
-	struct SPlan SPlanData;			//ËÙ¶È¹æ»®²ÎÊı
+    struct SInput SUserData; // ç”¨æˆ·ï¼ˆè¾“å…¥ï¼‰å‚æ•°
+    struct SPlan SPlanData;  //é€Ÿåº¦è§„åˆ’å‚æ•°
 
-	/******************* ÔË¶¯²ÎÊı  ÓëµãÓĞ¹ØµÄ²¿·Ö *****************/
-	SVector SStartVector;			//¡ÁÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£© ¡ÌÎ»ÒÆ·ÖÁ¿
-	SPointDouble SStartPoint;		//Æğµã£¬µ¥Î»£ºmm
-	SPointDouble SEndPoint;			//ÖÕµã£¬µ¥Î»£ºmm
-	float  fCylinderRadius; // Ô²Öù°ë¾¶ mm  2023.3.29 ÖìÎÈÖĞ
-	//int8 cArcDir;					//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	//double dRadius;					//°ë¾¶£¬µ¥Î»£ºmm
-	//SPointDouble SCenterPoint;		//Ô²ĞÄ£¬µ¥Î»£ºmm£¨Ïà¶ÔÆğµã
-	/***************************************************************/
+    /******************* è¿åŠ¨å‚æ•°  ä¸ç‚¹æœ‰å…³çš„éƒ¨åˆ† *****************/
+    SVector SStartVector;     //Ã—èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰ âˆšä½ç§»åˆ†é‡
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    SPointDouble SEndPoint;   //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
+    float fCylinderRadius;    // åœ†æŸ±åŠå¾„ mm  2023.3.29 æœ±ç¨³ä¸­
+    //int8 cArcDir;					//åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    //double dRadius;					//åŠå¾„ï¼Œå•ä½ï¼šmm
+    //SPointDouble SCenterPoint;		//åœ†å¿ƒï¼Œå•ä½ï¼šmmï¼ˆç›¸å¯¹èµ·ç‚¹
+    /***************************************************************/
 
-	/*********************ÄÚ²¿½ø¸øËÙ¶È ±¶ÂÊ*************************/
-	double dFeedrate;				//½ø¸øËÙ¶È  mm/ms
-	double dFeedRatio;				//½ø¸ø±¶ÂÊ
-	double dAcc; // ¼ÓËÙ¶È  Ô­Ê¼Öµ
-	double dDec; //¼õËÙ¶È  Ô­Ê¼Öµ
-	/***************************************************************/
+    /*********************å†…éƒ¨è¿›ç»™é€Ÿåº¦ å€ç‡*************************/
+    double dFeedrate;  //è¿›ç»™é€Ÿåº¦  mm/ms
+    double dFeedRatio; //è¿›ç»™å€ç‡
+    double dAcc;       // åŠ é€Ÿåº¦  åŸå§‹å€¼
+    double dDec;       //å‡é€Ÿåº¦  åŸå§‹å€¼
+    /***************************************************************/
 
-	double dCurrentSpeed;		//µ±Ç°ËÙ¶È mm/ms
+    double dCurrentSpeed; //å½“å‰é€Ÿåº¦ mm/ms
 
-	uint8 ucInpStatus;					//²å²¹×´Ì¬£¬INITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
-	//uint8 ucRunStep;					//²½Öè
+    uint8 ucInpStatus; //æ’è¡¥çŠ¶æ€ï¼ŒINITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
+    //uint8 ucRunStep;					//æ­¥éª¤
 
-	bool bUseSRunFeedRatio;	//ÊÇ·ñÊ¹ÓÃSRun±¶ÂÊ
-	bool bIsUserData; //Ê¹ÓÃÓÃ»§Êı¾İ    2022.12.6
+    bool bUseSRunFeedRatio; //æ˜¯å¦ä½¿ç”¨SRunå€ç‡
+    bool bIsUserData;       //ä½¿ç”¨ç”¨æˆ·æ•°æ®    2022.12.6
 
-	double dPulseToMm[AXIS_NUM_MAX];	//Âö³åµ±Á¿µÄµ¹Êı  ¸÷¸öÖá  XYZ ABC
-	bool bReCalculateDec;	//¼õËÙµ½ÈíÏŞÎ»µãµÄ¼õËÙ¶ÈÖØËã±êÖ¾Î» 2024/4/11 ºé¹ÚÅô
-	double dReCalculateVe;  //¸ù¾İÈíÏŞÎ»µãÖØËãÄ©ËÙ¶È 2024/4/11 ºé¹ÚÅô
+    double dPulseToMm[AXIS_NUM_MAX]; //è„‰å†²å½“é‡çš„å€’æ•°  å„ä¸ªè½´  XYZ ABC
+    bool bReCalculateDec;            //å‡é€Ÿåˆ°è½¯é™ä½ç‚¹çš„å‡é€Ÿåº¦é‡ç®—æ ‡å¿—ä½ 2024/4/11 æ´ªå† é¹
+    double dReCalculateVe;           //æ ¹æ®è½¯é™ä½ç‚¹é‡ç®—æœ«é€Ÿåº¦ 2024/4/11 æ´ªå† é¹
 
-	double dG84Ratio; //ÓÃÓÚG84±¶ÂÊ 2025.11.15
+    double dG84Ratio; //ç”¨äºG84å€ç‡ 2025.11.15
 };
 
 //extern struct SG1 g_SG1;
 
 void SG1LoadSysPara(struct SG1* pSG1);
 
-//ĞŞÕıĞı×ªÖáÖÕµã
-int8 modifyRotationAxisPoint(double* pdStartPoint, double* pdEndPoint, double* pdVector, int nArraySize, uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE	ucRelaVal);
+//ä¿®æ­£æ—‹è½¬è½´ç»ˆç‚¹
+int8 modifyRotationAxisPoint(double* pdStartPoint, double* pdEndPoint, double* pdVector, int nArraySize,
+                             uint8* ucMapArray, VAL_STRUCT_TYPE* ucValStatus, VAL_STRUCT_TYPE ucRelaVal);
 
-//¼ÆËã³¤ÖáºÍ¾àÀë·ÖÁ¿
-int8 calVectorAndDistance(double* pdStatPoint, double* pdEndPoint, double* dDistance, double* pdOutputVector, int nArraySize, VAL_STRUCT_TYPE ucValStatus);
+//è®¡ç®—é•¿è½´å’Œè·ç¦»åˆ†é‡
+int8 calVectorAndDistance(double* pdStatPoint, double* pdEndPoint, double* dDistance, double* pdOutputVector,
+                          int nArraySize, VAL_STRUCT_TYPE ucValStatus);
 
-// ¼ÆËãG84³¤ÖáºÍ¾àÀë·ÖÁ¿
-int8 calcG84VectorAndDistance(double *pdStatPoint, double *pdEndPoint, double *pdDistance, double *pdOutputVector, int nArraySize, VAL_STRUCT_TYPE ucValStatus, double dMotionRatio);
+// è®¡ç®—G84é•¿è½´å’Œè·ç¦»åˆ†é‡
+int8 calcG84VectorAndDistance(double* pdStatPoint, double* pdEndPoint, double* pdDistance, double* pdOutputVector,
+                              int nArraySize, VAL_STRUCT_TYPE ucValStatus, double dMotionRatio);
 
-//¼ÆËãÖ±Ïß²å²¹µÄ×ø±êµãº¯Êı
-int8 calculateLinearInterpolationPoint(double* pdStartPoint, double* pdVector, double dDeltaL, double* pdOutPutPoint, int nArraySize);
+//è®¡ç®—ç›´çº¿æ’è¡¥çš„åæ ‡ç‚¹å‡½æ•°
+int8 calculateLinearInterpolationPoint(double* pdStartPoint, double* pdVector, double dDeltaL, double* pdOutPutPoint,
+                                       int nArraySize);
 
-//ÔİÍ£³õÊ¼»¯º¯Êı
+//æš‚åœåˆå§‹åŒ–å‡½æ•°
 int8 prepareToPauseG1(struct SG1* pSG1Pointer, double dVmin, double dDec, bool bWriteBackFlag);
 
-//´ÓInput²ÎÊı¸³Öµµ½G1½á¹¹Ìå
+//ä»Inputå‚æ•°èµ‹å€¼åˆ°G1ç»“æ„ä½“
 int8 loadSG1DataFromInput(struct SG1* pSG1Pointer, struct SInput* pSInput);
 
-//Ö±ÏßÔË¶¯²å²¹
+//ç›´çº¿è¿åŠ¨æ’è¡¥
 int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn);
 
-//ÔİÍ£ºó¼ÓÔØ²ÎÊı¸³Öµµ½G1½á¹¹Ìå
-int8 loadSG1DataAfterPause(struct SG1* pSG1Pointer, SPointDouble SStartPoint, SPointDouble SEndPoint, bool bIsG0Move, struct SInput* pSInput);
+//æš‚åœååŠ è½½å‚æ•°èµ‹å€¼åˆ°G1ç»“æ„ä½“
+int8 loadSG1DataAfterPause(struct SG1* pSG1Pointer, SPointDouble SStartPoint, SPointDouble SEndPoint, bool bIsG0Move,
+                           struct SInput* pSInput);
 
-// ¼ì²éG1ÄÄ¸ùÖá×îÏÈ´¥·¢ÈíÏŞÎ»
-int8 checkG1FirstAxisSoftLimit(struct SChannel *pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal, SPointDouble SMinVal);
+// æ£€æŸ¥G1å“ªæ ¹è½´æœ€å…ˆè§¦å‘è½¯é™ä½
+int8 checkG1FirstAxisSoftLimit(struct SChannel* pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal,
+                               SPointDouble SMinVal);
 
 #endif

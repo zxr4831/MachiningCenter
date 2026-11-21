@@ -4,145 +4,145 @@
 #include "common.h"
 #include "Spindle.h"
 
-//G0±êÖ¾Î»µÄÊı¾İÀàĞÍ
+//G0æ ‡å¿—ä½çš„æ•°æ®ç±»å‹
 #define G0_SIGN_TYPE uint8
 
-#define SINGLEAXIS_MODE SPINDLE_SINGLEAXIS_MODE   // µ¥ÖáÄ£Ê½
+#define SINGLEAXIS_MODE SPINDLE_SINGLEAXIS_MODE // å•è½´æ¨¡å¼
 
-struct SSingleAxis // 2022.3.14 µ¥Öá½á¹¹Ìå  µ¥Öá²å²¹µÄÖ´ĞĞ½á¹¹Ìå
+struct SSingleAxis // 2022.3.14 å•è½´ç»“æ„ä½“  å•è½´æ’è¡¥çš„æ‰§è¡Œç»“æ„ä½“
 {
-	// ÌØÊâ²ÎÊı  £¨Ö»ÓĞCÖáÄÜÊ¹ÓÃ£©
-	uint32 unGCodeLineNum;			// ½âÎöµ½µÚ¼¸ĞĞG´úÂë
-	uint32 unCommandType;			//Ö¸ÁîÀàĞÍ
-	double dSpindleSpeed;			//Ö÷ÖáËÙ¶È
-	double dLimitedSpindleSpeed;	// G50 ÏŞÖÆµÄÖ÷Öá×ªËÙ(r/min)
-	int8 cSpindleDir;				//Ö÷Öá·½Ïò£¬Õı×ª=ARC_CW£¨1£©£¬·´×ª=ARC_ANTI_CW£¨-1£©
+    // ç‰¹æ®Šå‚æ•°  ï¼ˆåªæœ‰Cè½´èƒ½ä½¿ç”¨ï¼‰
+    uint32 unGCodeLineNum;       // è§£æåˆ°ç¬¬å‡ è¡ŒGä»£ç 
+    uint32 unCommandType;        //æŒ‡ä»¤ç±»å‹
+    double dSpindleSpeed;        //ä¸»è½´é€Ÿåº¦
+    double dLimitedSpindleSpeed; // G50 é™åˆ¶çš„ä¸»è½´è½¬é€Ÿ(r/min)
+    int8 cSpindleDir;            //ä¸»è½´æ–¹å‘ï¼Œæ­£è½¬=ARC_CWï¼ˆ1ï¼‰ï¼Œåè½¬=ARC_ANTI_CWï¼ˆ-1ï¼‰
 
-	double dSpindleSpeedForChangeAcc;  //Ö÷Öá¼ÓËÙ¶È¸Ä±äµÄ¼ì²â×ªËÙ£¨r/min£© ºé¹ÚÅô 2024/3/23
-	bool bIsChangeAcc; //¸Ä±ä¼ÓËÙ¶È±êÖ¾Î»
-	uint8 ucGearForChangeRate;//¼ÓËÙ¶ÈµµÎ»£¨%£©
-	
-	uint8 ucAxis;//µ±Ç°ÖáºÅ 0 ~ AXIS_NUM_MAX-1   //G0³ÌĞòÄÚ²¿ ¸ù¾İµ±Ç°ÖáºÅºÍµÚ¶ş²ãÓ³Éä Ñ¡ÏµÍ³²ÎÊı
+    double dSpindleSpeedForChangeAcc; //ä¸»è½´åŠ é€Ÿåº¦æ”¹å˜çš„æ£€æµ‹è½¬é€Ÿï¼ˆr/minï¼‰ æ´ªå† é¹ 2024/3/23
+    bool bIsChangeAcc;                //æ”¹å˜åŠ é€Ÿåº¦æ ‡å¿—ä½
+    uint8 ucGearForChangeRate;        //åŠ é€Ÿåº¦æ¡£ä½ï¼ˆ%ï¼‰
 
-	//struct SInputSingle//£¨ÓÃ»§ÉèÖÃ£©²ÎÊı     Ïà¶Ô¶¨ÒåµÄ½á¹¹Ìå  ¢Ù×ø±êµã±äÎªµ¥¸öµã  ¢ÚÃ»ÓĞ°ë¾¶ºÍÔ²ĞÄ
-	//{
-	//	double dDistance;		//×Ü¾àÀë  ²å²¹¾àÀë	mm
-	//	double dTargetDist;		//Ä¿±ê¾àÀë
-	//	double dPreDist;		//ËÙ¶È¹æ»®Ç°   ÒÑ×ß¾àÀë
-	//	double dCurLeftDist;	//µ±Ç°ÁôÏÂÎ´ÒÆ¶¯µÄ¾àÀë
+    uint8 ucAxis; //å½“å‰è½´å· 0 ~ AXIS_NUM_MAX-1   //G0ç¨‹åºå†…éƒ¨ æ ¹æ®å½“å‰è½´å·å’Œç¬¬äºŒå±‚æ˜ å°„ é€‰ç³»ç»Ÿå‚æ•°
 
-	//	double dFeedrate;		//½ø¸øËÙ¶È£¨×î´óËÙ¶È) £¨ÓÃ»§ÉèÖÃ£©
-	//	double dFeedRatio;		//½ø¸ø±¶ÂÊ  £¨ÓÃ»§ÉèÖÃ£©
-	//	double dAcc;			//¼ÓËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	//	double dDec;			//¼õËÙ¶Î¼ÓËÙ¶È	mm/ms2
-	//	double dVs;				//³õÊ¼ËÙ¶È	mm/ms
-	//	//double dVe;			//×îÖÕËÙ¶È	mm/ms
-	//	double dPrimalVe;		//´ÓÇ°Õ°¼Ì³ĞµÄ×îÖÕËÙ¶È mm/ms
+    //struct SInputSingle//ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰å‚æ•°     ç›¸å¯¹å®šä¹‰çš„ç»“æ„ä½“  â‘ åæ ‡ç‚¹å˜ä¸ºå•ä¸ªç‚¹  â‘¡æ²¡æœ‰åŠå¾„å’Œåœ†å¿ƒ
+    //{
+    //	double dDistance;		//æ€»è·ç¦»  æ’è¡¥è·ç¦»	mm
+    //	double dTargetDist;		//ç›®æ ‡è·ç¦»
+    //	double dPreDist;		//é€Ÿåº¦è§„åˆ’å‰   å·²èµ°è·ç¦»
+    //	double dCurLeftDist;	//å½“å‰ç•™ä¸‹æœªç§»åŠ¨çš„è·ç¦»
 
-	//	uint8 ucAccVelPlanType;		//¼ÓËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	//	uint8 ucDecVelPlanType;		//¼õËÙ¶Î  ËÙ¶ÈÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º3´ÎSĞÍ£¬3£º4´ÎSĞÍ
-	//	uint8 ucDistReAverageType;	//Æ½Ì¯ÇúÏßÀàĞÍ£¬1£ºÌİĞÎ£¬2£º5´Î£¬3£º±ÈÀıÏµÊı
+    //	double dFeedrate;		//è¿›ç»™é€Ÿåº¦ï¼ˆæœ€å¤§é€Ÿåº¦) ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰
+    //	double dFeedRatio;		//è¿›ç»™å€ç‡  ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰
+    //	double dAcc;			//åŠ é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    //	double dDec;			//å‡é€Ÿæ®µåŠ é€Ÿåº¦	mm/ms2
+    //	double dVs;				//åˆå§‹é€Ÿåº¦	mm/ms
+    //	//double dVe;			//æœ€ç»ˆé€Ÿåº¦	mm/ms
+    //	double dPrimalVe;		//ä»å‰ç»ç»§æ‰¿çš„æœ€ç»ˆé€Ÿåº¦ mm/ms
 
-	//	double dStartVector;		//ÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£©
+    //	uint8 ucAccVelPlanType;		//åŠ é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    //	uint8 ucDecVelPlanType;		//å‡é€Ÿæ®µ  é€Ÿåº¦æ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š3æ¬¡Så‹ï¼Œ3ï¼š4æ¬¡Så‹
+    //	uint8 ucDistReAverageType;	//å¹³æ‘Šæ›²çº¿ç±»å‹ï¼Œ1ï¼šæ¢¯å½¢ï¼Œ2ï¼š5æ¬¡ï¼Œ3ï¼šæ¯”ä¾‹ç³»æ•°
 
-	//	double dStartPoint;			//Æğµã£¬µ¥Î»£ºmm
-	//	double dEndPoint;			//ÖÕµã£¬µ¥Î»£ºmm //2021-11-09  ÖìÎÈÖĞ
+    //	double dStartVector;		//èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰
 
-	//	int8 cInterpDir;			//²å²¹·½Ïò (ÊÖÂÖ·½Ïò)
+    //	double dStartPoint;			//èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    //	double dEndPoint;			//ç»ˆç‚¹ï¼Œå•ä½ï¼šmm //2021-11-09  æœ±ç¨³ä¸­
 
-	//	//int8 cArcDir;				//Ô²»¡·½Ïò£¬Ë³Ê±Õë=1£¬ÄæÊ±Õë=-1
-	//	//double dRadius;			//°ë¾¶£¬µ¥Î»£ºmm
-	//	//SPointDouble SCenterPoint;	//Ô²ĞÄ£¬µ¥Î»£ºmm£¨Ïà¶ÔÆğµã)
+    //	int8 cInterpDir;			//æ’è¡¥æ–¹å‘ (æ‰‹è½®æ–¹å‘)
 
-	//}SUserData; // ÓÃ»§£¨ÊäÈë£©²ÎÊı
+    //	//int8 cArcDir;				//åœ†å¼§æ–¹å‘ï¼Œé¡ºæ—¶é’ˆ=1ï¼Œé€†æ—¶é’ˆ=-1
+    //	//double dRadius;			//åŠå¾„ï¼Œå•ä½ï¼šmm
+    //	//SPointDouble SCenterPoint;	//åœ†å¿ƒï¼Œå•ä½ï¼šmmï¼ˆç›¸å¯¹èµ·ç‚¹)
 
-	struct SInput SUserData;//£¨ÓÃ»§ÉèÖÃ£©²ÎÊı
+    //}SUserData; // ç”¨æˆ·ï¼ˆè¾“å…¥ï¼‰å‚æ•°
 
-	struct SPlan SPlanData;  //ËÙ¶È¹æ»®²ÎÊı
+    struct SInput SUserData; //ï¼ˆç”¨æˆ·è®¾ç½®ï¼‰å‚æ•°
 
-	/******************* ÔË¶¯²ÎÊı  ÓëµãÓĞ¹ØµÄ²¿·Ö *****************/
-	double dStartVector;	//ÆğµãÊ¸Á¿£¨µ¥Î»ÏòÁ¿£©
-	double dStartPoint;		//Æğµã£¬µ¥Î»£ºmm
-	double dEndPoint;		//ÖÕµã£¬µ¥Î»£ºmm
+    struct SPlan SPlanData; //é€Ÿåº¦è§„åˆ’å‚æ•°
 
-	/***************************************************************/
+    /******************* è¿åŠ¨å‚æ•°  ä¸ç‚¹æœ‰å…³çš„éƒ¨åˆ† *****************/
+    double dStartVector; //èµ·ç‚¹çŸ¢é‡ï¼ˆå•ä½å‘é‡ï¼‰
+    double dStartPoint;  //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    double dEndPoint;    //ç»ˆç‚¹ï¼Œå•ä½ï¼šmm
 
-	/*********************ÄÚ²¿½ø¸øËÙ¶È ±¶ÂÊ*************************/
-	double dFeedrate;		//½ø¸øËÙ¶È  mm/ms 12-30 ÖìÎÈÖĞ
-	double dFeedRatio;		//½ø¸ø±¶ÂÊ  12-30 ÖìÎÈÖĞ
-	double dAcc; // ¼ÓËÙ¶È  Ô­Ê¼Öµ
-	double dDec; //¼õËÙ¶È  Ô­Ê¼Öµ
-	/***************************************************************/
+    /***************************************************************/
 
-	double dCurrentSpeed;		//µ±Ç°ËÙ¶È mm/ms
+    /*********************å†…éƒ¨è¿›ç»™é€Ÿåº¦ å€ç‡*************************/
+    double dFeedrate;  //è¿›ç»™é€Ÿåº¦  mm/ms 12-30 æœ±ç¨³ä¸­
+    double dFeedRatio; //è¿›ç»™å€ç‡  12-30 æœ±ç¨³ä¸­
+    double dAcc;       // åŠ é€Ÿåº¦  åŸå§‹å€¼
+    double dDec;       //å‡é€Ÿåº¦  åŸå§‹å€¼
+    /***************************************************************/
 
-	uint8 ucInpStatus;		//²å²¹×´Ì¬£¬INITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
-	uint8 ucRunMode;		//Ä£Ê½ (µ¥ÖáºãÎªSINGLEAXIS_MODE  Ö÷ÖáÍ£ÏÂÊ± ÎªSINGLEAXIS_MODE  ÔË¶¯Ê±ÎªÆäËû ÏêÇé¼ûSpindle.h)
+    double dCurrentSpeed; //å½“å‰é€Ÿåº¦ mm/ms
 
-	bool bUseSRunFeedRatio;	//ÊÇ·ñÊ¹ÓÃSRun±¶ÂÊ
+    uint8 ucInpStatus; //æ’è¡¥çŠ¶æ€ï¼ŒINITIATION    ASSIGNMENT_START    RUNNING    PAUSING    FINISHED
+    uint8 ucRunMode;   //æ¨¡å¼ (å•è½´æ’ä¸ºSINGLEAXIS_MODE  ä¸»è½´åœä¸‹æ—¶ ä¸ºSINGLEAXIS_MODE  è¿åŠ¨æ—¶ä¸ºå…¶ä»– è¯¦æƒ…è§Spindle.h)
 
-	double dPulseToMm;		//Âö³åµ±Á¿µÄµ¹Êı  µ¥¸öÖá
+    bool bUseSRunFeedRatio; //æ˜¯å¦ä½¿ç”¨SRunå€ç‡
 
-	double dReCalculateVe;  //¸ù¾İÈíÏŞÎ»µãÖØËãÄ©ËÙ¶È 2024/12/12 ºé¹ÚÅô
+    double dPulseToMm; //è„‰å†²å½“é‡çš„å€’æ•°  å•ä¸ªè½´
+
+    double dReCalculateVe; //æ ¹æ®è½¯é™ä½ç‚¹é‡ç®—æœ«é€Ÿåº¦ 2024/12/12 æ´ªå† é¹
 };
 
-
-struct SG0   //G0ÔËĞĞ½á¹¹Ìå
+struct SG0 //G0è¿è¡Œç»“æ„ä½“
 {
-	struct SChannel *pSChannel; // Í¨µÀÖ¸Õë  (¸¸)
+    struct SChannel* pSChannel; // é€šé“æŒ‡é’ˆ  (çˆ¶)
 
-	VAL_STRUCT_TYPE	ucValStatus;	//ÓĞĞ§Öµ£¨Öá£©ÀàĞÍ	2022-4-12
-	struct SInput SUserData;	// ÓÃ»§£¨ÊäÈë£©²ÎÊı
+    VAL_STRUCT_TYPE ucValStatus; //æœ‰æ•ˆå€¼ï¼ˆè½´ï¼‰ç±»å‹	2022-4-12
+    struct SInput SUserData;     // ç”¨æˆ·ï¼ˆè¾“å…¥ï¼‰å‚æ•°
 
-	bool bIsUserData; //Ê¹ÓÃÓÃ»§Êı¾İ    2022.12.6
+    bool bIsUserData; //ä½¿ç”¨ç”¨æˆ·æ•°æ®    2022.12.6
 
-	G0_SIGN_TYPE ucCurrentSigned;  //µ±Ç°±êÖ¾
-	G0_SIGN_TYPE ucFinishedSigned; //Íê³É±êÖ¾
-	uint8 ucRunStep;  //²½Öè
-	struct SSingleAxis *pSSingleAxisArray;   //³õÊ¼»¯Ê±Ö¸Ïò g_SSingleAxisArray
-	SPointDouble SEndPoint; //ÖÕµã
-	int8 cInterpDir; //²å²¹·½Ïò
+    G0_SIGN_TYPE ucCurrentSigned;          //å½“å‰æ ‡å¿—
+    G0_SIGN_TYPE ucFinishedSigned;         //å®Œæˆæ ‡å¿—
+    uint8 ucRunStep;                       //æ­¥éª¤
+    struct SSingleAxis* pSSingleAxisArray; //åˆå§‹åŒ–æ—¶æŒ‡å‘ g_SSingleAxisArray
+    SPointDouble SEndPoint;                //ç»ˆç‚¹
+    int8 cInterpDir;                       //æ’è¡¥æ–¹å‘
 };
-
 
 //extern struct SG0 g_SG0;
-//extern struct SSingleAxis g_SSingleAxisArray[AXIS_NUM_MAX];  //µ¥Öá½á¹¹Ìå  £¨Êı×é£©
+//extern struct SSingleAxis g_SSingleAxisArray[AXIS_NUM_MAX];  //å•è½´ç»“æ„ä½“  ï¼ˆæ•°ç»„ï¼‰
 
 int8 SG0LoadSysPara(struct SG0* pSG0);
 
 int8 SG0Init(struct SG0* pSG0);
 
-//»ñÈ¡µ¥ÖáµÄÖÕµã×ø±ê
+//è·å–å•è½´çš„ç»ˆç‚¹åæ ‡
 double getSingleAxisEndPoint(struct SChannel* pSChannel, uint8 ucAxis);
- 
-//ÉèÖÃµ¥ÖáÍê³É
+
+//è®¾ç½®å•è½´å®Œæˆ
 int8 setFinishedStatus(struct SG0* pSG0Pointer, int nAxisNum);
 
-//µ¥ÖáÔİÍ£³õÊ¼»¯º¯Êı
+//å•è½´æš‚åœåˆå§‹åŒ–å‡½æ•°
 int8 prepareToPauseSingle(struct SSingleAxis* pSSingleAxis, double dVmin, double dDec);
 
-//¿ìËÙÔË¶¯»ØĞ´
+//å¿«é€Ÿè¿åŠ¨å›å†™
 int8 quickMoveWriteBack(struct SG0* pSG0);
 
-//µ¥ÖáÒÆ¶¯Ö¸¶¨¾àÀë
-int8 singleAxisPre(struct SG0* pSG0Pointer, uint8 ucAxis, SPointDouble SStartPoint, SPointDouble SEndPoint, bool bReCalculate, struct SInput* pSInputPointer);
+//å•è½´ç§»åŠ¨æŒ‡å®šè·ç¦»
+int8 singleAxisPre(struct SG0* pSG0Pointer, uint8 ucAxis, SPointDouble SStartPoint, SPointDouble SEndPoint,
+                   bool bReCalculate, struct SInput* pSInputPointer);
 
-//µ¥ÖáÒÆ¶¯Ö¸¶¨¾àÀëÑ­»·
-int8 singleAxisPreLoop(struct SG0* pSG0Pointer, SPointDouble SStartPoint, SPointDouble SEndPoint, struct SInput* pSInput, VAL_STRUCT_TYPE* ucValStatus, bool bReCalculate);
+//å•è½´ç§»åŠ¨æŒ‡å®šè·ç¦»å¾ªç¯
+int8 singleAxisPreLoop(struct SG0* pSG0Pointer, SPointDouble SStartPoint, SPointDouble SEndPoint,
+                       struct SInput* pSInput, VAL_STRUCT_TYPE* ucValStatus, bool bReCalculate);
 
-//´ÓInput²ÎÊı¸³Öµµ½G0/µ¥Öá½á¹¹Ìå
+//ä»Inputå‚æ•°èµ‹å€¼åˆ°G0/å•è½´ç»“æ„ä½“
 int8 loadSG0DataFromInput(struct SG0* pSG0Pointer, struct SInput* pSInput);
 
-//µ¥Öá²å²¹ÔË¶¯
+//å•è½´æ’è¡¥è¿åŠ¨
 int8 singleAxisMotion(struct SG0* pSG0, uint8 ucAxis, bool bPauseOn, bool bRatioOn);
 
-//µ¥Öá²å²¹ÔË¶¯Ñ­»·
-int8 singleAxisMotionLoop(struct SG0* pSG0Pointer,int nAxisNum, bool bPauseOn, bool bRatioOn);
+//å•è½´æ’è¡¥è¿åŠ¨å¾ªç¯
+int8 singleAxisMotionLoop(struct SG0* pSG0Pointer, int nAxisNum, bool bPauseOn, bool bRatioOn);
 
-//¿ìËÙÔË¶¯º¯Êı
+//å¿«é€Ÿè¿åŠ¨å‡½æ•°
 int8 motionQuickMove(struct SG0* pSG0Pointer);
 
-// ¼ì²éµ±Ç°ÖáÊÇ·ñ´¥·¢ÈíÏŞÎ»
-int8 checkSingleAxisSoftLimit(struct SChannel *pSChannel, uint8 ucAxis, SPointDouble SMaxVal, SPointDouble SMinVal);
+// æ£€æŸ¥å½“å‰è½´æ˜¯å¦è§¦å‘è½¯é™ä½
+int8 checkSingleAxisSoftLimit(struct SChannel* pSChannel, uint8 ucAxis, SPointDouble SMaxVal, SPointDouble SMinVal);
 
 #endif

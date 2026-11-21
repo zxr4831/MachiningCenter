@@ -1,24 +1,21 @@
 #ifndef __GCODE_G93_H
 #define __GCODE_G93_H
 
-
 //#include "common.h"
 //#include "GCodeCommon.h"
 
-
 typedef struct _SG93Para
 {
-	int8 cStep;                  //ÇĞÆ¬¸¨Öú±êÖ¾
-	double dR;					//RÖµ
-	double dRRaw;              // ĞÂÊäÈëµÄ R Ô­Ê¼Öµ£¬µ¥Î»Ëæ±à³Ìµ¥Î»¡£
-	bool bRNeedsConvert;      // ĞÂ R ´ı´¦Àí±êÖ¾£¬±¾ĞĞµ¥Î»ÉúĞ§ºó´¦ÀíÒ»´Î¡£
-	
-	SCoord SCoordInfo;			//³ÌĞò¶Î×ø±êĞÅÏ¢
-	SPointDouble SPointA;		//Aµã×ø±ê£¨»úĞµ×ø±ê£©
-	SPointDouble SPointC;		//Cµã×ø±ê£¨»úĞµ×ø±ê£©
+    int8 cStep;          //åˆ‡ç‰‡è¾…åŠ©æ ‡å¿—
+    double dR;           //Rå€¼
+    double dRRaw;        // æ–°è¾“å…¥çš„ R åŸå§‹å€¼ï¼Œå•ä½éšç¼–ç¨‹å•ä½ã€‚
+    bool bRNeedsConvert; // æ–° R å¾…å¤„ç†æ ‡å¿—ï¼Œæœ¬è¡Œå•ä½ç”Ÿæ•ˆåå¤„ç†ä¸€æ¬¡ã€‚
 
-}SG93Para;
+    SCoord SCoordInfo;    //ç¨‹åºæ®µåæ ‡ä¿¡æ¯
+    SPointDouble SPointA; //Aç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
+    SPointDouble SPointC; //Cç‚¹åæ ‡ï¼ˆæœºæ¢°åæ ‡ï¼‰
 
+} SG93Para;
 
 void addG93RegulationAPI();
 

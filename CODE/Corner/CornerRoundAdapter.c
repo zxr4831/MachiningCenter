@@ -2,62 +2,63 @@
 #include "GCodeCommandAPI.h"
 #include "RoundGeometry.h"
 
-/* ×Ô¶¯µ¹Ô²ÊÊÅä²ã£ºËÄÖÖ×éºÏ¹²ÓÃÓÐÏÞÂÖÀªÇó½âÆ÷¡£
- * ×ø±êÓë°ë¾¶¾ùÎªÕæÊµºÁÃ×£»·Ç³É¹¦·µ»Ø²»ÐÞ¸ÄÊä³ö£¬²»²Ù×÷½âÎö×´Ì¬»ò»·ÐÎ»º³å¡£
+/* è‡ªåŠ¨å€’åœ†é€‚é…å±‚ï¼šå››ç§ç»„åˆå…±ç”¨æœ‰é™è½®å»“æ±‚è§£å™¨ã€‚
+ * åæ ‡ä¸ŽåŠå¾„å‡ä¸ºçœŸå®žæ¯«ç±³ï¼›éžæˆåŠŸè¿”å›žä¸ä¿®æ”¹è¾“å‡ºï¼Œä¸æ“ä½œè§£æžçŠ¶æ€æˆ–çŽ¯å½¢ç¼“å†²ã€‚
  */
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic RGCurve convertLineToRoundCurve(const SLine *line)
-  º¯Êý¹¦ÄÜ£º½«ÏîÄ¿Ö±Ïß½á¹¹Ó³ÉäÎª¼¸ºÎÄÚºËµÄ¶þÎ¬Ö±Ïß¡£
-  ÊäÈë²ÎÊý£ºline ÒÑÍê³É×ø±ê¹éÒ»»¯µÄ·Ç¿ÕÖ±Ïß¡£
-  Êä³ö²ÎÊý£ºÎÞ¡£
-  ·µ »Ø Öµ£ºRGCurve£¬dir Îª 0¡£
-  ±¸    ×¢£ºÄÚºË×ø±êË³ÐòÎª (Z,X)£»ÕâÀï²»½øÐÐÖ±¾¶µ½°ë¾¶»òµ¥Î»»»Ëã¡£
+  å‡½æ•°åç§°ï¼šstatic RGCurve convertLineToRoundCurve(const SLine *line)
+  å‡½æ•°åŠŸèƒ½ï¼šå°†é¡¹ç›®ç›´çº¿ç»“æž„æ˜ å°„ä¸ºå‡ ä½•å†…æ ¸çš„äºŒç»´ç›´çº¿ã€‚
+  è¾“å…¥å‚æ•°ï¼šline å·²å®Œæˆåæ ‡å½’ä¸€åŒ–çš„éžç©ºç›´çº¿ã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å›ž å€¼ï¼šRGCurveï¼Œdir ä¸º 0ã€‚
+  å¤‡    æ³¨ï¼šå†…æ ¸åæ ‡é¡ºåºä¸º (Z,X)ï¼›è¿™é‡Œä¸è¿›è¡Œç›´å¾„åˆ°åŠå¾„æˆ–å•ä½æ¢ç®—ã€‚
 **************************************************/
-static RGCurve convertLineToRoundCurve(const SLine *line)
+static RGCurve convertLineToRoundCurve(const SLine* line)
 {
     RGCurve c = {0};
-    c.start = makeRoundPoint(line->SStartPoint.dArray[AXIS_Z],line->SStartPoint.dArray[AXIS_X]);
-    c.end = makeRoundPoint(line->SEndPoint.dArray[AXIS_Z],line->SEndPoint.dArray[AXIS_X]);
+    c.start = makeRoundPoint(line->SStartPoint.dArray[AXIS_Z], line->SStartPoint.dArray[AXIS_X]);
+    c.end = makeRoundPoint(line->SEndPoint.dArray[AXIS_Z], line->SEndPoint.dArray[AXIS_X]);
     return c;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic RGCurve convertArcToRoundCurve(const SArc *arc)
-  º¯Êý¹¦ÄÜ£º½«ÏîÄ¿Ô²»¡½á¹¹Ó³ÉäÎª¼¸ºÎÄÚºËµÄÓÐÏòÔ²»¡¡£
-  ÊäÈë²ÎÊý£ºarc ·Ç¿ÕÔ²»¡£¬·½ÏòÒÑÓÉ¹«¹²Èë¿ÚÐ£Ñé¡£
-  Êä³ö²ÎÊý£ºÎÞ¡£
-  ·µ »Ø Öµ£º°üº¬ÆðÖÕµã¡¢Ô²ÐÄ¡¢°ë¾¶ºÍ·½ÏòµÄ RGCurve¡£
-  ±¸    ×¢£ºÏîÄ¿ ARC_CW=1¡¢ARC_ANTI_CW=-1£»ÄÚºËÏà·´£¬Òò´Ë·½ÏòÈ¡¸º¡£
+  å‡½æ•°åç§°ï¼šstatic RGCurve convertArcToRoundCurve(const SArc *arc)
+  å‡½æ•°åŠŸèƒ½ï¼šå°†é¡¹ç›®åœ†å¼§ç»“æž„æ˜ å°„ä¸ºå‡ ä½•å†…æ ¸çš„æœ‰å‘åœ†å¼§ã€‚
+  è¾“å…¥å‚æ•°ï¼šarc éžç©ºåœ†å¼§ï¼Œæ–¹å‘å·²ç”±å…¬å…±å…¥å£æ ¡éªŒã€‚
+  è¾“å‡ºå‚æ•°ï¼šæ— ã€‚
+  è¿” å›ž å€¼ï¼šåŒ…å«èµ·ç»ˆç‚¹ã€åœ†å¿ƒã€åŠå¾„å’Œæ–¹å‘çš„ RGCurveã€‚
+  å¤‡    æ³¨ï¼šé¡¹ç›® ARC_CW=1ã€ARC_ANTI_CW=-1ï¼›å†…æ ¸ç›¸åï¼Œå› æ­¤æ–¹å‘å–è´Ÿã€‚
 **************************************************/
-static RGCurve convertArcToRoundCurve(const SArc *arc)
+static RGCurve convertArcToRoundCurve(const SArc* arc)
 {
     RGCurve c = {0};
-    c.start = makeRoundPoint(arc->SStartPoint.dArray[AXIS_Z],arc->SStartPoint.dArray[AXIS_X]);
-    c.end = makeRoundPoint(arc->SEndPoint.dArray[AXIS_Z],arc->SEndPoint.dArray[AXIS_X]);
-    c.center = makeRoundPoint(arc->SCenterPoint.dArray[AXIS_Z],arc->SCenterPoint.dArray[AXIS_X]);
+    c.start = makeRoundPoint(arc->SStartPoint.dArray[AXIS_Z], arc->SStartPoint.dArray[AXIS_X]);
+    c.end = makeRoundPoint(arc->SEndPoint.dArray[AXIS_Z], arc->SEndPoint.dArray[AXIS_X]);
+    c.center = makeRoundPoint(arc->SCenterPoint.dArray[AXIS_Z], arc->SCenterPoint.dArray[AXIS_X]);
     c.radius = arc->dRadius;
-    /* ×ø±êÖáÐò±£³Ö (Z,X)£¬Ö»×ª»»ÏîÄ¿ÓëÄÚºËÏà·´µÄÔ²»¡·½Ïò±àÂë¡£ */
+    /* åæ ‡è½´åºä¿æŒ (Z,X)ï¼Œåªè½¬æ¢é¡¹ç›®ä¸Žå†…æ ¸ç›¸åçš„åœ†å¼§æ–¹å‘ç¼–ç ã€‚ */
     c.dir = -arc->cArcDir;
     return c;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºstatic int8 calcRoundArc(const RGCurve *a, const RGCurve *b, double radius, const SPointDouble *base, SArc *out)
-  º¯Êý¹¦ÄÜ£ºµ÷ÓÃÍ³Ò»Çó½âÆ÷²¢½«³É¹¦½á¹û×ª»»³ÉÏîÄ¿ SArc¡£
-  ÊäÈë²ÎÊý£ºa¡¢b ÄÚºËÇúÏß£»radius ÕæÊµ°ë¾¶£»base ·Ç¿ÕÁ¬½Óµã¡£
-  Êä³ö²ÎÊý£ºout ½öÔÚ·µ»Ø 1 Ê±Ð´ÈëÍêÕûÔ²½Ç½á¹¹¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 Í¬Ïò¹²Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£º·ÇÆ½ÃæÖá´Ó base ¼Ì³Ð£»ÏÈ¹¹ÔìÁÙÊ±½á¹û£¬Ê§°ÜÊ±±£³Ö out ²»±ä¡£
+  å‡½æ•°åç§°ï¼šstatic int8 calcRoundArc(const RGCurve *a, const RGCurve *b, double radius, const SPointDouble *base, SArc *out)
+  å‡½æ•°åŠŸèƒ½ï¼šè°ƒç”¨ç»Ÿä¸€æ±‚è§£å™¨å¹¶å°†æˆåŠŸç»“æžœè½¬æ¢æˆé¡¹ç›® SArcã€‚
+  è¾“å…¥å‚æ•°ï¼šaã€b å†…æ ¸æ›²çº¿ï¼›radius çœŸå®žåŠå¾„ï¼›base éžç©ºè¿žæŽ¥ç‚¹ã€‚
+  è¾“å‡ºå‚æ•°ï¼šout ä»…åœ¨è¿”å›ž 1 æ—¶å†™å…¥å®Œæ•´åœ†è§’ç»“æž„ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 åŒå‘å…±çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šéžå¹³é¢è½´ä»Ž base ç»§æ‰¿ï¼›å…ˆæž„é€ ä¸´æ—¶ç»“æžœï¼Œå¤±è´¥æ—¶ä¿æŒ out ä¸å˜ã€‚
 **************************************************/
-static int8 calcRoundArc(const RGCurve *a, const RGCurve *b, double radius,
-                           const SPointDouble *base, SArc *out)
+static int8 calcRoundArc(const RGCurve* a, const RGCurve* b, double radius, const SPointDouble* base, SArc* out)
 {
     RGResult result;
     SArc temp = {0};
     int status;
-    if (!out) return RG_INVALID;
-    status = solveRoundGeometry(a,b,radius,&result);
-    if (status != RG_OK) return (int8)status;
+    if (!out)
+        return RG_INVALID;
+    status = solveRoundGeometry(a, b, radius, &result);
+    if (status != RG_OK)
+        return (int8)status;
     temp.EntityType = ARC;
-    /* ÏÈ¼Ì³ÐÈ«²¿Öá×ø±ê£¬ÔÙ¸²¸ÇÆ½Ãæ·ÖÁ¿£¬±ÜÃâ·ÇÆ½ÃæÖá²ÐÁôÎ´³õÊ¼»¯Öµ¡£ */
+    /* å…ˆç»§æ‰¿å…¨éƒ¨è½´åæ ‡ï¼Œå†è¦†ç›–å¹³é¢åˆ†é‡ï¼Œé¿å…éžå¹³é¢è½´æ®‹ç•™æœªåˆå§‹åŒ–å€¼ã€‚ */
     temp.SStartPoint = temp.SEndPoint = temp.SCenterPoint = *base;
     temp.SStartPoint.dArray[AXIS_Z] = result.first.x;
     temp.SStartPoint.dArray[AXIS_X] = result.first.y;
@@ -71,63 +72,71 @@ static int8 calcRoundArc(const RGCurve *a, const RGCurve *b, double radius,
     return RG_OK;
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 calAngleRoundedInfoInLineAndLine(SLine* a, SLine* b, double r, SArc* out)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÖ±Ïß½ÓÖ±ÏßµÄ×Ô¶¯Ô²½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°Ö±Ïß£»b ºóÖ±Ïß£»r ÕæÊµºÁÃ×°ë¾¶¡£
-  Êä³ö²ÎÊý£ºout ³É¹¦Ê±·µ»ØÇÐµã¡¢Ô²ÐÄ¡¢°ë¾¶¼°ÏîÄ¿·½Ïò±àÂë¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 ½öÍ¬Ïò¹²ÏßÖ±Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£ºÖ»´¦Àí G18 µÄÓÐÏÞÂÖÀª¼¸ºÎ£»Ä£Ì¬Óë±ß½çÓÉÉÏ²ã¼ì²é£¬·Ç³É¹¦Ê±²»ÐÞ¸Ä out¡£
+  å‡½æ•°åç§°ï¼šint8 calAngleRoundedInfoInLineAndLine(SLine* a, SLine* b, double r, SArc* out)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ç›´çº¿æŽ¥ç›´çº¿çš„è‡ªåŠ¨åœ†è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰ç›´çº¿ï¼›b åŽç›´çº¿ï¼›r çœŸå®žæ¯«ç±³åŠå¾„ã€‚
+  è¾“å‡ºå‚æ•°ï¼šout æˆåŠŸæ—¶è¿”å›žåˆ‡ç‚¹ã€åœ†å¿ƒã€åŠå¾„åŠé¡¹ç›®æ–¹å‘ç¼–ç ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 ä»…åŒå‘å…±çº¿ç›´çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šåªå¤„ç† G18 çš„æœ‰é™è½®å»“å‡ ä½•ï¼›æ¨¡æ€ä¸Žè¾¹ç•Œç”±ä¸Šå±‚æ£€æŸ¥ï¼ŒéžæˆåŠŸæ—¶ä¸ä¿®æ”¹ outã€‚
 **************************************************/
 int8 calAngleRoundedInfoInLineAndLine(SLine* a, SLine* b, double r, SArc* out)
 {
     RGCurve ca, cb;
-    if (!a || !b) return RG_INVALID;
-    ca=convertLineToRoundCurve(a); cb=convertLineToRoundCurve(b);
-    return calcRoundArc(&ca,&cb,r,&a->SEndPoint,out);
+    if (!a || !b)
+        return RG_INVALID;
+    ca = convertLineToRoundCurve(a);
+    cb = convertLineToRoundCurve(b);
+    return calcRoundArc(&ca, &cb, r, &a->SEndPoint, out);
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 calAngleRoundedInfoInLineAndArc(SLine* a, SArc* b, double r, SArc* out)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÖ±Ïß½ÓÔ²»¡µÄ×Ô¶¯Ô²½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°Ö±Ïß£»b ºóÔ²»¡£»r ÕæÊµºÁÃ×°ë¾¶¡£
-  Êä³ö²ÎÊý£ºout ³É¹¦Ê±·µ»ØÇÐµã¡¢Ô²ÐÄ¡¢°ë¾¶¼°ÏîÄ¿·½Ïò±àÂë¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 ½öÍ¬Ïò¹²ÏßÖ±Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£ºÖ»´¦Àí G18 µÄÓÐÏÞÂÖÀª¼¸ºÎ£»Ä£Ì¬Óë±ß½çÓÉÉÏ²ã¼ì²é£¬·Ç³É¹¦Ê±²»ÐÞ¸Ä out¡£
+  å‡½æ•°åç§°ï¼šint8 calAngleRoundedInfoInLineAndArc(SLine* a, SArc* b, double r, SArc* out)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—ç›´çº¿æŽ¥åœ†å¼§çš„è‡ªåŠ¨åœ†è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰ç›´çº¿ï¼›b åŽåœ†å¼§ï¼›r çœŸå®žæ¯«ç±³åŠå¾„ã€‚
+  è¾“å‡ºå‚æ•°ï¼šout æˆåŠŸæ—¶è¿”å›žåˆ‡ç‚¹ã€åœ†å¿ƒã€åŠå¾„åŠé¡¹ç›®æ–¹å‘ç¼–ç ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 ä»…åŒå‘å…±çº¿ç›´çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šåªå¤„ç† G18 çš„æœ‰é™è½®å»“å‡ ä½•ï¼›æ¨¡æ€ä¸Žè¾¹ç•Œç”±ä¸Šå±‚æ£€æŸ¥ï¼ŒéžæˆåŠŸæ—¶ä¸ä¿®æ”¹ outã€‚
 **************************************************/
 int8 calAngleRoundedInfoInLineAndArc(SLine* a, SArc* b, double r, SArc* out)
 {
     RGCurve ca, cb;
-    if (!a || !b || (b->cArcDir != ARC_CW && b->cArcDir != ARC_ANTI_CW)) return RG_INVALID;
-    ca=convertLineToRoundCurve(a); cb=convertArcToRoundCurve(b);
-    return calcRoundArc(&ca,&cb,r,&a->SEndPoint,out);
+    if (!a || !b || (b->cArcDir != ARC_CW && b->cArcDir != ARC_ANTI_CW))
+        return RG_INVALID;
+    ca = convertLineToRoundCurve(a);
+    cb = convertArcToRoundCurve(b);
+    return calcRoundArc(&ca, &cb, r, &a->SEndPoint, out);
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 calAngleRoundedInfoInArcAndLine(SArc* a, SLine* b, double r, SArc* out)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÔ²»¡½ÓÖ±ÏßµÄ×Ô¶¯Ô²½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°Ô²»¡£»b ºóÖ±Ïß£»r ÕæÊµºÁÃ×°ë¾¶¡£
-  Êä³ö²ÎÊý£ºout ³É¹¦Ê±·µ»ØÇÐµã¡¢Ô²ÐÄ¡¢°ë¾¶¼°ÏîÄ¿·½Ïò±àÂë¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 ½öÍ¬Ïò¹²ÏßÖ±Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£ºÖ»´¦Àí G18 µÄÓÐÏÞÂÖÀª¼¸ºÎ£»Ä£Ì¬Óë±ß½çÓÉÉÏ²ã¼ì²é£¬·Ç³É¹¦Ê±²»ÐÞ¸Ä out¡£
+  å‡½æ•°åç§°ï¼šint8 calAngleRoundedInfoInArcAndLine(SArc* a, SLine* b, double r, SArc* out)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åœ†å¼§æŽ¥ç›´çº¿çš„è‡ªåŠ¨åœ†è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰åœ†å¼§ï¼›b åŽç›´çº¿ï¼›r çœŸå®žæ¯«ç±³åŠå¾„ã€‚
+  è¾“å‡ºå‚æ•°ï¼šout æˆåŠŸæ—¶è¿”å›žåˆ‡ç‚¹ã€åœ†å¿ƒã€åŠå¾„åŠé¡¹ç›®æ–¹å‘ç¼–ç ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 ä»…åŒå‘å…±çº¿ç›´çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šåªå¤„ç† G18 çš„æœ‰é™è½®å»“å‡ ä½•ï¼›æ¨¡æ€ä¸Žè¾¹ç•Œç”±ä¸Šå±‚æ£€æŸ¥ï¼ŒéžæˆåŠŸæ—¶ä¸ä¿®æ”¹ outã€‚
 **************************************************/
 int8 calAngleRoundedInfoInArcAndLine(SArc* a, SLine* b, double r, SArc* out)
 {
     RGCurve ca, cb;
-    if (!a || !b || (a->cArcDir != ARC_CW && a->cArcDir != ARC_ANTI_CW)) return RG_INVALID;
-    ca=convertArcToRoundCurve(a); cb=convertLineToRoundCurve(b);
-    return calcRoundArc(&ca,&cb,r,&a->SEndPoint,out);
+    if (!a || !b || (a->cArcDir != ARC_CW && a->cArcDir != ARC_ANTI_CW))
+        return RG_INVALID;
+    ca = convertArcToRoundCurve(a);
+    cb = convertLineToRoundCurve(b);
+    return calcRoundArc(&ca, &cb, r, &a->SEndPoint, out);
 }
 /*************************************************
-  º¯ÊýÃû³Æ£ºint8 calAngleRoundedInfoInArcAndArc(SArc* a, SArc* b, double r, SArc* out)
-  º¯Êý¹¦ÄÜ£º¼ÆËãÔ²»¡½ÓÔ²»¡µÄ×Ô¶¯Ô²½Ç¡£
-  ÊäÈë²ÎÊý£ºa Ç°Ô²»¡£»b ºóÔ²»¡£»r ÕæÊµºÁÃ×°ë¾¶¡£
-  Êä³ö²ÎÊý£ºout ³É¹¦Ê±·µ»ØÇÐµã¡¢Ô²ÐÄ¡¢°ë¾¶¼°ÏîÄ¿·½Ïò±àÂë¡£
-  ·µ »Ø Öµ£º1 ³É¹¦£»0 ½öÍ¬Ïò¹²ÏßÖ±Ïß²»±ä£»-1 ÎÞ½â£»-2 ·Ç·¨ÊäÈë¡£
-  ±¸    ×¢£ºÖ»´¦Àí G18 µÄÓÐÏÞÂÖÀª¼¸ºÎ£»Ä£Ì¬Óë±ß½çÓÉÉÏ²ã¼ì²é£¬·Ç³É¹¦Ê±²»ÐÞ¸Ä out¡£
+  å‡½æ•°åç§°ï¼šint8 calAngleRoundedInfoInArcAndArc(SArc* a, SArc* b, double r, SArc* out)
+  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—åœ†å¼§æŽ¥åœ†å¼§çš„è‡ªåŠ¨åœ†è§’ã€‚
+  è¾“å…¥å‚æ•°ï¼ša å‰åœ†å¼§ï¼›b åŽåœ†å¼§ï¼›r çœŸå®žæ¯«ç±³åŠå¾„ã€‚
+  è¾“å‡ºå‚æ•°ï¼šout æˆåŠŸæ—¶è¿”å›žåˆ‡ç‚¹ã€åœ†å¿ƒã€åŠå¾„åŠé¡¹ç›®æ–¹å‘ç¼–ç ã€‚
+  è¿” å›ž å€¼ï¼š1 æˆåŠŸï¼›0 ä»…åŒå‘å…±çº¿ç›´çº¿ä¸å˜ï¼›-1 æ— è§£ï¼›-2 éžæ³•è¾“å…¥ã€‚
+  å¤‡    æ³¨ï¼šåªå¤„ç† G18 çš„æœ‰é™è½®å»“å‡ ä½•ï¼›æ¨¡æ€ä¸Žè¾¹ç•Œç”±ä¸Šå±‚æ£€æŸ¥ï¼ŒéžæˆåŠŸæ—¶ä¸ä¿®æ”¹ outã€‚
 **************************************************/
 int8 calAngleRoundedInfoInArcAndArc(SArc* a, SArc* b, double r, SArc* out)
 {
     RGCurve ca, cb;
-    if (!a || !b || (a->cArcDir != ARC_CW && a->cArcDir != ARC_ANTI_CW)
-        || (b->cArcDir != ARC_CW && b->cArcDir != ARC_ANTI_CW)) return RG_INVALID;
-    ca=convertArcToRoundCurve(a); cb=convertArcToRoundCurve(b);
-    return calcRoundArc(&ca,&cb,r,&a->SEndPoint,out);
+    if (!a || !b || (a->cArcDir != ARC_CW && a->cArcDir != ARC_ANTI_CW) ||
+        (b->cArcDir != ARC_CW && b->cArcDir != ARC_ANTI_CW))
+        return RG_INVALID;
+    ca = convertArcToRoundCurve(a);
+    cb = convertArcToRoundCurve(b);
+    return calcRoundArc(&ca, &cb, r, &a->SEndPoint, out);
 }

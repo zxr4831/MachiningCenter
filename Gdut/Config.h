@@ -1,17 +1,17 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-/***********************���뻷������**************************/
+/***********************编译环境设置**************************/
 #ifndef STM32_MODE
-#define STM32_MODE		0 //��STM32ʱΪ1  VS��ʹ��Ϊ0 
+#define STM32_MODE 0 //在STM32时为1  VS中使用为0
 #endif
 #ifndef ENCODER_MODE
 #define ENCODER_MODE STM32_MODE
 #endif
 
-
-/* Ĭ�����þ�������ģ����ͣ���߽磻VS ͨ��ԭ��������������ṩ�������롣
- * ���ڹ���Ԥ����������ʽ�رգ��ı俪�غ����ȫ�����±��롣 */
+/* 默认配置保留 VS 原有实现。仅在主机端通过注入编码器采样数据进行
+ * 回归测试时，才显式定义这些功能宏。
+ * 修改任一开关后，必须重新编译所有编译单元。 */
 #ifndef HANDWHEEL_SIM_DISTANCE_ENABLE
 #define HANDWHEEL_SIM_DISTANCE_ENABLE STM32_MODE
 #endif
@@ -35,38 +35,35 @@
 #endif
 #endif
 
-#define SPECIAL_MACHINE 0//ר��ģʽ��˫�����������ͨ������һ�׵��ߣ�ר��ģʽʱ����Ϊ1��
+#define SPECIAL_MACHINE 0 //专机模式（双主轴机，两个通道共用一套刀具，专机模式时设置为1）
 
-
-
-/***********************���л�������**************************/
+/***********************运行机器配置**************************/
 /*************************************************
-Ŀǰ�����ã�
-1.���ݲ�ͬ�Ļ������ò�ͬ��������ӳ��
-2.���ݲ�ͬ�Ļ����ò�ͬ��IO
+目前的作用：
+1.根据不同的机器配置不同的物理轴映射
+2.根据不同的机器置不同的IO
 **************************************************/
-#define NORMAL_SINGLECHANNEL_MACHINE				0	//��ͨ��_��ͨ�����
-#define TURNING_AND_MILLING_SINGLECHANNEL_MACHINE	1	//��ͨ��_��ϳ���ϻ�
-#define NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE		2	//��ͨ��Y���	1ͨ����XZ��+C��		2ͨ����Y��
-#define NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE		3	//��ͨ��˫�����	1ͨ����XZ��+C1��	2ͨ����XZ��+C2��
-#define TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE	4	//��ͨ��_��ϳ������бY���
-
-#define MACHINING_CENTER_XYZ_MACHINE 5                         // ��ͨ��ֱ������ XYZ �ӹ����Ŀ�������
+#define NORMAL_SINGLECHANNEL_MACHINE 0                         //单通道_普通二轴机
+#define TURNING_AND_MILLING_SINGLECHANNEL_MACHINE 1            //单通道_车铣复合机
+#define NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE 2                 //多通道Y轴机	1通道：XZ轴+C轴		2通道：Y轴
+#define NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE 3                 //多通道双主轴机	1通道：XZ轴+C1轴	2通道：XZ轴+C2轴
+#define TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE 4 //单通道_车铣复合倾斜Y轴机
+#define MACHINING_CENTER_XYZ_MACHINE 5                         // 单通道直角坐标 XYZ 加工中心开发配置
 
 #define MACHINE_CONFIG MACHINING_CENTER_XYZ_MACHINE
 #define MC_PROFILE_XYZ 1
-#define MC_CYCLE_US 1000U // �ں�ʹ�� ms���������߹̶�Ϊ 1 ms ����
-//����Ϊ˫�����ʱ��Ҫ��common.h�ļ��е�#define TURRET_MAX_NUM ����Ϊ1
-//����ΪY���ʱ��Ҫ��common.h�ļ��е�#define TURRET_MAX_NUM ����Ϊ2
-//����Ϊ��ͨ��_��ͨ�����ʱ��Ҫ��common.h�ļ��е�#define TURRET_MAX_NUM ����Ϊ1
-//����Ϊ��ͨ��_��ϳ���ϻ�ʱ��Ҫ��common.h�ļ��е�#define TURRET_MAX_NUM ����Ϊ1�� ������ initaprray()�����и���ͨ�������ӳ���޸ĺ���setTurretToAxisMap��1��X���еĲ���X
+#define MC_CYCLE_US 1000U // 内核使用 ms，开发基线固定为 1 ms 周期
+//配置为双主轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为1
+//配置为Y轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为2
+//配置为单通道_普通二轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为1
+//配置为单通道_车铣复合机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为1， 并且在 initaprray()函数中根据通道对轴的映射修改函数setTurretToAxisMap（1，X）中的参数X
 
+/***********************芯片选择**************************/
+/* 当前桌面构建复用数组形式的模拟 IO 接口。此值不是目标处理器声明；
+ * 接入 H743 BSP 时应替换 IO 适配层，不能仅改为 0 就视为移植完成。 */
+#define CotrexF4 1
 
-/***********************оƬѡ��**************************/
-#define CotrexF4                                    1  //оƬѡ�� 1��F4 0:H7  H7��F4�ײ��IOʹ�÷�ʽ��ͬ
-
-/***********************ר�û�������**************************/
-#define SWING_ARM_MACHINE  0  //�ڱۻ� 0����������  1���ڱۻ�
-
+/***********************专用机器配置**************************/
+#define SWING_ARM_MACHINE 0 //摆臂机 0：其他机型  1：摆臂机
 
 #endif

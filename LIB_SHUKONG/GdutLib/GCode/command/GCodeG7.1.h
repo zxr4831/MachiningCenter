@@ -3,13 +3,10 @@
 
 void addG7_1RegulationAPI();
 
-
-//¼ì²éG15
+//æ£€æŸ¥G15
 int8 CheckG7_1(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-//¸³ÖµG16
+//èµ‹å€¼G16
 int8 AssignG7_1(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
-
-
 
 #endif

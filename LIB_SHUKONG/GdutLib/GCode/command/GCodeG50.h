@@ -7,7 +7,8 @@ int8 CheckG50(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeB
 
 int8 AssignG50(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit);
 
-
-int8 calculateG50Offset(uint8 ucMod, uint8 ucChannelNum, SPointDouble* pSCurrMacPoint, SPointDouble* pSCurrG50Offset, SPointDouble* pSCurrTotalOffset, SPointDouble* pSNewG50Offset, SScan* pSScan, bool bImperialProgramming);
+int8 calculateG50Offset(uint8 ucMod, uint8 ucChannelNum, SPointDouble* pSCurrMacPoint, SPointDouble* pSCurrG50Offset,
+                        SPointDouble* pSCurrTotalOffset, SPointDouble* pSNewG50Offset, SScan* pSScan,
+                        bool bImperialProgramming);
 
 #endif

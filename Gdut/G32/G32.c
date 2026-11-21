@@ -14,127 +14,124 @@
 //#include "pwm.h"
 #include "Config.h"
 #include "ErrorCompensation.h"
-const double TAPER_45 = 3.1415926 / 4; //45¡ã¶ÔÓ¦µÄ»¡¶È
-//struct _SG32 g_SG32;          //ÂİÎÆÀà²ÎÊı½á¹¹Ìå
-
+const double TAPER_45 = 3.1415926 / 4; //45Â°å¯¹åº”çš„å¼§åº¦
+//struct _SG32 g_SG32;          //èºçº¹ç±»å‚æ•°ç»“æ„ä½“
 
 int8 SG32LoadSysPara(struct _SG32* pG32)
 {
-	int i;
-	const uint8* ucMapArray;//Ó³Éä
-	if (pG32 == NULL)
-	{
-		return -1;
-	}
-	//Ó³Éä
-	ucMapArray = pG32->pSChannel->pMapAxisArray;
+    int i;
+    const uint8* ucMapArray; //æ˜ å°„
+    if (pG32 == NULL)
+    {
+        return -1;
+    }
+    //æ˜ å°„
+    ucMapArray = pG32->pSChannel->pMapAxisArray;
 
-	//G1Âö³åµ±Á¿³õÊ¼»¯
-	for (i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX) continue;//¿ÕÖá Ìø¹ı
-		pG32->dPulseToMm[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dPulseToMm;
-	}
-	//²å²¹ÖÜÆÚ
-	pG32->SPlanData.dTc = g_SSystemPara.dInterpolationTime;
+    //G1è„‰å†²å½“é‡åˆå§‹åŒ–
+    for (i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        if (ucMapArray[i] >= AXIS_PHYSICS_NUM_MAX)
+            continue; //ç©ºè½´ è·³è¿‡
+        pG32->dPulseToMm[i] = g_SSystemPara.SAxisPara[ucMapArray[i]].dPulseToMm;
+    }
+    //æ’è¡¥å‘¨æœŸ
+    pG32->SPlanData.dTc = g_SSystemPara.dInterpolationTime;
 
-	return 1;
-
-
+    return 1;
 }
 
-int g_nSpindleAccum; //Ä£Äâ±àÂëÆ÷º¯ÊıÖĞ£¬Ö÷Öá±àÂëÆ÷ËùÏÔÊ¾µÄÊıÖµ
+int g_nSpindleAccum; //æ¨¡æ‹Ÿç¼–ç å™¨å‡½æ•°ä¸­ï¼Œä¸»è½´ç¼–ç å™¨æ‰€æ˜¾ç¤ºçš„æ•°å€¼
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint8 chooseInterpPlaneForG32(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£ºÑ¡ÔñG32²å²¹Æ½Ãæ
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šint8 chooseInterpPlaneForG32(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šé€‰æ‹©G32æ’è¡¥å¹³é¢
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 int8 chooseInterpPlaneForG32(struct _SG32* pG32)
 {
-	if (pG32 == NULL) return -1;
-	switch (getBits(pG32->unCommandType, CMD_PLANE_ADDR))
-	{
-	case CMD_PLANE_G18:
-	default:
-		pG32->SUserData.ucAxis[0] = AXIS_Z;
-		pG32->SUserData.ucAxis[1] = AXIS_X;
-		break;
-	case CMD_PLANE_G17:
-		pG32->SUserData.ucAxis[0] = AXIS_X;
-		pG32->SUserData.ucAxis[1] = AXIS_Y;
-		break;
-	case CMD_PLANE_G19:
-		pG32->SUserData.ucAxis[0] = AXIS_Y;
-		pG32->SUserData.ucAxis[1] = AXIS_Z;
-		break;
-	}
-	return 1;
+    if (pG32 == NULL)
+        return -1;
+    switch (getBits(pG32->unCommandType, CMD_PLANE_ADDR))
+    {
+    case CMD_PLANE_G18:
+    default:
+        pG32->SUserData.ucAxis[0] = AXIS_Z;
+        pG32->SUserData.ucAxis[1] = AXIS_X;
+        break;
+    case CMD_PLANE_G17:
+        pG32->SUserData.ucAxis[0] = AXIS_X;
+        pG32->SUserData.ucAxis[1] = AXIS_Y;
+        break;
+    case CMD_PLANE_G19:
+        pG32->SUserData.ucAxis[0] = AXIS_Y;
+        pG32->SUserData.ucAxis[1] = AXIS_Z;
+        break;
+    }
+    return 1;
 }
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint GetSpindleEncoder()
-//  º¯Êı¹¦ÄÜ£ºÄ£ÄâÏÔÊ¾Ö÷Öá±àÂëÆ÷
-//  ÊäÈë²ÎÊı£ºÎŞ
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºµ±Ç°ÖÜÆÚÄ£ÄâÖ÷Öá±àÂëÆ÷¶ÔÓ¦µÄÊıÖµ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šint GetSpindleEncoder()
+//  å‡½æ•°åŠŸèƒ½ï¼šæ¨¡æ‹Ÿæ˜¾ç¤ºä¸»è½´ç¼–ç å™¨
+//  è¾“å…¥å‚æ•°ï¼šæ— 
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šå½“å‰å‘¨æœŸæ¨¡æ‹Ÿä¸»è½´ç¼–ç å™¨å¯¹åº”çš„æ•°å€¼
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
-int GetSpindleEncoder()  //Ä£ÄâÏÔÊ¾Ö÷Öá±àÂëÆ÷£¬µ½Ê±ºò×öÊµÎï²âÊÔµÄÊ±ºòÉ¾³ı
+int GetSpindleEncoder() //æ¨¡æ‹Ÿæ˜¾ç¤ºä¸»è½´ç¼–ç å™¨ï¼Œåˆ°æ—¶å€™åšå®ç‰©æµ‹è¯•çš„æ—¶å€™åˆ é™¤
 {
 
-	//g_nSpindleAccum += round(g_SChannel[0].SSpindle.pSSpindleAxis->dSpindleSpeed * g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum);  //µ±Ç°ÖÜÆÚÄ£ÄâÖ÷Öá±àÂëÆ÷¶ÔÓ¦µÄÊıÖµ;
-	//g_nSpindleAccum += round(g_SSpindle.pSSpindleAxis->dSpindleSpeed * g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum);  //µ±Ç°ÖÜÆÚÄ£ÄâÖ÷Öá±àÂëÆ÷¶ÔÓ¦µÄÊıÖµ;
-	return g_nSpindleAccum;  //·µ»Ø¸ÃÖµ
-
+    //g_nSpindleAccum += round(g_SChannel[0].SSpindle.pSSpindleAxis->dSpindleSpeed * g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum);  //å½“å‰å‘¨æœŸæ¨¡æ‹Ÿä¸»è½´ç¼–ç å™¨å¯¹åº”çš„æ•°å€¼;
+    //g_nSpindleAccum += round(g_SSpindle.pSSpindleAxis->dSpindleSpeed * g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum);  //å½“å‰å‘¨æœŸæ¨¡æ‹Ÿä¸»è½´ç¼–ç å™¨å¯¹åº”çš„æ•°å€¼;
+    return g_nSpindleAccum; //è¿”å›è¯¥å€¼
 }
 
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid getThreadCutType(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º¸ù¾İ´«ÈëµÄÂİÎÆÀàÖ¸Áî²ÎÊı½á¹¹Ìå£¬ÅĞ¶Ï´Ë´ÎÇĞÏ÷ÂİÎÆµÄÀàĞÍ
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid getThreadCutType(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®ä¼ å…¥çš„èºçº¹ç±»æŒ‡ä»¤å‚æ•°ç»“æ„ä½“ï¼Œåˆ¤æ–­æ­¤æ¬¡åˆ‡å‰Šèºçº¹çš„ç±»å‹
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 //void getThreadCutType(struct _SG32* pG32)
 //{
-//	double dCutDisX = 0;	//X·½ÏòÇĞÏ÷µÄ´óĞ¡
-//	double dCutDisZ = 0;	//Z·½ÏòÇĞÏ÷µÄ´óĞ¡
-//	double dTaper = 0;		//×¶¶È
+//	double dCutDisX = 0;	//Xæ–¹å‘åˆ‡å‰Šçš„å¤§å°
+//	double dCutDisZ = 0;	//Zæ–¹å‘åˆ‡å‰Šçš„å¤§å°
+//	double dTaper = 0;		//é”¥åº¦
 //
 //	dCutDisX = fabs(pG32->SEndPoint.dX - pG32->SStarCutPoint.dX);
 //	dCutDisZ = fabs(pG32->SEndPoint.dZ - pG32->SStarCutPoint.dZ);
 //
-//	//ÂİÎÆÇĞÏ÷ÀàĞÍµÄÅĞ¶Ï
+//	//èºçº¹åˆ‡å‰Šç±»å‹çš„åˆ¤æ–­
 //	if (isZero(dCutDisZ))
 //	{
-//		pG32->ThreadCutType = ENDFACE_THREAD;  //Îª¶ËÃæÂİÎÆÇĞÏ÷
+//		pG32->ThreadCutType = ENDFACE_THREAD;  //ä¸ºç«¯é¢èºçº¹åˆ‡å‰Š
 //#if LHK_DEBUG
-//		printf("¶ËÃæÂİÎÆÇĞÏ÷\r\n");
+//		printf("ç«¯é¢èºçº¹åˆ‡å‰Š\r\n");
 //#endif
 //
 //	}
 //	else
 //	{
-//		dTaper = atan(dCutDisX / dCutDisZ);  //ÂİÎÆ×¶¶È¼ÆËã
-//		if (dTaper > TAPER_45)  //×¶¶È´óÓÚ45£¬³¤ÖáÎªXÖá
+//		dTaper = atan(dCutDisX / dCutDisZ);  //èºçº¹é”¥åº¦è®¡ç®—
+//		if (dTaper > TAPER_45)  //é”¥åº¦å¤§äº45ï¼Œé•¿è½´ä¸ºXè½´
 //		{
 //
-//			pG32->ThreadCutType = TAPER45_MORE_THREAD;  //ÇĞÏ÷ÂİÎÆµÄ×¶¶È´óÓÚ45¡ã
+//			pG32->ThreadCutType = TAPER45_MORE_THREAD;  //åˆ‡å‰Šèºçº¹çš„é”¥åº¦å¤§äº45Â°
 //#if LHK_DEBUG
-//			printf("×¶¶È´óÓÚ45\r\n");
+//			printf("é”¥åº¦å¤§äº45\r\n");
 //#endif
 //
 //		}
-//		else  ////×¶¶ÈĞ¡ÓÚ45£¬³¤ÖáÎªZÖá
+//		else  ////é”¥åº¦å°äº45ï¼Œé•¿è½´ä¸ºZè½´
 //		{
-//			pG32->ThreadCutType = TAPER45_NOMORE_THREAD;  //ÇĞÏ÷ÂİÎÆµÄ×¶¶ÈĞ¡ÓÚ45¡ã£¨Ö±ÂİÎÆ»ò×¶ÂİÎÆ£©
+//			pG32->ThreadCutType = TAPER45_NOMORE_THREAD;  //åˆ‡å‰Šèºçº¹çš„é”¥åº¦å°äº45Â°ï¼ˆç›´èºçº¹æˆ–é”¥èºçº¹ï¼‰
 //#if LHK_DEBUG
-//			printf("×¶¶ÈĞ¡ÓÚ45\r\n");
+//			printf("é”¥åº¦å°äº45\r\n");
 //#endif
 //
 //		}
@@ -146,970 +143,964 @@ int GetSpindleEncoder()  //Ä£ÄâÏÔÊ¾Ö÷Öá±àÂëÆ÷£¬µ½Ê±ºò×öÊµÎï²âÊÔµÄÊ±ºòÉ¾³ı
 //
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºbool isGetSyncSignal(double dTargetPositionPulse)
-//  º¯Êı¹¦ÄÜ£ºÅĞ¶ÏÊÇ·ñ´ïµ½·¢ËÍÍ¬²½ĞÅºÅµÄÌõ¼ş£¬´Ó¶ø¸ù¾İÌõ¼ş·¢ËÍÍ¬²½ĞÅºÅ
-//  ÊäÈë²ÎÊı£ºdTargetPositionPulse    double          Ä¿±êÎ»ÖÃµÄÂö³åÊı
-//  Êä³ö²ÎÊı£ºg_SEncoder[SPINDLE_ENCODER - 1].dEncoderNumDeviation       Ö÷Öá±àÂëÆ÷½á¹¹ÌåµÄ²ÎÊı            ¸Ã²å²¹ÖÜÆÚ±àÂëÆ÷µÄÎ»ÖÃÓëÀíÏëÎ»ÖÃµÄÆ«²î£¨pulse£©
-//  ·µ »Ø Öµ£ºTRUE   »ñÈ¡Í¬²½ĞÅºÅ
-//			FALSE  Ã»»ñÈ¡Í¬²½ĞÅºÅ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šbool isGetSyncSignal(double dTargetPositionPulse)
+//  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­æ˜¯å¦è¾¾åˆ°å‘é€åŒæ­¥ä¿¡å·çš„æ¡ä»¶ï¼Œä»è€Œæ ¹æ®æ¡ä»¶å‘é€åŒæ­¥ä¿¡å·
+//  è¾“å…¥å‚æ•°ï¼šdTargetPositionPulse    double          ç›®æ ‡ä½ç½®çš„è„‰å†²æ•°
+//  è¾“å‡ºå‚æ•°ï¼šg_SEncoder[SPINDLE_ENCODER - 1].dEncoderNumDeviation       ä¸»è½´ç¼–ç å™¨ç»“æ„ä½“çš„å‚æ•°            è¯¥æ’è¡¥å‘¨æœŸç¼–ç å™¨çš„ä½ç½®ä¸ç†æƒ³ä½ç½®çš„åå·®ï¼ˆpulseï¼‰
+//  è¿” å› å€¼ï¼šTRUE   è·å–åŒæ­¥ä¿¡å·
+//			FALSE  æ²¡è·å–åŒæ­¥ä¿¡å·
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 bool isGetSyncSignal(double dTargetPositionPulse, struct SChannel* pSChannel, struct SEncoder* pSSpindleEncoder)
 {
 
-	int nEncoderNum;		 //µ±Ç°ÖÜÆÚ±àÂëÆ÷µÄÊµ¼ÊÎ»ÖÃ£¬ÓÃÓÚºÍnPulseQ×ö±È½ÏÅĞ¶ÏÊÇ·ñ»ñµÃÍ¬²½ĞÅºÅ
-	int nDeltaQ;			 //Í¬²½ĞÅºÅ·¶Î§Çø¼ä£¬È¡µ±Ç°Ö÷Öá²å²¹ÖÜÆÚµÄÂö³åÆ«²îµÄ1.1±¶µÄÒ»°ë×÷Îª·¶Î§Çø¼ä
-	double dPulseQLeftRegion;   //QÖµµÄ×óÇø¼äÖµ
-	double dPulseQRightRegion;  //QÖµµÄÓÒÇø¼äÖµ
+    int nEncoderNum;           //å½“å‰å‘¨æœŸç¼–ç å™¨çš„å®é™…ä½ç½®ï¼Œç”¨äºå’ŒnPulseQåšæ¯”è¾ƒåˆ¤æ–­æ˜¯å¦è·å¾—åŒæ­¥ä¿¡å·
+    int nDeltaQ;               //åŒæ­¥ä¿¡å·èŒƒå›´åŒºé—´ï¼Œå–å½“å‰ä¸»è½´æ’è¡¥å‘¨æœŸçš„è„‰å†²åå·®çš„1.1å€çš„ä¸€åŠä½œä¸ºèŒƒå›´åŒºé—´
+    double dPulseQLeftRegion;  //Qå€¼çš„å·¦åŒºé—´å€¼
+    double dPulseQRightRegion; //Qå€¼çš„å³åŒºé—´å€¼
 
-	if (pSSpindleEncoder == NULL || pSSpindleEncoder->usEncoderCirclePulseNum <= 0)//±ÜÃâ±àÂëÆ÷ÏßÊıÎª0
-	{
-		parseRunningError(9999,GCODE_ERROR_NUM153,9999);
-		return FALSE;
-	}
+    if (pSSpindleEncoder == NULL || pSSpindleEncoder->usEncoderCirclePulseNum <= 0) //é¿å…ç¼–ç å™¨çº¿æ•°ä¸º0
+    {
+        parseRunningError(9999, GCODE_ERROR_NUM153, 9999);
+        return FALSE;
+    }
 
-	nDeltaQ = (int)ceil((1.1 * pSSpindleEncoder->usDelta) * 0.5);  //¼ÆËãÍ¬²½ĞÅºÅ·¶Î§Çø¼ä
+    nDeltaQ = (int)ceil((1.1 * pSSpindleEncoder->usDelta) * 0.5); //è®¡ç®—åŒæ­¥ä¿¡å·èŒƒå›´åŒºé—´
 
-	dPulseQLeftRegion = dTargetPositionPulse - nDeltaQ;  //¼ÆËãQÖµµÄ×óÇø¼äÖµ
-	if (dPulseQLeftRegion < 0)  //Èô×óÇø¼äµÄÖµĞ¡ÓÚ0
-	{
-		dPulseQLeftRegion = pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQLeftRegion;  //ĞŞÕı×óÇø¼äµÄÖµ	
-	}
+    dPulseQLeftRegion = dTargetPositionPulse - nDeltaQ; //è®¡ç®—Qå€¼çš„å·¦åŒºé—´å€¼
+    if (dPulseQLeftRegion < 0)                          //è‹¥å·¦åŒºé—´çš„å€¼å°äº0
+    {
+        dPulseQLeftRegion = pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQLeftRegion; //ä¿®æ­£å·¦åŒºé—´çš„å€¼
+    }
 
-	dPulseQRightRegion = dTargetPositionPulse + nDeltaQ;  //¼ÆËãQÖµµÄÓÒÇø¼äÖµ
-	if (dPulseQRightRegion > pSSpindleEncoder->usEncoderCirclePulseNum)  //ÈôÓÒÇø¼äµÄÖµ³¬¹ı±àÂëÆ÷Ğı×ªÒ»È¦µÄÂö³åÖµ
-	{
-		dPulseQRightRegion = surplusDoubleData(dPulseQRightRegion, pSSpindleEncoder->usEncoderCirclePulseNum);  //ĞŞÕıÓÒÇø¼äµÄÖµ
-	}
+    dPulseQRightRegion = dTargetPositionPulse + nDeltaQ;                //è®¡ç®—Qå€¼çš„å³åŒºé—´å€¼
+    if (dPulseQRightRegion > pSSpindleEncoder->usEncoderCirclePulseNum) //è‹¥å³åŒºé—´çš„å€¼è¶…è¿‡ç¼–ç å™¨æ—‹è½¬ä¸€åœˆçš„è„‰å†²å€¼
+    {
+        dPulseQRightRegion =
+            surplusDoubleData(dPulseQRightRegion, pSSpindleEncoder->usEncoderCirclePulseNum); //ä¿®æ­£å³åŒºé—´çš„å€¼
+    }
 
-	//Êµ¼Ê»ñÈ¡µÄÖ÷Öá±àÂëÆ÷ÊıÖµÂäºóÒ»¸öÖÜÆÚ£¬ËùÒÔÔÚÕâ²¹ÉÏ
-	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
+    //å®é™…è·å–çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼è½åä¸€ä¸ªå‘¨æœŸï¼Œæ‰€ä»¥åœ¨è¿™è¡¥ä¸Š
+    if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´æ­£è½¬
 
-	{
-		nEncoderNum = (pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta)
-			% pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡µ±Ç°ÖÜÆÚÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+    {
+        nEncoderNum = (pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta) %
+                      pSSpindleEncoder->usEncoderCirclePulseNum; //è·å–å½“å‰å‘¨æœŸä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+    }
+    else //è‹¥ä¸»è½´åè½¬
+    {
+        nEncoderNum = (pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta) %
+                      pSSpindleEncoder->usEncoderCirclePulseNum; //è·å–å½“å‰å‘¨æœŸä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+    }
 
+    if (nEncoderNum < 0) //è‹¥ä¸»è½´ä¸ºåè½¬
+    {
+        nEncoderNum += pSSpindleEncoder->usEncoderCirclePulseNum; //ä¿®æ­£å½“å‰å‘¨æœŸä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+    }
 
-	}
-	else  //ÈôÖ÷Öá·´×ª
-	{
-		nEncoderNum = (pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta)
-			% pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡µ±Ç°ÖÜÆÚÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+    if (dPulseQRightRegion - dPulseQLeftRegion >= 0) //å·¦å³åŒºé—´å€¼éƒ½åœ¨0çš„åŒä¸€ä¾§
+    {
+        if (nEncoderNum >= dPulseQLeftRegion &&
+            nEncoderNum <= dPulseQRightRegion) //è‹¥å½“å‰å‘¨æœŸä¸»è½´ç¼–ç å™¨çš„ä½ç½®ä½äºQå€¼çš„å·¦å³åŒºé—´å†…
+        {
+            if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´æ­£è½¬
+            {
+                pSSpindleEncoder->dEncoderNumDeviation = (nEncoderNum - dTargetPositionPulse); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+            }
+            else //è‹¥ä¸»è½´åè½¬
+            {
+                pSSpindleEncoder->dEncoderNumDeviation = -(nEncoderNum - dTargetPositionPulse); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+            }
+            return TRUE; //å‘é€åŒæ­¥ä¿¡å·
+        }
+    }
+    else //å·¦å³åŒºé—´å€¼åœ¨0çš„ä¸åŒæµ‹
+    {
+        bool bInLeftRegion = (nEncoderNum >= dPulseQLeftRegion &&
+                              nEncoderNum < pSSpindleEncoder->usEncoderCirclePulseNum); //ä¸»è½´ç¼–ç å™¨çš„ä½ç½®æ˜¯æ˜¯å¦åœ¨å·¦åŒºé—´
+        bool bInRightRegion = (nEncoderNum <= dPulseQRightRegion && nEncoderNum >= 0);  //ä¸»è½´ç¼–ç å™¨çš„ä½ç½®æ˜¯æ˜¯å¦åœ¨å³åŒºé—´
 
-	}
+        bool bInLeftRegionQ =
+            (dTargetPositionPulse >= dPulseQLeftRegion &&
+             dTargetPositionPulse < pSSpindleEncoder->usEncoderCirclePulseNum); //Qå€¼å¯¹åº”çš„è„‰å†²åœ¨0çš„å·¦è¾¹
+        bool bInRightRegionQ =
+            (dTargetPositionPulse <= dPulseQRightRegion && dTargetPositionPulse >= 0); //Qå€¼å¯¹åº”çš„è„‰å†²åœ¨0çš„å³è¾¹
 
-	if (nEncoderNum < 0)  //ÈôÖ÷ÖáÎª·´×ª
-	{
-		nEncoderNum += pSSpindleEncoder->usEncoderCirclePulseNum;  //ĞŞÕıµ±Ç°ÖÜÆÚÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
-	}
+        if (bInLeftRegion || bInRightRegion) //å½“å‰ä¸»è½´ç¼–ç å™¨çš„ä½ç½®åœ¨å·¦åŒºé—´å†…æˆ–å³åŒºé—´å†…
+        {
+            if ((bInLeftRegion && bInLeftRegionQ) ||
+                (bInRightRegion && bInRightRegionQ)) //è¯¥æ’è¡¥å‘¨æœŸä¸»è½´ç¼–ç å™¨çš„ä½ç½®ä¸Qå€¼åœ¨0çš„åŒä¸€ä¾§
+            {
+                if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´ä¸ºæ­£è½¬
+                {
+                    pSSpindleEncoder->dEncoderNumDeviation =
+                        (nEncoderNum - dTargetPositionPulse); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+                }
+                else //è‹¥ä¸»è½´ä¸ºåè½¬
+                {
+                    pSSpindleEncoder->dEncoderNumDeviation =
+                        -(nEncoderNum - dTargetPositionPulse); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+                }
 
+                return TRUE; //å‘é€åŒæ­¥ä¿¡å·
+            }
+            else //è¯¥æ’è¡¥å‘¨æœŸç¼–ç å™¨çš„ä½ç½®ä¸Qå€¼åœ¨0çš„ä¸åŒä¾§
+            {
+                double dDeltaLeft;  //å·¦åŒºé—´çš„è„‰å†²å·®å€¼
+                double dDeltaRight; //å³åŒºé—´çš„è„‰å†²å·®å€¼
 
-	if (dPulseQRightRegion - dPulseQLeftRegion >= 0)  //×óÓÒÇø¼äÖµ¶¼ÔÚ0µÄÍ¬Ò»²à
-	{
-		if (nEncoderNum >= dPulseQLeftRegion && nEncoderNum <= dPulseQRightRegion)  //Èôµ±Ç°ÖÜÆÚÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃÎ»ÓÚQÖµµÄ×óÓÒÇø¼äÄÚ
-		{
-			if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
-			{
-				pSSpindleEncoder->dEncoderNumDeviation = (nEncoderNum - dTargetPositionPulse);  //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
-			}
-			else  //ÈôÖ÷Öá·´×ª
-			{
-				pSSpindleEncoder->dEncoderNumDeviation = -(nEncoderNum - dTargetPositionPulse);  //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
+                if (bInLeftRegion && bInRightRegionQ) //è‹¥ä¸»è½´ç¼–ç å™¨åœ¨å·¦åŒºé—´ä¸”Qå€¼å¯¹åº”çš„è„‰å†²åœ¨0çš„å³è¾¹
+                {
+                    dDeltaLeft = pSSpindleEncoder->usEncoderCirclePulseNum - nEncoderNum; //è·å–å·¦åŒºé—´çš„è„‰å†²å·®å€¼
+                    dDeltaRight = dTargetPositionPulse;                                   //è·å–å³åŒºé—´çš„è„‰å†²å·®å€¼
+                }
+                else //è‹¥ä¸»è½´ç¼–ç å™¨åœ¨å³åŒºé—´ä¸”Qå€¼å¯¹åº”çš„è„‰å†²åœ¨0çš„å·¦è¾¹
+                {
+                    dDeltaLeft =
+                        -(pSSpindleEncoder->usEncoderCirclePulseNum - dTargetPositionPulse); //è·å–å·¦åŒºé—´çš„è„‰å†²å·®å€¼
+                    dDeltaRight = -nEncoderNum;                                              //è·å–å³åŒºé—´çš„è„‰å†²å·®å€¼
+                }
 
-			}
-			return TRUE;  //·¢ËÍÍ¬²½ĞÅºÅ
+                if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´ä¸ºæ­£è½¬
+                {
+                    pSSpindleEncoder->dEncoderNumDeviation = -(dDeltaLeft + dDeltaRight); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+                }
+                else //è‹¥ä¸»è½´ä¸ºåè½¬
+                {
+                    pSSpindleEncoder->dEncoderNumDeviation = (dDeltaLeft + dDeltaRight); //è·å¾—ä¸»è½´å¯åŠ¨ä½ç½®åå·®
+                }
+                return TRUE; //å‘é€åŒæ­¥ä¿¡å·
+            }
+        }
+    }
 
-		}
-
-	}
-	else  //×óÓÒÇø¼äÖµÔÚ0µÄ²»Í¬²â
-	{
-		bool bInLeftRegion = (nEncoderNum >= dPulseQLeftRegion && nEncoderNum < pSSpindleEncoder->usEncoderCirclePulseNum);  //Ö÷Öá±àÂëÆ÷µÄÎ»ÖÃÊÇÊÇ·ñÔÚ×óÇø¼ä
-		bool bInRightRegion = (nEncoderNum <= dPulseQRightRegion && nEncoderNum >= 0);  //Ö÷Öá±àÂëÆ÷µÄÎ»ÖÃÊÇÊÇ·ñÔÚÓÒÇø¼ä
-
-		bool bInLeftRegionQ = (dTargetPositionPulse >= dPulseQLeftRegion && dTargetPositionPulse < pSSpindleEncoder->usEncoderCirclePulseNum);  //QÖµ¶ÔÓ¦µÄÂö³åÔÚ0µÄ×ó±ß
-		bool bInRightRegionQ = (dTargetPositionPulse <= dPulseQRightRegion && dTargetPositionPulse >= 0);  //QÖµ¶ÔÓ¦µÄÂö³åÔÚ0µÄÓÒ±ß
-
-		if (bInLeftRegion || bInRightRegion)  //µ±Ç°Ö÷Öá±àÂëÆ÷µÄÎ»ÖÃÔÚ×óÇø¼äÄÚ»òÓÒÇø¼äÄÚ
-		{
-			if ((bInLeftRegion && bInLeftRegionQ) || (bInRightRegion && bInRightRegionQ))  //¸Ã²å²¹ÖÜÆÚÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃÓëQÖµÔÚ0µÄÍ¬Ò»²à
-			{
-				if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÎªÕı×ª
-				{
-					pSSpindleEncoder->dEncoderNumDeviation = (nEncoderNum - dTargetPositionPulse);  //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
-				}
-				else  //ÈôÖ÷ÖáÎª·´×ª
-				{
-					pSSpindleEncoder->dEncoderNumDeviation = -(nEncoderNum - dTargetPositionPulse);  //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
-
-				}
-
-				return TRUE;  //·¢ËÍÍ¬²½ĞÅºÅ
-
-			}
-			else  //¸Ã²å²¹ÖÜÆÚ±àÂëÆ÷µÄÎ»ÖÃÓëQÖµÔÚ0µÄ²»Í¬²à
-			{
-				double dDeltaLeft;  //×óÇø¼äµÄÂö³å²îÖµ
-				double dDeltaRight; //ÓÒÇø¼äµÄÂö³å²îÖµ
-
-
-				if (bInLeftRegion && bInRightRegionQ)  //ÈôÖ÷Öá±àÂëÆ÷ÔÚ×óÇø¼äÇÒQÖµ¶ÔÓ¦µÄÂö³åÔÚ0µÄÓÒ±ß
-				{
-					dDeltaLeft = pSSpindleEncoder->usEncoderCirclePulseNum - nEncoderNum;  //»ñÈ¡×óÇø¼äµÄÂö³å²îÖµ
-					dDeltaRight = dTargetPositionPulse;                                                  //»ñÈ¡ÓÒÇø¼äµÄÂö³å²îÖµ
-
-				}
-				else //ÈôÖ÷Öá±àÂëÆ÷ÔÚÓÒÇø¼äÇÒQÖµ¶ÔÓ¦µÄÂö³åÔÚ0µÄ×ó±ß
-				{
-					dDeltaLeft = -(pSSpindleEncoder->usEncoderCirclePulseNum - dTargetPositionPulse);   //»ñÈ¡×óÇø¼äµÄÂö³å²îÖµ
-					dDeltaRight = -nEncoderNum;                                                                       //»ñÈ¡ÓÒÇø¼äµÄÂö³å²îÖµ
-
-				}
-
-				if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÎªÕı×ª
-				{
-					pSSpindleEncoder->dEncoderNumDeviation = -(dDeltaLeft + dDeltaRight);  //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
-				}
-				else  //ÈôÖ÷ÖáÎª·´×ª
-				{
-					pSSpindleEncoder->dEncoderNumDeviation = (dDeltaLeft + dDeltaRight);   //»ñµÃÖ÷ÖáÆô¶¯Î»ÖÃÆ«²î
-
-				}
-				return TRUE;  //·¢ËÍÍ¬²½ĞÅºÅ
-
-			}
-
-		}
-
-	}
-
-	return FALSE;  //µ±Ç°ÔË¶¯ÖÜÆÚÃ»ÓĞ»ñµÃÍ¬²½ĞÅºÅ
-
-
+    return FALSE; //å½“å‰è¿åŠ¨å‘¨æœŸæ²¡æœ‰è·å¾—åŒæ­¥ä¿¡å·
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid G32Init(struct _SG32 *pG32)
-//  º¯Êı¹¦ÄÜ£º³õÊ¼»¯Ö´ĞĞG32Ö¸ÁîËùĞè²ÎÊı
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid G32Init(struct _SG32 *pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–æ‰§è¡ŒG32æŒ‡ä»¤æ‰€éœ€å‚æ•°
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void G32Init(struct _SG32* pG32)
 {
-	pG32->bSyncSignal = FALSE;        //Í¬²½ĞÅºÅ±êÖ¾Î»³õÊ¼»¯
-	pG32->bLeftTailFlag = FALSE;      //ÍËÎ²±êÖ¾Î»³õÊ¼»¯ 
-	pG32->bDecPlanTransitionFlag = FALSE; //Á¬ĞøG32¼õËÙ¹ı¶É±êÖ¾Î»³õÊ¼»¯
+    pG32->bSyncSignal = FALSE;            //åŒæ­¥ä¿¡å·æ ‡å¿—ä½åˆå§‹åŒ–
+    pG32->bLeftTailFlag = FALSE;          //é€€å°¾æ ‡å¿—ä½åˆå§‹åŒ–
+    pG32->bDecPlanTransitionFlag = FALSE; //è¿ç»­G32å‡é€Ÿè¿‡æ¸¡æ ‡å¿—ä½åˆå§‹åŒ–
 
-	pG32->unCurrentT = 0;				//¹ı¶É½×¶ÎÖĞ²å²¹Ê±¼ä½Úµã³õÊ¼»¯
-	pG32->unTac = 0;                  //¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã³õÊ¼»¯
-	pG32->dNextG32LongAxisSpeed = 0;  //Á¬ĞøG32ÖĞÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáËÙ¶È³õÊ¼»¯
-	pG32->ucMotionState = 0;          //ÔË¶¯×´Ì¬³õÊ¼»¯
-	pG32->dIdealTransmitStartPos = 0; //ÀíÏë¿ªÊ¼¼õËÙ¹ı¶ÉÎ»ÖÃ³õÊ¼»¯
+    pG32->unCurrentT = 0;             //è¿‡æ¸¡é˜¶æ®µä¸­æ’è¡¥æ—¶é—´èŠ‚ç‚¹åˆå§‹åŒ–
+    pG32->unTac = 0;                  //è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹åˆå§‹åŒ–
+    pG32->dNextG32LongAxisSpeed = 0;  //è¿ç»­G32ä¸­ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´é€Ÿåº¦åˆå§‹åŒ–
+    pG32->ucMotionState = 0;          //è¿åŠ¨çŠ¶æ€åˆå§‹åŒ–
+    pG32->dIdealTransmitStartPos = 0; //ç†æƒ³å¼€å§‹å‡é€Ÿè¿‡æ¸¡ä½ç½®åˆå§‹åŒ–
 
-	pG32->dRemainDistance = 0;        //Á¬ĞøG32Ê£Óà¾àÀë³õÊ¼»¯
-	pG32->dVs = 0;                    //Á¬ĞøG32ÆğÊ¼ËÙ¶È£¨¹ı¶É¶ÎµÄÆğÊ¼ËÙ¶ÈÊÇµ±Ç°ËÙ¶È£¬ËùÒÔĞèÒª´æ´¢¼ÇÂ¼£©³õÊ¼»¯
-	pG32->dDec = 0;                   //Á¬ĞøG32¹ı¶É¶Î¼õËÙ¶È³õÊ¼»¯
-	pG32->dIdealSpindlePosition = 0;  //Á¬ĞøG32ÖÕµã´¦ÀíÏëµÄÖ÷ÖáÎ»ÖÃ
-	pG32->dSpindleSpeed = 0;          //Ö÷Öá×ªËÙ³õÊ¼»¯
-	pG32->dStartFollowDis = 0;        //¿ªÊ¼Ëæ¶¯ËùĞèµÄ³¤¶È³õÊ¼»¯£¨ÓÃÓÚ¶Ë¿Ú²é¿´£©
-	pG32->bStartCompensate = TRUE;    //¿ªÊ¼²¹³¥±êÖ¾Î»³õÊ¼»¯
+    pG32->dRemainDistance = 0;       //è¿ç»­G32å‰©ä½™è·ç¦»åˆå§‹åŒ–
+    pG32->dVs = 0;                   //è¿ç»­G32èµ·å§‹é€Ÿåº¦ï¼ˆè¿‡æ¸¡æ®µçš„èµ·å§‹é€Ÿåº¦æ˜¯å½“å‰é€Ÿåº¦ï¼Œæ‰€ä»¥éœ€è¦å­˜å‚¨è®°å½•ï¼‰åˆå§‹åŒ–
+    pG32->dDec = 0;                  //è¿ç»­G32è¿‡æ¸¡æ®µå‡é€Ÿåº¦åˆå§‹åŒ–
+    pG32->dIdealSpindlePosition = 0; //è¿ç»­G32ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ä½ç½®
+    pG32->dSpindleSpeed = 0;         //ä¸»è½´è½¬é€Ÿåˆå§‹åŒ–
+    pG32->dStartFollowDis = 0;       //å¼€å§‹éšåŠ¨æ‰€éœ€çš„é•¿åº¦åˆå§‹åŒ–ï¼ˆç”¨äºç«¯å£æŸ¥çœ‹ï¼‰
+    pG32->bStartCompensate = TRUE;   //å¼€å§‹è¡¥å¿æ ‡å¿—ä½åˆå§‹åŒ–
 
-	pG32->dRatioXZ = 0;               //XÖáËÅ·şµç»úÓëZÖáËÅ·şµç»úµÄÂö³åÖ®±È£¨ÓÃÓÚÇĞÏ÷×¶ÂİÎÆ,´ø¶ÌÖáÏòÁ¿£©
+    pG32->dRatioXZ = 0; //Xè½´ä¼ºæœç”µæœºä¸Zè½´ä¼ºæœç”µæœºçš„è„‰å†²ä¹‹æ¯”ï¼ˆç”¨äºåˆ‡å‰Šé”¥èºçº¹,å¸¦çŸ­è½´å‘é‡ï¼‰
 
-	free(pG32->SExcessPlanForG32);    //ÊÍ·ÅG32ÌØÊâ¹æ»®Ö¸Õë
-	pG32->SExcessPlanForG32 = NULL;   //G32ÌØÊâ¹æ»®Ö¸Õë³õÊ¼»¯
-	pG32->dShortAxisCompensate = 0;   //¶ÌÖá²¹³¥Á¿³õÊ¼»¯
-	pG32->dStartPointCompensateCopy = 0;  //³¤ÖáÆğÊ¼²¹³¥Á¿¸±±¾
-	pG32->bExcessPlanFlag = FALSE;        //²»ÔÙ¶Ô¶ÌÖá½øĞĞËÙ¶È¹æ»®
-	
-
-
+    free(pG32->SExcessPlanForG32);       //é‡Šæ”¾G32ç‰¹æ®Šè§„åˆ’æŒ‡é’ˆ
+    pG32->SExcessPlanForG32 = NULL;      //G32ç‰¹æ®Šè§„åˆ’æŒ‡é’ˆåˆå§‹åŒ–
+    pG32->dShortAxisCompensate = 0;      //çŸ­è½´è¡¥å¿é‡åˆå§‹åŒ–
+    pG32->dStartPointCompensateCopy = 0; //é•¿è½´èµ·å§‹è¡¥å¿é‡å‰¯æœ¬
+    pG32->bExcessPlanFlag = FALSE;       //ä¸å†å¯¹çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid initThreadPreStructData(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º¸ù¾İµ¶²¹ºóµÄ½á¹¹Ìå²ÎÊı³õÊ¼»¯ÂİÎÆÀàÖ¸Áî²ÎÊı½á¹¹Ìå
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid initThreadPreStructData(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šæ ¹æ®åˆ€è¡¥åçš„ç»“æ„ä½“å‚æ•°åˆå§‹åŒ–èºçº¹ç±»æŒ‡ä»¤å‚æ•°ç»“æ„ä½“
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void initThreadPreStructData(struct _SG32* pG32)
 {
-	//G32ÂİÎÆÇĞÏ÷²ÎÊı³õÊ¼»¯³õÊ¼»¯
-	G32Init(pG32);
+    //G32èºçº¹åˆ‡å‰Šå‚æ•°åˆå§‹åŒ–åˆå§‹åŒ–
+    G32Init(pG32);
 
-	//¼ÆËãÂİÎÆ³¤¶ÌÖá¸÷×ÔËùĞèµÄ²ÎÊı
-	G32Prepare(pG32);
-
-
+    //è®¡ç®—èºçº¹é•¿çŸ­è½´å„è‡ªæ‰€éœ€çš„å‚æ•°
+    G32Prepare(pG32);
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid processAxisForG34BackTail(struct _SG32* pG32, double* dCutDisFirstAxis, double* dCutDisSecondAxis)
-//  º¯Êı¹¦ÄÜ£ºG34ÍËÎ²Ê±µÄÖá´¦Àí
-//  ÊäÈë²ÎÊı£º*pG32£¬            ½á¹¹Ìåstruct _SG32Ö¸Õë
-//            *dCutDisFirstAxis£¬ double*    ²å²¹0ºÅÖáµÄÇĞÏ÷¾àÀë
-//			  *dDistFromSpindle   double*    ²å²¹1ºÅÖáµÄÇĞÏ÷¾àÀë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			  *dCutDisFirstAxis£¬ double*    ²å²¹0ºÅÖáµÄÇĞÏ÷¾àÀë
-//			  *dDistFromSpindle   double*    ²å²¹1ºÅÖáµÄÇĞÏ÷¾àÀë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid processAxisForG34BackTail(struct _SG32* pG32, double* dCutDisFirstAxis, double* dCutDisSecondAxis)
+//  å‡½æ•°åŠŸèƒ½ï¼šG34é€€å°¾æ—¶çš„è½´å¤„ç†
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ            ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//            *dCutDisFirstAxisï¼Œ double*    æ’è¡¥0å·è½´çš„åˆ‡å‰Šè·ç¦»
+//			  *dDistFromSpindle   double*    æ’è¡¥1å·è½´çš„åˆ‡å‰Šè·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			  *dCutDisFirstAxisï¼Œ double*    æ’è¡¥0å·è½´çš„åˆ‡å‰Šè·ç¦»
+//			  *dDistFromSpindle   double*    æ’è¡¥1å·è½´çš„åˆ‡å‰Šè·ç¦»
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void processAxisForG34BackTail(struct _SG32* pG32, double* dCutDisFirstAxis, double* dCutDisSecondAxis)
 {
-	double dIdealCutDisFirstAxis;           //0ºÅÖáÀíÏëµÄÇĞÏ÷Á¿£¨ÆğµãÎªÉÏÒ»¶ÎG32µÄÖÕµã£©
-	double dIdealCutDisSecondAxis;          //1ºÅÖáÀíÏëµÄÇĞÏ÷Á¿
-	pG32->ucAxis[0] = pG32->ucLastAxis[0];  //ÖØËã³¤ÖáÖáºÅ
-	pG32->ucAxis[1] = pG32->ucLastAxis[1];  //ÖØËã¶ÌÖáÖáºÅ
-	dIdealCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SLastEndPoint.dArray[pG32->ucAxis[0]];    //»ñÈ¡Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿
-	dIdealCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SLastEndPoint.dArray[pG32->ucAxis[1]];   //»ñÈ¡Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿
-	*dCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SStarCutPoint.dArray[pG32->ucAxis[0]];        //»ñÈ¡Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿
-	*dCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SStarCutPoint.dArray[pG32->ucAxis[1]];       //»ñÈ¡Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿
-	pG32->dRatioXZ = isZero(dIdealCutDisFirstAxis)? 0 : dIdealCutDisSecondAxis / fabs(dIdealCutDisFirstAxis);  //»ñÈ¡¶ÌÖáËÅ·şµç»úÓë³¤ÖáËÅ·şµç»úµÄÂö³åÖ®±È(´ø¶ÌÖáÊ¸Á¿)
+    double dIdealCutDisFirstAxis;          //0å·è½´ç†æƒ³çš„åˆ‡å‰Šé‡ï¼ˆèµ·ç‚¹ä¸ºä¸Šä¸€æ®µG32çš„ç»ˆç‚¹ï¼‰
+    double dIdealCutDisSecondAxis;         //1å·è½´ç†æƒ³çš„åˆ‡å‰Šé‡
+    pG32->ucAxis[0] = pG32->ucLastAxis[0]; //é‡ç®—é•¿è½´è½´å·
+    pG32->ucAxis[1] = pG32->ucLastAxis[1]; //é‡ç®—çŸ­è½´è½´å·
+    dIdealCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] -
+                            pG32->SLastEndPoint.dArray[pG32->ucAxis[0]]; //è·å–æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡
+    dIdealCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] -
+                             pG32->SLastEndPoint.dArray[pG32->ucAxis[1]]; //è·å–æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡
+    *dCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] -
+                        pG32->SStarCutPoint.dArray[pG32->ucAxis[0]]; //è·å–æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡
+    *dCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] -
+                         pG32->SStarCutPoint.dArray[pG32->ucAxis[1]]; //è·å–æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡
+    pG32->dRatioXZ = isZero(dIdealCutDisFirstAxis)
+                         ? 0
+                         : dIdealCutDisSecondAxis /
+                               fabs(dIdealCutDisFirstAxis); //è·å–çŸ­è½´ä¼ºæœç”µæœºä¸é•¿è½´ä¼ºæœç”µæœºçš„è„‰å†²ä¹‹æ¯”(å¸¦çŸ­è½´çŸ¢é‡)
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid G32Prepare(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º»ñÈ¡ÂİÎÆÔË¶¯ÖĞµÄ±ÈÀıÏµÊıÒÔ¼°³¤Öá²å²¹µÄ¾àÀë
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid G32Prepare(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šè·å–èºçº¹è¿åŠ¨ä¸­çš„æ¯”ä¾‹ç³»æ•°ä»¥åŠé•¿è½´æ’è¡¥çš„è·ç¦»
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void G32Prepare(struct _SG32* pG32)
 {
-	double dCutDisFirstAxis; 	   //Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿£¨´øÊ¸Á¿£©
-	double dCutDisSecondAxis;	   //Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿£¨´øÊ¸Á¿£©
-	bool bAxisNumChangeFlag = FALSE;       //ÖáºÅ±ä»¯±êÖ¾Î»
-	uint8 *pMapAxisArray = pG32->pSChannel->pMapAxisArray;
-	if(pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]] >= AXIS_PHYSICS_NUM_MAX || pG32->pSChannel->pMapAxisArray[pG32->ucAxis[1]] >= AXIS_PHYSICS_NUM_MAX)
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM150,9999);
-		return;
-	}
+    double dCutDisFirstAxis;         //æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡ï¼ˆå¸¦çŸ¢é‡ï¼‰
+    double dCutDisSecondAxis;        //æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡ï¼ˆå¸¦çŸ¢é‡ï¼‰
+    bool bAxisNumChangeFlag = FALSE; //è½´å·å˜åŒ–æ ‡å¿—ä½
+    uint8* pMapAxisArray = pG32->pSChannel->pMapAxisArray;
+    if (pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]] >= AXIS_PHYSICS_NUM_MAX ||
+        pG32->pSChannel->pMapAxisArray[pG32->ucAxis[1]] >= AXIS_PHYSICS_NUM_MAX)
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+        return;
+    }
 
-	dCutDisFirstAxis  = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SStarCutPoint.dArray[pG32->ucAxis[0]];  //»ñÈ¡Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿
-	dCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SStarCutPoint.dArray[pG32->ucAxis[1]];  //»ñÈ¡Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿
+    dCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] -
+                       pG32->SStarCutPoint.dArray[pG32->ucAxis[0]]; //è·å–æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡
+    dCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] -
+                        pG32->SStarCutPoint.dArray[pG32->ucAxis[1]]; //è·å–æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡
 
-	 //Èç¹û1ºÅÖáµÄÇĞÏ÷Á¿ > 0ºÅÖáµÄÇĞÏ÷Á¿£¬ ½»»»Á½ÖáµÄÎ»ÖÃ±£Ö¤Öá0ËùÖ¸ÏòµÄÖáÎª³¤Öá
-	if (fabs(dCutDisSecondAxis) > fabs(dCutDisFirstAxis))
-	{
-		uint8 ucTemp = pG32->ucAxis[0];
-		double dCutDisTemp = dCutDisFirstAxis;
-		pG32->ucAxis[0] = pG32->ucAxis[1];
-		pG32->ucAxis[1] = ucTemp;
-		dCutDisFirstAxis = dCutDisSecondAxis;
-		dCutDisSecondAxis = dCutDisTemp;
-		bAxisNumChangeFlag = TRUE;
-	}
+    //å¦‚æœ1å·è½´çš„åˆ‡å‰Šé‡ > 0å·è½´çš„åˆ‡å‰Šé‡ï¼Œ äº¤æ¢ä¸¤è½´çš„ä½ç½®ä¿è¯è½´0æ‰€æŒ‡å‘çš„è½´ä¸ºé•¿è½´
+    if (fabs(dCutDisSecondAxis) > fabs(dCutDisFirstAxis))
+    {
+        uint8 ucTemp = pG32->ucAxis[0];
+        double dCutDisTemp = dCutDisFirstAxis;
+        pG32->ucAxis[0] = pG32->ucAxis[1];
+        pG32->ucAxis[1] = ucTemp;
+        dCutDisFirstAxis = dCutDisSecondAxis;
+        dCutDisSecondAxis = dCutDisTemp;
+        bAxisNumChangeFlag = TRUE;
+    }
 
+    pG32->dMmToPulse =
+        1.0 / g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]]].dPulseToMm; //è·å–é•¿è½´çš„è„‰å†²å½“é‡
 
+    //æ ¹æ®èºçº¹åˆ‡å‰Šçš„ç±»å‹ï¼Œå¯¹è¿åŠ¨è½´çš„è½´å·ã€æ¯”ä¾‹ç³»æ•°ç­‰è¿›è¡Œå¤„ç†
+    if (isZero(pG32->dRadius)) //è‹¥ä¸ä¸ºåœ†å¼§é¢èºçº¹
+    {
+        if (pG32->bG34BackTailFlag) //å½“å‰æ’è¡¥æ®µä¸ºG34çš„é€€å°¾æ®µ
+        {
+            processAxisForG34BackTail(pG32, &dCutDisFirstAxis, &dCutDisSecondAxis); //G34é€€å°¾æ®µè¿åŠ¨è½´çš„å¤„ç†
+        }
+        else
+        {
+            if (pG32->bRepeatG32Flag) //ä¸ºè¿ç»­G32
+            {
+                double dIdealCutDisFirstAxis;  //0å·è½´ç†æƒ³çš„åˆ‡å‰Šé‡ï¼ˆèµ·ç‚¹ä¸ºä¸Šä¸€æ®µG32çš„ç»ˆç‚¹ï¼‰
+                double dIdealCutDisSecondAxis; //1å·è½´ç†æƒ³çš„åˆ‡å‰Šé‡
 
-	pG32->dMmToPulse = 1.0 / g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]]].dPulseToMm;              //»ñÈ¡³¤ÖáµÄÂö³åµ±Á¿
-																														   
-	//¸ù¾İÂİÎÆÇĞÏ÷µÄÀàĞÍ£¬¶ÔÔË¶¯ÖáµÄÖáºÅ¡¢±ÈÀıÏµÊıµÈ½øĞĞ´¦Àí																														   
-	if (isZero(pG32->dRadius))  //Èô²»ÎªÔ²»¡ÃæÂİÎÆ
-	{
-		if (pG32->bG34BackTailFlag)  //µ±Ç°²å²¹¶ÎÎªG34µÄÍËÎ²¶Î
-		{
-			processAxisForG34BackTail(pG32, &dCutDisFirstAxis, &dCutDisSecondAxis);  //G34ÍËÎ²¶ÎÔË¶¯ÖáµÄ´¦Àí
-		}
-		else
-		{
-			if (pG32->bRepeatG32Flag)  //ÎªÁ¬ĞøG32
-			{
-				double dIdealCutDisFirstAxis;  //0ºÅÖáÀíÏëµÄÇĞÏ÷Á¿£¨ÆğµãÎªÉÏÒ»¶ÎG32µÄÖÕµã£©
-				double dIdealCutDisSecondAxis; //1ºÅÖáÀíÏëµÄÇĞÏ÷Á¿
+                dIdealCutDisFirstAxis = pG32->SEndPoint.dArray[pG32->ucAxis[0]] -
+                                        pG32->SLastEndPoint.dArray[pG32->ucAxis[0]]; //è·å–æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡
+                dIdealCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] -
+                                         pG32->SLastEndPoint.dArray[pG32->ucAxis[1]]; //è·å–æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡
 
-				dIdealCutDisFirstAxis  = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SLastEndPoint.dArray[pG32->ucAxis[0]];   //»ñÈ¡Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿
-				dIdealCutDisSecondAxis = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SLastEndPoint.dArray[pG32->ucAxis[1]];   //»ñÈ¡Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿
+                //å¦‚æœç†æƒ³é•¿è½´å’ŒçŸ­è½´é•¿åº¦ç›¸åŒï¼ˆè¿ç»­G32ä¸­ï¼Œç”±äºåŠ é€Ÿè¿‡æ¸¡ä¼šè¶…è¿‡æœ¬æ¬¡åˆ‡å‰Šçš„è·ç¦»ï¼Œæ‰€ä»¥å¯èƒ½ä¼šå¯¼è‡´é•¿è½´é”™è¯¯åˆ¤æ–­çš„æƒ…å†µï¼‰ï¼Œæ›´æ”¹é•¿çŸ­è½´çš„è½´å·
+                if (bAxisNumChangeFlag && (isZero(fabs(dIdealCutDisFirstAxis) - fabs(dIdealCutDisSecondAxis)) ||
+                                           fabs(dIdealCutDisFirstAxis) < fabs(dIdealCutDisSecondAxis)))
+                {
+                    //æ›´æ”¹é•¿çŸ­è½´çš„è½´å·å’Œå¯¹åº”çš„æ’è¡¥è·ç¦»
+                    uint8 ucTemp = pG32->ucAxis[0];
+                    double dCutDisTemp = dCutDisFirstAxis;
+                    double dIdealDisTemp = dIdealCutDisFirstAxis;
+                    pG32->ucAxis[0] = pG32->ucAxis[1];
+                    pG32->ucAxis[1] = ucTemp;
+                    dCutDisFirstAxis = dCutDisSecondAxis;
+                    dCutDisSecondAxis = dCutDisTemp;
+                    dIdealCutDisFirstAxis = dIdealCutDisSecondAxis;
+                    dIdealCutDisSecondAxis = dIdealDisTemp;
+                }
+                pG32->dRatioXZ =
+                    isZero(dIdealCutDisFirstAxis)
+                        ? 0
+                        : dIdealCutDisSecondAxis /
+                              fabs(dIdealCutDisFirstAxis); //è·å–ç†æƒ³çš„çŸ­è½´ä¼ºæœç”µæœºä¸é•¿è½´ä¼ºæœç”µæœºçš„è„‰å†²ä¹‹æ¯”(å¸¦çŸ­è½´çŸ¢é‡)
+            }
+            else //ä¸ºæ­£å¸¸G32
+            {
+                pG32->dRatioXZ =
+                    isZero(dCutDisFirstAxis)
+                        ? 0
+                        : dCutDisSecondAxis /
+                              fabs(dCutDisFirstAxis); //è·å–çŸ­è½´ä¼ºæœç”µæœºä¸é•¿è½´ä¼ºæœç”µæœºçš„è„‰å†²ä¹‹æ¯”(å¸¦çŸ­è½´çŸ¢é‡)
+            }
+        }
+    }
 
-				//Èç¹ûÀíÏë³¤ÖáºÍ¶ÌÖá³¤¶ÈÏàÍ¬£¨Á¬ĞøG32ÖĞ£¬ÓÉÓÚ¼ÓËÙ¹ı¶É»á³¬¹ı±¾´ÎÇĞÏ÷µÄ¾àÀë£¬ËùÒÔ¿ÉÄÜ»áµ¼ÖÂ³¤Öá´íÎóÅĞ¶ÏµÄÇé¿ö£©£¬¸ü¸Ä³¤¶ÌÖáµÄÖáºÅ
-				if (bAxisNumChangeFlag && (isZero(fabs(dIdealCutDisFirstAxis) - fabs(dIdealCutDisSecondAxis)) || fabs(dIdealCutDisFirstAxis) < fabs(dIdealCutDisSecondAxis)))
-				{
-					//¸ü¸Ä³¤¶ÌÖáµÄÖáºÅºÍ¶ÔÓ¦µÄ²å²¹¾àÀë
-					uint8 ucTemp = pG32->ucAxis[0];
-					double dCutDisTemp   = dCutDisFirstAxis;
-					double dIdealDisTemp = dIdealCutDisFirstAxis;
-					pG32->ucAxis[0] = pG32->ucAxis[1];
-					pG32->ucAxis[1] = ucTemp;
-					dCutDisFirstAxis = dCutDisSecondAxis;
-					dCutDisSecondAxis = dCutDisTemp;
-					dIdealCutDisFirstAxis = dIdealCutDisSecondAxis;
-					dIdealCutDisSecondAxis = dIdealDisTemp;
+    if (fabs(dCutDisFirstAxis) < g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]]].dPulseToMm)
+        dCutDisFirstAxis = 0; //è‹¥0å·è½´æ’è¡¥è·ç¦»ä¸åˆ°ä¸€ä¸ªè„‰å†²ï¼Œç›´æ¥ç½®ä¸º0
+    if (fabs(dCutDisSecondAxis) < g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[1]]].dPulseToMm)
+        dCutDisSecondAxis = 0;                                          //è‹¥1å·è½´æ’è¡¥è·ç¦»ä¸åˆ°ä¸€ä¸ªè„‰å†²ï¼Œç›´æ¥ç½®ä¸º0
+    pG32->SStartVector.dArray[pG32->ucAxis[1]] = 0;                     //é‡ç®—çŸ­è½´å‘é‡
+    pG32->SStartVector.dArray[pG32->ucAxis[0]] = sgn(dCutDisFirstAxis); //é‡ç®—é•¿è½´å‘é‡
+    pG32->SPlanData.dDistance = fabs(dCutDisFirstAxis);                 //è·å¾—é•¿è½´æ€»çš„æ’è¡¥è·ç¦»
 
-				}
-				pG32->dRatioXZ = isZero(dIdealCutDisFirstAxis)? 0 :dIdealCutDisSecondAxis / fabs(dIdealCutDisFirstAxis);  //»ñÈ¡ÀíÏëµÄ¶ÌÖáËÅ·şµç»úÓë³¤ÖáËÅ·şµç»úµÄÂö³åÖ®±È(´ø¶ÌÖáÊ¸Á¿)
-			}
-			else  //ÎªÕı³£G32
-			{
-				pG32->dRatioXZ = isZero(dCutDisFirstAxis)? 0 :dCutDisSecondAxis / fabs(dCutDisFirstAxis);  //»ñÈ¡¶ÌÖáËÅ·şµç»úÓë³¤ÖáËÅ·şµç»úµÄÂö³åÖ®±È(´ø¶ÌÖáÊ¸Á¿)
+    if (pG32->bSysDataInitFlag)
+    {
+        //2023.5.19
+        if (g_SSystemPara.ucG32InputMode == 0) //G32çš„ç³»ç»Ÿå‚æ•°æ¥æºä¸ºåŠ å·¥ç³»ç»Ÿå‚æ•°
+        {
+            pG32->SUserData.dAcc = g_SSystemPara.dSysPlanTMaxAcc;
+            pG32->SUserData.dDec = g_SSystemPara.dSysPlanTMaxDec;
+            pG32->SUserData.dVs = g_SSystemPara.dSysMinVel;
+            pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;
+            pG32->SUserData.dVe = g_SSystemPara.dSysMinVel;
+        }
+        else //G32çš„ç³»ç»Ÿå‚æ•°æ¥æºä¸ºå¯¹åº”çš„å•è½´ç³»ç»Ÿå‚æ•°
+        {
+            pG32->SUserData.dAcc = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dSysPlanTMaxAcc;
+            pG32->SUserData.dDec = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dSysPlanTMaxDec;
+            pG32->SUserData.dVs = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVs;
+            pG32->SUserData.dVmax = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVmax;
+            pG32->SUserData.dVe = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVe;
+        }
 
-			}
-
-		}
-	
-	}
-
-	if (fabs(dCutDisFirstAxis) < g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[0]]].dPulseToMm)  dCutDisFirstAxis = 0;//Èô0ºÅÖá²å²¹¾àÀë²»µ½Ò»¸öÂö³å£¬Ö±½ÓÖÃÎª0
-	if (fabs(dCutDisSecondAxis) < g_SSystemPara.SAxisPara[pG32->pSChannel->pMapAxisArray[pG32->ucAxis[1]]].dPulseToMm) dCutDisSecondAxis = 0;//Èô1ºÅÖá²å²¹¾àÀë²»µ½Ò»¸öÂö³å£¬Ö±½ÓÖÃÎª0
-	pG32->SStartVector.dArray[pG32->ucAxis[1]] = 0;                      //ÖØËã¶ÌÖáÏòÁ¿
-	pG32->SStartVector.dArray[pG32->ucAxis[0]] = sgn(dCutDisFirstAxis);  //ÖØËã³¤ÖáÏòÁ¿
-	pG32->SPlanData.dDistance = fabs(dCutDisFirstAxis);                  //»ñµÃ³¤Öá×ÜµÄ²å²¹¾àÀë
-
-	if (pG32->bSysDataInitFlag)
-	{
-		//2023.5.19
-		if (g_SSystemPara.ucG32InputMode == 0)//G32µÄÏµÍ³²ÎÊıÀ´Ô´Îª¼Ó¹¤ÏµÍ³²ÎÊı
-		{
-			pG32->SUserData.dAcc  = g_SSystemPara.dSysPlanTMaxAcc;
-			pG32->SUserData.dDec  = g_SSystemPara.dSysPlanTMaxDec;
-			pG32->SUserData.dVs   = g_SSystemPara.dSysMinVel;
-			pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;
-			pG32->SUserData.dVe   = g_SSystemPara.dSysMinVel;
-
-		}
-		else  //G32µÄÏµÍ³²ÎÊıÀ´Ô´Îª¶ÔÓ¦µÄµ¥ÖáÏµÍ³²ÎÊı
-		{
-			pG32->SUserData.dAcc  = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dSysPlanTMaxAcc;
-			pG32->SUserData.dDec  = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dSysPlanTMaxDec;
-			pG32->SUserData.dVs   = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVs;
-			pG32->SUserData.dVmax = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVmax;
-			pG32->SUserData.dVe   = g_SSystemPara.SAxisPara[pMapAxisArray[pG32->ucAxis[0]]].dVe;
-
-		}
-		
-		pG32->SUserData.dVmax = min(pG32->SUserData.dVmax, g_SSystemPara.dG32MaxVelocity);	//³ÂÃô´Ï	2023/12/23	Ó¦ÆóÒµÒªÇóÔö¼ÓG32×¨ÓÃËÙ¶È
-	}
-	
-
+        pG32->SUserData.dVmax =
+            min(pG32->SUserData.dVmax, g_SSystemPara.dG32MaxVelocity); //é™ˆæ•èª	2023/12/23	åº”ä¼ä¸šè¦æ±‚å¢åŠ G32ä¸“ç”¨é€Ÿåº¦
+    }
 }
 
 void backTailShortAxisPlan(struct _SG32* pG32, double dShortAxisDistance)
 {
-	double dVs = fabs(pG32->dCurrentSpeed * pG32->dRatioXZ);
-	double dVmax = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVmax;
-	double dVe   = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVe;
-	double dAcc  = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dSysPlanTMaxAcc;
-	double dDec  = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dSysPlanTMaxDec;
-	double dSac, dSconst, dSde;     //¼ÓËÙ£¬ÔÈËÙ£¬¼õËÙ¾àÀë
-	double dDistance, dDistRemain;  //×Ü¾àÀë,²ĞÓà¾àÀë
-	double dTac, dTconst, dTde;     //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
-	double dTc;				        //²å²¹ÖÜÆÚ
-	double dTacP, dTconstP, dTdeP;  //¸ù¾İ³¤Öá×ÜµÄ¹æ»®Ê±¼ä£¬Ëù»ñµÃµÄ¶ÌÖáÊ±¼ä
-	int nMaxNum = 0;  //0£º¼ÓËÙ¶Î¡¢ 1£º¼õËÙ¶Î¡¢ 2ÔÈËÙ¶Î
-	uint32 unT1, unT2, unT3, unT4, unT5;   //¼ÓËÙ,ÔÈËÙ,¼õËÙÖÜÆÚ
+    double dVs = fabs(pG32->dCurrentSpeed * pG32->dRatioXZ);
+    double dVmax = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVmax;
+    double dVe = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVe;
+    double dAcc = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dSysPlanTMaxAcc;
+    double dDec = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dSysPlanTMaxDec;
+    double dSac, dSconst, dSde;          //åŠ é€Ÿï¼ŒåŒ€é€Ÿï¼Œå‡é€Ÿè·ç¦»
+    double dDistance, dDistRemain;       //æ€»è·ç¦»,æ®‹ä½™è·ç¦»
+    double dTac, dTconst, dTde;          //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
+    double dTc;                          //æ’è¡¥å‘¨æœŸ
+    double dTacP, dTconstP, dTdeP;       //æ ¹æ®é•¿è½´æ€»çš„è§„åˆ’æ—¶é—´ï¼Œæ‰€è·å¾—çš„çŸ­è½´æ—¶é—´
+    int nMaxNum = 0;                     //0ï¼šåŠ é€Ÿæ®µã€ 1ï¼šå‡é€Ÿæ®µã€ 2åŒ€é€Ÿæ®µ
+    uint32 unT1, unT2, unT3, unT4, unT5; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿå‘¨æœŸ
 
-	dTc = pG32->SPlanData.dTc;
-	dDistance = dShortAxisDistance;
+    dTc = pG32->SPlanData.dTc;
+    dDistance = dShortAxisDistance;
 
-	if (dVs < g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVs)
-	{
-		dVs = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVs;
+    if (dVs < g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVs)
+    {
+        dVs = g_SSystemPara.SAxisPara[pG32->ucAxis[1]].dVs;
+    }
 
-	}
+    dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //è®¡ç®—åŠ é€Ÿæ®µä½ç§»
+    dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2)); //è®¡ç®—å‡é€Ÿæ®µä½ç§»
 
-	dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //¼ÆËã¼ÓËÙ¶ÎÎ»ÒÆ
-	dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));   //¼ÆËã¼õËÙ¶ÎÎ»ÒÆ
+    if (dDistance < dSac + dSde) //è·¯ç¨‹ä¸è¶³åŠ å‡é€Ÿ
+    {
+        //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
 
-	if (dDistance < dSac + dSde) //Â·³Ì²»×ã¼Ó¼õËÙ
-	{
-		//ÖØËã×î´óËÙ¶È
-		dVmax = sqrt((2 * dDistance * dAcc * dDec + dVs * dVs * dDec + dVe * dVe * dAcc) / (dAcc + dDec));
+        dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2)); //é‡ç®—åŠ å‡é€Ÿæ®µä½ç§»
+        dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
+    }
 
-		dSac = fabs((dVmax * dVmax - dVs * dVs) / (dAcc * 2));   //ÖØËã¼Ó¼õËÙ¶ÎÎ»ÒÆ
-		dSde = fabs((dVmax * dVmax - dVe * dVe) / (dDec * 2));
-	}
+    dTac = (dVmax - dVs) / (dAcc * dTc);                 //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = (dVmax - dVe) / (dDec * dTc);                 //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = (dDistance - dSac - dSde) / (dVmax * dTc); //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
-	dTac = (dVmax - dVs) / (dAcc * dTc);                   //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = (dVmax - dVe) / (dDec * dTc);                   //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    if (dTconst <= 0) //è·ç¦»ä¸è¶³æ²¡æœ‰åŒ€é€Ÿçš„æƒ…å†µ
+    {
+        if (dTac < 0 || dTde < 0) //è·ç¦»ä¸è¶³
+        {
+            //åŠ¨æ€è§„åˆ’
+            //Veæµ®åŠ¨
+            if (dVs > dVe) //å‡é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec); //æ ¹æ®å‡é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦(ä¸ä¼šå‡ºç°è´Ÿå€¼)
+                dVmax = dVs;                                    //ç”±äºæ˜¯å‡é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºåˆé€Ÿåº¦
+            }
+            else //åŠ é€Ÿ
+            {
+                dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance); //æ ¹æ®åŠ é€Ÿè·ç¦»å…¬å¼è®¡ç®—æœ«é€Ÿåº¦
+                dVmax = dVe;                                    //ç”±äºæ˜¯åŠ é€Ÿ  æœ€å¤§é€Ÿåº¦ç­‰äºæœ«é€Ÿåº¦
+            }
+            dTac = (dVmax - dVs) / (dAcc * dTc); //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+            dTde = (dVmax - dVe) / (dDec * dTc); //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+        }
+        dTconst = 0; //åŒ€é€Ÿå‘¨æœŸä¸èƒ½å°äº0  å°†å…¶ç½®ä¸º0
+    }
 
-	if (dTconst <= 0)   //¾àÀë²»×ãÃ»ÓĞÔÈËÙµÄÇé¿ö
-	{
-		if (dTac < 0 || dTde < 0)  //¾àÀë²»×ã
-		{
-			//¶¯Ì¬¹æ»®
-			//Ve¸¡¶¯
-			if (dVs > dVe)//¼õËÙ
-			{
-				dVe = sqrt(dVs * dVs - dDistance * 2.0 * dDec);//¸ù¾İ¼õËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È(²»»á³öÏÖ¸ºÖµ)
-				dVmax = dVs;//ÓÉÓÚÊÇ¼õËÙ  ×î´óËÙ¶ÈµÈÓÚ³õËÙ¶È
-			}
-			else//¼ÓËÙ
-			{
-				dVe = sqrt(dVs * dVs + 2.0 * dAcc * dDistance);//¸ù¾İ¼ÓËÙ¾àÀë¹«Ê½¼ÆËãÄ©ËÙ¶È
-				dVmax = dVe;//ÓÉÓÚÊÇ¼ÓËÙ  ×î´óËÙ¶ÈµÈÓÚÄ©ËÙ¶È
-			}
-			dTac = (dVmax - dVs) / (dAcc * dTc);    //¼ÆËã¼ÓËÙÖÜÆÚ
-			dTde = (dVmax - dVe) / (dDec * dTc);    //¼ÆËã¼õËÙÖÜÆÚ
-		}
-		dTconst = 0;//ÔÈËÙÖÜÆÚ²»ÄÜĞ¡ÓÚ0  ½«ÆäÖÃÎª0
-	}
+    if (dTac < 0) //è·ç¦»è¶³å¤Ÿ ä½†æ˜¯åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿï¼ŒåŠ é€Ÿæ®µå˜ä¸ºå‡é€Ÿæ®µ
+    {
+        dTac = fabs(dTac); //åŠ é€Ÿå‘¨æœŸä¸ºè´Ÿæ•°  å–ç»å¯¹å€¼
+        dAcc = -(dAcc);    //åŠ é€Ÿåº¦ä¸ºæ­£  å°†å…¶å˜ä¸ºå‡é€Ÿ  å–å
+    }
 
-	if (dTac < 0)//¾àÀë×ã¹» µ«ÊÇ¼ÓËÙÖÜÆÚÎª¸º£¬¼ÓËÙ¶Î±äÎª¼õËÙ¶Î
-	{
-		dTac = fabs(dTac);//¼ÓËÙÖÜÆÚÎª¸ºÊı  È¡¾ø¶ÔÖµ  
-		dAcc = -(dAcc);//¼ÓËÙ¶ÈÎªÕı  ½«Æä±äÎª¼õËÙ  È¡·´
-	}
+    dTacP = dTac / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
+    dTdeP = dTde / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
+    dTconstP = dTconst / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
 
-	dTacP = dTac / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
-	dTdeP = dTde / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
-	dTconstP = dTconst / (dTac + dTde + dTconst) * pG32->SPlanData.unT5;
+    if (dTacP > dTdeP && dTacP > dTconstP)
+    {
+        nMaxNum = 0;
+    }
+    else if (dTdeP > dTacP && dTdeP > dTconstP)
+    {
+        nMaxNum = 1;
+    }
+    else if (dTconstP > dTacP && dTconstP > dTdeP)
+    {
+        nMaxNum = 2;
+    }
+    else
+    {
+        nMaxNum = 1;
+    }
 
-	if (dTacP > dTdeP && dTacP > dTconstP)
-	{
-		nMaxNum = 0;
-	}
-	else if (dTdeP > dTacP && dTdeP > dTconstP)
-	{
-		nMaxNum = 1;
-	}
-	else if (dTconstP > dTacP && dTconstP > dTdeP)
-	{
-		nMaxNum = 2;
-	}
-	else
-	{
-		nMaxNum = 1;
-	}
+    dTacP = round(dTacP);
+    dTdeP = round(dTdeP);
+    dTconstP = round(dTconstP);
 
-	dTacP = round(dTacP);
-	dTdeP = round(dTdeP);
-	dTconstP = round(dTconstP);
+    if (!isZero(dTacP + dTdeP + dTconstP - pG32->SPlanData.unT5))
+    {
+        int nExtime = pG32->SPlanData.unT5 - (dTacP + dTdeP + dTconstP);
+        if (nMaxNum == 0)
+        {
+            dTacP += nExtime;
+        }
+        else if (nMaxNum == 1)
+        {
+            dTdeP += nExtime;
+        }
+        else
+        {
+            dTconstP += nExtime;
+        }
+    }
 
-	if (!isZero(dTacP + dTdeP + dTconstP - pG32->SPlanData.unT5))
-	{
-		int nExtime = pG32->SPlanData.unT5 - (dTacP + dTdeP + dTconstP);
-		if (nMaxNum == 0)
-		{
-			dTacP += nExtime;
-		}
-		else if (nMaxNum == 1)
-		{
-			dTdeP += nExtime;
-		}
-		else
-		{
-			dTconstP += nExtime;
-		}
-	}
+    dTac = dTacP;       //è®¡ç®—åŠ é€Ÿå‘¨æœŸ
+    dTde = dTdeP;       //è®¡ç®—å‡é€Ÿå‘¨æœŸ
+    dTconst = dTconstP; //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
 
-	dTac = dTacP;      //¼ÆËã¼ÓËÙÖÜÆÚ
-	dTde = dTdeP;      //¼ÆËã¼õËÙÖÜÆÚ
-	dTconst = dTconstP;   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
+    if (((int)(dTac + 0.5)) == 0) //åŠ é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0  (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    {
+        dTac = 0;    //åŠ é€Ÿå‘¨æœŸä¸º0
+        dVs = dVmax; //èµ·å§‹é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    if (((int)(dTde + 0.5)) == 0) //å‡é€Ÿå‘¨æœŸå››èˆäº”å…¥åä¸º0 (åˆ¤æ–­æ˜¯å¦å°äº0.5)
+    {
+        dTde = 0; //å‡é€Ÿå‘¨æœŸè®¾ä¸º0
+        /*		dVmax = dVe;*/
+        dVe = dVmax; //æœ«é€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
 
-	if (((int)(dTac + 0.5)) == 0)//¼ÓËÙÖÜÆÚËÄÉáÎåÈëºóÎª0  (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	{
-		dTac = 0;//¼ÓËÙÖÜÆÚÎª0
-		dVs = dVmax;//ÆğÊ¼ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	if (((int)(dTde + 0.5)) == 0)//¼õËÙÖÜÆÚËÄÉáÎåÈëºóÎª0 (ÅĞ¶ÏÊÇ·ñĞ¡ÓÚ0.5)
-	{
-		dTde = 0;//¼õËÙÖÜÆÚÉèÎª0
-		/*		dVmax = dVe;*/
-		dVe = dVmax;//Ä©ËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
+    if (isZero(dTac) || isZero(dVs - dVmax)) //åŠ é€Ÿå‘¨æœŸä¸º0
+    {
+        dVs = dVmax;
+    }
+    else
+    {
+        dVmax = dAcc * (dTac * dTc) + dVs; //é‡ç®—æœ€å¤§é€Ÿåº¦
+    }
 
+    if (isZero(dTde) ||
+        isZero(
+            dVe -
+            dVmax)) //å‡é€Ÿå‘¨æœŸä¸º0 ï¼ˆå‰ææ˜¯æœ€å¤§é€Ÿåº¦ä¸ä¼šæ¯”ç»ˆç‚¹é€Ÿåº¦å°å¾ˆå¤š(>dDec)ï¼‰   æ™®é€šè§„åˆ’é™åˆ¶äº†æœ«é€Ÿåº¦ä¸è¶…è¿‡æœ€å¤§é€Ÿåº¦  æ–°å¢è·ç¦»çš„è§„åˆ’æ²¡æœ‰é™åˆ¶  å› æ­¤éœ€è¦åˆ¤æ–­<=0
+    {
+        dVe = dVmax; //æœ€ç»ˆé€Ÿåº¦ç­‰äºæœ€å¤§é€Ÿåº¦
+    }
+    else
+    {
 
-	if (isZero(dTac) || isZero(dVs - dVmax))//¼ÓËÙÖÜÆÚÎª0
-	{
-		dVs = dVmax;
-	}
-	else
-	{
-		dVmax = dAcc * (dTac * dTc) + dVs;//ÖØËã×î´óËÙ¶È
-	}
+        dDec = (dVmax - dVe) / (dTde * dTc);
+    }
 
-	if (isZero(dTde) || isZero(dVe - dVmax))  //¼õËÙÖÜÆÚÎª0 £¨Ç°ÌáÊÇ×î´óËÙ¶È²»»á±ÈÖÕµãËÙ¶ÈĞ¡ºÜ¶à(>dDec)£©   ÆÕÍ¨¹æ»®ÏŞÖÆÁËÄ©ËÙ¶È²»³¬¹ı×î´óËÙ¶È  ĞÂÔö¾àÀëµÄ¹æ»®Ã»ÓĞÏŞÖÆ  Òò´ËĞèÒªÅĞ¶Ï<=0
-	{
-		dVe = dVmax;  //×îÖÕËÙ¶ÈµÈÓÚ×î´óËÙ¶È
-	}
-	else
-	{
+    dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2); //åŠ é€Ÿæ®µä½ç§»ï¼ˆæ—¶é—´å–æ•´åï¼‰
+    dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2); //å‡é€Ÿæ®µä½ç§»
 
-		dDec = (dVmax - dVe) / (dTde * dTc);
+    //dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //è®¡ç®—åŒ€é€Ÿæ®µå‘¨æœŸ
+    //if (dTconst <= 0)  //æ²¡æœ‰åŒ€é€Ÿå‘¨æœŸ
+    //{
+    //	dTconst = 0;
+    //}
 
-	}
+    unT1 = unT2 = (uint32)dTac;                      //æ—¶é—´èŠ‚ç‚¹T1  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT3 = unT2 + (uint32)dTconst;                   //æ—¶é—´èŠ‚ç‚¹T2  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    unT4 = unT5 = unT3 + (uint32)dTde;               //æ—¶é—´èŠ‚ç‚¹T3  ï¼ˆç»å¯¹æ—¶é—´ï¼‰
+    dSconst = dVmax * (unT3 - unT2) * dTc;           //è®¡ç®—åŒ€é€Ÿæ®µä½ç§»
+    dDistRemain = dDistance - dSac - dSde - dSconst; //è®¡ç®—æ®‹ä½™è·ç¦»
 
-	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //¼ÓËÙ¶ÎÎ»ÒÆ£¨Ê±¼äÈ¡Õûºó£©
-	dSde = (dVmax * dVmax - dVe * dVe) / (dDec * 2);   //¼õËÙ¶ÎÎ»ÒÆ 
+    //ä¼ å‡ºå‚æ•°
+    pG32->SExcessPlanForG32->unT1 = unT1; //æ—¶é—´èŠ‚ç‚¹T1,2,3
+    pG32->SExcessPlanForG32->unT2 = unT2;
+    pG32->SExcessPlanForG32->unT3 = unT3;
+    pG32->SExcessPlanForG32->unT4 = unT4;
+    pG32->SExcessPlanForG32->unT5 = unT5;
 
-	//dTconst = (dDistance - dSac - dSde) / (dVmax * dTc);   //¼ÆËãÔÈËÙ¶ÎÖÜÆÚ
-	//if (dTconst <= 0)  //Ã»ÓĞÔÈËÙÖÜÆÚ
-	//{
-	//	dTconst = 0;
-	//}
+    pG32->SExcessPlanForG32->dDistAcc = dSac; //åŠ é€Ÿ,åŒ€é€Ÿ,å‡é€Ÿè·ç¦»
+    pG32->SExcessPlanForG32->dDistConst = dSconst;
+    pG32->SExcessPlanForG32->dDistDec = dSde;
 
-	unT1 = unT2 = (uint32)dTac;               //Ê±¼ä½ÚµãT1  £¨¾ø¶ÔÊ±¼ä£© 
-	unT3 = unT2 + (uint32)dTconst; //Ê±¼ä½ÚµãT2  £¨¾ø¶ÔÊ±¼ä£© 
-	unT4 = unT5 = unT3 + (uint32)dTde;       //Ê±¼ä½ÚµãT3  £¨¾ø¶ÔÊ±¼ä£© 
-	dSconst = dVmax * (unT3 - unT2) * dTc; //¼ÆËãÔÈËÙ¶ÎÎ»ÒÆ
-	dDistRemain = dDistance - dSac - dSde - dSconst;  //¼ÆËã²ĞÓà¾àÀë
+    pG32->SExcessPlanForG32->dVmax = dVmax; //æœ€å¤§é€Ÿåº¦ï¼Œç»ˆç‚¹é€Ÿåº¦
+    pG32->SExcessPlanForG32->dVs = dVs;
+    pG32->SExcessPlanForG32->dVe = dVe;
+    pG32->SExcessPlanForG32->dAcc = dAcc; //åŠ é€Ÿåº¦ï¼Œå‡é€Ÿåº¦
+    pG32->SExcessPlanForG32->dDec = dDec;
+    pG32->SExcessPlanForG32->dDistRemaining = dDistRemain; //æ®‹ä½™è·ç¦»
 
-	//´«³ö²ÎÊı
-	pG32->SExcessPlanForG32->unT1 = unT1;		//Ê±¼ä½ÚµãT1,2,3
-	pG32->SExcessPlanForG32->unT2 = unT2;
-	pG32->SExcessPlanForG32->unT3 = unT3;
-	pG32->SExcessPlanForG32->unT4 = unT4;
-	pG32->SExcessPlanForG32->unT5 = unT5;
-
-	pG32->SExcessPlanForG32->dDistAcc = dSac;			//¼ÓËÙ,ÔÈËÙ,¼õËÙ¾àÀë
-	pG32->SExcessPlanForG32->dDistConst = dSconst;
-	pG32->SExcessPlanForG32->dDistDec = dSde;
-
-	pG32->SExcessPlanForG32->dVmax = dVmax;	//×î´óËÙ¶È£¬ÖÕµãËÙ¶È
-	pG32->SExcessPlanForG32->dVs = dVs;
-	pG32->SExcessPlanForG32->dVe = dVe;
-	pG32->SExcessPlanForG32->dAcc = dAcc;		//¼ÓËÙ¶È£¬¼õËÙ¶È
-	pG32->SExcessPlanForG32->dDec = dDec;
-	pG32->SExcessPlanForG32->dDistRemaining = dDistRemain; //²ĞÓà¾àÀë
-
-	pG32->SExcessPlanForG32->ucAccVelPlanType = VEL_PLAN_T_CURVE;
-	pG32->SExcessPlanForG32->ucDecVelPlanType = VEL_PLAN_T_CURVE;
-	pG32->SExcessPlanForG32->ucDistReAverageType = DIST_REAVG_T_CURVE;
-	pG32->SExcessPlanForG32->dTc = dTc;
-
+    pG32->SExcessPlanForG32->ucAccVelPlanType = VEL_PLAN_T_CURVE;
+    pG32->SExcessPlanForG32->ucDecVelPlanType = VEL_PLAN_T_CURVE;
+    pG32->SExcessPlanForG32->ucDistReAverageType = DIST_REAVG_T_CURVE;
+    pG32->SExcessPlanForG32->dTc = dTc;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid retreatTailPre(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£ºÍËÎ²Ô¤´¦Àí
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid retreatTailPre(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šé€€å°¾é¢„å¤„ç†
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void retreatTailPre(struct _SG32* pG32)
 {
-	//double dRetreatRange = g_SEncoder[SPINDLE_ENCODER - 1].usDelta / g_SEncoder[SPINDLE_ENCODER - 1].lEncoderAbsValue * pG32->dF; //ÍËÎ²·¶Î§
-	//double dRetreatRange = g_SEncoder[SPINDLE_ENCODER - 1].usDelta * pG32->dF / g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum / 2.0; //ÍËÎ²·¶Î§
-	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
-	if (pSSpindleEncoder == NULL || pSSpindleEncoder->usEncoderCirclePulseNum <= 0 )//Èç¹û±àÂëÆ÷È¦ÊıµÈÓÚ0  ÔòÊ¹ÓÃ±àÂëÆ÷Öµ
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return;
-	}
-	double dRetreatRange = pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum / 2.0; //ÍËÎ²·¶Î§
+    //double dRetreatRange = g_SEncoder[SPINDLE_ENCODER - 1].usDelta / g_SEncoder[SPINDLE_ENCODER - 1].lEncoderAbsValue * pG32->dF; //é€€å°¾èŒƒå›´
+    //double dRetreatRange = g_SEncoder[SPINDLE_ENCODER - 1].usDelta * pG32->dF / g_SEncoder[SPINDLE_ENCODER - 1].usEncoderCirclePulseNum / 2.0; //é€€å°¾èŒƒå›´
+    struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+    if (pSSpindleEncoder == NULL ||
+        pSSpindleEncoder->usEncoderCirclePulseNum <= 0) //å¦‚æœç¼–ç å™¨åœˆæ•°ç­‰äº0  åˆ™ä½¿ç”¨ç¼–ç å™¨å€¼
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return;
+    }
+    double dRetreatRange =
+        pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum / 2.0; //é€€å°¾èŒƒå›´
 
-	double dTailSignDis; 					//ÀíÏëÍËÎ²Î»ÖÃ
-	double dLongAxisVector;			        //³¤ÖáÏòÁ¿
-	//double dJVector;				        //¶ÌÖáÍËÎ²ÏòÁ¿
-	double dCutLeftDisLongAxis = 0; 	    //X·½ÏòÊ£ÓàµÄÇĞÏ÷Á¿
-	double dCutLeftDisShortAxis = 0;	    //Z·½ÏòÊ£ÓàµÄÇĞÏ÷Á¿
-	double dLongAxisDistance = 0;           //³¤Öá¾àÀë
-	double dShortAxisDistance = 0;		    //¶ÌÖá¾àÀë
-	uint8 ucLongAxisNum = pG32->ucAxis[0];  //»ñÈ¡³¤Öá¶ÔÓ¦µÄÖáºÅ
-	uint8 ucShortAxisNum = pG32->ucAxis[1]; //»ñÈ¡¶ÌÖá¶ÔÓ¦µÄÖáºÅ
-	SPointDouble SRealTimePoint;
+    double dTailSignDis;    //ç†æƒ³é€€å°¾ä½ç½®
+    double dLongAxisVector; //é•¿è½´å‘é‡
+    //double dJVector;				        //çŸ­è½´é€€å°¾å‘é‡
+    double dCutLeftDisLongAxis = 0;         //Xæ–¹å‘å‰©ä½™çš„åˆ‡å‰Šé‡
+    double dCutLeftDisShortAxis = 0;        //Zæ–¹å‘å‰©ä½™çš„åˆ‡å‰Šé‡
+    double dLongAxisDistance = 0;           //é•¿è½´è·ç¦»
+    double dShortAxisDistance = 0;          //çŸ­è½´è·ç¦»
+    uint8 ucLongAxisNum = pG32->ucAxis[0];  //è·å–é•¿è½´å¯¹åº”çš„è½´å·
+    uint8 ucShortAxisNum = pG32->ucAxis[1]; //è·å–çŸ­è½´å¯¹åº”çš„è½´å·
+    SPointDouble SRealTimePoint;
 
-	dLongAxisVector = pG32->SStartVector.dArray[ucLongAxisNum];  //»ñÈ¡³¤ÖáÏòÁ¿
-	//dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dK * dLongAxisVector;  //»ñÈ¡³¤ÖáÀíÏëÍËÎ²Î»ÖÃ
-	// ³¤ÖáÍËÎ²Á¿°´³¤¶ÈÊ¹ÓÃ£¬¾¶ÏòÍËÎ²·½ÏòÈÔÓÉ´ø·ûºÅµÄ J ¾ö¶¨¡£
-    dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dK * dLongAxisVector;  //»ñÈ¡³¤ÖáÀíÏëÍËÎ²Î»ÖÃ
+    dLongAxisVector = pG32->SStartVector.dArray[ucLongAxisNum];                        //è·å–é•¿è½´å‘é‡
+    dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dK * dLongAxisVector; //è·å–é•¿è½´ç†æƒ³é€€å°¾ä½ç½®
 
-	getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
+    getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
 
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-	if (pG32->pSChannel->bUseVirtualY == TRUE)
-	{
-		if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
-		{
-			double dY1Mach = 0;
-			getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pG32->pSChannel->pMapAxisArray);//µ±Ç°Y1ÖáµÄÎ»ÖÃ
-			SRealTimePoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1;
-		}
-		if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
-		{
-			SRealTimePoint.dArray[AXIS_Y] = SRealTimePoint.dArray[AXIS_Y] * pG32->pSChannel->dCOSAngleYY1;
-		}
-	}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (pG32->pSChannel->bUseVirtualY == TRUE)
+    {
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
+        {
+            double dY1Mach = 0;
+            getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, pG32->pSChannel->pMapAxisArray); //å½“å‰Y1è½´çš„ä½ç½®
+            SRealTimePoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1;
+        }
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
+        {
+            SRealTimePoint.dArray[AXIS_Y] = SRealTimePoint.dArray[AXIS_Y] * pG32->pSChannel->dCOSAngleYY1;
+        }
+    }
 #endif
 
-	////³¬¹ıÀíÏë¿ªÊ¼ÍËÎ²Î»ÖÃ»òÔÚÍËÎ²Çø¼äÄÚ
-	//if ((dTailSignDis * dLongAxisVector < SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector) || (fabs(dTailSignDis - SRealTimePoint.dArray[ucLongAxisNum]) <= dRetreatRange))
-	//{
-	//	pG32->SEndPoint.dArray[ucShortAxisNum] += pG32->dJ;  //ÖØËãÇĞÏ÷ÖÕµã(¶ÌÖáµÄÖÕµã±»ĞŞ¸ÄÁË£¬³¤ÖáÖÕµã²»±ä)
-	//	dCutLeftDisLongAxis = fabs(pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]); //»ñÈ¡³¤Öá·½ÏòÊ£ÓàµÄÇĞÏ÷Á¿£¨²»´øÏòÁ¿£©
-	//	dCutLeftDisShortAxis = pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum];     //»ñÈ¡¶ÌÖá·½ÏòÊ£ÓàµÄÇĞÏ÷Á¿£¨´øÓĞÏòÁ¿£©
-	//	pG32->dRatioXZ = (dCutLeftDisShortAxis / dCutLeftDisLongAxis);   //ÖØËã³¤¶ÌÖáÖ®¼äµÄ±ÈÀı£¨´øÓĞ¶ÌÖá·½ÏòµÄÏòÁ¿£©
-	//	pG32->SBackTailPoint = SRealTimePoint;                           //»ñµÃÊµ¼ÊµÄÍËÎ²Î»ÖÃ
-	//	pG32->bLeftTailFlag = TRUE;                                      //ÒÑÍê³ÉÍËÎ²µÄÔ¤´¦Àí
+    ////è¶…è¿‡ç†æƒ³å¼€å§‹é€€å°¾ä½ç½®æˆ–åœ¨é€€å°¾åŒºé—´å†…
+    //if ((dTailSignDis * dLongAxisVector < SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector) || (fabs(dTailSignDis - SRealTimePoint.dArray[ucLongAxisNum]) <= dRetreatRange))
+    //{
+    //	pG32->SEndPoint.dArray[ucShortAxisNum] += pG32->dJ;  //é‡ç®—åˆ‡å‰Šç»ˆç‚¹(çŸ­è½´çš„ç»ˆç‚¹è¢«ä¿®æ”¹äº†ï¼Œé•¿è½´ç»ˆç‚¹ä¸å˜)
+    //	dCutLeftDisLongAxis = fabs(pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]); //è·å–é•¿è½´æ–¹å‘å‰©ä½™çš„åˆ‡å‰Šé‡ï¼ˆä¸å¸¦å‘é‡ï¼‰
+    //	dCutLeftDisShortAxis = pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum];     //è·å–çŸ­è½´æ–¹å‘å‰©ä½™çš„åˆ‡å‰Šé‡ï¼ˆå¸¦æœ‰å‘é‡ï¼‰
+    //	pG32->dRatioXZ = (dCutLeftDisShortAxis / dCutLeftDisLongAxis);   //é‡ç®—é•¿çŸ­è½´ä¹‹é—´çš„æ¯”ä¾‹ï¼ˆå¸¦æœ‰çŸ­è½´æ–¹å‘çš„å‘é‡ï¼‰
+    //	pG32->SBackTailPoint = SRealTimePoint;                           //è·å¾—å®é™…çš„é€€å°¾ä½ç½®
+    //	pG32->bLeftTailFlag = TRUE;                                      //å·²å®Œæˆé€€å°¾çš„é¢„å¤„ç†
 
-	//}
+    //}
 
-	//³¬¹ıÀíÏë¿ªÊ¼ÍËÎ²Î»ÖÃ»òÔÚÍËÎ²Çø¼äÄÚ
-	if ((dTailSignDis * dLongAxisVector < SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector) || (fabs(dTailSignDis - SRealTimePoint.dArray[ucLongAxisNum]) <= dRetreatRange))
-	{
-		//³¤ÖáµÄËÙ¶È¹æ»®
-		pG32->SPlanData.dVs   = pG32->dCurrentSpeed;
-		pG32->SPlanData.dVmax = pG32->dCurrentSpeed;
-		pG32->SPlanData.dVe   = pG32->SUserData.dVe;
-		pG32->SPlanData.dAcc  = pG32->SUserData.dAcc;
-		pG32->SPlanData.dDec  = pG32->SUserData.dDec;
-		pG32->SPlanData.dCurLeftDist = fabs(pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]);
-		pG32->SPlanData.dDistance = pG32->SPlanData.dCurLeftDist;
-		pG32->SPlanData.dPreDist = 0;
-		pG32->SPlanData.dTargetDist = pG32->SPlanData.dCurLeftDist;
-		pG32->SPlanData.cInterpDir = INP_GO_AHEAD;
+    //è¶…è¿‡ç†æƒ³å¼€å§‹é€€å°¾ä½ç½®æˆ–åœ¨é€€å°¾åŒºé—´å†…
+    if ((dTailSignDis * dLongAxisVector < SRealTimePoint.dArray[ucLongAxisNum] * dLongAxisVector) ||
+        (fabs(dTailSignDis - SRealTimePoint.dArray[ucLongAxisNum]) <= dRetreatRange))
+    {
+        //é•¿è½´çš„é€Ÿåº¦è§„åˆ’
+        pG32->SPlanData.dVs = pG32->dCurrentSpeed;
+        pG32->SPlanData.dVmax = pG32->dCurrentSpeed;
+        pG32->SPlanData.dVe = pG32->SUserData.dVe;
+        pG32->SPlanData.dAcc = pG32->SUserData.dAcc;
+        pG32->SPlanData.dDec = pG32->SUserData.dDec;
+        pG32->SPlanData.dCurLeftDist =
+            fabs(pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]);
+        pG32->SPlanData.dDistance = pG32->SPlanData.dCurLeftDist;
+        pG32->SPlanData.dPreDist = 0;
+        pG32->SPlanData.dTargetDist = pG32->SPlanData.dCurLeftDist;
+        pG32->SPlanData.cInterpDir = INP_GO_AHEAD;
 
-		pG32->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;
-		pG32->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;
-		pG32->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;
-		preparePlanningCombine(&pG32->SPlanData, TRUE);
-		prepareDistReAvgT(&pG32->SPlanData, FALSE);
+        pG32->SPlanData.ucAccVelPlanType = VEL_PLAN_T_CURVE;
+        pG32->SPlanData.ucDecVelPlanType = VEL_PLAN_T_CURVE;
+        pG32->SPlanData.ucDistReAverageType = DIST_REAVG_T_CURVE;
+        preparePlanningCombine(&pG32->SPlanData, TRUE);
+        prepareDistReAvgT(&pG32->SPlanData, FALSE);
 
-		//pG32->SStarCutPoint = SRealTimePoint;
-		pG32->SEndPoint.dArray[ucShortAxisNum] += pG32->dJ;  //ÖØËãÇĞÏ÷ÖÕµã(¶ÌÖáµÄÖÕµã±»ĞŞ¸ÄÁË£¬³¤ÖáÖÕµã²»±ä)
-		pG32->SBackTailPoint = SRealTimePoint;                           //»ñµÃÊµ¼ÊµÄÍËÎ²Î»ÖÃ
-		pG32->SPlanData.unCurrentT = 0;
-		pG32->SStartVector.dArray[pG32->ucAxis[1]] = 0;                     			 //ÖØËã¶ÌÖáÏòÁ¿
-		pG32->SStartVector.dArray[pG32->ucAxis[0]] = sgn(pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]);  //ÖØËã³¤ÖáÏòÁ¿ //2026.4.27
-		dLongAxisDistance = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[0]];
-		dShortAxisDistance = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]];
-		pG32->dRatioXZ = isZero(dLongAxisDistance) ? 0 : dShortAxisDistance/dLongAxisDistance;			//¸ü»»¼ÆËã±ÈÖµÎ»ÖÃ,2026.4.21
-		pG32->bLeftTailFlag = TRUE;                                      //ÒÑÍê³ÉÍËÎ²µÄÔ¤´¦Àí
+        //pG32->SStarCutPoint = SRealTimePoint;
+        pG32->SEndPoint.dArray[ucShortAxisNum] += pG32->dJ; //é‡ç®—åˆ‡å‰Šç»ˆç‚¹(çŸ­è½´çš„ç»ˆç‚¹è¢«ä¿®æ”¹äº†ï¼Œé•¿è½´ç»ˆç‚¹ä¸å˜)
+        pG32->SBackTailPoint = SRealTimePoint;              //è·å¾—å®é™…çš„é€€å°¾ä½ç½®
+        pG32->SPlanData.unCurrentT = 0;
+        pG32->SStartVector.dArray[pG32->ucAxis[1]] = 0; //é‡ç®—çŸ­è½´å‘é‡
+        pG32->SStartVector.dArray[pG32->ucAxis[0]] = sgn(
+            pG32->SEndPoint.dArray[ucLongAxisNum] - SRealTimePoint.dArray[ucLongAxisNum]); //é‡ç®—é•¿è½´å‘é‡ //2026.4.27
+        dLongAxisDistance = pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[0]];
+        dShortAxisDistance = pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]];
+        pG32->dRatioXZ =
+            isZero(dLongAxisDistance) ? 0 : dShortAxisDistance / dLongAxisDistance; //æ›´æ¢è®¡ç®—æ¯”å€¼ä½ç½®,2026.4.21
+        pG32->bLeftTailFlag = TRUE;                                                 //å·²å®Œæˆé€€å°¾çš„é¢„å¤„ç†
 
-		/*ĞŞ¸Ä2025.11.27 Ê¹ÓÃG1½øĞĞÍËÎ²£¬²»ĞèÒª¶ÌÖá½øĞĞËÙ¶È¹æ»®*/
-		// //¶ÌÖáµÄËÙ¶È¹æ»®
-		// if (pG32->SExcessPlanForG32 == NULL)
-		// {
-		// 	pG32->SExcessPlanForG32 = malloc(sizeof(struct SPlan));  //ÉêÇë´æ´¢¶ÌÖáËÙ¶È¹æ»®²ÎÊıµÄ¿Õ¼ä
-		// }
-		
-		// //ÉêÇë¿Õ¼ä³É¹¦
-		// if (pG32->SExcessPlanForG32 != NULL)
-		// {
-			
-		// 	pG32->SExcessPlanForG32->dCurLeftDist = fabs(pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum]);
-		// 	pG32->SExcessPlanForG32->dDistance = pG32->SExcessPlanForG32->dCurLeftDist;
-		// 	pG32->SExcessPlanForG32->dPreDist = 0;
-		// 	pG32->SExcessPlanForG32->dTargetDist = pG32->SExcessPlanForG32->dCurLeftDist;
-		// 	pG32->SExcessPlanForG32->cInterpDir = INP_GO_AHEAD;
-			
-		// 	backTailShortAxisPlan(pG32, pG32->SExcessPlanForG32->dCurLeftDist);
-		// 	prepareDistReAvgT(pG32->SExcessPlanForG32, FALSE);
-		// }
+        /*ä¿®æ”¹2025.11.27 ä½¿ç”¨G1è¿›è¡Œé€€å°¾ï¼Œä¸éœ€è¦çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’*/
+        // //çŸ­è½´çš„é€Ÿåº¦è§„åˆ’
+        // if (pG32->SExcessPlanForG32 == NULL)
+        // {
+        // 	pG32->SExcessPlanForG32 = malloc(sizeof(struct SPlan));  //ç”³è¯·å­˜å‚¨çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°çš„ç©ºé—´
+        // }
 
+        // //ç”³è¯·ç©ºé—´æˆåŠŸ
+        // if (pG32->SExcessPlanForG32 != NULL)
+        // {
 
-	}
+        // 	pG32->SExcessPlanForG32->dCurLeftDist = fabs(pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum]);
+        // 	pG32->SExcessPlanForG32->dDistance = pG32->SExcessPlanForG32->dCurLeftDist;
+        // 	pG32->SExcessPlanForG32->dPreDist = 0;
+        // 	pG32->SExcessPlanForG32->dTargetDist = pG32->SExcessPlanForG32->dCurLeftDist;
+        // 	pG32->SExcessPlanForG32->cInterpDir = INP_GO_AHEAD;
 
-
+        // 	backTailShortAxisPlan(pG32, pG32->SExcessPlanForG32->dCurLeftDist);
+        // 	prepareDistReAvgT(pG32->SExcessPlanForG32, FALSE);
+        // }
+    }
 }
 //
-//²»´ø±Ü¿Õ¾àÀë
+//ä¸å¸¦é¿ç©ºè·ç¦»
 /////*************************************************
-////  º¯ÊıÃû³Æ£ºdouble getRealTargetPulse(struct _SG32* pG32)
-////  º¯Êı¹¦ÄÜ£º»ñµÃÕæÕıµÄ³õÊ¼½ÇQ¶ÔÓ¦µÄÏà¶ÔÂö³å
-////  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-////  Êä³ö²ÎÊı£ºÎŞ
-////  ·µ »Ø Öµ£ºÕæÕıµÄ³õÊ¼½ÇQ¶ÔÓ¦µÄÏà¶ÔÂö³å
-////  ±¸    ×¢£ºÎŞ
+////  å‡½æ•°åç§°ï¼šdouble getRealTargetPulse(struct _SG32* pG32)
+////  å‡½æ•°åŠŸèƒ½ï¼šè·å¾—çœŸæ­£çš„åˆå§‹è§’Qå¯¹åº”çš„ç›¸å¯¹è„‰å†²
+////  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+////  è¾“å‡ºå‚æ•°ï¼šæ— 
+////  è¿” å› å€¼ï¼šçœŸæ­£çš„åˆå§‹è§’Qå¯¹åº”çš„ç›¸å¯¹è„‰å†²
+////  å¤‡    æ³¨ï¼šæ— 
 ////**************************************************/
 //double getRealTargetPulse(struct _SG32* pG32)
 //{
 //
-//	double dTac;//¼ÓËÙÖÜÆÚ
-//	double dSac;//¼ÓËÙ¾àÀë
+//	double dTac;//åŠ é€Ÿå‘¨æœŸ
+//	double dSac;//åŠ é€Ÿè·ç¦»
 //
-//	double dVs, dVmax;    //ÆğÊ¼£¬×î´óËÙ¶È
-//	double dAcc;          //¼ÓËÙ¶ÎµÄ¼ÓËÙ¶È
-//	double dDistance;     //×Ü²å²¹¾àÀë
-//	double dTc;			  //²å²¹ÖÜÆÚ
-//	double dPulseQ;       //Æô¶¯Î»ÖÃQµÄÂö³åĞÎÊ½
-//	double dSpindleSpeed; //Ö÷ÖáÆ½¾ù×ªËÙ£¨pulse / ms£©
+//	double dVs, dVmax;    //èµ·å§‹ï¼Œæœ€å¤§é€Ÿåº¦
+//	double dAcc;          //åŠ é€Ÿæ®µçš„åŠ é€Ÿåº¦
+//	double dDistance;     //æ€»æ’è¡¥è·ç¦»
+//	double dTc;			  //æ’è¡¥å‘¨æœŸ
+//	double dPulseQ;       //å¯åŠ¨ä½ç½®Qçš„è„‰å†²å½¢å¼
+//	double dSpindleSpeed; //ä¸»è½´å¹³å‡è½¬é€Ÿï¼ˆpulse / msï¼‰
 //
-//	double dEncoderPreAbsNum;       //¿ªÊ¼Ëæ¶¯Ê±Ö÷Öá±àÂëÆ÷µÄ¾ø¶ÔÊıÖµ
-//	double dEncoderBackAbsNum;		//´Ó¿ªÊ¼Ëæ¶¯µÄÎ»ÖÃ·´×ªµ½ÆğÊ¼Î»ÖÃÊ±£¬Ö÷Öá±àÂëÆ÷µÄ¾ø¶ÔÊıÖµ
-//	double dEncoderBackNum;			//´Ó¿ªÊ¼Ëæ¶¯µÄÎ»ÖÃ·´×ªµ½ÆğÊ¼Î»ÖÃÊ±£¬Ö÷Öá±àÂëÆ÷µÄÏà¶ÔÊıÖµ
+//	double dEncoderPreAbsNum;       //å¼€å§‹éšåŠ¨æ—¶ä¸»è½´ç¼–ç å™¨çš„ç»å¯¹æ•°å€¼
+//	double dEncoderBackAbsNum;		//ä»å¼€å§‹éšåŠ¨çš„ä½ç½®åè½¬åˆ°èµ·å§‹ä½ç½®æ—¶ï¼Œä¸»è½´ç¼–ç å™¨çš„ç»å¯¹æ•°å€¼
+//	double dEncoderBackNum;			//ä»å¼€å§‹éšåŠ¨çš„ä½ç½®åè½¬åˆ°èµ·å§‹ä½ç½®æ—¶ï¼Œä¸»è½´ç¼–ç å™¨çš„ç›¸å¯¹æ•°å€¼
 //	double dSpindleRealSpeed = pG32->pSChannel->dSpindleRealSpeed;
 //	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 //
-//	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-//	//dVs = g_SSystemPara.dSysMinVel;						//»ñÈ¡ÆğÊ¼ËÙ¶È
+//	//åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+//	//dVs = g_SSystemPara.dSysMinVel;						//è·å–èµ·å§‹é€Ÿåº¦
 //	dVs = pG32->SUserData.dVs;
-//	dVmax = (dSpindleRealSpeed * pG32->dF);	//½«Ö÷ÖáµÄËæ¶¯ËÙ¶È×÷Îª×î´óËÙ¶È
-//	//dAcc = g_SSystemPara.dSysPlanTMaxAcc;					//½«ÏµÍ³²ÎÊıÖĞµÄTĞÍÇúÏß¼ÓËÙ¶È×÷Îª¼ÓËÙ¶È
+//	dVmax = (dSpindleRealSpeed * pG32->dF);	//å°†ä¸»è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºæœ€å¤§é€Ÿåº¦
+//	//dAcc = g_SSystemPara.dSysPlanTMaxAcc;					//å°†ç³»ç»Ÿå‚æ•°ä¸­çš„Tå‹æ›²çº¿åŠ é€Ÿåº¦ä½œä¸ºåŠ é€Ÿåº¦
 //	dAcc = pG32->SUserData.dAcc;
-//	dTc = pG32->SPlanData.dTc;							//»ñÈ¡²å²¹ÖÜÆÚ
+//	dTc = pG32->SPlanData.dTc;							//è·å–æ’è¡¥å‘¨æœŸ
 //
-//	//Èô×î´óÆğÌøËÙ¶È´óÓÚËæ¶¯ËÙ¶È
+//	//è‹¥æœ€å¤§èµ·è·³é€Ÿåº¦å¤§äºéšåŠ¨é€Ÿåº¦
 //	if (dVs > dVmax)
 //	{
-//		dVs = dVmax;  //ÔòÁíËæ¶¯ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
+//		dVs = dVmax;  //åˆ™å¦éšåŠ¨é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
 //	}
 //
-//	dDistance = pG32->SPlanData.dDistance;  //»ñµÃ³¤Öá×ÜµÄ²å²¹¾àÀë
+//	dDistance = pG32->SPlanData.dDistance;  //è·å¾—é•¿è½´æ€»çš„æ’è¡¥è·ç¦»
 //
-//	//¼ÆËã¼ÓËÙÊ±¼äºÍ¼ÓËÙÎ»ÒÆ
-//	dTac = fabs((dVmax - dVs) / (dAcc * dTc));		   //»ñÈ¡¼ÓËÙÖÜÆÚ
-//	dTac = ceil(dTac);								   //¼ÓËÙÊ±¼äÏòÉÏÈ¡Õû
-//	dVmax = dAcc * (dTac * dTc) + dVs;				   //ÖØËã×î´óËÙ¶È
-//	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //ÖØËã¼ÓËÙ¶ÎÎ»ÒÆ
+//	//è®¡ç®—åŠ é€Ÿæ—¶é—´å’ŒåŠ é€Ÿä½ç§»
+//	dTac = fabs((dVmax - dVs) / (dAcc * dTc));		   //è·å–åŠ é€Ÿå‘¨æœŸ
+//	dTac = ceil(dTac);								   //åŠ é€Ÿæ—¶é—´å‘ä¸Šå–æ•´
+//	dVmax = dAcc * (dTac * dTc) + dVs;				   //é‡ç®—æœ€å¤§é€Ÿåº¦
+//	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //é‡ç®—åŠ é€Ÿæ®µä½ç§»
 //	//dSac += dVs + 0.5 * dAcc * dTc;
 //
-//	if (dSac > dDistance || isZero(pG32->dF))  //Èô¼ÓËÙ¾àÀë´óÓÚ×ÜµÄ²å²¹¾àÀë,»òÕßÃ»ÓĞµ¼³Ì
+//	if (dSac > dDistance || isZero(pG32->dF))  //è‹¥åŠ é€Ÿè·ç¦»å¤§äºæ€»çš„æ’è¡¥è·ç¦»,æˆ–è€…æ²¡æœ‰å¯¼ç¨‹
 //	{
-//		return 0;  //¾àÀëÌ«¶Ì£¬Ã»°ì·¨¼ÓËÙ³É¹¦
+//		return 0;  //è·ç¦»å¤ªçŸ­ï¼Œæ²¡åŠæ³•åŠ é€ŸæˆåŠŸ
 //
 //	}
 //
-//	dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡Æô¶¯Î»ÖÃQµÄÂö³åĞÎÊ½
-//	dSpindleSpeed = dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;         //»ñÈ¡Ö÷ÖáÆ½¾ù×ªËÙ
+//	dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum;  //è·å–å¯åŠ¨ä½ç½®Qçš„è„‰å†²å½¢å¼
+//	dSpindleSpeed = dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;         //è·å–ä¸»è½´å¹³å‡è½¬é€Ÿ
 //
-//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
+//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //è‹¥ä¸»è½´æ­£è½¬
 //	{
-//		//ÆğÊ¼Î»ÖÃ->Ëæ¶¯Î»ÖÃ
+//		//èµ·å§‹ä½ç½®->éšåŠ¨ä½ç½®
 //		//dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ + dSpindleSpeed * g_SInterpolation.dTc;
 //		dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ;
 //
 //
-//		//Ëæ¶¯Î»ÖÃ->ÆğÊ¼Î»ÖÃ
+//		//éšåŠ¨ä½ç½®->èµ·å§‹ä½ç½®
 //		dEncoderBackAbsNum = dEncoderPreAbsNum - dSpindleSpeed * dTac;
-//		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum); //¶ÔÖ÷Öá±àÂëÆ÷È¡Óà
+//		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum); //å¯¹ä¸»è½´ç¼–ç å™¨å–ä½™
 //
 //
 //	}
-//	else  //ÈôÖ÷Öá·´×ª
+//	else  //è‹¥ä¸»è½´åè½¬
 //	{
-//		//ÆğÊ¼Î»ÖÃ->Ëæ¶¯Î»ÖÃ
+//		//èµ·å§‹ä½ç½®->éšåŠ¨ä½ç½®
 //		//dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum - dSpindleSpeed * g_SInterpolation.dTc;
 //		dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum;
 //
-//		//Ëæ¶¯Î»ÖÃ->ÆğÊ¼Î»ÖÃ
+//		//éšåŠ¨ä½ç½®->èµ·å§‹ä½ç½®
 //		dEncoderBackAbsNum = dEncoderPreAbsNum + dSpindleSpeed * dTac;
-//		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÖ÷Öá±àÂëÆ÷È¡Óà
+//		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum);  //å¯¹ä¸»è½´ç¼–ç å™¨å–ä½™
 //
 //
 //	}
 //
-//	if (dEncoderBackNum < 0)  //Èô¼ÆËãËùµÃµÄÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃÎª¸ºÊı
+//	if (dEncoderBackNum < 0)  //è‹¥è®¡ç®—æ‰€å¾—çš„ä¸»è½´ç¼–ç å™¨çš„ä½ç½®ä¸ºè´Ÿæ•°
 //	{
-//		dEncoderBackNum += pSSpindleEncoder->usEncoderCirclePulseNum;  //ĞŞÕıÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+//		dEncoderBackNum += pSSpindleEncoder->usEncoderCirclePulseNum;  //ä¿®æ­£ä¸»è½´ç¼–ç å™¨çš„ä½ç½®
 //
 //	}
 //
-//	pG32->unTac = (uint32)dTac;  //»ñÈ¡¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
-//	pG32->dVs = dVs;              //»ñµÃ¹ı¶É½×¶ÎµÄÆğÊ¼ËÙ¶È
-//	return dEncoderBackNum;                 //·µ»Ø³õÊ¼½Ç¶ÔÓ¦µÄÏà¶ÔÂö³å
+//	pG32->unTac = (uint32)dTac;  //è·å–è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
+//	pG32->dVs = dVs;              //è·å¾—è¿‡æ¸¡é˜¶æ®µçš„èµ·å§‹é€Ÿåº¦
+//	return dEncoderBackNum;                 //è¿”å›åˆå§‹è§’å¯¹åº”çš„ç›¸å¯¹è„‰å†²
 //
 //}
 
-
-//´ø±Ü¿Õ¾àÀë
+//å¸¦é¿ç©ºè·ç¦»
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºdouble getRealTargetPulse(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º»ñµÃÕæÕıµÄ³õÊ¼½ÇQ¶ÔÓ¦µÄÏà¶ÔÂö³å
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºÕæÕıµÄ³õÊ¼½ÇQ¶ÔÓ¦µÄÏà¶ÔÂö³å
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šdouble getRealTargetPulse(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šè·å¾—çœŸæ­£çš„åˆå§‹è§’Qå¯¹åº”çš„ç›¸å¯¹è„‰å†²
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šçœŸæ­£çš„åˆå§‹è§’Qå¯¹åº”çš„ç›¸å¯¹è„‰å†²
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 double getRealTargetPulse(struct _SG32* pG32)
 {
 
-	double dTac;//¼ÓËÙÖÜÆÚ
-	double dSac;//¼ÓËÙ¾àÀë
+    double dTac; //åŠ é€Ÿå‘¨æœŸ
+    double dSac; //åŠ é€Ÿè·ç¦»
 
-	double dVs, dVmax;    //ÆğÊ¼£¬×î´óËÙ¶È
-	double dAcc;          //¼ÓËÙ¶ÎµÄ¼ÓËÙ¶È
-	double dDistance;     //×Ü²å²¹¾àÀë
-	double dTc;			  //²å²¹ÖÜÆÚ
-	double dPulseQ;       //Æô¶¯Î»ÖÃQµÄÂö³åĞÎÊ½
-	double dSpindleSpeed; //Ö÷ÖáÆ½¾ù×ªËÙ£¨pulse / ms£©
+    double dVs, dVmax;    //èµ·å§‹ï¼Œæœ€å¤§é€Ÿåº¦
+    double dAcc;          //åŠ é€Ÿæ®µçš„åŠ é€Ÿåº¦
+    double dDistance;     //æ€»æ’è¡¥è·ç¦»
+    double dTc;           //æ’è¡¥å‘¨æœŸ
+    double dPulseQ;       //å¯åŠ¨ä½ç½®Qçš„è„‰å†²å½¢å¼
+    double dSpindleSpeed; //ä¸»è½´å¹³å‡è½¬é€Ÿï¼ˆpulse / msï¼‰
 
-	double dEncoderPreAbsNum;       //¿ªÊ¼Ëæ¶¯Ê±Ö÷Öá±àÂëÆ÷µÄ¾ø¶ÔÊıÖµ
-	double dEncoderBackAbsNum;		//´Ó¿ªÊ¼Ëæ¶¯µÄÎ»ÖÃ·´×ªµ½ÆğÊ¼Î»ÖÃÊ±£¬Ö÷Öá±àÂëÆ÷µÄ¾ø¶ÔÊıÖµ
-	double dEncoderBackNum;			//´Ó¿ªÊ¼Ëæ¶¯µÄÎ»ÖÃ·´×ªµ½ÆğÊ¼Î»ÖÃÊ±£¬Ö÷Öá±àÂëÆ÷µÄÏà¶ÔÊıÖµ
-	double dSpindleRealSpeed = pG32->pSChannel->dSpindleRealSpeed;
-	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+    double dEncoderPreAbsNum;  //å¼€å§‹éšåŠ¨æ—¶ä¸»è½´ç¼–ç å™¨çš„ç»å¯¹æ•°å€¼
+    double dEncoderBackAbsNum; //ä»å¼€å§‹éšåŠ¨çš„ä½ç½®åè½¬åˆ°èµ·å§‹ä½ç½®æ—¶ï¼Œä¸»è½´ç¼–ç å™¨çš„ç»å¯¹æ•°å€¼
+    double dEncoderBackNum;    //ä»å¼€å§‹éšåŠ¨çš„ä½ç½®åè½¬åˆ°èµ·å§‹ä½ç½®æ—¶ï¼Œä¸»è½´ç¼–ç å™¨çš„ç›¸å¯¹æ•°å€¼
+    double dSpindleRealSpeed = pG32->pSChannel->dSpindleRealSpeed;
+    struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 
-	double dSacBase = 0;         //ÂİÎÆ³µÏ÷µÄ±Ü¿Õ¾àÀë
-	double dLongAxisAbsPos = 0;  //³¤ÖáµÄ¾ø¶ÔÎ»ÖÃ
+    double dSacBase = 0;        //èºçº¹è½¦å‰Šçš„é¿ç©ºè·ç¦»
+    double dLongAxisAbsPos = 0; //é•¿è½´çš„ç»å¯¹ä½ç½®
 
-	//³õÊ¼»¯²ÎÊı(´Ó½á¹¹Ìå»ñÈ¡£©
-	//dVs = g_SSystemPara.dSysMinVel;						//»ñÈ¡ÆğÊ¼ËÙ¶È
-	dVs = pG32->SUserData.dVs;
-	dVmax = fabs(dSpindleRealSpeed * pG32->dF);	//½«Ö÷ÖáµÄËæ¶¯ËÙ¶È×÷Îª×î´óËÙ¶È
-	//dAcc = g_SSystemPara.dSysPlanTMaxAcc;					//½«ÏµÍ³²ÎÊıÖĞµÄTĞÍÇúÏß¼ÓËÙ¶È×÷Îª¼ÓËÙ¶È
-	dAcc = pG32->SUserData.dAcc;
-	dTc = pG32->SPlanData.dTc;							//»ñÈ¡²å²¹ÖÜÆÚ
+    //åˆå§‹åŒ–å‚æ•°(ä»ç»“æ„ä½“è·å–ï¼‰
+    //dVs = g_SSystemPara.dSysMinVel;						//è·å–èµ·å§‹é€Ÿåº¦
+    dVs = pG32->SUserData.dVs;
+    dVmax = fabs(dSpindleRealSpeed * pG32->dF); //å°†ä¸»è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºæœ€å¤§é€Ÿåº¦
+    //dAcc = g_SSystemPara.dSysPlanTMaxAcc;					//å°†ç³»ç»Ÿå‚æ•°ä¸­çš„Tå‹æ›²çº¿åŠ é€Ÿåº¦ä½œä¸ºåŠ é€Ÿåº¦
+    dAcc = pG32->SUserData.dAcc;
+    dTc = pG32->SPlanData.dTc; //è·å–æ’è¡¥å‘¨æœŸ
 
-	if(dAcc <= 0 || dTc <= 0 || pSSpindleEncoder->usEncoderCirclePulseNum == 0)
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return 0;
-	}
+    if (dAcc <= 0 || dTc <= 0 || pSSpindleEncoder->usEncoderCirclePulseNum == 0)
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return 0;
+    }
 
-	//Èô×î´óÆğÌøËÙ¶È´óÓÚËæ¶¯ËÙ¶È
-	if (dVs > dVmax)
-	{
-		dVs = dVmax;  //ÔòÁíËæ¶¯ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
-	}
+    //è‹¥æœ€å¤§èµ·è·³é€Ÿåº¦å¤§äºéšåŠ¨é€Ÿåº¦
+    if (dVs > dVmax)
+    {
+        dVs = dVmax; //åˆ™å¦éšåŠ¨é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
+    }
 
-	dDistance = pG32->SPlanData.dDistance;  //»ñµÃ³¤Öá×ÜµÄ²å²¹¾àÀë
+    dDistance = pG32->SPlanData.dDistance; //è·å¾—é•¿è½´æ€»çš„æ’è¡¥è·ç¦»
 
-	//¼ÆËã¼ÓËÙÊ±¼äºÍ¼ÓËÙÎ»ÒÆ
-	dTac = fabs((dVmax - dVs) / (dAcc * dTc));		   //»ñÈ¡¼ÓËÙÖÜÆÚ
-	dTac = ceil(dTac);								   //¼ÓËÙÊ±¼äÏòÉÏÈ¡Õû
-	dVmax = dAcc * (dTac * dTc) + dVs;				   //ÖØËã×î´óËÙ¶È
-	dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //ÖØËã¼ÓËÙ¶ÎÎ»ÒÆ
-	//dSac += dVs + 0.5 * dAcc * dTc;
+    //è®¡ç®—åŠ é€Ÿæ—¶é—´å’ŒåŠ é€Ÿä½ç§»
+    dTac = fabs((dVmax - dVs) / (dAcc * dTc));       //è·å–åŠ é€Ÿå‘¨æœŸ
+    dTac = ceil(dTac);                               //åŠ é€Ÿæ—¶é—´å‘ä¸Šå–æ•´
+    dVmax = dAcc * (dTac * dTc) + dVs;               //é‡ç®—æœ€å¤§é€Ÿåº¦
+    dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2); //é‡ç®—åŠ é€Ÿæ®µä½ç§»
+    //dSac += dVs + 0.5 * dAcc * dTc;
 
-	dLongAxisAbsPos = pG32->SStarCutPoint.dArray[pG32->ucAxis[0]] - pG32->pSChannel->SRun.SCurrentOffset.dArray[pG32->ucAxis[0]];
-	//»ñÈ¡±Ü¿Õ¾àÀë
-	if (isZero(dLongAxisAbsPos) || dLongAxisAbsPos < 0)  //´Ó¹¤¼şÄÚ¿ªÊ¼ÇĞÂİÎÆÊ±£¬Ê¹ÓÃÏµÍ³²ÎÊıµÄ×î´ó±Ü¿Õ¾àÀë£¬×÷Îª±Ü¿Õ¾àÀë
-	{
-		if (isZero(g_SSystemPara.dG32SacBase))
-		{
-			parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-			return 0;
-		}
-		dSacBase = g_SSystemPara.dG32SacBase;
-	}
-	else  //´Ó¹¤¼şÍâ¿ªÊ¼ÇĞÂİÎÆ£¬ÒÔÂİÎÆ³µÏ÷ÆğµãÎ»ÖÃ×÷Îª±Ü¿Õ¾àÀë
-	{
-		dSacBase = dLongAxisAbsPos;
-	}
+    dLongAxisAbsPos =
+        pG32->SStarCutPoint.dArray[pG32->ucAxis[0]] - pG32->pSChannel->SRun.SCurrentOffset.dArray[pG32->ucAxis[0]];
+    //è·å–é¿ç©ºè·ç¦»
+    if (isZero(dLongAxisAbsPos) || dLongAxisAbsPos < 0) //ä»å·¥ä»¶å†…å¼€å§‹åˆ‡èºçº¹æ—¶ï¼Œä½¿ç”¨ç³»ç»Ÿå‚æ•°çš„æœ€å¤§é¿ç©ºè·ç¦»ï¼Œä½œä¸ºé¿ç©ºè·ç¦»
+    {
+        if (isZero(g_SSystemPara.dG32SacBase))
+        {
+            parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+            return 0;
+        }
+        dSacBase = g_SSystemPara.dG32SacBase;
+    }
+    else //ä»å·¥ä»¶å¤–å¼€å§‹åˆ‡èºçº¹ï¼Œä»¥èºçº¹è½¦å‰Šèµ·ç‚¹ä½ç½®ä½œä¸ºé¿ç©ºè·ç¦»
+    {
+        dSacBase = dLongAxisAbsPos;
+    }
 
-	dSacBase = dSacBase * 0.95; //ÒÔÀíÏëµÄ±Ü¿Õ¾àÀëµÄ0.95±¶×÷Îª×îÖÕÒªÇóµÄ±Ü¿Õ¾àÀë
+    dSacBase = dSacBase * 0.95; //ä»¥ç†æƒ³çš„é¿ç©ºè·ç¦»çš„0.95å€ä½œä¸ºæœ€ç»ˆè¦æ±‚çš„é¿ç©ºè·ç¦»
 
-	//°´ÏµÍ³ËùÉèµÄ¼ÓËÙ¶È¼ÆËãµÃµ½µÄ¼ÓËÙ¾àÀëSac,´óÓÚ±Ü¿Õ¾àÀëdSacBase
-	if (dSac > dSacBase)
-	{
-		dSac = dSacBase;
-		dVmax = (dSpindleRealSpeed * pG32->dF);	  //½«Ö÷ÖáµÄËæ¶¯ËÙ¶È×÷Îª×î´óËÙ¶È
-		dAcc  = (dVmax * dVmax - dVs * dVs) / (dSac * 2);
-		dTac  = fabs((dVmax - dVs) / (dAcc * dTc));		   //»ñÈ¡¼ÓËÙÖÜÆÚ
-		dTac  = floor(dTac);								   //¼ÓËÙÊ±¼äÏòÏÂÈ¡Õû
-		dVmax = dAcc * (dTac * dTc) + dVs;				   //ÖØËã×î´óËÙ¶È
-		dSac  = (dVmax * dVmax - dVs * dVs) / (dAcc * 2);   //»ñµÃ×îÖÕµÄ¼ÓËÙ¶ÎÎ»ÒÆ
-	}
+    //æŒ‰ç³»ç»Ÿæ‰€è®¾çš„åŠ é€Ÿåº¦è®¡ç®—å¾—åˆ°çš„åŠ é€Ÿè·ç¦»Sac,å¤§äºé¿ç©ºè·ç¦»dSacBase
+    if (dSac > dSacBase)
+    {
+        dSac = dSacBase;
+        dVmax = (dSpindleRealSpeed * pG32->dF); //å°†ä¸»è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºæœ€å¤§é€Ÿåº¦
+        dAcc = (dVmax * dVmax - dVs * dVs) / (dSac * 2);
+        dTac = fabs((dVmax - dVs) / (dAcc * dTc));       //è·å–åŠ é€Ÿå‘¨æœŸ
+        dTac = floor(dTac);                              //åŠ é€Ÿæ—¶é—´å‘ä¸‹å–æ•´
+        dVmax = dAcc * (dTac * dTc) + dVs;               //é‡ç®—æœ€å¤§é€Ÿåº¦
+        dSac = (dVmax * dVmax - dVs * dVs) / (dAcc * 2); //è·å¾—æœ€ç»ˆçš„åŠ é€Ÿæ®µä½ç§»
+    }
 
-	if (dSac > dDistance || isZero(pG32->dF))  //Èô¼ÓËÙ¾àÀë´óÓÚ×ÜµÄ²å²¹¾àÀë,»òÕßÃ»ÓĞµ¼³Ì
-	{
-		return 0;  //¾àÀëÌ«¶Ì£¬Ã»°ì·¨¼ÓËÙ³É¹¦
+    if (dSac > dDistance || isZero(pG32->dF)) //è‹¥åŠ é€Ÿè·ç¦»å¤§äºæ€»çš„æ’è¡¥è·ç¦»,æˆ–è€…æ²¡æœ‰å¯¼ç¨‹
+    {
+        return 0; //è·ç¦»å¤ªçŸ­ï¼Œæ²¡åŠæ³•åŠ é€ŸæˆåŠŸ
+    }
 
-	}
+    dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum;   //è·å–å¯åŠ¨ä½ç½®Qçš„è„‰å†²å½¢å¼
+    dSpindleSpeed = dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum; //è·å–ä¸»è½´å¹³å‡è½¬é€Ÿ
 
-	dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡Æô¶¯Î»ÖÃQµÄÂö³åĞÎÊ½
-	dSpindleSpeed = dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;         //»ñÈ¡Ö÷ÖáÆ½¾ù×ªËÙ
+    if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´æ­£è½¬
+    {
+        //èµ·å§‹ä½ç½®->éšåŠ¨ä½ç½®
+        //dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ + dSpindleSpeed * g_SInterpolation.dTc;
+        dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ;
 
-	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
-	{
-		//ÆğÊ¼Î»ÖÃ->Ëæ¶¯Î»ÖÃ
-		//dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ + dSpindleSpeed * g_SInterpolation.dTc;
-		dEncoderPreAbsNum = dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum + dPulseQ;
+        //éšåŠ¨ä½ç½®->èµ·å§‹ä½ç½®
+        dEncoderBackAbsNum = dEncoderPreAbsNum - dSpindleSpeed * dTac;
+        dEncoderBackNum =
+            surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum); //å¯¹ä¸»è½´ç¼–ç å™¨å–ä½™
+    }
+    else //è‹¥ä¸»è½´åè½¬
+    {
+        //èµ·å§‹ä½ç½®->éšåŠ¨ä½ç½®
+        //dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum - dSpindleSpeed * g_SInterpolation.dTc;
+        dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum;
 
+        //éšåŠ¨ä½ç½®->èµ·å§‹ä½ç½®
+        dEncoderBackAbsNum = dEncoderPreAbsNum + dSpindleSpeed * dTac;
+        dEncoderBackNum =
+            surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum); //å¯¹ä¸»è½´ç¼–ç å™¨å–ä½™
+    }
 
-		//Ëæ¶¯Î»ÖÃ->ÆğÊ¼Î»ÖÃ
-		dEncoderBackAbsNum = dEncoderPreAbsNum - dSpindleSpeed * dTac;
-		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum); //¶ÔÖ÷Öá±àÂëÆ÷È¡Óà
+    if (dEncoderBackNum < 0) //è‹¥è®¡ç®—æ‰€å¾—çš„ä¸»è½´ç¼–ç å™¨çš„ä½ç½®ä¸ºè´Ÿæ•°
+    {
+        dEncoderBackNum += pSSpindleEncoder->usEncoderCirclePulseNum; //ä¿®æ­£ä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+    }
 
-
-	}
-	else  //ÈôÖ÷Öá·´×ª
-	{
-		//ÆğÊ¼Î»ÖÃ->Ëæ¶¯Î»ÖÃ
-		//dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum - dSpindleSpeed * g_SInterpolation.dTc;
-		dEncoderPreAbsNum = dPulseQ - dSac / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum;
-
-		//Ëæ¶¯Î»ÖÃ->ÆğÊ¼Î»ÖÃ
-		dEncoderBackAbsNum = dEncoderPreAbsNum + dSpindleSpeed * dTac;
-		dEncoderBackNum = surplusDoubleData(dEncoderBackAbsNum, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÖ÷Öá±àÂëÆ÷È¡Óà
-
-
-	}
-
-	if (dEncoderBackNum < 0)  //Èô¼ÆËãËùµÃµÄÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃÎª¸ºÊı
-	{
-		dEncoderBackNum += pSSpindleEncoder->usEncoderCirclePulseNum;  //ĞŞÕıÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
-
-	}
-
-	pG32->unTac = (uint32)dTac;   //»ñÈ¡¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
-	pG32->dVs   = dVs;            //»ñµÃ¹ı¶É½×¶ÎµÄÆğÊ¼ËÙ¶È
-	pG32->dAcc  = dAcc;		      //»ñµÃ¹ı¶É½×¶ÎµÄ¼ÓËÙ¶È
-	return dEncoderBackNum;       //·µ»Ø³õÊ¼½Ç¶ÔÓ¦µÄÏà¶ÔÂö³å
-
+    pG32->unTac = (uint32)dTac; //è·å–è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
+    pG32->dVs = dVs;            //è·å¾—è¿‡æ¸¡é˜¶æ®µçš„èµ·å§‹é€Ÿåº¦
+    pG32->dAcc = dAcc;          //è·å¾—è¿‡æ¸¡é˜¶æ®µçš„åŠ é€Ÿåº¦
+    return dEncoderBackNum;     //è¿”å›åˆå§‹è§’å¯¹åº”çš„ç›¸å¯¹è„‰å†²
 }
 
-
 /////*************************************************
-////  º¯ÊıÃû³Æ£ºvoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
-////  º¯Êı¹¦ÄÜ£º¡°¼õËÙ¡±ÀàĞÍÁ¬ĞøG32µÄËÙ¶È¹æ»®
-////  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë	
-////			dLeftDistance       double              µ±Ç°Î»ÖÃ¾àÀë²å²¹ÖÕµãµÄ¾àÀë
-////  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-////  ·µ »Ø Öµ£ºÎŞ
-////  ±¸    ×¢£ºÎŞ
+////  å‡½æ•°åç§°ï¼švoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
+////  å‡½æ•°åŠŸèƒ½ï¼šâ€œå‡é€Ÿâ€ç±»å‹è¿ç»­G32çš„é€Ÿåº¦è§„åˆ’
+////  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+////			dLeftDistance       double              å½“å‰ä½ç½®è·ç¦»æ’è¡¥ç»ˆç‚¹çš„è·ç¦»
+////  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+////  è¿” å› å€¼ï¼šæ— 
+////  å¤‡    æ³¨ï¼šæ— 
 ////**************************************************/
 //void planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
 //{
-//	double dDistance = dLeftDistance; //³¤Öá¾àÀëÖÕµãµÄ³¤¶È£¨¼õËÙ¶ÎÎ»ÒÆ£©
-//	double dRemainDistance;           //²ĞÓà¾àÀë
-//	double dTac;                      //¼õËÙÖÜÆÚ
+//	double dDistance = dLeftDistance; //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦ï¼ˆå‡é€Ÿæ®µä½ç§»ï¼‰
+//	double dRemainDistance;           //æ®‹ä½™è·ç¦»
+//	double dTac;                      //å‡é€Ÿå‘¨æœŸ
 //
-//	double dVs, dVe;    //ÆğÊ¼£¬ÖÕµãËÙ¶È£¨×î´óËÙ¶ÈÎªÁ½ÕßµÄ×î´óÖµ£©
-//	double dDec;        //¼õËÙ¶È
-//	double dTc;		    //²å²¹ÖÜÆÚ
+//	double dVs, dVe;    //èµ·å§‹ï¼Œç»ˆç‚¹é€Ÿåº¦ï¼ˆæœ€å¤§é€Ÿåº¦ä¸ºä¸¤è€…çš„æœ€å¤§å€¼ï¼‰
+//	double dDec;        //å‡é€Ÿåº¦
+//	double dTc;		    //æ’è¡¥å‘¨æœŸ
 //
-//	double dSpindleSpeed;               //Ö÷ÖáÀíÂÛ×ªËÙ£¨pulse / ms£©
-//	double dDelta;                      //ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-//	double dNowG32LongAxisSpeed;        //µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
-//	double dIdealSpindlePosition;       //ÖÕµã´¦Ö÷Öá±àÂëÆ÷µÄÊıÖµ
-//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
+//	double dSpindleSpeed;               //ä¸»è½´ç†è®ºè½¬é€Ÿï¼ˆpulse / msï¼‰
+//	double dDelta;                      //ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+//	double dNowG32LongAxisSpeed;        //å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
+//	double dIdealSpindlePosition;       //ç»ˆç‚¹å¤„ä¸»è½´ç¼–ç å™¨çš„æ•°å€¼
+//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //é•¿è½´è½´å·
 //	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 //
-//	dTc = pG32->SPlanData.dTc;  //»ñÈ¡²å²¹ÖÜÆÚ
-//	dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //»ñÈ¡µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
+//	dTc = pG32->SPlanData.dTc;  //è·å–æ’è¡¥å‘¨æœŸ
+//	dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //è·å–å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
 //
-//	//pInterpPrePointer->dCurrentSpeed = dNowG32LongAxisSpeed;  //ÖØËãµ±Ç°ËÙ¶È£¨±£Ö¤ËÙ¶ÈÏàÍ¬ÊÇÎªÁË±£Ö¤¹ı¶ÉÊ±¼äÏàÍ¬£©
-//	//dVs = pInterpPrePointer->dCurrentSpeed;                   //ÒÔµ±Ç°ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
-//	dVs = dNowG32LongAxisSpeed;                  //ÒÔµ±Ç°G32µÄËæ¶¯ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
-//	dVe = pG32->dNextG32LongAxisSpeed;           //ÒÔÏÂÒ»¸öG32³¤ÖáµÄËæ¶¯ËÙ¶È×÷ÎªÖÕµãËÙ¶È
+//	//pInterpPrePointer->dCurrentSpeed = dNowG32LongAxisSpeed;  //é‡ç®—å½“å‰é€Ÿåº¦ï¼ˆä¿è¯é€Ÿåº¦ç›¸åŒæ˜¯ä¸ºäº†ä¿è¯è¿‡æ¸¡æ—¶é—´ç›¸åŒï¼‰
+//	//dVs = pInterpPrePointer->dCurrentSpeed;                   //ä»¥å½“å‰é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
+//	dVs = dNowG32LongAxisSpeed;                  //ä»¥å½“å‰G32çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
+//	dVe = pG32->dNextG32LongAxisSpeed;           //ä»¥ä¸‹ä¸€ä¸ªG32é•¿è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºç»ˆç‚¹é€Ÿåº¦
 //
-//	//¼ÆËãÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-//	dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];  //»ñÈ¡ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-//	
-//	dDec = (dVe * dVe - dVs * dVs) / (dDelta * 2);  //»ñÈ¡¼õËÙ¶È
-//	
+//	//è®¡ç®—ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+//	dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];  //è·å–ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
 //
-//	if (isZero(dDec))  //ÈôÖÕµãËÙ¶ÈºÍµ±Ç°ËÙ¶ÈÏàÍ¬£¬µ¼ÖÂ¼õËÙ¶ÈÎª0
+//	dDec = (dVe * dVe - dVs * dVs) / (dDelta * 2);  //è·å–å‡é€Ÿåº¦
+//
+//
+//	if (isZero(dDec))  //è‹¥ç»ˆç‚¹é€Ÿåº¦å’Œå½“å‰é€Ÿåº¦ç›¸åŒï¼Œå¯¼è‡´å‡é€Ÿåº¦ä¸º0
 //	{
-//		dTac = round(dDistance / dVs);              //½«µ½´ïÖÕµãËùĞèµÄÊ±¼äÏòÉÏÈ¡Õû
-//		dRemainDistance = dDistance - dTac * dVs;   //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë
+//		dTac = round(dDistance / dVs);              //å°†åˆ°è¾¾ç»ˆç‚¹æ‰€éœ€çš„æ—¶é—´å‘ä¸Šå–æ•´
+//		dRemainDistance = dDistance - dTac * dVs;   //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»
 //	}
-//	else  //Èô¼õËÙ¶È²»Îª0
+//	else  //è‹¥å‡é€Ÿåº¦ä¸ä¸º0
 //	{
-//		dTac = fabs((dVe - dVs) / (dDec * dTc));           //»ñÈ¡¼õËÙÊ±¼ä
-//		dTac = round(dTac);							       //¼õËÙÊ±¼äËÄÉáÎåÈëÈ¡Õû
+//		dTac = fabs((dVe - dVs) / (dDec * dTc));           //è·å–å‡é€Ÿæ—¶é—´
+//		dTac = round(dTac);							       //å‡é€Ÿæ—¶é—´å››èˆäº”å…¥å–æ•´
 //		if (isZero(dTac))
 //		{
 //			dTac = 1;
 //		}
-//		dVe = dDec * (dTac * dTc) + dVs;                   //ÖØËãÖÕµãËÙ¶È
-//		dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2);  //ÖØËã¼õËÙ¶ÎÎ»ÒÆ
-//		dRemainDistance = dLeftDistance - dDistance;       //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë
+//		dVe = dDec * (dTac * dTc) + dVs;                   //é‡ç®—ç»ˆç‚¹é€Ÿåº¦
+//		dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2);  //é‡ç®—å‡é€Ÿæ®µä½ç§»
+//		dRemainDistance = dLeftDistance - dDistance;       //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»
 //	}
 //
 //
-//	dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡Ö÷ÖáÀíÂÛ×ªËÙ
+//	dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;  //è·å–ä¸»è½´ç†è®ºè½¬é€Ÿ
 //
-//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
+//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //è‹¥ä¸»è½´æ­£è½¬
 //	{
-//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta + dSpindleSpeed * dTac;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta + dSpindleSpeed * dTac;  //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
 //
 //	}
-//	else  //ÈôÖ÷Öá·´×ª
+//	else  //è‹¥ä¸»è½´åè½¬
 //	{
-//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta - dSpindleSpeed * dTac;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta - dSpindleSpeed * dTac;  //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
 //
 //	}
 //
@@ -1119,7 +1110,7 @@ double getRealTargetPulse(struct _SG32* pG32)
 //
 //	}
 //
-//	//½«ÏÂÊö²ÎÊı¸³Öµµ½ÂİÎÆ²å²¹½á¹¹Ìå
+//	//å°†ä¸‹è¿°å‚æ•°èµ‹å€¼åˆ°èºçº¹æ’è¡¥ç»“æ„ä½“
 //	pG32->dRemainDistance = dRemainDistance;
 //	pG32->unTac = dTac;
 //	pG32->dVs = dVs;
@@ -1128,45 +1119,45 @@ double getRealTargetPulse(struct _SG32* pG32)
 //}
 
 /////*************************************************
-////  º¯ÊıÃû³Æ£ºvoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
-////  º¯Êı¹¦ÄÜ£º¡°¼õËÙ¡±ÀàĞÍÁ¬ĞøG32µÄËÙ¶È¹æ»®
-////  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë	
-////			dLeftDistance       double              µ±Ç°Î»ÖÃ¾àÀë²å²¹ÖÕµãµÄ¾àÀë
-////  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-////  ·µ »Ø Öµ£ºÎŞ
-////  ±¸    ×¢£ºÎŞ
+////  å‡½æ•°åç§°ï¼švoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
+////  å‡½æ•°åŠŸèƒ½ï¼šâ€œå‡é€Ÿâ€ç±»å‹è¿ç»­G32çš„é€Ÿåº¦è§„åˆ’
+////  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+////			dLeftDistance       double              å½“å‰ä½ç½®è·ç¦»æ’è¡¥ç»ˆç‚¹çš„è·ç¦»
+////  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+////  è¿” å› å€¼ï¼šæ— 
+////  å¤‡    æ³¨ï¼šæ— 
 ////**************************************************/
 //void planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
 //{
-//	double dDistance = dLeftDistance; //³¤Öá¾àÀëÖÕµãµÄ³¤¶È£¨¼õËÙ¶ÎÎ»ÒÆ£©
-//	double dRemainDistance;           //²ĞÓà¾àÀë
-//	double dTac;                      //Êµ¼Ê¼õËÙÊ±¼ä
-//	double dTacIdeal;                 //ÀíÂÛ¼õËÙÊ±¼ä     
+//	double dDistance = dLeftDistance; //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦ï¼ˆå‡é€Ÿæ®µä½ç§»ï¼‰
+//	double dRemainDistance;           //æ®‹ä½™è·ç¦»
+//	double dTac;                      //å®é™…å‡é€Ÿæ—¶é—´
+//	double dTacIdeal;                 //ç†è®ºå‡é€Ÿæ—¶é—´
 //
-//	double dVs, dVe;    //ÆğÊ¼£¬ÖÕµãËÙ¶È£¨×î´óËÙ¶ÈÎªÁ½ÕßµÄ×î´óÖµ£©
-//	double dVsIdeal;    //ÀíÏëµÄÆğÊ¼ËÙ¶È
-//	double dDec;        //¼õËÙ¶È
-//	double dTc;		    //²å²¹ÖÜÆÚ
+//	double dVs, dVe;    //èµ·å§‹ï¼Œç»ˆç‚¹é€Ÿåº¦ï¼ˆæœ€å¤§é€Ÿåº¦ä¸ºä¸¤è€…çš„æœ€å¤§å€¼ï¼‰
+//	double dVsIdeal;    //ç†æƒ³çš„èµ·å§‹é€Ÿåº¦
+//	double dDec;        //å‡é€Ÿåº¦
+//	double dTc;		    //æ’è¡¥å‘¨æœŸ
 //
-//	double dSpindleSpeed;               //Ö÷ÖáÀíÂÛ×ªËÙ£¨pulse / ms£©
-//	double dDelta;                      //ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-//	double dNowG32LongAxisSpeed;        //µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
-//	double dIdealSpindlePosition;       //ÖÕµã´¦Ö÷Öá±àÂëÆ÷µÄÊıÖµ
-//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
+//	double dSpindleSpeed;               //ä¸»è½´ç†è®ºè½¬é€Ÿï¼ˆpulse / msï¼‰
+//	double dDelta;                      //ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+//	double dNowG32LongAxisSpeed;        //å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
+//	double dIdealSpindlePosition;       //ç»ˆç‚¹å¤„ä¸»è½´ç¼–ç å™¨çš„æ•°å€¼
+//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //é•¿è½´è½´å·
 //	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 //
-//	dTc = pG32->SPlanData.dTc;  //»ñÈ¡²å²¹ÖÜÆÚ
-//	dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //»ñÈ¡µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
+//	dTc = pG32->SPlanData.dTc;  //è·å–æ’è¡¥å‘¨æœŸ
+//	dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //è·å–å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
 //
-//	//pInterpPrePointer->dCurrentSpeed = dNowG32LongAxisSpeed;  //ÖØËãµ±Ç°ËÙ¶È£¨±£Ö¤ËÙ¶ÈÏàÍ¬ÊÇÎªÁË±£Ö¤¹ı¶ÉÊ±¼äÏàÍ¬£©
-//	dVs = pG32->dCurrentSpeed;                   //ÒÔµ±Ç°ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
-//	dVsIdeal = dNowG32LongAxisSpeed;			 //ÒÔµ±Ç°G32µÄÀíÏëËæ¶¯ËÙ¶È×÷ÎªÀíÏëÆğÊ¼ËÙ¶È
-//	dVe = pG32->dNextG32LongAxisSpeed;           //ÒÔÏÂÒ»¸öG32³¤ÖáµÄËæ¶¯ËÙ¶È×÷ÎªÖÕµãËÙ¶È
+//	//pInterpPrePointer->dCurrentSpeed = dNowG32LongAxisSpeed;  //é‡ç®—å½“å‰é€Ÿåº¦ï¼ˆä¿è¯é€Ÿåº¦ç›¸åŒæ˜¯ä¸ºäº†ä¿è¯è¿‡æ¸¡æ—¶é—´ç›¸åŒï¼‰
+//	dVs = pG32->dCurrentSpeed;                   //ä»¥å½“å‰é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
+//	dVsIdeal = dNowG32LongAxisSpeed;			 //ä»¥å½“å‰G32çš„ç†æƒ³éšåŠ¨é€Ÿåº¦ä½œä¸ºç†æƒ³èµ·å§‹é€Ÿåº¦
+//	dVe = pG32->dNextG32LongAxisSpeed;           //ä»¥ä¸‹ä¸€ä¸ªG32é•¿è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºç»ˆç‚¹é€Ÿåº¦
 //
-//	//¼ÆËãÀíÏë¼õËÙÎ»ÖÃÖÁÖÕµãËùĞèÒªµÄÊ±¼ä
-//	dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];  //»ñÈ¡ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-//	dDec = (dVe * dVe - dVsIdeal * dVsIdeal) / (dDelta * 2); //»ñÈ¡ÀíÏë¼õËÙ¶È
-//	dTacIdeal = fabs((dVe - dVsIdeal) / (dDec * dTc));       //»ñÈ¡ÀíÏë¼õËÙÊ±¼ä
+//	//è®¡ç®—ç†æƒ³å‡é€Ÿä½ç½®è‡³ç»ˆç‚¹æ‰€éœ€è¦çš„æ—¶é—´
+//	dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];  //è·å–ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+//	dDec = (dVe * dVe - dVsIdeal * dVsIdeal) / (dDelta * 2); //è·å–ç†æƒ³å‡é€Ÿåº¦
+//	dTacIdeal = fabs((dVe - dVsIdeal) / (dDec * dTc));       //è·å–ç†æƒ³å‡é€Ÿæ—¶é—´
 //	dTacIdeal = round(dTacIdeal);
 //	if (isZero(dTacIdeal))
 //	{
@@ -1174,42 +1165,42 @@ double getRealTargetPulse(struct _SG32* pG32)
 //
 //	}
 //
-//	//¼ÆËãÓÃÓÚ¹æ»®µÄ¼õËÙ¶È
+//	//è®¡ç®—ç”¨äºè§„åˆ’çš„å‡é€Ÿåº¦
 //	dDec = (dVe * dVe - dVs * dVs) / (dLeftDistance * 2);
 //
-//	if (isZero(dDec))  //ÈôÖÕµãËÙ¶ÈºÍµ±Ç°ËÙ¶ÈÏàÍ¬£¬µ¼ÖÂ¼õËÙ¶ÈÎª0
+//	if (isZero(dDec))  //è‹¥ç»ˆç‚¹é€Ÿåº¦å’Œå½“å‰é€Ÿåº¦ç›¸åŒï¼Œå¯¼è‡´å‡é€Ÿåº¦ä¸º0
 //	{
-//		dTac = round(dDistance / dVs);              //½«µ½´ïÖÕµãËùĞèµÄÊ±¼äÏòÉÏÈ¡Õû
-//		dRemainDistance = dDistance - dTac * dVs;   //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë
+//		dTac = round(dDistance / dVs);              //å°†åˆ°è¾¾ç»ˆç‚¹æ‰€éœ€çš„æ—¶é—´å‘ä¸Šå–æ•´
+//		dRemainDistance = dDistance - dTac * dVs;   //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»
 //	}
-//	else  //Èô¼õËÙ¶È²»Îª0
+//	else  //è‹¥å‡é€Ÿåº¦ä¸ä¸º0
 //	{
-//		dTac = fabs((dVe - dVs) / (dDec * dTc));           //»ñÈ¡¼õËÙÊ±¼ä
-//		dTac = round(dTac);							       //¼õËÙÊ±¼äËÄÉáÎåÈëÈ¡Õû
+//		dTac = fabs((dVe - dVs) / (dDec * dTc));           //è·å–å‡é€Ÿæ—¶é—´
+//		dTac = round(dTac);							       //å‡é€Ÿæ—¶é—´å››èˆäº”å…¥å–æ•´
 //		if (isZero(dTac))
 //		{
 //			dTac = 1;
 //		}
-//		dVe = dDec * (dTac * dTc) + dVs;                   //ÖØËãÖÕµãËÙ¶È
-//		dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2);  //ÖØËã¼õËÙ¶ÎÎ»ÒÆ
-//		dRemainDistance = dLeftDistance - dDistance;       //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë
+//		dVe = dDec * (dTac * dTc) + dVs;                   //é‡ç®—ç»ˆç‚¹é€Ÿåº¦
+//		dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2);  //é‡ç®—å‡é€Ÿæ®µä½ç§»
+//		dRemainDistance = dLeftDistance - dDistance;       //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»
 //	}
 //
 //	pG32->dStartPointCompensate += (dTacIdeal - dTac) * pG32->dNextG32LongAxisSpeed;
 //
 //
-//	dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡Ö÷ÖáÀíÂÛ×ªËÙ
+//	dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;  //è·å–ä¸»è½´ç†è®ºè½¬é€Ÿ
 //
-//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
+//	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //è‹¥ä¸»è½´æ­£è½¬
 //	{
-//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta + dSpindleSpeed * dTac;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta + dSpindleSpeed * dTac;  //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
 //
 //	}
-//	else  //ÈôÖ÷Öá·´×ª
+//	else  //è‹¥ä¸»è½´åè½¬
 //	{
-//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta - dSpindleSpeed * dTac;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
+//		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta - dSpindleSpeed * dTac;  //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+//		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
 //
 //	}
 //
@@ -1219,7 +1210,7 @@ double getRealTargetPulse(struct _SG32* pG32)
 //
 //	}
 //
-//	//½«ÏÂÊö²ÎÊı¸³Öµµ½ÂİÎÆ²å²¹½á¹¹Ìå
+//	//å°†ä¸‹è¿°å‚æ•°èµ‹å€¼åˆ°èºçº¹æ’è¡¥ç»“æ„ä½“
 //	pG32->dRemainDistance = dRemainDistance;
 //	pG32->unTac = dTac;
 //	pG32->dVs = dVs;
@@ -1228,238 +1219,246 @@ double getRealTargetPulse(struct _SG32* pG32)
 //}
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
-//  º¯Êı¹¦ÄÜ£º¡°¼õËÙ¡±ÀàĞÍÁ¬ĞøG32µÄËÙ¶È¹æ»®
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë	
-//			dLeftDistance       double              µ±Ç°Î»ÖÃ¾àÀë²å²¹ÖÕµãµÄ¾àÀë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
+//  å‡½æ•°åŠŸèƒ½ï¼šâ€œå‡é€Ÿâ€ç±»å‹è¿ç»­G32çš„é€Ÿåº¦è§„åˆ’
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dLeftDistance       double              å½“å‰ä½ç½®è·ç¦»æ’è¡¥ç»ˆç‚¹çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void planDecForRepeatG32(struct _SG32* pG32, double dLeftDistance)
 {
-	double dDistance = dLeftDistance; //³¤Öá¾àÀëÖÕµãµÄ³¤¶È£¨¼õËÙ¶ÎÎ»ÒÆ£©
-	double dRemainDistance;           //²ĞÓà¾àÀë
-	double dTac;                      //Êµ¼Ê¼õËÙÊ±¼ä
-	double dTacIdeal;                 //ÀíÂÛ¼õËÙÊ±¼ä     
+    double dDistance = dLeftDistance; //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦ï¼ˆå‡é€Ÿæ®µä½ç§»ï¼‰
+    double dRemainDistance;           //æ®‹ä½™è·ç¦»
+    double dTac;                      //å®é™…å‡é€Ÿæ—¶é—´
+    double dTacIdeal;                 //ç†è®ºå‡é€Ÿæ—¶é—´
 
-	double dVs, dVe;    //ÆğÊ¼£¬ÖÕµãËÙ¶È£¨×î´óËÙ¶ÈÎªÁ½ÕßµÄ×î´óÖµ£©
-	double dVsIdeal;    //ÀíÏëµÄÆğÊ¼ËÙ¶È
-	double dDec;        //¼õËÙ¶È
-	double dTc;		    //²å²¹ÖÜÆÚ
+    double dVs, dVe; //èµ·å§‹ï¼Œç»ˆç‚¹é€Ÿåº¦ï¼ˆæœ€å¤§é€Ÿåº¦ä¸ºä¸¤è€…çš„æœ€å¤§å€¼ï¼‰
+    double dVsIdeal; //ç†æƒ³çš„èµ·å§‹é€Ÿåº¦
+    double dDec;     //å‡é€Ÿåº¦
+    double dTc;      //æ’è¡¥å‘¨æœŸ
 
-	double dSpindleSpeed;               //Ö÷ÖáÀíÂÛ×ªËÙ£¨pulse / ms£©
-	double dDelta;                      //ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-	double dNowG32LongAxisSpeed;        //µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
-	double dIdealSpindlePosition;       //ÖÕµã´¦Ö÷Öá±àÂëÆ÷µÄÊıÖµ
-	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
-	double dOverIdealPosComp = 0;           //µ±Ç°Î»ÖÃËùÓ¦¸ÃÔö¼ÓµÄÖ÷ÖáÂö³å²¹³¥Á¿
-	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+    double dSpindleSpeed;                  //ä¸»è½´ç†è®ºè½¬é€Ÿï¼ˆpulse / msï¼‰
+    double dDelta;                         //ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+    double dNowG32LongAxisSpeed;           //å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
+    double dIdealSpindlePosition;          //ç»ˆç‚¹å¤„ä¸»è½´ç¼–ç å™¨çš„æ•°å€¼
+    uint8 ucLongAxisNum = pG32->ucAxis[0]; //é•¿è½´è½´å·
+    double dOverIdealPosComp = 0;          //å½“å‰ä½ç½®æ‰€åº”è¯¥å¢åŠ çš„ä¸»è½´è„‰å†²è¡¥å¿é‡
+    struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 
-	struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-	double dNextG32F;  //ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
+    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+    double dNextG32F;                                   //ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
 
-	if (pG32->pSChannel->pSSpindleEncoder == NULL)
-	{
-		return;
-	}
-	if(dLeftDistance <= 0 || pSSpindleEncoder->usEncoderCirclePulseNum == 0)
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return;
-	}
+    if (pG32->pSChannel->pSSpindleEncoder == NULL)
+    {
+        return;
+    }
+    if (dLeftDistance <= 0 || pSSpindleEncoder->usEncoderCirclePulseNum == 0)
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return;
+    }
 
-	pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
-	dNextG32F = pSToolCompPointer->dF;                                 //»ñÈ¡ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
+    pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
+    dNextG32F = pSToolCompPointer->dF; //è·å–ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
 
-	dTc = pG32->SPlanData.dTc;  //»ñÈ¡²å²¹ÖÜÆÚ
-	dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //»ñÈ¡µ±Ç°G32³¤ÖáµÄËæ¶¯ËÙ¶È
+    dTc = pG32->SPlanData.dTc;                             //è·å–æ’è¡¥å‘¨æœŸ
+    dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF; //è·å–å½“å‰G32é•¿è½´çš„éšåŠ¨é€Ÿåº¦
 
-	dVs = pG32->dCurrentSpeed;                   //ÒÔµ±Ç°ËÙ¶È×÷ÎªÆğÊ¼ËÙ¶È
-	dVsIdeal = dNowG32LongAxisSpeed;			 //ÒÔµ±Ç°G32µÄÀíÏëËæ¶¯ËÙ¶È×÷ÎªÀíÏëÆğÊ¼ËÙ¶È
-	dVe = pG32->dNextG32LongAxisSpeed;           //ÒÔÏÂÒ»¸öG32³¤ÖáµÄËæ¶¯ËÙ¶È×÷ÎªÖÕµãËÙ¶È
+    dVs = pG32->dCurrentSpeed;         //ä»¥å½“å‰é€Ÿåº¦ä½œä¸ºèµ·å§‹é€Ÿåº¦
+    dVsIdeal = dNowG32LongAxisSpeed;   //ä»¥å½“å‰G32çš„ç†æƒ³éšåŠ¨é€Ÿåº¦ä½œä¸ºç†æƒ³èµ·å§‹é€Ÿåº¦
+    dVe = pG32->dNextG32LongAxisSpeed; //ä»¥ä¸‹ä¸€ä¸ªG32é•¿è½´çš„éšåŠ¨é€Ÿåº¦ä½œä¸ºç»ˆç‚¹é€Ÿåº¦
 
-	//¼ÆËãÀíÏë¼õËÙÎ»ÖÃÖÁÖÕµãËùĞèÒªµÄÊ±¼ä
-	dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];  //»ñÈ¡ÀíÏë¼õËÙÎ»ÖÃ¾àÀëÖÕµãµÄ¾àÀë
-	if(isZero(dDelta) || isZero(dVe - dVsIdeal))
-	{
-		dTacIdeal = 0;
-	}
-	else
-	{
-		dDec = (dVe * dVe - dVsIdeal * dVsIdeal) / (dDelta * 2); //»ñÈ¡ÀíÏë¼õËÙ¶È
-		dTacIdeal = fabs((dVe - dVsIdeal) / (dDec * dTc));       //»ñÈ¡ÀíÏë¼õËÙÊ±¼ä
-	}
-	dTacIdeal = round(dTacIdeal);
-	if (isZero(dTacIdeal))
-	{
-		dTacIdeal = 1;
-	}
+    //è®¡ç®—ç†æƒ³å‡é€Ÿä½ç½®è‡³ç»ˆç‚¹æ‰€éœ€è¦çš„æ—¶é—´
+    dDelta = (pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) *
+             pG32->SStartVector.dArray[ucLongAxisNum]; //è·å–ç†æƒ³å‡é€Ÿä½ç½®è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+    if (isZero(dDelta) || isZero(dVe - dVsIdeal))
+    {
+        dTacIdeal = 0;
+    }
+    else
+    {
+        dDec = (dVe * dVe - dVsIdeal * dVsIdeal) / (dDelta * 2); //è·å–ç†æƒ³å‡é€Ÿåº¦
+        dTacIdeal = fabs((dVe - dVsIdeal) / (dDec * dTc));       //è·å–ç†æƒ³å‡é€Ÿæ—¶é—´
+    }
+    dTacIdeal = round(dTacIdeal);
+    if (isZero(dTacIdeal))
+    {
+        dTacIdeal = 1;
+    }
 
-	//¼ÆËãÓÃÓÚ¹æ»®µÄ¼õËÙ¶È
-	dDec = (dVe * dVe - dVs * dVs) / (dLeftDistance * 2);
+    //è®¡ç®—ç”¨äºè§„åˆ’çš„å‡é€Ÿåº¦
+    dDec = (dVe * dVe - dVs * dVs) / (dLeftDistance * 2);
 
-	if (isZero(dDec))  //ÈôÖÕµãËÙ¶ÈºÍµ±Ç°ËÙ¶ÈÏàÍ¬£¬µ¼ÖÂ¼õËÙ¶ÈÎª0
-	{
-		dTac = round(dDistance / dVs);              //½«µ½´ïÖÕµãËùĞèµÄÊ±¼äÏòÉÏÈ¡Õû
-		dRemainDistance = dDistance - dTac * dVs;   //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë
-	}
-	else  //Èô¼õËÙ¶È²»Îª0
-	{
-		dTac = fabs((dVe - dVs) / (dDec * dTc));           //»ñÈ¡¼õËÙÊ±¼ä
-		dTac = ceil(dTac);							       //¼õËÙÊ±¼äËÄÉáÎåÈëÈ¡Õû
-		if (isZero(dTac))
-		{
-			dTac = 1;
-		}
-		dVe = dDec * (dTac * dTc) + dVs;                   //ÖØËãÖÕµãËÙ¶È
-		dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2);  //ÖØËã¼õËÙ¶ÎÎ»ÒÆ
-		dRemainDistance = dDistance - dLeftDistance;       //»ñÈ¡Ê±¼äÈ¡Õûºó²å²¹µÄ²ĞÓà¾àÀë£¨³¬¹ıµ±Ç°ÖÕµãµÄ¾àÀë£©
-	}
+    if (isZero(dDec)) //è‹¥ç»ˆç‚¹é€Ÿåº¦å’Œå½“å‰é€Ÿåº¦ç›¸åŒï¼Œå¯¼è‡´å‡é€Ÿåº¦ä¸º0
+    {
+        dTac = round(dDistance / dVs);            //å°†åˆ°è¾¾ç»ˆç‚¹æ‰€éœ€çš„æ—¶é—´å‘ä¸Šå–æ•´
+        dRemainDistance = dDistance - dTac * dVs; //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»
+    }
+    else //è‹¥å‡é€Ÿåº¦ä¸ä¸º0
+    {
+        dTac = fabs((dVe - dVs) / (dDec * dTc)); //è·å–å‡é€Ÿæ—¶é—´
+        dTac = ceil(dTac);                       //å‡é€Ÿæ—¶é—´å››èˆäº”å…¥å–æ•´
+        if (isZero(dTac))
+        {
+            dTac = 1;
+        }
+        dVe = dDec * (dTac * dTc) + dVs;                  //é‡ç®—ç»ˆç‚¹é€Ÿåº¦
+        dDistance = (dVe * dVe - dVs * dVs) / (dDec * 2); //é‡ç®—å‡é€Ÿæ®µä½ç§»
+        dRemainDistance = dDistance - dLeftDistance;      //è·å–æ—¶é—´å–æ•´åæ’è¡¥çš„æ®‹ä½™è·ç¦»ï¼ˆè¶…è¿‡å½“å‰ç»ˆç‚¹çš„è·ç¦»ï¼‰
+    }
 
-	dOverIdealPosComp = (dDelta - dLeftDistance) / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum;
-	dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;  //»ñÈ¡Ö÷ÖáÀíÂÛ×ªËÙ
+    dOverIdealPosComp = (dDelta - dLeftDistance) / pG32->dF * pSSpindleEncoder->usEncoderCirclePulseNum;
+    dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum; //è·å–ä¸»è½´ç†è®ºè½¬é€Ÿ
 
-	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
-	{
-		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta - dOverIdealPosComp + dSpindleSpeed * dTacIdeal;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-		//¼õËÙ¹ı¶ÉÀàĞÍÁ¬ĞøÂİÎÆ
-		if (!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
-		{
-			dIdealSpindlePosition += dRemainDistance / dNextG32F * pSSpindleEncoder->usEncoderCirclePulseNum;
-		}
-		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
-		//pG32->dIdealSpindlePosition = dIdealSpindlePosition;
+    if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´æ­£è½¬
+    {
+        dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue + pSSpindleEncoder->usDelta - dOverIdealPosComp +
+                                dSpindleSpeed * dTacIdeal; //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+        //å‡é€Ÿè¿‡æ¸¡ç±»å‹è¿ç»­èºçº¹
+        if (!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
+        {
+            dIdealSpindlePosition += dRemainDistance / dNextG32F * pSSpindleEncoder->usEncoderCirclePulseNum;
+        }
+        pG32->dIdealSpindlePosition = surplusDoubleData(
+            dIdealSpindlePosition,
+            pSSpindleEncoder->usEncoderCirclePulseNum); //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+                                                        //pG32->dIdealSpindlePosition = dIdealSpindlePosition;
+    }
+    else //è‹¥ä¸»è½´åè½¬
+    {
+        dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta + dOverIdealPosComp -
+                                dSpindleSpeed * dTacIdeal; //è·å–ç»ˆç‚¹å¤„ç†æƒ³çš„ä¸»è½´ç¼–ç å™¨æ•°å€¼
+        //å‡é€Ÿè¿‡æ¸¡ç±»å‹è¿ç»­èºçº¹
+        if (!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
+        {
+            dIdealSpindlePosition += -(dRemainDistance / dNextG32F * pSSpindleEncoder->usEncoderCirclePulseNum);
+        }
+        pG32->dIdealSpindlePosition = surplusDoubleData(
+            dIdealSpindlePosition,
+            pSSpindleEncoder->usEncoderCirclePulseNum); //å¯¹ç†æƒ³ç¼–ç å™¨æ•°å€¼å–ä½™è¿›è€Œè·å¾—ç†è®ºä¸»è½´ç¼–ç å™¨çš„ä½ç½®
+                                                        //pG32->dIdealSpindlePosition = dIdealSpindlePosition;
+    }
 
-	}
-	else  //ÈôÖ÷Öá·´×ª
-	{
-		dIdealSpindlePosition = pSSpindleEncoder->lEncoderAbsValue - pSSpindleEncoder->usDelta + dOverIdealPosComp - dSpindleSpeed * dTacIdeal;  //»ñÈ¡ÖÕµã´¦ÀíÏëµÄÖ÷Öá±àÂëÆ÷ÊıÖµ
-		//¼õËÙ¹ı¶ÉÀàĞÍÁ¬ĞøÂİÎÆ
-		if (!isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
-		{
-			dIdealSpindlePosition += -(dRemainDistance / dNextG32F * pSSpindleEncoder->usEncoderCirclePulseNum);
-		}
-		pG32->dIdealSpindlePosition = surplusDoubleData(dIdealSpindlePosition, pSSpindleEncoder->usEncoderCirclePulseNum);  //¶ÔÀíÏë±àÂëÆ÷ÊıÖµÈ¡Óà½ø¶ø»ñµÃÀíÂÛÖ÷Öá±àÂëÆ÷µÄÎ»ÖÃ
-		//pG32->dIdealSpindlePosition = dIdealSpindlePosition; 
-	}
-
-	/*if (isZero(pG32->dIdealSpindlePosition))
+    /*if (isZero(pG32->dIdealSpindlePosition))
 	{
 		pG32->dIdealSpindlePosition = pSSpindleEncoder->usEncoderCirclePulseNum;
 
 	}*/
 
-	//½«ÏÂÊö²ÎÊı¸³Öµµ½ÂİÎÆ²å²¹½á¹¹Ìå
-	pG32->dRemainDistance = dRemainDistance;
-	pG32->unTac = dTac;
-	pG32->dVs = dVs;
-	pG32->dDec = dDec;
-
+    //å°†ä¸‹è¿°å‚æ•°èµ‹å€¼åˆ°èºçº¹æ’è¡¥ç»“æ„ä½“
+    pG32->dRemainDistance = dRemainDistance;
+    pG32->unTac = dTac;
+    pG32->dVs = dVs;
+    pG32->dDec = dDec;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPointer, double dDistFromSpindle)
-//  º¯Êı¹¦ÄÜ£ºÁ¬ĞøG32Ô¤´¦Àí
-//  ÊäÈë²ÎÊı£º*pG32£¬               ½á¹¹Ìåstruct _SG32Ö¸Õë
-//            *SToolCompensation	½á¹¹Ìåstruct SToolCompensationÖ¸Õë 
-//			  dDistFromSpindle      double              µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPointer, double dDistFromSpindle)
+//  å‡½æ•°åŠŸèƒ½ï¼šè¿ç»­G32é¢„å¤„ç†
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ               ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//            *SToolCompensation	ç»“æ„ä½“struct SToolCompensationæŒ‡é’ˆ
+//			  dDistFromSpindle      double              å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPointer, double dDistFromSpindle)
 {
-	//ÈôÏÂÒ»¶ÎG32µÄ²å²¹³¤¶È>±¾´ÎG32²å²¹Ëæ¶¯¶ÎÁ½±¶²å²¹Ê±¼äµÄ¾àÀë£¬ÔòÎªÕı³£Á¬ĞøG32²å²¹£¨6.24£©
-	if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT && ((pSToolCompPointer->dLength > dDistFromSpindle * 2) || pSToolCompPointer->ucG32SubMode == 2 || pSToolCompPointer->ucG32SubMode == 3))
-	{
-		
-		bool bChangeDirFlag = FALSE;
-		uint8 ucLongAxisNum = pG32->ucAxis[0];  //»ñÈ¡³¤ÖáÖáºÅ
-		//pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF / (g_SInterpolation.dTc);  //ÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáÒÆ¶¯ÒÆ¶¯ËÙ¶È
-		pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF;  //ÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáÒÆ¶¯ÒÆ¶¯ËÙ¶È
+    //è‹¥ä¸‹ä¸€æ®µG32çš„æ’è¡¥é•¿åº¦>æœ¬æ¬¡G32æ’è¡¥éšåŠ¨æ®µä¸¤å€æ’è¡¥æ—¶é—´çš„è·ç¦»ï¼Œåˆ™ä¸ºæ­£å¸¸è¿ç»­G32æ’è¡¥ï¼ˆ6.24ï¼‰
+    if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT &&
+        ((pSToolCompPointer->dLength > dDistFromSpindle * 2) || pSToolCompPointer->ucG32SubMode == 2 ||
+         pSToolCompPointer->ucG32SubMode == 3))
+    {
 
-		//Èç¹ûÏÂÒ»´ÎG32³¤ÖáµÄÏòÁ¿·¢Éú±ä»¯£¬ÔòÎª»»ÏòÀàĞÍÁ¬ĞøG32²å²¹£¨6.24£©
-		if (sgn(pG32->SStartVector.dArray[ucLongAxisNum]) != sgn(pSToolCompPointer->SStartVector.dArray[ucLongAxisNum]) || pSToolCompPointer->ucG32SubMode == 2 || pSToolCompPointer->ucG32SubMode == 3)
-		{
-			pG32->dNextG32LongAxisSpeed = pG32->SUserData.dVe;  //¶ÔÓÚµ±Ç°G32ÏÂÒ»¸öG32µÄ³¤ÖáËÙ¶ÈÎªÏµÍ³ÔÊĞíÆğÌøËÙ¶È
-			bChangeDirFlag = TRUE;
-		}
+        bool bChangeDirFlag = FALSE;
+        uint8 ucLongAxisNum = pG32->ucAxis[0]; //è·å–é•¿è½´è½´å·
+        //pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF / (g_SInterpolation.dTc);  //ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´ç§»åŠ¨ç§»åŠ¨é€Ÿåº¦
+        pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF; //ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´ç§»åŠ¨ç§»åŠ¨é€Ÿåº¦
 
+        //å¦‚æœä¸‹ä¸€æ¬¡G32é•¿è½´çš„å‘é‡å‘ç”Ÿå˜åŒ–ï¼Œåˆ™ä¸ºæ¢å‘ç±»å‹è¿ç»­G32æ’è¡¥ï¼ˆ6.24ï¼‰
+        if (sgn(pG32->SStartVector.dArray[ucLongAxisNum]) !=
+                sgn(pSToolCompPointer->SStartVector.dArray[ucLongAxisNum]) ||
+            pSToolCompPointer->ucG32SubMode == 2 || pSToolCompPointer->ucG32SubMode == 3)
+        {
+            pG32->dNextG32LongAxisSpeed = pG32->SUserData.dVe; //å¯¹äºå½“å‰G32ä¸‹ä¸€ä¸ªG32çš„é•¿è½´é€Ÿåº¦ä¸ºç³»ç»Ÿå…è®¸èµ·è·³é€Ÿåº¦
+            bChangeDirFlag = TRUE;
+        }
 
-		//µ±Îª¼õËÙ¹ı¶ÉĞÍÁ¬ĞøG32 »ò»»ÏòÁ¬ĞøG32
-		if (pG32->dF > pSToolCompPointer->dF || bChangeDirFlag)
-		{
-			double dNowG32LongAxisSpeed;   //µ±Ç°g32Ëæ¶¯µÄËÙ¶È
-			double dNextG32LongAxisSpeed;  //ÏÂÒ»¸öG32Ëæ¶¯µÄËÙ¶È   
-			double dDec;				   //¼õËÙ¶ÈÎªÏµÍ³¼õËÙ¶È
-			double dSdec;                  //ÀíÏë¼õËÙµã¾àÀëÖÕµãµÄ¾àÀë
-			double dTdc;                   //ÀíÂÛ¼õËÙÊ±¼ä
+        //å½“ä¸ºå‡é€Ÿè¿‡æ¸¡å‹è¿ç»­G32 æˆ–æ¢å‘è¿ç»­G32
+        if (pG32->dF > pSToolCompPointer->dF || bChangeDirFlag)
+        {
+            double dNowG32LongAxisSpeed;  //å½“å‰g32éšåŠ¨çš„é€Ÿåº¦
+            double dNextG32LongAxisSpeed; //ä¸‹ä¸€ä¸ªG32éšåŠ¨çš„é€Ÿåº¦
+            double dDec;                  //å‡é€Ÿåº¦ä¸ºç³»ç»Ÿå‡é€Ÿåº¦
+            double dSdec;                 //ç†æƒ³å‡é€Ÿç‚¹è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+            double dTdc;                  //ç†è®ºå‡é€Ÿæ—¶é—´
 
-			dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //»ñÈ¡µ±Ç°g32Ëæ¶¯µÄËÙ¶È
-			dNextG32LongAxisSpeed = pG32->dNextG32LongAxisSpeed;  //»ñÈ¡ÏÂÒ»¸öG32Ëæ¶¯µÄËÙ¶È
-			dDec = pG32->SUserData.dDec;  //¼õËÙ¶ÈÎªÏµÍ³¼õËÙ¶È
+            dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF; //è·å–å½“å‰g32éšåŠ¨çš„é€Ÿåº¦
+            dNextG32LongAxisSpeed = pG32->dNextG32LongAxisSpeed;   //è·å–ä¸‹ä¸€ä¸ªG32éšåŠ¨çš„é€Ÿåº¦
+            dDec = pG32->SUserData.dDec;                           //å‡é€Ÿåº¦ä¸ºç³»ç»Ÿå‡é€Ÿåº¦
 
-			if(dDec <= 0)
-			{
-				parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-				return;
-			}
+            if (dDec <= 0)
+            {
+                parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+                return;
+            }
 
-			dTdc = fabs((dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dDec * pG32->SPlanData.dTc));
-			dTdc = round(dTdc);
-			if (isZero(dTdc))
-			{
-				dTdc = 1;
+            dTdc = fabs((dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dDec * pG32->SPlanData.dTc));
+            dTdc = round(dTdc);
+            if (isZero(dTdc))
+            {
+                dTdc = 1;
+            }
+            dDec = fabs(dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dTdc * pG32->SPlanData.dTc);
 
-			}
-			dDec = fabs(dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dTdc * pG32->SPlanData.dTc);
+            dSdec = isZero(dNextG32LongAxisSpeed - dNowG32LongAxisSpeed)
+                        ? 0
+                        : fabs((dNextG32LongAxisSpeed * dNextG32LongAxisSpeed -
+                                dNowG32LongAxisSpeed * dNowG32LongAxisSpeed) /
+                                   (2 * dDec) +
+                               dNowG32LongAxisSpeed * dTdc); //ç†æƒ³å‡é€Ÿç‚¹è·ç¦»ç»ˆç‚¹çš„è·ç¦»
 
-			dSdec = isZero(dNextG32LongAxisSpeed - dNowG32LongAxisSpeed)? 0 : fabs((dNextG32LongAxisSpeed * dNextG32LongAxisSpeed - dNowG32LongAxisSpeed * dNowG32LongAxisSpeed) / (2 * dDec) + dNowG32LongAxisSpeed * dTdc);  //ÀíÏë¼õËÙµã¾àÀëÖÕµãµÄ¾àÀë
-
-			pG32->bDecPlanTransitionFlag = TRUE;  //µ±Ç°G32Îª·Ç¼ÓËÙ¹ı¶ÉÀàĞÍ
-			pG32->dIdealTransmitStartPos = pG32->SEndPoint.dArray[ucLongAxisNum] - dSdec * pG32->SStartVector.dArray[ucLongAxisNum];  //»ñµÃ³¤ÖáÀíÏë¹ı¶ÉÆğµãÎ»ÖÃ
-
-		}
-
-	}
-			
-	
-		
+            pG32->bDecPlanTransitionFlag = TRUE; //å½“å‰G32ä¸ºéåŠ é€Ÿè¿‡æ¸¡ç±»å‹
+            pG32->dIdealTransmitStartPos = pG32->SEndPoint.dArray[ucLongAxisNum] -
+                                           dSdec * pG32->SStartVector.dArray[ucLongAxisNum]; //è·å¾—é•¿è½´ç†æƒ³è¿‡æ¸¡èµ·ç‚¹ä½ç½®
+        }
+    }
 }
 
 //void prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPointer, double dDistFromSpindle)
 //{
-//	//ÈôÏÂÒ»¶ÎG32µÄ²å²¹³¤¶È>±¾´ÎG32²å²¹Ëæ¶¯¶ÎÁ½±¶²å²¹Ê±¼äµÄ¾àÀë£¬ÔòÎªÕı³£Á¬ĞøG32²å²¹
+//	//è‹¥ä¸‹ä¸€æ®µG32çš„æ’è¡¥é•¿åº¦>æœ¬æ¬¡G32æ’è¡¥éšåŠ¨æ®µä¸¤å€æ’è¡¥æ—¶é—´çš„è·ç¦»ï¼Œåˆ™ä¸ºæ­£å¸¸è¿ç»­G32æ’è¡¥
 //	if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT && (pSToolCompPointer->dLength > dDistFromSpindle * 2))
 //	{
 //		if (pSToolCompPointer->ucG32SubMode == 0)
 //		{
 //			bool bChangeDirFlag = FALSE;
-//			uint8 ucLongAxisNum = pG32->ucAxis[0];  //»ñÈ¡³¤ÖáÖáºÅ
-//			//pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF / (g_SInterpolation.dTc);  //ÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáÒÆ¶¯ÒÆ¶¯ËÙ¶È
-//			pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF;  //ÏÂÒ»¸öG32Ö¸ÁîµÄ³¤ÖáÒÆ¶¯ÒÆ¶¯ËÙ¶È
+//			uint8 ucLongAxisNum = pG32->ucAxis[0];  //è·å–é•¿è½´è½´å·
+//			//pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF / (g_SInterpolation.dTc);  //ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´ç§»åŠ¨ç§»åŠ¨é€Ÿåº¦
+//			pG32->dNextG32LongAxisSpeed = pG32->dSpindleSpeed * pSToolCompPointer->dF;  //ä¸‹ä¸€ä¸ªG32æŒ‡ä»¤çš„é•¿è½´ç§»åŠ¨ç§»åŠ¨é€Ÿåº¦
 //
-//			//Èç¹ûÏÂÒ»´ÎG32³¤ÖáµÄÏòÁ¿·¢Éú±ä»¯£¬ÔòÎª»»ÏòÀàĞÍÁ¬ĞøG32²å²¹
+//			//å¦‚æœä¸‹ä¸€æ¬¡G32é•¿è½´çš„å‘é‡å‘ç”Ÿå˜åŒ–ï¼Œåˆ™ä¸ºæ¢å‘ç±»å‹è¿ç»­G32æ’è¡¥
 //			if (sgn(pG32->SStartVector.dArray[ucLongAxisNum]) != sgn(pSToolCompPointer->SStartVector.dArray[ucLongAxisNum]))
 //			{
-//				pG32->dNextG32LongAxisSpeed = pG32->SUserData.dVe;  //¶ÔÓÚµ±Ç°G32ÏÂÒ»¸öG32µÄ³¤ÖáËÙ¶ÈÎªÏµÍ³ÔÊĞíÆğÌøËÙ¶È
+//				pG32->dNextG32LongAxisSpeed = pG32->SUserData.dVe;  //å¯¹äºå½“å‰G32ä¸‹ä¸€ä¸ªG32çš„é•¿è½´é€Ÿåº¦ä¸ºç³»ç»Ÿå…è®¸èµ·è·³é€Ÿåº¦
 //				bChangeDirFlag = TRUE;
 //			}
 //
 //
-//			//µ±Îª¼õËÙ¹ı¶ÉĞÍÁ¬ĞøG32 »ò»»ÏòÁ¬ĞøG32
+//			//å½“ä¸ºå‡é€Ÿè¿‡æ¸¡å‹è¿ç»­G32 æˆ–æ¢å‘è¿ç»­G32
 //			if (pG32->dF > pSToolCompPointer->dF || bChangeDirFlag)
 //			{
-//				double dNowG32LongAxisSpeed;   //µ±Ç°g32Ëæ¶¯µÄËÙ¶È
-//				double dNextG32LongAxisSpeed;  //ÏÂÒ»¸öG32Ëæ¶¯µÄËÙ¶È   
-//				double dDec;				   //¼õËÙ¶ÈÎªÏµÍ³¼õËÙ¶È
-//				double dSdec;                  //ÀíÏë¼õËÙµã¾àÀëÖÕµãµÄ¾àÀë
-//				double dTdc;                   //ÀíÂÛ¼õËÙÊ±¼ä
+//				double dNowG32LongAxisSpeed;   //å½“å‰g32éšåŠ¨çš„é€Ÿåº¦
+//				double dNextG32LongAxisSpeed;  //ä¸‹ä¸€ä¸ªG32éšåŠ¨çš„é€Ÿåº¦
+//				double dDec;				   //å‡é€Ÿåº¦ä¸ºç³»ç»Ÿå‡é€Ÿåº¦
+//				double dSdec;                  //ç†æƒ³å‡é€Ÿç‚¹è·ç¦»ç»ˆç‚¹çš„è·ç¦»
+//				double dTdc;                   //ç†è®ºå‡é€Ÿæ—¶é—´
 //
-//				dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //»ñÈ¡µ±Ç°g32Ëæ¶¯µÄËÙ¶È
-//				dNextG32LongAxisSpeed = pG32->dNextG32LongAxisSpeed;  //»ñÈ¡ÏÂÒ»¸öG32Ëæ¶¯µÄËÙ¶È
-//				dDec = pG32->SUserData.dDec;  //¼õËÙ¶ÈÎªÏµÍ³¼õËÙ¶È
+//				dNowG32LongAxisSpeed = pG32->dSpindleSpeed * pG32->dF;  //è·å–å½“å‰g32éšåŠ¨çš„é€Ÿåº¦
+//				dNextG32LongAxisSpeed = pG32->dNextG32LongAxisSpeed;  //è·å–ä¸‹ä¸€ä¸ªG32éšåŠ¨çš„é€Ÿåº¦
+//				dDec = pG32->SUserData.dDec;  //å‡é€Ÿåº¦ä¸ºç³»ç»Ÿå‡é€Ÿåº¦
 //
 //				dTdc = fabs((dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dDec * pG32->SPlanData.dTc));
 //				dTdc = round(dTdc);
@@ -1470,10 +1469,10 @@ void prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPo
 //				}
 //				dDec = (dNextG32LongAxisSpeed - dNowG32LongAxisSpeed) / (dTdc * pG32->SPlanData.dTc);
 //
-//				dSdec = fabs((dNextG32LongAxisSpeed * dNextG32LongAxisSpeed - dNowG32LongAxisSpeed * dNowG32LongAxisSpeed) / (2 * dDec) + dNowG32LongAxisSpeed * dTdc);  //ÀíÏë¼õËÙµã¾àÀëÖÕµãµÄ¾àÀë
+//				dSdec = fabs((dNextG32LongAxisSpeed * dNextG32LongAxisSpeed - dNowG32LongAxisSpeed * dNowG32LongAxisSpeed) / (2 * dDec) + dNowG32LongAxisSpeed * dTdc);  //ç†æƒ³å‡é€Ÿç‚¹è·ç¦»ç»ˆç‚¹çš„è·ç¦»
 //
-//				pG32->bDecPlanTransitionFlag = TRUE;  //µ±Ç°G32Îª·Ç¼ÓËÙ¹ı¶ÉÀàĞÍ
-//				pG32->dIdealTransmitStartPos = pG32->SEndPoint.dArray[ucLongAxisNum] - dSdec * pG32->SStartVector.dArray[ucLongAxisNum];  //»ñµÃ³¤ÖáÀíÏë¹ı¶ÉÆğµãÎ»ÖÃ
+//				pG32->bDecPlanTransitionFlag = TRUE;  //å½“å‰G32ä¸ºéåŠ é€Ÿè¿‡æ¸¡ç±»å‹
+//				pG32->dIdealTransmitStartPos = pG32->SEndPoint.dArray[ucLongAxisNum] - dSdec * pG32->SStartVector.dArray[ucLongAxisNum];  //è·å¾—é•¿è½´ç†æƒ³è¿‡æ¸¡èµ·ç‚¹ä½ç½®
 //
 //			}
 //
@@ -1486,948 +1485,946 @@ void prepareRepeatG32(struct _SG32* pG32, struct SToolCompensation* pSToolCompPo
 //}
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid runAndCompForIFM(struct _SG32* pG32, double* dDistFromSpindle)
-//  º¯Êı¹¦ÄÜ£ºÖ÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid runAndCompForIFM(struct _SG32* pG32, double* dDistFromSpindle)
+//  å‡½æ•°åŠŸèƒ½ï¼šä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void runAndCompForIFM(struct _SG32* pG32, double* dDistFromSpindle)
 {
-	pG32->unCurrentT += 1;  //ÔËĞĞÊ±¼äÔö¼Ó
+    pG32->unCurrentT += 1; //è¿è¡Œæ—¶é—´å¢åŠ 
 
-	if (pG32->pSChannel->pSSpindleEncoder == NULL || pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0)//±ÜÃâ±àÂëÆ÷ÏßÊıÎª0
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return;
-	}
+    if (pG32->pSChannel->pSSpindleEncoder == NULL ||
+        pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0) //é¿å…ç¼–ç å™¨çº¿æ•°ä¸º0
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return;
+    }
 
-	//Èôµ±Ç°²å²¹Ê±¼ä½Úµã<=¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
-	if (pG32->unCurrentT <= pG32->unTac)
-	{
-		double dDisNow;                             //±¾ÖÜÆÚµÄ²å²¹¾àÀë
-		double dDisBefore;                          //ÉÏÒ»ÖÜÆÚµÄ²å²¹¾àÀë
-		double dVs = pG32->dVs;                     //ÆğÊ¼ËÙ¶È
-		uint32 unK = pG32->unCurrentT;              //²å²¹Ê±¼äµã
-		double dTc = pG32->SPlanData.dTc;           //²å²¹ÖÜÆÚ
+    //è‹¥å½“å‰æ’è¡¥æ—¶é—´èŠ‚ç‚¹<=è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
+    if (pG32->unCurrentT <= pG32->unTac)
+    {
+        double dDisNow;                   //æœ¬å‘¨æœŸçš„æ’è¡¥è·ç¦»
+        double dDisBefore;                //ä¸Šä¸€å‘¨æœŸçš„æ’è¡¥è·ç¦»
+        double dVs = pG32->dVs;           //èµ·å§‹é€Ÿåº¦
+        uint32 unK = pG32->unCurrentT;    //æ’è¡¥æ—¶é—´ç‚¹
+        double dTc = pG32->SPlanData.dTc; //æ’è¡¥å‘¨æœŸ
 
-		//double dAcc = pG32->SUserData.dAcc;  //TĞÍ¼ÓËÙ¶È
-		double dAcc = pG32->dAcc;    //±Ü¿Õ¾àÀëËù¼ÆËãµÄ¼ÓËÙ¶È
-		double dSpindleSpeed;                         //Ö÷ÖáÆ½¾ù×ªËÙ£¨pulse / ms£©
-		double dLongAxisDelta;                        //±¾ÖÜÆÚ³¤Öá¾ùÌ¯Á¿
-		struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+        //double dAcc = pG32->SUserData.dAcc;  //Tå‹åŠ é€Ÿåº¦
+        double dAcc = pG32->dAcc; //é¿ç©ºè·ç¦»æ‰€è®¡ç®—çš„åŠ é€Ÿåº¦
+        double dSpindleSpeed;     //ä¸»è½´å¹³å‡è½¬é€Ÿï¼ˆpulse / msï¼‰
+        double dLongAxisDelta;    //æœ¬å‘¨æœŸé•¿è½´å‡æ‘Šé‡
+        struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
 
+        dDisNow = dVs * unK * dTc + dAcc * unK * dTc * unK * dTc / 2;
+        dDisBefore = dVs * (unK - 1) * dTc + dAcc * (unK - 1) * dTc * (unK - 1) * dTc / 2;
 
-		dDisNow = dVs * unK * dTc + dAcc * unK * dTc * unK * dTc / 2;
-		dDisBefore = dVs * (unK - 1) * dTc + dAcc * (unK - 1) * dTc * (unK - 1) * dTc / 2;
+        //dSpindleSpeed = g_dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;
+        dSpindleSpeed = fabs(pG32->pSChannel->dSpindleRealSpeed) * pSSpindleEncoder->usEncoderCirclePulseNum;
+        dLongAxisDelta =
+            (pSSpindleEncoder->usDelta - dSpindleSpeed * dTc + (pSSpindleEncoder->dEncoderNumDeviation / pG32->unTac)) *
+            pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum;
 
-		//dSpindleSpeed = g_dSpindleRealSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;
-		dSpindleSpeed = fabs(pG32->pSChannel->dSpindleRealSpeed) * pSSpindleEncoder->usEncoderCirclePulseNum;
-		dLongAxisDelta = (pSSpindleEncoder->usDelta - dSpindleSpeed * dTc + (pSSpindleEncoder->dEncoderNumDeviation / pG32->unTac)) * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum;
+        *dDistFromSpindle = dDisNow - dDisBefore + dLongAxisDelta; //æ›´æ–°å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´åº”è¯¥æ–°å¢çš„è·ç¦»
+    }
+    else //è¿‡æ¸¡é˜¶æ®µè¿åŠ¨å®Œæˆ
+    {
+        pG32->ucG32Step = G32_RUNNING; //è¿åŠ¨éƒ¨åˆ†
+        pG32->unTac = 0;               //åˆå§‹åŒ–è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
+        pG32->unCurrentT = 0;          //åˆå§‹åŒ–è¿‡æ¸¡é˜¶æ®µçš„æ’è¡¥èŠ‚ç‚¹
+        pG32->bAccPhaseFlag = FALSE;   //åŠ é€Ÿé˜¶æ®µç»“æŸ
+    }
 
-		*dDistFromSpindle = dDisNow - dDisBefore + dLongAxisDelta;  //¸üĞÂµ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáÓ¦¸ÃĞÂÔöµÄ¾àÀë
+    ////è¿‡æ¸¡é˜¶æ®µè¿åŠ¨å®Œæˆ
+    //if (pG32->unCurrentT == pG32->unTac || pG32->unTac == 0)
+    //{
+    //	pG32->ucG32Step = G32_RUNNING;     //è¿åŠ¨éƒ¨åˆ†
+    //	pG32->unTac = 0;         //åˆå§‹åŒ–è¿‡æ¸¡é˜¶æ®µæ€»çš„æ’è¡¥èŠ‚ç‚¹
+    //	pG32->unCurrentT = 0;    //åˆå§‹åŒ–è¿‡æ¸¡é˜¶æ®µçš„æ’è¡¥èŠ‚ç‚¹
 
-	}
-	else //¹ı¶É½×¶ÎÔË¶¯Íê³É
-	{
-		pG32->ucG32Step = G32_RUNNING;  //ÔË¶¯²¿·Ö
-		pG32->unTac = 0;                //³õÊ¼»¯¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
-		pG32->unCurrentT = 0;		    //³õÊ¼»¯¹ı¶É½×¶ÎµÄ²å²¹½Úµã
-		pG32->bAccPhaseFlag = FALSE;    //¼ÓËÙ½×¶Î½áÊø
-
-
-	}
-
-	////¹ı¶É½×¶ÎÔË¶¯Íê³É
-	//if (pG32->unCurrentT == pG32->unTac || pG32->unTac == 0)
-	//{
-	//	pG32->ucG32Step = G32_RUNNING;     //ÔË¶¯²¿·Ö
-	//	pG32->unTac = 0;         //³õÊ¼»¯¹ı¶É½×¶Î×ÜµÄ²å²¹½Úµã
-	//	pG32->unCurrentT = 0;    //³õÊ¼»¯¹ı¶É½×¶ÎµÄ²å²¹½Úµã
-
-	//}
-
+    //}
 }
 
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid runAndCompForG32RepeatDec(struct _SG32* pG32, double* dDistFromSpindle)
-//  º¯Êı¹¦ÄÜ£º¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid runAndCompForG32RepeatDec(struct _SG32* pG32, double* dDistFromSpindle)
+//  å‡½æ•°åŠŸèƒ½ï¼šå‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void runAndCompForG32RepeatDec(struct _SG32* pG32, double* dDistFromSpindle)
 {
-	pG32->unCurrentT += 1;  //²å²¹Ê±¼ä½ÚµãÔö¼Ó
+    pG32->unCurrentT += 1; //æ’è¡¥æ—¶é—´èŠ‚ç‚¹å¢åŠ 
 
-	if (pG32->pSChannel->pSSpindleEncoder == NULL || pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0)//±ÜÃâ±àÂëÆ÷ÏßÊıÎª0
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return;
-	}
+    if (pG32->pSChannel->pSSpindleEncoder == NULL ||
+        pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0) //é¿å…ç¼–ç å™¨çº¿æ•°ä¸º0
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return;
+    }
 
-	if (pG32->unCurrentT <= pG32->unTac)
-	{
-		double dDisNow;                                        //±¾ÖÜÆÚµÄ²å²¹¾àÀë
-		double dDisBefore;							           //ÉÏÒ»ÖÜÆÚµÄ²å²¹¾àÀë
-		double dVs = pG32->dVs;                             //ÆğÊ¼ËÙ¶È
-		uint32 unK = pG32->unCurrentT;                      //²å²¹Ê±¼äµã
-		double dTc = pG32->SPlanData.dTc;                   //²å²¹ÖÜÆÚ
-		double dDec = pG32->dDec;                            //ËÙ¶È¹æ»®»ñµÃµÄ¼õËÙ¶È
-		double dDelta = pG32->dRemainDistance / pG32->unTac;   //µ±Ç°ÖÜÆÚµÄ¾ùÌ¯¾àÀë
+    if (pG32->unCurrentT <= pG32->unTac)
+    {
+        double dDisNow;                                      //æœ¬å‘¨æœŸçš„æ’è¡¥è·ç¦»
+        double dDisBefore;                                   //ä¸Šä¸€å‘¨æœŸçš„æ’è¡¥è·ç¦»
+        double dVs = pG32->dVs;                              //èµ·å§‹é€Ÿåº¦
+        uint32 unK = pG32->unCurrentT;                       //æ’è¡¥æ—¶é—´ç‚¹
+        double dTc = pG32->SPlanData.dTc;                    //æ’è¡¥å‘¨æœŸ
+        double dDec = pG32->dDec;                            //é€Ÿåº¦è§„åˆ’è·å¾—çš„å‡é€Ÿåº¦
+        double dDelta = pG32->dRemainDistance / pG32->unTac; //å½“å‰å‘¨æœŸçš„å‡æ‘Šè·ç¦»
 
-		dDisNow = dVs * unK * dTc + dDec * unK * dTc * unK * dTc / 2;
-		dDisBefore = dVs * (unK - 1) * dTc + dDec * (unK - 1) * dTc * (unK - 1) * dTc / 2;
+        dDisNow = dVs * unK * dTc + dDec * unK * dTc * unK * dTc / 2;
+        dDisBefore = dVs * (unK - 1) * dTc + dDec * (unK - 1) * dTc * (unK - 1) * dTc / 2;
 
-		//*dDistFromSpindle = dDisNow - dDisBefore + dDelta; //¸üĞÂµ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáÓ¦¸ÃĞÂÔöµÄ¾àÀë
-		if (isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
-		{
-			*dDistFromSpindle = dDisNow - dDisBefore - dDelta; //¸üĞÂµ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáÓ¦¸ÃĞÂÔöµÄ¾àÀë
-		}
-		else
-		{
-			*dDistFromSpindle = dDisNow - dDisBefore;
-			double b = dDisNow - dDisBefore;
-			int a = 0;
-		}
-		//*dDistFromSpindle = dDisNow - dDisBefore;
-		//*dDistFromSpindle = dDisNow - dDisBefore; //¸üĞÂµ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáÓ¦¸ÃĞÂÔöµÄ¾àÀë
-		
+        //*dDistFromSpindle = dDisNow - dDisBefore + dDelta; //æ›´æ–°å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´åº”è¯¥æ–°å¢çš„è·ç¦»
+        if (isZero(pG32->dNextG32LongAxisSpeed - pG32->SUserData.dVe))
+        {
+            *dDistFromSpindle = dDisNow - dDisBefore - dDelta; //æ›´æ–°å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´åº”è¯¥æ–°å¢çš„è·ç¦»
+        }
+        else
+        {
+            *dDistFromSpindle = dDisNow - dDisBefore;
+            double b = dDisNow - dDisBefore;
+            int a = 0;
+        }
+        //*dDistFromSpindle = dDisNow - dDisBefore;
+        //*dDistFromSpindle = dDisNow - dDisBefore; //æ›´æ–°å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´åº”è¯¥æ–°å¢çš„è·ç¦»
+    }
 
-	}
+    //è¿‡æ¸¡é˜¶æ®µè¿åŠ¨å®Œæˆ
+    if (pG32->unCurrentT == pG32->unTac || pG32->unTac == 0)
+    {
+        double dSpindlePulseDelta;   //ä¸»è½´è„‰å†²åå·®
+        double dSpindleSpeed;        //ä¸»è½´è½¬é€Ÿè„‰å†²å½¢å¼
+        double dLongAxisDelta;       //é•¿è½´å‡æ‘Šé‡
+        double dRealSpindlePosition; //ç»ˆç‚¹å¤„å®é™…ä¸»è½´ä½ç½®
+        struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+        int nEncoderValue =
+            pSSpindleEncoder->lEncoderAbsValue % pSSpindleEncoder->usEncoderCirclePulseNum; //è¿‡æ¸¡æ—¶ç¼–ç å™¨æ‰€åœ¨çš„ä½ç½®
+        dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;
+        double dEncoderDeviation;                           //ç»ˆç‚¹å¤„ç¼–ç å™¨ä½ç½®åå·®
+        struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+        double dNextG32F;                                   //ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
+        double dDeltaPos;                                   //ç†æƒ³ä¸»è½´ä¸å®é™…ä¸»è½´çš„ä½ç½®åå·®
+        double dCompDir;                                    //è¡¥å¿æ–¹å‘
 
-	//¹ı¶É½×¶ÎÔË¶¯Íê³É
-	if (pG32->unCurrentT == pG32->unTac || pG32->unTac == 0)
-	{
-		double dSpindlePulseDelta;   //Ö÷ÖáÂö³åÆ«²î
-		double dSpindleSpeed;        //Ö÷Öá×ªËÙÂö³åĞÎÊ½
-		double dLongAxisDelta;	     //³¤Öá¾ùÌ¯Á¿
-		double dRealSpindlePosition; //ÖÕµã´¦Êµ¼ÊÖ÷ÖáÎ»ÖÃ
-		struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
-		int	nEncoderValue = pSSpindleEncoder->lEncoderAbsValue % pSSpindleEncoder->usEncoderCirclePulseNum; //¹ı¶ÉÊ±±àÂëÆ÷ËùÔÚµÄÎ»ÖÃ
-		dSpindleSpeed = pG32->dSpindleSpeed * pSSpindleEncoder->usEncoderCirclePulseNum;
-		double dEncoderDeviation;    //ÖÕµã´¦±àÂëÆ÷Î»ÖÃÆ«²î
-		struct SToolCompensation* pSToolCompPointer = NULL;   //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-		double dNextG32F;            //ÏÂÒ»¸öG32µÄµ¼³ÌÖµ 
-		double dDeltaPos;            //ÀíÏëÖ÷ÖáÓëÊµ¼ÊÖ÷ÖáµÄÎ»ÖÃÆ«²î
-		double dCompDir;             //²¹³¥·½Ïò
+        //ä¸»è½´æ­£è½¬
+        if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)
+        {
+            dRealSpindlePosition =
+                surplusDoubleData(nEncoderValue + pSSpindleEncoder->usDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
+            dDeltaPos = fabs(dRealSpindlePosition - pG32->dIdealSpindlePosition);
+            dDeltaPos = dDeltaPos < (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos)
+                            ? dDeltaPos
+                            : (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos);
+            if (isZero(surplusDoubleData(pG32->dIdealSpindlePosition + dDeltaPos,
+                                         pSSpindleEncoder->usEncoderCirclePulseNum) -
+                       dRealSpindlePosition))
+            {
+                dCompDir = 1;
+            }
+            else
+            {
+                dCompDir = -1;
+            }
+            dEncoderDeviation = dCompDir * dDeltaPos;
+        }
+        else //ä¸»è½´åè½¬
+        {
+            dRealSpindlePosition =
+                surplusDoubleData(nEncoderValue - pSSpindleEncoder->usDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
+            dDeltaPos = fabs(dRealSpindlePosition - pG32->dIdealSpindlePosition);
+            dDeltaPos = dDeltaPos < (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos)
+                            ? dDeltaPos
+                            : (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos);
+            if (isZero(surplusDoubleData(pG32->dIdealSpindlePosition - dDeltaPos,
+                                         pSSpindleEncoder->usEncoderCirclePulseNum) -
+                       dRealSpindlePosition))
+            {
+                dCompDir = 1;
+            }
+            else
+            {
+                dCompDir = -1;
+            }
+            dEncoderDeviation = dCompDir * dDeltaPos;
+        }
 
-		//Ö÷ÖáÕı×ª
-		if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)
-		{
-			dRealSpindlePosition = surplusDoubleData(nEncoderValue + pSSpindleEncoder->usDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
-			dDeltaPos = fabs(dRealSpindlePosition - pG32->dIdealSpindlePosition);
-			dDeltaPos = dDeltaPos < (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos) ? dDeltaPos : (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos);
-			if (isZero(surplusDoubleData(pG32->dIdealSpindlePosition + dDeltaPos, pSSpindleEncoder->usEncoderCirclePulseNum) - dRealSpindlePosition))
-			{
-				dCompDir = 1;
-			}
-			else
-			{
-				dCompDir = -1;
+        pSToolCompPointer =
+            getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"æŒ‡é’ˆ
+        dNextG32F = pSToolCompPointer->dF;
 
-			}
-			dEncoderDeviation = dCompDir * dDeltaPos;
-		}
-		else  //Ö÷Öá·´×ª
-		{
-			dRealSpindlePosition = surplusDoubleData(nEncoderValue - pSSpindleEncoder->usDelta, pSSpindleEncoder->usEncoderCirclePulseNum);
-			dDeltaPos = fabs(dRealSpindlePosition - pG32->dIdealSpindlePosition);
-			dDeltaPos = dDeltaPos < (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos) ? dDeltaPos : (pSSpindleEncoder->usEncoderCirclePulseNum - dDeltaPos);
-			if (isZero(surplusDoubleData(pG32->dIdealSpindlePosition - dDeltaPos, pSSpindleEncoder->usEncoderCirclePulseNum) - dRealSpindlePosition))
-			{
-				dCompDir = 1;
-			}
-			else
-			{
-				dCompDir = -1;
-			}
-			dEncoderDeviation = dCompDir * dDeltaPos;
-		}
-		 
-		pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"Ö¸Õë
-		dNextG32F = pSToolCompPointer->dF;
+        dLongAxisDelta = dEncoderDeviation * dNextG32F / pSSpindleEncoder->usEncoderCirclePulseNum;
+        pG32->dStartPointCompensate += dLongAxisDelta; //ä¸‹ä¸€æ¬¡G32èµ·ç‚¹ä½ç½®çš„è¡¥å¿
 
-		dLongAxisDelta = dEncoderDeviation * dNextG32F / pSSpindleEncoder->usEncoderCirclePulseNum;
-		pG32->dStartPointCompensate += dLongAxisDelta;  //ÏÂÒ»´ÎG32ÆğµãÎ»ÖÃµÄ²¹³¥
-
-		pG32->ucG32Step = G32_RUNNING;  //ÔË¶¯²¿·Ö
-	}
-
+        pG32->ucG32Step = G32_RUNNING; //è¿åŠ¨éƒ¨åˆ†
+    }
 }
 
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint8 motionForG32(struct _SG32* pG32,  double* dLongAxisDelta)
-//  º¯Êı¹¦ÄÜ£ºG32ÔË¶¯×ø±êµãµÄ¼ÆËã
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			*dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šint8 motionForG32(struct _SG32* pG32,  double* dLongAxisDelta)
+//  å‡½æ•°åŠŸèƒ½ï¼šG32è¿åŠ¨åæ ‡ç‚¹çš„è®¡ç®—
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			*dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
-int8 motionForG32(struct _SG32* pG32, double* dLongAxisDelta, double dDistFromSpindle, double dVectorFromSpindle, double dAcc, double dDec)
+int8 motionForG32(struct _SG32* pG32, double* dLongAxisDelta, double dDistFromSpindle, double dVectorFromSpindle,
+                  double dAcc, double dDec)
 {
-	double dDeltaLongAxisDis;   //³¤ÖáÔË¶¯µÄ³¤¶È
-	double dDeltaL;				//Ïà¶ÔÆğµãµÄ¾àÀë 
-	SPointDouble STargetPoint;  //µ±Ç°µãµÄÀíÂÛ¾ø¶Ô×ø±ê
-	SPointDouble SStarPoint;
-	uint8 ucLongAxisNum  = pG32->ucAxis[0];  //»ñÈ¡³¤ÖáÖáºÅ
-	uint8 ucShortAxisNum = pG32->ucAxis[1];  //»ñÈ¡¶ÌÖáÖáºÅ
-	double dDeltaLForShortAxis;				 //±ä×¶¶ÈÁ¬ĞøG32£¬¶ÌÖáÏà¶ÔÆğµãµÄ¾àÀë 
-	
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	pSRun = &pG32->pSChannel->SRun;//ÔËĞĞ½á¹¹Ìå
+    double dDeltaLongAxisDis;  //é•¿è½´è¿åŠ¨çš„é•¿åº¦
+    double dDeltaL;            //ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
+    SPointDouble STargetPoint; //å½“å‰ç‚¹çš„ç†è®ºç»å¯¹åæ ‡
+    SPointDouble SStarPoint;
+    uint8 ucLongAxisNum = pG32->ucAxis[0];  //è·å–é•¿è½´è½´å·
+    uint8 ucShortAxisNum = pG32->ucAxis[1]; //è·å–çŸ­è½´è½´å·
+    double dDeltaLForShortAxis;             //å˜é”¥åº¦è¿ç»­G32ï¼ŒçŸ­è½´ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
 
-	//ÔËĞĞÊ±¼äÔö¼Ó
-	pG32->SPlanData.unCurrentT += 1;
+    struct _SRun* pSRun;            //è¿è¡Œç»“æ„ä½“
+    pSRun = &pG32->pSChannel->SRun; //è¿è¡Œç»“æ„ä½“
 
-	//»ñÈ¡currentTÊ±¿ÌµÄÏß¶Î³¤£¨Ö±Ïß£©
-	dDeltaL = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData));
+    //è¿è¡Œæ—¶é—´å¢åŠ 
+    pG32->SPlanData.unCurrentT += 1;
 
-	//¼ÆËã³¤ÖáÀíÂÛ×ø±êµã 
-	calculateExactPointForG32((double*)&STargetPoint, dDeltaL, pG32);
+    //è·å–currentTæ—¶åˆ»çš„çº¿æ®µé•¿ï¼ˆç›´çº¿ï¼‰
+    dDeltaL = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData));
 
-	if (pG32->bLeftTailFlag)  //ÍËÎ²Ô¤´¦ÀíÊÇ·ñÍê³É
-	{
-		SStarPoint = pG32->SBackTailPoint;  //Íê³ÉÔòÓĞÍËÎ²£¬ÏÂ·½µÄ×ø±ê¼ÆËãÒÔÍËÎ²µã×÷ÎªÆğµã
-	}
-	else
-	{
-		SStarPoint = pG32->SStarCutPoint;   //ÎŞÍËÎ²£¬ÔòÒÔÇĞÏ÷Æğµã×÷Îª×ø±ê¼ÆËãµÄÆğµã
-	}
+    //è®¡ç®—é•¿è½´ç†è®ºåæ ‡ç‚¹
+    calculateExactPointForG32((double*)&STargetPoint, dDeltaL, pG32);
 
-	//Îª±ä×¶¶ÈÁ¬ĞøG32
-	if (pG32->bRepeatG32Flag && !isZero(pG32->dRatioXZ - pG32->dLastRatioXZ) && !pG32->bExcessPlanFlag)
-	{
-		double dLongAxisOverLength;	//³¤Öáµ±Ç°Î»ÖÃ³¬¹ı²å²¹ÆğµãµÄ¾àÀë
-		pG32->bExcessPlanFlag = TRUE;  //ĞèÒª¶Ô¶ÌÖá½øĞĞËÙ¶È¹æ»®
-		pG32->SExcessPlanForG32 = malloc(sizeof(struct SPlan));  //ÉêÇë´æ´¢¶ÌÖáËÙ¶È¹æ»®²ÎÊıµÄ¿Õ¼ä
-		
-		//ÉêÇë¿Õ¼ä³É¹¦
-		if (pG32->SExcessPlanForG32 != NULL)
-		{
-			uint8 ucLongAxisNum = pG32->ucAxis[0];   //»ñÈ¡³¤ÖáÖáºÅ	
-			uint8 ucShortAxisNum = pG32->ucAxis[1];  //»ñÈ¡¶ÌÖáÖáºÅ
-			SPointDouble SRealTimePoint;             //ÊµÊ±µã
-			double dShortAxisOverLength;
-			double dRatioXZ = fabs(pG32->dRatioXZ);
-			//»ñÈ¡³¤Öáµ±Ç°Î»ÖÃ³¬¹ı²å²¹ÆğµãµÄ¾àÀë
-			dLongAxisOverLength  = fabs(pG32->SStarCutPoint.dArray[ucLongAxisNum] - pG32->SLastEndPoint.dArray[ucLongAxisNum]);  
-			dShortAxisOverLength = fabs(pG32->SStarCutPoint.dArray[ucShortAxisNum] - pG32->SLastEndPoint.dArray[ucShortAxisNum]);
-			getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);  //»ñÈ¡ÊµÊ±µã
+    if (pG32->bLeftTailFlag) //é€€å°¾é¢„å¤„ç†æ˜¯å¦å®Œæˆ
+    {
+        SStarPoint = pG32->SBackTailPoint; //å®Œæˆåˆ™æœ‰é€€å°¾ï¼Œä¸‹æ–¹çš„åæ ‡è®¡ç®—ä»¥é€€å°¾ç‚¹ä½œä¸ºèµ·ç‚¹
+    }
+    else
+    {
+        SStarPoint = pG32->SStarCutPoint; //æ— é€€å°¾ï¼Œåˆ™ä»¥åˆ‡å‰Šèµ·ç‚¹ä½œä¸ºåæ ‡è®¡ç®—çš„èµ·ç‚¹
+    }
 
-			//³õÊ¼»¯¶ÌÖáËÙ¶È¹æ»®²ÎÊı
-			pG32->SExcessPlanForG32->dTc = pG32->SPlanData.dTc;  //»ñÈ¡¶ÌÖá²å²¹ÖÜÆÚ
-			pG32->SExcessPlanForG32->dDistance = pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum];   //»ñÈ¡¶ÌÖá²å²¹¾àÀë
-			//pG32->SExcessPlanForG32->dTargetDist  = dRealOverValue * (pG32->dRatioXZ - pG32->dLastRatioXZ) + pG32->dStartPointCompensateCopy * pG32->dRatioXZ;  //»ñÈ¡¶ÌÖáÆğÊ¼Î»ÖÃ²¹³¥Á¿
-			//pG32->SExcessPlanForG32->dCurLeftDist = dRealOverValue * (pG32->dRatioXZ - pG32->dLastRatioXZ) + pG32->dStartPointCompensateCopy * pG32->dRatioXZ;
-			pG32->SExcessPlanForG32->dTargetDist  = dLongAxisOverLength * dRatioXZ - dShortAxisOverLength + pG32->dStartPointCompensateCopy * dRatioXZ;  //»ñÈ¡¶ÌÖáÆğÊ¼Î»ÖÃ²¹³¥Á¿
-			pG32->SExcessPlanForG32->dCurLeftDist = dLongAxisOverLength * dRatioXZ - dShortAxisOverLength + pG32->dStartPointCompensateCopy * dRatioXZ;
-		
-			pG32->SExcessPlanForG32->dPreDist = 0;    //ÒÑ²å²¹µÄ¾àÀë³õÊ¼»¯
-			pG32->SExcessPlanForG32->unCurrentT = 0;  //²å²¹Ê±¼ä½Úµã³õÊ¼»¯
-			pG32->dShortAxisCurrentSpeed = pG32->dCurrentSpeed * fabs(pG32->dLastRatioXZ);   //»ñÈ¡¶ÌÖáµ±Ç°µÄËÙ¶È
-			pG32->dStartPointCompensateCopy = 0;  //ÆğÊ¼²¹³äÁ¿£¨¸±±¾£©³õÊ¼»¯
-		}
-		else
-		{
-			pG32->bExcessPlanFlag = FALSE;
-			return -1;  //ÉêÇë¿Õ¼äÊ§°Ü£¬ÔË¶¯±¨´í
-		}
-		
-		
-	}
+    //ä¸ºå˜é”¥åº¦è¿ç»­G32
+    if (pG32->bRepeatG32Flag && !isZero(pG32->dRatioXZ - pG32->dLastRatioXZ) && !pG32->bExcessPlanFlag)
+    {
+        double dLongAxisOverLength;                             //é•¿è½´å½“å‰ä½ç½®è¶…è¿‡æ’è¡¥èµ·ç‚¹çš„è·ç¦»
+        pG32->bExcessPlanFlag = TRUE;                           //éœ€è¦å¯¹çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’
+        pG32->SExcessPlanForG32 = malloc(sizeof(struct SPlan)); //ç”³è¯·å­˜å‚¨çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°çš„ç©ºé—´
 
-	//ÆÕÍ¨ÂİÎÆ£¬¸ù¾İ³¤¶ÌÖáµÄ±ÈÀı¼ÆËãµ±Ç°µãµÄÀíÂÛ¶ÌÖá¾ø¶Ô×ø±ê
-	if (isZero(pG32->dRadius))
-	{
-		
-		dDeltaLongAxisDis = fabs(STargetPoint.dArray[ucLongAxisNum] - SStarPoint.dArray[ucLongAxisNum]);  //»ñÈ¡³¤ÖáÔË¶¯µÄÔöÁ¿
+        //ç”³è¯·ç©ºé—´æˆåŠŸ
+        if (pG32->SExcessPlanForG32 != NULL)
+        {
+            uint8 ucLongAxisNum = pG32->ucAxis[0];  //è·å–é•¿è½´è½´å·
+            uint8 ucShortAxisNum = pG32->ucAxis[1]; //è·å–çŸ­è½´è½´å·
+            SPointDouble SRealTimePoint;            //å®æ—¶ç‚¹
+            double dShortAxisOverLength;
+            double dRatioXZ = fabs(pG32->dRatioXZ);
+            //è·å–é•¿è½´å½“å‰ä½ç½®è¶…è¿‡æ’è¡¥èµ·ç‚¹çš„è·ç¦»
+            dLongAxisOverLength =
+                fabs(pG32->SStarCutPoint.dArray[ucLongAxisNum] - pG32->SLastEndPoint.dArray[ucLongAxisNum]);
+            dShortAxisOverLength =
+                fabs(pG32->SStarCutPoint.dArray[ucShortAxisNum] - pG32->SLastEndPoint.dArray[ucShortAxisNum]);
+            getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                             &pG32->ucValStatus); //è·å–å®æ—¶ç‚¹
 
-		//²»ĞèÒª½øĞĞ¶îÍâµÄ¶ÌÖáËÙ¶È¹æ»®Ê±£¬¼ÆËãÀíÂÛ¶ÌÖá¾ø¶Ô×ø±ê
-		if (!pG32->bExcessPlanFlag || isZero(pG32->dRatioXZ))
-		{
-			//Ò»°ãÇé¿ö
-			if (isZero(pG32->dShortAxisPos))
-			{
+            //åˆå§‹åŒ–çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°
+            pG32->SExcessPlanForG32->dTc = pG32->SPlanData.dTc; //è·å–çŸ­è½´æ’è¡¥å‘¨æœŸ
+            pG32->SExcessPlanForG32->dDistance =
+                pG32->SEndPoint.dArray[ucShortAxisNum] - SRealTimePoint.dArray[ucShortAxisNum]; //è·å–çŸ­è½´æ’è¡¥è·ç¦»
+            //pG32->SExcessPlanForG32->dTargetDist  = dRealOverValue * (pG32->dRatioXZ - pG32->dLastRatioXZ) + pG32->dStartPointCompensateCopy * pG32->dRatioXZ;  //è·å–çŸ­è½´èµ·å§‹ä½ç½®è¡¥å¿é‡
+            //pG32->SExcessPlanForG32->dCurLeftDist = dRealOverValue * (pG32->dRatioXZ - pG32->dLastRatioXZ) + pG32->dStartPointCompensateCopy * pG32->dRatioXZ;
+            pG32->SExcessPlanForG32->dTargetDist = dLongAxisOverLength * dRatioXZ - dShortAxisOverLength +
+                                                   pG32->dStartPointCompensateCopy * dRatioXZ; //è·å–çŸ­è½´èµ·å§‹ä½ç½®è¡¥å¿é‡
+            pG32->SExcessPlanForG32->dCurLeftDist =
+                dLongAxisOverLength * dRatioXZ - dShortAxisOverLength + pG32->dStartPointCompensateCopy * dRatioXZ;
 
-				//STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] + (dDeltaLongAxisDis + pG32->dShortAxisCompensate) * pG32->dRatioXZ;
-				STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] + (dDeltaLongAxisDis + pG32->dShortAxisCompensate) * pG32->dRatioXZ;
-				//STargetPoint.dArray[ucShortAxisNum] = pG32->SLastEndPoint.dArray[ucShortAxisNum] + (dDeltaLongAxisDis) * pG32->dRatioXZ;
+            pG32->SExcessPlanForG32->dPreDist = 0;                                         //å·²æ’è¡¥çš„è·ç¦»åˆå§‹åŒ–
+            pG32->SExcessPlanForG32->unCurrentT = 0;                                       //æ’è¡¥æ—¶é—´èŠ‚ç‚¹åˆå§‹åŒ–
+            pG32->dShortAxisCurrentSpeed = pG32->dCurrentSpeed * fabs(pG32->dLastRatioXZ); //è·å–çŸ­è½´å½“å‰çš„é€Ÿåº¦
+            pG32->dStartPointCompensateCopy = 0;                                           //èµ·å§‹è¡¥å……é‡ï¼ˆå‰¯æœ¬ï¼‰åˆå§‹åŒ–
+        }
+        else
+        {
+            pG32->bExcessPlanFlag = FALSE;
+            return -1; //ç”³è¯·ç©ºé—´å¤±è´¥ï¼Œè¿åŠ¨æŠ¥é”™
+        }
+    }
 
-			}
-			else  //ÒÔ±ä×¶¶È´úÌæÍËÎ²Ê±£¬³öÏÖ¾àÀëÌ«¶Ì£¬¶ÌÖá»¹Î´¸úËæÉÏ³¤Öá£¬¶ÌÖá¾ÍÔË¶¯½áÊøµÄÇé¿ö£»ÕâÖÖÇé¿ö¼ÇÂ¼¶ÌÖáÔË¶¯½áÊøµÄÎ»ÖÃ¼´¿É£¬²»ĞèÒª¸ù¾İ±ÈÀıÖØËã¶ÌÖáµÄÎ»ÖÃ
-			{
-				STargetPoint.dArray[ucShortAxisNum] = pG32->dShortAxisPos;  
-			}
-		}
-		else  //ĞèÒª½øĞĞ¶îÍâµÄ¶ÌÖáËÙ¶È¹æ»®
-		{
-			if (pG32->SExcessPlanForG32 != NULL)
-			{
-				uint8 ucMotionState;                                               //±ä×¶¶ÈÁ¬ĞøG32£¬¶ÌÖáËÙ¶È¹æ»®µÄ×´Ì¬
-				double dNewAddDistance = dDistFromSpindle * fabs(pG32->dRatioXZ);  //¶ÌÖáµ±Ç°ÖÜÆÚĞÂÔöµÄ¾àÀë
-				double dVe = pG32->dCurrentSpeed * fabs(pG32->dRatioXZ);           //¶ÌÖá¹æ»®ËùÒª´ïµ½µÄ×îÖÕËÙ¶È
-				double dShortAxisDelta = 0;  //¶ÌÖáµ±Ç°Î»ÖÃ¾àÀëÖÕµãµÄ³¤¶È
-				
-				ucMotionState = newAddDistace(pG32, pG32->SExcessPlanForG32, dNewAddDistance, dAcc, dDec, dVe, pG32->dShortAxisCurrentSpeed);  //¶Ô¶ÌÖá½øĞĞËÙ¶È¹æ»®
-				pG32->SExcessPlanForG32->unCurrentT += 1;  //¶ÌÖáÔËĞĞÊ±¼äÔö¼Ó
+    //æ™®é€šèºçº¹ï¼Œæ ¹æ®é•¿çŸ­è½´çš„æ¯”ä¾‹è®¡ç®—å½“å‰ç‚¹çš„ç†è®ºçŸ­è½´ç»å¯¹åæ ‡
+    if (isZero(pG32->dRadius))
+    {
 
-				dDeltaLForShortAxis = nextstepPlanningAndDistReAvg(pG32->SExcessPlanForG32->unCurrentT, pG32->SExcessPlanForG32);     //»ñµÃ±ä×¶¶ÈÁ¬ĞøG32£¬¶ÌÖáÏà¶ÔÆğµãµÄ¾àÀë 
-				STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] + dDeltaLForShortAxis * sgn(pG32->dRatioXZ);  //¼ÆËãÀíÂÛ¶ÌÖá¾ø¶Ô×ø±ê
-				dShortAxisDelta = (STargetPoint.dArray[ucShortAxisNum] - pG32->SEndPoint.dArray[ucShortAxisNum]) * sgn(pG32->dRatioXZ);
+        dDeltaLongAxisDis =
+            fabs(STargetPoint.dArray[ucLongAxisNum] - SStarPoint.dArray[ucLongAxisNum]); //è·å–é•¿è½´è¿åŠ¨çš„å¢é‡
 
-				//Çé¿ö1£ºµ±³¤Öá¶ÌÖá¶¼½øÈëÁËËæ¶¯½×¶Î,¶ÌÖáËÙ¶È¹æ»®½áÊø; 
-				//Çé¿ö2£º»ò¶ÌÖá²å²¹¾àÀë¹ı¶Ì£¬²»×ãÒÔ¸úÉÏ³¤ÖáÊ±£¬¶ÌÖá²å²¹½áÊø£¬ËÙ¶È¹æ»®½áÊø
-				if ((ucMotionState == 1 && pG32->ucMotionState == 1) || (dShortAxisDelta > 0 || isZero(dShortAxisDelta)))
-				{
-				
-					if (dShortAxisDelta > 0 || isZero(dShortAxisDelta))  //Èç¹ûÊÇÇé¿ö2
-					{
-						pG32->dShortAxisPos = STargetPoint.dArray[ucShortAxisNum];  //¼ÇÂ¼¶ÌÖáÔË¶¯½áÊøºóµÄÎ»ÖÃ
-					}
-					pG32->dShortAxisCompensate = dDeltaLForShortAxis / fabs(pG32->dRatioXZ) - dDeltaLongAxisDis;  //»ñÈ¡¶ÌÖá²¹³¥Á¿
-					pG32->dLastRatioXZ = pG32->dRatioXZ;  //ÖØËãÏÂÒ»´ÎG32µÄ¶ÌÖá±ÈÀı
-					pG32->bExcessPlanFlag = FALSE;        //²»ÔÙ¶Ô¶ÌÖá½øĞĞËÙ¶È¹æ»®
-					free(pG32->SExcessPlanForG32);        //ÊÍ·Å¶ÌÖáËÙ¶È¹æ»®²ÎÊıÖ¸Õë
-					pG32->SExcessPlanForG32 = NULL;
+        //ä¸éœ€è¦è¿›è¡Œé¢å¤–çš„çŸ­è½´é€Ÿåº¦è§„åˆ’æ—¶ï¼Œè®¡ç®—ç†è®ºçŸ­è½´ç»å¯¹åæ ‡
+        if (!pG32->bExcessPlanFlag || isZero(pG32->dRatioXZ))
+        {
+            //ä¸€èˆ¬æƒ…å†µ
+            if (isZero(pG32->dShortAxisPos))
+            {
 
-				}
-				
-			}
-				
-		}	
+                //STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] + (dDeltaLongAxisDis + pG32->dShortAxisCompensate) * pG32->dRatioXZ;
+                STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] +
+                                                      (dDeltaLongAxisDis + pG32->dShortAxisCompensate) * pG32->dRatioXZ;
+                //STargetPoint.dArray[ucShortAxisNum] = pG32->SLastEndPoint.dArray[ucShortAxisNum] + (dDeltaLongAxisDis) * pG32->dRatioXZ;
+            }
+            else //ä»¥å˜é”¥åº¦ä»£æ›¿é€€å°¾æ—¶ï¼Œå‡ºç°è·ç¦»å¤ªçŸ­ï¼ŒçŸ­è½´è¿˜æœªè·Ÿéšä¸Šé•¿è½´ï¼ŒçŸ­è½´å°±è¿åŠ¨ç»“æŸçš„æƒ…å†µï¼›è¿™ç§æƒ…å†µè®°å½•çŸ­è½´è¿åŠ¨ç»“æŸçš„ä½ç½®å³å¯ï¼Œä¸éœ€è¦æ ¹æ®æ¯”ä¾‹é‡ç®—çŸ­è½´çš„ä½ç½®
+            {
+                STargetPoint.dArray[ucShortAxisNum] = pG32->dShortAxisPos;
+            }
+        }
+        else //éœ€è¦è¿›è¡Œé¢å¤–çš„çŸ­è½´é€Ÿåº¦è§„åˆ’
+        {
+            if (pG32->SExcessPlanForG32 != NULL)
+            {
+                uint8 ucMotionState;                                              //å˜é”¥åº¦è¿ç»­G32ï¼ŒçŸ­è½´é€Ÿåº¦è§„åˆ’çš„çŠ¶æ€
+                double dNewAddDistance = dDistFromSpindle * fabs(pG32->dRatioXZ); //çŸ­è½´å½“å‰å‘¨æœŸæ–°å¢çš„è·ç¦»
+                double dVe = pG32->dCurrentSpeed * fabs(pG32->dRatioXZ);          //çŸ­è½´è§„åˆ’æ‰€è¦è¾¾åˆ°çš„æœ€ç»ˆé€Ÿåº¦
+                double dShortAxisDelta = 0;                                       //çŸ­è½´å½“å‰ä½ç½®è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
 
-		*dLongAxisDelta = (STargetPoint.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) * pG32->SStartVector.dArray[ucLongAxisNum];  //³¤Öá¾àÀëÖÕµãµÄ³¤¶È
-	}
-	else  //Ô²»¡ÃæÂİÎÆ
-	{
-		int8 cRes = calcArcG32ShortAxisPos(pG32, STargetPoint.dArray[ucLongAxisNum],&STargetPoint.dArray[ucShortAxisNum]);  //¼ÆËã³¤Öáµ±Ç°Î»ÖÃÏÂ£¬¶ÌÖáµÄ¾ø¶ÔÎ»ÖÃ
-		if(cRes == -1)return -1;
-		*dLongAxisDelta = (STargetPoint.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) * pG32->SStartVector.dArray[ucLongAxisNum];  //³¤Öá¾àÀëÖÕµãµÄ³¤¶È
-	}
+                ucMotionState = newAddDistace(pG32, pG32->SExcessPlanForG32, dNewAddDistance, dAcc, dDec, dVe,
+                                              pG32->dShortAxisCurrentSpeed); //å¯¹çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’
+                pG32->SExcessPlanForG32->unCurrentT += 1;                    //çŸ­è½´è¿è¡Œæ—¶é—´å¢åŠ 
 
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-	if (pG32->pSChannel->bUseVirtualY == TRUE)
-	{
-		//½«Ö±½Ç×ø±êÏµÏÂµÄ×ø±êµã×ª»¯ÎªÇãĞ±×ø±êÏµÏÂµÄµã
-		if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
-		{
-			STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pG32->pSChannel->dTANAngleYY1;
-		}
-		if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
-		{
-			STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pG32->pSChannel->dCOSAngleYY1;
-		}
-	}
+                dDeltaLForShortAxis =
+                    nextstepPlanningAndDistReAvg(pG32->SExcessPlanForG32->unCurrentT,
+                                                 pG32->SExcessPlanForG32); //è·å¾—å˜é”¥åº¦è¿ç»­G32ï¼ŒçŸ­è½´ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
+                STargetPoint.dArray[ucShortAxisNum] = SStarPoint.dArray[ucShortAxisNum] +
+                                                      dDeltaLForShortAxis * sgn(pG32->dRatioXZ); //è®¡ç®—ç†è®ºçŸ­è½´ç»å¯¹åæ ‡
+                dShortAxisDelta = (STargetPoint.dArray[ucShortAxisNum] - pG32->SEndPoint.dArray[ucShortAxisNum]) *
+                                  sgn(pG32->dRatioXZ);
+
+                //æƒ…å†µ1ï¼šå½“é•¿è½´çŸ­è½´éƒ½è¿›å…¥äº†éšåŠ¨é˜¶æ®µ,çŸ­è½´é€Ÿåº¦è§„åˆ’ç»“æŸ;
+                //æƒ…å†µ2ï¼šæˆ–çŸ­è½´æ’è¡¥è·ç¦»è¿‡çŸ­ï¼Œä¸è¶³ä»¥è·Ÿä¸Šé•¿è½´æ—¶ï¼ŒçŸ­è½´æ’è¡¥ç»“æŸï¼Œé€Ÿåº¦è§„åˆ’ç»“æŸ
+                if ((ucMotionState == 1 && pG32->ucMotionState == 1) ||
+                    (dShortAxisDelta > 0 || isZero(dShortAxisDelta)))
+                {
+
+                    if (dShortAxisDelta > 0 || isZero(dShortAxisDelta)) //å¦‚æœæ˜¯æƒ…å†µ2
+                    {
+                        pG32->dShortAxisPos = STargetPoint.dArray[ucShortAxisNum]; //è®°å½•çŸ­è½´è¿åŠ¨ç»“æŸåçš„ä½ç½®
+                    }
+                    pG32->dShortAxisCompensate =
+                        dDeltaLForShortAxis / fabs(pG32->dRatioXZ) - dDeltaLongAxisDis; //è·å–çŸ­è½´è¡¥å¿é‡
+                    pG32->dLastRatioXZ = pG32->dRatioXZ;                                //é‡ç®—ä¸‹ä¸€æ¬¡G32çš„çŸ­è½´æ¯”ä¾‹
+                    pG32->bExcessPlanFlag = FALSE;                                      //ä¸å†å¯¹çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’
+                    free(pG32->SExcessPlanForG32);                                      //é‡Šæ”¾çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°æŒ‡é’ˆ
+                    pG32->SExcessPlanForG32 = NULL;
+                }
+            }
+        }
+
+        *dLongAxisDelta = (STargetPoint.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) *
+                          pG32->SStartVector.dArray[ucLongAxisNum]; //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
+    }
+    else //åœ†å¼§é¢èºçº¹
+    {
+        int8 cRes = calcArcG32ShortAxisPos(pG32, STargetPoint.dArray[ucLongAxisNum],
+                                           &STargetPoint.dArray[ucShortAxisNum]); //è®¡ç®—é•¿è½´å½“å‰ä½ç½®ä¸‹ï¼ŒçŸ­è½´çš„ç»å¯¹ä½ç½®
+        if (cRes == -1)
+            return -1;
+        *dLongAxisDelta = (STargetPoint.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) *
+                          pG32->SStartVector.dArray[ucLongAxisNum]; //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
+    }
+
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (pG32->pSChannel->bUseVirtualY == TRUE)
+    {
+        //å°†ç›´è§’åæ ‡ç³»ä¸‹çš„åæ ‡ç‚¹è½¬åŒ–ä¸ºå€¾æ–œåæ ‡ç³»ä¸‹çš„ç‚¹
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
+        {
+            STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pG32->pSChannel->dTANAngleYY1;
+        }
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
+        {
+            STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pG32->pSChannel->dCOSAngleYY1;
+        }
+    }
 #endif
 
-#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //µ¥±íÂİ¾à²¹³¥+ ·´Ïò¼äÏ¶²¹³¥
-	//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-	outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus);
-#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //Ë«±íÂİ¾à²¹³¥
-	outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus);
+#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //å•è¡¨èºè·è¡¥å¿+ åå‘é—´éš™è¡¥å¿
+    //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+    outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                                pG32->dPulseToMm, &pG32->ucValStatus);
+#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //åŒè¡¨èºè·è¡¥å¿
+    outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                                         pG32->dPulseToMm, &pG32->ucValStatus);
 #else
-	//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-	outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus); //ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ£¨Î´Íê³É£©
+    //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+    outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm,
+                   &pG32->ucValStatus); //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®ï¼ˆæœªå®Œæˆï¼‰
 #endif
 
-	//Èç¹ûµ±Ç°ÁôÏÂÎ´ÒÆ¶¯µÄ¾àÀë´óÓÚµÈÓÚ0
-	if (pG32->SPlanData.dCurLeftDist > 0 || isZero(pG32->SPlanData.dCurLeftDist))
-	{
-		//¼ÆËãµ±Ç°ÀíÂÛËÙ¶È
-		pG32->dCurrentSpeed = fabs(pG32->SPlanData.dCurLeftDist - (pG32->SPlanData.dTargetDist - dDeltaL)) / pG32->SPlanData.dTc;
-		pG32->SPlanData.dCurLeftDist = pG32->SPlanData.dTargetDist - dDeltaL;  //¼ÆËãÀíÂÛÎ´×ß¾àÀë
-	}
-	else
-	{
-		pG32->dCurrentSpeed = 0;  //µ±Ç°ËÙ¶ÈÎª0
-	}
+    //å¦‚æœå½“å‰ç•™ä¸‹æœªç§»åŠ¨çš„è·ç¦»å¤§äºç­‰äº0
+    if (pG32->SPlanData.dCurLeftDist > 0 || isZero(pG32->SPlanData.dCurLeftDist))
+    {
+        //è®¡ç®—å½“å‰ç†è®ºé€Ÿåº¦
+        pG32->dCurrentSpeed =
+            fabs(pG32->SPlanData.dCurLeftDist - (pG32->SPlanData.dTargetDist - dDeltaL)) / pG32->SPlanData.dTc;
+        pG32->SPlanData.dCurLeftDist = pG32->SPlanData.dTargetDist - dDeltaL; //è®¡ç®—ç†è®ºæœªèµ°è·ç¦»
+    }
+    else
+    {
+        pG32->dCurrentSpeed = 0; //å½“å‰é€Ÿåº¦ä¸º0
+    }
 
-	//Èç¹ûĞèÒª¶Ô¶ÌÖá½øĞĞ¶îÍâµÄËÙ¶È¹æ»®
-	if (pG32->SExcessPlanForG32 != NULL && pG32->bExcessPlanFlag)
-	{
-		if (pG32->SExcessPlanForG32->dCurLeftDist >= 0)
-		{
-			//¼ÆËã¶ÌÖáµ±Ç°ÀíÂÛËÙ¶È
-			pG32->dShortAxisCurrentSpeed = fabs(pG32->SExcessPlanForG32->dCurLeftDist - (pG32->SExcessPlanForG32->dTargetDist - dDeltaLForShortAxis))
-				/ pG32->SExcessPlanForG32->dTc;
-			pG32->SExcessPlanForG32->dCurLeftDist = pG32->SExcessPlanForG32->dTargetDist - dDeltaLForShortAxis;
+    //å¦‚æœéœ€è¦å¯¹çŸ­è½´è¿›è¡Œé¢å¤–çš„é€Ÿåº¦è§„åˆ’
+    if (pG32->SExcessPlanForG32 != NULL && pG32->bExcessPlanFlag)
+    {
+        if (pG32->SExcessPlanForG32->dCurLeftDist >= 0)
+        {
+            //è®¡ç®—çŸ­è½´å½“å‰ç†è®ºé€Ÿåº¦
+            pG32->dShortAxisCurrentSpeed = fabs(pG32->SExcessPlanForG32->dCurLeftDist -
+                                                (pG32->SExcessPlanForG32->dTargetDist - dDeltaLForShortAxis)) /
+                                           pG32->SExcessPlanForG32->dTc;
+            pG32->SExcessPlanForG32->dCurLeftDist = pG32->SExcessPlanForG32->dTargetDist - dDeltaLForShortAxis;
+        }
+        else
+        {
+            pG32->dShortAxisCurrentSpeed = 0; //çŸ­è½´å½“å‰é€Ÿåº¦ä¸º0
+        }
+    }
 
-		}
-		else
-		{
-			pG32->dShortAxisCurrentSpeed = 0;  //¶ÌÖáµ±Ç°ËÙ¶ÈÎª0
-		}
-
-	}
-
-	return 1;
-	
-
+    return 1;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid prepareG32RepeatDecPlanning(struct _SG32* pG32, double* dLongAxisDelta)
-//  º¯Êı¹¦ÄÜ£º¼õËÙÀàĞÍÁ¬ĞøG32¹ı¶É¹æ»®µÄÇ°ÖÃ×¼±¸
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double *  µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid prepareG32RepeatDecPlanning(struct _SG32* pG32, double* dLongAxisDelta)
+//  å‡½æ•°åŠŸèƒ½ï¼šå‡é€Ÿç±»å‹è¿ç»­G32è¿‡æ¸¡è§„åˆ’çš„å‰ç½®å‡†å¤‡
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double *  å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void prepareG32RepeatDecPlanning(struct _SG32* pG32, double* dLongAxisDelta)
 {
-	double dDelta;  //³¤Öá¾àÀëÀíÏë¼õËÙµãµÄÊµ¼Ê³¤¶È
-	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	pSRun = &pG32->pSChannel->SRun;//ÔËĞĞ½á¹¹Ìå
+    double dDelta;                         //é•¿è½´è·ç¦»ç†æƒ³å‡é€Ÿç‚¹çš„å®é™…é•¿åº¦
+    uint8 ucLongAxisNum = pG32->ucAxis[0]; //é•¿è½´è½´å·
+    struct _SRun* pSRun;                   //è¿è¡Œç»“æ„ä½“
+    pSRun = &pG32->pSChannel->SRun;        //è¿è¡Œç»“æ„ä½“
 
-	dDelta = (pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) * pG32->SStartVector.dArray[ucLongAxisNum];
-	if (!(dDelta < 0))  //Èôµ±Ç°Î»ÖÃ´óÓÚµÈÓÚÀíÏë¼õËÙµãµÄÎ»ÖÃ
-	{
-		struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-		double dNextG32F;  //ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
-		pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
-		dNextG32F = pSToolCompPointer->dF;                                 //»ñÈ¡ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
+    dDelta = (pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->dIdealTransmitStartPos) *
+             pG32->SStartVector.dArray[ucLongAxisNum];
+    if (!(dDelta < 0)) //è‹¥å½“å‰ä½ç½®å¤§äºç­‰äºç†æƒ³å‡é€Ÿç‚¹çš„ä½ç½®
+    {
+        struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+        double dNextG32F;                                   //ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
+        pSToolCompPointer =
+            getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
+        dNextG32F = pSToolCompPointer->dF;                                                //è·å–ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
 
-		planDecForRepeatG32(pG32, fabs(*dLongAxisDelta));                        //¼õËÙ¹æ»®
-		//pG32->dStartPointCompensate += dDelta * (dNextG32F / pG32->dF);//³¬¹ıÀíÏë¼õËÙµãµÄÖµ¾ùÌ¯ÖÁÏÂÒ»¶ÎG32
-		//pG32->dStartPointCompensate += pG32->dRemainDistance;
-		pG32->ucG32Step = G32_REPEATSTATE_COMPENSATE;   //G32ÔËĞĞ²½ÖèÇĞ»»Îª4£¨¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥£©
-		pG32->bStartCompensate = FALSE;   //¿ªÊ¼²¹³¥±êÖ¾Î»ÖÃÎ»ÖÃÎªFALSE
-
-
-	}
-
+        planDecForRepeatG32(pG32, fabs(*dLongAxisDelta)); //å‡é€Ÿè§„åˆ’
+        //pG32->dStartPointCompensate += dDelta * (dNextG32F / pG32->dF);//è¶…è¿‡ç†æƒ³å‡é€Ÿç‚¹çš„å€¼å‡æ‘Šè‡³ä¸‹ä¸€æ®µG32
+        //pG32->dStartPointCompensate += pG32->dRemainDistance;
+        pG32->ucG32Step = G32_REPEATSTATE_COMPENSATE; //G32è¿è¡Œæ­¥éª¤åˆ‡æ¢ä¸º4ï¼ˆå‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿ï¼‰
+        pG32->bStartCompensate = FALSE;               //å¼€å§‹è¡¥å¿æ ‡å¿—ä½ç½®ä½ç½®ä¸ºFALSE
+    }
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid compensateForAccRepeatG32(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º¼ÓËÙÀàĞÍÁ¬ĞøG32µÄ²¹³¥Á¿¼ÆËã
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid compensateForAccRepeatG32(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šåŠ é€Ÿç±»å‹è¿ç»­G32çš„è¡¥å¿é‡è®¡ç®—
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void compensateForAccRepeatG32(struct _SG32* pG32)
 {
-	struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-	double dNextG32F;       //ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
-	double dRealOverValue;  //³¤ÖáÊµ¼Ê³¬¹ıÖÕµãÁ¿
-	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
-	struct _SRun* pSRun;//ÔËĞĞ½á¹¹Ìå
-	pSRun = &pG32->pSChannel->SRun;//ÔËĞĞ½á¹¹Ìå
+    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+    double dNextG32F;                                   //ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
+    double dRealOverValue;                              //é•¿è½´å®é™…è¶…è¿‡ç»ˆç‚¹é‡
+    uint8 ucLongAxisNum = pG32->ucAxis[0];              //é•¿è½´è½´å·
+    struct _SRun* pSRun;                                //è¿è¡Œç»“æ„ä½“
+    pSRun = &pG32->pSChannel->SRun;                     //è¿è¡Œç»“æ„ä½“
 
-	pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
-	dNextG32F = pSToolCompPointer->dF;   //»ñÈ¡ÏÂÒ»¸öG32µÄµ¼³ÌÖµ
-	dRealOverValue = (pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) * pG32->SStartVector.dArray[ucLongAxisNum];
+    pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
+    dNextG32F = pSToolCompPointer->dF; //è·å–ä¸‹ä¸€ä¸ªG32çš„å¯¼ç¨‹å€¼
+    dRealOverValue = (pSRun->SAbsCoord.dArray[ucLongAxisNum] - pG32->SEndPoint.dArray[ucLongAxisNum]) *
+                     pG32->SStartVector.dArray[ucLongAxisNum];
 
-	//if (pG32->ucLongAxisNum == AXIS_Z)  //³¤ÖáÎªZÖá
-	//{
-	//	dRealOverValue = (g_SRun.SAbsCoord.dZ - pG32->SEndPoint.dZ) * pG32->SStartVector.dIZ;  //»ñÈ¡³¤Öá¾àÀëÖÕµãµÄ³¤¶È
+    //if (pG32->ucLongAxisNum == AXIS_Z)  //é•¿è½´ä¸ºZè½´
+    //{
+    //	dRealOverValue = (g_SRun.SAbsCoord.dZ - pG32->SEndPoint.dZ) * pG32->SStartVector.dIZ;  //è·å–é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
 
-	//}
-	//else  //³¤ÖáÎªXÖá
-	//{
-	//	dRealOverValue = (g_SRun.SAbsCoord.dX - pG32->SEndPoint.dX) * pG32->SStartVector.dIX;  //»ñÈ¡³¤Öá¾àÀëÖÕµãµÄ³¤¶È
+    //}
+    //else  //é•¿è½´ä¸ºXè½´
+    //{
+    //	dRealOverValue = (g_SRun.SAbsCoord.dX - pG32->SEndPoint.dX) * pG32->SStartVector.dIX;  //è·å–é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
 
-	//}
+    //}
 
-	pG32->dStartPointCompensate += dRealOverValue * (dNextG32F / pG32->dF - 1);//³¬¹ıÀíÏë¼õËÙµãµÄÖµ¾ùÌ¯ÖÁÏÂÒ»¶ÎG32	
-	pG32->bStartCompensate = FALSE;  //¿ªÊ¼²¹³¥±êÖ¾Î»ÖÃÎªFALSE
-
+    pG32->dStartPointCompensate += dRealOverValue * (dNextG32F / pG32->dF - 1); //è¶…è¿‡ç†æƒ³å‡é€Ÿç‚¹çš„å€¼å‡æ‘Šè‡³ä¸‹ä¸€æ®µG32
+    pG32->bStartCompensate = FALSE;                                             //å¼€å§‹è¡¥å¿æ ‡å¿—ä½ç½®ä¸ºFALSE
 }
 
-//*********************************²âÊÔÓÃÈ«¾Ö±äÁ¿********************************
+//*********************************æµ‹è¯•ç”¨å…¨å±€å˜é‡********************************
 int g_nTestNum = 0;
 extern double g_dTime;
 double test_dG32Time;
 double test_dTargetPos;
-//*********************************²âÊÔÓÃÈ«¾Ö±äÁ¿********************************
+//*********************************æµ‹è¯•ç”¨å…¨å±€å˜é‡********************************
 //
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid prepareForMoveAndInit(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º³õÊ¼»¯ºÍÔË¶¯×¼±¸
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid prepareForMoveAndInit(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šåˆå§‹åŒ–å’Œè¿åŠ¨å‡†å¤‡
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void prepareForMoveAndInit(struct _SG32* pG32)
 {
-	initThreadPreStructData(pG32);            //¸ù¾İµ¶²¹ºóµÄ½á¹¹Ìå²ÎÊı³õÊ¼»¯ÂİÎÆÀàÖ¸Áî²ÎÊı½á¹¹Ìå
-	
+    initThreadPreStructData(pG32); //æ ¹æ®åˆ€è¡¥åçš„ç»“æ„ä½“å‚æ•°åˆå§‹åŒ–èºçº¹ç±»æŒ‡ä»¤å‚æ•°ç»“æ„ä½“
+
 #if !ENCODER_MODE
-	g_SSystemPara.ThreadCutMode = INCOMPLETE_FOLLOW_MODE;  //Éèµ±Ç°Ä£Ê½Îª¡°Ö÷Öá²»ÍêÈ«¸úËæ¡±Ä£Ê½£¨²âÊÔÓÃ)¡£
+    g_SSystemPara.ThreadCutMode = INCOMPLETE_FOLLOW_MODE; //è®¾å½“å‰æ¨¡å¼ä¸ºâ€œä¸»è½´ä¸å®Œå…¨è·Ÿéšâ€æ¨¡å¼ï¼ˆæµ‹è¯•ç”¨)ã€‚
 
 #endif
 
-	pG32->pSChannel->bCalculateSpindleSpeedFlag = TRUE;   //¼ÆËãÖ÷ÖáÊµ¼Ê×ªËÙ±êÖ¾Î»
+    pG32->pSChannel->bCalculateSpindleSpeedFlag = TRUE; //è®¡ç®—ä¸»è½´å®é™…è½¬é€Ÿæ ‡å¿—ä½
 
-	pG32->ucG32Step = G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE;    //ÉèÖÃG32ÔËĞĞ²½ÖèÎª¡°Á¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç¡±
-	//pG32->SPlanData.dTargetDist  = 0;  //²å²¹½á¹¹ÌåÄ¿±ê²å²¹¾àÀëºÍÎ´²å²¹¾àÀë³õÊ¼»¯
-	//pG32->SPlanData.dCurLeftDist = 0;
-	pG32->ucInpStatus = INP_RUNNING;  //²å²¹½á¹¹ÌåµÄ×´Ì¬Îª¡°ÔËĞĞ¡±
+    pG32->ucG32Step = G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE; //è®¾ç½®G32è¿è¡Œæ­¥éª¤ä¸ºâ€œè¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’â€
+    //pG32->SPlanData.dTargetDist  = 0;  //æ’è¡¥ç»“æ„ä½“ç›®æ ‡æ’è¡¥è·ç¦»å’Œæœªæ’è¡¥è·ç¦»åˆå§‹åŒ–
+    //pG32->SPlanData.dCurLeftDist = 0;
+    pG32->ucInpStatus = INP_RUNNING; //æ’è¡¥ç»“æ„ä½“çš„çŠ¶æ€ä¸ºâ€œè¿è¡Œâ€
 
-	pG32->dSpindleSpeed = getG97AbsSpindleSpeed(&pG32->pSChannel->SSpindle);  //»ñµÃ²»Í¬Ö÷Öá±¶ÂÊÏÂµÄ×ªËÙ£¨ÔË¶¯ºó²»»á¸Ä±ä¸ÃÊıÖµ£©
+    pG32->dSpindleSpeed =
+        getG97AbsSpindleSpeed(&pG32->pSChannel->SSpindle); //è·å¾—ä¸åŒä¸»è½´å€ç‡ä¸‹çš„è½¬é€Ÿï¼ˆè¿åŠ¨åä¸ä¼šæ”¹å˜è¯¥æ•°å€¼ï¼‰
 
+    //å½“å‰æŒ‡ä»¤ä¸ºè¿ç»­G32æŒ‡ä»¤
+    if (pG32->bRepeatG32Flag)
+    {
+        //ç›´æ¥è¿›è¡Œè¿åŠ¨ï¼Œä¸ç”¨è·å–åŒæ­¥ä¿¡å·,ä¹Ÿä¸éœ€è¦è®¡ç®—ä¸»è½´å®é™…è½¬é€Ÿ
+        pG32->bSyncSignal = TRUE;
+        pG32->pSChannel->bCalculateSpindleSpeedFlag = FALSE;
+    }
 
-	//µ±Ç°Ö¸ÁîÎªÁ¬ĞøG32Ö¸Áî
-	if (pG32->bRepeatG32Flag)
-	{
-		//Ö±½Ó½øĞĞÔË¶¯£¬²»ÓÃ»ñÈ¡Í¬²½ĞÅºÅ,Ò²²»ĞèÒª¼ÆËãÖ÷ÖáÊµ¼Ê×ªËÙ
-		pG32->bSyncSignal = TRUE;
-		pG32->pSChannel->bCalculateSpindleSpeedFlag = FALSE;
+    //*********************************æ–‡æœ¬è¾“å‡ºç¬¬Nä¸ªG32èµ·çš„æ•°æ®********************************
+    if (test_dG32Time >= 0)
+    {
+        pG32->bPrintFlag = TRUE;
+    }
 
-	}
-
-	//*********************************ÎÄ±¾Êä³öµÚN¸öG32ÆğµÄÊı¾İ********************************
-	if (test_dG32Time >= 0)
-	{
-		pG32->bPrintFlag = TRUE;
-	}
-
-	test_dG32Time++;
-	//*********************************ÎÄ±¾Êä³öµÚN¸öG32ÆğµÄÊı¾İ********************************
-
-
+    test_dG32Time++;
+    //*********************************æ–‡æœ¬è¾“å‡ºç¬¬Nä¸ªG32èµ·çš„æ•°æ®********************************
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid judgeRepeatG32AndGetRealCutAngle(struct _SG32* pG32, double dDistFromSpindle)
-//  º¯Êı¹¦ÄÜ£ºÁ¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//			dDistFromSpindle     double    µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid judgeRepeatG32AndGetRealCutAngle(struct _SG32* pG32, double dDistFromSpindle)
+//  å‡½æ•°åŠŸèƒ½ï¼šè¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//			dDistFromSpindle     double    å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void judgeRepeatG32AndGetRealCutAngle(struct _SG32* pG32, double dDistFromSpindle)
 {
-	struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-	pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
+    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+    pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
 
-	//Èô"ËÙ¶È¹æ»®¶Á"Ö¸ÕëÓĞÄÚÈİ¿É¶Á
-	if (getSToolCompPointerBufRes(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum) > 0)
-	{
-		prepareRepeatG32(pG32, pSToolCompPointer, dDistFromSpindle);  //Á¬ĞøG32Ô¤´¦Àí
+    //è‹¥"é€Ÿåº¦è§„åˆ’è¯»"æŒ‡é’ˆæœ‰å†…å®¹å¯è¯»
+    if (getSToolCompPointerBufRes(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum) > 0)
+    {
+        prepareRepeatG32(pG32, pSToolCompPointer, dDistFromSpindle); //è¿ç»­G32é¢„å¤„ç†
+    }
 
-	}
+    pG32->bAccPhaseFlag = FALSE; //åŠ é€Ÿé˜¶æ®µæ ‡å¿—ä½åˆå§‹åŒ–
+    //ä¸ä¸ºè¿ç»­G32æŒ‡ä»¤
+    if (!pG32->bRepeatG32Flag)
+    {
+        //è¿è¡Œæ¨¡å¼ä¸ºï¼šä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼
+        if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE &&
+            pG32->ucG32SubMode != 4) //å½“ä¸ä¸ºG32.4ä¸”ä¸ºä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼æ‰é‡æ–°è®¡ç®—åˆ‡å…¥è§’	é™ˆæ•èª 2023/6/15
+        {
+            pG32->dQ = getRealTargetPulse(pG32); //è®¡ç®—çœŸæ­£çš„èµ·å§‹åˆ‡å…¥è§’
+            pG32->bAccPhaseFlag = TRUE;
+        }
 
-	pG32->bAccPhaseFlag = FALSE;  //¼ÓËÙ½×¶Î±êÖ¾Î»³õÊ¼»¯
-	//²»ÎªÁ¬ĞøG32Ö¸Áî
-	if (!pG32->bRepeatG32Flag)
-	{
-		//ÔËĞĞÄ£Ê½Îª£ºÖ÷Öá²»ÍêÈ«¸úËæÄ£Ê½
-		if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE && pG32->ucG32SubMode != 4)	//µ±²»ÎªG32.4ÇÒÎªÖ÷Öá²»ÍêÈ«¸úËæÄ£Ê½²ÅÖØĞÂ¼ÆËãÇĞÈë½Ç	³ÂÃô´Ï 2023/6/15
-		{
-			pG32->dQ = getRealTargetPulse(pG32); //¼ÆËãÕæÕıµÄÆğÊ¼ÇĞÈë½Ç
-			pG32->bAccPhaseFlag = TRUE;
-
-		}
-
-		pG32->ucG32Step = G32_GET_SYNCSIGN; //ÅĞ¶ÏÊÇ·ñ»ñÈ¡Í¬²½ĞÅºÅ
-
-	}
-	else
-	{
-		pG32->ucG32Step = G32_RUNNING;      //ÔËĞĞ
-
-	}
-
+        pG32->ucG32Step = G32_GET_SYNCSIGN; //åˆ¤æ–­æ˜¯å¦è·å–åŒæ­¥ä¿¡å·
+    }
+    else
+    {
+        pG32->ucG32Step = G32_RUNNING; //è¿è¡Œ
+    }
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid judgeSyncSignalAndCompensate(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£ºÅĞ¶ÏÊÇ·ñ»ñµÃÍ¬²½ĞÅºÅºÍ²¹³¥Æô¶¯Æ«²î
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë		
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid judgeSyncSignalAndCompensate(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šåˆ¤æ–­æ˜¯å¦è·å¾—åŒæ­¥ä¿¡å·å’Œè¡¥å¿å¯åŠ¨åå·®
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void judgeSyncSignalAndCompensate(struct _SG32* pG32)
 {
-	double dPulseQ;  //ÆğÊ¼ÇĞÈë½ÇµÄÂö³å±íÊ¾ĞÎÊ½
-	struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
-	if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE)  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½
-	{
-		dPulseQ = pG32->dQ;  //¼ÆËãÕæÕıµÄÆğÊ¼ÇĞÈë½ÇµÄ²½Öè£¬ÒÔ½«Æä×ª»»ÎªÂö³å±íÊ¾ĞÎÊ½
+    double dPulseQ; //èµ·å§‹åˆ‡å…¥è§’çš„è„‰å†²è¡¨ç¤ºå½¢å¼
+    struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+    if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE) //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼
+    {
+        dPulseQ = pG32->dQ; //è®¡ç®—çœŸæ­£çš„èµ·å§‹åˆ‡å…¥è§’çš„æ­¥éª¤ï¼Œä»¥å°†å…¶è½¬æ¢ä¸ºè„‰å†²è¡¨ç¤ºå½¢å¼
+    }
+    else //ä¸»è½´å®Œå…¨è·Ÿéšæ¨¡å¼
+    {
+        dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum; //è½¬æ¢ä¸ºè„‰å†²è¡¨ç¤ºå½¢å¼
+    }
 
-	}
-	else   //Ö÷ÖáÍêÈ«¸úËæÄ£Ê½
-	{
-		dPulseQ = (pG32->dQ / 360000.0) * pSSpindleEncoder->usEncoderCirclePulseNum;  //×ª»»ÎªÂö³å±íÊ¾ĞÎÊ½
-	}
+    //dPulseQ += getMoveLagComp(pG32->pSChannel, pG32->dF, pG32->ucAxis[0], nLongAxisLogValue);
+    //dPulseQ = surplusDoubleData(dPulseQ, pSSpindleEncoder->usEncoderCirclePulseNum);
+    pG32->bSyncSignal = isGetSyncSignal(dPulseQ, pG32->pSChannel,
+                                        pSSpindleEncoder); //åˆ¤æ–­æ˜¯å¦è·å¾—åŒæ­¥ä¿¡å·ï¼Œå¹¶åœ¨è·å–åŒæ­¥ä¿¡å·æ—¶è®°å½•å¯åŠ¨åå·®
 
-	//dPulseQ += getMoveLagComp(pG32->pSChannel, pG32->dF, pG32->ucAxis[0], nLongAxisLogValue);
-	//dPulseQ = surplusDoubleData(dPulseQ, pSSpindleEncoder->usEncoderCirclePulseNum);
-	pG32->bSyncSignal = isGetSyncSignal(dPulseQ, pG32->pSChannel, pSSpindleEncoder);  //ÅĞ¶ÏÊÇ·ñ»ñµÃÍ¬²½ĞÅºÅ£¬²¢ÔÚ»ñÈ¡Í¬²½ĞÅºÅÊ±¼ÇÂ¼Æô¶¯Æ«²î
+    //è·å¾—åŒæ­¥ä¿¡å·
+    if (pG32->bSyncSignal)
+    {
+        if (pG32->ucG32SubMode == 4) //å¦‚æœæ˜¯G32.4ï¼Œè·å–åˆ°åŒæ­¥ä¿¡å·åå°±ç»“æŸè¿è¡Œ	é™ˆæ•èª	2023/6/15
+        {
+            pG32->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+            pG32->pSChannel->SPreProcess.ucInpStatus = INP_FINISHED;
+            pG32->ucG32Step = G32_OCCUPATION; //è¿è¡Œæ­¥éª¤åˆå§‹åŒ–
+            g_dTime = 0;                      //G32è¿è¡Œæ¬¡æ•°ï¼ˆæµ‹è¯•ï¼‰
 
-	//»ñµÃÍ¬²½ĞÅºÅ
-	if (pG32->bSyncSignal)
-	{
-		if (pG32->ucG32SubMode == 4)	//Èç¹ûÊÇG32.4£¬»ñÈ¡µ½Í¬²½ĞÅºÅºó¾Í½áÊøÔËĞĞ	³ÂÃô´Ï	2023/6/15
-		{
-			pG32->ucInpStatus = INP_FINISHED;           //×´Ì¬¸Ä±äÎªFINISHED
-			pG32->pSChannel->SPreProcess.ucInpStatus = INP_FINISHED;
-			pG32->ucG32Step = G32_OCCUPATION;           //ÔËĞĞ²½Öè³õÊ¼»¯
-			g_dTime = 0;                                //G32ÔËĞĞ´ÎÊı£¨²âÊÔ£©
+            if (pG32->SExcessPlanForG32 != NULL)
+            {
+                free(pG32->SExcessPlanForG32); //é‡Šæ”¾çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°æŒ‡é’ˆ
+                pG32->SExcessPlanForG32 = NULL;
+            }
+        }
+        else
+        {
+            if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE) //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼
+            {
+                pG32->ucG32Step = G32_IFM_COMPENSATE; //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
+            }
+            else //ä¸»è½´å®Œå…¨è·Ÿéšæ¨¡å¼
+            {
 
-			if (pG32->SExcessPlanForG32 != NULL)
-			{
-				free(pG32->SExcessPlanForG32);        //ÊÍ·Å¶ÌÖáËÙ¶È¹æ»®²ÎÊıÖ¸Õë
-				pG32->SExcessPlanForG32 = NULL;
-			}
-		}
-		else
-		{
-			if (g_SSystemPara.ThreadCutMode == INCOMPLETE_FOLLOW_MODE)  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½
-			{
-				pG32->ucG32Step = G32_IFM_COMPENSATE;  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
-			}
-			else  //Ö÷ÖáÍêÈ«¸úËæÄ£Ê½
-			{
-
-				//Èç¹ûÎªÖ÷ÖáÍêÈ«¸úËæÄ£Ê½£¬ÔòÖ±½Ó½«Æô¶¯Æ«²î¸³Öµ¸ø¡°Ä¿±ê¾àÀë¡±ºÍ¡°µ±Ç°ÁôÏÂÎ´ÒÆ¶¯¾àÀë¡±
-				pG32->SPlanData.dCurLeftDist = pSSpindleEncoder->dEncoderNumDeviation * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum;  //Ö÷Öá±àÂëÆ÷Î»ÖÃµÄÆ«²î
-				pG32->SPlanData.dTargetDist = pG32->SPlanData.dCurLeftDist;
-				pG32->ucG32Step = G32_RUNNING;  //ÔË¶¯²¿·Ö
-
-			}
-		}
-
-	}
-
+                //å¦‚æœä¸ºä¸»è½´å®Œå…¨è·Ÿéšæ¨¡å¼ï¼Œåˆ™ç›´æ¥å°†å¯åŠ¨åå·®èµ‹å€¼ç»™â€œç›®æ ‡è·ç¦»â€å’Œâ€œå½“å‰ç•™ä¸‹æœªç§»åŠ¨è·ç¦»â€
+                pG32->SPlanData.dCurLeftDist = pSSpindleEncoder->dEncoderNumDeviation * pG32->dF /
+                                               pSSpindleEncoder->usEncoderCirclePulseNum; //ä¸»è½´ç¼–ç å™¨ä½ç½®çš„åå·®
+                pG32->SPlanData.dTargetDist = pG32->SPlanData.dCurLeftDist;
+                pG32->ucG32Step = G32_RUNNING; //è¿åŠ¨éƒ¨åˆ†
+            }
+        }
+    }
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºuint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInterpolationPre* pSPrePointer, struct _SG32* pG32, struct SInputG32* pSInputG32)
-//  º¯Êı¹¦ÄÜ£ºÔØÈëÊäÈëµÄ²ÎÊıÖÁG32½á¹¹Ìå
-//  ÊäÈë²ÎÊı£º*pG32£¬              ½á¹¹Ìåstruct _SG32Ö¸Õë
-//            *pSToolCompPointer   ½á¹¹Ìåstruct SToolCompensationÖ¸Õë
-//			*pSPrePointer        ½á¹¹Ìåstruct SInterpolationPreÖ¸Õë
-//			*pSInputG32          ½á¹¹Ìåstruct SInputG32 Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šuint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInterpolationPre* pSPrePointer, struct _SG32* pG32, struct SInputG32* pSInputG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šè½½å…¥è¾“å…¥çš„å‚æ•°è‡³G32ç»“æ„ä½“
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ              ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//            *pSToolCompPointer   ç»“æ„ä½“struct SToolCompensationæŒ‡é’ˆ
+//			*pSPrePointer        ç»“æ„ä½“struct SInterpolationPreæŒ‡é’ˆ
+//			*pSInputG32          ç»“æ„ä½“struct SInputG32 æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
-uint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInput* pSInput, struct _SG32* pG32, struct SInputG32* pSInputG32)
+uint8 loadSG32DataFromInput(struct SToolCompensation* pSToolCompPointer, struct SInput* pSInput, struct _SG32* pG32,
+                            struct SInputG32* pSInputG32)
 {
-	bool bAssignBySys = FALSE; //ÊÇ·ñ¸ù¾İÏµÍ³²ÎÊı³õÊ¼»¯G32
+    bool bAssignBySys = FALSE; //æ˜¯å¦æ ¹æ®ç³»ç»Ÿå‚æ•°åˆå§‹åŒ–G32
 
-	if (pSToolCompPointer == NULL || pSInput == NULL)//¿ÕÖ¸Õë  ²»ÔËĞĞ
-	{
-		return -1;
-	}
+    if (pSToolCompPointer == NULL || pSInput == NULL) //ç©ºæŒ‡é’ˆ  ä¸è¿è¡Œ
+    {
+        return -1;
+    }
 
-	pG32->ucValStatus = pSInput->ucValStatus;     //ÓĞĞ§Öá
-	for (int i = 0; i < 2; i++)
-	{
-		setbit(pG32->ucValStatus, pG32->SUserData.ucAxis[i]);
-	}
-	pG32->SUserData.ucRelaVal = pSInput->ucRelaVal;  //Ïà¶ÔÖµ±êÊ¶±äÁ¿
+    pG32->ucValStatus = pSInput->ucValStatus; //æœ‰æ•ˆè½´
+    for (int i = 0; i < 2; i++)
+    {
+        setbit(pG32->ucValStatus, pG32->SUserData.ucAxis[i]);
+    }
+    pG32->SUserData.ucRelaVal = pSInput->ucRelaVal; //ç›¸å¯¹å€¼æ ‡è¯†å˜é‡
 
-	if (pSInputG32 == NULL)
-	{
-		pG32->bSysDataInitFlag = TRUE;
-		
+    if (pSInputG32 == NULL)
+    {
+        pG32->bSysDataInitFlag = TRUE;
+    }
 
-	}
+    if (pG32->bSysDataInitFlag) //æ ¹æ®ç³»ç»Ÿå‚æ•°åˆå§‹åŒ–G32
+    {
+        //èºçº¹å‚æ•°åˆå§‹åŒ–
+        pG32->SUserData.dJ = pSToolCompPointer->dJ;                     //çŸ­è½´é€€å°¾é‡
+        pG32->SUserData.dK = pSToolCompPointer->dK;                     //é•¿è½´é€€å°¾é‡
+        pG32->SUserData.dQ = pSToolCompPointer->dQ;                     //èµ·å§‹è§’
+        pG32->SUserData.dF = pSToolCompPointer->dF;                     //é•¿è½´èºçº¹å¯¼ç¨‹
+        pG32->SUserData.SEndPoint = pSToolCompPointer->SEndPoint;       //èºçº¹åˆ‡å‰Šç»ˆç‚¹
+        pG32->SUserData.SStarCutPoint = pSToolCompPointer->SStartPoint; //èºçº¹åˆ‡å‰Šç†è®ºèµ·ç‚¹
 
-	if (pG32->bSysDataInitFlag)  //¸ù¾İÏµÍ³²ÎÊı³õÊ¼»¯G32
-	{
-		//ÂİÎÆ²ÎÊı³õÊ¼»¯
-		pG32->SUserData.dJ = pSToolCompPointer->dJ;                //¶ÌÖáÍËÎ²Á¿
-		pG32->SUserData.dK = pSToolCompPointer->dK;                //³¤ÖáÍËÎ²Á¿
-		pG32->SUserData.dQ = pSToolCompPointer->dQ;                //ÆğÊ¼½Ç
-		pG32->SUserData.dF = pSToolCompPointer->dF;                //³¤ÖáÂİÎÆµ¼³Ì
-		pG32->SUserData.SEndPoint = pSToolCompPointer->SEndPoint;                //ÂİÎÆÇĞÏ÷ÖÕµã
-		pG32->SUserData.SStarCutPoint = pSToolCompPointer->SStartPoint;              //ÂİÎÆÇĞÏ÷ÀíÂÛÆğµã
+        //getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, g_ucAxisMapArray[0], &pG32->ucValStatus);  //åœ¨è¿è¡Œéƒ¨åˆ†å†ä¿®æ”¹ä¸ºå®æ—¶ç‚¹
+        //getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
+        //åœ†å¼§G32çš„å‚æ•°
+        pG32->cArcDir = pSToolCompPointer->cArcDir;
+        pG32->dRadius = pSToolCompPointer->dRadius;
+        pG32->SCenterPoint = pSToolCompPointer->SCenterPoint;
 
-		//getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, g_ucAxisMapArray[0], &pG32->ucValStatus);  //ÔÚÔËĞĞ²¿·ÖÔÙĞŞ¸ÄÎªÊµÊ±µã
-		//getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
-		//Ô²»¡G32µÄ²ÎÊı
-		pG32->cArcDir = pSToolCompPointer->cArcDir;
-		pG32->dRadius = pSToolCompPointer->dRadius;
-		pG32->SCenterPoint = pSToolCompPointer->SCenterPoint;
+        //ä»¥ä¸‹å‚æ•°å¾—åˆ¤æ–­é•¿çŸ­è½´åæ‰èƒ½åˆå§‹åŒ–ï¼Œåœ¨å‡½æ•°G32Prepare()å®ç°åˆå§‹åŒ–
+        //pG32->SUserData.dAcc = g_SSystemPara.dSysPlanTMaxAcc;  //å‰ç»åæ‰ä¼šå¢åŠ åŠ é€Ÿåº¦ï¼Œæ‰€ä»¥G32çš„åŠ é€Ÿåº¦åªèƒ½åœ¨ç³»ç»Ÿå‚æ•°æˆ–è€…å¤–éƒ¨è¾“å…¥è·å¾—
+        //pG32->SUserData.dDec = g_SSystemPara.dSysPlanTMaxDec;
+        //pG32->SUserData.dVs = g_SSystemPara.dSysMinVel;
+        //pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;
+        //pG32->SUserData.dVe = g_SSystemPara.dSysMinVel;
 
-		//ÒÔÏÂ²ÎÊıµÃÅĞ¶Ï³¤¶ÌÖáºó²ÅÄÜ³õÊ¼»¯£¬ÔÚº¯ÊıG32Prepare()ÊµÏÖ³õÊ¼»¯
-		//pG32->SUserData.dAcc = g_SSystemPara.dSysPlanTMaxAcc;  //Ç°Õ°ºó²Å»áÔö¼Ó¼ÓËÙ¶È£¬ËùÒÔG32µÄ¼ÓËÙ¶ÈÖ»ÄÜÔÚÏµÍ³²ÎÊı»òÕßÍâ²¿ÊäÈë»ñµÃ
-		//pG32->SUserData.dDec = g_SSystemPara.dSysPlanTMaxDec;
-		//pG32->SUserData.dVs = g_SSystemPara.dSysMinVel;
-		//pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;
-		//pG32->SUserData.dVe = g_SSystemPara.dSysMinVel;
+        pG32->ucG32SubMode = pSToolCompPointer->ucG32SubMode; //é™ˆæ•èª	2023/6/15å¢
+    }
+    else //æ ¹æ®ç”¨æˆ·è¾“å…¥å‚æ•°åˆå§‹åŒ–G32
+    {
 
-		pG32->ucG32SubMode = pSToolCompPointer->ucG32SubMode;	//³ÂÃô´Ï	2023/6/15Ôö
-
-	}
-	else  //¸ù¾İÓÃ»§ÊäÈë²ÎÊı³õÊ¼»¯G32
-	{
-
-		pG32->SUserData = *pSInputG32;
-
-	}
-	pG32->bG34RunFlag = pSToolCompPointer->bG34RunFlag;           //ÅĞ¶Ïµ±Ç°Ö¸ÁîÊÇ·ñÎªG34
-	pG32->bG34BackTailFlag = pSToolCompPointer->bG34BackTailFlag; //ÅĞ¶Ïµ±Ç°Ö¸ÁîG34Ö¸ÁîÊÇ·ñ´¦ÓÚÍËÎ²µÄ×´Ì¬
-	pG32->bRepeatG32Flag = pSToolCompPointer->bRepeatG32Flag;     //ÊÇ·ñÎªÁ¬ĞøG32
-	pG32->ucG32Step = G32_OCCUPATION;                             //ÂİÎÆÔËĞĞ²½Öè
-	return 1;
-
-
-
+        pG32->SUserData = *pSInputG32;
+    }
+    pG32->bG34RunFlag = pSToolCompPointer->bG34RunFlag;           //åˆ¤æ–­å½“å‰æŒ‡ä»¤æ˜¯å¦ä¸ºG34
+    pG32->bG34BackTailFlag = pSToolCompPointer->bG34BackTailFlag; //åˆ¤æ–­å½“å‰æŒ‡ä»¤G34æŒ‡ä»¤æ˜¯å¦å¤„äºé€€å°¾çš„çŠ¶æ€
+    pG32->bRepeatG32Flag = pSToolCompPointer->bRepeatG32Flag;     //æ˜¯å¦ä¸ºè¿ç»­G32
+    pG32->ucG32Step = G32_OCCUPATION;                             //èºçº¹è¿è¡Œæ­¥éª¤
+    return 1;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid processUserInputAxis(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º´¦ÀíÓÃ»§ÊäÈëµÄ²å²¹ÖáÖáºÅ
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid processUserInputAxis(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šå¤„ç†ç”¨æˆ·è¾“å…¥çš„æ’è¡¥è½´è½´å·
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void processUserInputAxis(struct _SG32* pG32)
 {
-	double dCutDisFirstAxis; 	   //ÓÃ»§²ÎÊıÊäÈëºóÖ´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿£¨´øÊ¸Á¿£©
-	double dCutDisSecondAxis;	   //ÓÃ»§²ÎÊıÊäÈëºóÖ´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿£¨´øÊ¸Á¿£©
-	uint8 ucLongAxisNum;           //ÊäÈëÓÃ»§²ÎÊıºó³¤ÖáµÄÖáºÅ
-	uint8 ucShortAxisNum;          //ÊäÈëÓÃ»§²ÎÊıºó¶ÌÖáµÄÖáºÅ
+    double dCutDisFirstAxis;  //ç”¨æˆ·å‚æ•°è¾“å…¥åæ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡ï¼ˆå¸¦çŸ¢é‡ï¼‰
+    double dCutDisSecondAxis; //ç”¨æˆ·å‚æ•°è¾“å…¥åæ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡ï¼ˆå¸¦çŸ¢é‡ï¼‰
+    uint8 ucLongAxisNum;      //è¾“å…¥ç”¨æˆ·å‚æ•°åé•¿è½´çš„è½´å·
+    uint8 ucShortAxisNum;     //è¾“å…¥ç”¨æˆ·å‚æ•°åçŸ­è½´çš„è½´å·
 
-	dCutDisFirstAxis = pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[0]] - pG32->SUserData.SStarCutPoint.dArray[pG32->SUserData.ucAxis[0]];  //»ñÈ¡Ö´ĞĞ²å²¹0ºÅÖáµÄÇĞÏ÷Á¿
-	dCutDisSecondAxis = pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[1]] - pG32->SUserData.SStarCutPoint.dArray[pG32->SUserData.ucAxis[1]];  //»ñÈ¡Ö´ĞĞ²å²¹1ºÅÖáµÄÇĞÏ÷Á¿
+    dCutDisFirstAxis = pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[0]] -
+                       pG32->SUserData.SStarCutPoint.dArray[pG32->SUserData.ucAxis[0]]; //è·å–æ‰§è¡Œæ’è¡¥0å·è½´çš„åˆ‡å‰Šé‡
+    dCutDisSecondAxis = pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[1]] -
+                        pG32->SUserData.SStarCutPoint.dArray[pG32->SUserData.ucAxis[1]]; //è·å–æ‰§è¡Œæ’è¡¥1å·è½´çš„åˆ‡å‰Šé‡
 
-	ucLongAxisNum = fabs(dCutDisFirstAxis) > fabs(dCutDisSecondAxis) ? pG32->SUserData.ucAxis[0] : pG32->SUserData.ucAxis[1];  //»ñÈ¡ÓÃ»§ÊäÈëµÄ³¤ÖáÖáºÅ
-	ucShortAxisNum = ucLongAxisNum == pG32->SUserData.ucAxis[0] ? pG32->SUserData.ucAxis[1] : pG32->SUserData.ucAxis[0];       //»ñÈ¡ÓÃ»§ÊäÈëµÄ¶ÌÖáÖáºÅ
+    ucLongAxisNum = fabs(dCutDisFirstAxis) > fabs(dCutDisSecondAxis)
+                        ? pG32->SUserData.ucAxis[0]
+                        : pG32->SUserData.ucAxis[1]; //è·å–ç”¨æˆ·è¾“å…¥çš„é•¿è½´è½´å·
+    ucShortAxisNum = ucLongAxisNum == pG32->SUserData.ucAxis[0] ? pG32->SUserData.ucAxis[1]
+                                                                : pG32->SUserData.ucAxis[0]; //è·å–ç”¨æˆ·è¾“å…¥çš„çŸ­è½´è½´å·
 
-	//ÅĞ¶ÏÓÃ»§ÊäÈëµÄ²å²¹ÖáÓëĞŞ¸ÄÇ°µÄ²å²¹ÖáÖáºÅÇé¿ö
-	for (int i = 0; i < 2; i++)
-	{
-		if (pG32->ucAxis[i] != pG32->SUserData.ucAxis[0] && pG32->ucAxis[i] != pG32->SUserData.ucAxis[1])  //Èç¹ûÓÃ»§ÊäÈëµÄ²å²¹ÖáÖáºÅ²»°üº¬¾ÉµÄ²å²¹ÖáºÅ
-		{
-			pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[i]] = pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[i]];  //Áî¸Ã¾ÉµÄ²å²¹ÖáµÄÖÕµãµÈÓÚµ±Ç°µã
+    //åˆ¤æ–­ç”¨æˆ·è¾“å…¥çš„æ’è¡¥è½´ä¸ä¿®æ”¹å‰çš„æ’è¡¥è½´è½´å·æƒ…å†µ
+    for (int i = 0; i < 2; i++)
+    {
+        if (pG32->ucAxis[i] != pG32->SUserData.ucAxis[0] &&
+            pG32->ucAxis[i] != pG32->SUserData.ucAxis[1]) //å¦‚æœç”¨æˆ·è¾“å…¥çš„æ’è¡¥è½´è½´å·ä¸åŒ…å«æ—§çš„æ’è¡¥è½´å·
+        {
+            pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[i]] =
+                pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[i]]; //ä»¤è¯¥æ—§çš„æ’è¡¥è½´çš„ç»ˆç‚¹ç­‰äºå½“å‰ç‚¹
+        }
+    }
 
-		}
-
-
-	}
-
-	//Èô²å²¹ÖáµÄ³¤ÖáÖáºÅ·¢Éú¸Ä±ä
-	if (pG32->SUserData.ucAxis[0] != ucLongAxisNum)
-	{
-		if (pG32->SUserData.ucAxis[0] == ucShortAxisNum)  //²å²¹Öá³¤ÖáÖáºÅÎªÔ­ÏÈµÄ¶ÌÖá
-		{
-			pG32->dCurrentSpeed = pG32->dCurrentSpeed * fabs(pG32->dRatioXZ);  //ÓÉÓÚĞÂµÄ¹æ»®µÄ³¤ÖáÎªÔ­ÏÈ¹æ»®µÄ¶ÌÖá£¬ËùÒÔ¹æ»®ÖĞµ±Ç°ËÙ¶ÈÓ¦¸Ã¸üĞÂÎªÔ­ÏÈ¶ÌÖáµÄËÙ¶È
-
-		}
-		else  //²å²¹Öá³¤ÖáÖáºÅ²»µÈÓÚÔ­ÏÈµÄÈÎÒâÒ»¸ö²å²¹Öá
-		{
-			pG32->dCurrentSpeed = 0;
-
-		}
-
-	}
-
-
+    //è‹¥æ’è¡¥è½´çš„é•¿è½´è½´å·å‘ç”Ÿæ”¹å˜
+    if (pG32->SUserData.ucAxis[0] != ucLongAxisNum)
+    {
+        if (pG32->SUserData.ucAxis[0] == ucShortAxisNum) //æ’è¡¥è½´é•¿è½´è½´å·ä¸ºåŸå…ˆçš„çŸ­è½´
+        {
+            pG32->dCurrentSpeed =
+                pG32->dCurrentSpeed *
+                fabs(pG32->dRatioXZ); //ç”±äºæ–°çš„è§„åˆ’çš„é•¿è½´ä¸ºåŸå…ˆè§„åˆ’çš„çŸ­è½´ï¼Œæ‰€ä»¥è§„åˆ’ä¸­å½“å‰é€Ÿåº¦åº”è¯¥æ›´æ–°ä¸ºåŸå…ˆçŸ­è½´çš„é€Ÿåº¦
+        }
+        else //æ’è¡¥è½´é•¿è½´è½´å·ä¸ç­‰äºåŸå…ˆçš„ä»»æ„ä¸€ä¸ªæ’è¡¥è½´
+        {
+            pG32->dCurrentSpeed = 0;
+        }
+    }
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid getInputParameter(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º»ñÈ¡ÊäÈë²ÎÊı
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid getInputParameter(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šè·å–è¾“å…¥å‚æ•°
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 int8 getInputParameter(struct _SG32* pG32)
 {
-	const uint8* ucMapArray = pG32->pSChannel->pMapAxisArray;//Ó³Éä
+    const uint8* ucMapArray = pG32->pSChannel->pMapAxisArray; //æ˜ å°„
 
-	pG32->SPlanData.dTc = g_SSystemPara.dInterpolationTime;  //»ñÈ¡²å²¹ÖÜÆÚ
+    pG32->SPlanData.dTc = g_SSystemPara.dInterpolationTime; //è·å–æ’è¡¥å‘¨æœŸ
 
-	//ÅĞ¶ÏÏà¶Ô×ø±ê  ĞŞÕıÖÕµã
-	if (pG32->SUserData.ucRelaVal != VAL_ABS_POINT)//²»ÍêÈ«ÊÇ¾ø¶Ô×ø±ê
-	{
-		modifyRelaEndPoint((double*)&pG32->SUserData.SStarCutPoint, (double*)&pG32->SUserData.SEndPoint, ucMapArray, AXIS_NUM_MAX, &pG32->SUserData.ucRelaVal);
-	}
-	//»ñÈ¡µ±Ç°×ø±ê×÷ÎªÆğµã
-	getRealTimePoint((double*)&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
+    //åˆ¤æ–­ç›¸å¯¹åæ ‡  ä¿®æ­£ç»ˆç‚¹
+    if (pG32->SUserData.ucRelaVal != VAL_ABS_POINT) //ä¸å®Œå…¨æ˜¯ç»å¯¹åæ ‡
+    {
+        modifyRelaEndPoint((double*)&pG32->SUserData.SStarCutPoint, (double*)&pG32->SUserData.SEndPoint, ucMapArray,
+                           AXIS_NUM_MAX, &pG32->SUserData.ucRelaVal);
+    }
+    //è·å–å½“å‰åæ ‡ä½œä¸ºèµ·ç‚¹
+    getRealTimePoint((double*)&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                     &pG32->ucValStatus);
 
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-	if (pG32->pSChannel->bUseVirtualY == TRUE)
-	{
-		if(VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
-		{
-			double dY1Mach = 0;
-			getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, ucMapArray);//µ±Ç°Y1ÖáµÄÎ»ÖÃ
-			pG32->SUserData.SStarCutPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1;
-			//pG32->SUserData.SStarCutPoint.dArray[AXIS_X] -= (round(1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1 * g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].usMmToPulse) / (double)g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].usMmToPulse);
-		}
-		if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
-		{
-			pG32->SUserData.SStarCutPoint.dArray[AXIS_Y] = pG32->SUserData.SStarCutPoint.dArray[AXIS_Y] * pG32->pSChannel->dCOSAngleYY1;
-		}
-	}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+    if (pG32->pSChannel->bUseVirtualY == TRUE)
+    {
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
+        {
+            double dY1Mach = 0;
+            getSingleAxisRealTimePoint(&dY1Mach, AXIS_Y, ucMapArray); //å½“å‰Y1è½´çš„ä½ç½®
+            pG32->SUserData.SStarCutPoint.dArray[AXIS_X] -= 1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1;
+            //pG32->SUserData.SStarCutPoint.dArray[AXIS_X] -= (round(1.0 * dY1Mach * pG32->pSChannel->dSINAngleYY1 * g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].usMmToPulse) / (double)g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].usMmToPulse);
+        }
+        if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
+        {
+            pG32->SUserData.SStarCutPoint.dArray[AXIS_Y] =
+                pG32->SUserData.SStarCutPoint.dArray[AXIS_Y] * pG32->pSChannel->dCOSAngleYY1;
+        }
+    }
 #endif
-	//³õÊ¼»¯²å²¹²ÎÊı
-	pG32->SPlanData.dTargetDist = 0;
-	pG32->SPlanData.dCurLeftDist = 0;
-	pG32->SPlanData.dPreDist = 0;
-	pG32->SPlanData.dDistance = 0;
-	pG32->SPlanData.unCurrentT = 0;
+    //åˆå§‹åŒ–æ’è¡¥å‚æ•°
+    pG32->SPlanData.dTargetDist = 0;
+    pG32->SPlanData.dCurLeftDist = 0;
+    pG32->SPlanData.dPreDist = 0;
+    pG32->SPlanData.dDistance = 0;
+    pG32->SPlanData.unCurrentT = 0;
 
-	pG32->dJ = pG32->SUserData.dJ;	//¶ÌÖáÍËÎ²Á¿
-	pG32->dK = pG32->SUserData.dK;  //³¤ÖáÍËÎ²Á¿
-	pG32->dQ = pG32->SUserData.dQ;  //ÆğÊ¼½Ç
-	pG32->dF = pG32->SUserData.dF;  //³¤ÖáÂİÎÆµ¼³Ì
+    pG32->dJ = pG32->SUserData.dJ; //çŸ­è½´é€€å°¾é‡
+    pG32->dK = pG32->SUserData.dK; //é•¿è½´é€€å°¾é‡
+    pG32->dQ = pG32->SUserData.dQ; //èµ·å§‹è§’
+    pG32->dF = pG32->SUserData.dF; //é•¿è½´èºçº¹å¯¼ç¨‹
 
-	pG32->SStarCutPoint = pG32->SUserData.SStarCutPoint;  //ÇĞÏ÷Æğµã
-	pG32->SLastEndPoint = pG32->SEndPoint;                //ÉÏÒ»´ÎG32µÄÖÕµã£¬ÓÃÓÚ¼ÆËã±ä×¶¶ÈÂİÎÆÊ±£¬±£Ö¤¼ÆËã×¶¶ÈµÄÆğÊ¼Í³Ò»¡£
-	pG32->SEndPoint = pG32->SUserData.SEndPoint;          //ÖÕµã
-	pG32->ucAxis[0] = pG32->SUserData.ucAxis[0];
-	pG32->ucAxis[1] = pG32->SUserData.ucAxis[1];
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		pG32->SStartVector.dArray[i] = 0;  //³õÊ¼»¯G32²å²¹ÏòÁ¿
-	}
+    pG32->SStarCutPoint = pG32->SUserData.SStarCutPoint; //åˆ‡å‰Šèµ·ç‚¹
+    pG32->SLastEndPoint = pG32->SEndPoint;       //ä¸Šä¸€æ¬¡G32çš„ç»ˆç‚¹ï¼Œç”¨äºè®¡ç®—å˜é”¥åº¦èºçº¹æ—¶ï¼Œä¿è¯è®¡ç®—é”¥åº¦çš„èµ·å§‹ç»Ÿä¸€ã€‚
+    pG32->SEndPoint = pG32->SUserData.SEndPoint; //ç»ˆç‚¹
+    pG32->ucAxis[0] = pG32->SUserData.ucAxis[0];
+    pG32->ucAxis[1] = pG32->SUserData.ucAxis[1];
+    for (int i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        pG32->SStartVector.dArray[i] = 0; //åˆå§‹åŒ–G32æ’è¡¥å‘é‡
+    }
 
-	// //µ±M30Ğ´ÔÚG32ÏÂÒ»ĞĞÊ±£¬ÓÉÓÚG32ÊÇÄ£Ì¬Á¿ËùÒÔM30ĞĞ»áÓĞG32£¬µ«ÓÉÓÚF²»ÊÇÄ£Ì¬Á¿£¬ËùÒÔFÎª0£¬¼´F = 0Ê±Ä¬ÈÏG32ÎŞĞ§  //×¢ÊÍM30²»»á½øÈëG32Ö¸Áî
-	// if (isZero(pG32->dF))
-	// {
-	// 	pG32->SEndPoint = pG32->SStarCutPoint;
-	// }
-	return 1;
+    // //å½“M30å†™åœ¨G32ä¸‹ä¸€è¡Œæ—¶ï¼Œç”±äºG32æ˜¯æ¨¡æ€é‡æ‰€ä»¥M30è¡Œä¼šæœ‰G32ï¼Œä½†ç”±äºFä¸æ˜¯æ¨¡æ€é‡ï¼Œæ‰€ä»¥Fä¸º0ï¼Œå³F = 0æ—¶é»˜è®¤G32æ— æ•ˆ  //æ³¨é‡ŠM30ä¸ä¼šè¿›å…¥G32æŒ‡ä»¤
+    // if (isZero(pG32->dF))
+    // {
+    // 	pG32->SEndPoint = pG32->SStarCutPoint;
+    // }
+    return 1;
 }
 
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint8 calculateExactPointForG32(double* pdTargetPoint, double dDeltaL, struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£º»ñÈ¡ÊäÈë²ÎÊı
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//            dDeltaL   doubleÀàĞÍÊı¾İ  ÔË¶¯ÔöÁ¿£¨¾ø¶ÔÖµ£©
-//  Êä³ö²ÎÊı£º*pdTargetPoint£¬   doubleÀàĞÍÖ¸Õë
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼šint8 calculateExactPointForG32(double* pdTargetPoint, double dDeltaL, struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šè·å–è¾“å…¥å‚æ•°
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//            dDeltaL   doubleç±»å‹æ•°æ®  è¿åŠ¨å¢é‡ï¼ˆç»å¯¹å€¼ï¼‰
+//  è¾“å‡ºå‚æ•°ï¼š*pdTargetPointï¼Œ   doubleç±»å‹æŒ‡é’ˆ
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 int8 calculateExactPointForG32(double* pdTargetPoint, double dDeltaL, struct _SG32* pG32)
 {
-	SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
 
-	if (pG32 == NULL)
-	{
-		return -1;
-	}
+    if (pG32 == NULL)
+    {
+        return -1;
+    }
 
-	SStartPoint = pG32->SStarCutPoint;	//Æğµã£¬µ¥Î»£ºmm
+    SStartPoint = pG32->SStarCutPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
 
-	//¼ÆËã¸÷¸öÖáµÄ¾ø¶Ô×ø±ê
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		pdTargetPoint[i] = SStartPoint.dArray[i] + pG32->SStartVector.dArray[i] * dDeltaL;
-	}
+    //è®¡ç®—å„ä¸ªè½´çš„ç»å¯¹åæ ‡
+    for (int i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        pdTargetPoint[i] = SStartPoint.dArray[i] + pG32->SStartVector.dArray[i] * dDeltaL;
+    }
 
-	return 1;
-
+    return 1;
 }
 
-
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºvoid UserInput(struct _SG32* pG32)
-//  º¯Êı¹¦ÄÜ£ºÓÃÓÚÊäÈë²ÎÊı£¨²âÊÔÓÃ£©
-//  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-//  Êä³ö²ÎÊı£ºÎŞ
-//  ·µ »Ø Öµ£ºÎŞ
-//  ±¸    ×¢£ºÎŞ
+//  å‡½æ•°åç§°ï¼švoid UserInput(struct _SG32* pG32)
+//  å‡½æ•°åŠŸèƒ½ï¼šç”¨äºè¾“å…¥å‚æ•°ï¼ˆæµ‹è¯•ç”¨ï¼‰
+//  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+//  è¾“å‡ºå‚æ•°ï¼šæ— 
+//  è¿” å› å€¼ï¼šæ— 
+//  å¤‡    æ³¨ï¼šæ— 
 //**************************************************/
 void UserInput(struct _SG32* pG32)
 {
-	//ÓÃ»§ÊäÈë²ÎÊı
-	pG32->SUserData.dJ = 0;              //¶ÌÖáÍËÎ²Á¿
-	pG32->SUserData.dK = 0;              //³¤ÖáÍËÎ²Á¿
-	pG32->SUserData.dQ = 0;              //ÆğÊ¼½Ç
-	pG32->SUserData.dF = 3;              //³¤ÖáÂİÎÆµ¼³Ì
+    //ç”¨æˆ·è¾“å…¥å‚æ•°
+    pG32->SUserData.dJ = 0; //çŸ­è½´é€€å°¾é‡
+    pG32->SUserData.dK = 0; //é•¿è½´é€€å°¾é‡
+    pG32->SUserData.dQ = 0; //èµ·å§‹è§’
+    pG32->SUserData.dF = 3; //é•¿è½´èºçº¹å¯¼ç¨‹
 
-	pG32->SUserData.ucAxis[0] = AXIS_Z;
-	pG32->SUserData.ucAxis[1] = AXIS_X;
-	//pG32->SUserData.ucAxis[0] = AXIS_Y;
-	//pG32->SUserData.ucAxis[1] = AXIS_Z;
+    pG32->SUserData.ucAxis[0] = AXIS_Z;
+    pG32->SUserData.ucAxis[1] = AXIS_X;
+    //pG32->SUserData.ucAxis[0] = AXIS_Y;
+    //pG32->SUserData.ucAxis[1] = AXIS_Z;
 
-	pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[0]] = 50;   //ÂİÎÆÇĞÏ÷ÖÕµã
-	pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[1]] = 20;
+    pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[0]] = 50; //èºçº¹åˆ‡å‰Šç»ˆç‚¹
+    pG32->SUserData.SEndPoint.dArray[pG32->SUserData.ucAxis[1]] = 20;
 
-	pG32->SUserData.dAcc = g_SSystemPara.dSysPlanTMaxAcc;   //¼ÓËÙ¶È
-	pG32->SUserData.dDec = g_SSystemPara.dSysPlanTMaxDec;   //¼õËÙ¶È
-	pG32->SUserData.dVs = g_SSystemPara.dSysMinVel;         //ÆğÊ¼ËÙ¶È
-	pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;       //×î´óËÙ¶È
-	pG32->SUserData.dVe = g_SSystemPara.dSysMinVel;         //×îĞ¡ËÙ¶È
-	pG32->SUserData.ucUserInputState = USER_INPUT;          //ÓÃ»§ÊäÈë×´Ì¬ÖÃÎªÓÃ»§ÒÑÊäÈë
-
+    pG32->SUserData.dAcc = g_SSystemPara.dSysPlanTMaxAcc; //åŠ é€Ÿåº¦
+    pG32->SUserData.dDec = g_SSystemPara.dSysPlanTMaxDec; //å‡é€Ÿåº¦
+    pG32->SUserData.dVs = g_SSystemPara.dSysMinVel;       //èµ·å§‹é€Ÿåº¦
+    pG32->SUserData.dVmax = g_SSystemPara.dSysMaxVel;     //æœ€å¤§é€Ÿåº¦
+    pG32->SUserData.dVe = g_SSystemPara.dSysMinVel;       //æœ€å°é€Ÿåº¦
+    pG32->SUserData.ucUserInputState = USER_INPUT;        //ç”¨æˆ·è¾“å…¥çŠ¶æ€ç½®ä¸ºç”¨æˆ·å·²è¾“å…¥
 }
-
 
 int8 processUserInput(struct _SG32* pG32)
 {
-	//ÅĞ¶ÏÊÇ·ñĞèÒªÌí¼ÓÓĞĞ§ÖáºÅ
-	for (int i = 0; i < 2; i++)
-	{
-		if (pG32->SUserData.ucAxis[i] != pG32->ucAxis[0] && pG32->SUserData.ucAxis[i] != pG32->ucAxis[1])
-		{
-			setbit(pG32->ucValStatus, pG32->SUserData.ucAxis[i]);  //ÈôĞŞ¸ÄÁË²å²¹Öá£¬ÔòÍêÉÆÓĞĞ§ÖáºÅ
-		}
+    //åˆ¤æ–­æ˜¯å¦éœ€è¦æ·»åŠ æœ‰æ•ˆè½´å·
+    for (int i = 0; i < 2; i++)
+    {
+        if (pG32->SUserData.ucAxis[i] != pG32->ucAxis[0] && pG32->SUserData.ucAxis[i] != pG32->ucAxis[1])
+        {
+            setbit(pG32->ucValStatus, pG32->SUserData.ucAxis[i]); //è‹¥ä¿®æ”¹äº†æ’è¡¥è½´ï¼Œåˆ™å®Œå–„æœ‰æ•ˆè½´å·
+        }
+    }
+    getRealTimePoint((double*)&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                     &pG32->ucValStatus);
+    //getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, g_ucAxisMapArray[0], &pG32->ucValStatus);  //ä»¥å½“å‰ç‚¹ä½œä¸ºåˆ‡å‰Šèµ·ç‚¹
 
-	}
-	getRealTimePoint((double*)&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
-	//getRealTimePoint(&pG32->SUserData.SStarCutPoint, AXIS_NUM_MAX, g_ucAxisMapArray[0], &pG32->ucValStatus);  //ÒÔµ±Ç°µã×÷ÎªÇĞÏ÷Æğµã
+    //******************************ç”¨æˆ·è¾“å…¥å‚æ•°é”™è¯¯æ£€æŸ¥************************************************
+    if (pG32->SUserData.ucAxis[0] == pG32->SUserData.ucAxis[1]) //å¦‚æœç”¨æˆ·è¾“å…¥çš„ä¸¤è½´è½´å·ç›¸åŒ
+    {
+        pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[0]] = pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[0]];
+        pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[1]] = pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[1]];
+        //pG32->dCurrentSpeed = 0;
+        return -1; //è·å–å‚æ•°å¤±è´¥
+    }
 
-	//******************************ÓÃ»§ÊäÈë²ÎÊı´íÎó¼ì²é************************************************
-	if (pG32->SUserData.ucAxis[0] == pG32->SUserData.ucAxis[1])  //Èç¹ûÓÃ»§ÊäÈëµÄÁ½ÖáÖáºÅÏàÍ¬
-	{
-		pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[0]] = pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[0]];
-		pG32->SUserData.SEndPoint.dArray[pG32->ucAxis[1]] = pG32->SUserData.SStarCutPoint.dArray[pG32->ucAxis[1]];
-		//pG32->dCurrentSpeed = 0;
-		return -1;  //»ñÈ¡²ÎÊıÊ§°Ü
-	}
+    if (pG32->SUserData.dK < 0 || pG32->SUserData.dF < 0 || pG32->SUserData.dQ < 0)
+    {
+        return -1; //è·å–å‚æ•°å¤±è´¥
+    }
+    //******************************ç”¨æˆ·è¾“å…¥å‚æ•°é”™è¯¯æ£€æŸ¥************************************************
 
-	
-	if (pG32->SUserData.dK < 0 || pG32->SUserData.dF < 0 || pG32->SUserData.dQ < 0)
-	{
-		return -1;  //»ñÈ¡²ÎÊıÊ§°Ü
+    //å¤„ç†ç”¨æˆ·è¾“å…¥è½´
+    processUserInputAxis(pG32);
 
-	}
-	//******************************ÓÃ»§ÊäÈë²ÎÊı´íÎó¼ì²é************************************************
+    pG32->SUserData.ucUserInputState = FINSH_CHECK; //å®Œæˆç”¨æˆ·è¾“å…¥å‚æ•°çš„èµ‹å€¼
 
-
-
-	//´¦ÀíÓÃ»§ÊäÈëÖá
-	processUserInputAxis(pG32);
-
-	pG32->SUserData.ucUserInputState = FINSH_CHECK;   //Íê³ÉÓÃ»§ÊäÈë²ÎÊıµÄ¸³Öµ
-
-	if (!pG32->bSyncSignal)  //ÈôÓÃ»§ÊäÈë²ÎÊıÊ±£¬Ö®Ç°µÄG32»¹Î´Æô¶¯
-	{
-		pG32->SUserData.ucUserInputState = FINSH_CHECK_SYSNCSIGNAL;  //ÓÃ»§²ÎÊıÊäÈë×´Ì¬ÖÃÎªÍê³É¸³Öµ£¬µ«ĞèÒª¼ÆËãĞÂµÄÍ¬²½ĞÅºÅ
-
-	}
-	return 1;
-
-
+    if (!pG32->bSyncSignal) //è‹¥ç”¨æˆ·è¾“å…¥å‚æ•°æ—¶ï¼Œä¹‹å‰çš„G32è¿˜æœªå¯åŠ¨
+    {
+        pG32->SUserData.ucUserInputState =
+            FINSH_CHECK_SYSNCSIGNAL; //ç”¨æˆ·å‚æ•°è¾“å…¥çŠ¶æ€ç½®ä¸ºå®Œæˆèµ‹å€¼ï¼Œä½†éœ€è¦è®¡ç®—æ–°çš„åŒæ­¥ä¿¡å·
+    }
+    return 1;
 }
 
 //double calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos)
 //{
-//	//Ô²µÄ·½³ÌÎªx^2 + y^2 + D*x + E*y + F = 0
+//	//åœ†çš„æ–¹ç¨‹ä¸ºx^2 + y^2 + D*x + E*y + F = 0
 //	// D = -2a;
 //	// E = -2b;
-//	// F = a^2 + b^2 -R^2  Ô²ĞÄ×ø±ê£¨a, b£©£¬°ë¾¶R
-//	//ÆäÖĞxÍ³Ò»Îª¶ÌÖáµÄÖáºÅ£¬ yÎª³¤ÖáµÄÖáºÅ
-//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
-//	uint8 ucShortAxisNum = pG32->ucAxis[1];  //¶ÌÖáÖáºÅ
+//	// F = a^2 + b^2 -R^2  åœ†å¿ƒåæ ‡ï¼ˆa, bï¼‰ï¼ŒåŠå¾„R
+//	//å…¶ä¸­xç»Ÿä¸€ä¸ºçŸ­è½´çš„è½´å·ï¼Œ yä¸ºé•¿è½´çš„è½´å·
+//	uint8 ucLongAxisNum = pG32->ucAxis[0];  //é•¿è½´è½´å·
+//	uint8 ucShortAxisNum = pG32->ucAxis[1];  //çŸ­è½´è½´å·
 //	double dA = pG32->SCenterPoint.dArray[ucShortAxisNum];
 //	double dB = pG32->SCenterPoint.dArray[ucLongAxisNum];
 //	double dR = pG32->dRadius;
@@ -2440,7 +2437,7 @@ int8 processUserInput(struct _SG32* pG32)
 //	double dX2;
 //	double dAnswer;
 //
-//	//Ô²µÄ·½³Ì¿ÉÕûÀíÎª x^2 + Dx + y^2 + E*y + F = 0  µÈ¼ÛÓÚ x^2 + Dx + C = 0
+//	//åœ†çš„æ–¹ç¨‹å¯æ•´ç†ä¸º x^2 + Dx + y^2 + E*y + F = 0  ç­‰ä»·äº x^2 + Dx + C = 0
 //	double dC = dY * dY + dE * dY + dF;
 //
 //	dX1 = (-dD / 2) + sqrt((dD * dD / 4) - dC);
@@ -2451,7 +2448,7 @@ int8 processUserInput(struct _SG32* pG32)
 //	dX2 = dX2 >= 0 ? dX2 : 0;*/
 //
 //
-//	if (pG32->cArcDir == ARC_CW)  //ÎªË³Ê±ÕëÔ²»¡
+//	if (pG32->cArcDir == ARC_CW)  //ä¸ºé¡ºæ—¶é’ˆåœ†å¼§
 //	{
 //		return dX1 > dX2 ? dX2 : dX1;
 //
@@ -2483,189 +2480,179 @@ int8 processUserInput(struct _SG32* pG32)
 //
 //}
 ///*************************************************
-//  º¯ÊıÃû³Æ£ºint8 calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos, double* pShortAxisPos)
-//  º¯Êı¹¦ÄÜ£º¼ÆËãG32Ô²»¡²å²¹¶ÌÖáÎ»ÖÃ£¬Ôö¼ÓÅĞ±ğÊ½±£»¤
-//  ÊäÈë²ÎÊı£º*pG32: G32½á¹¹ÌåÖ¸Õë
-//            dLongAxisPos: ³¤Öáµ±Ç°Î»ÖÃ
-//            *pShortAxisPos: Êä³ö²ÎÊı£¬¼ÆËãµÃµ½µÄ¶ÌÖáÎ»ÖÃ
-//  ·µ»ØÖµ£º 1: ³É¹¦
-//          -1: Ê§°Ü (ÅĞ±ğÊ½Ğ¡ÓÚ-EPS£¬ÎŞÊµÊı½â)
-//  ±¸×¢£º    
+//  å‡½æ•°åç§°ï¼šint8 calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos, double* pShortAxisPos)
+//  å‡½æ•°åŠŸèƒ½ï¼šè®¡ç®—G32åœ†å¼§æ’è¡¥çŸ­è½´ä½ç½®ï¼Œå¢åŠ åˆ¤åˆ«å¼ä¿æŠ¤
+//  è¾“å…¥å‚æ•°ï¼š*pG32: G32ç»“æ„ä½“æŒ‡é’ˆ
+//            dLongAxisPos: é•¿è½´å½“å‰ä½ç½®
+//            *pShortAxisPos: è¾“å‡ºå‚æ•°ï¼Œè®¡ç®—å¾—åˆ°çš„çŸ­è½´ä½ç½®
+//  è¿”å›å€¼ï¼š 1: æˆåŠŸ
+//          -1: å¤±è´¥ (åˆ¤åˆ«å¼å°äº-EPSï¼Œæ— å®æ•°è§£)
+//  å¤‡æ³¨ï¼š
 ///**************************************************/
-int8 calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos,double* pShortAxisPos)
+int8 calcArcG32ShortAxisPos(struct _SG32* pG32, double dLongAxisPos, double* pShortAxisPos)
 {
-	//Ô²µÄ·½³ÌÎªx^2 + y^2 + D*x + E*y + F = 0
-	// D = -2a;
-	// E = -2b;
-	// F = a^2 + b^2 -R^2  Ô²ĞÄ×ø±ê£¨a, b£©£¬°ë¾¶R
-	//ÆäÖĞxÍ³Ò»Îª¶ÌÖáµÄÖáºÅ£¬ yÎª³¤ÖáµÄÖáºÅ
-	uint8 ucLongAxisNum = pG32->ucAxis[0];  //³¤ÖáÖáºÅ
-	uint8 ucShortAxisNum = pG32->ucAxis[1];  //¶ÌÖáÖáºÅ
-	double dA = pG32->SCenterPoint.dArray[ucShortAxisNum];
-	double dB = pG32->SCenterPoint.dArray[ucLongAxisNum];
-	double dR = pG32->dRadius;
-	double dY = dLongAxisPos;
-    
-	if (pG32 == NULL || pShortAxisPos == NULL)
+    //åœ†çš„æ–¹ç¨‹ä¸ºx^2 + y^2 + D*x + E*y + F = 0
+    // D = -2a;
+    // E = -2b;
+    // F = a^2 + b^2 -R^2  åœ†å¿ƒåæ ‡ï¼ˆa, bï¼‰ï¼ŒåŠå¾„R
+    //å…¶ä¸­xç»Ÿä¸€ä¸ºçŸ­è½´çš„è½´å·ï¼Œ yä¸ºé•¿è½´çš„è½´å·
+    uint8 ucLongAxisNum = pG32->ucAxis[0];  //é•¿è½´è½´å·
+    uint8 ucShortAxisNum = pG32->ucAxis[1]; //çŸ­è½´è½´å·
+    double dA = pG32->SCenterPoint.dArray[ucShortAxisNum];
+    double dB = pG32->SCenterPoint.dArray[ucLongAxisNum];
+    double dR = pG32->dRadius;
+    double dY = dLongAxisPos;
+
+    if (pG32 == NULL || pShortAxisPos == NULL)
     {
         return -1;
     }
 
-	if (fabs(dLongAxisPos) - 37.80 < 0)
-	{
-		int a = 0;
-	}
+    if (fabs(dLongAxisPos) - 37.80 < 0)
+    {
+        int a = 0;
+    }
 
-	double dD = -2 * dA;
-	double dE = -2 * dB;
-	double dF = dA * dA + dB * dB - dR * dR;
-	double dX1;
-	double dX2;
-	double dAnswer;
+    double dD = -2 * dA;
+    double dE = -2 * dB;
+    double dF = dA * dA + dB * dB - dR * dR;
+    double dX1;
+    double dX2;
+    double dAnswer;
 
-	//Ô²µÄ·½³Ì¿ÉÕûÀíÎª x^2 + Dx + y^2 + E*y + F = 0  µÈ¼ÛÓÚ x^2 + Dx + C = 0
-	double dC = dY * dY + dE * dY + dF;
-	double disc = (dD * dD / 4.0) - dC;
-	double dResult = 0;
+    //åœ†çš„æ–¹ç¨‹å¯æ•´ç†ä¸º x^2 + Dx + y^2 + E*y + F = 0  ç­‰ä»·äº x^2 + Dx + C = 0
+    double dC = dY * dY + dE * dY + dF;
+    double disc = (dD * dD / 4.0) - dC;
+    double dResult = 0;
 
-	if (disc < 0)
+    if (disc < 0)
     {
         parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM133, 9999);
         return -1;
     }
-	dX1 = (-dD / 2) + sqrt(disc);
-	dX2 = (-dD / 2) - sqrt(disc);
+    dX1 = (-dD / 2) + sqrt(disc);
+    dX2 = (-dD / 2) - sqrt(disc);
 
-	if (pG32->cArcDir == ARC_CW)  //ÎªË³Ê±ÕëÔ²»¡
-	{
-		if (pG32->SStartVector.dArray[pG32->ucAxis[0]] > 0)
-		{
-			if (pG32->ucAxis[0] == AXIS_Z)
-			{
-				dResult = dX1 > dX2 ? dX1 : dX2;
-			}
-			else
-			{
-				dResult = dX1 > dX2 ? dX2 : dX1;
-			}
-
-		}
-		else
-		{
-			if (pG32->ucAxis[0] == AXIS_Z)
-			{
-				dResult = dX1 > dX2 ? dX2 : dX1;
-			}
-			else
-			{
-				dResult = dX1 > dX2 ? dX1 : dX2;
-			}
-
-		}
-
-	}
-	else
-	{
-		if (pG32->SStartVector.dArray[pG32->ucAxis[0]] > 0)
-		{
-			if (pG32->ucAxis[0] == AXIS_Z)
-			{
-				dResult = dX1 > dX2 ? dX2 : dX1;
-			}
-			else
-			{
-				dResult = dX1 > dX2 ? dX1 : dX2;
-			}
-
-		}
-		else
-		{
-			if (pG32->ucAxis[0] == AXIS_Z)
-			{
-				dResult = dX1 > dX2 ? dX1 : dX2;
-			}
-			else
-			{
-				dResult = dX1 > dX2 ? dX2 : dX1;
-			}
-
-		}
-
-	}
-	*pShortAxisPos = dResult;
+    if (pG32->cArcDir == ARC_CW) //ä¸ºé¡ºæ—¶é’ˆåœ†å¼§
+    {
+        if (pG32->SStartVector.dArray[pG32->ucAxis[0]] > 0)
+        {
+            if (pG32->ucAxis[0] == AXIS_Z)
+            {
+                dResult = dX1 > dX2 ? dX1 : dX2;
+            }
+            else
+            {
+                dResult = dX1 > dX2 ? dX2 : dX1;
+            }
+        }
+        else
+        {
+            if (pG32->ucAxis[0] == AXIS_Z)
+            {
+                dResult = dX1 > dX2 ? dX2 : dX1;
+            }
+            else
+            {
+                dResult = dX1 > dX2 ? dX1 : dX2;
+            }
+        }
+    }
+    else
+    {
+        if (pG32->SStartVector.dArray[pG32->ucAxis[0]] > 0)
+        {
+            if (pG32->ucAxis[0] == AXIS_Z)
+            {
+                dResult = dX1 > dX2 ? dX2 : dX1;
+            }
+            else
+            {
+                dResult = dX1 > dX2 ? dX1 : dX2;
+            }
+        }
+        else
+        {
+            if (pG32->ucAxis[0] == AXIS_Z)
+            {
+                dResult = dX1 > dX2 ? dX1 : dX2;
+            }
+            else
+            {
+                dResult = dX1 > dX2 ? dX2 : dX1;
+            }
+        }
+    }
+    *pShortAxisPos = dResult;
     return 1;
-
-	
-
 }
 
 double getMoveLagComp(struct SChannel* pSChannel, double dF, uint8 ucLongAxisNum, int nTargetLagNum)
 {
-	//²Î¿¼Öµ£º
-	//×ªËÙ2500£¬ÖÍºó750¸öÂö³å
-	//µ±Ç°²âÊÔÖµ
-	//×ªËÙ200£¬ ÖÍºó60¸öÂö³å
+    //å‚è€ƒå€¼ï¼š
+    //è½¬é€Ÿ2500ï¼Œæ»å750ä¸ªè„‰å†²
+    //å½“å‰æµ‹è¯•å€¼
+    //è½¬é€Ÿ200ï¼Œ æ»å60ä¸ªè„‰å†²
 
-	//²¹³¥Ë¼Â·£º²Î¿¼×ªËÙµÄÖÍºóÖµ - µ±Ç°×ªËÙµÄÖÍºóÖµµÃµ½ÖÍºóµÄÆ«²îÖµ£¬
-	//½«ÖÍºóµÄÆ«²îÖµ»»Ëã³ÉÖ÷ÖáËùĞèµÄÂö³å£¬·µ»Ø¼´¿É¡£
-	struct SEncoder* pSSpindleEncoder = pSChannel->pSSpindleEncoder;
-	int nReferenceLagNum = 750;
-	int nLagDeviation = nReferenceLagNum - nTargetLagNum;  //µ±Ç°×ªËÙÖÍºóÖµÓë²Î¿¼×ªËÙÖÍºóÖµµÄÆ«²î
-	double spindlePulseComp = 0;  //Ö÷ÖáÍ¬²½ĞÅºÅÎ»ÖÃ²¹³¥Öµ
+    //è¡¥å¿æ€è·¯ï¼šå‚è€ƒè½¬é€Ÿçš„æ»åå€¼ - å½“å‰è½¬é€Ÿçš„æ»åå€¼å¾—åˆ°æ»åçš„åå·®å€¼ï¼Œ
+    //å°†æ»åçš„åå·®å€¼æ¢ç®—æˆä¸»è½´æ‰€éœ€çš„è„‰å†²ï¼Œè¿”å›å³å¯ã€‚
+    struct SEncoder* pSSpindleEncoder = pSChannel->pSSpindleEncoder;
+    int nReferenceLagNum = 750;
+    int nLagDeviation = nReferenceLagNum - nTargetLagNum; //å½“å‰è½¬é€Ÿæ»åå€¼ä¸å‚è€ƒè½¬é€Ÿæ»åå€¼çš„åå·®
+    double spindlePulseComp = 0;                          //ä¸»è½´åŒæ­¥ä¿¡å·ä½ç½®è¡¥å¿å€¼
 
-	if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD)  //ÈôÖ÷ÖáÕı×ª
-	{
-		spindlePulseComp = (nLagDeviation * g_SSystemPara.SAxisPara[ucLongAxisNum].dPulseToMm) / dF
-			* pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
-	}
-	else  //ÈôÖ÷Öá·´×ª
-	{
-		spindlePulseComp = -(nLagDeviation * g_SSystemPara.SAxisPara[ucLongAxisNum].dPulseToMm) / dF
-			* pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
-	}
+    if (pSSpindleEncoder->cEncoderDir == INP_GO_AHEAD) //è‹¥ä¸»è½´æ­£è½¬
+    {
+        spindlePulseComp = (nLagDeviation * g_SSystemPara.SAxisPara[ucLongAxisNum].dPulseToMm) / dF *
+                           pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
+    }
+    else //è‹¥ä¸»è½´åè½¬
+    {
+        spindlePulseComp = -(nLagDeviation * g_SSystemPara.SAxisPara[ucLongAxisNum].dPulseToMm) / dF *
+                           pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;
+    }
 
-	return spindlePulseComp;
-
+    return spindlePulseComp;
 }
 
-int8 calculateExactPointForG32BackTail(double* pdTargetPoint, double dLongAxisDeltal, double dShortAxisDeltal, struct _SG32* pG32)
+int8 calculateExactPointForG32BackTail(double* pdTargetPoint, double dLongAxisDeltal, double dShortAxisDeltal,
+                                       struct _SG32* pG32)
 {
-	SPointDouble SStartPoint;	//Æğµã£¬µ¥Î»£ºmm
-	uint8 ucLongAxisNum  = pG32->ucAxis[0];
-	uint8 ucShortAxisNum = pG32->ucAxis[1];
+    SPointDouble SStartPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
+    uint8 ucLongAxisNum = pG32->ucAxis[0];
+    uint8 ucShortAxisNum = pG32->ucAxis[1];
 
+    if (pG32 == NULL)
+    {
+        return -1;
+    }
 
-	if (pG32 == NULL)
-	{
-		return -1;
-	}
+    SStartPoint = pG32->SStarCutPoint; //èµ·ç‚¹ï¼Œå•ä½ï¼šmm
 
-	SStartPoint = pG32->SStarCutPoint;	//Æğµã£¬µ¥Î»£ºmm
+    //åˆå§‹åŒ–å„ä¸ªè½´çš„ç»å¯¹åæ ‡
+    for (int i = 0; i < AXIS_NUM_MAX; i++)
+    {
+        pdTargetPoint[i] = SStartPoint.dArray[i];
+    }
 
-	//³õÊ¼»¯¸÷¸öÖáµÄ¾ø¶Ô×ø±ê
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		pdTargetPoint[i] = SStartPoint.dArray[i];
-	}
+    pdTargetPoint[ucLongAxisNum] =
+        pG32->SBackTailPoint.dArray[ucLongAxisNum] + dLongAxisDeltal * pG32->SStartVector.dArray[pG32->ucAxis[0]];
+    // pdTargetPoint[ucShortAxisNum] = pG32->SBackTailPoint.dArray[ucShortAxisNum] + dShortAxisDeltal * sgn(pG32->dJ);
+    //ä¿®æ”¹2026.1.14 ç”±äºdShortAxisDeltal è®¡ç®—æ—¶åªæ˜¯ä¹˜ä»¥çŸ­è½´ä¸é•¿è½´çš„ç›¸å¯¹æ¯”å€¼ï¼Œæ‰€ä»¥æ­¤å¤„éœ€è¦ä¹˜ä»¥é•¿è½´ä¸è§„åˆ’è·ç¦»çš„æ¯”å€¼
+    pdTargetPoint[ucShortAxisNum] =
+        pG32->SBackTailPoint.dArray[ucShortAxisNum] + dShortAxisDeltal * pG32->SStartVector.dArray[pG32->ucAxis[0]];
 
-	pdTargetPoint[ucLongAxisNum]  = pG32->SBackTailPoint.dArray[ucLongAxisNum]  + dLongAxisDeltal * pG32->SStartVector.dArray[pG32->ucAxis[0]];
-	// pdTargetPoint[ucShortAxisNum] = pG32->SBackTailPoint.dArray[ucShortAxisNum] + dShortAxisDeltal * sgn(pG32->dJ);
-	//ĞŞ¸Ä2026.1.14 ÓÉÓÚdShortAxisDeltal ¼ÆËãÊ±Ö»ÊÇ³ËÒÔ¶ÌÖáÓë³¤ÖáµÄÏà¶Ô±ÈÖµ£¬ËùÒÔ´Ë´¦ĞèÒª³ËÒÔ³¤ÖáÓë¹æ»®¾àÀëµÄ±ÈÖµ
-	pdTargetPoint[ucShortAxisNum]  = pG32->SBackTailPoint.dArray[ucShortAxisNum]  + dShortAxisDeltal * pG32->SStartVector.dArray[pG32->ucAxis[0]];
-
-	return 1;
-
+    return 1;
 }
-
 
 /*************************************************
-  zxr: ¼ì²é G32 ÆğÖÕµã¼°ÍËÎ²ÊÇ·ñ³¬³öÒÑÊ¹ÄÜÈíÏŞÎ»
-  º¯ÊıÃû³Æ£ºcheckG32StartEndSoftLimit
-  º¯Êı¹¦ÄÜ£º¼ì²é G32 Æğµã¡¢ÖÕµã¼°ÍËÎ²ÊÇ·ñ³¬³öÈíÏŞÎ»
-  ÊäÈë²ÎÊı£ºpG32£¬½á¹¹Ìå struct _SG32 Ö¸Õë
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£º0£ºÍ¨¹ı£»·Ç 0£º¶ÔÓ¦µÄ±¨¾¯ºÅ£¨41~46ÎªÕıÏŞÎ»£¬47~52Îª¸ºÏŞÎ»£©
-  ±¸    ×¢£º½öÔÚÇĞÈë½ø¸øÇ°¾²Ì¬¼ì²é£¬²»Õ¼ÓÃ 1ms ÖĞ¶ÏÑ­»·£»Ğı×ªÖá²»ÏŞÎ»¡£
+  zxr: æ£€æŸ¥ G32 èµ·ç»ˆç‚¹åŠé€€å°¾æ˜¯å¦è¶…å‡ºå·²ä½¿èƒ½è½¯é™ä½
+  å‡½æ•°åç§°ï¼šcheckG32StartEndSoftLimit
+  å‡½æ•°åŠŸèƒ½ï¼šæ£€æŸ¥ G32 èµ·ç‚¹ã€ç»ˆç‚¹åŠé€€å°¾æ˜¯å¦è¶…å‡ºè½¯é™ä½
+  è¾“å…¥å‚æ•°ï¼špG32ï¼Œç»“æ„ä½“ struct _SG32 æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼š0ï¼šé€šè¿‡ï¼›é 0ï¼šå¯¹åº”çš„æŠ¥è­¦å·ï¼ˆ41~46ä¸ºæ­£é™ä½ï¼Œ47~52ä¸ºè´Ÿé™ä½ï¼‰
+  å¤‡    æ³¨ï¼šä»…åœ¨åˆ‡å…¥è¿›ç»™å‰é™æ€æ£€æŸ¥ï¼Œä¸å ç”¨ 1ms ä¸­æ–­å¾ªç¯ï¼›æ—‹è½¬è½´ä¸é™ä½ã€‚
 **************************************************/
 static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
 {
@@ -2680,8 +2667,7 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
     {
         return GCODE_ERROR_NUM153;
     }
-    if (pG32->pSChannel->ucChannelNum >= CHANNEL_NUM_MAX ||
-        pG32->pSChannel->pMapAxisArray == NULL)
+    if (pG32->pSChannel->ucChannelNum >= CHANNEL_NUM_MAX || pG32->pSChannel->pMapAxisArray == NULL)
     {
         return GCODE_ERROR_NUM150;
     }
@@ -2691,7 +2677,7 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
     SEndPoint = pG32->SEndPoint;
     STailPoint = SEndPoint;
 
-    // zxr: ÈôÓĞ¶ÌÖáÍËÎ²Á¿ dJ£¬¼ÆËãÍËÎ²ÖÕµã£¨¶ÌÖá¼ÓÉÏÍËÎ²Á¿£©
+    // zxr: è‹¥æœ‰çŸ­è½´é€€å°¾é‡ dJï¼Œè®¡ç®—é€€å°¾ç»ˆç‚¹ï¼ˆçŸ­è½´åŠ ä¸Šé€€å°¾é‡ï¼‰
     if (!isZero(pG32->dJ) && pG32->ucAxis[1] < AXIS_NUM_MAX)
     {
         STailPoint.dArray[pG32->ucAxis[1]] += pG32->dJ;
@@ -2699,7 +2685,7 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
     }
 
 #if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE
-    /* zxr: Óë motionForG32 Êµ¼ÊÊä³ö×ª»»±£³ÖÒ»ÖÂ£¬ÇãĞ± Y »úĞÍ»»ËãÎªÊµ¼Ê»úĞµ×ø±ê */
+    /* zxr: ä¸ motionForG32 å®é™…è¾“å‡ºè½¬æ¢ä¿æŒä¸€è‡´ï¼Œå€¾æ–œ Y æœºå‹æ¢ç®—ä¸ºå®é™…æœºæ¢°åæ ‡ */
     if (pG32->pSChannel->bUseVirtualY == TRUE)
     {
         if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
@@ -2755,7 +2741,7 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
             return GCODE_ERROR_NUM153;
         }
 
-        // ÕıÏòÈíÏŞÎ»¼ì²é
+        // æ­£å‘è½¯é™ä½æ£€æŸ¥
         if (g_SSystemPara.MOTOR_WARN[ucPhysicalAxis].soft_pos == 1)
         {
             double dLimit = g_SSystemPara.MOTOR_WARN[ucPhysicalAxis].pos_soft;
@@ -2769,7 +2755,7 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
             }
         }
 
-        // ¸ºÏòÈíÏŞÎ»¼ì²é
+        // è´Ÿå‘è½¯é™ä½æ£€æŸ¥
         if (g_SSystemPara.MOTOR_WARN[ucPhysicalAxis].soft_neg == 1)
         {
             double dLimit = g_SSystemPara.MOTOR_WARN[ucPhysicalAxis].neg_soft;
@@ -2788,128 +2774,124 @@ static uint16 checkG32StartEndSoftLimit(const struct _SG32* pG32)
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid G32Run(struct _SG32* pG32, struct SInterpolationPre* pInterpPrePointer)
-  º¯Êı¹¦ÄÜ£ºG32ÔËĞĞµ÷¶È
-  ÊäÈë²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-			*pInterpPrePointer£¬½á¹¹Ìåstruct SInterpolationPreÖ¸Õë
-  Êä³ö²ÎÊı£º*pG32£¬   ½á¹¹Ìåstruct _SG32Ö¸Õë
-			*pInterpPrePointer£¬½á¹¹Ìåstruct SInterpolationPreÖ¸Õë
-			g_SRun              SRun½á¹¹ÌåÈ«¾Ö±äÁ¿
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£ºÎŞ
+  å‡½æ•°åç§°ï¼švoid G32Run(struct _SG32* pG32, struct SInterpolationPre* pInterpPrePointer)
+  å‡½æ•°åŠŸèƒ½ï¼šG32è¿è¡Œè°ƒåº¦
+  è¾“å…¥å‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+			*pInterpPrePointerï¼Œç»“æ„ä½“struct SInterpolationPreæŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼š*pG32ï¼Œ   ç»“æ„ä½“struct _SG32æŒ‡é’ˆ
+			*pInterpPrePointerï¼Œç»“æ„ä½“struct SInterpolationPreæŒ‡é’ˆ
+			g_SRun              SRunç»“æ„ä½“å…¨å±€å˜é‡
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼šæ— 
 **************************************************/
 void G32Run(struct _SG32* pG32)
 {
 
-	if (pG32->pSChannel->pSSpindleEncoder == NULL || pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0)//±ÜÃâ±àÂëÆ÷ÏßÊıÎª0
-	{
-		parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-		return;
-	}
+    if (pG32->pSChannel->pSSpindleEncoder == NULL ||
+        pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum <= 0) //é¿å…ç¼–ç å™¨çº¿æ•°ä¸º0
+    {
+        parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+        return;
+    }
 
-	double dDistFromSpindle = pG32->pSChannel->pSSpindleEncoder->usDelta * pG32->dF / pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum; //µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-	double dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;  //µ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáµÄÔË¶¯ËÙ¶È£¨Ëæ¶¯£©
-	double dAcc = pG32->SUserData.dAcc;
-	double dDec = pG32->SUserData.dDec;
-	struct SInterpolationPre* pSPreprocess; //Ô¤´¦ÀíÖ¸Õë
-	const uint8* ucMapArray;                //Ó³Éä
-	enum SYSTEMSTATUS* pSystemStatus;       //ÏµÍ³×´Ì¬
+    double dDistFromSpindle =
+        pG32->pSChannel->pSSpindleEncoder->usDelta * pG32->dF /
+        pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum;     //å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+    double dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc; //å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´çš„è¿åŠ¨é€Ÿåº¦ï¼ˆéšåŠ¨ï¼‰
+    double dAcc = pG32->SUserData.dAcc;
+    double dDec = pG32->SUserData.dDec;
+    struct SInterpolationPre* pSPreprocess; //é¢„å¤„ç†æŒ‡é’ˆ
+    const uint8* ucMapArray;                //æ˜ å°„
+    enum SYSTEMSTATUS* pSystemStatus;       //ç³»ç»ŸçŠ¶æ€
 
-	pSystemStatus = &pG32->pSChannel->ucChannelStatus;//Í¨µÀ×´Ì¬
-	pSPreprocess = &pG32->pSChannel->SPreProcess;//Ô¤´¦ÀíÖ¸Õë
-	ucMapArray = pG32->pSChannel->pMapAxisArray;//Ó³Éä
+    pSystemStatus = &pG32->pSChannel->ucChannelStatus; //é€šé“çŠ¶æ€
+    pSPreprocess = &pG32->pSChannel->SPreProcess;      //é¢„å¤„ç†æŒ‡é’ˆ
+    ucMapArray = pG32->pSChannel->pMapAxisArray;       //æ˜ å°„
 
-	if (pG32->SUserData.ucUserInputState == USER_INPUT)  //Èô·¢ÏÖÓÃ»§Íâ²¿ÊäÈë²ÎÊı£¨¶¯Ì¬ĞŞ¸Ä£©
-	{
-		pG32->ucG32Step = G32_OCCUPATION;  //Á÷³ÌÖØĞÂ¿ªÊ¼£¨½øÈëÖáÕ¼ÓÃ£©
-	}
+    if (pG32->SUserData.ucUserInputState == USER_INPUT) //è‹¥å‘ç°ç”¨æˆ·å¤–éƒ¨è¾“å…¥å‚æ•°ï¼ˆåŠ¨æ€ä¿®æ”¹ï¼‰
+    {
+        pG32->ucG32Step = G32_OCCUPATION; //æµç¨‹é‡æ–°å¼€å§‹ï¼ˆè¿›å…¥è½´å ç”¨ï¼‰
+    }
 
-	//¸ù¾İG32µÄÔËĞĞ²½Öè±àºÅ£¬Ö´ĞĞÏàÓ¦²½Öè
-	switch (pG32->ucG32Step)
-	{
-	case G32_OCCUPATION:  //G32µÄÖáÕ¼ÓÃ
-	{
-		//ÊÍ·ÅÉÏÒ»Ö¸ÁîµÄÖáÕ¼ÓÃ
-		releaseLastCommandAxis(pSPreprocess);
-#if(TURRET_AXIS_TEST == 1)
-		if (axisManagerOccupyByChannel(pG32->ucValStatus & (~pSPreprocess->ucOccupideTurretAxis), pG32->pSChannel->ucChannelNum, &pSPreprocess->ucOccupideValStatus) == 1)
-		{
-			//Õ¼ÓÃ³É¹¦			
-			if (pG32->SUserData.ucUserInputState == USER_INPUT)  //ÈôÓĞÓÃ»§ÊäÈë²ÎÊı
-			{
-				pG32->ucG32Step = G32_USER_INPUT;  //ÏÂÒ»ÔË¶¯½×¶ÎÎªÓÃ»§ÔËĞĞ½×¶Î
-
-			}
-			else
-			{
-				pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT;  //ÏÂÒ»ÔË¶¯½×¶ÎÎª³õÊ¼»¯ºÍ¸³Öµ½×¶Î
-
-			}
-		}
-		else
-		{
-			break;
-		}
+    //æ ¹æ®G32çš„è¿è¡Œæ­¥éª¤ç¼–å·ï¼Œæ‰§è¡Œç›¸åº”æ­¥éª¤
+    switch (pG32->ucG32Step)
+    {
+    case G32_OCCUPATION: //G32çš„è½´å ç”¨
+    {
+        //é‡Šæ”¾ä¸Šä¸€æŒ‡ä»¤çš„è½´å ç”¨
+        releaseLastCommandAxis(pSPreprocess);
+#if (TURRET_AXIS_TEST == 1)
+        if (axisManagerOccupyByChannel(pG32->ucValStatus & (~pSPreprocess->ucOccupideTurretAxis),
+                                       pG32->pSChannel->ucChannelNum, &pSPreprocess->ucOccupideValStatus) == 1)
+        {
+            //å ç”¨æˆåŠŸ
+            if (pG32->SUserData.ucUserInputState == USER_INPUT) //è‹¥æœ‰ç”¨æˆ·è¾“å…¥å‚æ•°
+            {
+                pG32->ucG32Step = G32_USER_INPUT; //ä¸‹ä¸€è¿åŠ¨é˜¶æ®µä¸ºç”¨æˆ·è¿è¡Œé˜¶æ®µ
+            }
+            else
+            {
+                pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT; //ä¸‹ä¸€è¿åŠ¨é˜¶æ®µä¸ºåˆå§‹åŒ–å’Œèµ‹å€¼é˜¶æ®µ
+            }
+        }
+        else
+        {
+            break;
+        }
 
 #else
-		//ÅĞ¶ÏÖáÕ¼ÓÃ(¸ù¾İÓĞĞ§Öá+Ó³Éä)   ÓĞĞ§Öá¼õÈ¥µ¶²¹Öá 
-		if (axisManagerOccupyByChannel(pG32->ucValStatus & (~pSPreprocess->ucToolAxis), pG32->pSChannel->ucChannelNum,NULL) == 1)
-		{	//Õ¼ÓÃ³É¹¦
-			pSPreprocess->ucLastValStatus = pG32->ucValStatus;
+        //åˆ¤æ–­è½´å ç”¨(æ ¹æ®æœ‰æ•ˆè½´+æ˜ å°„)   æœ‰æ•ˆè½´å‡å»åˆ€è¡¥è½´
+        if (axisManagerOccupyByChannel(pG32->ucValStatus & (~pSPreprocess->ucToolAxis), pG32->pSChannel->ucChannelNum,
+                                       NULL) == 1)
+        { //å ç”¨æˆåŠŸ
+            pSPreprocess->ucLastValStatus = pG32->ucValStatus;
 
-			if (pG32->SUserData.ucUserInputState == USER_INPUT)  //ÈôÓĞÓÃ»§ÊäÈë²ÎÊı
-			{
-				pG32->ucG32Step = G32_USER_INPUT;  //ÏÂÒ»ÔË¶¯½×¶ÎÎªÓÃ»§ÔËĞĞ½×¶Î
-
-			}
-			else
-			{
-				pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT;  //ÏÂÒ»ÔË¶¯½×¶ÎÎª³õÊ¼»¯ºÍ¸³Öµ½×¶Î
-
-			}
-		}
-		else
-		{
-			break;
-		}
+            if (pG32->SUserData.ucUserInputState == USER_INPUT) //è‹¥æœ‰ç”¨æˆ·è¾“å…¥å‚æ•°
+            {
+                pG32->ucG32Step = G32_USER_INPUT; //ä¸‹ä¸€è¿åŠ¨é˜¶æ®µä¸ºç”¨æˆ·è¿è¡Œé˜¶æ®µ
+            }
+            else
+            {
+                pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT; //ä¸‹ä¸€è¿åŠ¨é˜¶æ®µä¸ºåˆå§‹åŒ–å’Œèµ‹å€¼é˜¶æ®µ
+            }
+        }
+        else
+        {
+            break;
+        }
 #endif
-	}
-	case G32_USER_INPUT: //ÓÃ»§Íâ²¿ÊäÈë²ÎÊı
-	{
-		//ÈôÓĞÓÃ»§ÊäÈëÍâ²¿²ÎÊı
-		if (pG32->SUserData.ucUserInputState == USER_INPUT)
-		{
-			int8 cState = processUserInput(pG32);  //²ÎÊı´íÎó¼ì²é+¸üµü³¤ÖáÓÃÓÚ¹æ»®µÄÔË¶¯²ÎÊı
-			//ÈôÓÃ»§²ÎÊı»ñÈ¡Ê§°Ü»òÎŞĞ§£¬Ö±½ÓÍ£Ö¹µ±Ç°ÔË¶¯
-			if (cState == -1)
-			{
-				enum SYSTEMSTATUS* pSystemStatus;			//ÏµÍ³×´Ì¬
-				pG32->ucInpStatus = INP_FINISHED;           //×´Ì¬¸Ä±äÎªFINISHED
-				pSPreprocess->ucInpStatus = INP_FINISHED;
-				pSystemStatus = &pG32->pSChannel->ucChannelStatus;//Í¨µÀ×´Ì¬
-				*pSystemStatus = SYS_RUN_TO_PAUSE;  //½«ÏµÍ³×´Ì¬±äÎªÔİÍ£
-				return;
-
-			}
-			pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT;
-
-
-		}
-
-	}
-	if (!pG32->bRepeatG32Flag)  //Èç¹ûµ±Ç°Ö¸ÁîÎªÁ¬ĞøG32Ö¸Áî£¬ÔòËùÓĞÂİÎÆ²½Öè¶¼µÃÔÚÍ¬¸ö²å²¹ÖÜÆÚÍê³É
-	{
-		break;
-
-	}
-	case G32_INIT_AND_ASSIGNMENT:  //³õÊ¼»¯ºÍ¸³Öµ
-	{
-		struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
-		//µ±Ö÷ÖáÎ´¼Ó¼õËÙÍê³ÉÊ±£¨Ç°ºó×÷ÓÃÑÓÊ±Ê±¼äÌ«¶Ì£©£¬²»½øĞĞG32ÔË¶¯
-		if (pG32->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
-		{
-			getInputParameter(pG32);      //»ñÈ¡ÊäÈë²ÎÊı
-            /* zxr: ½øÈëÊµ¼ÊÔË¶¯Ç°¼ì²éÆğÖÕµã¼°ÍËÎ²ÈíÏŞÎ» */
+    }
+    case G32_USER_INPUT: //ç”¨æˆ·å¤–éƒ¨è¾“å…¥å‚æ•°
+    {
+        //è‹¥æœ‰ç”¨æˆ·è¾“å…¥å¤–éƒ¨å‚æ•°
+        if (pG32->SUserData.ucUserInputState == USER_INPUT)
+        {
+            int8 cState = processUserInput(pG32); //å‚æ•°é”™è¯¯æ£€æŸ¥+æ›´è¿­é•¿è½´ç”¨äºè§„åˆ’çš„è¿åŠ¨å‚æ•°
+            //è‹¥ç”¨æˆ·å‚æ•°è·å–å¤±è´¥æˆ–æ— æ•ˆï¼Œç›´æ¥åœæ­¢å½“å‰è¿åŠ¨
+            if (cState == -1)
+            {
+                enum SYSTEMSTATUS* pSystemStatus; //ç³»ç»ŸçŠ¶æ€
+                pG32->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+                pSPreprocess->ucInpStatus = INP_FINISHED;
+                pSystemStatus = &pG32->pSChannel->ucChannelStatus; //é€šé“çŠ¶æ€
+                *pSystemStatus = SYS_RUN_TO_PAUSE;                 //å°†ç³»ç»ŸçŠ¶æ€å˜ä¸ºæš‚åœ
+                return;
+            }
+            pG32->ucG32Step = G32_INIT_AND_ASSIGNMENT;
+        }
+    }
+        if (!pG32->bRepeatG32Flag) //å¦‚æœå½“å‰æŒ‡ä»¤ä¸ºè¿ç»­G32æŒ‡ä»¤ï¼Œåˆ™æ‰€æœ‰èºçº¹æ­¥éª¤éƒ½å¾—åœ¨åŒä¸ªæ’è¡¥å‘¨æœŸå®Œæˆ
+        {
+            break;
+        }
+    case G32_INIT_AND_ASSIGNMENT: //åˆå§‹åŒ–å’Œèµ‹å€¼
+    {
+        struct SEncoder* pSSpindleEncoder = pG32->pSChannel->pSSpindleEncoder;
+        //å½“ä¸»è½´æœªåŠ å‡é€Ÿå®Œæˆæ—¶ï¼ˆå‰åä½œç”¨å»¶æ—¶æ—¶é—´å¤ªçŸ­ï¼‰ï¼Œä¸è¿›è¡ŒG32è¿åŠ¨
+        if (pG32->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
+        {
+            getInputParameter(pG32); //è·å–è¾“å…¥å‚æ•°
+            /* zxr: è¿›å…¥å®é™…è¿åŠ¨å‰æ£€æŸ¥èµ·ç»ˆç‚¹åŠé€€å°¾è½¯é™ä½ */
             {
                 uint16 usLimitError = checkG32StartEndSoftLimit(pG32);
                 if (usLimitError != 0)
@@ -2918,387 +2900,367 @@ void G32Run(struct _SG32* pG32)
                     return;
                 }
             }
-			prepareForMoveAndInit(pG32);  //³õÊ¼»¯ºÍÔË¶¯×¼±¸
-			dDistFromSpindle = pG32->pSChannel->pSSpindleEncoder->usDelta * pG32->dF / pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum; //µ±Ç°Ö÷Öá×ªËÙ£¬³¤ÖáÓ¦¸ÃĞĞ×ßµÄ¾àÀë
-			dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;  //µ±Ç°Ö÷Öá×ªËÙÏÂ£¬³¤ÖáµÄÔË¶¯ËÙ¶È£¨Ëæ¶¯£©
+            prepareForMoveAndInit(pG32); //åˆå§‹åŒ–å’Œè¿åŠ¨å‡†å¤‡
+            dDistFromSpindle =
+                pG32->pSChannel->pSSpindleEncoder->usDelta * pG32->dF /
+                pG32->pSChannel->pSSpindleEncoder->usEncoderCirclePulseNum; //å½“å‰ä¸»è½´è½¬é€Ÿï¼Œé•¿è½´åº”è¯¥è¡Œèµ°çš„è·ç¦»
+            dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;    //å½“å‰ä¸»è½´è½¬é€Ÿä¸‹ï¼Œé•¿è½´çš„è¿åŠ¨é€Ÿåº¦ï¼ˆéšåŠ¨ï¼‰
+        }
 
-		}
+        //******************************************å­˜åœ¨ç”¨æˆ·å¤–éƒ¨è¾“å…¥çš„å¤„ç†***********************************
+        if (pG32->SUserData.ucUserInputState == FINSH_CHECK) //å¦‚æœç”¨æˆ·å¤–éƒ¨è¾“å…¥æ•°æ®ï¼ŒåŒæ—¶ä¸éœ€è¦åŒæ­¥ä¿¡å·
+        {
+            pG32->bSyncSignal = TRUE;                            //ç›´æ¥è·å–åŒæ­¥ä¿¡å·
+            pG32->bRepeatG32Flag = TRUE;                         //åˆå§‹åŒ–åè¯¥æ’è¡¥å‘¨æœŸç›´æ¥è¿åŠ¨
+            pG32->pSChannel->bCalculateSpindleSpeedFlag = FALSE; //ä¸éœ€è¦è®¡ç®—ä¸»è½´å®é™…è½¬é€Ÿ
+            pG32->ucG32Step = G32_RUNNING;                       //G32ç›´æ¥è¿›å…¥è¿è¡Œé˜¶æ®µ
+            dDistFromSpindle =
+                pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum; //é‡ç®—æ–°å¢è·ç¦»
+            dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;                          //é‡ç®—éšåŠ¨é€Ÿåº¦
+            pG32->SUserData.ucUserInputState = NO_INPUT;                                          //é‡ç½®ç”¨æˆ·å¤–éƒ¨è¾“å…¥çŠ¶æ€
+        }
+        else if (pG32->SUserData.ucUserInputState == FINSH_CHECK_SYSNCSIGNAL) //å¦‚æœç”¨æˆ·å¤–éƒ¨è¾“å…¥æ•°æ®ï¼ŒåŒæ—¶éœ€è¦åŒæ­¥ä¿¡å·
+        {
+            dDistFromSpindle =
+                pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum; //é‡ç®—æ–°å¢è·ç¦»
+            dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;                          //é‡ç®—éšåŠ¨é€Ÿåº¦
+            pG32->SUserData.ucUserInputState =
+                NO_INPUT; //é‡ç½®ç”¨æˆ·å¤–éƒ¨è¾“å…¥çŠ¶æ€ï¼Œç„¶åæŒ‰æ–°çš„å‚æ•°è·å–èµ°æ™®é€šæµç¨‹è·å–åŒæ­¥ä¿¡å·
+        }
+        //******************************************å­˜åœ¨ç”¨æˆ·å¤–éƒ¨è¾“å…¥çš„å¤„ç†***********************************
+    }
+        if (!pG32->bRepeatG32Flag) //å¦‚æœå½“å‰æŒ‡ä»¤ä¸ºè¿ç»­G32æŒ‡ä»¤ï¼Œåˆ™æ‰€æœ‰èºçº¹æ­¥éª¤éƒ½å¾—åœ¨åŒä¸ªæ’è¡¥å‘¨æœŸå®Œæˆ
+        {
+            break;
+        }
+    case G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE: //è¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’
+    {
+        if (!pG32->pSChannel->bCalculateSpindleSpeedFlag) //ä¸éœ€è¦è®¡ç®—ä¸»è½´å®é™…è½¬é€Ÿ)  //å·²ç»è·å¾—ä¸»è½´å®é™…è½¬é€Ÿ
+        {
+            judgeRepeatG32AndGetRealCutAngle(pG32, dDistFromSpindle); //è¿ç»­G32çš„åˆ¤æ–­ä»¥åŠè·å–çœŸæ­£åˆ‡å…¥è§’
+        }
+    }
+        if (!pG32->bRepeatG32Flag) //å¦‚æœå½“å‰æŒ‡ä»¤ä¸ºè¿ç»­G32æŒ‡ä»¤ï¼Œåˆ™æ‰€æœ‰èºçº¹æ­¥éª¤éƒ½å¾—åœ¨åŒä¸ªæ’è¡¥å‘¨æœŸå®Œæˆ
+        {
+            break;
+        }
+    case G32_GET_SYNCSIGN: //åˆ¤æ–­æ˜¯å¦è·å–åŒæ­¥ä¿¡å·
+    {
+        //æ²¡æœ‰è·å¾—åŒæ­¥ä¿¡å·
+        if (!pG32->bSyncSignal)
+        {
+            judgeSyncSignalAndCompensate(pG32); //åˆ¤æ–­æ˜¯å¦è·å–åŒæ­¥ä¿¡å·
+        }
+    }
+    case G32_IFM_COMPENSATE: //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
+    {
+        //è·å¾—åŒæ­¥ä¿¡å·ï¼ŒåŒæ—¶è¿è¡Œæ­¥éª¤ä¸ºG32_IFM_COMPENSATE
+        if (pG32->bSyncSignal && pG32->ucG32Step == G32_IFM_COMPENSATE)
+        {
+            runAndCompForIFM(pG32, &dDistFromSpindle); //ä¸»è½´ä¸å®Œå…¨è·Ÿéšæ¨¡å¼ä¸‹ï¼Œè¿‡æ¸¡é˜¶æ®µçš„è¿åŠ¨ä¸è¡¥å¿
+        }
+    }
+    case G32_REPEATSTATE_COMPENSATE: //å‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿
+    {
+        if (pG32->ucG32Step == G32_REPEATSTATE_COMPENSATE)
+        {
+            runAndCompForG32RepeatDec(pG32, &dDistFromSpindle); //å‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32é•¿è½´çš„è¿åŠ¨ä¸è¡¥å¿
+        }
+    }
+    case G32_RUNNING: //è¿åŠ¨éƒ¨åˆ†
+    {
+        //å¦‚æœè·å¾—åŒæ­¥ä¿¡å·
+        if (pG32->bSyncSignal && pG32->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
+        {
+            uint8 ucMotionStateLast = pG32->ucMotionState; //ä¸Šä¸€æ¬¡è¿åŠ¨çš„çŠ¶æ€
+            int8 cRunState;                                //è®¡ç®—G32è¿åŠ¨æ’è¡¥ç‚¹çš„çŠ¶æ€
+            double dLongAxisDelta;                         //é•¿è½´è·ç¦»ç»ˆç‚¹çš„é•¿åº¦
+            double dCompensate;
 
-		//******************************************´æÔÚÓÃ»§Íâ²¿ÊäÈëµÄ´¦Àí***********************************
-		if (pG32->SUserData.ucUserInputState == FINSH_CHECK)  //Èç¹ûÓÃ»§Íâ²¿ÊäÈëÊı¾İ£¬Í¬Ê±²»ĞèÒªÍ¬²½ĞÅºÅ
-		{
-			pG32->bSyncSignal = TRUE;                                     //Ö±½Ó»ñÈ¡Í¬²½ĞÅºÅ
-			pG32->bRepeatG32Flag = TRUE;                                  //³õÊ¼»¯ºó¸Ã²å²¹ÖÜÆÚÖ±½ÓÔË¶¯
-			pG32->pSChannel->bCalculateSpindleSpeedFlag = FALSE;          //²»ĞèÒª¼ÆËãÖ÷ÖáÊµ¼Ê×ªËÙ
-			pG32->ucG32Step = G32_RUNNING;                                //G32Ö±½Ó½øÈëÔËĞĞ½×¶Î
-			dDistFromSpindle = pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum; //ÖØËãĞÂÔö¾àÀë
-			dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;  //ÖØËãËæ¶¯ËÙ¶È
-			pG32->SUserData.ucUserInputState = NO_INPUT;                 //ÖØÖÃÓÃ»§Íâ²¿ÊäÈë×´Ì¬
-
-		}
-		else if (pG32->SUserData.ucUserInputState == FINSH_CHECK_SYSNCSIGNAL)     //Èç¹ûÓÃ»§Íâ²¿ÊäÈëÊı¾İ£¬Í¬Ê±ĞèÒªÍ¬²½ĞÅºÅ
-		{
-			dDistFromSpindle = pSSpindleEncoder->usDelta * pG32->dF / pSSpindleEncoder->usEncoderCirclePulseNum; //ÖØËãĞÂÔö¾àÀë
-			dVectorFromSpindle = dDistFromSpindle / pG32->SPlanData.dTc;               //ÖØËãËæ¶¯ËÙ¶È
-			pG32->SUserData.ucUserInputState = NO_INPUT;                              //ÖØÖÃÓÃ»§Íâ²¿ÊäÈë×´Ì¬£¬È»ºó°´ĞÂµÄ²ÎÊı»ñÈ¡×ßÆÕÍ¨Á÷³Ì»ñÈ¡Í¬²½ĞÅºÅ
-
-		}
-		//******************************************´æÔÚÓÃ»§Íâ²¿ÊäÈëµÄ´¦Àí***********************************
-
-	}
-	if (!pG32->bRepeatG32Flag)  //Èç¹ûµ±Ç°Ö¸ÁîÎªÁ¬ĞøG32Ö¸Áî£¬ÔòËùÓĞÂİÎÆ²½Öè¶¼µÃÔÚÍ¬¸ö²å²¹ÖÜÆÚÍê³É
-	{
-		break;
-
-	}
-	case G32_JUAGE_REPEATSTATE_AND_GET_REALCUTANGLE:  //Á¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç
-	{
-		if (!pG32->pSChannel->bCalculateSpindleSpeedFlag) //²»ĞèÒª¼ÆËãÖ÷ÖáÊµ¼Ê×ªËÙ)  //ÒÑ¾­»ñµÃÖ÷ÖáÊµ¼Ê×ªËÙ
-		{
-			judgeRepeatG32AndGetRealCutAngle(pG32, dDistFromSpindle);  //Á¬ĞøG32µÄÅĞ¶ÏÒÔ¼°»ñÈ¡ÕæÕıÇĞÈë½Ç
-
-		}
-
-	}
-	if (!pG32->bRepeatG32Flag)  //Èç¹ûµ±Ç°Ö¸ÁîÎªÁ¬ĞøG32Ö¸Áî£¬ÔòËùÓĞÂİÎÆ²½Öè¶¼µÃÔÚÍ¬¸ö²å²¹ÖÜÆÚÍê³É
-	{
-		break;
-
-	}
-	case G32_GET_SYNCSIGN:  //ÅĞ¶ÏÊÇ·ñ»ñÈ¡Í¬²½ĞÅºÅ
-	{
-		//Ã»ÓĞ»ñµÃÍ¬²½ĞÅºÅ
-		if (!pG32->bSyncSignal)
-		{
-			judgeSyncSignalAndCompensate(pG32);  //ÅĞ¶ÏÊÇ·ñ»ñÈ¡Í¬²½ĞÅºÅ
-
-		}
-
-	}
-	case G32_IFM_COMPENSATE:  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
-	{
-		//»ñµÃÍ¬²½ĞÅºÅ£¬Í¬Ê±ÔËĞĞ²½ÖèÎªG32_IFM_COMPENSATE
-		if (pG32->bSyncSignal && pG32->ucG32Step == G32_IFM_COMPENSATE)
-		{
-			runAndCompForIFM(pG32, &dDistFromSpindle);  //Ö÷Öá²»ÍêÈ«¸úËæÄ£Ê½ÏÂ£¬¹ı¶É½×¶ÎµÄÔË¶¯Óë²¹³¥
-
-		}
-
-	}
-	case G32_REPEATSTATE_COMPENSATE:  //¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥
-	{
-		if (pG32->ucG32Step == G32_REPEATSTATE_COMPENSATE)
-		{
-			runAndCompForG32RepeatDec(pG32, &dDistFromSpindle);  //¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32³¤ÖáµÄÔË¶¯Óë²¹³¥
-
-		}
-
-	}
-	case G32_RUNNING:  //ÔË¶¯²¿·Ö
-	{
-		//Èç¹û»ñµÃÍ¬²½ĞÅºÅ
-		if (pG32->bSyncSignal && pG32->pSChannel->SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
-		{
-			uint8 ucMotionStateLast = pG32->ucMotionState;  //ÉÏÒ»´ÎÔË¶¯µÄ×´Ì¬
-			int8  cRunState; //¼ÆËãG32ÔË¶¯²å²¹µãµÄ×´Ì¬
-			double dLongAxisDelta;     //³¤Öá¾àÀëÖÕµãµÄ³¤¶È
-			double dCompensate;
-
-			//*********************************²âÊÔ********************************
-			g_nTestNum++;
-			if (g_nTestNum >= 100 && g_nTestNum < 101)
-			{
-				//resetButtonAPI(0);
-				/*dDistFromSpindle = 0;
+            //*********************************æµ‹è¯•********************************
+            g_nTestNum++;
+            if (g_nTestNum >= 100 && g_nTestNum < 101)
+            {
+                //resetButtonAPI(0);
+                /*dDistFromSpindle = 0;
 				dVectorFromSpindle = 0;*/
-				//dDistFromSpindle = 0.05;
-				//dVectorFromSpindle = 0.05;
+                //dDistFromSpindle = 0.05;
+                //dVectorFromSpindle = 0.05;
+            }
 
-			}
+            if (g_nTestNum == 900)
+            {
+                //UserInput(pG32);  //ç”¨æˆ·å¤–éƒ¨è¾“å…¥æµ‹è¯•
+            }
+            //*********************************æµ‹è¯•********************************
 
-			if (g_nTestNum == 900)
-			{
-				//UserInput(pG32);  //ÓÃ»§Íâ²¿ÊäÈë²âÊÔ
+            //å¦‚æœè¿åŠ¨çŠ¶æ€ä¸ºéšåŠ¨ï¼Œåˆ™åŠ å‡é€Ÿåº¦ä¸ºç³»ç»Ÿå‚æ•°çš„äº”å€
+            if (pG32->ucMotionState == 1)
+            {
+                dAcc = dAcc * 5;
+                dDec = dDec * 5;
+            }
 
-			}
-			//*********************************²âÊÔ********************************
+            if (pG32->bAccPhaseFlag)
+            {
+                dAcc = pG32->dAcc;
+                dDec = pG32->dAcc;
+            }
 
-			//Èç¹ûÔË¶¯×´Ì¬ÎªËæ¶¯£¬Ôò¼Ó¼õËÙ¶ÈÎªÏµÍ³²ÎÊıµÄÎå±¶
-			if (pG32->ucMotionState == 1)
-			{
-				dAcc = dAcc * 5;
-				dDec = dDec * 5;
+            //å¦‚æœå½“å‰ä¸»è½´è½¬é€Ÿä¸º0ï¼Œåˆ™é•¿è½´çš„è¿åŠ¨é€Ÿåº¦ä¹Ÿä¸º0
+            if (isZero(dVectorFromSpindle))
+            {
+                //g_SInterpolation.dCurrentSpeed = 0;
+                pG32->dCurrentSpeed = 0;
+            }
 
-			}
-			
-			if (pG32->bAccPhaseFlag)
-			{
-				dAcc = pG32->dAcc;
-				dDec = pG32->dAcc;
-			}
-			
+            //è¿ç»­G32å¦‚æœæœ‰èµ·å§‹è¡¥å¿é‡
+            if (!isZero(pG32->dStartPointCompensate) && pG32->bStartCompensate)
+            {
 
-			//Èç¹ûµ±Ç°Ö÷Öá×ªËÙÎª0£¬Ôò³¤ÖáµÄÔË¶¯ËÙ¶ÈÒ²Îª0
-			if (isZero(dVectorFromSpindle))
-			{
-				//g_SInterpolation.dCurrentSpeed = 0;
-				pG32->dCurrentSpeed = 0;
-			}
+                if (isZero(pG32->dStartPointCompensateCopy))
+                {
+                    pG32->dStartPointCompensateCopy =
+                        pG32->dStartPointCompensate; //è·å–èµ·å§‹è¡¥å¿é‡å‰¯æœ¬ï¼ˆç”¨äºå˜é”¥åº¦èºçº¹ï¼ŒçŸ­è½´çš„é€Ÿåº¦è§„åˆ’è¡¥å¿ï¼‰
+                }
 
-			//Á¬ĞøG32Èç¹ûÓĞÆğÊ¼²¹³¥Á¿
-			if (!isZero(pG32->dStartPointCompensate) && pG32->bStartCompensate)
-			{
+                if (pG32->dStartPointCompensate < 0)
+                {
+                    double dMaxDelta = pG32->SUserData.dDec; //å•æ¬¡è¡¥å¿æ‰€å…è®¸çš„æœ€é«˜å€¼
+                    if (fabs(pG32->dStartPointCompensate) > dMaxDelta)
+                    {
+                        pG32->SPlanData.dTargetDist -= dMaxDelta;
+                        pG32->SPlanData.dCurLeftDist -= dMaxDelta;
+                        pG32->dStartPointCompensate += dMaxDelta;
+                    }
+                    else
+                    {
+                        pG32->SPlanData.dTargetDist += pG32->dStartPointCompensate;
+                        pG32->SPlanData.dCurLeftDist += pG32->dStartPointCompensate;
+                        pG32->dStartPointCompensate = 0;
+                    }
+                }
+                else
+                {
+                    //é€Ÿåº¦å¢åŠ ä¼šè¢«è§„åˆ’æ›²çº¿é™åˆ¶ï¼Œæ‰€æœ‰ç›´æ¥å°†èµ·å§‹è¡¥å¿é‡å…¨éƒ¨æ”¾å…¥è§„åˆ’æœªç§»åŠ¨çš„è·ç¦»å³å¯
+                    pG32->SPlanData.dTargetDist += pG32->dStartPointCompensate;
+                    pG32->SPlanData.dCurLeftDist += pG32->dStartPointCompensate;
+                    //pG32->dStartPointCompensateCopy = pG32->dStartPointCompensate;  //è·å–èµ·å§‹è¡¥å¿é‡å‰¯æœ¬ï¼ˆç”¨äºå˜é”¥åº¦èºçº¹ï¼ŒçŸ­è½´çš„é€Ÿåº¦è§„åˆ’è¡¥å¿ï¼‰
+                    pG32->dStartPointCompensate = 0;
+                }
+            }
 
-				if (isZero(pG32->dStartPointCompensateCopy))
-				{
-					pG32->dStartPointCompensateCopy = pG32->dStartPointCompensate;  //»ñÈ¡ÆğÊ¼²¹³¥Á¿¸±±¾£¨ÓÃÓÚ±ä×¶¶ÈÂİÎÆ£¬¶ÌÖáµÄËÙ¶È¹æ»®²¹³¥£©
+            //è¿›è¡Œé€Ÿåº¦è§„åˆ’ï¼Œå¹¶è¿”å›å½“å‰çš„è¿åŠ¨çŠ¶æ€
+            pG32->ucMotionState = newAddDistace(pG32, &pG32->SPlanData, dDistFromSpindle, dAcc, dDec,
+                                                dVectorFromSpindle, pG32->dCurrentSpeed);
 
-				}
+            //ä¸Šå‘¨æœŸçš„è§„åˆ’æ˜¯éšåŠ¨çŠ¶æ€ï¼Œæœ¬å‘¨æœŸçš„è§„åˆ’æ˜¯åŠ é€ŸçŠ¶æ€ï¼Œåˆ™é»˜è®¤ä¸ºéšåŠ¨é˜¶æ®µå†…çš„åŠ é€Ÿ
+            if (ucMotionStateLast == 1 && pG32->ucMotionState == 0)
+            {
+                pG32->ucMotionState = 1; //è¿åŠ¨çŠ¶æ€ä¸ºåŠ é€Ÿ
+            }
+            else if (pG32->ucMotionState < 0) //é€Ÿåº¦è§„åˆ’å¤±è´¥
+            {
+                parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
+                return;
+            }
 
-				if (pG32->dStartPointCompensate < 0)
-				{
-					double dMaxDelta = pG32->SUserData.dDec;  //µ¥´Î²¹³¥ËùÔÊĞíµÄ×î¸ßÖµ
-					if (fabs(pG32->dStartPointCompensate) > dMaxDelta)
-					{
-						pG32->SPlanData.dTargetDist -= dMaxDelta;
-						pG32->SPlanData.dCurLeftDist -= dMaxDelta;
-						pG32->dStartPointCompensate += dMaxDelta;
-					}
-					else
-					{
-						pG32->SPlanData.dTargetDist  += pG32->dStartPointCompensate;
-						pG32->SPlanData.dCurLeftDist += pG32->dStartPointCompensate;
-						pG32->dStartPointCompensate = 0;
+            cRunState = motionForG32(pG32, &dLongAxisDelta, dDistFromSpindle, dVectorFromSpindle, dAcc,
+                                     dDec); //è·å–è®¡ç®—G32è¿åŠ¨æ’è¡¥ç‚¹çš„çŠ¶æ€
+            //è‹¥è®¡ç®—æ’è¡¥ç‚¹å¤±è´¥ï¼Œåˆ™æš‚åœ
+            if (cRunState == -1)
+            {
+                // *pSystemStatus = SYS_RUN_TO_PAUSE;  //ç³»ç»ŸçŠ¶æ€ç½®ä¸ºæš‚åœ
+                pG32->dShortAxisPos = 0;
+                pG32->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+                pSPreprocess->ucInpStatus = INP_FINISHED;
+                pG32->ucG32Step = G32_OCCUPATION; //è¿è¡Œæ­¥éª¤åˆå§‹åŒ–
+                g_dTime = 0;                      //G32è¿è¡Œæ¬¡æ•°ï¼ˆæµ‹è¯•ï¼‰
+                *pSystemStatus = SYS_PAUSE;       //ç³»ç»ŸçŠ¶æ€ç½®ä¸ºæš‚åœ
+                return;
+            }
 
-					}
+            //è‹¥ä¸ºå‡é€Ÿè§„åˆ’ç±»å‹è¿ç»­G32,åŒæ—¶è¿˜æœªè¿›è¡Œå‡é€Ÿè§„åˆ’
+            if (pG32->bDecPlanTransitionFlag && pG32->unTac == 0)
+            {
+                prepareG32RepeatDecPlanning(pG32, &dLongAxisDelta); //å‡é€Ÿç±»å‹è¿ç»­G32è¿‡æ¸¡è§„åˆ’
+            }
 
-				}
-				else
-				{
-					//ËÙ¶ÈÔö¼Ó»á±»¹æ»®ÇúÏßÏŞÖÆ£¬ËùÓĞÖ±½Ó½«ÆğÊ¼²¹³¥Á¿È«²¿·ÅÈë¹æ»®Î´ÒÆ¶¯µÄ¾àÀë¼´¿É
-					pG32->SPlanData.dTargetDist += pG32->dStartPointCompensate;
-					pG32->SPlanData.dCurLeftDist += pG32->dStartPointCompensate;
-					//pG32->dStartPointCompensateCopy = pG32->dStartPointCompensate;  //»ñÈ¡ÆğÊ¼²¹³¥Á¿¸±±¾£¨ÓÃÓÚ±ä×¶¶ÈÂİÎÆ£¬¶ÌÖáµÄËÙ¶È¹æ»®²¹³¥£©
-					pG32->dStartPointCompensate = 0;
-				}
+            //é€€å°¾å¤„ç†
+            if (!isZero(pG32->dJ) && !pG32->bLeftTailFlag)
+            {
+                retreatTailPre(pG32); //é€€å°¾é¢„å¤„ç†
+                if (pG32->bLeftTailFlag)
+                {
+                    pG32->ucG32Step = G32_BACKTAIL;
+                }
+            }
 
-			}
+            //åˆ¤æ–­æ˜¯å¦åˆ°è¾¾ç»ˆç‚¹(æˆ–åæ ‡ç‚¹è®¡ç®—å¤±è´¥éœ€æš‚åœ)
+            if (dLongAxisDelta > 0 || isZero(dLongAxisDelta))
+            {
+                //è‹¥èƒ½æ­£å¸¸è®¡ç®—æ’è¡¥ç‚¹
+                //ä¸ºåŠ é€Ÿç±»å‹çš„è¿ç»­G32
+                if (!pG32->bDecPlanTransitionFlag && !isZero(pG32->dNextG32LongAxisSpeed))
+                {
+                    compensateForAccRepeatG32(pG32); //åŠ é€Ÿç±»å‹è¿ç»­G32çš„è¡¥å¿é‡è®¡ç®—
+                }
+                //å½“ä¸ºè¿ç»­G32æ—¶å­˜å‚¨æœ¬æ¬¡G32çš„é”¥åº¦ï¼Œç”¨äºä¸‹ä¸€æ®µG32çš„é”¥åº¦æ¯”è¾ƒ
+                if (getSToolCompPointerBufRes(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum) >
+                    0) //è‹¥"é€Ÿåº¦è§„åˆ’è¯»"æŒ‡é’ˆæœ‰å†…å®¹å¯è¯»
+                {
+                    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
+                    pSToolCompPointer =
+                        getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
+                    if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT)
+                    {
+                        pG32->dLastRatioXZ = pG32->dRatioXZ; //å­˜å‚¨æœ¬æ¬¡G32çš„é”¥åº¦
+                    }
+                }
+                else
+                {
+                    pG32->dLastRatioXZ = 0; //ä¸éœ€è¦å­˜å‚¨æœ¬æ¬¡G32çš„é”¥åº¦
+                }
+                pG32->dShortAxisPos = 0;
+                pG32->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+                pSPreprocess->ucInpStatus = INP_FINISHED;
+                pG32->ucG32Step = G32_OCCUPATION; //è¿è¡Œæ­¥éª¤åˆå§‹åŒ–
+                g_dTime = 0;                      //G32è¿è¡Œæ¬¡æ•°ï¼ˆæµ‹è¯•ï¼‰
 
-			//½øĞĞËÙ¶È¹æ»®£¬²¢·µ»Øµ±Ç°µÄÔË¶¯×´Ì¬
-			pG32->ucMotionState = newAddDistace(pG32, &pG32->SPlanData, dDistFromSpindle, dAcc, dDec, dVectorFromSpindle, pG32->dCurrentSpeed);
+                //G32è¿è¡Œè¿‡ç¨‹ä¸­ï¼Œä¸æš‚åœï¼Œè¿è¡Œå®Œåæ‰æš‚åœ
+                if (*pSystemStatus == SYS_RUN_TO_PAUSE && pSPreprocess->ucInpStatus == INP_FINISHED)
+                {
+                    *pSystemStatus = SYS_PAUSE; //ç³»ç»ŸçŠ¶æ€ç½®ä¸ºæš‚åœ
+                }
+            }
+        }
+    }
+    break;
+    case G32_BACKTAIL:
+    {
+        double dLongAxisDeltal;         //é•¿è½´ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
+        double dShortAxisDeltal;        //çŸ­è½´ç›¸å¯¹èµ·ç‚¹çš„è·ç¦»
+        SPointDouble STargetPoint;      //å½“å‰ç‚¹çš„ç†è®ºç»å¯¹åæ ‡
+        struct _SRun* pSRun;            //è¿è¡Œç»“æ„ä½“
+        pSRun = &pG32->pSChannel->SRun; //è¿è¡Œç»“æ„ä½“
 
-			//ÉÏÖÜÆÚµÄ¹æ»®ÊÇËæ¶¯×´Ì¬£¬±¾ÖÜÆÚµÄ¹æ»®ÊÇ¼ÓËÙ×´Ì¬£¬ÔòÄ¬ÈÏÎªËæ¶¯½×¶ÎÄÚµÄ¼ÓËÙ
-			if (ucMotionStateLast == 1 && pG32->ucMotionState == 0)
-			{
-				pG32->ucMotionState = 1;  //ÔË¶¯×´Ì¬Îª¼ÓËÙ
-			}
-			else if (pG32->ucMotionState < 0)//ËÙ¶È¹æ»®Ê§°Ü
-			{
-				parseRunningError(pG32->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM153,9999);
-				return; 
-			}
+        pG32->SPlanData.unCurrentT += 1; //è¿è¡Œæ—¶é—´å¢åŠ 
+        //è·å–currentTæ—¶åˆ»çš„çº¿æ®µé•¿ï¼ˆç›´çº¿ï¼‰
 
-			
-			cRunState = motionForG32(pG32, &dLongAxisDelta, dDistFromSpindle, dVectorFromSpindle, dAcc, dDec);  //»ñÈ¡¼ÆËãG32ÔË¶¯²å²¹µãµÄ×´Ì¬
-			//Èô¼ÆËã²å²¹µãÊ§°Ü£¬ÔòÔİÍ£
-			if (cRunState == -1)
-			{
-				// *pSystemStatus = SYS_RUN_TO_PAUSE;  //ÏµÍ³×´Ì¬ÖÃÎªÔİÍ£
-				pG32->dShortAxisPos = 0;
-				pG32->ucInpStatus = INP_FINISHED;           //×´Ì¬¸Ä±äÎªFINISHED
-				pSPreprocess->ucInpStatus = INP_FINISHED;
-				pG32->ucG32Step = G32_OCCUPATION;           //ÔËĞĞ²½Öè³õÊ¼»¯
-				g_dTime = 0;                                //G32ÔËĞĞ´ÎÊı£¨²âÊÔ£©
-				*pSystemStatus = SYS_PAUSE;					//ÏµÍ³×´Ì¬ÖÃÎªÔİÍ£
-				return;
-			}
+        /*ä¿®æ”¹2025.11.27 ä½¿ç”¨G1è¿›è¡Œé€€å°¾ï¼Œä¸éœ€è¦çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’*/
+        // if (pG32->SExcessPlanForG32 != NULL)
+        // {
+        // 	dLongAxisDeltal  = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData));
+        // 	dShortAxisDeltal = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, pG32->SExcessPlanForG32);
+        // 	//è®¡ç®—é•¿è½´ç†è®ºåæ ‡ç‚¹
+        // 	calculateExactPointForG32BackTail((double*)&STargetPoint, dLongAxisDeltal, dShortAxisDeltal, pG32);
+        // }
+        dLongAxisDeltal = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData)); //è®¡ç®—é•¿è½´è·ç¦»
+        //		pG32->dRatioXZ = (pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]]) / pG32->dK;//è®¡ç®—çŸ­è½´ä¸é•¿è½´çš„æ¯”å€¼
+        //      pG32->dRatioXZ = (pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]]) / (pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[0]]);//ä¿®æ”¹2026.1.14 è®¡ç®—çŸ­è½´ä¸é•¿è½´çš„æ¯”å€¼
+        dShortAxisDeltal = dLongAxisDeltal * pG32->dRatioXZ; // è®¡ç®—çŸ­è½´è·ç¦»
 
-			//ÈôÎª¼õËÙ¹æ»®ÀàĞÍÁ¬ĞøG32,Í¬Ê±»¹Î´½øĞĞ¼õËÙ¹æ»®
-			if (pG32->bDecPlanTransitionFlag && pG32->unTac == 0)
-			{
-				prepareG32RepeatDecPlanning(pG32, &dLongAxisDelta);  //¼õËÙÀàĞÍÁ¬ĞøG32¹ı¶É¹æ»®
+        // è®¡ç®—é•¿çŸ­è½´ç†è®ºåæ ‡ç‚¹
+        calculateExactPointForG32BackTail((double*)&STargetPoint, dLongAxisDeltal, dShortAxisDeltal, pG32);
+        /*ä¿®æ”¹2025.11.27 ä½¿ç”¨G1è¿›è¡Œé€€å°¾ï¼Œä¸éœ€è¦çŸ­è½´è¿›è¡Œé€Ÿåº¦è§„åˆ’*/
 
-			}
-
-			//ÍËÎ²´¦Àí
-			if (!isZero(pG32->dJ) && !pG32->bLeftTailFlag)
-			{
-				retreatTailPre(pG32); //ÍËÎ²Ô¤´¦Àí
-				if (pG32->bLeftTailFlag)
-				{
-					pG32->ucG32Step = G32_BACKTAIL;
-				}
-			}
-
-			//ÅĞ¶ÏÊÇ·ñµ½´ïÖÕµã(»ò×ø±êµã¼ÆËãÊ§°ÜĞèÔİÍ£)
-			if (dLongAxisDelta > 0 || isZero(dLongAxisDelta))
-			{
-				//ÈôÄÜÕı³£¼ÆËã²å²¹µã
-				//Îª¼ÓËÙÀàĞÍµÄÁ¬ĞøG32
-				if (!pG32->bDecPlanTransitionFlag && !isZero(pG32->dNextG32LongAxisSpeed))
-				{
-					compensateForAccRepeatG32(pG32);  //¼ÓËÙÀàĞÍÁ¬ĞøG32µÄ²¹³¥Á¿¼ÆËã
-
-				}
-				//µ±ÎªÁ¬ĞøG32Ê±´æ´¢±¾´ÎG32µÄ×¶¶È£¬ÓÃÓÚÏÂÒ»¶ÎG32µÄ×¶¶È±È½Ï
-				if (getSToolCompPointerBufRes(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum) > 0)  //Èô"ËÙ¶È¹æ»®¶Á"Ö¸ÕëÓĞÄÚÈİ¿É¶Á
-				{
-					struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
-					pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pG32->pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
-					if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT)
-					{
-						pG32->dLastRatioXZ = pG32->dRatioXZ;  //´æ´¢±¾´ÎG32µÄ×¶¶È
-					}
-
-					}
-				else
-				{
-					pG32->dLastRatioXZ = 0;  //²»ĞèÒª´æ´¢±¾´ÎG32µÄ×¶¶È
-
-				}
-				pG32->dShortAxisPos = 0;
-				pG32->ucInpStatus = INP_FINISHED;           //×´Ì¬¸Ä±äÎªFINISHED
-				pSPreprocess->ucInpStatus = INP_FINISHED;
-				pG32->ucG32Step = G32_OCCUPATION;           //ÔËĞĞ²½Öè³õÊ¼»¯
-				g_dTime = 0;                                //G32ÔËĞĞ´ÎÊı£¨²âÊÔ£©
-
-				//G32ÔËĞĞ¹ı³ÌÖĞ£¬²»ÔİÍ££¬ÔËĞĞÍêºó²ÅÔİÍ£
-				if (*pSystemStatus == SYS_RUN_TO_PAUSE && pSPreprocess->ucInpStatus == INP_FINISHED)
-				{
-					*pSystemStatus = SYS_PAUSE;  //ÏµÍ³×´Ì¬ÖÃÎªÔİÍ£
-
-				}
-			}
-
-		}
-
-	}
-	break;
-	case G32_BACKTAIL:
-	{
-		double dLongAxisDeltal;          //³¤ÖáÏà¶ÔÆğµãµÄ¾àÀë 
-		double dShortAxisDeltal;        //¶ÌÖáÏà¶ÔÆğµãµÄ¾àÀë
-		SPointDouble STargetPoint;       //µ±Ç°µãµÄÀíÂÛ¾ø¶Ô×ø±ê
-		struct _SRun* pSRun;             //ÔËĞĞ½á¹¹Ìå
-		pSRun = &pG32->pSChannel->SRun;  //ÔËĞĞ½á¹¹Ìå
-
-		pG32->SPlanData.unCurrentT += 1;  //ÔËĞĞÊ±¼äÔö¼Ó
-		//»ñÈ¡currentTÊ±¿ÌµÄÏß¶Î³¤£¨Ö±Ïß£©
-
-		/*ĞŞ¸Ä2025.11.27 Ê¹ÓÃG1½øĞĞÍËÎ²£¬²»ĞèÒª¶ÌÖá½øĞĞËÙ¶È¹æ»®*/
-			// if (pG32->SExcessPlanForG32 != NULL)
-			// {
-			// 	dLongAxisDeltal  = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData));
-			// 	dShortAxisDeltal = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, pG32->SExcessPlanForG32);
-			// 	//¼ÆËã³¤ÖáÀíÂÛ×ø±êµã
-			// 	calculateExactPointForG32BackTail((double*)&STargetPoint, dLongAxisDeltal, dShortAxisDeltal, pG32);
-			// }
-		dLongAxisDeltal = nextstepPlanningAndDistReAvg(pG32->SPlanData.unCurrentT, &(pG32->SPlanData));//¼ÆËã³¤Öá¾àÀë
-//		pG32->dRatioXZ = (pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]]) / pG32->dK;//¼ÆËã¶ÌÖáÓë³¤ÖáµÄ±ÈÖµ	
-//      pG32->dRatioXZ = (pG32->SEndPoint.dArray[pG32->ucAxis[1]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[1]]) / (pG32->SEndPoint.dArray[pG32->ucAxis[0]] - pG32->SBackTailPoint.dArray[pG32->ucAxis[0]]);//ĞŞ¸Ä2026.1.14 ¼ÆËã¶ÌÖáÓë³¤ÖáµÄ±ÈÖµ
-		dShortAxisDeltal = dLongAxisDeltal * pG32->dRatioXZ ; // ¼ÆËã¶ÌÖá¾àÀë
-
-		// ¼ÆËã³¤¶ÌÖáÀíÂÛ×ø±êµã
-		calculateExactPointForG32BackTail((double *)&STargetPoint, dLongAxisDeltal, dShortAxisDeltal, pG32);
-		/*ĞŞ¸Ä2025.11.27 Ê¹ÓÃG1½øĞĞÍËÎ²£¬²»ĞèÒª¶ÌÖá½øĞĞËÙ¶È¹æ»®*/
-
-#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//ÇãĞ±YÖá»ú 
-		if (pG32->pSChannel->bUseVirtualY == TRUE)
-		{
-			if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
-			{
-				STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pG32->pSChannel->dTANAngleYY1;
-			}
-			if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
-			{
-				STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pG32->pSChannel->dCOSAngleYY1;
-			}
-		}
+#if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //å€¾æ–œYè½´æœº
+        if (pG32->pSChannel->bUseVirtualY == TRUE)
+        {
+            if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_X))
+            {
+                STargetPoint.dArray[AXIS_X] += 1.0 * STargetPoint.dArray[AXIS_Y] * pG32->pSChannel->dTANAngleYY1;
+            }
+            if (VAL_VALID == getbit(pG32->ucValStatus, AXIS_Y))
+            {
+                STargetPoint.dArray[AXIS_Y] = STargetPoint.dArray[AXIS_Y] / pG32->pSChannel->dCOSAngleYY1;
+            }
+        }
 #endif
 
-#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //µ¥±íÂİ¾à²¹³¥+ ·´Ïò¼äÏ¶²¹³¥
-		//ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus);
-#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //Ë«±íÂİ¾à²¹³¥
-		outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus);
+#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //å•è¡¨èºè·è¡¥å¿+ åå‘é—´éš™è¡¥å¿
+        //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray,
+                                    pG32->dPulseToMm, &pG32->ucValStatus);
+#elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //åŒè¡¨èºè·è¡¥å¿
+        outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX,
+                                             pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus);
 #else
-		// ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ
-		outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm, &pG32->ucValStatus); //ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ£¨Î´Íê³É£©
+        // åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®
+        outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, pG32->dPulseToMm,
+                       &pG32->ucValStatus); //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®ï¼ˆæœªå®Œæˆï¼‰
 #endif
 
-		//¼ÆËãµ±Ç°ËÙ¶È
-		pG32->dCurrentSpeed = fabs(pG32->SPlanData.dCurLeftDist - (pG32->SPlanData.dTargetDist - dLongAxisDeltal)) / pG32->SPlanData.dTc;
+        //è®¡ç®—å½“å‰é€Ÿåº¦
+        pG32->dCurrentSpeed =
+            fabs(pG32->SPlanData.dCurLeftDist - (pG32->SPlanData.dTargetDist - dLongAxisDeltal)) / pG32->SPlanData.dTc;
 
-		//¼ÆËã   !ÀíÂÛ! Î´×ß¾àÀë
-		pG32->SPlanData.dCurLeftDist = pG32->SPlanData.dTargetDist - dLongAxisDeltal;
+        //è®¡ç®—   !ç†è®º! æœªèµ°è·ç¦»
+        pG32->SPlanData.dCurLeftDist = pG32->SPlanData.dTargetDist - dLongAxisDeltal;
 
-		//ÔËĞĞ½áÊøÌõ¼ş
-		if ((pG32->SPlanData.dCurLeftDist <= EPSINON))
-		{
-			pG32->ucInpStatus = INP_FINISHED;           //×´Ì¬¸Ä±äÎªFINISHED
-			pSPreprocess->ucInpStatus = INP_FINISHED;
-			pG32->ucG32Step = G32_OCCUPATION;           //ÔËĞĞ²½Öè³õÊ¼»¯
-			g_dTime = 0;                                //G32ÔËĞĞ´ÎÊı£¨²âÊÔ£©
+        //è¿è¡Œç»“æŸæ¡ä»¶
+        if ((pG32->SPlanData.dCurLeftDist <= EPSINON))
+        {
+            pG32->ucInpStatus = INP_FINISHED; //çŠ¶æ€æ”¹å˜ä¸ºFINISHED
+            pSPreprocess->ucInpStatus = INP_FINISHED;
+            pG32->ucG32Step = G32_OCCUPATION; //è¿è¡Œæ­¥éª¤åˆå§‹åŒ–
+            g_dTime = 0;                      //G32è¿è¡Œæ¬¡æ•°ï¼ˆæµ‹è¯•ï¼‰
 
-			if (pG32->SExcessPlanForG32 != NULL)
-			{
-				free(pG32->SExcessPlanForG32);        //ÊÍ·Å¶ÌÖáËÙ¶È¹æ»®²ÎÊıÖ¸Õë
-				pG32->SExcessPlanForG32 = NULL;
-			}
-			
+            if (pG32->SExcessPlanForG32 != NULL)
+            {
+                free(pG32->SExcessPlanForG32); //é‡Šæ”¾çŸ­è½´é€Ÿåº¦è§„åˆ’å‚æ•°æŒ‡é’ˆ
+                pG32->SExcessPlanForG32 = NULL;
+            }
 
-			//G32ÔËĞĞ¹ı³ÌÖĞ£¬²»ÔİÍ££¬ÔËĞĞÍêºó²ÅÔİÍ£
-			if (*pSystemStatus == SYS_RUN_TO_PAUSE && pSPreprocess->ucInpStatus == INP_FINISHED)
-			{
-				*pSystemStatus = SYS_PAUSE;  //ÏµÍ³×´Ì¬ÖÃÎªÔİÍ£
-				changeNoRepeatG32(pG32->pSChannel);//½«ÏÂÒ»¶ÎG32ĞŞ¸ÄÎª·ÇÁ¬ĞøG32
-			}
-			
-		}
-	}
-	break;
-	default:
-		break;
-
-	}
-
+            //G32è¿è¡Œè¿‡ç¨‹ä¸­ï¼Œä¸æš‚åœï¼Œè¿è¡Œå®Œåæ‰æš‚åœ
+            if (*pSystemStatus == SYS_RUN_TO_PAUSE && pSPreprocess->ucInpStatus == INP_FINISHED)
+            {
+                *pSystemStatus = SYS_PAUSE;         //ç³»ç»ŸçŠ¶æ€ç½®ä¸ºæš‚åœ
+                changeNoRepeatG32(pG32->pSChannel); //å°†ä¸‹ä¸€æ®µG32ä¿®æ”¹ä¸ºéè¿ç»­G32
+            }
+        }
+    }
+    break;
+    default:
+        break;
+    }
 }
 
 void initResetForG32(struct SChannel* pSChannel)
 {
-	// if(getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT) ÔİÊ±×¢ÊÍ£¬Ã»ÓÃ×÷ÓÃ
-	// {
-	// 	pSChannel->SG32.SPlanData.dTargetDist += pSChannel->SG00.pSSingleAxisArray[pSChannel->SG32.ucAxis[0]].SPlanData.dDistance;
-	// }
-	changeNoRepeatG32(pSChannel);
+    // if(getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT) æš‚æ—¶æ³¨é‡Šï¼Œæ²¡ç”¨ä½œç”¨
+    // {
+    // 	pSChannel->SG32.SPlanData.dTargetDist += pSChannel->SG00.pSSingleAxisArray[pSChannel->SG32.ucAxis[0]].SPlanData.dDistance;
+    // }
+    changeNoRepeatG32(pSChannel);
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid changeNoRepeatG32(struct SChannel* pSChannel)
-  º¯Êı¹¦ÄÜ£ºĞŞ¸ÄÎª·ÇÁ¬ĞøG32
-  ÊäÈë²ÎÊı£º*pSChannel£¬   Í¨µÀ½á¹¹ÌåÖ¸Õë
-  Êä³ö²ÎÊı£ºÎŞ
-  ·µ »Ø Öµ£ºÎŞ
-  ±¸    ×¢£ºÎŞ
+  å‡½æ•°åç§°ï¼švoid changeNoRepeatG32(struct SChannel* pSChannel)
+  å‡½æ•°åŠŸèƒ½ï¼šä¿®æ”¹ä¸ºéè¿ç»­G32
+  è¾“å…¥å‚æ•°ï¼š*pSChannelï¼Œ   é€šé“ç»“æ„ä½“æŒ‡é’ˆ
+  è¾“å‡ºå‚æ•°ï¼šæ— 
+  è¿” å› å€¼ï¼šæ— 
+  å¤‡    æ³¨ï¼šæ— 
 **************************************************/
 void changeNoRepeatG32(struct SChannel* pSChannel)
 {
-	struct SToolCompensation* pSToolCompPointer = NULL;                //µ¶²¹ºó²úÉúµÄ½á¹¹ÌåÖ¸Õë£¬ÓÃÓÚ¶ÁÈ¡ÏÂÒ»¸öÖ¸ÁîÀàĞÍ
+    struct SToolCompensation* pSToolCompPointer = NULL; //åˆ€è¡¥åäº§ç”Ÿçš„ç»“æ„ä½“æŒ‡é’ˆï¼Œç”¨äºè¯»å–ä¸‹ä¸€ä¸ªæŒ‡ä»¤ç±»å‹
 
-	//Èô"ËÙ¶È¹æ»®¶Á"Ö¸ÕëÓĞÄÚÈİ¿É¶Á
-	if (getSToolCompPointerBufRes(INTERPOLATION_READ, pSChannel->ucChannelNum) > 0)
-	{
-		pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pSChannel->ucChannelNum); //»ñÈ¡"ËÙ¶È¹æ»®¶Á"
-		if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT)
-		{
-			 pSToolCompPointer->bRepeatG32Flag = FALSE;//½«ÏÂÒ»¶ÎG32ÉèÖÃÎª·ÇÁ¬Ğø
-		}
-	}
-	if(pSChannel->ucChannelStatus == SYS_IDLE && getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT)//¿ÕÏĞ×´Ì¬½«G32¸ÄÎªÄ¬ÈÏG0
-	{
-		setBits(pSChannel->SRun.unCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR); // ¸ÄÎª¿ìËÙÒÆ¶¯
-	}
+    //è‹¥"é€Ÿåº¦è§„åˆ’è¯»"æŒ‡é’ˆæœ‰å†…å®¹å¯è¯»
+    if (getSToolCompPointerBufRes(INTERPOLATION_READ, pSChannel->ucChannelNum) > 0)
+    {
+        pSToolCompPointer = getSToolCompPointerByType(INTERPOLATION_READ, pSChannel->ucChannelNum); //è·å–"é€Ÿåº¦è§„åˆ’è¯»"
+        if (getBits(pSToolCompPointer->unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT)
+        {
+            pSToolCompPointer->bRepeatG32Flag = FALSE; //å°†ä¸‹ä¸€æ®µG32è®¾ç½®ä¸ºéè¿ç»­
+        }
+    }
+    if (pSChannel->ucChannelStatus == SYS_IDLE &&
+        getBits(pSChannel->SRun.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_SCREWCUT) //ç©ºé—²çŠ¶æ€å°†G32æ”¹ä¸ºé»˜è®¤G0
+    {
+        setBits(pSChannel->SRun.unCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR); // æ”¹ä¸ºå¿«é€Ÿç§»åŠ¨
+    }
 }
 
 //void getHandWheelData(struct SChannel* pSChannel)
@@ -3309,11 +3271,11 @@ void changeNoRepeatG32(struct SChannel* pSChannel)
 //	pEncoder = pSChannel->pSHandleWheelEncoder;
 //	uint8 ucAXISNum = g_SEncoder[HANDEWHEEL_ENCODER - 1].AXISNum;
 //	uint8* pMapAxisArray = pSChannel->pMapAxisArray;
-//	int i = 0;  //Ñ­»·´ÎÊı
-//	double dDeltaL; //¸÷¸öÖáµÄÎ»ÒÆÔöÁ¿
+//	int i = 0;  //å¾ªç¯æ¬¡æ•°
+//	double dDeltaL; //å„ä¸ªè½´çš„ä½ç§»å¢é‡
 //	VAL_STRUCT_TYPE ucValStatus = 0;
 //
-//	//»ñÈ¡ÊÖÂÖĞı×ª¶ÔÓ¦µÄÂö³åÊı
+//	//è·å–æ‰‹è½®æ—‹è½¬å¯¹åº”çš„è„‰å†²æ•°
 //	if (pEncoder->cEncoderDir == INP_GO_BACK)
 //	{
 //		usSendValue = -pEncoder->usDelta * pEncoder->ucWheelMultiple;
@@ -3323,7 +3285,7 @@ void changeNoRepeatG32(struct SChannel* pSChannel)
 //		usSendValue = pEncoder->usDelta * pEncoder->ucWheelMultiple;
 //	}
 //
-//	//µÃµ½ÔÊĞíÈ¥Æµ»¯µÄÂö³å
+//	//å¾—åˆ°å…è®¸å»é¢‘åŒ–çš„è„‰å†²
 //	if (abs(usSendValue) % 4 != 0)
 //	{
 //		pEncoder->dDelataAccmulate += usSendValue;
@@ -3335,47 +3297,47 @@ void changeNoRepeatG32(struct SChannel* pSChannel)
 //		}
 //	}
 //
-//	//ĞéÄâÖáµÄÓ³Éä²»Îª¿Õ
+//	//è™šæ‹Ÿè½´çš„æ˜ å°„ä¸ä¸ºç©º
 //	if (pMapAxisArray[ucAXISNum] != AXIS_NULL)
 //	{
-//		double dAxisPulseToMm = 0;  //ÔË¶¯ÖáÂö³åÊı¶ÔÓ¦µÄ¾àÀë
-//		SPointDouble STargetPoint;  //µ±Ç°µãµÄÀíÂÛ¾ø¶Ô×ø±ê
-//		struct SPlan* pSPlanPointer = &pSChannel->SSingleAxisArray[ucAXISNum].SPlanData;  //ÊÖÂÖËù¿ØÖÆÔË¶¯ÖáµÄËÙ¶È¹æ»®½á¹¹Ìå
-//		double dPreDist = 0;  //ÒÑ²å²¹³¤¶È
+//		double dAxisPulseToMm = 0;  //è¿åŠ¨è½´è„‰å†²æ•°å¯¹åº”çš„è·ç¦»
+//		SPointDouble STargetPoint;  //å½“å‰ç‚¹çš„ç†è®ºç»å¯¹åæ ‡
+//		struct SPlan* pSPlanPointer = &pSChannel->SSingleAxisArray[ucAXISNum].SPlanData;  //æ‰‹è½®æ‰€æ§åˆ¶è¿åŠ¨è½´çš„é€Ÿåº¦è§„åˆ’ç»“æ„ä½“
+//		double dPreDist = 0;  //å·²æ’è¡¥é•¿åº¦
 //		dPreDist = pSPlanPointer->dTargetDist - pSPlanPointer->dCurLeftDist;
-//		uint8 ucPlanState = 0;//ËÙ¶È¹æ»®×´Ì¬±êÖ¾Î»
+//		uint8 ucPlanState = 0;//é€Ÿåº¦è§„åˆ’çŠ¶æ€æ ‡å¿—ä½
 //
 //		int8 cVector = sgn(pEncoder->sAxisAccmulate[ucAXISNum] - round(dPreDist / g_SSystemPara.SAxisPara[pMapAxisArray[i]].dPulseToMm));
 //		int8 cVectorBack = sgn(usSendValue);
 //
-//		//ÊÖÂÖÓĞ²¦¶¯
+//		//æ‰‹è½®æœ‰æ‹¨åŠ¨
 //		if (usSendValue != 0)
 //		{
-//			//ÊÖÂÖ·½Ïò·¢Éú±ä»¯
+//			//æ‰‹è½®æ–¹å‘å‘ç”Ÿå˜åŒ–
 //			if (cVector != cVectorBack)
 //			{
-//				pEncoder->sPulseForChangeDie[ucAXISNum] += usSendValue; //»»ÏòÊ±µÄÂö³å»º³å£¨ÊıÖµ²»Îª0¼´Îª»»Ïò±êÖ¾Î»£©
+//				pEncoder->sPulseForChangeDie[ucAXISNum] += usSendValue; //æ¢å‘æ—¶çš„è„‰å†²ç¼“å†²ï¼ˆæ•°å€¼ä¸ä¸º0å³ä¸ºæ¢å‘æ ‡å¿—ä½ï¼‰
 //			}
 //			else
 //			{
-//				pEncoder->sAxisAccmulate[ucAXISNum] += usSendValue;   //ĞéÄâÖá
+//				pEncoder->sAxisAccmulate[ucAXISNum] += usSendValue;   //è™šæ‹Ÿè½´
 //			}
 //
 //		}
 //
-//		SPointDouble SRealTimePoint;  //»ñÈ¡µ±Ç°ÊµÊ±µã
-//		getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pMapAxisArray, NULL);  //»ñÈ¡ÊµÊ±×ø±ê
+//		SPointDouble SRealTimePoint;  //è·å–å½“å‰å®æ—¶ç‚¹
+//		getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pMapAxisArray, NULL);  //è·å–å®æ—¶åæ ‡
 //
-//		//ÓÉÓÚ¿ÉÄÜ´æÔÚ¶àÖáÔË¶¯µÄÇé¿ö£¬ËùÒÔµÃÕâÃ´´¦Àí
+//		//ç”±äºå¯èƒ½å­˜åœ¨å¤šè½´è¿åŠ¨çš„æƒ…å†µï¼Œæ‰€ä»¥å¾—è¿™ä¹ˆå¤„ç†
 //		for (i = 0; i < AXIS_NUM_MAX; i++)
 //		{
-//			dDeltaL = 0;				//³õÊ¼»¯¸÷¸öÖáµÄÎ»ÒÆÔöÁ¿
-//			STargetPoint.dArray[i] = 0; //³õÊ¼»¯¸÷¸öÖáÄ¿±ê×ø±ê
+//			dDeltaL = 0;				//åˆå§‹åŒ–å„ä¸ªè½´çš„ä½ç§»å¢é‡
+//			STargetPoint.dArray[i] = 0; //åˆå§‹åŒ–å„ä¸ªè½´ç›®æ ‡åæ ‡
 //
-//			//ÔË¶¯ÖáµÄ´æÔÚÎ´¹æ»®µÄÂö³åÊı
+//			//è¿åŠ¨è½´çš„å­˜åœ¨æœªè§„åˆ’çš„è„‰å†²æ•°
 //			if (pEncoder->sAxisAccmulate[i] != 0)
 //			{
-//				pSChannel->SSingleAxisArray[i].SPlanData.cInterpDir = sgn(pEncoder->sAxisAccmulate[i]);  //·½ÏòÅĞ¶Ï·½Ê½´ı¶¨
+//				pSChannel->SSingleAxisArray[i].SPlanData.cInterpDir = sgn(pEncoder->sAxisAccmulate[i]);  //æ–¹å‘åˆ¤æ–­æ–¹å¼å¾…å®š
 //				dAxisPulseToMm = fabs(pEncoder->sAxisAccmulate[i]) * g_SSystemPara.SAxisPara[pMapAxisArray[i]].dPulseToMm;
 //				ucPlanState = handWheelAddNewPlan(&pSChannel->SSingleAxisArray[i].SPlanData, dAxisPulseToMm, g_SSystemPara.SAxisPara[pMapAxisArray[i]].dVs, g_SSystemPara.SAxisPara[pMapAxisArray[i]].dVe, pEncoder->dAxisCurrentSpeed[i]);
 //				dDeltaL = nextstepPlanningAndDistReAvg(1, &pSChannel->SSingleAxisArray[i].SPlanData);
@@ -3384,36 +3346,36 @@ void changeNoRepeatG32(struct SChannel* pSChannel)
 //			}
 //		}
 //
-//		outPutAbsPoint(&pSChannel->SRun, (double*)&STargetPoint, AXIS_NUM_MAX, pSChannel->pMapAxisArray, pSChannel->SG01.dPulseToMm, &ucValStatus); //ÀûÓÃÀíÂÛ×ø±êÉú³ÉSRun½á¹¹ÌåÊı¾İ£¨Î´Íê³É£©
+//		outPutAbsPoint(&pSChannel->SRun, (double*)&STargetPoint, AXIS_NUM_MAX, pSChannel->pMapAxisArray, pSChannel->SG01.dPulseToMm, &ucValStatus); //åˆ©ç”¨ç†è®ºåæ ‡ç”ŸæˆSRunç»“æ„ä½“æ•°æ®ï¼ˆæœªå®Œæˆï¼‰
 //
 //		for (i = 0; i < AXIS_NUM_MAX; i++)
 //		{
-//			if (pSChannel->pMapAxisArray[i] >= AXIS_PHYSICS_NUM_MAX || VAL_VALID != getbit(ucValStatus, i)) continue;  //Ó³ÉäÎª¿ÕµÄÎïÀíÖá  ²»¼ÆËã
+//			if (pSChannel->pMapAxisArray[i] >= AXIS_PHYSICS_NUM_MAX || VAL_VALID != getbit(ucValStatus, i)) continue;  //æ˜ å°„ä¸ºç©ºçš„ç‰©ç†è½´  ä¸è®¡ç®—
 //
-//			//Èç¹ûµ±Ç°ÁôÏÂÎ´ÒÆ¶¯µÄ¾àÀë´óÓÚµÈÓÚ0
+//			//å¦‚æœå½“å‰ç•™ä¸‹æœªç§»åŠ¨çš„è·ç¦»å¤§äºç­‰äº0
 //			if (pSChannel->SSingleAxisArray[i].SPlanData.dCurLeftDist > 0 || isZero(pSChannel->SSingleAxisArray[i].SPlanData.dCurLeftDist))
 //			{
-//				//¼ÆËãµ±Ç°ÀíÂÛËÙ¶È
+//				//è®¡ç®—å½“å‰ç†è®ºé€Ÿåº¦
 //				pEncoder->dAxisCurrentSpeed[i] = fabs(pSChannel->SSingleAxisArray[i].SPlanData.dCurLeftDist - (pSChannel->SSingleAxisArray[i].SPlanData.dTargetDist - dDeltaL)) / pSChannel->SSingleAxisArray[i].SPlanData.dTc;
-//				pSChannel->SSingleAxisArray[i].SPlanData.dCurLeftDist = pSChannel->SSingleAxisArray[i].SPlanData.dTargetDist - dDeltaL;  //¼ÆËãÀíÂÛÎ´×ß¾àÀë
+//				pSChannel->SSingleAxisArray[i].SPlanData.dCurLeftDist = pSChannel->SSingleAxisArray[i].SPlanData.dTargetDist - dDeltaL;  //è®¡ç®—ç†è®ºæœªèµ°è·ç¦»
 //			}
 //			else
 //			{
-//				pEncoder->dAxisCurrentSpeed[i] = 0;  //µ±Ç°ËÙ¶ÈÎª0
+//				pEncoder->dAxisCurrentSpeed[i] = 0;  //å½“å‰é€Ÿåº¦ä¸º0
 //			}
 //
 //		}
 //
-//		//²å²¹½áÊø
+//		//æ’è¡¥ç»“æŸ
 //		if (ucPlanState == 3)
 //		{
-//			pSPlanPointer->dDistance = 0;   //³¤ÖáµÄ²å²¹³¤¶È
-//			pSPlanPointer->dPreDist = 0;   //ÒÑ²å²¹³¤¶È
-//			pSPlanPointer->dTargetDist = 0;   //Ä¿±ê¾àÀëÎŞ×Ü³¤¶ÈÏŞÖÆ
-//			pSPlanPointer->dCurLeftDist = 0;   //¼ÆËãÊ£Óà¾àÀë£¨¹æ»®ÓÃ)
+//			pSPlanPointer->dDistance = 0;   //é•¿è½´çš„æ’è¡¥é•¿åº¦
+//			pSPlanPointer->dPreDist = 0;   //å·²æ’è¡¥é•¿åº¦
+//			pSPlanPointer->dTargetDist = 0;   //ç›®æ ‡è·ç¦»æ— æ€»é•¿åº¦é™åˆ¶
+//			pSPlanPointer->dCurLeftDist = 0;   //è®¡ç®—å‰©ä½™è·ç¦»ï¼ˆè§„åˆ’ç”¨)
 //			pEncoder->sAxisAccmulate[ucAXISNum] = 0;
 //
-//			//»»Ïò»¹Î´ÒÆ¶¯µÄ¾àÀë
+//			//æ¢å‘è¿˜æœªç§»åŠ¨çš„è·ç¦»
 //			if (pEncoder->sPulseForChangeDie[ucAXISNum] != 0)
 //			{
 //				pEncoder->sAxisAccmulate[ucAXISNum] += pEncoder->sPulseForChangeDie[ucAXISNum];
@@ -3427,6 +3389,3 @@ void changeNoRepeatG32(struct SChannel* pSChannel)
 //
 //
 //}
-
-
-

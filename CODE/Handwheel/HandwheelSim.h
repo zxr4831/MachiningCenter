@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright (C) 版权归属沿用原项目，本次注释整理不变更权属。
 @file HandwheelSim.h
 @author Codex（本次移植与注释整理）
@@ -58,8 +58,8 @@ struct SHandwheelSim
 /** 无副作用的单拍预览结果；同一中断内输出成功后才能提交，预览本身不扣减距离。 */
 struct SHandwheelSimTrial
 {
-    double dPosition; /**< 本拍候选理论段进度，范围为 [0, 段长]。 */
-    double dVelocity; /**< 本拍候选周期末有符号速度，单位为路径单位/ms。 */
+    double dPosition;              /**< 本拍候选理论段进度，范围为 [0, 段长]。 */
+    double dVelocity;              /**< 本拍候选周期末有符号速度，单位为路径单位/ms。 */
     enum HANDWHEEL_SIM_STEP eStep; /**< 本拍等待、运动、段完成或暂停完成事件。 */
 };
 
@@ -69,22 +69,22 @@ struct SHandwheelSimTrial
 struct SHandwheelPath
 {
     struct SHandwheelSim SState; /**< 自动插补公共进度、速度和授权。 */
-    bool bBound; /**< 完成全部校验后才接受编码器输入。 */
-    bool bPreparing; /**< 直径圆弧分拍准备中；此时不接受授权、不输出运动。 */
-    bool bUseDistanceMap; /**< 仅直径圆弧需要非线性输入换算。 */
-    bool bArc; /**< TRUE 为 G2/G3，否则为 G1。 */
-    int8 cBindResult; /**< 绑定诊断：1 成功，-2 模式，-3 几何，-4 约束，-5 状态，-6 映射表，-7 坐标。 */
-    int16 sLastPulseArray[AXIS_NUM_MAX]; /**< 最后成功帧，故障候选不得覆盖原报警停车的速度来源。 */
-    double dFeedRatio; /**< 绑定时的进给倍率；运行中改变时请求暂停重绑。 */
-    double dFixedSpeedLimit; /**< 几何及机床约束的固定上限，G99 实时限速不能超过它。 */
-    double dProgramFeed; /**< 绑定时的公共进给，G99 为公共进度单位/r。 */
-    bool bPerRevolution; /**< TRUE 表示 G99，速度上限跟随实测主轴转速。 */
-    bool bSpindleStop; /**< G99 主轴停转后锁存制动，零速取消余量前不接受输入。 */
-    int nDistanceMapIndex; /**< 已完成的输入换算表区间数。 */
-    double dInputDistanceScale; /**< 输入距离/公共进度，普通路径为 1，直径直线绑定时计算。 */
-    double dInputRateToProgress; /**< 直径圆弧导数到公共进度输入单位的固定比例。 */
-    double dAxisMovePerProgressArray[AXIS_NUM_MAX]; /**< 实际轴位移/公共进度；旋转轴以度计，不重复乘当量系数。 */
-    double dMetricArray[HWSIM_PATH_MAP_COUNT + 1]; /**< 显示合成距离的累计积分。 */
+    bool bBound;                 /**< 完成全部校验后才接受编码器输入。 */
+    bool bPreparing;             /**< 直径圆弧分拍准备中；此时不接受授权、不输出运动。 */
+    bool bUseDistanceMap;        /**< 仅直径圆弧需要非线性输入换算。 */
+    bool bArc;                   /**< TRUE 为 G2/G3，否则为 G1。 */
+    int8 cBindResult;            /**< 绑定诊断：1 成功，-2 模式，-3 几何，-4 约束，-5 状态，-6 映射表，-7 坐标。 */
+    int16 sLastPulseArray[AXIS_NUM_MAX];               /**< 最后成功帧，故障候选不得覆盖原报警停车的速度来源。 */
+    double dFeedRatio;                                 /**< 绑定时的进给倍率；运行中改变时请求暂停重绑。 */
+    double dFixedSpeedLimit;                           /**< 几何及机床约束的固定上限，G99 实时限速不能超过它。 */
+    double dProgramFeed;                               /**< 绑定时的公共进给，G99 为公共进度单位/r。 */
+    bool bPerRevolution;                               /**< TRUE 表示 G99，速度上限跟随实测主轴转速。 */
+    bool bSpindleStop;                                 /**< G99 主轴停转后锁存制动，零速取消余量前不接受输入。 */
+    int nDistanceMapIndex;                             /**< 已完成的输入换算表区间数。 */
+    double dInputDistanceScale;                        /**< 输入距离/公共进度，普通路径为 1，直径直线绑定时计算。 */
+    double dInputRateToProgress;                       /**< 直径圆弧导数到公共进度输入单位的固定比例。 */
+    double dAxisMovePerProgressArray[AXIS_NUM_MAX];    /**< 实际轴位移/公共进度；旋转轴以度计，不重复乘当量系数。 */
+    double dMetricArray[HWSIM_PATH_MAP_COUNT + 1];     /**< 显示合成距离的累计积分。 */
     double dMetricRateArray[HWSIM_PATH_MAP_COUNT + 1]; /**< 对归一化几何进度的导数。 */
 };
 
@@ -102,20 +102,20 @@ int8 executeHandwheelPathStep(struct SChannel* pChannel, bool bArc);
 struct SHandwheelSimGroup
 {
     struct SHandwheelSim SAxisStateArray[AXIS_NUM_MAX]; /**< 按逻辑轴索引的独立距离账本。 */
-    struct SHandwheelPath SPath; /**< G1/G2/G3 独享的合成距离账本。 */
-    bool bInstructionBound; /**< TRUE 表示当前指令可接收输入；段间输入不缓存。 */
-    bool bFault; /**< 任一轴发生错误后锁存，禁止继续正常运动。 */
-    bool bAwaitingFreshInput; /**< 模式切换后等待编码器给出一次有效方向。 */
-    bool bReverseBlocked; /**< 全轴位于可回退首端时，静默丢弃继续向外的输入。 */
-    int8 cInputDirection; /**< 本段最后一份有效输入方向；零表示绑定后尚无输入。 */
-    int8 cBoundaryDirection; /**< 未绑定时记录刚完成的端点方向，仅用于段间游标校准。 */
-    int8 cInputRateDirection; /**< 测速方向；换向清窗口，禁止沿用旧高速状态。 */
-    bool bFastInput; /**< 增益大于一的诊断标志；不以此切换控制模式。 */
-    double dFilteredInputRate; /**< 逐拍低通的原始格速，格/秒。 */
-    double dInputGain; /**< 平滑后的新增距离倍率，最小为 1。 */
-    double dInputIdleTime; /**< 距最后有效输入的毫秒数，与测速窗口独立。 */
-    double dInputGapEstimate; /**< 同方向有效输入的平均间隔，单位 ms。 */
-    bool bInputActive; /**< 本段已接收生产采样，允许停摇计时；直接授权接口不置位。 */
+    struct SHandwheelPath SPath;                        /**< G1/G2/G3 独享的合成距离账本。 */
+    bool bInstructionBound;                             /**< TRUE 表示当前指令可接收输入；段间输入不缓存。 */
+    bool bFault;                                        /**< 任一轴发生错误后锁存，禁止继续正常运动。 */
+    bool bAwaitingFreshInput;                           /**< 模式切换后等待编码器给出一次有效方向。 */
+    bool bReverseBlocked;                               /**< 全轴位于可回退首端时，静默丢弃继续向外的输入。 */
+    int8 cInputDirection;                               /**< 本段最后一份有效输入方向；零表示绑定后尚无输入。 */
+    int8 cBoundaryDirection;                            /**< 未绑定时记录刚完成的端点方向，仅用于段间游标校准。 */
+    int8 cInputRateDirection;                           /**< 测速方向；换向清窗口，禁止沿用旧高速状态。 */
+    bool bFastInput;                                    /**< 增益大于一的诊断标志；不以此切换控制模式。 */
+    double dFilteredInputRate;                          /**< 逐拍低通的原始格速，格/秒。 */
+    double dInputGain;                                  /**< 平滑后的新增距离倍率，最小为 1。 */
+    double dInputIdleTime;                              /**< 距最后有效输入的毫秒数，与测速窗口独立。 */
+    double dInputGapEstimate;                           /**< 同方向有效输入的平均间隔，单位 ms。 */
+    bool bInputActive;                                  /**< 本段已接收生产采样，允许停摇计时；直接授权接口不置位。 */
 };
 
 /*************************************************
@@ -131,11 +131,11 @@ bool hasHandwheelReverseHistory(const struct SChannel* pChannel, bool bCompleted
 /** 绑定一个单轴几何段所需的不可变参数，合并参数以避免接口参数过多。 */
 struct SHandwheelSimSegment
 {
-    uint8 ucAxis;          /**< 当前段的逻辑轴号，必须小于 AXIS_NUM_MAX。 */
-    double dLength;        /**< 当前段总长，G0 使用本轴单位，合成轴使用自动公共进度单位。 */
-    double dPosition;      /**< 当前理论段进度，范围为 [0, dLength]。 */
-    double dPeriod;        /**< 插补周期，单位为 ms。 */
-    double dSpeedLimit;    /**< 正值速度上限，单位为路径单位/ms。 */
+    uint8 ucAxis;         /**< 当前段的逻辑轴号，必须小于 AXIS_NUM_MAX。 */
+    double dLength;       /**< 当前段总长，G0 使用本轴单位，合成轴使用自动公共进度单位。 */
+    double dPosition;     /**< 当前理论段进度，范围为 [0, dLength]。 */
+    double dPeriod;       /**< 插补周期，单位为 ms。 */
+    double dSpeedLimit;   /**< 正值速度上限，单位为路径单位/ms。 */
     double dAcceleration; /**< 正值加速度，单位为路径单位/ms^2。 */
     double dDeceleration; /**< 正值减速度，单位为路径单位/ms^2。 */
 };
@@ -194,7 +194,7 @@ void clearHandwheelSimMotion(struct SHandwheelSimGroup* pGroup);
   函数名称：resetHandwheelSimGroup
   函数功能：初始化通道及全部独立轴、合成轴的距离状态
   输入参数：pGroup - 通道状态，允许为空
-  输出参数：pGroup - 清零后的控制状态；圆弧表失效并在下次绑定时重建
+  输出参数：pGroup - 清零后的通道及轴状态
   返 回 值：无
   备    注：仅初始化、确认零速或原停止路径接管后调用，不修改共享手轮档位
 ****************************************/

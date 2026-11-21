@@ -1,1135 +1,1115 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include<string.h>
-#include<math.h>
+#include <string.h>
+#include <math.h>
 #include "Config.h"
-#include"Motion.h"
-#include"Gcode.h"
-#include"GeneralFunctions.h"
-#include"ErrorFunction.h"
-#include"NCDataPara.h"
-#include"IOCommand.h"
-#include"ToolChanger.h"
-#include"Channel.h"
+#include "Motion.h"
+#include "Gcode.h"
+#include "GeneralFunctions.h"
+#include "ErrorFunction.h"
+#include "NCDataPara.h"
+#include "IOCommand.h"
+#include "ToolChanger.h"
+#include "Channel.h"
 #include "ringbuff.h"
 
-
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºSAssignConfiguration* getAssignConfig(uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ: »ñÈ¡Ä³¸öÍ¨µÀµÄG´úÂë¸³Öµ½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºucChannelNum     Í¨µÀºÅ
+  å‡½æ•°åç§°ï¼šSAssignConfiguration* getAssignConfig(uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½: è·å–æŸä¸ªé€šé“çš„Gä»£ç èµ‹å€¼ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼šucChannelNum     é€šé“å·
 
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 SAssignConfiguration* getAssignConfig(uint8 ucChannelNum)
 {
-	if (ucChannelNum >= CHANNEL_NUM_MAX)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM301);
-		return NULL;
-	}
-	SChannelConfiguration* pSChannelConfig = getChannelConfig(ucChannelNum);
+    if (ucChannelNum >= CHANNEL_NUM_MAX)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM301);
+        return NULL;
+    }
+    SChannelConfiguration* pSChannelConfig = getChannelConfig(ucChannelNum);
 
-	if (pSChannelConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return NULL;
-	}
+    if (pSChannelConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return NULL;
+    }
 
-	return &pSChannelConfig->SAssignConfig;
+    return &pSChannelConfig->SAssignConfig;
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£º
-  º¯Êı¹¦ÄÜ: ³õÊ¼»¯¼ì²é½á¹¹Ìå
-  ÊäÈë²ÎÊı£ºpSAssignConfig Óï·¨¼ì²é½á¹¹Ìå
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º³õÊ¼»¯½á¹¹Ìå±äÁ¿µÄ²½ÖèÈçÏÂ
-			1.ÊÍ·Å½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-			2.½á¹¹ÌåÄÚÈ«²¿ÖÃ0
-			3.¶Ô½á¹¹Ìå±äÁ¿³õÊ¼»¯
-			4.¶Ô³õÊ¼Öµ·Ç0µÄ±äÁ¿¸³Öµ
+  å‡½æ•°åç§°ï¼š
+  å‡½æ•°åŠŸèƒ½: åˆå§‹åŒ–æ£€æŸ¥ç»“æ„ä½“
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig è¯­æ³•æ£€æŸ¥ç»“æ„ä½“
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šåˆå§‹åŒ–ç»“æ„ä½“å˜é‡çš„æ­¥éª¤å¦‚ä¸‹
+			1.é‡Šæ”¾ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+			2.ç»“æ„ä½“å†…å…¨éƒ¨ç½®0
+			3.å¯¹ç»“æ„ä½“å˜é‡åˆå§‹åŒ–
+			4.å¯¹åˆå§‹å€¼é0çš„å˜é‡èµ‹å€¼
 **************************************************/
 void initAssignConfig(struct _SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum)
 {
-	//1.ÊÍ·Å¸³Öµ½á¹¹ÌåÖĞ¿ª±ÙµÄÄÚ´æ
-	//½á¹¹ÌåÄÚÎ´¿ª±ÙÄÚ´æ
+    //1.é‡Šæ”¾èµ‹å€¼ç»“æ„ä½“ä¸­å¼€è¾Ÿçš„å†…å­˜
+    //ç»“æ„ä½“å†…æœªå¼€è¾Ÿå†…å­˜
 
-	//2.Çå¿Õ¼ì²é½á¹¹Ìå
-	memset(pSAssignConfig, 0, sizeof(struct _SAssignConfiguration));
+    //2.æ¸…ç©ºæ£€æŸ¥ç»“æ„ä½“
+    memset(pSAssignConfig, 0, sizeof(struct _SAssignConfiguration));
 
-//3.³õÊ¼»¯½á¹¹Ìå±äÁ¿
-	//3.1³õÊ¼»¯»ñÈ¡ÎÄ±¾×´Ì¬
-	initGetTextStateInfo(&pSAssignConfig->SGetTextStateInfo);
-	//3.2³õÊ¼»¯É¨Ãè½á¹¹Ìå
-	initScanContainer(&pSAssignConfig->SScanContainer, TRUE);
-	//3.3³õÊ¼»¯ÏµÍ³×´Ì¬½á¹¹Ìå
-	initGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState,  ucChannelNum);
+    //3.åˆå§‹åŒ–ç»“æ„ä½“å˜é‡
+    //3.1åˆå§‹åŒ–è·å–æ–‡æœ¬çŠ¶æ€
+    initGetTextStateInfo(&pSAssignConfig->SGetTextStateInfo);
+    //3.2åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+    initScanContainer(&pSAssignConfig->SScanContainer, TRUE);
+    //3.3åˆå§‹åŒ–ç³»ç»ŸçŠ¶æ€ç»“æ„ä½“
+    initGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, ucChannelNum);
 
-//4.³õÊ¼»¯·Ç0µÄ±äÁ¿
-	//4.1³õÊ¼»¯Í¨µÀºÅ
-	pSAssignConfig->ucChannelNum = ucChannelNum;
-	//4.2³õÊ¼»¯G´úÂë¼ì²é×´Ì¬»ú
-	pSAssignConfig->ucStatus = GCODE_IDLE;
-	pSAssignConfig->ucTargetStatus = UNASSIGNED_VALUE;
-	//4.3³õÊ¼»¯G´úÂëÇĞÆ¬
-	pSAssignConfig->cPart = SYNTAX_PART_1;
-	//4.4³õÊ¼»¯ÆğÊ¼µ¥½Ú
+    //4.åˆå§‹åŒ–é0çš„å˜é‡
+    //4.1åˆå§‹åŒ–é€šé“å·
+    pSAssignConfig->ucChannelNum = ucChannelNum;
+    //4.2åˆå§‹åŒ–Gä»£ç æ£€æŸ¥çŠ¶æ€æœº
+    pSAssignConfig->ucStatus = GCODE_IDLE;
+    pSAssignConfig->ucTargetStatus = UNASSIGNED_VALUE;
+    //4.3åˆå§‹åŒ–Gä»£ç åˆ‡ç‰‡
+    pSAssignConfig->cPart = SYNTAX_PART_1;
+    //4.4åˆå§‹åŒ–èµ·å§‹å•èŠ‚
 #if STM32_MODE
-	//pSAssignConfig->usMainProStartLine = re_gcoderunline(ucChannelNum);//»ñÈ¡ÆğÊ¼µ¥½Ú
-	pSAssignConfig->SGetTextStateInfo.unGetLineNum = re_gcoderunline(ucChannelNum);
+    //pSAssignConfig->usMainProStartLine = re_gcoderunline(ucChannelNum);//è·å–èµ·å§‹å•èŠ‚
+    pSAssignConfig->SGetTextStateInfo.unGetLineNum = re_gcoderunline(ucChannelNum);
 
-	if (g_SChannel[0].cSubRunMode == 0)
-	{
-		pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
-	}
+    if (g_SChannel[0].cSubRunMode == 0)
+    {
+        pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
+    }
 #else
-	//pSAssignConfig->usMainProStartLine = 0;//»ñÈ¡ÆğÊ¼µ¥½Ú
-	pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
+    //pSAssignConfig->usMainProStartLine = 0;//è·å–èµ·å§‹å•èŠ‚
+    pSAssignConfig->SGetTextStateInfo.unGetLineNum = 0;
 #endif
-	//4.5³õÊ¼»¯G´úÂë»·ĞÎ»º³åÇøÊ×µØÖ·
-	pSAssignConfig->pGCodeBuf = getGCodeHeadAddress(ucChannelNum);
+    //4.5åˆå§‹åŒ–Gä»£ç ç¯å½¢ç¼“å†²åŒºé¦–åœ°å€
+    pSAssignConfig->pGCodeBuf = getGCodeHeadAddress(ucChannelNum);
 
-	pSAssignConfig->SGetTextStateInfo.nEndLineNum = UNASSIGNED_VALUE;
-	//4.6Æ«ÖÃÖµµÄ³õÊ¼»¯
+    pSAssignConfig->SGetTextStateInfo.nEndLineNum = UNASSIGNED_VALUE;
+    //4.6åç½®å€¼çš„åˆå§‹åŒ–
 
-	//¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£
+    //ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚ã€‚
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid assignStatusMachine(SAssignConfiguration *pSAssignConfig, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£º¸³Öµ×´Ì¬»ú
-  ÊäÈë²ÎÊı£ºpSAssignConfig¸³Öµ½á¹¹Ìå£¬ucChannelNumÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£º
+  å‡½æ•°åç§°ï¼švoid assignStatusMachine(SAssignConfiguration *pSAssignConfig, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šèµ‹å€¼çŠ¶æ€æœº
+  è¾“å…¥å‚æ•°ï¼špSAssignConfigèµ‹å€¼ç»“æ„ä½“ï¼ŒucChannelNumé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼š
 **************************************************/
 void assignStatusMachine(SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum)
 {
 
-	switch (pSAssignConfig->ucStatus)
-	{
-	case GCODE_IDLE:  //²»ÔËĞĞ
-	{
-		break;
-	}
+    switch (pSAssignConfig->ucStatus)
+    {
+    case GCODE_IDLE: //ä¸è¿è¡Œ
+    {
+        break;
+    }
 
-	case GCODE_RUN:  //Ö±½ÓÔËĞĞ
-	{
-		SSyntaxConfiguration* pSSyntaxConfig = getSyntaxConfig(ucChannelNum);
-		SProgram* pSCurProgram = getCurrProgramStruct(ucChannelNum);
+    case GCODE_RUN: //ç›´æ¥è¿è¡Œ
+    {
+        SSyntaxConfiguration* pSSyntaxConfig = getSyntaxConfig(ucChannelNum);
+        SProgram* pSCurProgram = getCurrProgramStruct(ucChannelNum);
 
-		//¸³Öµ±ØĞëÍ¬Ê±Âú×ãÒÔÏÂÌõ¼ş£º
-		//1.ÓĞ³ÌĞòÆğÊ¼ĞĞºÅ || £¨ÎŞÆğÊ¼ĞĞºÅ && ÇĞÆ¬²»ÎªPart1£©
-		//ËµÃ÷£ºÎªÁË±£Ö¤Part1-Part8Ö´ĞĞµÄÁ¬¹áĞÔ£¬²»±»´ò¶Ï£¨Èç£º¼ÓÈë³ÌĞò½Úµãºó³ÌĞòÆğÊ¼ĞĞºÅ±ä»¯£©
-		//2.¼ì²é¸³Öµ²î¾à´óÓÚÖ¸¶¨Öµ || £¨¼ì²é¸³Öµ²î¾àĞ¡ÓÚÖ¸¶¨Öµ && ¼ì²é×´Ì¬²»ÎªRUN£©
-		//ËµÃ÷£ºÎªÁË±£Ö¤¼ì²é½ø¶È¿ìÓÚ¸³Öµ½ø¶È
-		if (pSCurProgram->sBeginLineNum != UNASSIGNED_VALUE || (pSCurProgram->sBeginLineNum == UNASSIGNED_VALUE && (pSAssignConfig->cPart != ASSIGN_PART_1 || pSSyntaxConfig->ucStatus == GCODE_FINISHED)))
-		{
-			if (pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt > 5 || (pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt <= 5 && pSSyntaxConfig->ucStatus != GCODE_RUN))
-			{
-				assignSegments(pSAssignConfig, ucChannelNum);
-			}
-		}
-		
-		//	if (pSCurProgram->sBeginLineNum == UNASSIGNED_VALUE ||
-		//	(pSSyntaxConfig->ucStatus == GCODE_RUN &&
-		//		pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt <= 5))
-		//{
-		//	if (pSAssignConfig->cPart != ASSIGN_PART_1)
-		//	{
-		//		
-		//	}
-		//}
-		//else
-		//{
-		//	assignSegments(pSAssignConfig, ucChannelNum);
-		//}
+        //èµ‹å€¼å¿…é¡»åŒæ—¶æ»¡è¶³ä»¥ä¸‹æ¡ä»¶ï¼š
+        //1.æœ‰ç¨‹åºèµ·å§‹è¡Œå· || ï¼ˆæ— èµ·å§‹è¡Œå· && åˆ‡ç‰‡ä¸ä¸ºPart1ï¼‰
+        //è¯´æ˜ï¼šä¸ºäº†ä¿è¯Part1-Part8æ‰§è¡Œçš„è¿è´¯æ€§ï¼Œä¸è¢«æ‰“æ–­ï¼ˆå¦‚ï¼šåŠ å…¥ç¨‹åºèŠ‚ç‚¹åç¨‹åºèµ·å§‹è¡Œå·å˜åŒ–ï¼‰
+        //2.æ£€æŸ¥èµ‹å€¼å·®è·å¤§äºæŒ‡å®šå€¼ || ï¼ˆæ£€æŸ¥èµ‹å€¼å·®è·å°äºæŒ‡å®šå€¼ && æ£€æŸ¥çŠ¶æ€ä¸ä¸ºRUNï¼‰
+        //è¯´æ˜ï¼šä¸ºäº†ä¿è¯æ£€æŸ¥è¿›åº¦å¿«äºèµ‹å€¼è¿›åº¦
+        if (pSCurProgram->sBeginLineNum != UNASSIGNED_VALUE ||
+            (pSCurProgram->sBeginLineNum == UNASSIGNED_VALUE &&
+             (pSAssignConfig->cPart != ASSIGN_PART_1 || pSSyntaxConfig->ucStatus == GCODE_FINISHED)))
+        {
+            if (pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt > 5 ||
+                (pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt <= 5 &&
+                 pSSyntaxConfig->ucStatus != GCODE_RUN))
+            {
+                assignSegments(pSAssignConfig, ucChannelNum);
+            }
+        }
 
-		//assignSegments(pSAssignConfig, ucChannelNum);
+        //	if (pSCurProgram->sBeginLineNum == UNASSIGNED_VALUE ||
+        //	(pSSyntaxConfig->ucStatus == GCODE_RUN &&
+        //		pSSyntaxConfig->unTotalCommandCnt - pSAssignConfig->unTotalCommandCnt <= 5))
+        //{
+        //	if (pSAssignConfig->cPart != ASSIGN_PART_1)
+        //	{
+        //
+        //	}
+        //}
+        //else
+        //{
+        //	assignSegments(pSAssignConfig, ucChannelNum);
+        //}
 
-		break;
-	}
+        //assignSegments(pSAssignConfig, ucChannelNum);
 
-	case GCODE_RUN2FINISHED:
-	{
-		assignRun2Finished(pSAssignConfig, ucChannelNum);
-		break;
-	}
+        break;
+    }
 
-	case GCODE_FINISHED:  //²»ÔËĞĞ
-	{
-		break;
-	}
+    case GCODE_RUN2FINISHED:
+    {
+        assignRun2Finished(pSAssignConfig, ucChannelNum);
+        break;
+    }
 
-	case GCODE_WARN:
-	{
-		break;
-	}
-	case GCODE_WAIT:  //Ö»×öÁËË«Í¨µÀµÄµÈ´ı//lxw:G´úÂë½âÎö¸÷Í¨µÀ¶ÀÁ¢£¬È¡ÏûÍ¨µÀ¼äµÈ´ı£¬Ö»ĞèÔÚÇĞ»»³ÌĞòÎÄ±¾Ê±½øĞĞµÈ´ı
-	{
-		struct SChannel* pSChannel = g_SChannel;
-		if (pSChannel->cRunChannelGcodeAgain == TRUE)//(³ÂÃô´Ï	2023/8/28Ôö ´¦ÓÚM99µÄÇé¿öÏÂ£¬ÈÃG´úÂëÖØĞÂÆô¶¯)  zxd:20251029Ìí¼Ó
-		{
-			pSChannel->cRunChannelGcodeAgain = FALSE;
+    case GCODE_FINISHED: //ä¸è¿è¡Œ
+    {
+        break;
+    }
+
+    case GCODE_WARN:
+    {
+        break;
+    }
+    case GCODE_WAIT: //åªåšäº†åŒé€šé“çš„ç­‰å¾…//lxw:Gä»£ç è§£æå„é€šé“ç‹¬ç«‹ï¼Œå–æ¶ˆé€šé“é—´ç­‰å¾…ï¼Œåªéœ€åœ¨åˆ‡æ¢ç¨‹åºæ–‡æœ¬æ—¶è¿›è¡Œç­‰å¾…
+    {
+        struct SChannel* pSChannel = g_SChannel;
+        if (pSChannel->cRunChannelGcodeAgain ==
+            TRUE) //(é™ˆæ•èª	2023/8/28å¢ å¤„äºM99çš„æƒ…å†µä¸‹ï¼Œè®©Gä»£ç é‡æ–°å¯åŠ¨)  zxd:20251029æ·»åŠ 
+        {
+            pSChannel->cRunChannelGcodeAgain = FALSE;
             changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_RUN, TRUE, 0);
-		}
+        }
 
-		//void changeGCodeStatus(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, uint8 ucTargetStatus, bool bReport, uint32 unLineNum)
+        //void changeGCodeStatus(uint8 ucSyntaxOrAssign, uint8 ucChannelNum, uint8 ucTargetStatus, bool bReport, uint32 unLineNum)
 
-		//changeGCodeStatus(ASSIGN,ucChannelNum, GCODE_RUN, 1, 0);
-		break;
-	}
-	case GCODE_ASSIGN_WAIT:  //²»ÔËĞĞ
-	{
-		break;
-	}
+        //changeGCodeStatus(ASSIGN,ucChannelNum, GCODE_RUN, 1, 0);
+        break;
+    }
+    case GCODE_ASSIGN_WAIT: //ä¸è¿è¡Œ
+    {
+        break;
+    }
 
-	default:
-		parseGCodeErrorB(0, GCODE_ERROR_NUM306);
-		break;
-	}
+    default:
+        parseGCodeErrorB(0, GCODE_ERROR_NUM306);
+        break;
+    }
 }
 
-
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid assignSegments(struct _SAssignConfiguration*pSAssignConfig, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£º·Ö½×¶Î½«µ±Ç°³ÌĞòĞĞ¸³ÖµÎª G ´úÂë»º³å¼ÇÂ¼²¢Ìá½»¡£
-  ÊäÈë²ÎÊı£ºpSAssignConfig ¸³Öµ×´Ì¬£»ucChannelNum Í¨µÀºÅ¡£
-  Êä³ö²ÎÊı£ºĞ´²Û¡¢¸³Öµ½×¶Î¡¢±à³Ì×´Ì¬ºÍÌá½»Ö¸Õë£¬°´µ±Ç°½×¶Î¸üĞÂ¡£
-  ·µ »Ø Öµ£ºÎŞ£»F Ğ£ÑéÊ§°ÜÊ±±¨¾¯²¢·µ»Ø£¬²»ÍÆ½øµ±Ç°¸³Öµ½×¶Î¡£
-  ±¸    ×¢£ºF Ê§°Üºó²»Ö´ĞĞ S/T »òÔË¶¯¸³Öµ£»´ËÇ°ÒÑÖ´ĞĞµÄÄ£Ì¬ºÍÇ°×÷ÓÃ¸³Öµ²»»Ø¹ö¡£
+  å‡½æ•°åç§°ï¼švoid assignSegments(struct _SAssignConfiguration*pSAssignConfig, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šåˆ†é˜¶æ®µå°†å½“å‰ç¨‹åºè¡Œèµ‹å€¼ä¸º G ä»£ç ç¼“å†²è®°å½•å¹¶æäº¤ã€‚
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig èµ‹å€¼çŠ¶æ€ï¼›ucChannelNum é€šé“å·ã€‚
+  è¾“å‡ºå‚æ•°ï¼šå†™æ§½ã€èµ‹å€¼é˜¶æ®µã€ç¼–ç¨‹çŠ¶æ€å’Œæäº¤æŒ‡é’ˆï¼ŒæŒ‰å½“å‰é˜¶æ®µæ›´æ–°ã€‚
+  è¿” å› å€¼ï¼šæ— ï¼›F æ ¡éªŒå¤±è´¥æ—¶æŠ¥è­¦å¹¶è¿”å›ï¼Œä¸æ¨è¿›å½“å‰èµ‹å€¼é˜¶æ®µã€‚
+  å¤‡    æ³¨ï¼šF å¤±è´¥åä¸æ‰§è¡Œ S/T æˆ–è¿åŠ¨èµ‹å€¼ï¼›æ­¤å‰å·²æ‰§è¡Œçš„æ¨¡æ€å’Œå‰ä½œç”¨èµ‹å€¼ä¸å›æ»šã€‚
 **************************************************/
-void assignSegments(struct _SAssignConfiguration*pSAssignConfig, uint8 ucChannelNum)
+void assignSegments(struct _SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return;
-	}
-	if (ucChannelNum > CHANNEL_NUM_MAX - 1)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM301);
-		return;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return;
+    }
+    if (ucChannelNum > CHANNEL_NUM_MAX - 1)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM301);
+        return;
+    }
 
-	switch (pSAssignConfig->cPart)
-	{
-	//Part1£º´¦Àí³ÌĞòÎÄ±¾
-	case ASSIGN_PART_1:
-	{
-		int8 cRet;
-		SProgram* pSCurrProgram = NULL;   //µ±Ç°³ÌĞò½á¹¹Ìå
-		//1.»ñÈ¡µ±Ç°³ÌĞò½á¹¹Ìå
-		pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
-		if (pSCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+    switch (pSAssignConfig->cPart)
+    {
+    //Part1ï¼šå¤„ç†ç¨‹åºæ–‡æœ¬
+    case ASSIGN_PART_1:
+    {
+        int8 cRet;
+        SProgram* pSCurrProgram = NULL; //å½“å‰ç¨‹åºç»“æ„ä½“
+        //1.è·å–å½“å‰ç¨‹åºç»“æ„ä½“
+        pSCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);
+        if (pSCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-		//2.´¦Àí³ÌĞòÎÄ±¾
-		cRet = processProgramText(GC_ASSIGN, &pSAssignConfig->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
-		//»ñÈ¡µ½³ÌĞòÕıÎÄ
-		if (cRet == 1)
-		{
-			//if (pSAssignConfig->SGetTextStateInfo.unCurrLineNum == 42);
-			pSAssignConfig->cCommandSegmentCnt++;
-			pSAssignConfig->cPart = ASSIGN_PART_2;
-		}
-		//(ucRet == 0 || ucRet == 2 || ucRet == 3)£¬²»ĞèÒªÖ´ĞĞºóĞøÇĞÆ¬
-		//0£º³ÌĞòÎÄ±¾Î´´¦ÀíÍê¡¢2£ºÒÑ´¦Àí%¡¢3£ºÒÑ¼ÇÂ¼DEFINE
-		break;
-	}
+        //2.å¤„ç†ç¨‹åºæ–‡æœ¬
+        cRet = processProgramText(GC_ASSIGN, &pSAssignConfig->SGetTextStateInfo, ucChannelNum, pSCurrProgram);
+        //è·å–åˆ°ç¨‹åºæ­£æ–‡
+        if (cRet == 1)
+        {
+            //if (pSAssignConfig->SGetTextStateInfo.unCurrLineNum == 42);
+            pSAssignConfig->cCommandSegmentCnt++;
+            pSAssignConfig->cPart = ASSIGN_PART_2;
+        }
+        //(ucRet == 0 || ucRet == 2 || ucRet == 3)ï¼Œä¸éœ€è¦æ‰§è¡Œåç»­åˆ‡ç‰‡
+        //0ï¼šç¨‹åºæ–‡æœ¬æœªå¤„ç†å®Œã€2ï¼šå·²å¤„ç†%ã€3ï¼šå·²è®°å½•DEFINE
+        break;
+    }
 
-	//Part2£º³õÊ¼»¯É¨Ãè½á¹¹Ìå
-	case ASSIGN_PART_2:
-	{
-		//1.É¨ÃèÇ°ĞèÒª³õÊ¼»¯É¨Ãè½á¹¹Ìå
-		//1.1µ±Ç°É¨Ãè³ÌĞò¶ÎÎªÖ¸ÁîµÄµÚÒ»¶Î£¬ĞèÒªÇå¿ÕÉ¨Ãè½á¹¹Ìå
-		if (pSAssignConfig->cCommandSegmentCnt == 1)
-		{
-			initScanContainer(&pSAssignConfig->SScanContainer, TRUE);
-		}
-		//1.2µ±Ç°É¨Ãè³ÌĞò¶Î·ÇÖ¸ÁîµÄµÚÒ»¶Î£¬²»ĞèÇå¿ÕMFSTÖµ£¬·ÀÖ¹¶à³ÌĞò¶Î¶ªÊ§MFSTµÄÖµ
-		else
-		{
-			initScanContainer(&pSAssignConfig->SScanContainer, FALSE);
-		}
+    //Part2ï¼šåˆå§‹åŒ–æ‰«æç»“æ„ä½“
+    case ASSIGN_PART_2:
+    {
+        //1.æ‰«æå‰éœ€è¦åˆå§‹åŒ–æ‰«æç»“æ„ä½“
+        //1.1å½“å‰æ‰«æç¨‹åºæ®µä¸ºæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œéœ€è¦æ¸…ç©ºæ‰«æç»“æ„ä½“
+        if (pSAssignConfig->cCommandSegmentCnt == 1)
+        {
+            initScanContainer(&pSAssignConfig->SScanContainer, TRUE);
+        }
+        //1.2å½“å‰æ‰«æç¨‹åºæ®µéæŒ‡ä»¤çš„ç¬¬ä¸€æ®µï¼Œä¸éœ€æ¸…ç©ºMFSTå€¼ï¼Œé˜²æ­¢å¤šç¨‹åºæ®µä¸¢å¤±MFSTçš„å€¼
+        else
+        {
+            initScanContainer(&pSAssignConfig->SScanContainer, FALSE);
+        }
 
-		//2.pCurrPtrĞèÒªÖØĞÂÖ¸Ïò³ÌĞò¶Î×Ö·û´®Ê××Ö·û
-		pSAssignConfig->SGetTextStateInfo.pCurrPtr = pSAssignConfig->SGetTextStateInfo.cStr;
-	
-		//3.½øÈëÏÂÒ»ÇĞÆ¬
-		pSAssignConfig->cPart = ASSIGN_PART_3;
+        //2.pCurrPtréœ€è¦é‡æ–°æŒ‡å‘ç¨‹åºæ®µå­—ç¬¦ä¸²é¦–å­—ç¬¦
+        pSAssignConfig->SGetTextStateInfo.pCurrPtr = pSAssignConfig->SGetTextStateInfo.cStr;
 
-		break;
-	}
+        //3.è¿›å…¥ä¸‹ä¸€åˆ‡ç‰‡
+        pSAssignConfig->cPart = ASSIGN_PART_3;
 
-	//Part3£ºÉ¨Ãè³ÌĞò¶Î
-	case ASSIGN_PART_3:
-	{
-		int8 cRet;
+        break;
+    }
 
-		int16 sLastCommandVal;//¼ÇÂ¼ÉÏÒ»³ÌĞò¶ÎGa/Gz×éÖ¸Áî
-		int16 sCurrCommandVal;//¼ÇÂ¼µ±Ç°³ÌĞò¶ÎGa/Gz×éÖ¸Áî
-		const SGCommandRegulation* pSLastCommandRegulation;//¼ÇÂ¼ÉÏÒ»³ÌĞò¶ÎGa/Gz×éÖ¸Áî¹æÔòµØÖ·
-		const SGCommandRegulation* pSCurrCommandRegulation;//¼ÇÂ¼µ±Ç°³ÌĞò¶ÎGa/Gz×éÖ¸Áî¹æÔòµØÖ·
+    //Part3ï¼šæ‰«æç¨‹åºæ®µ
+    case ASSIGN_PART_3:
+    {
+        int8 cRet;
 
-		//1.»ñÈ¡µ±Ç°½âÎöµÄ³ÌĞòÎÄ±¾
-		SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0);		//µ±Ç°³ÌĞò½á¹¹Ìå
-		if (pCurrProgram == NULL)
-		{
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return;
-		}
+        int16 sLastCommandVal;                              //è®°å½•ä¸Šä¸€ç¨‹åºæ®µGa/Gzç»„æŒ‡ä»¤
+        int16 sCurrCommandVal;                              //è®°å½•å½“å‰ç¨‹åºæ®µGa/Gzç»„æŒ‡ä»¤
+        const SGCommandRegulation* pSLastCommandRegulation; //è®°å½•ä¸Šä¸€ç¨‹åºæ®µGa/Gzç»„æŒ‡ä»¤è§„åˆ™åœ°å€
+        const SGCommandRegulation* pSCurrCommandRegulation; //è®°å½•å½“å‰ç¨‹åºæ®µGa/Gzç»„æŒ‡ä»¤è§„åˆ™åœ°å€
 
-		//2.É¨Ãè³ÌĞò¶Î
-		cRet = scanSegment(GC_ASSIGN, &pSAssignConfig->SGetTextStateInfo, &pSAssignConfig->SScanContainer, pCurrProgram, ucChannelNum);
-		
-		//3.µ±Ç°³ÌĞò¶ÎÈ«²¿É¨ÃèÍê³É
-		if (cRet == TRUE)
-		{
-			//1.»ñÈ¡ÉÏÒ»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî£¨Gz×éÓÅÏÈ¼¶¸ßÓÚGa×é£©
-			if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGz != 0)
-			{
-				sLastCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGz;
-				pSLastCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGzRegulation;
-			}
-			else
-			{
-				sLastCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
-				pSLastCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-			}
+        //1.è·å–å½“å‰è§£æçš„ç¨‹åºæ–‡æœ¬
+        SProgram* pCurrProgram = FindNodeData(getProgramList(ucChannelNum), 0); //å½“å‰ç¨‹åºç»“æ„ä½“
+        if (pCurrProgram == NULL)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return;
+        }
 
-			//2.»ñÈ¡µ±Ç°³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸Áî
-			//2.1µ±Ç°³ÌĞò¶Î³öÏÖGa×éÖ¸Áî
-			if(pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
-			{
-				sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
-				pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
-				pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
-			}
-			//2.2µ±Ç°³ÌĞò¶Î³öÏÖGz×éÖ¸Áî
-			else if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
-			{
-				sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
-				pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
-				pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
-			}
-			//2.3µ±Ç°³ÌĞò¶ÎÎ´³öÏÖGaGz×éÖ¸Áî,ÔòÈ¡µ±Ç°ÏµÍ³×´Ì¬Ga×éÖ¸Áî
-			else
-			{
-				sCurrCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
-				pSCurrCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-				pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
-			}
+        //2.æ‰«æç¨‹åºæ®µ
+        cRet = scanSegment(GC_ASSIGN, &pSAssignConfig->SGetTextStateInfo, &pSAssignConfig->SScanContainer, pCurrProgram,
+                           ucChannelNum);
 
-			//3.ÅĞ¶Ï¶à³ÌĞò¶ÎÖ¸ÁîµÄÃ¿Ò»³ÌĞò¶ÎÔË¶¯Ïà¹ØÖ¸ÁîÊÇ·ñÒ»ÖÂ£¨¸³Öµ²»ĞèÒªÅĞ¶Ï£©
-			if (pSAssignConfig->cCommandSegmentCnt == 1)
-			{
-				pSAssignConfig->sCurrCommandVal = sCurrCommandVal;
-			}
-			else
-			{
-				if (pSAssignConfig->sCurrCommandVal != sCurrCommandVal)
-				{
-					//¶à³ÌĞò¶ÎÖ¸ÁîµÄµÚÒ»¶Î³ÌĞò¶ÎµÄÖ¸ÁîÓëºóĞø³ÌĞò¶ÎÖ¸Áî²»Ò»ÖÂ£¬Èç£ºµÚÒ»¶ÎÎªG71£¬µÚ¶ş¶Î·ÇG71
-					parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
-					break;
-				}
-			}
+        //3.å½“å‰ç¨‹åºæ®µå…¨éƒ¨æ‰«æå®Œæˆ
+        if (cRet == TRUE)
+        {
+            //1.è·å–ä¸Šä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤ï¼ˆGzç»„ä¼˜å…ˆçº§é«˜äºGaç»„ï¼‰
+            if (pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGz != 0)
+            {
+                sLastCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGz;
+                pSLastCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGzRegulation;
+            }
+            else
+            {
+                sLastCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
+                pSLastCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+            }
 
-			//4.ÅĞ¶ÏÊÇ·ñĞèÒªÊÍ·Å¿ª±ÙÖ¸Áî²ÎÊı½á¹¹ÌåÄÚ´æ£¨½öÔË¶¯Ïà¹ØÖ¸ÁîµÚÒ»³ÌĞò¶ÎĞèÒªÅĞ¶Ï£©
-			if (pSAssignConfig->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
-			{
-				//4.1ÊÍ·ÅÉÏÒ»Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-				if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
-				{
-					pSLastCommandRegulation->pFreeParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum);
-				}
-				//4.2¿ª±Ùµ±Ç°Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-				if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-				{
-					if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum) <= 0)
-					{
-						parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
-						break; 
-					}
-				}
-			}
-			else if (pSAssignConfig->cCommandSegmentCnt == 1 && (sLastCommandVal == sCurrCommandVal))
-			{
-				//4.2¿ª±Ùµ±Ç°Ö¸Áî×ÖµÄ²ÎÊı½á¹¹Ìå
-				if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
-				{
-					if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum) <= 0)
-					{
-						parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
-						break;
-					}
-				}
-			}
+            //2.è·å–å½“å‰ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤
+            //2.1å½“å‰ç¨‹åºæ®µå‡ºç°Gaç»„æŒ‡ä»¤
+            if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
+            {
+                sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
+                pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
+                pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation;
+            }
+            //2.2å½“å‰ç¨‹åºæ®µå‡ºç°Gzç»„æŒ‡ä»¤
+            else if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
+            {
+                sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
+                pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
+                pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation;
+            }
+            //2.3å½“å‰ç¨‹åºæ®µæœªå‡ºç°GaGzç»„æŒ‡ä»¤,åˆ™å–å½“å‰ç³»ç»ŸçŠ¶æ€Gaç»„æŒ‡ä»¤
+            else
+            {
+                sCurrCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
+                pSCurrCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+                pSAssignConfig->pSCurrCommandRegulation = pSAssignConfig->SGCodeCurrSysState.SModalInfo.pSGaRegulation;
+            }
 
-			//5.ÅĞ¶Ïµ±Ç°Ö¸Áî×ÖÊÇ·ñĞèÒªĞ´²ÎÊı½á¹¹Ìå
-			if (pSCurrCommandRegulation->pGetParaAPI != NULL)
-			{
-				pSCurrCommandRegulation->pGetParaAPI(GC_ASSIGN, &pSAssignConfig->SScanContainer, ucChannelNum, &pSAssignConfig->SGCodeCurrSysState);
-			}
+            //3.åˆ¤æ–­å¤šç¨‹åºæ®µæŒ‡ä»¤çš„æ¯ä¸€ç¨‹åºæ®µè¿åŠ¨ç›¸å…³æŒ‡ä»¤æ˜¯å¦ä¸€è‡´ï¼ˆèµ‹å€¼ä¸éœ€è¦åˆ¤æ–­ï¼‰
+            if (pSAssignConfig->cCommandSegmentCnt == 1)
+            {
+                pSAssignConfig->sCurrCommandVal = sCurrCommandVal;
+            }
+            else
+            {
+                if (pSAssignConfig->sCurrCommandVal != sCurrCommandVal)
+                {
+                    //å¤šç¨‹åºæ®µæŒ‡ä»¤çš„ç¬¬ä¸€æ®µç¨‹åºæ®µçš„æŒ‡ä»¤ä¸åç»­ç¨‹åºæ®µæŒ‡ä»¤ä¸ä¸€è‡´ï¼Œå¦‚ï¼šç¬¬ä¸€æ®µä¸ºG71ï¼Œç¬¬äºŒæ®µéG71
+                    parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
+                    break;
+                }
+            }
 
-			//6.ÅĞ¶ÏcGa,cGzÖ¸ÁîËùÓĞ³ÌĞò¶ÎÊÇ·ñÉ¨ÃèÍê³É
-			if (pSAssignConfig->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
-			{
-				//6.1ÔË¶¯Ïà¹ØÖ¸ÁîËùÓĞ³ÌĞò¶ÎÒÑÈ«²¿É¨Ãè
-				pSAssignConfig->cPart = ASSIGN_PART_4;
-			}
-			else
-			{
-				//6.2»¹Ğè¼ÌĞø»ñÈ¡ÔË¶¯Ïà¹ØÖ¸Áî³ÌĞò¶Î
-				pSAssignConfig->cPart = ASSIGN_PART_1;
-			}
-		}
+            //4.åˆ¤æ–­æ˜¯å¦éœ€è¦é‡Šæ”¾å¼€è¾ŸæŒ‡ä»¤å‚æ•°ç»“æ„ä½“å†…å­˜ï¼ˆä»…è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¬¬ä¸€ç¨‹åºæ®µéœ€è¦åˆ¤æ–­ï¼‰
+            if (pSAssignConfig->cCommandSegmentCnt == 1 && (sLastCommandVal != sCurrCommandVal))
+            {
+                //4.1é‡Šæ”¾ä¸Šä¸€æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                if (pSLastCommandRegulation->pFreeParaStructAPI != NULL)
+                {
+                    pSLastCommandRegulation->pFreeParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum);
+                }
+                //4.2å¼€è¾Ÿå½“å‰æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                {
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum) <= 0)
+                    {
+                        parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
+                        break;
+                    }
+                }
+            }
+            else if (pSAssignConfig->cCommandSegmentCnt == 1 && (sLastCommandVal == sCurrCommandVal))
+            {
+                //4.2å¼€è¾Ÿå½“å‰æŒ‡ä»¤å­—çš„å‚æ•°ç»“æ„ä½“
+                if (pSCurrCommandRegulation->pMallocParaStructAPI != NULL)
+                {
+                    if (pSCurrCommandRegulation->pMallocParaStructAPI(GC_ASSIGN, pSAssignConfig->ucChannelNum) <= 0)
+                    {
+                        parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM300);
+                        break;
+                    }
+                }
+            }
 
-		break;
-	}
+            //5.åˆ¤æ–­å½“å‰æŒ‡ä»¤å­—æ˜¯å¦éœ€è¦å†™å‚æ•°ç»“æ„ä½“
+            if (pSCurrCommandRegulation->pGetParaAPI != NULL)
+            {
+                pSCurrCommandRegulation->pGetParaAPI(GC_ASSIGN, &pSAssignConfig->SScanContainer, ucChannelNum,
+                                                     &pSAssignConfig->SGCodeCurrSysState);
+            }
 
-	//Part4£º³õÊ¼»¯»º³åÇøµ¥Ôª£¬²¢Íê³É¶ÔÉÏÒ»»º³åÇø²¿·ÖÊı¾İµÄ¼Ì³Ğ
-	//		 ¸³Öµ·ÇGa/Gz×éÖ¸Áî¡¢Ç°×÷ÓÃMÖ¸Áî¡¢FSTÖ¸Áî
-	case ASSIGN_PART_4:
-	{
-		//1.ÅĞ¶ÏÈİÁ¿
-		if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
-		{
-			break;
-		}
+            //6.åˆ¤æ–­cGa,cGzæŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µæ˜¯å¦æ‰«æå®Œæˆ
+            if (pSAssignConfig->cCommandSegmentCnt == pSCurrCommandRegulation->cSegmentNum)
+            {
+                //6.1è¿åŠ¨ç›¸å…³æŒ‡ä»¤æ‰€æœ‰ç¨‹åºæ®µå·²å…¨éƒ¨æ‰«æ
+                pSAssignConfig->cPart = ASSIGN_PART_4;
+            }
+            else
+            {
+                //6.2è¿˜éœ€ç»§ç»­è·å–è¿åŠ¨ç›¸å…³æŒ‡ä»¤ç¨‹åºæ®µ
+                pSAssignConfig->cPart = ASSIGN_PART_1;
+            }
+        }
 
-		//2.»ñÈ¡µ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-		int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-		struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+        break;
+    }
 
-		//3.»º³åÇøµ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-		initGCodeBufUnit(pSGCodeParseUnit);
+    //Part4ï¼šåˆå§‹åŒ–ç¼“å†²åŒºå•å…ƒï¼Œå¹¶å®Œæˆå¯¹ä¸Šä¸€ç¼“å†²åŒºéƒ¨åˆ†æ•°æ®çš„ç»§æ‰¿
+    //		 èµ‹å€¼éGa/Gzç»„æŒ‡ä»¤ã€å‰ä½œç”¨MæŒ‡ä»¤ã€FSTæŒ‡ä»¤
+    case ASSIGN_PART_4:
+    {
+        //1.åˆ¤æ–­å®¹é‡
+        if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
+        {
+            break;
+        }
 
-		//4.¼Ì³ĞÉÏÒ»»º³åÇø²¿·ÖÊı¾İ£¨Èç£ºµ¶¾ßºÅ£¬µ¶²¹ºÅµÈ£©
-		inheritFromGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+        //2.è·å–å½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+        int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+        struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
 
-		//5.¸³Öµ·ÇGa/Gz×éÖ¸Áî
-		assignGbCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGcCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGdCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGeCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGfCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGgCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGjCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGhCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignGxCommand(pSAssignConfig, pSGCodeParseUnit);
-		
+        //3.ç¼“å†²åŒºå½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+        initGCodeBufUnit(pSGCodeParseUnit);
 
-		//6.¸³ÖµÇ°×÷ÓÃMÖ¸Áî
-		for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
-		{
-			if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
-			{
-				if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_PRE_ACTION)
-				{
-					if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI != NULL)
-					{
-						pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-					}
-				}
-			}
-		}
+        //4.ç»§æ‰¿ä¸Šä¸€ç¼“å†²åŒºéƒ¨åˆ†æ•°æ®ï¼ˆå¦‚ï¼šåˆ€å…·å·ï¼Œåˆ€è¡¥å·ç­‰ï¼‰
+        inheritFromGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
 
-		assignFCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignSCommand(pSAssignConfig, pSGCodeParseUnit);
-		assignTCommand(pSAssignConfig, pSGCodeParseUnit);
+        //5.èµ‹å€¼éGa/Gzç»„æŒ‡ä»¤
+        assignGbCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGcCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGdCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGeCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGfCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGgCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGjCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGhCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignGxCommand(pSAssignConfig, pSGCodeParseUnit);
 
-		pSAssignConfig->cPart = ASSIGN_PART_5;
+        //6.èµ‹å€¼å‰ä½œç”¨MæŒ‡ä»¤
+        for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
+        {
+            if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
+            {
+                if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_PRE_ACTION)
+                {
+                    if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI != NULL)
+                    {
+                        pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI(
+                            pSAssignConfig, pSGCodeParseUnit);
+                    }
+                }
+            }
+        }
 
-		break;
-	}
+        assignFCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignSCommand(pSAssignConfig, pSGCodeParseUnit);
+        assignTCommand(pSAssignConfig, pSGCodeParseUnit);
 
-	//Part5£º¸³ÖµGa/Gz×éÖ¸Áî
-	case ASSIGN_PART_5:
-	{
-		//1.ÅĞ¶ÏÈİÁ¿
-		if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 1)
-		{
-			break;
-		}
-		
-		//2.»ñÈ¡µ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-		int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-		struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+        pSAssignConfig->cPart = ASSIGN_PART_5;
 
-		int8 cRet = 0;
-		
-		//3.µ÷ÓÃ¶ÔÓ¦Ö¸ÁîµÄ¸³Öµ½Ó¿Ú
-		if (pSAssignConfig->pSCurrCommandRegulation->pAssignCommandAPI != NULL)
-		{
-			//×¢Òâ£¡£¡£¡
-			//µ÷ÓÃÒ»´Î¸³Öµ½Ó¿ÚÖ»ÄÜĞ´Ò»¸ö»º³åÇø£¬¼´Ö¸Áî½Ó¿ÚÄÚĞ´ÍêÒ»¶Î¹ì¼£ºó±ØĞë·µ»Ø
-			cRet = pSAssignConfig->pSCurrCommandRegulation->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		}
+        break;
+    }
 
-		//4.1Ga/Gz×éÖ¸Áî¸³Öµ½Ó¿ÚÄÚ²»²¹³ä»º³åÇøÊ£ÓàÄÚÈİ¡¢²»´¦Àí¶à¸ö»º³åÇø¼äµÄ¹ı¶É
-		if (cRet == 1 || cRet == 2)
-		{
-			//Ğ´ÈëÎÄ¼şÃû
-			SProgram* pSCurrProgram = getCurrProgramStruct(ucChannelNum);
-			strncpy(pSGCodeParseUnit->cFilename,pSCurrProgram->cFileName, FILENAME_LENGTH_LIMIT);
-			pSGCodeParseUnit->cFilename[FILENAME_LENGTH_LIMIT - 1] = 0;
+    //Part5ï¼šèµ‹å€¼Ga/Gzç»„æŒ‡ä»¤
+    case ASSIGN_PART_5:
+    {
+        //1.åˆ¤æ–­å®¹é‡
+        if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 1)
+        {
+            break;
+        }
 
-			//Ğ´»º³åÇøÖĞG´úÂëĞĞºÅĞÅÏ¢
-			pSGCodeParseUnit->unGCodeLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
-			//Ğ´»º³åÇøÖĞGa×éÄ£Ì¬ĞÅÏ¢
-			if (pSAssignConfig->pSCurrCommandRegulation->cGroup == sGa)
-			{
-				pSGCodeParseUnit->SModalInfo.sGa = pSAssignConfig->sCurrCommandVal;
-				pSGCodeParseUnit->SModalInfo.pSGaRegulation = pSAssignConfig->pSCurrCommandRegulation;
-			}
-			//Ğ´»º³åÇøÖĞGz×éÄ£Ì¬ĞÅÏ¢
-			else
-			{
-				pSGCodeParseUnit->SModalInfo.sGz = pSAssignConfig->sCurrCommandVal;
-				pSGCodeParseUnit->SModalInfo.pSGzRegulation = pSAssignConfig->pSCurrCommandRegulation;
-			}
+        //2.è·å–å½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+        int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+        struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
 
-			//4.1ÔÚGa/Gz×éÖ¸Áî¸³Öµ½Ó¿ÚÖĞ¸³ÁËÖµ£¬µ«Î´¸³ÖµÍê£¨¶Ô»º³åÇøµ¥Ôª¼ä½øĞĞ¹ı¶É£©
-			if (cRet == 1)
-			{
-				//¸üĞÂG´úÂëÏµÍ³×´Ì¬
-				updataGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
-				//ÒÆ¶¯Ö¸Õë
-				moveGCodeWritePtr(pSAssignConfig->ucChannelNum);
-        /* µ¹Ô²Ğ´ÈëÊ§°ÜÊ±²»¼ÆÍê³É¶ÎÊı£¬Ò²²»ÇĞ»ØÏÂÒ»ĞĞ¸³Öµ½×¶Î¡£ */
-        if (isErrorHasBeenWritten()) return;
+        int8 cRet = 0;
 
-				//Ö¸ÕëÒÆ¶¯£¬ĞèÒªÔÙ´Î»ñÈ¡µ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-				int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-				struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
-				//³õÊ¼»¯G´úÂë»º³åÇøµ¥Ôª
-				initGCodeBufUnit(pSGCodeParseUnit);
-				//´ÓG´úÂëÏµÍ³×´Ì¬ÖĞ¼Ì³Ğ
-				inheritFromGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
-			}
-			//4.2ÔÚGa/Gz×éÖ¸Áî¸³Öµ½Ó¿ÚÖĞ¸³ÁËÖµ£¬ÇÒÒÑ¸³ÖµÍê
-			else if (cRet == 2)
-			{
-				pSAssignConfig->cPart = ASSIGN_PART_6;
-			}
-		}
-		//4.2Ga/Gz×éÖ¸Áî¸³Öµ½Ó¿ÚÄÚ²¹³ä»º³åÇøÊ£ÓàÄÚÈİ¡¢ÇÒ´¦ÀíÁË¶à¸ö»º³åÇø¼äµÄ¹ı¶É
-		if (cRet == 3)
-		{
-			pSAssignConfig->cPart = ASSIGN_PART_6;
-		}
+        //3.è°ƒç”¨å¯¹åº”æŒ‡ä»¤çš„èµ‹å€¼æ¥å£
+        if (pSAssignConfig->pSCurrCommandRegulation->pAssignCommandAPI != NULL)
+        {
+            //æ³¨æ„ï¼ï¼ï¼
+            //è°ƒç”¨ä¸€æ¬¡èµ‹å€¼æ¥å£åªèƒ½å†™ä¸€ä¸ªç¼“å†²åŒºï¼Œå³æŒ‡ä»¤æ¥å£å†…å†™å®Œä¸€æ®µè½¨è¿¹åå¿…é¡»è¿”å›
+            cRet = pSAssignConfig->pSCurrCommandRegulation->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        }
 
-		break;
-	}
+        //4.1Ga/Gzç»„æŒ‡ä»¤èµ‹å€¼æ¥å£å†…ä¸è¡¥å……ç¼“å†²åŒºå‰©ä½™å†…å®¹ã€ä¸å¤„ç†å¤šä¸ªç¼“å†²åŒºé—´çš„è¿‡æ¸¡
+        if (cRet == 1 || cRet == 2)
+        {
+            //å†™å…¥æ–‡ä»¶å
+            SProgram* pSCurrProgram = getCurrProgramStruct(ucChannelNum);
+            strncpy(pSGCodeParseUnit->cFilename, pSCurrProgram->cFileName, FILENAME_LENGTH_LIMIT);
+            pSGCodeParseUnit->cFilename[FILENAME_LENGTH_LIMIT - 1] = 0;
 
-	//Part6£º¸³Öµºó×÷ÓÃÖ¸Áî
-	case ASSIGN_PART_6:
-	{		
-		//1.ÅĞ¶ÏÈİÁ¿
-		if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
-		{
-			break;
-		}
+            //å†™ç¼“å†²åŒºä¸­Gä»£ç è¡Œå·ä¿¡æ¯
+            pSGCodeParseUnit->unGCodeLineNum = pSAssignConfig->SGetTextStateInfo.unCurrLineNum;
+            //å†™ç¼“å†²åŒºä¸­Gaç»„æ¨¡æ€ä¿¡æ¯
+            if (pSAssignConfig->pSCurrCommandRegulation->cGroup == sGa)
+            {
+                pSGCodeParseUnit->SModalInfo.sGa = pSAssignConfig->sCurrCommandVal;
+                pSGCodeParseUnit->SModalInfo.pSGaRegulation = pSAssignConfig->pSCurrCommandRegulation;
+            }
+            //å†™ç¼“å†²åŒºä¸­Gzç»„æ¨¡æ€ä¿¡æ¯
+            else
+            {
+                pSGCodeParseUnit->SModalInfo.sGz = pSAssignConfig->sCurrCommandVal;
+                pSGCodeParseUnit->SModalInfo.pSGzRegulation = pSAssignConfig->pSCurrCommandRegulation;
+            }
 
-		//2.»ñÈ¡µ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-		int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-		struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+            //4.1åœ¨Ga/Gzç»„æŒ‡ä»¤èµ‹å€¼æ¥å£ä¸­èµ‹äº†å€¼ï¼Œä½†æœªèµ‹å€¼å®Œï¼ˆå¯¹ç¼“å†²åŒºå•å…ƒé—´è¿›è¡Œè¿‡æ¸¡ï¼‰
+            if (cRet == 1)
+            {
+                //æ›´æ–°Gä»£ç ç³»ç»ŸçŠ¶æ€
+                updataGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+                //ç§»åŠ¨æŒ‡é’ˆ
+                moveGCodeWritePtr(pSAssignConfig->ucChannelNum);
+                /* å€’åœ†å†™å…¥å¤±è´¥æ—¶ä¸è®¡å®Œæˆæ®µæ•°ï¼Œä¹Ÿä¸åˆ‡å›ä¸‹ä¸€è¡Œèµ‹å€¼é˜¶æ®µã€‚ */
+                if (isErrorHasBeenWritten())
+                    return;
 
-		//3.¸³Öµºó×÷ÓÃM
-		for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
-		{
-			if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
-			{
-				if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_POST_ACTION)
-				{
-					if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI != NULL)
-					{
-						pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-					}
-				}
-			}
-		}
-	   
-		pSAssignConfig->cPart = ASSIGN_PART_7;
-		break;
-	}
+                //æŒ‡é’ˆç§»åŠ¨ï¼Œéœ€è¦å†æ¬¡è·å–å½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+                int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+                struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+                //åˆå§‹åŒ–Gä»£ç ç¼“å†²åŒºå•å…ƒ
+                initGCodeBufUnit(pSGCodeParseUnit);
+                //ä»Gä»£ç ç³»ç»ŸçŠ¶æ€ä¸­ç»§æ‰¿
+                inheritFromGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+            }
+            //4.2åœ¨Ga/Gzç»„æŒ‡ä»¤èµ‹å€¼æ¥å£ä¸­èµ‹äº†å€¼ï¼Œä¸”å·²èµ‹å€¼å®Œ
+            else if (cRet == 2)
+            {
+                pSAssignConfig->cPart = ASSIGN_PART_6;
+            }
+        }
+        //4.2Ga/Gzç»„æŒ‡ä»¤èµ‹å€¼æ¥å£å†…è¡¥å……ç¼“å†²åŒºå‰©ä½™å†…å®¹ã€ä¸”å¤„ç†äº†å¤šä¸ªç¼“å†²åŒºé—´çš„è¿‡æ¸¡
+        if (cRet == 3)
+        {
+            pSAssignConfig->cPart = ASSIGN_PART_6;
+        }
 
-	//Part7£º¸³ÖµÌØÊâÖ¸Áî
-	case ASSIGN_PART_7:
-	{
-		//1.ÅĞ¶ÏÈİÁ¿
-		if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
-		{
-			break;
-		}
+        break;
+    }
 
-		int8 cRet;
-		int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-		struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+    //Part6ï¼šèµ‹å€¼åä½œç”¨æŒ‡ä»¤
+    case ASSIGN_PART_6:
+    {
+        //1.åˆ¤æ–­å®¹é‡
+        if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
+        {
+            break;
+        }
 
-		cRet = assignSpecialCommand(pSAssignConfig, pSGCodeParseUnit);
-		
-		if (cRet == 1)
-		{
-			pSAssignConfig->cPart = ASSIGN_PART_8;
-		}
-		break;
-	}
+        //2.è·å–å½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+        int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+        struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
 
+        //3.èµ‹å€¼åä½œç”¨M
+        for (int i = 0; i < IO_MAXGROUP_IN_SINGLE_LINE; i++)
+        {
+            if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i] != NULL)
+            {
+                if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->cType == IO_POST_ACTION)
+                {
+                    if (pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI != NULL)
+                    {
+                        pSAssignConfig->SScanContainer.SScanNonModalInfo.pSMCommandArray[i]->pAssignCommandAPI(
+                            pSAssignConfig, pSGCodeParseUnit);
+                    }
+                }
+            }
+        }
 
-	//Part7£º¸³ÖµÌØÊâÖ¸Áî£¬²¢Íê³É»º³åÇøµ¥Ôª¼äµÄ¹ı¶É
-	case ASSIGN_PART_8:
-	{		
-		// 1.ÅĞ¶ÏÈİÁ¿£¬µ±Ç°¶ÎÓë¿ÉÄÜ²åÈëµÄ¹ı¶É¶Î×î¶àÕ¼Á½²Û£»ÈİÁ¿²»×ã±£³Ö±¾½×¶Î£¬µÈ´ıÏÂÓÎÊÍ·Å¡£
-		if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 1)
-		{
-			break;
-		}
+        pSAssignConfig->cPart = ASSIGN_PART_7;
+        break;
+    }
 
-		//2.»ñÈ¡µ±Ç°G´úÂë»º³åÇøĞ´µ¥Ôª
-		int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
-		struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
+    //Part7ï¼šèµ‹å€¼ç‰¹æ®ŠæŒ‡ä»¤
+    case ASSIGN_PART_7:
+    {
+        //1.åˆ¤æ–­å®¹é‡
+        if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 0)
+        {
+            break;
+        }
 
-		//±£´æµ½µ±Ç°G´úÂëÏµÍ³×´Ì¬½á¹¹Ìå
-		updataGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
+        int8 cRet;
+        int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+        struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
 
-		moveGCodeWritePtr(pSAssignConfig->ucChannelNum);
-        if (isErrorHasBeenWritten()) return;
-		
-		pSAssignConfig->unTotalCommandCnt += pSAssignConfig->cCommandSegmentCnt;
+        cRet = assignSpecialCommand(pSAssignConfig, pSGCodeParseUnit);
 
-		pSAssignConfig->cCommandSegmentCnt = 0;
-		pSAssignConfig->cPart = ASSIGN_PART_1;
+        if (cRet == 1)
+        {
+            pSAssignConfig->cPart = ASSIGN_PART_8;
+        }
+        break;
+    }
 
-		//¸³ÖµÅĞ¶ÏÊÇ·ñ½áÊø
-		//µ±Ç°¸³ÖµĞĞºÅ==³ÌĞò½áÊøĞĞºÅ
+    //Part7ï¼šèµ‹å€¼ç‰¹æ®ŠæŒ‡ä»¤ï¼Œå¹¶å®Œæˆç¼“å†²åŒºå•å…ƒé—´çš„è¿‡æ¸¡
+    case ASSIGN_PART_8:
+    {
+        // 1.åˆ¤æ–­å®¹é‡ï¼Œå½“å‰æ®µä¸å¯èƒ½æ’å…¥çš„è¿‡æ¸¡æ®µæœ€å¤šå ä¸¤æ§½ï¼›å®¹é‡ä¸è¶³ä¿æŒæœ¬é˜¶æ®µï¼Œç­‰å¾…ä¸‹æ¸¸é‡Šæ”¾ã€‚
+        if (getSGCodeParsePointerBufRes(GCODE_WRITE, ucChannelNum) <= 1)
+        {
+            break;
+        }
 
+        //2.è·å–å½“å‰Gä»£ç ç¼“å†²åŒºå†™å•å…ƒ
+        int16 sIndex = getSGCodeParsePointerIndex(GCODE_WRITE, pSAssignConfig->ucChannelNum);
+        struct SGCodeParse* pSGCodeParseUnit = &pSAssignConfig->pGCodeBuf[sIndex];
 
-		//ÅĞ¶ÏÊÇ·ñ¸Ä±ä¸³Öµ×´Ì¬
-		if (pSAssignConfig->ucTargetStatus != UNASSIGNED_VALUE && pSAssignConfig->ucStatus != pSAssignConfig->ucTargetStatus)
-		{
-			changeGCodeStatus(GC_ASSIGN, ucChannelNum, pSAssignConfig->ucTargetStatus, TRUE, 0);
-			pSAssignConfig->ucTargetStatus = UNASSIGNED_VALUE;
-		}
+        //ä¿å­˜åˆ°å½“å‰Gä»£ç ç³»ç»ŸçŠ¶æ€ç»“æ„ä½“
+        updataGCodeSystemState(&pSAssignConfig->SGCodeCurrSysState, pSGCodeParseUnit);
 
+        moveGCodeWritePtr(pSAssignConfig->ucChannelNum);
+        if (isErrorHasBeenWritten())
+            return;
 
+        pSAssignConfig->unTotalCommandCnt += pSAssignConfig->cCommandSegmentCnt;
 
-		break;
-	}
-	
-	default:
-		parseGCodeErrorB(0, GCODE_ERROR_NUM304);
-		break;
-	}
+        pSAssignConfig->cCommandSegmentCnt = 0;
+        pSAssignConfig->cPart = ASSIGN_PART_1;
 
+        //èµ‹å€¼åˆ¤æ–­æ˜¯å¦ç»“æŸ
+        //å½“å‰èµ‹å€¼è¡Œå·==ç¨‹åºç»“æŸè¡Œå·
+
+        //åˆ¤æ–­æ˜¯å¦æ”¹å˜èµ‹å€¼çŠ¶æ€
+        if (pSAssignConfig->ucTargetStatus != UNASSIGNED_VALUE &&
+            pSAssignConfig->ucStatus != pSAssignConfig->ucTargetStatus)
+        {
+            changeGCodeStatus(GC_ASSIGN, ucChannelNum, pSAssignConfig->ucTargetStatus, TRUE, 0);
+            pSAssignConfig->ucTargetStatus = UNASSIGNED_VALUE;
+        }
+
+        break;
+    }
+
+    default:
+        parseGCodeErrorB(0, GCODE_ERROR_NUM304);
+        break;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºvoid assignRun2Finished(SAssignConfiguration *pSAssignConfig, uint8 ucChannelNum)
-  º¯Êı¹¦ÄÜ£º¸³ÖµÍê³ÉÇ°µÄ²Ù×÷
-  ÊäÈë²ÎÊı£ºpSAssignConfig¸³Öµ½á¹¹Ìå£¬ucChannelNumÍ¨µÀºÅ
-  Êä³ö²ÎÊı£º
-  ·µ »Ø Öµ£º
-  ±¸    ×¢£ºG
+  å‡½æ•°åç§°ï¼švoid assignRun2Finished(SAssignConfiguration *pSAssignConfig, uint8 ucChannelNum)
+  å‡½æ•°åŠŸèƒ½ï¼šèµ‹å€¼å®Œæˆå‰çš„æ“ä½œ
+  è¾“å…¥å‚æ•°ï¼špSAssignConfigèµ‹å€¼ç»“æ„ä½“ï¼ŒucChannelNumé€šé“å·
+  è¾“å‡ºå‚æ•°ï¼š
+  è¿” å› å€¼ï¼š
+  å¤‡    æ³¨ï¼šG
 
 **************************************************/
 void assignRun2Finished(SAssignConfiguration* pSAssignConfig, uint8 ucChannelNum)
 {
-	SChannelConfiguration* pChannelConfig = getChannelConfig(ucChannelNum);
-	if (pChannelConfig == NULL)
-	{
-		return;
-	}
+    SChannelConfiguration* pChannelConfig = getChannelConfig(ucChannelNum);
+    if (pChannelConfig == NULL)
+    {
+        return;
+    }
 
+    //1.é‡Šæ”¾Gä»£ç è§£æå¼€è¾Ÿçš„å†…å­˜
+    //freeAllGcode();    æ³¨é‡Šæ‰çš„åŸå› æ˜¯ä¸ºäº†é€‚é…åŒé€šé“
+    freeGCodeChannelConfig(pChannelConfig);
+    pChannelConfig->ucStatus = GCODE_IDLE;
+    freeAllCommandParaStruct(ucChannelNum);
 
+    //2.åœ¨Gä»£ç ç¼“å†²åŒºä¸­å†™å…¥æ ‡å¿—bLastLineMark
 
+    //3.
 
-	//1.ÊÍ·ÅG´úÂë½âÎö¿ª±ÙµÄÄÚ´æ
-	//freeAllGcode();    ×¢ÊÍµôµÄÔ­ÒòÊÇÎªÁËÊÊÅäË«Í¨µÀ
-	freeGCodeChannelConfig(pChannelConfig);
-	pChannelConfig->ucStatus = GCODE_IDLE;
-	freeAllCommandParaStruct(ucChannelNum);
+    //4.
 
-	//2.ÔÚG´úÂë»º³åÇøÖĞĞ´Èë±êÖ¾bLastLineMark
+    //	setBFinshed(&pSAssignConfig->bFinshed, GC_ASSIGN, ucChannelNum);    //è®¾ç½®åŒæ­¥æ ‡è®°BFinshed
 
-	//3.
+    if (pSAssignConfig->SGCodeCurrSysState.sMb ==
+        M30) //M30å›åˆ°ç¬¬0è¡Œ	é™ˆæ•èª	2023/9/1	é™ˆæ•èªæ³¨é‡Š	è¿è¡Œç»“æŸæ— è®ºæƒ…å†µï¼Œç›´æ¥å°†è¡Œå·å¤ä½
+    {
+        pSAssignConfig->SGCodeCurrSysState.sMb = UNASSIGNED_VALUE;
+    }
 
-	//4.
+    //freeMemAssign(pSAssignConfig);	lxw:èµ‹å€¼ç»“æ„ä½“ä¸­æ— åŠ¨æ€å†…å­˜
 
+    //pSAssignConfig->sBeginLineNum = UNASSIGNED_VALUE;	//lxw beginLineNumç§»åŠ¨
 
+    g_SChannel[ucChannelNum].bGcodeWriteOverFlag = TRUE; //Gä»£ç å†™å®Œæ ‡å¿—ä½
 
+    changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_FINISHED, TRUE,
+                      pSAssignConfig->SGetTextStateInfo.unCurrLineNum); //çŠ¶æ€æ›´æ”¹ä¸ºè¿è¡Œåˆ°å®Œæˆ
 
-
-//	setBFinshed(&pSAssignConfig->bFinshed, GC_ASSIGN, ucChannelNum);    //ÉèÖÃÍ¬²½±ê¼ÇBFinshed
-
-	if (pSAssignConfig->SGCodeCurrSysState.sMb == M30)  //M30»Øµ½µÚ0ĞĞ	³ÂÃô´Ï	2023/9/1	³ÂÃô´Ï×¢ÊÍ	ÔËĞĞ½áÊøÎŞÂÛÇé¿ö£¬Ö±½Ó½«ĞĞºÅ¸´Î»
-	{
-		pSAssignConfig->SGCodeCurrSysState.sMb = UNASSIGNED_VALUE;
-	}
-
-	//freeMemAssign(pSAssignConfig);	lxw:¸³Öµ½á¹¹ÌåÖĞÎŞ¶¯Ì¬ÄÚ´æ
-
-
-	//pSAssignConfig->sBeginLineNum = UNASSIGNED_VALUE;	//lxw beginLineNumÒÆ¶¯
-
-
-	g_SChannel[ucChannelNum].bGcodeWriteOverFlag = TRUE;   //G´úÂëĞ´Íê±êÖ¾Î»
-
-
-
-	changeGCodeStatus(GC_ASSIGN, ucChannelNum, GCODE_FINISHED, TRUE, pSAssignConfig->SGetTextStateInfo.unCurrLineNum);  //×´Ì¬¸ü¸ÄÎªÔËĞĞµ½Íê³É
-
-	//g_bGCodeDraw[ucChannelNum] = FALSE;
-
+    //g_bGCodeDraw[ucChannelNum] = FALSE;
 }
 
-//¸³ÖµGb×éÖ¸Áî
-//- 1£º²ÎÊıÒì³£»òAPIÈ±Ê§£»
-//0£º±¾¶ÎÎŞ¸ÃÄ£Ì¬Ö¸Áî£¨pTemp == NULL£©£»
-//1£ºÖ´ĞĞ³É¹¦¡£
+//èµ‹å€¼Gbç»„æŒ‡ä»¤
+//- 1ï¼šå‚æ•°å¼‚å¸¸æˆ–APIç¼ºå¤±ï¼›
+//0ï¼šæœ¬æ®µæ— è¯¥æ¨¡æ€æŒ‡ä»¤ï¼ˆpTemp == NULLï¼‰ï¼›
+//1ï¼šæ‰§è¡ŒæˆåŠŸã€‚
 int8 assignGbCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGbRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGbRegulation;
 
-	//µ±Ç°³ÌĞò¶Î³öÏÖGb×éÖ¸Áî
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    //å½“å‰ç¨‹åºæ®µå‡ºç°Gbç»„æŒ‡ä»¤
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
-//¸³ÖµGc×éÖ¸Áî
+//èµ‹å€¼Gcç»„æŒ‡ä»¤
 int8 assignGcCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGcRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGcRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGdCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGdRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGdRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGeCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGeRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGeRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1 ;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGfCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1 ;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGfRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGfRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1 ;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGgCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1 ;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGgRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGgRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGjCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGjRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGjRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int8 assignGhCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGhRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanModalInfo.pSGhRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 int8 assignGxCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
-	if (pSAssignConfig == NULL)
-	{
-		parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-		return -1 ;
-	}
+    if (pSAssignConfig == NULL)
+    {
+        parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+        return -1;
+    }
 
-	SGCommandRegulation* pTemp;
-	pTemp = pSAssignConfig->SScanContainer.SScanNonModalInfo.pSGxRegulation;
+    SGCommandRegulation* pTemp;
+    pTemp = pSAssignConfig->SScanContainer.SScanNonModalInfo.pSGxRegulation;
 
-	if (pTemp != NULL)
-	{
-		if (pTemp->pAssignCommandAPI == NULL)
-		{
-			//Î´¸ø³öÖ¸ÁîµÄ¼ì²éº¯Êı
-			parseGCodeErrorB(0, GCODE_ERROR_NUM300);
-			return -1;
-		}
-		pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-
+    if (pTemp != NULL)
+    {
+        if (pTemp->pAssignCommandAPI == NULL)
+        {
+            //æœªç»™å‡ºæŒ‡ä»¤çš„æ£€æŸ¥å‡½æ•°
+            parseGCodeErrorB(0, GCODE_ERROR_NUM300);
+            return -1;
+        }
+        pTemp->pAssignCommandAPI(pSAssignConfig, pSGCodeParseUnit);
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 /*************************************************
-  º¯ÊıÃû³Æ£ºassignFCommand
-  º¯Êı¹¦ÄÜ£ºĞ£Ñé±¾´ÎÉ¨ÃèµÃµ½µÄ F£¬²¢°´µ±Ç°µ¥Î»ºÍ½ø¸øÄ£Ì¬Ğ´Èë½ø¸ø¡£
-  ÊäÈë²ÎÊı£ºpSAssignConfig º¬±¾¶ÎÉ¨Ãè¼°¼Ì³ĞÄ£Ì¬£»pGCodeBufUnit ÎªÎ´×ª»»Ä£Ì¬µÄĞ´²Û£¬¾ù·Ç¿Õ¡£
-  Êä³ö²ÎÊı£º³É¹¦Ê±¸üĞÂ dFeedrate£»Î´Ğ´ F »òÊ§°ÜÊ±±£³ÖĞ´²ÛºÍÉ¨ÃèÈİÆ÷²»±ä¡£
-  ·µ »Ø Öµ£º1 ³É¹¦»òÎ´Ğ´ F£»-1 ·Ç·¨ F£¬ÒÑ±¨ 130£¬µ÷ÓÃ·½±ØĞëÍ£Ö¹µ±Ç°¶Î¡£
-  ±¸    ×¢£º½öÊµ¼ÊÖ´ĞĞµÄ G84/G88 ÔÊĞí¸º F£»±£Áô F0£¬²»Ğ£ÑéÎ´Ğ´ F Ê±µÄ¼Ì³Ğ½ø¸ø¡£
+  å‡½æ•°åç§°ï¼šassignFCommand
+  å‡½æ•°åŠŸèƒ½ï¼šæ ¡éªŒæœ¬æ¬¡æ‰«æå¾—åˆ°çš„ Fï¼Œå¹¶æŒ‰å½“å‰å•ä½å’Œè¿›ç»™æ¨¡æ€å†™å…¥è¿›ç»™ã€‚
+  è¾“å…¥å‚æ•°ï¼špSAssignConfig å«æœ¬æ®µæ‰«æåŠç»§æ‰¿æ¨¡æ€ï¼›pGCodeBufUnit ä¸ºæœªè½¬æ¢æ¨¡æ€çš„å†™æ§½ï¼Œå‡éç©ºã€‚
+  è¾“å‡ºå‚æ•°ï¼šæˆåŠŸæ—¶æ›´æ–° dFeedrateï¼›æœªå†™ F æˆ–å¤±è´¥æ—¶ä¿æŒå†™æ§½å’Œæ‰«æå®¹å™¨ä¸å˜ã€‚
+  è¿” å› å€¼ï¼š1 æˆåŠŸæˆ–æœªå†™ Fï¼›-1 éæ³• Fï¼Œå·²æŠ¥ 130ï¼Œè°ƒç”¨æ–¹å¿…é¡»åœæ­¢å½“å‰æ®µã€‚
+  å¤‡    æ³¨ï¼šä»…å®é™…æ‰§è¡Œçš„ G84/G88 å…è®¸è´Ÿ Fï¼›ä¿ç•™ F0ï¼Œä¸æ ¡éªŒæœªå†™ F æ—¶çš„ç»§æ‰¿è¿›ç»™ã€‚
 **************************************************/
 int8 assignFCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//³ÌĞò¶ÎÖĞ³öÏÖF²Å¸³Öµ
-	if (pSAssignConfig->SScanContainer.bF == TRUE)
-	{
-		// ÓÃ¾Ö²¿±äÁ¿±£´æÔ­Ê¼F£¬²»ĞŞ¸ÄÉ¨ÃèÈİÆ÷
-		double dFeedMm = pSAssignConfig->SScanContainer.dF;
-		int16 sCurrCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
+    //ç¨‹åºæ®µä¸­å‡ºç°Fæ‰èµ‹å€¼
+    if (pSAssignConfig->SScanContainer.bF == TRUE)
+    {
+        // ç”¨å±€éƒ¨å˜é‡ä¿å­˜åŸå§‹Fï¼Œä¸ä¿®æ”¹æ‰«æå®¹å™¨
+        double dFeedMm = pSAssignConfig->SScanContainer.dF;
+        int16 sCurrCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
 
-		// G70 ½èÓÃÖ÷¸³Öµ½á¹¹£¬±ØĞë°´±¾¶ÎÉ¨Ãè¼°¼Ì³ĞÄ£Ì¬Ê¶±ğÊµ¼ÊÖ¸Áî£¬Ë³ĞòÓëÖ¸Áî·ÖÅÉÒ»ÖÂ¡£
-		if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
-		{
-			sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
-		}
-		else if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
-		{
-			sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
-		}
+        // G70 å€Ÿç”¨ä¸»èµ‹å€¼ç»“æ„ï¼Œå¿…é¡»æŒ‰æœ¬æ®µæ‰«æåŠç»§æ‰¿æ¨¡æ€è¯†åˆ«å®é™…æŒ‡ä»¤ï¼Œé¡ºåºä¸æŒ‡ä»¤åˆ†æ´¾ä¸€è‡´ã€‚
+        if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation != NULL)
+        {
+            sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGaRegulation->nCommandVal;
+        }
+        else if (pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation != NULL)
+        {
+            sCurrCommandVal = pSAssignConfig->SScanContainer.SScanModalInfo.pSGzRegulation->nCommandVal;
+        }
 
-		if (!isfinite(dFeedMm) || (dFeedMm < 0
-			&& sCurrCommandVal != G84 * pow(10, GCOMMAND_DECIMAL_PLACE)
-			&& sCurrCommandVal != G88 * pow(10, GCOMMAND_DECIMAL_PLACE)))
-		{
-			parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
-			return -1;
-		}
-		if (pGCodeBufUnit->SModalInfo.sGe ==G20 * pow(10, GCOMMAND_DECIMAL_PLACE))// G20ÏÂ£¬½«³¤¶Èµ¥Î»ÓÉÓ¢´ç×ª»»ÎªºÁÃ×£¬G21ÏÂ²»½øÈë´Ë·ÖÖ§£¬ÊıÖµ±£³Ö²»±ä
-		{
-			dFeedMm *= 25.4;
-		}
-		// ÓĞÏŞµÄÓ¢´çÖµÒ²¿ÉÄÜÔÚ»»ËãÊ±Òç³ö£»Ğ£ÑéÍê³ÉÇ°²»Ğ´Èë½ø¸ø¡£
-		if (!isfinite(dFeedMm))
-		{
-			parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
-			return -1;
-		}
-		pGCodeBufUnit->dFeedrate = pGCodeBufUnit->SModalInfo.sGg == G95 * pow(10, GCOMMAND_DECIMAL_PLACE) ?
-			dFeedMm : dFeedMm / (60 * 1000); // G98Ê±×ªËÙµ¥Î»ÓÉ mm / min ×ª³É mm / ms
-	}
-	return 1;
+        if (!isfinite(dFeedMm) || (dFeedMm < 0 && sCurrCommandVal != G84 * pow(10, GCOMMAND_DECIMAL_PLACE) &&
+                                   sCurrCommandVal != G88 * pow(10, GCOMMAND_DECIMAL_PLACE)))
+        {
+            parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+        if (pGCodeBufUnit->SModalInfo.sGe ==
+            G20 * pow(10, GCOMMAND_DECIMAL_PLACE)) // G20ä¸‹ï¼Œå°†é•¿åº¦å•ä½ç”±è‹±å¯¸è½¬æ¢ä¸ºæ¯«ç±³ï¼ŒG21ä¸‹ä¸è¿›å…¥æ­¤åˆ†æ”¯ï¼Œæ•°å€¼ä¿æŒä¸å˜
+        {
+            dFeedMm *= 25.4;
+        }
+        // æœ‰é™çš„è‹±å¯¸å€¼ä¹Ÿå¯èƒ½åœ¨æ¢ç®—æ—¶æº¢å‡ºï¼›æ ¡éªŒå®Œæˆå‰ä¸å†™å…¥è¿›ç»™ã€‚
+        if (!isfinite(dFeedMm))
+        {
+            parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+        pGCodeBufUnit->dFeedrate = pGCodeBufUnit->SModalInfo.sGg == G95 * pow(10, GCOMMAND_DECIMAL_PLACE)
+                                       ? dFeedMm
+                                       : dFeedMm / (60 * 1000); // å°† G94 è¿›ç»™æ¢ç®—ä¸ºå†…æ ¸ä½¿ç”¨çš„æ¯«ç±³æ¯æ¯«ç§’ã€‚
+    }
+    return 1;
 }
 
 int8 assignSCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	if (pSAssignConfig->SScanContainer.bS == TRUE)
-	{
-		//1.¶ÔdSpindleSpeed¸³Öµ
-		if (pSAssignConfig->cSpindleSpeedAssignFlag == 0)
-		{
-			pGCodeBufUnit->dSpindleSpeed = pSAssignConfig->SScanContainer.dS;
-
-		}
-		//2.¶ÔdSecondSpindleSpeed¸³Öµ
-		else if (pSAssignConfig->cSpindleSpeedAssignFlag == 1)
-		{
-			pGCodeBufUnit->dSecondSpindleSpeed = pSAssignConfig->SScanContainer.dS;
-
-
-		}
-	}
-	return 1;
+    if (pSAssignConfig->SScanContainer.bS == TRUE)
+    {
+        //1.å¯¹dSpindleSpeedèµ‹å€¼
+        if (pSAssignConfig->cSpindleSpeedAssignFlag == 0)
+        {
+            pGCodeBufUnit->dSpindleSpeed = pSAssignConfig->SScanContainer.dS;
+        }
+        //2.å¯¹dSecondSpindleSpeedèµ‹å€¼
+        else if (pSAssignConfig->cSpindleSpeedAssignFlag == 1)
+        {
+            pGCodeBufUnit->dSecondSpindleSpeed = pSAssignConfig->SScanContainer.dS;
+        }
+    }
+    return 1;
 }
 int8 assignTCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	//³ÌĞò¶ÎÖĞ³öÏÖT²Å¸³Öµ
-	if (pSAssignConfig->SScanContainer.bT == TRUE)
-	{
-		int8 cToolNum;//µ¶¾ßºÅ
-		int8 cToolCompNum;//µ¶²¹ºÅ
-		int32 nT = (int32)pSAssignConfig->SScanContainer.dT;
+    //ç¨‹åºæ®µä¸­å‡ºç°Tæ‰èµ‹å€¼
+    if (pSAssignConfig->SScanContainer.bT == TRUE)
+    {
+        int8 cToolNum;     //åˆ€å…·å·
+        int8 cToolCompNum; //åˆ€è¡¥å·
+        int32 nT = (int32)pSAssignConfig->SScanContainer.dT;
 
-		if (nT < 100)
-		{
-			cToolCompNum = nT;
-			cToolNum = pSAssignConfig->SGCodeCurrSysState.ucToolID;
-		}
-		else
-		{
-			cToolNum = nT / 100;
-			cToolCompNum = nT % 100;
-		}
-		pGCodeBufUnit->ucToolID = cToolNum;
-		pGCodeBufUnit->ucToolCompNum = cToolCompNum;
+        if (nT < 100)
+        {
+            cToolCompNum = nT;
+            cToolNum = pSAssignConfig->SGCodeCurrSysState.ucToolID;
+        }
+        else
+        {
+            cToolNum = nT / 100;
+            cToolCompNum = nT % 100;
+        }
+        pGCodeBufUnit->ucToolID = cToolNum;
+        pGCodeBufUnit->ucToolCompNum = cToolCompNum;
 
-		if (cToolCompNum < 1 || cToolCompNum > TOOL_NUM_MAX)
-		{
-			setErrorType(GCODE_ERROR_NUM129);
-			findError(pSAssignConfig->SGetTextStateInfo.pStartPtr, pSAssignConfig->SGetTextStateInfo.unCurrLineNum);
-			return -1;
-		}
+        if (cToolCompNum < 1 || cToolCompNum > TOOL_NUM_MAX)
+        {
+            setErrorType(GCODE_ERROR_NUM129);
+            findError(pSAssignConfig->SGetTextStateInfo.pStartPtr, pSAssignConfig->SGetTextStateInfo.unCurrLineNum);
+            return -1;
+        }
 
-		//¸üĞÂµ½ÏµÍ³×´Ì¬
-		pSAssignConfig->SGCodeCurrSysState.ucToolID = cToolNum;				//ÊµÊ±¸úĞÂµ¶ºÅ
-		pSAssignConfig->SGCodeCurrSysState.ucToolCompNum = cToolCompNum;	//ÊµÊ±¸úĞÂµ¶²¹ºÅ
+        //æ›´æ–°åˆ°ç³»ç»ŸçŠ¶æ€
+        pSAssignConfig->SGCodeCurrSysState.ucToolID = cToolNum;          //å®æ—¶è·Ÿæ–°åˆ€å·
+        pSAssignConfig->SGCodeCurrSysState.ucToolCompNum = cToolCompNum; //å®æ—¶è·Ÿæ–°åˆ€è¡¥å·
 
-		//¸üĞÂµ¶¾ßÆ«ÖÃÖµ£¨³¤¶È+Ä¥ºÄ£©
-		pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolLengthOffset = g_SSystemPara.SToolPara[pSAssignConfig->ucChannelNum][cToolCompNum - 1].SToolCoord;
-		pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolWearOffset = pSAssignConfig->SGCodeCurrSysState.SToolWearPara[cToolCompNum - 1];
+        //æ›´æ–°åˆ€å…·åç½®å€¼ï¼ˆé•¿åº¦+ç£¨è€—ï¼‰
+        pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolLengthOffset =
+            g_SSystemPara.SToolPara[pSAssignConfig->ucChannelNum][cToolCompNum - 1].SToolCoord;
+        pSAssignConfig->SGCodeCurrSysState.SAllOffsetOfCoord.SToolWearOffset =
+            pSAssignConfig->SGCodeCurrSysState.SToolWearPara[cToolCompNum - 1];
 
-		//¸üĞÂ×ÜÆ«ÖÃ
-		calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
-
-	}
-	return 1;
+        //æ›´æ–°æ€»åç½®
+        calculateTotalOffset(&pSAssignConfig->SGCodeCurrSysState);
+    }
+    return 1;
 }
 
 int8 assignSpecialCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
-	int8 cRet = 1;
+    int8 cRet = 1;
 
-	//1.BÀàºê¹Ø¼ü×Ö
-	if (pSAssignConfig->SScanContainer.cMacroType != 0)
-	{
-		switch (pSAssignConfig->SScanContainer.cMacroType)
-		{
-			//GOTO
-		case 1:
-		{
-			cRet = assignGOTO(pSAssignConfig, pGCodeBufUnit);
-			break;
-		}
-		//IF
-		case 2:
-		{
-			cRet = assignIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &pSAssignConfig->SGetTextStateInfo);
-			break;
-		}
-		//ELSEIF
-		case 3:
-		{
-			cRet = assignELSEIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &pSAssignConfig->SGetTextStateInfo);
-			break;
-		}
-		//ELSE
-		case 4:
-		{
-			cRet = assignELSE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
-			break;
-		}
-		//ENDIF
-		case 5:
-		{
-			cRet = assignENDIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
-			break;
-		}
-		//WHILE
-		case 6:
-		{
-			cRet = assignWHILE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer, &pSAssignConfig->SGetTextStateInfo);
-			break;
+    //1.Bç±»å®å…³é”®å­—
+    if (pSAssignConfig->SScanContainer.cMacroType != 0)
+    {
+        switch (pSAssignConfig->SScanContainer.cMacroType)
+        {
+            //GOTO
+        case 1:
+        {
+            cRet = assignGOTO(pSAssignConfig, pGCodeBufUnit);
+            break;
+        }
+        //IF
+        case 2:
+        {
+            cRet = assignIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer,
+                            &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        //ELSEIF
+        case 3:
+        {
+            cRet = assignELSEIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer,
+                                &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        //ELSE
+        case 4:
+        {
+            cRet = assignELSE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        //ENDIF
+        case 5:
+        {
+            cRet = assignENDIF(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        //WHILE
+        case 6:
+        {
+            cRet = assignWHILE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SScanContainer,
+                               &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        //ENDWHILE
+        case 7:
+        {
+            cRet = assignENDWHILE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
+            break;
+        }
+        default:
+            cRet = 1;
+            break;
+        }
+    }
 
-		}
-		//ENDWHILE
-		case 7:
-		{
-			cRet = assignENDWHILE(pSAssignConfig->ucChannelNum, &pSAssignConfig->SGetTextStateInfo);
-			break;
-		}
-		default:
-			cRet = 1;
-			break;
-		}
-
-	}
-
-	//2.G66ºê³ÌĞòµ÷ÓÃ
-
-	return cRet;
+    /* å½“å‰é“£å‰ŠæŒ‡ä»¤é›†å¯¹ G65/G66/G67 æŒ‰æœªæ”¯æŒæŒ‡ä»¤å¤„ç†ã€‚ */
+    return cRet;
 }
-
-
-
