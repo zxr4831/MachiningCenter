@@ -2930,8 +2930,11 @@ void refreshGCodeGeometry(struct SGCodeParse* pSGCodeBuffUnit)
         }
         if (pSGCodeBuffUnit->SModalInfo.sGa == 2 || pSGCodeBuffUnit->SModalInfo.sGa == 3)
         {
-            setbit(pSGCodeBuffUnit->ucValStatus, AXIS_X);
-            setbit(pSGCodeBuffUnit->ucValStatus, AXIS_Z);
+            // 圆弧平面内两轴都参与运动，即使某轴的起点与终点坐标相同。
+            uint8 ucPlaneAxis[2];
+            chooseInterpPlane(ucPlaneAxis, pSGCodeBuffUnit->unCommandType);
+            setbit(pSGCodeBuffUnit->ucValStatus, ucPlaneAxis[0]);
+            setbit(pSGCodeBuffUnit->ucValStatus, ucPlaneAxis[1]);
         }
     }
 }

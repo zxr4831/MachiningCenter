@@ -575,11 +575,17 @@ void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int 
 
         if (!isZero(dMaxNum))
         {
+#if MC_PROFILE_XYZ
+            // G94 的 F 与段间低速下限均按 XYZ 合成路径速度使用。
+            // 后续 calcVAndAPara / correctFeedrateAndLowerLimitSpeedAgain 按各轴能力限速。
+            pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear;
+#else
             //1.修正进给速度
             pToolcode->dFeedrate = pToolcode->dFeedrate / dMaxNum;
 
             //2，根据长轴轴号反算对应的复合运动切削进给段间低速下限值
             pToolcode->dLowerLimitSpeed = g_SSystemPara.dSysLowerLimitSpeed * dSpeedGear / dMaxNum;
+#endif
         }
         else
         {
