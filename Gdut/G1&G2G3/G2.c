@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "CTrajPlanning.h"
 #include <math.h>
+#include <float.h>
 #include "ringbuff.h"
 #include "Channel.h"
 //struct SG2 g_SG2;
@@ -583,6 +584,22 @@ int8 loadSG2DataFromInput(struct SG2* pSG2Pointer, struct SInput* pSInput)
             //获取当前坐标
             getRealTimePoint((double*)&pSG2Pointer->SStartPoint, AXIS_NUM_MAX, pSG2Pointer->pSChannel->pMapAxisArray,
                              &pSG2Pointer->ucValStatus);
+#if MC_PROFILE_XYZ
+            /* 自动段按编程起点接续，允许半个位置当量内的输出量化及浮点累加误差。 */
+            if (!pSG2Pointer->bIsUserData && isZero(pSInput->dPreDist))
+            {
+                for (int axis = 0; axis < AXIS_NUM_MAX; ++axis)
+                {
+                    uint8 physical = pSG2Pointer->pSChannel->pMapAxisArray[axis];
+                    if (physical >= AXIS_PHYSICS_NUM_MAX)
+                        continue;
+                    double tolerance = 0.5 * g_SSystemPara.SAxisPara[physical].dPulseToMm +
+                                       64.0 * DBL_EPSILON * fmax(1.0, fabs(pSInput->SStartPoint.dArray[axis]));
+                    if (fabs(pSG2Pointer->SStartPoint.dArray[axis] - pSInput->SStartPoint.dArray[axis]) <= tolerance)
+                        pSG2Pointer->SStartPoint.dArray[axis] = pSInput->SStartPoint.dArray[axis];
+                }
+            }
+#endif
 #if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE //倾斜Y轴机
             if (pSG2Pointer->pSChannel->bUseVirtualY == TRUE)
             {

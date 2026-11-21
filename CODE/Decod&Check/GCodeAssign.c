@@ -448,7 +448,8 @@ void assignSegments(struct _SAssignConfiguration* pSAssignConfig, uint8 ucChanne
             }
         }
 
-        assignFCommand(pSAssignConfig, pSGCodeParseUnit);
+        if (assignFCommand(pSAssignConfig, pSGCodeParseUnit) < 0)
+            return;
         assignSCommand(pSAssignConfig, pSGCodeParseUnit);
         assignTCommand(pSAssignConfig, pSGCodeParseUnit);
 
@@ -943,7 +944,7 @@ int8 assignGxCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCode
   输入参数：pSAssignConfig 含本段扫描及继承模态；pGCodeBufUnit 为未转换模态的写槽，均非空。
   输出参数：成功时更新 dFeedrate；未写 F 或失败时保持写槽和扫描容器不变。
   返 回 值：1 成功或未写 F；-1 非法 F，已报 130，调用方必须停止当前段。
-  备    注：仅实际执行的 G84/G88 允许负 F；保留 F0，不校验未写 F 时的继承进给。
+  备    注：XYZ 配置的显式 F 必须为正；其他机型沿用 G84/G88 负进给规则。
 **************************************************/
 int8 assignFCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBufUnit)
 {
@@ -952,6 +953,13 @@ int8 assignFCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeP
     {
         // 用局部变量保存原始F，不修改扫描容器
         double dFeedMm = pSAssignConfig->SScanContainer.dF;
+#if MC_PROFILE_XYZ
+        if (!isfinite(dFeedMm) || dFeedMm <= 0.0)
+        {
+            parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
+            return -1;
+        }
+#endif
         int16 sCurrCommandVal = pSAssignConfig->SGCodeCurrSysState.SModalInfo.sGa;
 
         // G70 借用主赋值结构，必须按本段扫描及继承模态识别实际指令，顺序与指令分派一致。

@@ -70,6 +70,13 @@ void initGCodeSystemState(SGCodeSysState* pSGCodeSysState, uint8 ucChannelNum)
     pSGCodeSysState->ucToolCompNum = 1;
 
     pSGCodeSysState->sWorkpieceCoordNum = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
+#if MC_PROFILE_XYZ
+    /* 新程序从当前机械位置开始，默认 G54 同时继承已设置的外部与工件偏置。 */
+    getRealTimePoint(pSGCodeSysState->SCurrPoint.dArray, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray, NULL);
+    pSGCodeSysState->SAllOffsetOfCoord.SToolSettingOffset = g_SZeroPtOfCoordSys[ucChannelNum].SToolSettingOffset;
+    pSGCodeSysState->SAllOffsetOfCoord.SWorkPieceOffset = g_SZeroPtOfCoordSys[ucChannelNum].SWorkPieceOffset[0];
+    calculateTotalOffset(pSGCodeSysState);
+#endif
 #endif
 
     /* 继承主轴已生效的限速，避免解析状态清零后下发零限速；度/ms转换为r/min。 */
@@ -3016,6 +3023,14 @@ void moveGCodeWritePtr(uint8 ucChannelNum)
     // 只转换局部副本；任何校验失败均不覆盖原始写槽。
     b = *current;
     convertGCodeBuff(&b);
+#if MC_PROFILE_XYZ
+    /* F 可从前段继承；实际切削运动发布前必须具备有效的正进给。 */
+    if ((b.EntityType == L1NE || b.EntityType == ARC) && (!isfinite(b.dFeedrate) || b.dFeedrate <= 0.0))
+    {
+        parseGCodeErrorB(b.unGCodeLineNum, GCODE_ERROR_NUM130);
+        return;
+    }
+#endif
     if (hasCornerRequest(&b) && !isCornerRequestValid(&b))
     {
         parseGCodeErrorB(b.unGCodeLineNum, 283);

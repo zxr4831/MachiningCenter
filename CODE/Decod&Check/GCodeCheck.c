@@ -804,6 +804,13 @@ void checkFCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SGCodePa
     //程序段中出现F才检查
     if (pSSyntaxConfig->SScanContainer.bF == TRUE)
     {
+#if MC_PROFILE_XYZ
+        if (!isfinite(pSSyntaxConfig->SScanContainer.dF) || pSSyntaxConfig->SScanContainer.dF <= 0.0)
+        {
+            parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
+            return;
+        }
+#endif
         //2026.10.10 唐子杰 进给速度F不能为负数（G84/G88攻丝指令的F允许为负，表示左旋）
         if (pSSyntaxConfig->SScanContainer.dF < 0 &&
             pSSyntaxConfig->sCurrCommandVal != 84 * pow(10, GCOMMAND_DECIMAL_PLACE) &&

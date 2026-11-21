@@ -22,15 +22,15 @@ int8 setRelaCoord(uint8 ucChannelNum, uint8 ucAxis, double val); //设置相对�
 
 ////修改坐标系 + 输入
 int8 modifyCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
-                      double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
+                      double dOffset); // ucNum : 0 EXT; 1 G54; 2 G55; 3 G56; 4 G57; 5 G58; 6 G59
 
 //设置外部/工件坐标系
 int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
-                   double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
+                   double dOffset); // ucNum : 0 EXT; 1 G54; 2 G55; 3 G56; 4 G57; 5 G58; 6 G59
 
 //输入外部/工件坐标系
 int8 inputCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
-                     double dOffset); // ucNum : 1 EXT; 2 G54; 3 G55 ; 4 G56 ; 5 G57 ; 6 G58 ; 7 G59 ;
+                     double dOffset); // ucNum : 0 EXT; 1 G54; 2 G55; 3 G56; 4 G57; 5 G58; 6 G59
 
 //获取外部/工件坐标系偏移
 double getCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis);

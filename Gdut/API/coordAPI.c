@@ -402,7 +402,9 @@ int8 setCoorOffset(uint8 ucChannelNum, uint8 ucNum, uint8 ucAxis,
         }
     }
 #endif
-    dRealTimeValue = ucAxis == AXIS_X ? 2.0 * dRealTimeValue : dRealTimeValue; //X轴实时点要乘2
+    uint8 ucPhysicalAxis = g_SChannel[ucChannelNum].pMapAxisArray[ucAxis];
+    if (ucPhysicalAxis < AXIS_PHYSICS_NUM_MAX && g_SSystemPara.SAxisPara[ucPhysicalAxis].bShowByDiameter)
+        dRealTimeValue *= 2.0; // 按实际物理轴的直径编程设置换算。
 
     pdTargetCoor = (double*)pSCoorOffset[ucNum].dArray; //指向目标偏移
 
