@@ -1120,12 +1120,11 @@ bool turretManagerRelease(VAL_TURRET_TYPE ucSign)
 int8 releaseAllOccupiedAxis(struct SInterpolationPre* pSPreProcess)
 {
 	/* 释放前必须取得有效通道，避免访问未绑定的同步状态。 */
-	if (pSPreProcess == NULL || pSPreProcess->pSChannel == NULL)
+    if (pSPreProcess == NULL)
 	{
 		return -1;
 	}
 	/* 释放轴所有权后，旧攻丝相位不可再作为相邻段参考。 */
-	pSPreProcess->pSChannel->SG01.SG84Follow.m_bActive = FALSE;
 	uint8* ucMapArray = NULL;
 	ucMapArray = pSPreProcess->pSChannel->pMapAxisArray;//获取映射
 	if (ucMapArray == NULL)//空指针

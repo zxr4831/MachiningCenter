@@ -1,1191 +1,605 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="头文件\Corner">
-      <UniqueIdentifier>{9862671b-66a3-4ed9-8f48-65a757a952ec}</UniqueIdentifier>
+    <Filter Include="Master">
+      <UniqueIdentifier>{B5049315-A061-4CD9-93EA-80D5C6D4FC12}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\Corner">
-      <UniqueIdentifier>{6b064d96-fda2-4cdb-8a4a-933fc1c3cc0b}</UniqueIdentifier>
+    <Filter Include="CODE\Machine">
+      <UniqueIdentifier>{4C254134-9E15-42E3-93E2-B685DA2D5229}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="CODE">
+      <UniqueIdentifier>{4346F51B-0CAE-5C31-8566-92C4A77A2489}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="CODE\CTrajPlanning">
+      <UniqueIdentifier>{4C856CDE-CB83-5859-8D8A-FE8DB11A6B77}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件\resource">
-      <UniqueIdentifier>{7493850b-ea0b-4ae5-a96b-71594ab500ef}</UniqueIdentifier>
+    <Filter Include="CODE\Channel">
+      <UniqueIdentifier>{8D4040A7-E293-5D50-8645-DA72C89B37A0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件\ouputFile">
-      <UniqueIdentifier>{c1c33dbd-7fcb-4f18-a4bd-1109ae708316}</UniqueIdentifier>
+    <Filter Include="CODE\Corner">
+      <UniqueIdentifier>{486B02F7-3251-5F4D-8C8A-4CD0FF8BF554}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件\NewFilter1">
-      <UniqueIdentifier>{ad0046df-d2bb-43ae-bd7a-a277d534f44d}</UniqueIdentifier>
+    <Filter Include="CODE\Decod&amp;Check">
+      <UniqueIdentifier>{2B222A49-658B-5572-BCA1-00EA00C983DD}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件\企业G代码">
-      <UniqueIdentifier>{7e62ca78-e96e-47f9-bfe5-49312b65425b}</UniqueIdentifier>
+    <Filter Include="CODE\Decod&amp;Check\command">
+      <UniqueIdentifier>{B2E9F73D-004F-5A42-A288-07D3033A859A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\API">
-      <UniqueIdentifier>{c5dbaed0-4028-4cc1-a89c-fc09c536a144}</UniqueIdentifier>
+    <Filter Include="CODE\ErrorCompensation">
+      <UniqueIdentifier>{31DC2997-EEF4-5F1C-B6EA-1E6588194F71}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode">
-      <UniqueIdentifier>{706d7da8-960e-45bf-9ef3-afb3e1b9c4f3}</UniqueIdentifier>
+    <Filter Include="CODE\Handwheel">
+      <UniqueIdentifier>{CA6B058D-DA05-511B-AFE0-4D7B6B77130A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command">
-      <UniqueIdentifier>{679fb3f8-ac2a-4306-862b-c8e1c8bea59d}</UniqueIdentifier>
+    <Filter Include="CODE\IOCommand">
+      <UniqueIdentifier>{7978A1F0-68CF-5AE1-ABE6-74E0B2C6B2F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\GCodeFrame">
-      <UniqueIdentifier>{51720b54-66be-4fa7-bac4-8b7af587aa4a}</UniqueIdentifier>
+    <Filter Include="CODE\Motion">
+      <UniqueIdentifier>{A503BC64-8072-53ED-9462-CD5F818C548F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Ga">
-      <UniqueIdentifier>{e0c716d5-af38-40f7-81a4-3bccc63cd582}</UniqueIdentifier>
+    <Filter Include="CODE\RingBuff">
+      <UniqueIdentifier>{1BC5C97D-F824-520F-8473-C56B65721D97}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gb">
-      <UniqueIdentifier>{7e29baf4-1bca-4401-af80-af1f865f391b}</UniqueIdentifier>
+    <Filter Include="CODE\SecondSpindle">
+      <UniqueIdentifier>{0C9350B7-4C13-5733-989F-EA45D6669758}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gc">
-      <UniqueIdentifier>{0c00bd7f-8ccd-41db-9b31-fde9beef4f2a}</UniqueIdentifier>
+    <Filter Include="CODE\Spindle">
+      <UniqueIdentifier>{BBDA4AF5-2B5F-55F6-A3F5-B1FB8F910AEB}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gz">
-      <UniqueIdentifier>{5b96582d-56dc-4e54-808f-0cb67f23928c}</UniqueIdentifier>
+    <Filter Include="CODE\TIOCommand">
+      <UniqueIdentifier>{6DF578E2-847D-56E1-9BB4-BF1B78E34667}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gd">
-      <UniqueIdentifier>{248d8e5d-d2dd-42c5-8c69-4bac5c76a349}</UniqueIdentifier>
+    <Filter Include="CODE\ToolCompensation">
+      <UniqueIdentifier>{4BD1CA6A-1F2B-547E-82FC-7F32D067CEB4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\M">
-      <UniqueIdentifier>{ab4ceb48-38e2-4bb8-b4b3-295c8fbdfb0a}</UniqueIdentifier>
+    <Filter Include="CODE\list">
+      <UniqueIdentifier>{E28B440C-F9BC-5E73-A83B-293FCA12F626}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Ge">
-      <UniqueIdentifier>{87b10736-abd2-4d06-b4df-44f4fda0a06c}</UniqueIdentifier>
+    <Filter Include="CODE\lookAhead">
+      <UniqueIdentifier>{D5DE8E4A-BE12-52EE-8F6C-1D3C112D075D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gf">
-      <UniqueIdentifier>{632aa36f-6823-4450-96b7-08fd5f231ba4}</UniqueIdentifier>
+    <Filter Include="CODE\manageMem">
+      <UniqueIdentifier>{0CA6F301-B8CD-5A8F-A59B-21C95129D002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gh">
-      <UniqueIdentifier>{2f35c972-7515-4c51-97ba-43852415664d}</UniqueIdentifier>
+    <Filter Include="CODE\toolAxis">
+      <UniqueIdentifier>{606583C1-7E51-5CB6-9734-724B574D30EC}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gg">
-      <UniqueIdentifier>{c16411a4-47ca-4c8f-ab4a-842ad5b7c0e7}</UniqueIdentifier>
+    <Filter Include="CODE\tree">
+      <UniqueIdentifier>{B5682A96-4B29-5A9C-AB33-67A9C3F61891}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gx">
-      <UniqueIdentifier>{578efff7-a40e-4795-8352-8ae8040f32f5}</UniqueIdentifier>
+    <Filter Include="Gdut">
+      <UniqueIdentifier>{F11174D5-8081-5FC2-AA11-497AC474941E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Macro">
-      <UniqueIdentifier>{2822fc0c-872e-40cb-8602-b85370986741}</UniqueIdentifier>
+    <Filter Include="Gdut\API">
+      <UniqueIdentifier>{B79C227C-1081-5859-AEB3-2EA2E76FC934}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\GCode\command\Gj">
-      <UniqueIdentifier>{eec8fe84-812f-4e5e-84a9-c7a443ef1cf1}</UniqueIdentifier>
+    <Filter Include="Gdut\G0">
+      <UniqueIdentifier>{1FD56604-FE8B-58A5-95F5-939B2E115639}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Gdut\G1&amp;G2G3">
+      <UniqueIdentifier>{5E53DF46-2B0F-5738-B387-193C78278E04}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\API">
-      <UniqueIdentifier>{2d98e7c8-3975-47fc-bf8d-260d255eba03}</UniqueIdentifier>
+    <Filter Include="Gdut\G32">
+      <UniqueIdentifier>{A3DF1CD8-FC58-5CB2-B824-32D4405C3404}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode">
-      <UniqueIdentifier>{0c489428-b534-494b-ad23-5ecd4d6b8341}</UniqueIdentifier>
+    <Filter Include="Gdut\G33">
+      <UniqueIdentifier>{CF2980FD-63AC-5090-8925-1DF38EF78827}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode\command">
-      <UniqueIdentifier>{445d8d60-4e4a-4043-8afc-d2439c00f387}</UniqueIdentifier>
+    <Filter Include="LIB_SHUKONG">
+      <UniqueIdentifier>{C88D4D7C-89A9-5BB0-8ACE-E07D3FCEF24C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode\command\Ga">
-      <UniqueIdentifier>{c91aa643-d348-4e70-bd47-0d27f84b88fd}</UniqueIdentifier>
+    <Filter Include="LIB_SHUKONG\GdutLib">
+      <UniqueIdentifier>{118C79BA-A6B8-52BB-9897-899727D765CE}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode\command\Gb">
-      <UniqueIdentifier>{6093a57c-aa3a-4120-8f68-7d8b8d0d80e0}</UniqueIdentifier>
+    <Filter Include="LIB_SHUKONG\GdutLib\GCode">
+      <UniqueIdentifier>{4E98CF88-0486-565F-8B87-FFF91B726830}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode\command\Gd">
-      <UniqueIdentifier>{e694a3c0-0a5e-46bb-b223-59b3262d6468}</UniqueIdentifier>
+    <Filter Include="LIB_SHUKONG\GdutLib\GCode\command">
+      <UniqueIdentifier>{32A9E7A1-C33A-5EB3-8B21-C0AF2D7A47B0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\GCode\command\Gz">
-      <UniqueIdentifier>{5b7f6386-c56c-4cf1-822a-fea89adc6dfa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gc">
-      <UniqueIdentifier>{f34d73ce-ccd2-47da-b297-5530c49d70a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\M">
-      <UniqueIdentifier>{d3b284d0-f1c8-4d24-8886-b61bcd263e52}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gf">
-      <UniqueIdentifier>{544716ff-57a2-4772-95e8-83d8233a7c6b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Ge">
-      <UniqueIdentifier>{1da8c9be-f220-44a2-a64e-b6da77e8dbbe}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gg">
-      <UniqueIdentifier>{f4065d34-c113-4d1e-ba09-9819e79ca707}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gh">
-      <UniqueIdentifier>{27c0b7f9-c12b-41be-b5c7-526fb198b6a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gx">
-      <UniqueIdentifier>{6ac65166-4b19-4ed9-b746-4c86692ab40b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Macro">
-      <UniqueIdentifier>{eb007a64-70dc-49fe-847b-29d6e4193e06}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\command\Gj">
-      <UniqueIdentifier>{22d53bb5-ae5b-4d87-973d-74b9c5f439d1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\GCode\GCodeFrame">
-      <UniqueIdentifier>{756cfb37-20e3-4036-b9ae-cf3b2e1e532c}</UniqueIdentifier>
+    <Filter Include="resource">
+      <UniqueIdentifier>{F3768421-F50B-5AF1-829B-2923F81698AE}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CODE\Channel\Channel.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\common.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\G1&amp;G2G3\G1.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\IOCommand\IOCommand.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\Spindle\Spindle.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\G32\G32.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\ErrorFunction.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\CTrajPlanning\CTrajPlanning.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\RingBuff\ringbuff.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\Motion\Motion.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\G1&amp;G2G3\G2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\G0\G0.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\lookAhead\lookAhead.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\ToolCompensation\ToolCompensation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\G33\G33.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\NCDataPara.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\Config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\coordAPI.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\motionAPI.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\SysParaAPI.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\ToolChanger.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\RunAPI.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="Gdut\API\API.h">
-      <Filter>头文件\API</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\ErrorCompensation\ErrorCompensation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\TIOCommand\TIOCommand.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\SecondSpindle\SecondSpindle.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\Handwheel\Handwheel.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCommandAPI.h">
-      <Filter>头文件\GCode\command</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\Gcode.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeAssign.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCalcExpression.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCheck.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\Corner\CornerTransition.h">
-      <Filter>头文件\Corner</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\Corner\RoundGeometry.h">
-      <Filter>头文件\Corner</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCheckAndAssign.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCommon.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeDefine.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeProgram.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeRegulation.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG0.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG1.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG2.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG93.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG54.h">
-      <Filter>头文件\GCode\command\Gb</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG17G18G19.h">
-      <Filter>头文件\GCode\command\Gc</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG4.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG40G41G42.h">
-      <Filter>头文件\GCode\command\Gd</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG71.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG3.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMa.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMb.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMc.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMe.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMg.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMf.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMh.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMi.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMj.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMk.h">
-      <Filter>头文件\GCode\command\M</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG70.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG94.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG20G21.h">
-      <Filter>头文件\GCode\command\Ge</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG96G97.h">
-      <Filter>头文件\GCode\command\Gf</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG98G99.h">
-      <Filter>头文件\GCode\command\Gg</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG90G91.h">
-      <Filter>头文件\GCode\command\Gh</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG80.h">
-      <Filter>头文件\GCode\command\Gx</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.1.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.2.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.1.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.2.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeGoto.h">
-      <Filter>头文件\GCode\command\Macro</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeIfAndWhile.h">
-      <Filter>头文件\GCode\command\Macro</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG84.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG88.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG34.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GCodeExpand\GCodeG92.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG33.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG50.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG65.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG66.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.2.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.3.h">
-      <Filter>头文件\GCode\command\Ga</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG76.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG74.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG75.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG15G16.h">
-      <Filter>头文件\GCode\command\Gj</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG51.2.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\toolAxis\toolAxis.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG73.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\tree\tree.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\list\list.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CODE\manageMem\manageMem.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeQuickHandle.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeTest.h">
-      <Filter>头文件\GCode\GCodeFrame</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG50.2.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG28.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG31.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG10.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG7.1.h">
-      <Filter>头文件\GCode\command\Gz</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="LIB_SHUKONG\GdutLib\common.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="main.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\G1&amp;G2G3\G1.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\IOCommand\IOCommand.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Spindle\Spindle.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Motion\Motion.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\G32\G32.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\G0\G0.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\G1&amp;G2G3\G2.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\CTrajPlanning\CTrajPlanning.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\ToolCompensation\ToolCompensation.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LIB_SHUKONG\GdutLib\GeneralFunctions.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\RingBuff\ringbuff.c">
-      <Filter>源文件</Filter>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeTest.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Channel\Channel.c">
-      <Filter>源文件</Filter>
+      <Filter>CODE\Channel</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\lookAhead\lookAhead.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LIB_SHUKONG\GdutLib\ErrorFunction.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\G33\G33.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\API\coordAPI.c">
-      <Filter>源文件\API</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\API\motionAPI.c">
-      <Filter>源文件\API</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\API\SysParaAPI.c">
-      <Filter>源文件\API</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\API\ToolChanger.c">
-      <Filter>源文件\API</Filter>
-    </ClCompile>
-    <ClCompile Include="Gdut\API\RunAPI.c">
-      <Filter>源文件\API</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\ErrorCompensation\ErrorCompensation.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\TIOCommand\TIOCommand.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\SecondSpindle\SecondSpindle.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Handwheel\Handwheel.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\getAxisMaxAndMin.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeCommandAPI.c">
-      <Filter>源文件\GCode\command</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeAssign.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeCalcExpression.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeCheck.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Corner\CornerTransition.c">
-      <Filter>源文件\Corner</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Corner\CornerRoundAdapter.c">
-      <Filter>源文件\Corner</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeCheckAndAssign.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeDefine.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeMain.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeProgram.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeQuickHandle.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeRegulation.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\GCodeTest.c">
-      <Filter>源文件\GCode\GCodeFrame</Filter>
+    <ClCompile Include="CODE\CTrajPlanning\CTrajPlanning.c">
+      <Filter>CODE\CTrajPlanning</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG0.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG1.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG2.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG93.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG94.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG404142.c">
-      <Filter>源文件\GCode\command\Gd</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG54.c">
-      <Filter>源文件\GCode\command\Gb</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG4.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG171819.c">
-      <Filter>源文件\GCode\command\Gc</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG32.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG71.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG3.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMa.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMb.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMc.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMe.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMf.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMg.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMi.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMh.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMj.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMk.c">
-      <Filter>源文件\GCode\command\M</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG50.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG65.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG70.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG2.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG20G21.c">
-      <Filter>源文件\GCode\command\Ge</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG80.c">
-      <Filter>源文件\GCode\command\Gx</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG3.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG98G99.c">
-      <Filter>源文件\GCode\command\Gg</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG4.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG96G97.c">
-      <Filter>源文件\GCode\command\Gf</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG404142.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG54.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG90G91.c">
-      <Filter>源文件\GCode\command\Gh</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG83.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG83.1.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG83.2.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG87.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG87.1.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG87.2.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\keyboardControl.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG92.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG34.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG84.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG88.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
-    </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeIfAndWhile.c">
-      <Filter>源文件\GCode\command\Macro</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
     <ClCompile Include="CODE\Decod&amp;Check\command\GCodeGoto.c">
-      <Filter>源文件\GCode\command\Macro</Filter>
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG66.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeIfAndWhile.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG33.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\command\MCodeMb.c">
+      <Filter>CODE\Decod&amp;Check\command</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG32.2.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeAssign.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG32.3.c">
-      <Filter>源文件\GCode\command\Ga</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeCalcExpression.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG76.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeCheck.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG74.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Corner\CornerTransition.c">
+      <Filter>CODE\Corner</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG75.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Corner\CornerRoundAdapter.c">
+      <Filter>CODE\Corner</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG15G16.c">
-      <Filter>源文件\GCode\command\Gj</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeCheckAndAssign.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG51.2.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeCommandAPI.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\toolAxis\toolAxis.c">
-      <Filter>源文件</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeDefine.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG73.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeMain.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeProgram.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeQuickHandle.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Decod&amp;Check\GCodeRegulation.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Decod&amp;Check\getAxisMaxAndMin.c">
+      <Filter>CODE\Decod&amp;Check</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\ErrorCompensation\ErrorCompensation.c">
+      <Filter>CODE\ErrorCompensation</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Handwheel\Handwheel.c">
+      <Filter>CODE\Handwheel</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\Handwheel\HandwheelSim.c">
+      <Filter>CODE\Handwheel</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\IOCommand\IOCommand.c">
+      <Filter>CODE\IOCommand</Filter>
     </ClCompile>
     <ClCompile Include="CODE\list\list.c">
-      <Filter>源文件</Filter>
+      <Filter>CODE\list</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\tree\tree.c">
-      <Filter>源文件</Filter>
+    <ClCompile Include="CODE\lookAhead\lookAhead.c">
+      <Filter>CODE\lookAhead</Filter>
     </ClCompile>
     <ClCompile Include="CODE\manageMem\manageMem.c">
-      <Filter>源文件</Filter>
+      <Filter>CODE\manageMem</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG50.2.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Motion\Motion.c">
+      <Filter>CODE\Motion</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG28.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\RingBuff\ringbuff.c">
+      <Filter>CODE\RingBuff</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG10.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\SecondSpindle\SecondSpindle.c">
+      <Filter>CODE\SecondSpindle</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG31.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\Spindle\Spindle.c">
+      <Filter>CODE\Spindle</Filter>
     </ClCompile>
-    <ClCompile Include="CODE\Decod&amp;Check\command\GCodeG7.1.c">
-      <Filter>源文件\GCode\command\Gz</Filter>
+    <ClCompile Include="CODE\TIOCommand\TIOCommand.c">
+      <Filter>CODE\TIOCommand</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\toolAxis\toolAxis.c">
+      <Filter>CODE\toolAxis</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\ToolCompensation\ToolCompensation.c">
+      <Filter>CODE\ToolCompensation</Filter>
+    </ClCompile>
+    <ClCompile Include="CODE\tree\tree.c">
+      <Filter>CODE\tree</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\API\coordAPI.c">
+      <Filter>Gdut\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\API\motionAPI.c">
+      <Filter>Gdut\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\API\RunAPI.c">
+      <Filter>Gdut\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\API\SysParaAPI.c">
+      <Filter>Gdut\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\API\ToolChanger.c">
+      <Filter>Gdut\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\G0\G0.c">
+      <Filter>Gdut\G0</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\G1&amp;G2G3\G1.c">
+      <Filter>Gdut\G1&amp;G2G3</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\G1&amp;G2G3\G2.c">
+      <Filter>Gdut\G1&amp;G2G3</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\G32\G32.c">
+      <Filter>Gdut\G32</Filter>
+    </ClCompile>
+    <ClCompile Include="Gdut\G33\G33.c">
+      <Filter>Gdut\G33</Filter>
+    </ClCompile>
+    <ClCompile Include="LIB_SHUKONG\GdutLib\common.c">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
+    </ClCompile>
+    <ClCompile Include="LIB_SHUKONG\GdutLib\ErrorFunction.c">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
+    </ClCompile>
+    <ClCompile Include="LIB_SHUKONG\GdutLib\GeneralFunctions.c">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="resource\3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\5.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\6.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\7.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\8.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\9.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\10.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\11.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\12.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\13.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\14.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\15.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\16.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\17.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\71.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\96.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\97.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\98.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\99.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\123.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G0.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.2.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.3.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.4.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G71.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G71.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G74.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.5.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.6.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.7.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.8.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.9.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.10.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.11.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.12.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.13.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G76.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.5.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.6.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.7.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G92.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G94.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G94.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G712.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G712.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="outputFile\Gnc.txt">
-      <Filter>资源文件\ouputFile</Filter>
-    </Text>
-    <Text Include="outputFile\Gnc0.txt">
-      <Filter>资源文件\ouputFile</Filter>
-    </Text>
-    <Text Include="outputFile\Gnc1.txt">
-      <Filter>资源文件\ouputFile</Filter>
-    </Text>
-    <Text Include="outputFile\Cnc0.txt">
-      <Filter>资源文件\ouputFile</Filter>
-    </Text>
-    <Text Include="outputFile\Cnc1.txt">
-      <Filter>资源文件\ouputFile</Filter>
-    </Text>
-    <Text Include="resource\O0001.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0002.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0003.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0004.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0005.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0006.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0007.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0008.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0009.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1001.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1002.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\G0.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G0.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.22.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\O0010.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0011.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0012.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O0013.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1101.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1102.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1103.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1104.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1105.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1106.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1107.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1108.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1109.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1110.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1111.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1112.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1113.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1114.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1115.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1116.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1117.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1118.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1119.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1120.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1121.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1122.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1123.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1124.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O1125.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\G32.5.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G34.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G34.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G34.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.6.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.5.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.7.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\O0095.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0102.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0103.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0104.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0105.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0107.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O1094.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\O0109.txt">
-      <Filter>资源文件\企业G代码</Filter>
-    </Text>
-    <Text Include="resource\G74.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G75.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G75.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\m100.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G10.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G83.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G85.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G73.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G72.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G72.2.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G72.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G72.4.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.2.1.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\MDIMUTI.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\MDISINGLE.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.6.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G34.5.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G34.7.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G32.5.2.1.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\O9999.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\O9998.txt">
-      <Filter>资源文件\NewFilter1</Filter>
-    </Text>
-    <Text Include="resource\G32.2.3.txt">
-      <Filter>资源文件\resource</Filter>
-    </Text>
-    <Text Include="resource\G93.txt" />
+    <ClInclude Include="CODE\CTrajPlanning\CTrajPlanning.h">
+      <Filter>CODE\CTrajPlanning</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Channel\Channel.h">
+      <Filter>CODE\Channel</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Corner\CornerTransition.h">
+      <Filter>CODE\Corner</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Corner\RoundGeometry.h">
+      <Filter>CODE\Corner</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\ErrorCompensation\ErrorCompensation.h">
+      <Filter>CODE\ErrorCompensation</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Handwheel\Handwheel.h">
+      <Filter>CODE\Handwheel</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Handwheel\HandwheelSim.h">
+      <Filter>CODE\Handwheel</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\IOCommand\IOCommand.h">
+      <Filter>CODE\IOCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Motion\Motion.h">
+      <Filter>CODE\Motion</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\RingBuff\ringbuff.h">
+      <Filter>CODE\RingBuff</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\SecondSpindle\SecondSpindle.h">
+      <Filter>CODE\SecondSpindle</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\Spindle\Spindle.h">
+      <Filter>CODE\Spindle</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\TIOCommand\TIOCommand.h">
+      <Filter>CODE\TIOCommand</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\ToolCompensation\ToolCompensation.h">
+      <Filter>CODE\ToolCompensation</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\list\list.h">
+      <Filter>CODE\list</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\lookAhead\lookAhead.h">
+      <Filter>CODE\lookAhead</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\manageMem\manageMem.h">
+      <Filter>CODE\manageMem</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\toolAxis\toolAxis.h">
+      <Filter>CODE\toolAxis</Filter>
+    </ClInclude>
+    <ClInclude Include="CODE\tree\tree.h">
+      <Filter>CODE\tree</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\API.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\RunAPI.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\SysParaAPI.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\ToolChanger.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\coordAPI.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\API\motionAPI.h">
+      <Filter>Gdut\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\Config.h">
+      <Filter>Gdut</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\G0\G0.h">
+      <Filter>Gdut\G0</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\G1&amp;G2G3\G1.h">
+      <Filter>Gdut\G1&amp;G2G3</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\G1&amp;G2G3\G2.h">
+      <Filter>Gdut\G1&amp;G2G3</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\G32\G32.h">
+      <Filter>Gdut\G32</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\G33\G33.h">
+      <Filter>Gdut\G33</Filter>
+    </ClInclude>
+    <ClInclude Include="Gdut\NCDataPara.h">
+      <Filter>Gdut</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\ErrorFunction.h">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeAssign.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCalcExpression.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCheck.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCheckAndAssign.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCommandAPI.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeCommon.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeDefine.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeProgram.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeQuickHandle.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeRegulation.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\GCodeTest.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\Gcode.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG0.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG1.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG10.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG15G16.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG17G18G19.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG20G21.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG28.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG3.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG31.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.3.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG32.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG33.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG34.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG4.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG40G41G42.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG50.2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG50.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG51.2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG54.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG65.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG66.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG7.1.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG70.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG71.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG73.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG74.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG75.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG76.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG80.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.1.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG83.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG84.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.1.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.2.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG87.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG88.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG90G91.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG92.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG93.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG94.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG96G97.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeG98G99.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeGoto.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\GCodeIfAndWhile.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMa.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMb.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMc.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMe.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMf.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMg.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMh.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMi.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMj.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GCode\command\MCodeMk.h">
+      <Filter>LIB_SHUKONG\GdutLib\GCode\command</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\GeneralFunctions.h">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
+    </ClInclude>
+    <ClInclude Include="LIB_SHUKONG\GdutLib\common.h">
+      <Filter>LIB_SHUKONG\GdutLib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resource\xyz_basic.nc">
+      <Filter>resource</Filter>
+    </None>
+    <None Include="Master\README.md">
+      <Filter>Master</Filter>
+    </None>
+    <None Include="CODE\Machine\README.md">
+      <Filter>CODE\Machine</Filter>
+    </None>
+    <None Include="README.md" />
+    <None Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

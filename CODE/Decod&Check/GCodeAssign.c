@@ -997,7 +997,7 @@ int8 assignFCommand(struct _SAssignConfiguration* pSAssignConfig, struct SGCodeP
 			parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM130);
 			return -1;
 		}
-		pGCodeBufUnit->dFeedrate = pGCodeBufUnit->SModalInfo.sGg == G99 * pow(10, GCOMMAND_DECIMAL_PLACE) ?
+		pGCodeBufUnit->dFeedrate = pGCodeBufUnit->SModalInfo.sGg == G95 * pow(10, GCOMMAND_DECIMAL_PLACE) ?
 			dFeedMm : dFeedMm / (60 * 1000); // G98时转速单位由 mm / min 转成 mm / ms
 	}
 	return 1;
@@ -1127,13 +1127,6 @@ int8 assignSpecialCommand(struct _SAssignConfiguration* pSAssignConfig, struct S
 	}
 
 	//2.G66宏程序调用
-	SProgram* pSCurrProgram = getCurrProgramStruct(pSAssignConfig->ucChannelNum);
-	if (pSCurrProgram->ucG66MarkAssign && isTriggerG66Command(pSAssignConfig->sCurrCommandVal) && pGCodeBufUnit->EntityType != DOT)
-	{
-		SChannelConfiguration* pSGCodeChannel = getChannelConfig(pSAssignConfig->ucChannelNum);
-		SG66InfoStruct* pSG66Info = pSGCodeChannel->pSG66InfoArr[pSCurrProgram->ucG66ArrIndex];
-		triggerG66ByAssign(pSAssignConfig, pSG66Info);
-	}
 
 	return cRet;
 }

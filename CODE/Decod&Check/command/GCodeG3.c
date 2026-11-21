@@ -272,7 +272,6 @@ int8 AssignG3(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBu
 			{
 				ucStraightMoveAxis = AXIS_Y;
 			}
-			pSG3Para->SG3MiddlePoint = pSG3Para->SG3StartPoint;
 			pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Hor] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor] - (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Hor] - pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Hor]);
 			pSG3Para->SG3MiddlePoint.dArray[pSG3Para->ucG3Ver] = pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver] - (pSG3Para->SG3StartPoint.dArray[pSG3Para->ucG3Ver] - pSG3Para->SG3CenterPoint.dArray[pSG3Para->ucG3Ver]);
 			//直线移动轴的计算

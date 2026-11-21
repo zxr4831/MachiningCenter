@@ -25,6 +25,16 @@ static SGetPathInfo* g_pSGetPathInfo[CHANNEL_NUM_MAX];			//用于函数
 返 回 值：
 备    注：开机初始化调用
 **************************************************/
+static int8 checkMillingG94(SSyntaxConfiguration* config, struct SGCodeParse* block)
+{
+    block->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
+}
+static int8 assignMillingG94(SAssignConfiguration* config, struct SGCodeParse* block)
+{
+    block->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
+    return 2;
+}
 void addAllGCommandRegulationAPI()
 {
 	addG0RegulationAPI();
@@ -33,14 +43,6 @@ void addAllGCommandRegulationAPI()
 	addG3RegulationAPI();
 
 	addG4RegulationAPI();
-	addG4_9RegulationAPI();
-
-	addG7_1RegulationAPI();
-
-	addG10RegulationAPI();
-
-	addG15RegulationAPI();
-	addG16RegulationAPI();
 
 	addG17RegulationAPI();
 	addG18RegulationAPI();
@@ -49,23 +51,7 @@ void addAllGCommandRegulationAPI()
 	addG20RegulationAPI();
 	addG21RegulationAPI();
 
-	addG28RegulationAPI();
-
-	addG31RegulationAPI();
-
-	addG32RegulationAPI();
-	addG32_2RegulationAPI();
-	addG32_3RegulationAPI();
-	addG33RegulationAPI();
-	addG34RegulationAPI();
 	addG40RegulationAPI();
-	addG41RegulationAPI();
-	addG42RegulationAPI();
-
-	addG50RegulationAPI();
-
-	addG50_2RegulationAPI();
-	addG51_2RegulationAPI();
 
 	addG54RegulationAPI();
 	addG55RegulationAPI();
@@ -74,43 +60,10 @@ void addAllGCommandRegulationAPI()
 	addG58RegulationAPI();
 	addG59RegulationAPI();
 
-	addG65RegulationAPI();
-	addG66RegulationAPI();
-	addG67RegulationAPI();
-
-
-	addG70RegulationAPI();
-	addG71RegulationAPI();
-	addG72RegulationAPI();
-	addG73RegulationAPI();
-
-	addG74RegulationAPI();
-	addG75RegulationAPI();
-	addG76RegulationAPI();
-	addG80RegulationAPI();
-	addG83RegulationAPI();
-	addG83_1RegulationAPI();
-	addG83_2RegulationAPI();
-
-	addG84RegulationAPI();
-
-	addG87RegulationAPI();
-	addG87_1RegulationAPI();
-	addG87_2RegulationAPI();
-
-	addG88RegulationAPI();
 
 	addG90RegulationAPI();//企业已经没有这个指令
 	addG91RegulationAPI();
-	addG92RegulationAPI();
-	addG93RegulationAPI();//zxd:里面实现的功能是G90 轴向切削循环
-	addG94RegulationAPI();
-
-	addG96RegulationAPI();
-	addG97RegulationAPI();
-
-	addG98RegulationAPI();
-	addG99RegulationAPI();
+    addGCommadRegulation(94, sGg, 1, NULL, NULL, NULL, checkMillingG94, assignMillingG94);
 
 }
 
@@ -124,61 +77,12 @@ void addAllGCommandRegulationAPI()
 **************************************************/
 void addAllMCommandRegulationAPI()
 {
-	addM03RegulationAPI();
-	addM04RegulationAPI();
-	addM05RegulationAPI();
 
 	addM00RegulationAPI();
 	addM01RegulationAPI();
 	addM02RegulationAPI();
-	addM29RegulationAPI();
 	addM30RegulationAPI();
 
-	addM08RegulationAPI();
-	addM09RegulationAPI();
-
-	addM32RegulationAPI();
-	addM33RegulationAPI();
-
-	addM10RegulationAPI();
-	addM11RegulationAPI();
-	addM12RegulationAPI();
-	addM13RegulationAPI();
-
-	addM14RegulationAPI();
-	addM15RegulationAPI();
-
-	addM50RegulationAPI();
-	addM51RegulationAPI();
-	addM52RegulationAPI();
-
-	addM38RegulationAPI();
-	addM39RegulationAPI();
-
-
-	addM20RegulationAPI();
-	addM21RegulationAPI();
-	addM22RegulationAPI();
-	addM35RegulationAPI();
-	addM36RegulationAPI();
-
-	addM80RegulationAPI();
-	addM81RegulationAPI();
-	addM82RegulationAPI();
-	addM83RegulationAPI();
-	addM84RegulationAPI();
-	addM85RegulationAPI();
-	addM86RegulationAPI();
-	addM87RegulationAPI();
-
-
-	addM96RegulationAPI();
-	addM97RegulationAPI();
-	addM98RegulationAPI();
-	addM99RegulationAPI();
-	addM100_M199RegulationAPI();
-
-	return;
 }
 
 /*************************************************
@@ -194,7 +98,6 @@ void initGCodeCommand(uint8 ucChannelNum)
 	//1.释放指令参数结构体
 	freeAllCommandParaStruct(ucChannelNum);
 
-	initG50RingBuffer(ucChannelNum);//初始化G50环形缓冲区  2023.7.28 陈育楠
 
 	//2.初始化扩展指令接口中的全局变量
 	if (g_pSTextInfoCheck[ucChannelNum] != NULL)//用于检查流程函数findTargetSegment()切片产生数据的存放
@@ -233,40 +136,12 @@ void freeAllCommandParaStruct(uint8 ucChannelNum)
 {
 	//ucMod == 0：释放用于检查的参数结构体
 	//ucMod == 1：释放用于赋值的参数结构体
-	for (uint8 ucMod = 0; ucMod < 2; ucMod++)
+    for (uint8 ucMod = 0; ucMod < 2; ++ucMod)
 	{
 		//Ga组
 		freeG2ParaStruct(ucMod, ucChannelNum);
 		freeG3ParaStruct(ucMod, ucChannelNum);
 
-		freeG32ParaStruct(ucMod, ucChannelNum);
-		freeG32_2ParaStruct(ucMod, ucChannelNum);
-		freeG32_3ParaStruct(ucMod, ucChannelNum);
-		freeG33ParaStruct(ucMod, ucChannelNum);
-		freeG34ParaStruct(ucMod, ucChannelNum);
-
-		freeG83ParaStruct(ucMod, ucChannelNum);
-		freeG83_1ParaStruct(ucMod, ucChannelNum);
-		freeG83_2ParaStruct(ucMod, ucChannelNum);
-		freeG84ParaStruct(ucMod, ucChannelNum);
-
-		freeG87ParaStruct(ucMod, ucChannelNum);
-		freeG87_1ParaStruct(ucMod, ucChannelNum);
-		freeG87_2ParaStruct(ucMod, ucChannelNum);
-		freeG88ParaStruct(ucMod, ucChannelNum);
-
-		freeG92ParaStruct(ucMod, ucChannelNum);
-		freeG93ParaStruct(ucMod, ucChannelNum);
-		freeG94ParaStruct(ucMod, ucChannelNum);
-
-		//Gz组
-		freeG28ParaStruct(ucMod, ucChannelNum);
-		freeG70ParaStruct(ucMod, ucChannelNum);
-		freeG71ParaStruct(ucMod, ucChannelNum);
-		freeG73ParaStruct(ucMod, ucChannelNum);
-		freeG74ParaStruct(ucMod, ucChannelNum);
-		freeG75ParaStruct(ucMod, ucChannelNum);
-		freeG76ParaStruct(ucMod, ucChannelNum);
 
 	}
 }
@@ -537,9 +412,9 @@ void getMacCoordByScanInfo(uint8 ucChannelNum, SScan* pSScanContainer, SPointDou
 				case AXIS_X:
 				case AXIS_Y:
 				case AXIS_Z:
-					if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter)	//直径显示	//陈敏聪	2023/7/22
+				if (bRelativeCoordinateProgramming)
 					{
-						pSTargetPoint->dArray[ucTemp] = pSScanContainer->dXYZ[ucTemp] / 2 + pSTotalOffset->dArray[ucTemp];
+                    pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSScanContainer->dXYZ[ucTemp];
 					}
 					else
 					{
@@ -718,9 +593,9 @@ void getMacCoordByCoordInfo(uint8 ucChannelNum, SCoord* pSCoordInfo, SPointDoubl
 				case AXIS_X:
 				case AXIS_Y:
 				case AXIS_Z:
-					if (g_SSystemPara.SAxisPara[ucTemp].bShowByDiameter)	//直径显示	//陈敏聪	2023/7/22
+					if (bRelativeCoordinateProgramming)
 					{
-						pSTargetPoint->dArray[ucTemp] = pSCoordInfo->dXYZ[ucTemp] / 2 + pSTotalOffset->dArray[ucTemp];
+                        pSTargetPoint->dArray[ucTemp] = pSStartPoint->dArray[ucTemp] + pSCoordInfo->dXYZ[ucTemp];
 					}
 					else
 					{
@@ -1934,17 +1809,6 @@ int8 getMachiningPath(uint8 ucMod, SProgram* pSCurrProgram, uint32 unNS, uint32 
 					sCurrCommandVal = (*ppSGetPathInfo)->SCurrState.sGa;
 					pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
 					(*ppSGetPathInfo)->pSCurrCommandRegulation = (*ppSGetPathInfo)->SCurrState.pSGaRegulation;
-				}
-
-		       /* 仅 G71/G72 的语法提取要求首段产生入刀线段，防止无坐标
-		        * 或非线性首段让后续真实轮廓被误当作可排除的入刀。 */
-           if (ucMod == GC_SYNTAX && (*ppSGetPathInfo)->SScanContainer.bN == TRUE && (*ppSGetPathInfo)->SScanContainer.dN == unNS &&((sCurrCommandVal != G00 * pow(10, GCOMMAND_DECIMAL_PLACE) &&sCurrCommandVal != G01 * pow(10, GCOMMAND_DECIMAL_PLACE)) ||!isSegmentHaveCoordInfo(&(*ppSGetPathInfo)->SScanContainer)))
-	    {
-			 parseGCodeErrorB((*ppSGetPathInfo)->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM130);
-			 freeList(&(*ppSGetPathInfo)->pSPathList);
-			 freeGCode(*ppSGetPathInfo);
-			 *ppSGetPathInfo = NULL;
-	   		 return -1;
 	      }
  
 				//3.判断多程序段指令的每一程序段运动相关指令是否一致（赋值不需要判断）

@@ -86,7 +86,7 @@ int8 CheckG4(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodePa
     ret = checkParaLetter("PXU", &pSSyntaxConfig->SScanContainer);
     if (ret == -1)
     {
-        parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM134);
+        parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM134);
         return -1;
     }
     // 2) 仅对“出现了”的参数做范围校验（避免未出现被 checkParaRange 判失败）
@@ -96,7 +96,7 @@ int8 CheckG4(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodePa
 		ret = checkParaRange('X', &pSSyntaxConfig->SScanContainer, 0, 9999);
 		if (ret == -1)
 		{
-		   parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM134);
+		   parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM134);
 		   return -1;
 		}
     }
@@ -105,16 +105,18 @@ int8 CheckG4(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodePa
 		ret = checkParaRange('U', &pSSyntaxConfig->SScanContainer, 0, 9999);
 		if (ret == -1)
 		{
-		   parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM134);
+		   parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM134);
 		   return -1;
 		}
     }
     if (pSSyntaxConfig->SScanContainer.bP == TRUE)
     {
 		ret = checkParaRange('P', &pSSyntaxConfig->SScanContainer, 0, 99999);
+		if (!isIntegerDouble(pSSyntaxConfig->SScanContainer.dP))
+            ret = -1;
 		if (ret == -1)
 		{
-		   parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM134);
+		   parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM134);
 		   return -1;
 		 }
 
@@ -123,7 +125,7 @@ int8 CheckG4(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodePa
 	// X/U/P 是同一等待时间的不同写法，不能同时指定。 
 	if ((pSSyntaxConfig->SScanContainer.bXYZ[0] == TRUE)+ (pSSyntaxConfig->SScanContainer.bUVW[0] == TRUE)+ (pSSyntaxConfig->SScanContainer.bP == TRUE) > 1)
 	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unGetLineNum,GCODE_ERROR_NUM442);
+		parseGCodeErrorB(pSSyntaxConfig->SScanContainer.unLineNum,GCODE_ERROR_NUM442);
 		return -1;
 	}
 
@@ -150,9 +152,16 @@ int8 CheckG4(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodePa
 int8 AssignG4(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCodeParseUnit)
 {
 	// X/U/P 是同一等待时间的不同写法，不能同时指定。 
+    if (pSAssignConfig->SScanContainer.bP &&
+        (!isfinite(pSAssignConfig->SScanContainer.dP) || pSAssignConfig->SScanContainer.dP < 0 ||
+         pSAssignConfig->SScanContainer.dP > 99999 || !isIntegerDouble(pSAssignConfig->SScanContainer.dP)))
+    {
+        parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM134);
+        return -1;
+    }
 	if ((pSAssignConfig->SScanContainer.bXYZ[0] == TRUE) + (pSAssignConfig->SScanContainer.bUVW[0] == TRUE) + (pSAssignConfig->SScanContainer.bP == TRUE) > 1)
 	{
-		parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unGetLineNum, GCODE_ERROR_NUM442);
+		parseGCodeErrorB(pSAssignConfig->SScanContainer.unLineNum, GCODE_ERROR_NUM442);
 		return -1;
 	}
 	

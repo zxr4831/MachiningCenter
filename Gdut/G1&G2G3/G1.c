@@ -12,301 +12,6 @@
 #include "math.h"
 #include"ToolCompensation.h"
 /* 1 ms 插补只累计计数；5 s 为故障上限，不是启动延时。 */
-#define G84_FEEDBACK_TIMEOUT_MS 5000.0
-/* 首段建参考前连续 100 拍无编码器变化；任一变化重新观察。 */
-#define G84_ENTRY_STILL_TICKS 100U
-/* G84 终点到位角度下限；保留更大的编码器量化容差，运行中保护仍用原门限。 */
-#define G84_END_TOLERANCE_DEG 0.2
-
-/*************************************************
-  函数名称：stopG84FollowOnError
-  函数功能：清除本通道本拍脉冲并通过原报警路径停止同步运动
-  输入参数：pG1 - 有效插补对象；usError - 原有运行错误码
-  输出参数：修改本通道跟随状态和脉冲缓存
-  返 回 值：-1，当前拍失败且不得继续提交运动
-  备    注：运动中断调用，报警停车仍由原调度负责
-****************************************/
-static int8 stopG84FollowOnError(struct SG1* pG1, uint16 usError)
-{
-    pG1->SG84Follow.m_bActive = FALSE;
-    initSRunPulseBuf(&pG1->pSChannel->SRun, pG1->ucValStatus);
-    parseRunningError(pG1->pSChannel->SRun.unGCodeLineNum, usError, 9999);
-    return -1;
-}
-
-/*************************************************
-  函数名称：waitG84SpindleStill
-  函数功能：首次 G84 建立参考前，跨拍确认前序主轴运动已停止变化
-  输入参数：pG1 - 已加载几何且持有 Z/C 的非连续 G84，反馈状态尚未激活
-  输出参数：复用 SG84Follow 的计数与编码器快照，不提交运动
-  返 回 值：1 静止观察通过；0 继续等待；-1 配置无效或五秒内未稳定并报警
-  备    注：1 ms 插补调用；每拍 O(1)，不申请内存，复位/释放沿原路径清理
-****************************************/
-static int8 waitG84SpindleStill(struct SG1* pG1)
-{
-    struct SG84Follow* pFollow = &pG1->SG84Follow;
-    struct SChannel* pChannel = pG1->pSChannel;
-    struct SEncoder* pEncoder = pChannel->pSSpindleEncoder;
-    struct _SRun* pRun = &pChannel->SRun;
-    /* 无有效采样源时不把静止当作已完成交接。 */
-    if (pEncoder == NULL || pChannel->SSpindle.pSSpindleAxis == NULL
-        || pEncoder->usEncoderCirclePulseNum < 4 || !isZero(pG1->SPlanData.dTc - 1.0))
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    /* 复用未激活状态的字段；加载只执行一次，后续等待不得再次清零。
-     * 主轴须完成停止请求、取消使能与轴占用释放，不能仅以插补结束放行。 */
-    if (pFollow->m_unWaitTicks == 0 || pEncoder->lEncoderAbsValue != pFollow->m_lLastEncoder
-        || pRun->sAxisDeltaPulse[AXIS_C] != 0 || pRun->sLastDeltaPulse[AXIS_C] != 0
-        || pRun->sAxisDeltaPulse[AXIS_Z] != 0 || pRun->sLastDeltaPulse[AXIS_Z] != 0
-        || !isSpindleStopFinished(&pChannel->SSpindle)
-        || pChannel->SSpindle.pSSpindleAxis->ucRunMode != SPINDLE_SINGLEAXIS_MODE
-        || pChannel->SSpindle.toDisableAxis || pChannel->SSpindle.ucOccupation != 0)
-    {
-        pFollow->m_unNoFeedbackTicks = 0;
-    }
-    else
-    {
-        pFollow->m_unNoFeedbackTicks++;
-    }
-    pFollow->m_lLastEncoder = pEncoder->lEncoderAbsValue;
-    pFollow->m_unWaitTicks++;
-    /* 持续爬行/振荡不能无限占轴；这是反馈静止判据，不冒充驱动器到位信号。 */
-    if (pFollow->m_unWaitTicks >= (uint32)G84_FEEDBACK_TIMEOUT_MS)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM154);
-    }
-    return pFollow->m_unNoFeedbackTicks >= G84_ENTRY_STILL_TICKS ? 1 : 0;
-}
-
-/*************************************************
-  函数名称：beginG84Follow
-  函数功能：更新同步段几何参考，相邻攻丝段保留实际 C 相位与未消费计数
-  输入参数：pG1 - 已加载几何和脉冲当量的有效 G1 对象
-  输出参数：更新本通道 SG84Follow，首段建立相位，普通 G1 清除旧状态
-  返 回 值：1 可运行；-1 参数或反馈接线无效，已报警
-  备    注：只读系统参数及本拍编码器，不清零共享编码器、不动态分配
-****************************************/
-static int8 beginG84Follow(struct SG1* pG1)
-{
-    struct SG84Follow* pFollow = &pG1->SG84Follow;
-    struct SChannel* pChannel = pG1->pSChannel;
-    struct SEncoder* pEncoder = pChannel->pSSpindleEncoder;
-    const uint8* pMap = pChannel->pMapAxisArray;
-    double dZAcc; /**< 按导程折算的 Z 加速度上限，度/ms²。 */
-    double dZDec; /**< 按导程折算的 Z 减速度上限，度/ms²。 */
-    /* 普通直线不使用编码器，不能继承前一攻丝段状态。 */
-    if (isZero(pG1->dG84Ratio))
-    {
-        memset(pFollow, 0, sizeof(*pFollow));
-        return 1;
-    }
-#if STM32_MODE && !ENCODER_MODE
-    return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-#else
-    /* g_SSystemPara 只读：核对物理反馈、Z/C 映射及单拍限速参数。 */
-    if (pEncoder == NULL || pMap == NULL || pMap[AXIS_Z] >= AXIS_PHYSICS_NUM_MAX
-        || pMap[AXIS_C] >= AXIS_PHYSICS_NUM_MAX
-        || g_SSystemPara.ucEncoderMapArray[pChannel->ucChannelNum][SPINDLE_ENCODER - 1] > 1
-        || pEncoder->usEncoderCirclePulseNum < 4 || !isfinite(pG1->dG84Ratio)
-        || !isfinite(pG1->SStartVector.dArray[AXIS_Z])
-        || isZero(pG1->SStartVector.dArray[AXIS_Z])
-        || !isZero(fabs(pG1->SStartVector.dArray[AXIS_C]) - 1.0)
-        || !isfinite(pG1->SPlanData.dTc) || pG1->SPlanData.dTc <= 0.0
-        || !isfinite(g_SSystemPara.SAxisPara[pMap[AXIS_Z]].dVmax)
-        || g_SSystemPara.SAxisPara[pMap[AXIS_Z]].dVmax <= 0.0
-        || !isfinite(g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax)
-        || g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax <= 0.0
-        || !isfinite(pG1->dPulseToMm[AXIS_Z]) || pG1->dPulseToMm[AXIS_Z] <= 0.0
-        || !isfinite(pG1->dPulseToMm[AXIS_C]) || pG1->dPulseToMm[AXIS_C] <= 0.0)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    /* 固件及 VS 反馈入口均按每 1 ms 采样；每拍最大位移连同一计数及一输出脉冲余量须小于半圈。
-     * 仅拒绝配置与规划超限，编码器已混叠时不能靠后续跳变阈值还原真实运动。 */
-    if (!isZero(pG1->SPlanData.dTc - 1.0)
-        || g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax * pG1->SPlanData.dTc
-            + 360.0 / pEncoder->usEncoderCirclePulseNum + pG1->dPulseToMm[AXIS_C] >= 180.0)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    /* 连续段必须沿用同一反馈源；配置变化不能重新对齐而吞掉已存在的相位误差。 */
-    if (pFollow->m_bActive
-        && (pFollow->m_usCountsPerRev != pEncoder->usEncoderCirclePulseNum
-            || pFollow->m_ucEncoderMap != g_SSystemPara.ucEncoderMapArray[pChannel->ucChannelNum][SPINDLE_ENCODER - 1]
-            || !isfinite(pFollow->m_dActualC)))
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    getSingleAxisRealTimePoint(&pFollow->m_dStartC, AXIS_C, pMap);
-    getSingleAxisRealTimePoint(&pFollow->m_dStartZ, AXIS_Z, pMap);
-    /* 仅首段建立相位；相邻段的量化残差和孔底停留期间的计数由首拍统一消费。 */
-    if (!pFollow->m_bActive)
-    {
-        pFollow->m_dActualC = pFollow->m_dStartC;
-        pFollow->m_lLastEncoder = pEncoder->lEncoderAbsValue;
-    }
-    pFollow->m_unNoFeedbackTicks = 0;
-    pFollow->m_unWaitTicks = 0;
-    pFollow->m_ucSettledTicks = 0;
-    pFollow->m_dZPerDegree = pG1->SStartVector.dArray[AXIS_Z] / pG1->SStartVector.dArray[AXIS_C];
-    /* 复用已校验的轴映射及本段曲线类型；C 规划必须满足 Z 的加减速能力。
-     * 缓存到 SG1 原始参数，倍率重规划与暂停继续使用同一组上限。 */
-    dZAcc = getSingleAxisAcc(AXIS_Z, pG1->SPlanData.ucAccVelPlanType, pMap) / fabs(pFollow->m_dZPerDegree);
-    dZDec = getSingleAxisDec(AXIS_Z, pG1->SPlanData.ucDecVelPlanType, pMap) / fabs(pFollow->m_dZPerDegree);
-    /* 无效的单轴参数不得被 min 掩盖，否则无法保证同步段的制动能力。 */
-    if (!isfinite(pG1->dAcc) || pG1->dAcc <= 0.0 || !isfinite(pG1->dDec) || pG1->dDec <= 0.0
-        || !isfinite(dZAcc) || dZAcc <= 0.0 || !isfinite(dZDec) || dZDec <= 0.0)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    pG1->SPlanData.dAcc = pG1->dAcc = min(pG1->dAcc, dZAcc);
-    pG1->SPlanData.dDec = pG1->dDec = min(pG1->dDec, dZDec);
-    pFollow->m_usCountsPerRev = pEncoder->usEncoderCirclePulseNum;
-    pFollow->m_dEncoderToDegree = 360.0 / pFollow->m_usCountsPerRev;
-    pFollow->m_ucEncoderMap = g_SSystemPara.ucEncoderMapArray[pChannel->ucChannelNum][SPINDLE_ENCODER - 1];
-    pFollow->m_bActive = TRUE;
-    return 1;
-#endif
-}
-
-/*************************************************
-  函数名称：followG84Encoder
-  函数功能：保留 C 规划目标，按实际 C 相位修改本拍 Z 目标并检查有限等待
-  输入参数：pG1 - 当前同步段；pTarget - 本拍理论坐标，非空
-  输出参数：回写目标 Z，更新本通道反馈计数和等待状态
-  返 回 值：1 反馈与终点连续到位；0 本拍正常尚未到位；-1 已报警
-  备    注：每拍 O(1)，只消费实际编码器相位，不申请内存或执行存储操作
-****************************************/
-static int8 followG84Encoder(struct SG1* pG1, SPointDouble* pTarget)
-{
-    struct SG84Follow* pFollow = &pG1->SG84Follow;
-    struct SChannel* pChannel = pG1->pSChannel;
-    struct SEncoder* pEncoder = pChannel->pSSpindleEncoder;
-    const uint8* pMap = pChannel->pMapAxisArray;
-    double dEncoderDelta;
-    double dCStep;
-    double dZStep;
-    double dCurrentZ;
-    double dCurrentC;
-    double dFinalC = pG1->SStartPoint.dArray[AXIS_C]
-        + pG1->SStartVector.dArray[AXIS_C] * pG1->SPlanData.dTargetDist;
-    double dFinalZ = pG1->SStartPoint.dArray[AXIS_Z]
-        + pG1->SStartVector.dArray[AXIS_Z] * pG1->SPlanData.dTargetDist;
-    double dDirection = pG1->SStartVector.dArray[AXIS_C];
-    double dTolerance = 2.0 * pFollow->m_dEncoderToDegree + pG1->dPulseToMm[AXIS_C];
-    double dEndTolerance = max(dTolerance, G84_END_TOLERANCE_DEG);
-    bool bPlanDone = pG1->SPlanData.cInterpDir == INP_GO_AHEAD
-        && (pG1->ucInpStatus == INP_DECELERATE || pG1->SPlanData.unCurrentT >= pG1->SPlanData.unT5)
-        && fabs(pTarget->dArray[AXIS_C] - dFinalC) <= EPSINON;
-    /* 运行中配置变化时拒绝旧参考；G84 不接受手轮反走。 */
-    if (!pFollow->m_bActive || pEncoder == NULL
-        || pFollow->m_usCountsPerRev != pEncoder->usEncoderCirclePulseNum
-        || pFollow->m_ucEncoderMap != g_SSystemPara.ucEncoderMapArray[pChannel->ucChannelNum][SPINDLE_ENCODER - 1]
-        || pG1->SPlanData.cInterpDir != INP_GO_AHEAD
-        || !isZero(pG1->SPlanData.dTc - 1.0)
-        || !isfinite(g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax)
-        || g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax <= 0.0
-        || g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax * pG1->SPlanData.dTc
-            + pFollow->m_dEncoderToDegree + pG1->dPulseToMm[AXIS_C] >= 180.0)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM153);
-    }
-    /* 初速度继承或距离平摊也不能生成半圈及以上的单拍 C 指令。 */
-    getSingleAxisRealTimePoint(&dCurrentC, AXIS_C, pMap);
-    if (!isfinite(pTarget->dArray[AXIS_C])
-        || fabs(pTarget->dArray[AXIS_C] - dCurrentC)
-            + pFollow->m_dEncoderToDegree + pG1->dPulseToMm[AXIS_C] >= 180.0)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM152);
-    }
-    /* 宽浮点差先拒绝复位/跳变，正常整数差保留单计数精度。 */
-    dEncoderDelta = (double)pEncoder->lEncoderAbsValue - (double)pFollow->m_lLastEncoder;
-    dCStep = g_SSystemPara.SAxisPara[pMap[AXIS_C]].dVmax * pG1->SPlanData.dTc;
-    if (fabs(dEncoderDelta) * pFollow->m_dEncoderToDegree > 4.0 * dCStep + dTolerance)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM152);
-    }
-    dEncoderDelta = (double)(pEncoder->lEncoderAbsValue - pFollow->m_lLastEncoder);
-    pFollow->m_lLastEncoder = pEncoder->lEncoderAbsValue;
-    pFollow->m_dActualC += dEncoderDelta * pFollow->m_dEncoderToDegree;
-    /* 允许量化范围内的换向回摆；明显朝段起点外运动视为错相位。
-     * 末端机械超调仍按真实相位跟随并等待回稳，不以窄门限误报正常伺服动态。 */
-    if ((pFollow->m_dActualC - pFollow->m_dStartC) * dDirection < -max(dTolerance, 2.0 * dCStep))
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM151);
-    }
-    pTarget->dArray[AXIS_Z] = pFollow->m_dStartZ
-        + (pFollow->m_dActualC - pFollow->m_dStartC) * pFollow->m_dZPerDegree;
-    /* 非零段必须观测到实际运动；首拍暂停使终点严格等于起点时无需虚构反馈。
-     * 起终点重合采用零容差，不能把小于编码器分辨率的非零段视为零位移。 */
-    if (bPlanDone && ((pFollow->m_dActualC - pFollow->m_dStartC) * dDirection > 0.0
-            || (isZeroWithDeviation(dFinalC - pFollow->m_dStartC, 0.0)
-                && isZeroWithDeviation(dFinalZ - pFollow->m_dStartZ, 0.0)))
-        && fabs(pFollow->m_dActualC - dFinalC) <= dEndTolerance
-        && fabs(dEncoderDelta) <= 1.0)
-    {
-        pTarget->dArray[AXIS_Z] = dFinalZ;
-        if (pFollow->m_ucSettledTicks < 3)
-        {
-            pFollow->m_ucSettledTicks++;
-        }
-    }
-    else
-    {
-        pFollow->m_ucSettledTicks = 0;
-    }
-    getSingleAxisRealTimePoint(&dCurrentZ, AXIS_Z, pMap);
-    dZStep = g_SSystemPara.SAxisPara[pMap[AXIS_Z]].dVmax * pG1->SPlanData.dTc
-        + fabs(pFollow->m_dZPerDegree) * dTolerance + pG1->dPulseToMm[AXIS_Z];
-    /* 不发送超出 Z 单轴能力的突变，也不截断相位误差伪装同步。 */
-    if (!isfinite(pTarget->dArray[AXIS_Z]) || fabs(pTarget->dArray[AXIS_Z] - dCurrentZ) > dZStep)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM152);
-    }
-    /* 机械回摆不得把 Z 指令送到配置的软限位之外。 */
-    if (g_SSystemPara.MOTOR_WARN[pMap[AXIS_Z]].soft_pos
-        && pTarget->dArray[AXIS_Z] > g_SSystemPara.MOTOR_WARN[pMap[AXIS_Z]].pos_soft)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM41 + AXIS_Z);
-    }
-    if (g_SSystemPara.MOTOR_WARN[pMap[AXIS_Z]].soft_neg
-        && pTarget->dArray[AXIS_Z] < g_SSystemPara.MOTOR_WARN[pMap[AXIS_Z]].neg_soft)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM47 + AXIS_Z);
-    }
-    /* 指令超过反馈量化范围且无新计数才累计失反馈时间，低速亚计数运动不误报。 */
-    if (isZero(dEncoderDelta) && fabs(pTarget->dArray[AXIS_C] - pFollow->m_dActualC) > dTolerance)
-    {
-        pFollow->m_unNoFeedbackTicks++;
-    }
-    else
-    {
-        pFollow->m_unNoFeedbackTicks = 0;
-    }
-    if (bPlanDone)
-    {
-        pFollow->m_unWaitTicks++;
-    }
-    else
-    {
-        pFollow->m_unWaitTicks = 0;
-    }
-    if ((double)pFollow->m_unNoFeedbackTicks * pG1->SPlanData.dTc >= G84_FEEDBACK_TIMEOUT_MS
-        || (double)pFollow->m_unWaitTicks * pG1->SPlanData.dTc >= G84_FEEDBACK_TIMEOUT_MS)
-    {
-        return stopG84FollowOnError(pG1, GCODE_ERROR_NUM154);
-    }
-    /* 第一次到位生成末帧，第二拍才提交 PWM；至少第三拍且前帧无 Z/C 脉冲才交接。
-     * sLastDeltaPulse 由本周期清缓存前保留，包含上一拍底层补偿后的脉冲。 */
-    return pFollow->m_ucSettledTicks >= 3
-#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE
-        && isRevCompFinishedAPI(pMap[AXIS_Z])
-        && isRevCompFinishedAPI(pMap[AXIS_C])
-#endif
-        && pChannel->SRun.sLastDeltaPulse[AXIS_Z] == 0
-        && pChannel->SRun.sLastDeltaPulse[AXIS_C] == 0 ? 1 : 0;
-}
 
 //struct SG1 g_SG1;
 
@@ -1027,11 +732,6 @@ int8 loadSG1DataFromInput(struct SG1* pSG1Pointer, struct SInput* pSInput)
 	}
 #endif
     /* 旧参考仅在相邻 G84 段之间有效；普通运动和轴释放路径使其失效。 */
-    if (!pSG1Pointer->SG84Follow.m_bActive || isZero(pSG1Pointer->dG84Ratio)
-        || isZero(pSInput->dG84Ratio))
-    {
-        memset(&pSG1Pointer->SG84Follow, 0, sizeof(pSG1Pointer->SG84Follow));
-    }
 	pSG1Pointer->ucValStatus = pSInput->ucValStatus;			//有效轴
 	pSG1Pointer->SPlanData.cInterpDir = pSInput->cInterpDir;	//插补方向
 	pSG1Pointer->SPlanData.dAcc = pSG1Pointer->dAcc = pSInput->dAcc;	//加速度
@@ -1141,8 +841,8 @@ int8 loadSG1DataFromInput(struct SG1* pSG1Pointer, struct SInput* pSInput)
 			}
 			/*修改2026.1.22以c轴作为长轴，使用c轴数据并转换单位*/
 			/* G84 每段均需停稳交接，不继承 C 单轴的非零末速度。 */
-			pSG1Pointer->SPlanData.dPrimalVe = 0.0;
-			pSG1Pointer->SPlanData.dVs = pSInput->dMinVs = 0.0; // 静止同步段从零起速，度/ms
+            pSG1Pointer->SPlanData.dPrimalVe = g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVe;             //末速度°/ms
+            pSG1Pointer->SPlanData.dVs = pSInput->dMinVs = g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVs; //初速度°/ms
 			pSG1Pointer->dFeedrate = pSInput->dFeedrate * fabs(pSG1Pointer->dG84Ratio);		        //进给速度°/ms
 			pSG1Pointer->SPlanData.dAcc = pSG1Pointer->dAcc = getSingleAxisAcc(AXIS_C, pSG1Pointer->SPlanData.ucAccVelPlanType, ucMapArray);	//加速度°/s2
 			pSG1Pointer->SPlanData.dDec = pSG1Pointer->dDec = getSingleAxisDec(AXIS_C, pSG1Pointer->SPlanData.ucDecVelPlanType, ucMapArray);	//减速度°/s2
@@ -1185,8 +885,8 @@ int8 loadSG1DataFromInput(struct SG1* pSG1Pointer, struct SInput* pSInput)
 			}
 			/*修改2026.1.22以c轴作为长轴，使用c轴数据并转换单位*/
 			/* G84 每段均需停稳交接，不继承 C 单轴的非零末速度。 */
-			pSG1Pointer->SPlanData.dPrimalVe = 0.0;
-			pSG1Pointer->SPlanData.dVs = pSInput->dMinVs = 0.0; // 静止同步段从零起速，度/ms
+            pSG1Pointer->SPlanData.dPrimalVe = g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVe;             //末速度°/ms
+            pSG1Pointer->SPlanData.dVs = pSInput->dMinVs = g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVs; //初速度°/ms
 			pSG1Pointer->dFeedrate = pSInput->dFeedrate * fabs(pSG1Pointer->dG84Ratio);		        //进给速度°/ms
 			pSG1Pointer->SPlanData.dAcc = pSG1Pointer->dAcc = getSingleAxisAcc(AXIS_C, pSG1Pointer->SPlanData.ucAccVelPlanType, ucMapArray);	//加速度°/s2
 			pSG1Pointer->SPlanData.dDec = pSG1Pointer->dDec = getSingleAxisDec(AXIS_C, pSG1Pointer->SPlanData.ucDecVelPlanType, ucMapArray);	//减速度°/s2
@@ -1238,8 +938,6 @@ int8 loadSG1DataAfterPause(struct SG1* pSG1Pointer, SPointDouble SStartPoint, SP
 	if (pSG1Pointer == NULL) return -1; // 结构体为空
 
     /* 暂停后人工偏移返回是普通恢复移动，不继承原攻丝反馈参考。 */
-    memset(&pSG1Pointer->SG84Follow, 0, sizeof(pSG1Pointer->SG84Follow));
-    pSG1Pointer->dG84Ratio = 0.0;
 	pSG1Pointer->SStartPoint = SStartPoint;	//起点
 	pSG1Pointer->SEndPoint = SEndPoint;		//终点
 	pSG1Pointer->dCurrentSpeed = 0;
@@ -1338,7 +1036,6 @@ int8 loadSG1DataAfterPause(struct SG1* pSG1Pointer, SPointDouble SStartPoint, SP
 int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 {
 	int8 res; // 调用函数返回
-    int8 cG84Ready = 1; /**< 普通 G1 不等待反馈，G84 每拍由实际编码器确认。 */
 	double dDeltaL; //相对起点的距离 (或弧长)
 	SPointDouble STargetPoint;   //当前点的理论绝对坐标
 	struct SInterpolationPre* pSPreprocess;//预处理指针
@@ -1399,7 +1096,8 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 
 	if (bRatioOn && pSG1Pointer->bUseSRunFeedRatio == TRUE)//普通倍率开启
 	{   //插补正在进行的状态 且（前）当前正生效执行的倍率不等于实时的最新目标倍率
-		if (pSG1Pointer->ucInpStatus == INP_RUNNING && !isZero(pSG1Pointer->dFeedRatio - pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio)) 
+        if (pSG1Pointer->ucInpStatus == INP_RUNNING &&
+            pSG1Pointer->dFeedRatio != pSRun->dCommonFeedRatio * pSRun->dHandWheelSpeedRatio)
 		{
 			if (pSG1Pointer->SPlanData.unCurrentT < pSG1Pointer->SPlanData.unT3 || pSG1Pointer->SPlanData.unCurrentT > pSG1Pointer->SPlanData.unT5)	
 			{
@@ -1443,24 +1141,9 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 		break;
 
 	case INP_OCCUPATION: //在预处理阶段赋值
+        releaseLastCommandAxis(pSPreprocess);
 		ucValStatus = pSG1Pointer->bIsUserData ? pSG1Pointer->SUserData.ucValStatus : pSPreprocess->SUserData.ucValStatus;
         /* 相邻 G84 段继续持有同一组轴，仅释放下一段不再使用的轴，避免双通道抢占空窗。 */
-        if (pSG1Pointer->SG84Follow.m_bActive
-            && !isZero(pSG1Pointer->bIsUserData ? pSG1Pointer->SUserData.dG84Ratio : pSPreprocess->SUserData.dG84Ratio))
-        {
-#if(TURRET_AXIS_TEST == 1)
-            axisManagerReleaseByStruct(pSPreprocess->ucOccupideValStatus & (~ucValStatus)
-                & (~pSPreprocess->ucOccupideTurretAxis), ucMapArray, AXIS_NUM_MAX, &pSPreprocess->ucOccupideValStatus);
-#else
-            axisManagerReleaseByStruct(pSPreprocess->ucLastValStatus & (~ucValStatus)
-                & (~pSPreprocess->ucToolAxis), ucMapArray, AXIS_NUM_MAX, &pSPreprocess->ucLastValStatus);
-#endif
-        }
-        else
-        {
-            // 释放上一条已执行完毕指令的轴占用，腾出物理电机轴资源
-            releaseLastCommandAxis(pSPreprocess);
-        }
 #if(TURRET_AXIS_TEST == 1)
 		// 【新架构-独立刀塔轴模式】：向轴管理器申请电机轴所有权，剔除当前通道已占用的刀塔轴（~ucOccupideTurretAxis）以避免自锁冲突
 		if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucOccupideTurretAxis), pSG1Pointer->pSChannel->ucChannelNum, &pSPreprocess->ucOccupideValStatus) == 1)
@@ -1477,7 +1160,8 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 
 #else
 		// 【传统架构-刀补轴模式】：向轴管理器申请电机轴所有权，剔除已在刀补流程中占用的轴（~ucToolAxis）以避免冲突
-		if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucToolAxis), pSG1Pointer->pSChannel->ucChannelNum, &pSPreprocess->ucLastValStatus) == 1)
+        if (axisManagerOccupyByChannel(ucValStatus & (~pSPreprocess->ucToolAxis), pSG1Pointer->pSChannel->ucChannelNum,
+                                       NULL) == 1)
 		{
 			// 记录本段保留或申请的指令轴状态（除去刀补轴，供后续指令释放用）
 			pSPreprocess->ucLastValStatus = ucValStatus & (~pSPreprocess->ucToolAxis);
@@ -1516,42 +1200,6 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 			break;
 		}
 		pSG1Pointer->dCurrentSpeed = pSRun->dCurrentSpeed;//初始化时先读取上一段的退场速度；G84 另经反馈等待与零初末速规划
-        pSG1Pointer->ucInpStatus = INP_BLOCKED;
-
-    case INP_BLOCKED:
-        /* 首段等待实际反馈静止；Q 分段、P 停留和连续同步沿用已有相位。 */
-        if (!pSG1Pointer->SG84Follow.m_bActive && !isZero(pSG1Pointer->dG84Ratio))
-        {
-            /* 尚未输出 G84 脉冲，暂停直接保留本段；继续时重新观察，不消耗等待上限。 */
-            if (bPauseOn && pSG1Pointer->pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE)
-            {
-                pSG1Pointer->dCurrentSpeed = 0.0;
-                pSG1Pointer->SPlanData.unCurrentT = 0;
-                /* 仍按原暂停接口回写完整未执行段，覆盖人工偏移后的恢复。 */
-                if (prepareToPauseG1(pSG1Pointer, 0.0, pSG1Pointer->dDec, TRUE) < 0)
-                {
-                    return stopG84FollowOnError(pSG1Pointer, GCODE_ERROR_NUM153);
-                }
-                pSG1Pointer->ucInpStatus = INP_FINISHED;
-                pSRun->dCurrentSpeed = 0.0;
-                handleSystemPause(pSG1Pointer->pSChannel);
-                return 0;
-            }
-            res = waitG84SpindleStill(pSG1Pointer);
-            if (res < 0)
-            {
-                return -1;
-            }
-            if (res == 0)
-            {
-                return 1;
-            }
-        }
-        /* 新段建立相位参考；后续倍率和暂停重规划不重新对零。 */
-        if (beginG84Follow(pSG1Pointer) < 0)
-        {
-            return -1;
-        }
 		pSG1Pointer->ucInpStatus = INP_ASSIGNMENT_START;
 
 	case INP_ASSIGNMENT_START: // 【核心阶段：插补启动规划】动力学参数装载、进给速度/倍率修调解算、初末速度衔接、速度规划及软限位预检
@@ -1579,8 +1227,7 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 
 		if (bRatioOn) // 开启倍率修调处理  zxr  G84复用G1运动。普通G1段：dG84Ratio保持为0，iszero(dG84Ratio)为TRUE，反之为G84
 		{
-			double dSpeedMax = (getBits(pSG1Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN) ?
-				pSG1Pointer->dFeedrate // G98 每分钟进给：基准最大速度直接等于指令进给速度 zxr 和G99最终都要换成mm/ms
+			double dSpeedMax = (getBits(pSG1Pointer->unCommandType, CMD_FEED_ADDR) == CMD_FEED_PER_MIN) ? pSG1Pointer->dFeedrate // G98 每分钟进给：基准最大速度直接等于指令进给速度 zxr 和G99最终都要换成mm/ms
 				: fabs(pSG1Pointer->pSChannel->SSpindleTest.dSpindleAvgSpeed) * pSG1Pointer->dFeedrate; // G99 每转进给：根据主轴实测转速与进给量计算线速度 zxr 进给速度（mm/min）＝ 主轴转速（r/min）× F（mm/r）
 			dSpeedMax = (isZero(pSG1Pointer->dG84Ratio)) ? dSpeedMax: pSG1Pointer->dFeedrate; // G84 攻丝特殊处理：攻丝轴与主轴固定同步，避免与 G99 闭环冲突
 			//继承进给速率
@@ -1598,8 +1245,7 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 				if (isZero(pSG1Pointer->dCurrentSpeed)) // 当前处于静止状态：允许直接切换运动方向并施加目标速度
 				{
 					pSG1Pointer->SPlanData.cInterpDir = (pSG1Pointer->dFeedRatio < 0) ? INP_GO_BACK : INP_GO_AHEAD;
-					pSG1Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate
-						= dSpeedMax * fabs(pSG1Pointer->dFeedRatio);
+                    pSG1Pointer->SPlanData.dVmax = pSRun->dCurrentFeedRate = dSpeedMax * fabs(pSG1Pointer->dFeedRatio);
 				}
 				else // 仍在运动中：禁止突变换向，目标速度强制归零，先受控减速刹停到 0
 				{
@@ -1641,22 +1287,12 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 		}
 
         /* G84 度/ms 规划同时满足 C 及按螺距换算的 Z 单轴速度上限。 */
-        if (pSG1Pointer->SG84Follow.m_bActive)
-        {
-            pSG1Pointer->SPlanData.dVmax = min(pSG1Pointer->SPlanData.dVmax,
-                min(g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVmax,
-                    g_SSystemPara.SAxisPara[ucMapArray[AXIS_Z]].dVmax / fabs(pSG1Pointer->SG84Follow.m_dZPerDegree)));
-        }
 
 		//计算初速度 分两种情况 ：G01刚开始(当前速度为0)  执行过程中进给速度改变(当前速度不为0)
 		//①刚开始：初速度和最大速度取最小值。初速度比最大速度大的情况下，直接以最大速度运动
 		//②非刚开始：一律继承当前速度
 		pSG1Pointer->SPlanData.dVs = (pSG1Pointer->bIsUserData) ? pSG1Pointer->SUserData.dVs : pSPreprocess->SUserData.dMinVs; //获取初速度
         /* 静止 G84 从零起速；运行中倍率重规划仍由下句继承当前速度。 */
-        if (pSG1Pointer->SG84Follow.m_bActive)
-        {
-            pSG1Pointer->SPlanData.dVs = 0.0;
-        }
 		pSG1Pointer->SPlanData.dVs = (isZero(pSG1Pointer->dCurrentSpeed)) ? min(pSG1Pointer->SPlanData.dVs, pSG1Pointer->SPlanData.dVmax) : pSG1Pointer->dCurrentSpeed;
 
 		// --- 跨段软限位接力减速判断 (cSoftLimitedOn == 3) ---
@@ -1823,8 +1459,8 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 			if (pSG1Pointer->pSChannel->ucChannelStatus == SYS_RUN_TO_PAUSE && pSG1Pointer->ucInpStatus != INP_PAUSING)
 			{
 				/* G84 暂停减到零，沿用本段 C/Z 联动约束；普通 G1 保持原参数。 */
-				dPauseMinVe = isZero(pSG1Pointer->dG84Ratio) ? pSUserData->dMinVe : 0.0;
-				dPauseDec = isZero(pSG1Pointer->dG84Ratio) ? pSUserData->dDec : pSG1Pointer->dDec;
+                dPauseMinVe = isZero((pSG1Pointer->dG84Ratio)) ? pSUserData->dMinVe : g_SSystemPara.SAxisPara[ucMapArray[AXIS_C]].dVe;
+				dPauseDec = isZero((pSG1Pointer->dG84Ratio)) ? pSUserData->dDec : getSingleAxisDec(AXIS_C, pSG1Pointer->SPlanData.ucDecVelPlanType, ucMapArray);
 				prepareToPauseG1(pSG1Pointer, dPauseMinVe, dPauseDec, TRUE);//根据当前速度重新规划减速段并回写剩余轨迹
 				pSG1Pointer->ucInpStatus = INP_PAUSING;  //改变状态为正在暂停
 			}
@@ -1832,31 +1468,15 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 	case INP_PAUSING://暂停
 
         /* C 规划到终点后保持目标，跨拍等待反馈，不继续增长规划时间。 */
-        if (pSG1Pointer->SG84Follow.m_bActive && pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON
-            && pSG1Pointer->SPlanData.unCurrentT >= pSG1Pointer->SPlanData.unT5)
-        {
-            dDeltaL = pSG1Pointer->SPlanData.dTargetDist;
-        }
-        else
-        {
             //运行时间增加 1 个插补周期（1ms）
             pSG1Pointer->SPlanData.unCurrentT += 1;
 
             //获取长轴（或空间轨迹）走到第 unCurrentT 周期时的累计位移 S(t)
             dDeltaL = nextstepPlanningAndDistReAvg(pSG1Pointer->SPlanData.unCurrentT, &pSG1Pointer->SPlanData);
-        }
 
 		//计算本周期各物理轴的理论绝对坐标点
 		calculateLinearInterpolationPoint((double*)&pSG1Pointer->SStartPoint, (double*)&pSG1Pointer->SStartVector, dDeltaL, (double*)&STargetPoint, AXIS_NUM_MAX);
         /* C 保持规划结果；Z 按真实编码器相位计算本拍目标。 */
-        if (!isZero(pSG1Pointer->dG84Ratio))
-        {
-            cG84Ready = followG84Encoder(pSG1Pointer, &STargetPoint);
-            if (cG84Ready < 0)
-            {
-                return -1;
-            }
-        }
 
 
 		//极坐标处理
@@ -1902,26 +1522,14 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 
 #if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE
 		//利用理论坐标生成SRun结构体数据
-		res = outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
-		res = outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #else
 		//利用理论坐标生成SRun结构体数据
-		res = outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #endif
         /* 输出失败不得提交完成状态；普通 G1 沿用原路径。 */
-        if (!isZero(pSG1Pointer->dG84Ratio))
-        {
-            if (res != 1)
-            {
-                return stopG84FollowOnError(pSG1Pointer, GCODE_ERROR_NUM153);
-            }
-            /* 本拍又产生量化修正时继续等待，不能在新脉冲提交之前完成。 */
-            if (pSRun->sAxisDeltaPulse[AXIS_Z] != 0 || pSRun->sAxisDeltaPulse[AXIS_C] != 0)
-            {
-                cG84Ready = 0;
-            }
-        }
 		//pSG1Pointer->pSChannel->ucChannelNum==1
 		//计算当前1ms瞬时速度并同步写入 pSRun 看板，(上一周期剩余距离 - 本周期剩余距离) / 周期时间 dTc (1ms)
 		pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = fabs(pSG1Pointer->SPlanData.dCurLeftDist - (pSG1Pointer->SPlanData.dTargetDist - dDeltaL)) / pSG1Pointer->SPlanData.dTc;
@@ -1951,24 +1559,25 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 				}
 			}
 		}
-		if (cG84Ready == 1 &&
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
-			(pSG1Pointer->bIsUserData || !isHandwheelAutomaticMoveRequired(pSG1Pointer->pSChannel)
+        if ((pSG1Pointer->bIsUserData || !isHandwheelAutomaticMoveRequired(pSG1Pointer->pSChannel)
 				|| pSG1Pointer->SPlanData.unCurrentT >= pSG1Pointer->SPlanData.unT5) &&
+            ((pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG1Pointer->SPlanData.cInterpDir == INP_GO_AHEAD)
+			|| (pSG1Pointer->SPlanData.dTargetDist - pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG1Pointer->SPlanData.cInterpDir == INP_GO_BACK && pSG1Pointer->pSChannel->ucChannelStatus != SYS_PAUSE_TO_RUN)))
+#else
+        if ((pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG1Pointer->SPlanData.cInterpDir == INP_GO_AHEAD) ||
+            (pSG1Pointer->SPlanData.dTargetDist - pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON &&
+             pSG1Pointer->SPlanData.cInterpDir == INP_GO_BACK &&
+             pSG1Pointer->pSChannel->ucChannelStatus != SYS_PAUSE_TO_RUN))
 #endif
-			((pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG1Pointer->SPlanData.cInterpDir == INP_GO_AHEAD)
-			|| (pSG1Pointer->SPlanData.dTargetDist - pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON && pSG1Pointer->SPlanData.cInterpDir == INP_GO_BACK && pSG1Pointer->pSChannel->ucChannelStatus != SYS_PAUSE_TO_RUN))
-			)
 		{
 			pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed;
 			/* 反馈交接完成后清除 G84 末拍平均速度，下一同步段从零起速。 */
-            if (pSG1Pointer->SG84Follow.m_bActive)
-            {
-                pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = 0.0;
-            }
+            pSRun->dCurrentSpeed = isZero(pSG1Pointer->dG84Ratio) ? pSRun->dCurrentSpeed : 0;
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 			if (!pSG1Pointer->bIsUserData && isHandwheelAutomaticMoveRequired(pSG1Pointer->pSChannel)
-				&& isZeroWithDeviation(pSG1Pointer->SPlanData.dVe, 0.0))
+				&&
+                pSG1Pointer->SPlanData.dVe == 0.0)
 			{
 				/* 规划已执行到零末速，末拍平均速度不是下一段起速。 */
 				pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = 0.0;
@@ -1985,7 +1594,7 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 	case INP_DECELERATE:
 		if (pSRun->cSoftLimitedOn == 0)//未触发软限位的减速运动[速度模式]
 		{
-			if (!pSG1Pointer->SG84Follow.m_bActive && pSG1Pointer->dCurrentSpeed <= g_SSystemPara.dSysMinVel)// 普通直线直接停；G84 还需等反馈
+			if (pSG1Pointer->dCurrentSpeed <= g_SSystemPara.dSysMinVel) // 速度达到末速度范围内  立即停
 			{
 				pSG1Pointer->dCurrentSpeed = 0;//运动结束 当前速度置为0
 				pSG1Pointer->ucInpStatus = INP_FINISHED;
@@ -1994,27 +1603,6 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 			}
 			pSG1Pointer->SPlanData.dDec = g_SSystemPara.dSysPlanTMaxDec;//获取系统参数设置的T型减速度
             /* 无软限位的保护减速仍按 T 型，并限制 C/Z 能力；软限位强制制动沿原路径。 */
-            if (pSG1Pointer->SG84Follow.m_bActive)
-            {
-                double dCDec = getSingleAxisDec(AXIS_C, VEL_PLAN_T_CURVE, ucMapArray);
-                double dZDec = getSingleAxisDec(AXIS_Z, VEL_PLAN_T_CURVE, ucMapArray)
-                    / fabs(pSG1Pointer->SG84Follow.m_dZPerDegree);
-                /* 非法减速度不能作为正常停稳条件，沿已有报警路径终止。 */
-                if (!isfinite(pSG1Pointer->SPlanData.dDec) || pSG1Pointer->SPlanData.dDec <= 0.0
-                    || !isfinite(dCDec) || dCDec <= 0.0 || !isfinite(dZDec) || dZDec <= 0.0)
-                {
-                    return stopG84FollowOnError(pSG1Pointer, GCODE_ERROR_NUM153);
-                }
-                pSG1Pointer->SPlanData.dDec = min(pSG1Pointer->SPlanData.dDec, min(dCDec, dZDec));
-            }
-		}
-
-        /* 保护减速到零后锁定 C 停止点，仍跨拍跟随在途机械运动。 */
-        if (pSG1Pointer->SG84Follow.m_bActive && pSRun->cSoftLimitedOn == 0
-            && pSG1Pointer->dCurrentSpeed <= pSG1Pointer->SPlanData.dDec * pSG1Pointer->SPlanData.dTc)
-        {
-            pSG1Pointer->SPlanData.dTargetDist -= pSG1Pointer->SPlanData.dCurLeftDist;
-            pSG1Pointer->SPlanData.dCurLeftDist = 0.0;
         }
 		if (pSG1Pointer->dCurrentSpeed >= pSG1Pointer->SPlanData.dDec * pSG1Pointer->SPlanData.dTc)
 		{
@@ -2043,14 +1631,6 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 		//计算理论坐标点
 		calculateLinearInterpolationPoint((double*)&pSG1Pointer->SStartPoint, (double*)&pSG1Pointer->SStartVector, dDeltaL, (double*)&STargetPoint, AXIS_NUM_MAX);
         /* C 保持规划结果；Z 按真实编码器相位计算本拍目标。 */
-        if (!isZero(pSG1Pointer->dG84Ratio))
-        {
-            cG84Ready = followG84Encoder(pSG1Pointer, &STargetPoint);
-            if (cG84Ready < 0)
-            {
-                return -1;
-            }
-        }
 
 #if MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE//倾斜Y轴机
 		if (pSG1Pointer->pSChannel->bUseVirtualY == TRUE)
@@ -2062,39 +1642,23 @@ int8 motionLine(struct SG1* pSG1Pointer, bool bPauseOn, bool bRatioOn)
 #endif
 #if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE//单表螺距误差+反向间隙补偿
 		//利用理论坐标生成SRun结构体数据
-		res = outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPointWithScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #elif ERROR_COMP_TYPE == TWOWAY_SCREW_COMP//双表螺距误差补偿
-		res = outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPointWithBilateralScrewComp(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #else //无补偿
 		//利用理论坐标生成SRun结构体数据
-		res = outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
+        outPutAbsPoint(pSRun, (double*)&STargetPoint, AXIS_NUM_MAX, ucMapArray, pSG1Pointer->dPulseToMm, &pSG1Pointer->ucValStatus);
 #endif
 
         /* 保护减速分支与正常运行使用相同的输出失败契约。 */
-        if (!isZero(pSG1Pointer->dG84Ratio))
-        {
-            if (res != 1)
-            {
-                return stopG84FollowOnError(pSG1Pointer, GCODE_ERROR_NUM153);
-            }
-            /* 本拍又产生量化修正时继续等待，不能在新脉冲提交之前完成。 */
-            if (pSRun->sAxisDeltaPulse[AXIS_Z] != 0 || pSRun->sAxisDeltaPulse[AXIS_C] != 0)
-            {
-                cG84Ready = 0;
-            }
-        }
 		//计算当前速度 //2024/12/12 注释：该公式计算的是插补周期1ms的平均速度（移动量/1ms），而在减速过程计算相对起点的公式计算使用的是移动后的瞬时速度
 		//pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = fabs(pSG1Pointer->SPlanData.dCurLeftDist - (pSG1Pointer->SPlanData.dTargetDist - dDeltaL)) / pSG1Pointer->SPlanData.dTc;
 		pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = pSG1Pointer->dCurrentSpeed - pSG1Pointer->SPlanData.dDec * pSG1Pointer->SPlanData.dTc;
-        if (pSG1Pointer->SG84Follow.m_bActive && pSG1Pointer->dCurrentSpeed < 0.0)
-        {
-            pSRun->dCurrentSpeed = pSG1Pointer->dCurrentSpeed = 0.0;
-        }
 
 		//计算   !理论! 未走距离
 		pSG1Pointer->SPlanData.dCurLeftDist = pSG1Pointer->SPlanData.dTargetDist - dDeltaL;
 
-		if (cG84Ready == 1 && pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON)//运行结束条件
+		if (pSG1Pointer->SPlanData.dCurLeftDist <= EPSINON)//运行结束条件
 		{
 			if (pSRun->cSoftLimitedOn == 1 && pSG1Pointer->pSChannel->ucChannelStatus != SYS_RUN_TO_PAUSE)//触发软限位：限位点在当前线段内
 			{

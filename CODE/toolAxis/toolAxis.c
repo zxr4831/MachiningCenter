@@ -1177,16 +1177,6 @@ int8 preparePlanningTNewAddForToolAxis(struct SPlan* pSPlanPointer)
 	{
 		pSPlanPointer->unT1 = pSPlanPointer->unT2 = pSPlanPointer->unT3 = 0; //距离对应的时间节点置0
 		pSPlanPointer->unT4 = pSPlanPointer->unT5 = 0;
-#if !ENCODER_MODE
-#if !MATLAB_DEBUG
-		if (pG32->bPrintFlag == TRUE)
-		{
-			fprintf(pWriteFid, " %lf ", dVmax);
-			fprintf(pWriteFid, " %lf %lf", dAcc, dDec);
-
-		}
-#endif
-#endif
 
 		return 0;
 	}

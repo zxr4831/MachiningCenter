@@ -574,6 +574,24 @@ void correctFeedrateAndLowerLimitSpeed(struct SToolCompensation* pToolcode, int 
 		//判断是否是平面圆弧
 		if (!bPlanarArcFlag)//非平面圆弧
 		{
+#if MC_PROFILE_XYZ
+            /* G94 的 F 表示沿三维螺旋线的路径速度。原有插补器使用参数 q 推进，
+             * 其长度取平面弧长与垂直轴行程的较大值。
+             * 将实际路径速度换算到同一 q 参数，保证规划与插补使用一致的长度基准。 */
+            uint8 plane[2];
+            chooseInterpPlane(plane, pToolcode->unCommandType);
+            uint8 perpendicular = (uint8)(AXIS_X + AXIS_Y + AXIS_Z - plane[0] - plane[1]);
+            double planar = fabs(pToolcode->dLength);
+            double axial =
+                fabs(pToolcode->SEndPoint.dArray[perpendicular] - pToolcode->SStartPoint.dArray[perpendicular]);
+            double spatial = hypot(planar, axial);
+            if (spatial > 0.0)
+            {
+                double parameter_ratio = max(planar, axial) / spatial;
+                pToolcode->dFeedrate *= parameter_ratio;
+                pToolcode->dLowerLimitSpeed *= parameter_ratio;
+            }
+#endif
 			if (pToolcode->ucLongAxisNum != AXIS_NULL)//长轴为第三轴
 			{
 				//修正之前计算的圆弧弓高误差及法向加速度误差对应的第三轴长轴速度

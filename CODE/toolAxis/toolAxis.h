@@ -6,7 +6,7 @@
 
 #define TOOLAXIS_TEST 0	//刀具轴运动测试（刀具轴运动开关）
 #define TOOLAXIS_DEBUG_32 0	//刀具轴调试_32模式（屏幕显示）
-#define TOOLAXIS_DEBUG_VS 1	//刀具轴调试_VS模式（输出文本）
+#define TOOLAXIS_DEBUG_VS 0 //刀具轴调试_VS模式（输出文本）
 
 //规划方式
 //1：对剩余距离进行速度规划，时间节点不圆整。若有加速周期则加速，若有匀速周期则匀速，若有减速周期则减速

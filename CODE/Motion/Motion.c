@@ -1,4 +1,4 @@
-#include "Motion.h"
+﻿#include "Motion.h"
 #include <stdio.h>
 #include "G33.h"
 #include "G32.h"
@@ -78,7 +78,6 @@ bool interpolationInit(struct SInterpolationPre* pSPreProcess)
 	pSChannel->SG00.ucCurrentSigned = pSChannel->SG00.ucFinishedSigned;
 	pSChannel->SG00.ucRunStep = 5;					//初始化G0123状态 朱稳中 2023.3.24
 	pSChannel->SG01.ucInpStatus = INP_FINISHED;
-	memset(&pSChannel->SG01.SG84Follow, 0, sizeof(pSChannel->SG01.SG84Follow));
 	pSChannel->SG02.ucInpStatus = INP_FINISHED;
 	pSChannel->dLessChipBreakLPreDist = 0; //清除不足断屑间距的累计量
 	return TRUE;
@@ -130,7 +129,7 @@ int8 interpolationInitAfterLoad(struct _SRun* pSRun, struct SInterpolationPre* p
 	//指令类型初始化
 	pSPreProcess->unCommandType = pSRun->unCommandType = 0x0;
 	setBits(pSRun->unCommandType, CMD_MOTION_QUICKMOVE, CMD_MOTION_ADDR);//开机默认G0	陈敏聪	2023/6/1
-	setBits(pSRun->unCommandType, CMD_PLANE_G18, CMD_PLANE_ADDR);//开机默认G18，指定插补平面ZX
+	setBits(pSRun->unCommandType, CMD_PLANE_G17, CMD_PLANE_ADDR);          //加工中心开机默认 G17，指定 XY 插补平面
 	setBits(pSRun->unCommandType, CMD_TOOLCOMP_CANCEL, CMD_TOOLCOMP_ADDR);//开机默认取消刀补G40
 	setBits(pSRun->unCommandType, CMD_SPINDLE_SPEED_CV, CMD_SPINDLE_SPEED_ADDR); // 开机默认主轴恒转速G97
 	setBits(pSRun->unCommandType, CMD_G90G91_G90, CMD_G90G91_ADDR);	//开机默认G90,绝对编程
@@ -940,7 +939,6 @@ int8 releaseLastCommandAxis(struct SInterpolationPre* pSPreprocess)
 		return -1;
 	}
 	/* 释放上一运动的轴即结束连续攻丝参考；相邻 G84 与孔底停留不走此分支。 */
-	pSPreprocess->pSChannel->SG01.SG84Follow.m_bActive = FALSE;
 	ucMapArray = pSPreprocess->pSChannel->pMapAxisArray;//获取映射  2022.12.06 修改位置
 
 #if(TURRET_AXIS_TEST == 1)
@@ -1703,23 +1701,11 @@ int8 initInterpStructByTool(struct SToolCompensation* pSToolCompPointer, struct 
 		g_SZeroPtOfCoordSys->SWorkPieceOffsetByG50 = pSToolCompPointer->SPointInfo;
 	}
 	//G10磨耗：前向执行时，将本条增量累加到实时刀表
-	else if (pSToolCompPointer->cPointType == G10 && cInterpDir == INP_GO_AHEAD)
+    else if (pSToolCompPointer->cPointType == G10)
 	{
-		volatile SPointDouble* pSToolWear; //当前通道目标刀的实时磨耗，单位为内部毫米。
-		pSToolWear = &g_SSystemPara.SWearPara[pSPrePointer->pSChannel->ucChannelNum]
-			[pSToolCompPointer->uG10ToolID - 1].SToolCoord;
-
-		//消费后清除本记录的待执行增量，避免重复初始化时再次累加。
-		if (pSToolCompPointer->SPointInfo.dArray[AXIS_X] != 0.0)
-		{
-			pSToolWear->dArray[AXIS_X] += pSToolCompPointer->SPointInfo.dArray[AXIS_X];
-			pSToolCompPointer->SPointInfo.dArray[AXIS_X] = 0.0;
-		}
-		if (pSToolCompPointer->SPointInfo.dArray[AXIS_Z] != 0.0)
-		{
-			pSToolWear->dArray[AXIS_Z] += pSToolCompPointer->SPointInfo.dArray[AXIS_Z];
-			pSToolCompPointer->SPointInfo.dArray[AXIS_Z] = 0.0;
-		}
+        g_SSystemPara.SWearPara[pSPrePointer->pSChannel->ucChannelNum]
+			[pSToolCompPointer->uG10ToolID - 1].SToolCoord =
+            pSToolCompPointer->SPointInfo;
 	}
 
 	if (pSPrePointer->bG65SystemMacroWait == TRUE)
@@ -2764,7 +2750,6 @@ int8 channelStopToIDLE(struct SChannel* pSChannel)
 	pSChannel->SG00.ucCurrentSigned = pSChannel->SG00.ucFinishedSigned;
 	pSChannel->SG00.ucRunStep = 5;					//初始化G0123状态 朱稳中 2023.3.24
 	pSChannel->SG01.ucInpStatus = INP_FINISHED;
-	memset(&pSChannel->SG01.SG84Follow, 0, sizeof(pSChannel->SG01.SG84Follow));
 	pSChannel->SG02.ucInpStatus = INP_FINISHED;
 	memset((void*)&pSChannel->SPreProcess.SUserData, 0, sizeof(struct SInput));
 	pSChannel->SPreProcess.SUserData.ucAxisNumOfNeedLookAhead = AXIS_NULL;//需要前瞻的单轴轴号置空
@@ -2862,6 +2847,9 @@ static bool isResetPulseOutputIdle(const struct SChannel* pSChannel)
 void resetProgram(struct SChannel* pSChannel)
 {
 	struct SG0* pSG0;
+	SPointDouble SCurPoint; // 当前点
+	uint8 ucPhysicalAxis;//物理轴
+	uint8* pMapAxisArray;//映射
 	bool bAlarmStop = FALSE;
 	if (pSChannel == NULL)//复位
 	{
@@ -2937,6 +2925,10 @@ void resetProgram(struct SChannel* pSChannel)
 #endif
 		pSChannel->bProgramNoFinished = FALSE;		//G代码用，决定G代码初始化是否使用固定参数	陈敏聪	2023/7/29
 		clearApplyRunTime(pSChannel);	//2023/9/6 陈敏聪	清空部分运行时间
+#if STM32_MODE	//2023/9/6	陈敏聪	复位将主程序名字返回给企业
+		//if(pSChannel->SPreProcess.cOriginFilename[0] != '\0')
+		//strncpy(Npro_name[pSChannel->ucChannelNum].Name, pSChannel->SPreProcess.cOriginFilename, FILENAME_LENGTH_LIMIT);//修改当前显示程序的程序名
+#endif
 		cancelWaitingInputIO(&pSChannel->SIOCommand);
 		channelStopToIDLE(pSChannel);
 		memset(&pSChannel->SIOCommand, 0, sizeof(struct _SIOCommand));//清理IO缓存 增加2026.4.2
@@ -3488,11 +3480,7 @@ void IRQHandler(struct SChannel* pSChannel)//中断服务函数
 	if (pSPreProcess->ulDelayTime != 0)  //G04暂停
 	{
 		/* G84 孔底停留仍处于攻丝循环，保留前段轴所有权直到下一同步段接管。 */
-		if (isZero(pSPreProcess->SUserData.dG84Ratio)
-			|| isZero(pSChannel->SG01.dG84Ratio) || !pSChannel->SG01.SG84Follow.m_bActive)
-		{
 			releaseLastCommandAxis(pSPreProcess);
-		}
 
         /* 主轴尚在收尾时冻结 G4 余时和读指针，不消耗最后一拍。 */
         if (*pSystemStatus == SYS_RUN_TO_PAUSE && isChannelSpindleStopPending(pSChannel))

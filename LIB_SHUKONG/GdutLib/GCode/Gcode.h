@@ -41,8 +41,8 @@
 #include "GCodeRegulation.h"
 #include "GCodeTest.h"
 
-#define PRINTMODE 3		//1:打G代码印缓冲区单元内容 2:打印G代码NC文件 3:打印运动插补点NC文件  4.打印运动插补点到test文件
-#define CONSOLEPRINT 1	//控制台打印G代码NC文件
+#define PRINTMODE 0    //1:打G代码印缓冲区单元内容 2:打印G代码NC文件 3:打印运动插补点NC文件  4.打印运动插补点到test文件
+#define CONSOLEPRINT 0 //控制台打印G代码NC文件
 
 #define CHANNEL_COMMAND_MIN_VAL 100
 #define CHANNEL_COMMAND_MAX_VAL 199

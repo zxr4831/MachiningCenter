@@ -278,7 +278,6 @@ int8 AssignG2(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pGCodeBu
 			{
 				ucStraightMoveAxis = AXIS_Y;
 			}
-			pSG2Para->SG2MiddlePoint = pSG2Para->SG2StartPoint;
 			pSG2Para->SG2MiddlePoint.dArray[pSG2Para->ucG2Hor] = pSG2Para->SG2CenterPoint.dArray[pSG2Para->ucG2Hor] - (pSG2Para->SG2StartPoint.dArray[pSG2Para->ucG2Hor] - pSG2Para->SG2CenterPoint.dArray[pSG2Para->ucG2Hor]);
 			pSG2Para->SG2MiddlePoint.dArray[pSG2Para->ucG2Ver] = pSG2Para->SG2CenterPoint.dArray[pSG2Para->ucG2Ver] - (pSG2Para->SG2StartPoint.dArray[pSG2Para->ucG2Ver] - pSG2Para->SG2CenterPoint.dArray[pSG2Para->ucG2Ver]);
 			//直线移动轴的计算

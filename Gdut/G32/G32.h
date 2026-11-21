@@ -10,7 +10,7 @@ extern const double TAPER_45;		 //45°对应的弧度
 
 
 #define	LHK_DEBUG 0    //1为vs测试
-#define MATLAB_DEBUG 1 //用于matlab的数据（比一般的输出少一些参数）
+#define MATLAB_DEBUG 0 //用于matlab的数据（比一般的输出少一些参数）
 
 //G32运行流程
 #define G32_INIT_AND_ASSIGNMENT                     0  //初始化和赋值

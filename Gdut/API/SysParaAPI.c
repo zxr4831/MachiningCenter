@@ -53,7 +53,19 @@ void initMapArray()
 	memset(g_SSystemPara.ucTurretToAxisMap, AXIS_NULL, TURRET_MAX_NUM);//初始化刀塔与结构体轴的映射
 #endif
 
-#if (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE)	//Y轴双通道机配置
+#if (MACHINE_CONFIG == MACHINING_CENTER_XYZ_MACHINE)
+    /* 六轴数据结构保留兼容性，只配置一个通道的 XYZ 三个直线轴。
+     * 未配置的主轴、动力刀和旋转轴不映射到物理轴；后续由机床 BSP 接入。 */
+    memset(g_SSystemPara.ucAxisMapArray, AXIS_NULL, sizeof(g_SSystemPara.ucAxisMapArray));
+    g_SSystemPara.ucAxisMapArray[0][AXIS_X] = 0;
+    g_SSystemPara.ucAxisMapArray[0][AXIS_Y] = 1;
+    g_SSystemPara.ucAxisMapArray[0][AXIS_Z] = 2;
+#if (TURRET_AXIS_TEST == 1)
+    /* 保留旧内核的刀具资源容器，用作唯一刀具组，不执行车床刀塔动作。 */
+    setChannelToTurretMapArray(0, 0, 1);
+    setTurretToAxisMap(1, 7);
+#endif
+#elif (MACHINE_CONFIG == NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE) //Y轴双通道机配置
 	memset(g_SSystemPara.ucAxisMapArray, AXIS_NULL, CHANNEL_NUM_MAX * AXIS_NUM_MAX);//映射全部指为空
 	//通道对于物理轴的映射
 	g_SSystemPara.ucAxisMapArray[0][AXIS_X] = 0; // 0
@@ -290,7 +302,7 @@ int8 initPhysicalAxisPara(uint8 ucPhysicalAxis,uint8 type)
 		//单轴 X轴初始化
 		g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAxisType = LINEAR_AXIS;//直线轴
 		g_SSystemPara.SAxisPara[ucPhysicalAxis].fDistPerCircle = 360.0;
-		g_SSystemPara.SAxisPara[ucPhysicalAxis].bShowByDiameter = TRUE;//直径显示
+		g_SSystemPara.SAxisPara[ucPhysicalAxis].bShowByDiameter = FALSE; //加工中心线性坐标，不按直径折半
 		g_SSystemPara.SAxisPara[ucPhysicalAxis].ucAccVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucPhysicalAxis].ucDecVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucPhysicalAxis].dSysPlanTMaxAcc = 0.001;
@@ -354,7 +366,7 @@ int8 initStructSingleAxisPara(uint8 ucChannelNum)
 		//单轴 X轴初始化
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].ucAxisType = LINEAR_AXIS;//直线轴
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].fDistPerCircle = 360.0;
-		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].bShowByDiameter = TRUE;//直径显示
+		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].bShowByDiameter = FALSE; //加工中心 X 线性坐标
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].ucAccVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].ucDecVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_X]].dSysPlanTMaxAcc =  0.004;
@@ -392,7 +404,7 @@ int8 initStructSingleAxisPara(uint8 ucChannelNum)
 		////单轴 Y轴初始化
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].ucAxisType = LINEAR_AXIS;//直线轴
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].fDistPerCircle = 360.0;
-		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].bShowByDiameter = TRUE;//直径显示
+		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].bShowByDiameter = FALSE; //加工中心 Y 线性坐标
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].ucAccVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].ucDecVelPlanType = VEL_PLAN_S4_CURVE;
 		g_SSystemPara.SAxisPara[ucMapArray[AXIS_Y]].dSysPlanTMaxAcc = 0.002;
@@ -779,7 +791,8 @@ void initEditablePara()
 #endif
 
 	int i = 0;
-	g_SSystemPara.dInterpolationTime = 1; //插补周期
+	g_SSystemPara.dInterpolationTime = MC_CYCLE_US / 1000.0; //内核时间单位 ms
+    g_SSystemPara.bDefaultG99 = FALSE;                       //加工中心默认每分钟进给，译码对应 G94
 
 	//合成
 	g_SSystemPara.dSysMinVel = 200 / 60 / 1000;    //最小速度
@@ -927,7 +940,7 @@ void initEditablePara()
 	//g_SSystemPara.SMachine_REFPOT[1].dArray[AXIS_C] = 20;
 
 	g_SSystemPara.dAngleXY1 = 30.0;		///Y1轴相对X轴的倾斜角度 30°		[倾斜Y轴机专用]
-	g_SSystemPara.bUseVirtualY = TRUE;	//是否开启虚拟Y轴 默认开启：TRUE	[倾斜Y轴机专用]
+	g_SSystemPara.bUseVirtualY = FALSE; //直角坐标 XYZ 不使用倾斜 Y 轴映射
 	g_SSystemPara.bSetG7456mmTOum = FALSE;
 	g_SSystemPara.unG84DefaultDelayTime = 500;  //G84孔底暂停默认时间，单位：ms
 }
@@ -1180,10 +1193,6 @@ void initAfterLoadSysPara()
 	const uint8* ucMapArray;//映射
 
 	// 恢复旧参数时，超出 0..10000 ms 的 G84 孔底停留时间按默认 500 ms 处理。
-	if (g_SSystemPara.unG84DefaultDelayTime > 10000U)
-	{
-		g_SSystemPara.unG84DefaultDelayTime = 500U;
-	}
 
 	toolInitAfterLoad();//刀具偏移初始化
 

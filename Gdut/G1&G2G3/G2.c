@@ -732,80 +732,6 @@ int8 loadSG2DataFromInput(struct SG2* pSG2Pointer, struct SInput* pSInput)
   返 回 值：非负值 - 从原起点累计的规划距离；-1 - 几何或比例无效
   备    注：只读圆弧；平面弧长按原比例换算，起点已在边界时保守返回零
 ****************************************/
-static double calculateArcLimitDistance(const struct SG2* pArc, uint8 ucAxis, double dLimit)
-{
-	uint8 ucHorizontal, ucVertical, ucLimitIndex;
-	double dRadius, dRatio, dOffsetRatio, dCrossOffset, dDistance;
-	double dCenterPoint[2], dStartPoint[2], dEndPoint[2];
-	double dAngles[2];
-
-	/* 限位轴和几何平面必须有效，避免非法下标或非有限限位参与计算。 */
-	if (pArc == NULL || ucAxis >= AXIS_NUM_MAX || !isfinite(dLimit)
-		|| pArc->ucAxis[0] >= AXIS_NUM_MAX || pArc->ucAxis[1] >= AXIS_NUM_MAX
-		|| pArc->ucAxis[0] == pArc->ucAxis[1])
-	{
-		return -1;
-	}
-	ucHorizontal = pArc->ucAxis[0];
-	ucVertical = pArc->ucAxis[1];
-	/* 非平面轴沿原位移分量线性推进，同样返回合成规划距离。 */
-	if (ucAxis != ucHorizontal && ucAxis != ucVertical)
-	{
-		dRatio = pArc->SStartVector.dArray[ucAxis];
-		if (!isfinite(dRatio) || fabs(dRatio) <= 0.0 || !isfinite(pArc->SStartPoint.dArray[ucAxis]))
-		{
-			return -1;
-		}
-		dDistance = (dLimit - pArc->SStartPoint.dArray[ucAxis]) / dRatio;
-		return isfinite(dDistance) ? max(0.0, dDistance) : -1;
-	}
-	dRadius = fabs(pArc->dRadius);
-	dRatio = fabs(pArc->SStartVector.dArray[ucHorizontal]);
-	/* 负 R 表示长弧，交点使用半径绝对值；零比例不能参与距离换算。 */
-	if (!isfinite(dRadius) || isZero(dRadius) || !isfinite(dRatio) || fabs(dRatio) <= 0.0
-		|| (pArc->cArcDir != 1 && pArc->cArcDir != -1))
-	{
-		return -1;
-	}
-	dCenterPoint[0] = pArc->SCenterPoint.dArray[ucHorizontal];
-	dCenterPoint[1] = pArc->SCenterPoint.dArray[ucVertical];
-	dStartPoint[0] = pArc->SStartPoint.dArray[ucHorizontal];
-	dStartPoint[1] = pArc->SStartPoint.dArray[ucVertical];
-	/* 圆心和起点必须为有限值，不能把无效几何当作未触限。 */
-	if (!isfinite(dCenterPoint[0]) || !isfinite(dCenterPoint[1])
-		|| !isfinite(dStartPoint[0]) || !isfinite(dStartPoint[1]))
-	{
-		return -1;
-	}
-	/* 已在限位坐标容差内时保守截停，避免同点舍入被解释为整圈。 */
-	if (isZero(dLimit - pArc->SStartPoint.dArray[ucAxis]))
-	{
-		return 0.0;
-	}
-	ucLimitIndex = (ucAxis == ucHorizontal) ? 0 : 1;
-	dOffsetRatio = (dLimit - dCenterPoint[ucLimitIndex]) / dRadius;
-	/* 无交点返回失败；仅将切点附近的浮点舍入误差夹回合法范围。 */
-	if (!isfinite(dOffsetRatio)
-		|| (fabs(dOffsetRatio) > 1.0 && !isZero(fabs(dOffsetRatio) - 1.0)))
-	{
-		return -1;
-	}
-	dOffsetRatio = max(-1.0, min(1.0, dOffsetRatio));
-	dCrossOffset = dRadius * sqrt(max(0.0, 1.0 - dOffsetRatio * dOffsetRatio));
-	dEndPoint[ucLimitIndex] = dLimit;
-	for (int i = 0; i < 2; i++)
-	{
-		dEndPoint[1 - ucLimitIndex] = dCenterPoint[1 - ucLimitIndex] + (i == 0 ? dCrossOffset : -dCrossOffset);
-		dAngles[i] = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint, pArc->cArcDir < 0);
-		/* 两个交点均须有效，避免 NaN 经最小值比较后被静默丢弃。 */
-		if (!isfinite(dAngles[i]))
-		{
-			return -1;
-		}
-	}
-	dDistance = min(dAngles[0], dAngles[1]) * dRadius / dRatio;
-	return isfinite(dDistance) ? dDistance : -1;
-}
 
 /*************************************************
   函数名称：motionArc(struct SG02* pSG2Pointer, bool bPauseOn, bool bRatioOn)
@@ -836,7 +762,8 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
 	VAL_STRUCT_TYPE ucValStatus; // 有效轴
 	
 	//软限位参数 2024/4/11 洪冠鹏
-	double dLimitDistance; //从原起点到限位的合成规划距离
+	double dRad1 = 0;
+    double dRad2 = 0;
 	double dNewEndPoint = 0;
 	double dSingleAxisLeftDist;//剩余未走单轴运动距离
 	double dResultantLeftDist;//剩余未走单轴运动距离
@@ -1167,26 +1094,84 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
 				if (VAL_VALID != getbit(pSPreprocess->SUserData.ucValStatus, i)) continue;  //无效轴 跳过
 				if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)//触发正限位
 				{
-					dNewEndPoint = g_SSystemPara.MOTOR_WARN[ucMapArray[i]].pos_soft;//新终点设为限位点
+					dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].pos_soft;//新终点设为限位点
 				}
 				else if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG)//触发负限位
 				{
-					dNewEndPoint = g_SSystemPara.MOTOR_WARN[ucMapArray[i]].neg_soft;//新终点设为限位点
+					dNewEndPoint = g_SSystemPara.MOTOR_WARN[i].neg_soft;//新终点设为限位点
 				}
 				else//未触发限位的轴：跳过
 				{
 					continue;
 				}
 				/* 选界和截停共用有向距离，保留长弧象限及其他联动轴的距离比例。 */
-				dLimitDistance = calculateArcLimitDistance(pSG2Pointer, i, dNewEndPoint);
-				/* 已判定触限却不能求出距离时报警返回，不继续输出原目标轨迹。 */
-				if (dLimitDistance < 0)
+                if (!isZero(dNewEndPoint -
+                            pSG2Pointer->SEndPoint
+                                .dArray[i])) //触发软限位后终点发生改变，目标距离（弧长）也因终点的改变发生变化
 				{
-					parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM153, 9999);
-					return -1;
+                    if (i == pSG2Pointer->ucAxis[0]) //触发限位的轴为插补平面的横轴
+                    {
+                        dRad1 = acos(fabs((pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) /
+                                          pSG2Pointer->dRadius)); //起点相对于横轴的夹角1，单位：rad
+                        dRad2 = acos(fabs((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) /
+                                          pSG2Pointer->dRadius)); //新终点相对于横轴的夹角2，单位：rad
+
+                        //起点与新终点在圆心两侧，则运动的弧度为PI-夹角1-夹角2；起点与新终点在圆心同侧，则运动的弧度为|夹角1-夹角2|
+                        if ((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) *
+                                    (pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) >
+                                0 ||
+                            isZero(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) ||
+                            isZero(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]))
+				{
+                            pSG2Pointer->SPlanData.dTargetDist = fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);
+				pSG2Pointer->SPlanData.dCurLeftDist =
+                                fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
 				}
-				pSG2Pointer->SPlanData.dTargetDist = min(pSG2Pointer->SPlanData.dTargetDist, dLimitDistance);
-				pSG2Pointer->SPlanData.dCurLeftDist = max(0.0, pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
+                        else
+                        {
+                            pSG2Pointer->SPlanData.dTargetDist = fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius);
+                            pSG2Pointer->SPlanData.dCurLeftDist =
+                                fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
+                        }
+                        //pSG2Pointer->SPlanData.dTargetDist = pSG2Pointer->SPlanData.dCurLeftDist = (sgn(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) != sgn(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i])) ?
+                        //	fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius) : fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);
+                    }
+                    else if (i == pSG2Pointer->ucAxis[1]) //触发限位的轴为插补平面的纵轴
+                    {
+                        dRad1 = asin(fabs((pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) /
+                                          pSG2Pointer->dRadius)); //起点相对于横轴的夹角1，单位：rad
+                        dRad2 = asin(fabs((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) /
+                                          pSG2Pointer->dRadius)); //新终点相对于横轴的夹角2，单位：rad
+
+                        //起点与新终点在圆心两侧，则运动的弧度为PI-夹角1-夹角2；起点与新终点在圆心同侧，则运动的弧度为|夹角1-夹角2|
+                        // 修改2025.9.29 ，增加判断两浮点数相减是否相等，若不判断则值可能有正有负，导致运动夹角计算错误
+                        if ((dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) *
+                                    (pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]) >
+                                0 ||
+                            isZero(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) ||
+                            isZero(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i]))
+                        {
+                            pSG2Pointer->SPlanData.dTargetDist = fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);
+                            pSG2Pointer->SPlanData.dCurLeftDist =
+                                fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
+                        }
+                        else
+                        {
+                            pSG2Pointer->SPlanData.dTargetDist = fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius);
+                            pSG2Pointer->SPlanData.dCurLeftDist =
+                                fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
+                        }
+                        //pSG2Pointer->SPlanData.dTargetDist = pSG2Pointer->SPlanData.dCurLeftDist = (sgn(dNewEndPoint - pSG2Pointer->SCenterPoint.dArray[i]) != sgn(pSG2Pointer->SStartPoint.dArray[i] - pSG2Pointer->SCenterPoint.dArray[i])) ?
+                        //	fabs((PI - dRad1 - dRad2) * pSG2Pointer->dRadius) : fabs((dRad1 - dRad2) * pSG2Pointer->dRadius);//弧长因终点的变化发生改变，原轨迹不变
+                    }
+                    else //对于非平面圆弧触发的软限位，则根据位移分量重算目标距离。
+                    {
+                        pSG2Pointer->SPlanData.dTargetDist = fabs((dNewEndPoint - pSG2Pointer->SStartPoint.dArray[i]) /
+                                                                  pSG2Pointer->SStartVector.dArray[i]);
+                        pSG2Pointer->SPlanData.dCurLeftDist =
+                            fabs(pSG2Pointer->SPlanData.dTargetDist - pSG2Pointer->SPlanData.dPreDist);
+                    }
+                }
 				//2.重算末速度 = 终止速度
 				pSG2Pointer->dReCalculateVe = g_SSystemPara.dSysMinVel;
 				//3.插补状态：运行
@@ -1454,10 +1439,6 @@ int8 motionArc(struct SG2* pSG2Pointer, bool bPauseOn, bool bRatioOn)
 				for (int i = 0; i < AXIS_NUM_MAX; i++)//寻找出触发软限位的轴并报警
 				{
 					/* 只消费本段有效轴的限位标记，其他运动留下的标记不在此报警或清除。 */
-					if (VAL_VALID != (getbit(pSPreprocess->SUserData.ucValStatus, i)))
-					{
-						continue;
-					}
 					if (pSG2Pointer->pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS)
 					{
 						parseRunningError(pSG2Pointer->pSChannel->SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM41 + i, 9999);
@@ -1554,72 +1535,160 @@ double calcArcAngle(double *pCenterPoint, double *pStartPoint, double *pEndPoint
 ****************************************/
 int8 checkG2FirstAxisSoftLimit(struct SChannel *pSChannel, SPointDouble SStartPoint, SPointDouble SMaxVal, SPointDouble SMinVal)
 {
-	int8 cLimitedAxis = -1; //当前最先到达限位的逻辑轴
-	uint8 ucLimitMode = SINGLEAXIS_MODE; //最先到达的正或负边界
-	double dNearestDistance = 0.0; //候选边界距圆弧起点的合成规划距离
-	struct SG2* pArc;
-	uint8* pMapAxisArray;
+    double dNearestPosLimited = 9999.9; // 用于判断最先触发正软限位轴的夹角变量
+    double dNearestNegLimited = 9999.9; // 用于判断最先触发负软限位轴的夹角变量
+    int8 cPosLimitedAXIS = -1;          // 最先触发正软限位的轴号
+    int8 cNegLimitedAXIS = -1;          // 最先触发负软限位的轴号
+    double dRad1 = 0;                   // 圆弧与软限位点之间的运动夹角1
+    double dRad2 = 0;                   // 圆弧与软限位点之间的运动夹角2
+    double dPosMinRad = 10000;          // 正软限位点最小运动夹角
+    double dNegMinRad = 10000;          // 负软限位点最小运动夹角
+    double dCenterPoint[2];             // 0-圆心横轴坐标,1-圆心纵轴坐标
+    double dStartPoint[2];              // 0-起点横轴坐标,1-起点纵轴坐标
 
-	/* 通道和映射必须有效；几何距离统一从已加载 SG02 的原起点计算。 */
-	if (pSChannel == NULL || pSChannel->ucChannelNum >= CHANNEL_NUM_MAX || pSChannel->pMapAxisArray == NULL)
-	{
-		return -1;
-	}
-	pArc = &pSChannel->SG02;
-	pMapAxisArray = pSChannel->pMapAxisArray;
-	(void)SStartPoint; //保留既有接口；调用方传入的就是 SG02.SStartPoint
-	/* 本段重新选界前清除本段有效轴的旧限位结果，保留其他轴及其他运行模式。 */
-	for (int i = 0; i < AXIS_NUM_MAX; i++)
-	{
-		if (VAL_VALID == (getbit(pSChannel->SPreProcess.SUserData.ucValStatus, i))
-			&& (pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_POS
-				|| pSChannel->SSingleAxisArray[i].ucRunMode == SINGLEAXIS_LIMIT_NEG))
-		{
-			pSChannel->SSingleAxisArray[i].ucRunMode = SINGLEAXIS_MODE;
-		}
-	}
+    uint8* pMapAxisArray = pSChannel->pMapAxisArray; // 获取映射
+    struct SG2* pSG2Pointer = &pSChannel->SG02;      // 获取G2结构体指针
+
+    // 圆弧参数
+    uint8 ucInpDir =
+        (getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_ANTI_ARC) ? 1 : 0; // 插补方向
+    dCenterPoint[0] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[0]];                          // 圆心横轴坐标
+    dCenterPoint[1] = pSG2Pointer->SCenterPoint.dArray[pSG2Pointer->ucAxis[1]];                          // 圆心纵轴坐标
+    dStartPoint[0] = SStartPoint.dArray[pSG2Pointer->ucAxis[0]];                                         // 起点横轴坐标
+    dStartPoint[1] = SStartPoint.dArray[pSG2Pointer->ucAxis[1]];                                         // 起点纵轴坐标
+    double dRadius = pSG2Pointer->dRadius;                                                               // 圆弧半径
 	for (int i = 0; i < AXIS_NUM_MAX; i++)
 	{
 		/* 沿用有效轴及旋转轴排除规则，映射越界不访问物理轴参数。 */
 		if (g_SSystemPara.ucAxisMapArray[pSChannel->ucChannelNum][i] == AXIS_NULL
-			|| pMapAxisArray[i] >= AXIS_PHYSICS_NUM_MAX
-			|| g_SSystemPara.SAxisPara[pMapAxisArray[i]].ucAxisType == ROTATION_AXIS
-			|| VAL_VALID != (getbit(pSChannel->SPreProcess.SUserData.ucValStatus, i)))
-		{
-			continue;
-		}
-		for (int nSide = 0; nSide < 2; nSide++)
-		{
-			double dLimit = nSide == 0 ? g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft : g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft;
-			double dDistance;
-			uint8 ucMode = nSide == 0 ? SINGLEAXIS_LIMIT_POS : SINGLEAXIS_LIMIT_NEG;
+			||
+            g_SSystemPara.SAxisPara[pMapAxisArray[i]].ucAxisType == ROTATION_AXIS) // 轴映射为空或旋转轴，跳过
+            continue;
 
-			/* 正负边界独立检查，先发现正边界也必须继续检查同轴负边界。 */
-			if ((nSide == 0 && (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_pos != 1 || SMaxVal.dArray[i] <= dLimit))
-				|| (nSide == 1 && (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_neg != 1 || SMinVal.dArray[i] >= dLimit)))
-			{
-				continue;
-			}
-			dDistance = calculateArcLimitDistance(pArc, i, dLimit);
-			/* 触限几何不能求解时交给截停入口报错，不能当作无限位放行。 */
-			if (dDistance < 0)
-			{
-				pSChannel->SSingleAxisArray[i].ucRunMode = ucMode;
-				return 1;
-			}
-			/* 所有候选使用同一合成距离量纲，选择沿原轨迹最早到达的一侧。 */
-			if (cLimitedAxis < 0 || dNearestDistance - dDistance > EPSINON)
-			{
-				cLimitedAxis = i;
-				ucLimitMode = ucMode;
-				dNearestDistance = dDistance;
+        if (VAL_VALID != getbit(pSChannel->SPreProcess.SUserData.ucValStatus, i)) // 无效轴，跳过
+            continue;
+
+        // 正限位检查
+        if (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_pos == 1) // 开启正限位检测
+		{
+            if (SMaxVal.dArray[i] > g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft) // 最值点 > 正限位点
+            {
+                if (i == pSG2Pointer->ucAxis[0]) // 触发限位的轴为插补平面的横轴
+                {
+                    // 计算交点
+                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft -
+                                                                     pSG2Pointer->SCenterPoint.dArray[i],
+                                                                 2));
+                    double dCrossPoint1 = dValue + dCenterPoint[1];  // 计算横轴软限位与圆弧的交点纵轴坐标较大值
+                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // 计算横轴软限位与圆弧的交点纵轴坐标较小值
+                    double dEndPoint1[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
+                                            dCrossPoint1}; // 圆弧1的终点
+                    double dEndPoint2[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft,
+                                            dCrossPoint2}; // 圆弧2的终点
+                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
+                                         ucInpDir); // 计算圆弧与软限位点之间的运动夹角1
+                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
+                                         ucInpDir); // 计算圆弧与软限位点之间的运动夹角2
+                    dPosMinRad = min(dRad1, dRad2); // 取最小值，设置最先触发限位的夹角
+                }
+                else if (i == pSG2Pointer->ucAxis[1]) // 触发限位的轴为插补平面的纵轴
+                {
+                    // 计算交点
+                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft -
+                                                                     pSG2Pointer->SCenterPoint.dArray[i],
+                                                                 2));
+                    double dCrossPoint1 = dValue + dCenterPoint[0];  // 计算纵轴软限位与圆弧的交点横轴坐标较大值
+                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // 计算纵轴软限位与圆弧的交点横轴坐标较小值
+                    double dEndPoint1[2] = {dCrossPoint1,
+                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // 圆弧1的终点
+                    double dEndPoint2[2] = {dCrossPoint2,
+                                            g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].pos_soft}; // 圆弧2的终点
+                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
+                                         ucInpDir); // 计算圆弧与软限位点之间的运动夹角1
+                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
+                                         ucInpDir); /// 计算圆弧与软限位点之间的运动夹角2
+                    dPosMinRad = min(dRad1, dRad2); // 取最小值，设置最先触发限位的夹角
+                }
+
+                if (dNearestPosLimited - dPosMinRad > EPSINON) // 寻找最先触发限位的轴
+                {
+                    cPosLimitedAXIS = i; // 保存轴号
+                    dNearestPosLimited = dPosMinRad;
+			continue;
 			}
 		}
 	}
 	/* 确有边界候选才发布限位模式，后续仍由原状态机减速和报警。 */
-	if (cLimitedAxis >= 0)
+        if (g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].soft_neg == 1)
 	{
-		pSChannel->SSingleAxisArray[cLimitedAxis].ucRunMode = ucLimitMode;
+            if (SMinVal.dArray[i] < g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft)
+            {
+                if (i == pSG2Pointer->ucAxis[0]) // 触发限位的轴为插补平面的横轴
+                {
+                    // 计算交点
+                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft -
+                                                                     pSG2Pointer->SCenterPoint.dArray[i],
+                                                                 2));
+                    double dCrossPoint1 = dValue + dCenterPoint[1];  // 计算横轴软限位与圆弧的交点纵轴坐标较大值
+                    double dCrossPoint2 = -dValue + dCenterPoint[1]; // 计算横轴软限位与圆弧的交点纵轴坐标较小值
+                    double dEndPoint1[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft, dCrossPoint1};
+                    double dEndPoint2[2] = {g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft, dCrossPoint2};
+                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
+                                         ucInpDir); // 计算圆弧与软限位点之间的运动夹角1
+                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
+                                         ucInpDir); /// 计算圆弧与软限位点之间的运动夹角2
+                    dNegMinRad = min(dRad1, dRad2); // 取最小值，设置最先触发限位的夹角
+                }
+                else if (i == pSG2Pointer->ucAxis[1]) // 触发限位的轴为插补平面的纵轴
+                {
+                    // 计算交点
+                    double dValue = sqrt(dRadius * dRadius - pow(g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft -
+                                                                     pSG2Pointer->SCenterPoint.dArray[i],
+                                                                 2));
+                    double dCrossPoint1 = dValue + dCenterPoint[0];  // 计算纵轴软限位与圆弧的交点横轴坐标较大值
+                    double dCrossPoint2 = -dValue + dCenterPoint[0]; // 计算纵轴软限位与圆弧的交点横轴坐标较小值
+                    double dEndPoint1[2] = {dCrossPoint1, g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft};
+                    double dEndPoint2[2] = {dCrossPoint2, g_SSystemPara.MOTOR_WARN[pMapAxisArray[i]].neg_soft};
+                    dRad1 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint1,
+                                         ucInpDir); // 计算圆弧与软限位点之间的运动夹角1
+                    dRad2 = calcArcAngle(dCenterPoint, dStartPoint, dEndPoint2,
+                                         ucInpDir); /// 计算圆弧与软限位点之间的运动夹角2
+                    dNegMinRad = min(dRad1, dRad2); // 取最小值，设置最先触发限位的夹角
+                }
+                if (dNearestNegLimited - dNegMinRad > EPSINON) // 寻找最先触发限位的轴
+                {
+                    cNegLimitedAXIS = i; // 保存轴号
+                    dNearestNegLimited = dNegMinRad;
+                    continue;
+			}
+            }
+        }
+    }
+
+    if (cPosLimitedAXIS != -1 || cNegLimitedAXIS != -1) // 判断是否有触发软限位的轴，并设置模式为限位模式
+    {
+        if (cPosLimitedAXIS != -1 &&
+            cNegLimitedAXIS != -1) // 比较正软限位和负软限位的最小距离比值，则为优先触发轴限位，并设置模式为限位模式
+        {
+            if (dNearestPosLimited > dNearestNegLimited)
+			{
+				pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode =
+                    SINGLEAXIS_LIMIT_NEG; // 单轴运行模式设置为负限位
+            }
+            else
+            {
+                pSChannel->SSingleAxisArray[cPosLimitedAXIS].ucRunMode =
+                    SINGLEAXIS_LIMIT_POS; // 单轴运行模式设置为正限位
+            }
+        }
+        else if (cPosLimitedAXIS != -1)
+	{
+		pSChannel->SSingleAxisArray[cPosLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_POS; // 单轴运行模式设置为正限位
+        }
+        else // cNegLimitedAXIS != -1
+        {
+            pSChannel->SSingleAxisArray[cNegLimitedAXIS].ucRunMode = SINGLEAXIS_LIMIT_NEG; // 单轴运行模式设置为负限位
+        }
 		return 1;
 	}
 	return -1;

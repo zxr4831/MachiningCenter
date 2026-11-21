@@ -21,7 +21,7 @@ void addG90RegulationAPI()
 	//指令占程序段数：1
 	//参数结构体：无
 	//char8* str=“”
-	addGCommadRegulation(93, sGa, 1, NULL, NULL, NULL, CheckG90, AssignG90);
+	addGCommadRegulation(90, sGh, 1, NULL, NULL, NULL, CheckG90, AssignG90);
 }
 //添加G91规则结构体
 void addG91RegulationAPI()

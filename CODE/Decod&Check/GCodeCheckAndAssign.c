@@ -71,10 +71,6 @@ void initGCodeSystemState(SGCodeSysState* pSGCodeSysState, uint8 ucChannelNum)
 
 	pSGCodeSysState->sWorkpieceCoordNum = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);
 	// 保留本通道各刀原有磨耗，供后续G10增量修改和完整写回。
-	for (int i = 0; i < TOOL_NUM_MAX; i++)
-	{
-		pSGCodeSysState->SToolWearPara[i] = g_SSystemPara.SWearPara[ucChannelNum][i].SToolCoord;
-	}
 
 #endif
 
@@ -160,11 +156,11 @@ void initGCodeModalInfo(SGCodeModalInfo* pSGCodeModalInfo)
 	//2.初始化
 	pSGCodeModalInfo->sGa = G00 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Ga组初始值：G00
 	pSGCodeModalInfo->sGb = G54 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gb组初始值：G54
-	pSGCodeModalInfo->sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gc组初始值：G18
+	pSGCodeModalInfo->sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE); //Gc组初始值：加工中心 XY 平面 G17
 	pSGCodeModalInfo->sGd = G40 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gd组初始值：G40
 	pSGCodeModalInfo->sGe = G21 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Ge组初始值：G21
 	pSGCodeModalInfo->sGf = G97 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gf组初始值：G97
-	pSGCodeModalInfo->sGg = G98 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gg组初始值：G98
+	pSGCodeModalInfo->sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE); //Gg组初始值：G94
 	pSGCodeModalInfo->sGh = G90 * pow(10, GCOMMAND_DECIMAL_PLACE);	//Gh组初始值：G90
 
 	pSGCodeModalInfo->pSGaRegulation = (SGCommandRegulation*)findTreeNodeData(g_pSGCommandRegulationTree->Root, G00 * pow(10, GCOMMAND_DECIMAL_PLACE));
@@ -237,7 +233,7 @@ void getInfoFromSRun(SGCodeSysState* pSGCodeSysState, uint8 ucChannelNum, enum R
 			pSGCodeSysState->SModalInfo.sGc = G19 * pow(10, GCOMMAND_DECIMAL_PLACE);
 			break;
 		default:
-			pSGCodeSysState->SModalInfo.sGc = G18 * pow(10, GCOMMAND_DECIMAL_PLACE);
+			pSGCodeSysState->SModalInfo.sGc = G17 * pow(10, GCOMMAND_DECIMAL_PLACE);
 			break;
 		}
 
@@ -264,13 +260,13 @@ void getInfoFromSRun(SGCodeSysState* pSGCodeSysState, uint8 ucChannelNum, enum R
 		switch (nRet)
 		{
 		case CMD_FEED_PER_MIN:
-			pSGCodeSysState->SModalInfo.sGg = G98 * pow(10, GCOMMAND_DECIMAL_PLACE);
+			pSGCodeSysState->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
 			break;
 		case CMD_FEED_PER_R:
-			pSGCodeSysState->SModalInfo.sGg = G99 * pow(10, GCOMMAND_DECIMAL_PLACE);
+			pSGCodeSysState->SModalInfo.sGg = G95 * pow(10, GCOMMAND_DECIMAL_PLACE);
 			break;
 		default:
-			pSGCodeSysState->SModalInfo.sGg = G98 * pow(10, GCOMMAND_DECIMAL_PLACE);
+			pSGCodeSysState->SModalInfo.sGg = G94 * pow(10, GCOMMAND_DECIMAL_PLACE);
 			break;
 		}
 		//SRun中获取sGh
@@ -1594,6 +1590,47 @@ void recordLexicalUnit(uint8 ucMod, SGetTextStateInfo* pSGetTextStateInfo, SScan
 		return;
 	}
 
+    /* 车床专用语法和待实现的机床输入输出指令在此明确报错。
+     * 当前进给采用 G94，刀具与主轴指令需完成加工中心实现后再开放。 */
+    switch (*pSGetTextStateInfo->pStartPtr)
+    {
+    case 'A':
+    case 'a':
+    case 'B':
+    case 'b':
+    case 'C':
+    case 'c':
+    case 'U':
+    case 'u':
+    case 'V':
+    case 'v':
+    case 'W':
+    case 'w':
+    case 'S':
+    case 's':
+    case 'T':
+    case 't':
+    case 'H':
+    case 'h':
+    case 'D':
+    case 'd':
+    case 'L':
+    case 'l':
+    case 'Q':
+    case 'q':
+        setErrorType(GCODE_ERROR_NUM87);
+        findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
+        return;
+    default:
+        break;
+    }
+    if (!isfinite(dLexicalUnitValue))
+    {
+        setErrorType(GCODE_ERROR_NUM130);
+        findError(pSGetTextStateInfo->pStartPtr, pSGetTextStateInfo->unCurrLineNum);
+		return;
+	}
+
 	switch (*pSGetTextStateInfo->pStartPtr)
 	{
 	case'A':case'a':
@@ -2775,7 +2812,7 @@ void refreshGCodeGeometry(struct SGCodeParse* pSGCodeBuffUnit)
 			setBits(pSGCodeBuffUnit->unCommandType, CMD_PLANE_G19, CMD_PLANE_ADDR);
 			break;
 		default:
-			setBits(pSGCodeBuffUnit->unCommandType, CMD_PLANE_G18, CMD_PLANE_ADDR);
+			setBits(pSGCodeBuffUnit->unCommandType, CMD_PLANE_G17, CMD_PLANE_ADDR);
 			break;
 		}
 		//1.3sGd
@@ -2813,10 +2850,10 @@ void refreshGCodeGeometry(struct SGCodeParse* pSGCodeBuffUnit)
 		int8 cGg = pSGCodeBuffUnit->SModalInfo.sGg;
 		switch (cGg)
 		{
-		case G98:
+		case G94:
 			setBits(pSGCodeBuffUnit->unCommandType, CMD_FEED_PER_MIN, CMD_FEED_ADDR);
 			break;
-		case G99:
+		case G95:
 			setBits(pSGCodeBuffUnit->unCommandType, CMD_FEED_PER_R, CMD_FEED_ADDR);
 			break;
 		default:  //默认G98

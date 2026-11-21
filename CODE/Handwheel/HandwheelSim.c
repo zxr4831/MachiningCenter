@@ -11,8 +11,8 @@ Copyright (C) 版权归属沿用原项目，本次注释整理不变更权属。
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
 #include <float.h>
 #include <math.h>
-#include <string.h>
 #include <stddef.h>
+#include <string.h>
 #include "Channel.h"
 #include "Motion.h"
 #include "GeneralFunctions.h"

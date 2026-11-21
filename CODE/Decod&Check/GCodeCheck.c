@@ -976,11 +976,6 @@ int8 checkSpecialCommand(struct _SSyntaxConfiguration* pSSyntaxConfig, struct SG
 
 	}
 
-	SProgram* pSCurrProgram = getCurrProgramStruct(pSSyntaxConfig->ucChannelNum);
-	if (pSCurrProgram->ucG66MarkCheck && isTriggerG66Command(pSSyntaxConfig->sCurrCommandVal) && pGCodeBufUnit->EntityType != DOT)
-	{
-		triggerG66ByCheck(pSSyntaxConfig);
-	}
 	return cRet;
 
 }

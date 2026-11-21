@@ -13,10 +13,10 @@
 /* 默认启用距离手轮模拟与停车边界；VS 通过原编码器样本入口提供手轮输入。
  * 可在工程预处理器中显式关闭；改变开关后必须全量重新编译。 */
 #ifndef HANDWHEEL_SIM_DISTANCE_ENABLE
-#define HANDWHEEL_SIM_DISTANCE_ENABLE 1
+#define HANDWHEEL_SIM_DISTANCE_ENABLE STM32_MODE
 #endif
 #ifndef HANDWHEEL_STOP_BOUNDARY_ENABLE
-#define HANDWHEEL_STOP_BOUNDARY_ENABLE 1
+#define HANDWHEEL_STOP_BOUNDARY_ENABLE STM32_MODE
 #endif
 
 #if STM32_MODE || HANDWHEEL_SIM_DISTANCE_ENABLE || HANDWHEEL_STOP_BOUNDARY_ENABLE
@@ -51,7 +51,11 @@
 #define NORMAL_MULTICHANNEL_ADDCAXIS_MACHINE		3	//多通道双主轴机	1通道：XZ轴+C1轴	2通道：XZ轴+C2轴
 #define TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE	4	//单通道_车铣复合倾斜Y轴机
 
-#define MACHINE_CONFIG        NORMAL_MULTICHANNEL_ADDYAXIS_MACHINE
+#define MACHINING_CENTER_XYZ_MACHINE 5                         // 单通道直角坐标 XYZ 加工中心开发配置
+
+#define MACHINE_CONFIG MACHINING_CENTER_XYZ_MACHINE
+#define MC_PROFILE_XYZ 1
+#define MC_CYCLE_US 1000U // 内核使用 ms，开发基线固定为 1 ms 周期
 //配置为双主轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为1
 //配置为Y轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为2
 //配置为单通道_普通二轴机时，要将common.h文件中的#define TURRET_MAX_NUM 配置为1

@@ -710,7 +710,7 @@ void retreatTailPre(struct _SG32* pG32)
 	dLongAxisVector = pG32->SStartVector.dArray[ucLongAxisNum];  //获取长轴向量
 	//dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dK * dLongAxisVector;  //获取长轴理想退尾位置
 	// 长轴退尾量按长度使用，径向退尾方向仍由带符号的 J 决定。
-	dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - fabs(pG32->dK) * dLongAxisVector;  //获取长轴理想退尾位置
+    dTailSignDis = pG32->SEndPoint.dArray[ucLongAxisNum] - pG32->dK * dLongAxisVector;  //获取长轴理想退尾位置
 
 	getRealTimePoint((double*)&SRealTimePoint, AXIS_NUM_MAX, pG32->pSChannel->pMapAxisArray, &pG32->ucValStatus);
 

@@ -1,18 +1,61 @@
+# 构建目录与本地运行输出
 /build/
 /LocalDev/
 /x64/
+/x86/
+/Win32/
+/Debug/
+/Release/
+/cmake-build-*/
 /outputFile/*
 !/outputFile/.gitkeep
-/.vs/
-/CMakeUserPresets.json
+
+# Visual Studio 的用户设置、缓存和中间文件
+.vs/
+/.vscode/
+ipch/
 *.user
-*.log
-*.obj
-*.pdb
-*.ilk
-*.aps
 *.suo
 *.VC.db
 *.VC.opendb
-/.vscode/
+*.obj
+*.o
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.ipch
+*.aps
+*.tlog/
+*.lastbuildstate
+*.exe.recipe
+
+# CMake 生成文件
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+/CMakeUserPresets.json
+
+# Python 测试缓存与覆盖率输出
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# 临时文件与日志
+/tmp/
+/temp/
+.cache/
+*.log
+*.tmp
+*.temp
+*.bak
+*~
+
+# 当前用户的本地协作习惯
 /AGENTS.md

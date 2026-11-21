@@ -26,12 +26,12 @@ typedef unsigned long long int   uint64;  //......，变量命名示例ulVar
 #define TURRET_AXIS_TEST 1  //刀塔轴测试
 
 #if(TURRET_AXIS_TEST == 1)
-#define TURRET_MAX_NUM  2 //刀塔配置数
+#define TURRET_MAX_NUM 1         //加工中心保留单个刀具资源组，供旧内核偏置/资源管理使用
 #define TOOl_LOCATION_MAX_NUM  15//刀塔的刀位数
 #define	 TURRET_NULL 0//定义空的刀塔
 
 #endif
-#define POLAR_COORD_TEST  1  //极坐标测试
+#define POLAR_COORD_TEST 0 //加工中心开发基线关闭车铣极坐标扩展
 
 #define DRAW_TEST		0	//画图测试	陈敏聪
 #define MINIMUM_OF_INT8 -128   //8月18 英华

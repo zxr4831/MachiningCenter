@@ -14,7 +14,7 @@
 #define SCREW_AND_REVCLEARANCE	1	//螺距误差补偿+ 反向间隙补偿
 #define TWOWAY_SCREW_COMP		2	//双向螺距误差补偿
 //螺距补偿功能选择
-#define ERROR_COMP_TYPE			SCREW_AND_REVCLEARANCE		//补偿类型 0：没有补偿  1： 螺距误差补偿+ 反向间隙补偿  2：双向螺距误差补偿
+#define ERROR_COMP_TYPE NO_SCREW_COMP //补偿类型 0：没有补偿  1： 螺距误差补偿+ 反向间隙补偿  2：双向螺距误差补偿
 
 
 

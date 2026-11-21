@@ -51,30 +51,14 @@ void addM01RegulationAPI()
 //检查M01
 int8 CheckM01(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeBuffUnit)
 {
-	SScan* pSScan = &pSSyntaxConfig->SScanContainer;
-
-	//出现J，但未出现LK
-	if (pSScan->bRIJK[2] == TRUE && pSScan->bL == FALSE && pSScan->bRIJK[3] == FALSE)
+    if (pSSyntaxConfig == NULL || pSGCodeBuffUnit == NULL)
+        return -1;
+    /* 原有 M01 的 K/L/J 外部输入等待属于车床扩展语法。 */
+    if (pSSyntaxConfig->SScanContainer.bL || pSSyntaxConfig->SScanContainer.bRIJK[2] ||
+        pSSyntaxConfig->SScanContainer.bRIJK[3])
 	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
+		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
 		return -1;
-	}
-	
-	//不能同时出现L,K
-	if (pSSyntaxConfig->SScanContainer.bL && pSSyntaxConfig->SScanContainer.bRIJK[3])
-	{
-		parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, 0);
-		return -1;
-	}
-
-	if (pSScan->bL || pSScan->bRIJK[3])
-	{
-		double input = fabs(pSScan->bRIJK[3] ? pSScan->dRIJK[3] : pSScan->dL);
-		if (!isfinite(input) || input > 37 || input != floor(input) || ((int)input % 10) > 7)
-		{
-			parseGCodeErrorB(pSSyntaxConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM301);
-			return -1;
-		}
 	}
 	return 1;
 }
@@ -82,62 +66,17 @@ int8 CheckM01(SSyntaxConfiguration* pSSyntaxConfig, struct SGCodeParse* pSGCodeB
 int8 AssignM01(SAssignConfiguration* pSAssignConfig, struct SGCodeParse*pSGCodeBuffUnit)
 {
 	if (pSAssignConfig==NULL|| pSGCodeBuffUnit==NULL)
+        return -1;
+    if (pSAssignConfig->SScanContainer.bL|| pSAssignConfig->SScanContainer.bRIJK[2] ||
+        pSAssignConfig->SScanContainer.bRIJK[3])
 	{
+				parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM87);
 		return -1;
     }
 
 	//获取赋值结构体中的扫描结构体
-	SScan* pScan = &pSAssignConfig->SScanContainer;
-
-	//存在参数L或K
-	// L，K：IO输入端口号
-	// L的IO电平有效类型为低电平有效
-	//K的IO电平有效类型为高电平有效
-	if (pScan->bL||pScan->bRIJK[3])
-	{
-		//参数L和K同时存在，IO输入端口以及IO输入IO电平有效类型的赋值以K为准，忽略L
-		if (pScan->bL && pScan->bRIJK[3])
-		{
-			double dInput = fabs(pScan->bRIJK[3] ? pScan->dRIJK[3] : pScan->dL);
-
-			/* 宏变量在检查后可能变化，赋值时须在整数转换前重新校验端口。 */
-			if (!isfinite(dInput) || dInput > 37.0 || dInput != floor(dInput) || ((int)dInput % 10) > 7)
-			{
-				parseGCodeErrorB(pSAssignConfig->SGetTextStateInfo.unCurrLineNum, GCODE_ERROR_NUM301);
-				return -1;
-			}
-
-			pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = (int8)fabs(pScan->dRIJK[3]);
-			pSGCodeBuffUnit->SIOContrlInfo.cInputValidType = HIGHLEVEL_VALID;
-		}
-		else if (pScan->bL)
-		{
-			pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = (int8)fabs(pScan->dL);
-			pSGCodeBuffUnit->SIOContrlInfo.cInputValidType = LOWLEVEL_VALID;
-		}
-		else
-		{
-			pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = (int8)fabs(pScan->dRIJK[3]);
-			pSGCodeBuffUnit->SIOContrlInfo.cInputValidType = HIGHLEVEL_VALID;
-		}
-
-		//参数J存在，赋值IO的输入等待检测时间
-		if (pScan->bRIJK[2])
-		{
-			pSGCodeBuffUnit->SIOContrlInfo.nInputDetectTime = (int8)fabs(pScan->dRIJK[2]) * 1000;//单位转换 s->ms
-		}
-		else
-		{
+			pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = UNASSIGNED_VALUE;
 			pSGCodeBuffUnit->SIOContrlInfo.nInputDetectTime = UNASSIGNED_VALUE;
-		}
-
-
-	}
-	//在没输入L / K时不清除M01, 而是把IO输入端口索引值赋 - 1
-	else
-	{
-		pSGCodeBuffUnit->SIOContrlInfo.cInputIOIndex = UNASSIGNED_VALUE;
-	}
 
 	//M01添加进IO缓冲区中，以及指令类型赋值
 	setBits(pSGCodeBuffUnit->unCommandType, CMD_PROGRAM_OPTION_PAUSE, CMD_PROGRAM_ADDR);
@@ -283,25 +222,6 @@ int8 AssignM30(SAssignConfiguration* pSAssignConfig, struct SGCodeParse* pSGCode
 	pSAssignConfig->bAssignFinished = TRUE;
 
 	//4.1当前模式：自动模式
-	if (AUTOMATIC_MODE == getRunMode() && g_SSystemPara.bIsStopSpindleAndCoolantwhileM30 == TRUE)
-	{
-		//关冷却液
-		AssignM09(pSAssignConfig, pSGCodeBuffUnit);
-
-		//关主轴
-		AssignM05(pSAssignConfig, pSGCodeBuffUnit);
-
-		//关第二主轴
-		AssignM52(pSAssignConfig, pSGCodeBuffUnit);
-
-		//关刀具轴
-		AssignG50_2(pSAssignConfig, pSGCodeBuffUnit);
-	}
-	//4.2当前模式：MDI模式
-	else if (MDI_MODE == getRunMode())
-	{
-	
-	}
 
 	return 1;
 }

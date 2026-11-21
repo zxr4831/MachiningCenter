@@ -980,7 +980,7 @@ int8 singleAxisPre(struct SG0* pSG0Pointer, uint8 ucAxis, SPointDouble SStartPoi
 	//移动距离为0 或 模式不为单轴模式
 	//移动距离为0 或 模式不为单轴模式
 	//if ((dDistance >= -pSSingleAxisPointer->dPulseToMm) && (dDistance <= pSSingleAxisPointer->dPulseToMm) || pSSingleAxisPointer->ucRunMode != SINGLEAXIS_MODE)//2024/12/17注释
-	if (isZero(dDistance)                   //zxr: 修复G0将小于等于一脉冲距离误判为零导致微小位移丢失的问题
+	if ((dDistance >= -pSSingleAxisPointer->dPulseToMm) && (dDistance <= pSSingleAxisPointer->dPulseToMm)
 #if HANDWHEEL_SIM_DISTANCE_ENABLE
         && !(isHandwheelDistanceControlActive(pSG0Pointer->pSChannel) && !pSG0Pointer->bIsUserData)
 #endif
@@ -1926,10 +1926,11 @@ int8 singleAxisMotionLoop(struct SG0* pSG0Pointer, int nAxisNum, bool bPauseOn, 
 	//循环执行单轴插补指令
 #if (MACHINE_CONFIG == TURNING_AND_MILLING_INCLINED_Y_SINGLECHANNEL_MACHINE) //倾斜Y轴机
 	for (i = nAxisNum - 1; i >= 0; i--)//X轴的移动要依据Y轴移动量确定补偿量
+	{
 #else
 	for (i = 0; i < nAxisNum; i++)
-#endif
 	{
+#endif
 		nRes = singleAxisMotion(pSG0Pointer, i, bPauseOn, bRatioOn);
 		if (nRes < 0)return nRes;
 	}

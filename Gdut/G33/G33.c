@@ -111,24 +111,6 @@
 #include "ErrorCompensation.h"
 
 // zxr: 软限位检查仅评估输入和本地停车规划，不改写实际主轴规划。
-static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle,
-    const struct G33* pSG33, double dStartupTarget);
-static double calcG33StopTravel(struct _SSpindle* pSpindle, const struct G33* pG33, bool bLimit);
-
-/*************************************************
-  zxr: 统一识别恒线速及其联动模式
-  函数名称：isG33ConstantSurfaceSpeed
-  函数功能：判断主轴是否按恒线速运行
-  输入参数：ucRunMode：主轴当前运行模式
-  输出参数：无
-  返 回 值：TRUE：恒线速；FALSE：其他模式
-  备    注：
-**************************************************/
-static bool isG33ConstantSurfaceSpeed(uint8 ucRunMode)
-{
-    return ucRunMode == SPINDLE_G96_MODE || ucRunMode == SPINDLE_G96ANDG0_MODE ||
-        ucRunMode == SPINDLE_G96ANDG1_MODE;
-}
 
 //G33保存数据用文件指针
 FILE* fpG33Write;
@@ -158,8 +140,6 @@ bool InitG33GlobalVariable(struct SChannel* pSChannel)
 	pSChannel->bG33SpindleOverSpeedWarningSigns = FALSE;
 	// zxr: 开机或新程序初始化时清零本G33对象的异常计数
 	pSChannel->SG33.unFollowTimeOut = 0;
-	pSChannel->SG33.unDirectionTimeOut = 0;
-	pSChannel->SG33.unRevCompTimeOut = 0;
 	return TRUE;
 }
 
@@ -532,8 +512,6 @@ int8 initSG33Data(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle*
 
 	// zxr: 新指令或暂停恢复重新初始化时，不沿用上次异常计数
 	pSG33->unFollowTimeOut = 0;
-	pSG33->unDirectionTimeOut = 0;
-	pSG33->unRevCompTimeOut = 0;
 
 	if (isZero(pInterpPrePointer->SUserData.dDistance))//G33的G代码中起点终点相同（长度为零），直接结束
 	{
@@ -562,18 +540,6 @@ int8 initSG33Data(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle*
 	getRealTimePoint((double*)&pSG33->SStartPoint, AXIS_NUM_MAX, ucMapArray, &pSG33->ucValStatus);
 
 	// zxr: 原指令未移动恒线速跟随轴时，只消除近零且不足半个物理脉冲的坐标尾差。
-	uint8 follow = pSSpindle->spindleFollowAxis;
-	if (isG33ConstantSurfaceSpeed(pSSpindle->pSSpindleAxis->ucRunMode) &&
-		follow < AXIS_NUM_MAX && ucMapArray[follow] < AXIS_PHYSICS_NUM_MAX &&
-		pInterpPrePointer->SUserData.SStartPoint.dArray[follow] == pInterpPrePointer->SUserData.SEndPoint.dArray[follow])
-	{
-		double delta = pSG33->SEndPoint.dArray[follow] - pSG33->SStartPoint.dArray[follow];
-		double pulse = g_SSystemPara.SAxisPara[ucMapArray[follow]].dPulseToMm;
-		if (isfinite(pulse) && isZero(delta) && fabs(delta) < pulse * 0.5)
-		{
-			pSG33->SEndPoint.dArray[follow] = pSG33->SStartPoint.dArray[follow];
-		}
-	}
 
 	//计算距离和向量
 	calcG1VectorAndDistance(pSG33->SStartPoint, pSG33->SEndPoint, &pSG33->SStartVector, &pSG33->SStartVector, &pSG33->SPlanData.dDistance, AXIS_NUM_MAX, ucMapArray, &pSG33->ucValStatus, pSG33->ucRelaVal);
@@ -611,9 +577,7 @@ int8 initSG33Data(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle*
 	//pSG33->dF   	pSG33->ucL      内螺纹导程、螺纹头数已在总初始化中赋值initInterpStructByTool()函数
 
 	// zxr: 恒线速记录本段主轴稳定后的规划转速，供攻入减速和反转使用。
-	pSG33->dG33SpindleSpeed = (isG33ConstantSurfaceSpeed(pSSpindle->pSSpindleAxis->ucRunMode)
-		? fabs(pSSpindle->pSSpindleAxis->dCurrentSpeed) / DEGREE_OF_CIRCLE
-		: getG97AbsSpindleSpeed(pSSpindle)) * 60 * 1000;//(r/min)（2023 / 3 / 23郭强）
+    pSG33->dG33SpindleSpeed = getG97AbsSpindleSpeed(pSSpindle) * 60 * 1000;//(r/min)（2023 / 3 / 23郭强）
 
 	pSG33->ucAlreadyL = 0;          //已加工头数为零
 
@@ -762,12 +726,11 @@ int8 changeG33StateAfterSpindleAccOrDec(struct SInterpolationPre* pInterpPrePoin
 
 		return 5;
 	}
-	else if (pSG33->G33MotionState == SPINDLE_DEC_TO_STOP_AFTER_ZAXIS_RETURN && pSG33->bPreFinishedFlag == TRUE && isSpindleStopFinished(pSSpindle))// zxr: 退刀后等待停机收尾完成，再结束本次攻牙循环或启动下一次循环
+	else if (pSG33->G33MotionState == SPINDLE_DEC_TO_STOP_AFTER_ZAXIS_RETURN && pSG33->bPreFinishedFlag == TRUE &&
+             pSingleAxisPointer->ucInpStatus == INP_FINISHED) //退刀后主轴减速完成
 	{
 		// zxr: 本次攻牙循环完成后清零异常计数，避免带入后续加工
 		pSG33->unFollowTimeOut = 0;
-		pSG33->unDirectionTimeOut = 0;
-		pSG33->unRevCompTimeOut = 0;
 		pSG33->ucAlreadyL++;//已加工头数+1
 
 		//还原攻牙转速(郭强，2023/3/23)
@@ -1043,10 +1006,16 @@ int8 ZAxisAccPre(struct G33* pSG33, struct SEncoder* pSpindleEncoder, int8 cSpin
 	}
 
 	// zxr: 零避空仍沿用十倍加减速度；先走已有逐周期虚拟规划，取得启动追赶累计目标。
-	if (isZero(g_SSystemPara.dG33AvoidEmptyDistance) && pSG33->bG33AccPreFirstTime)
+    if (isZero(g_SSystemPara.dG33AvoidEmptyDistance))
 	{
-		pSG33->dG33Acc = g_SSystemPara.dSysPlanTMaxAcc * 10;
-		pSG33->dG33Dec = g_SSystemPara.dSysPlanTMaxDec * 10;
+#if G33ProcLog_DEBUG
+        printf("*****************避空距离为0,加速度扩大10倍,Z轴加速度计算完毕！****************\n");
+#endif
+        pSG33->dZAxisStartEncoderRelValue = calcZAxisStartEncoderRelValue(pSG33, pSpindleEncoder);
+        pSG33->dG33Acc = pSG33->dG33Acc * 10;
+		pSG33->dG33Dec = pSG33->dG33Dec * 10;
+        pSG33->bPreFinishedFlag = TRUE;
+        return 1;
 	}
 
 	//首先进行编码器方向检测，异常反向直接返回（2022/8/6）
@@ -1116,18 +1085,13 @@ int8 ZAxisAccPre(struct G33* pSG33, struct SEncoder* pSpindleEncoder, int8 cSpin
 
 		//无需输出，直接获取实时点的位置，与起刀点作差，看是否在避空距离内
 		// zxr: 零避空已使用十倍加减速度，不按避空距离作除法重算
-		if (!isZero(g_SSystemPara.dG33AvoidEmptyDistance) &&
-			distance > g_SSystemPara.dG33AvoidEmptyDistance)
+        if (distance > g_SSystemPara.dG33AvoidEmptyDistance)
 		{
 			pSG33->dG33Acc = pSG33->dG33Acc * distance / g_SSystemPara.dG33AvoidEmptyDistance;
 			pSG33->dG33Dec = pSG33->dG33Dec * distance / g_SSystemPara.dG33AvoidEmptyDistance;
 		}
 
 		// zxr: 虚拟追赶累计目标包含尚未输出的距离，不能只把避空参数当作停车起点。
-		double dStartupTarget = pSG33->SPlanData.dTargetDist;
-		struct _SSpindle* pSpindle = pSG33->G33RotateAxis == AXIS_A
-			? &pSG33->pSChannel->SSecondSpindle : &pSG33->pSChannel->SSpindle;
-		uint16 usLimitError = checkG33StartEndSoftLimit(pSpindle, pSG33, dStartupTarget);
 
 		//加速度已计算出
 		pSG33->bPreFinishedFlag = TRUE;
@@ -1151,12 +1115,6 @@ int8 ZAxisAccPre(struct G33* pSG33, struct SEncoder* pSpindleEncoder, int8 cSpin
 		pSG33->pSChannel->SRun.sAxisDeltaPulse[ucG33Axis1] = 0;
 		pSG33->pSChannel->SRun.sAxisDeltaPulse[ucG33Axis2] = 0;
 		// zxr: 恢复虚拟状态后再报错，本轮不取得同步进给信号
-		if (usLimitError != 0)
-		{
-			pSG33->bPreFinishedFlag = FALSE;
-			parseRunningError(pSG33->pSChannel->SRun.unGCodeLineNum, usLimitError, 9999);
-			return -2;
-		}
 
 #if G33ProcLog_DEBUG
 		printf("*****************Z轴加速度计算完毕！****************\n");
@@ -1334,6 +1292,7 @@ int8 motionZAxisAccBeforeFolUp(struct _SSpindle* pSSpindle, struct G33* pSG33, s
 	double dVe;
 	int ret;
 	int8 cSpindleRevFlag;//主轴异常反向标志
+    static uint32 unTimeOut = 0; //记录主轴异常反向连续次数 // 2026.5.9
 	if (pSG33 == NULL || pSpindleEncoder == NULL)
 	{
 		return 2;
@@ -1343,9 +1302,9 @@ int8 motionZAxisAccBeforeFolUp(struct _SSpindle* pSSpindle, struct G33* pSG33, s
 	cSpindleRevFlag = pSpindleEncoder->cEncoderDir != pSG33->cTappingSpindleDir ? TRUE : FALSE;
 	
 	// zxr: 按本G33对象累计连续方向异常，方向恢复时清零
-	pSG33->unDirectionTimeOut = cSpindleRevFlag == TRUE ? pSG33->unDirectionTimeOut + 1 : 0;
-	
-	if (pSG33->unDirectionTimeOut > G33_TIMERANGE)//连续主轴异常反向，则报错
+    unTimeOut = cSpindleRevFlag == TRUE ? unTimeOut + 1 : 0; //记录主轴异常反向连续次数
+
+    if (unTimeOut > G33_TIMERANGE)//连续主轴异常反向，则报错
 	{
 		parseRunningError(pSG33->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM154,9999);
 		return -3;
@@ -1359,7 +1318,7 @@ int8 motionZAxisAccBeforeFolUp(struct _SSpindle* pSSpindle, struct G33* pSG33, s
 			printf("*****************Z轴加速规划开始！****************\n");
 #endif
 			// zxr: 预规划未完成或失败时均不进入同步进给
-			if (ZAxisAccPre(pSG33, pSpindleEncoder, cSpindleRevFlag) != 1)
+            if (ZAxisAccPre(pSG33, pSpindleEncoder, cSpindleRevFlag) == -1)
 			{
 #if G33ProcLog_DEBUG
 				printf("*****************Z轴加速阶段加速度未规划完毕！****************\n");
@@ -1923,9 +1882,7 @@ int8 calcSpindleDecPointPreDist(struct _SSpindle* pSSpindle, struct G33* pSG33)
 	{
 		double dEstiSurpassLength;//估算的主轴减速到停时Z轴超过减速点的距离
 		// zxr: 恒线速按本段的停车规划重算减速点，定转速保留原算法。
-		dEstiSurpassLength = isG33ConstantSurfaceSpeed(pSSpindle->pSSpindleAxis->ucRunMode)
-			? calcG33StopTravel(pSSpindle, pSG33, FALSE)
-			: calcSpindleDecZAxicSurpassLength(pSSpindle, pSG33);
+        dEstiSurpassLength = calcSpindleDecZAxicSurpassLength(pSSpindle, pSG33);
 
 		//2.根据情况更改减速点处位移
 		if (dEstiSurpassLength < 1)//超出距离小于1，不改变减速点位置
@@ -2066,14 +2023,6 @@ int8 motionSpindleDecToStopBeforeRev(struct _SSpindle* pSSpindle, struct G33* pS
 
 		//将主轴预处理状态位置TRUE
 		pSG33->bPreFinishedFlag = TRUE;
-	}
-
-	// zxr: 普通停车减速插补完成且无停机错误时，清零随动超时计数，避免等待取消使能期间误报154错误
-	if (pSSpindle->cStopError == 0 &&
-		pSSpindle->pSSpindleAxis->ucRunMode == SPINDLE_COMMONSTOP_MODE &&
-		pSSpindle->pSSpindleAxis->ucInpStatus == INP_FINISHED)
-	{
-		pSG33->unFollowTimeOut = 0;
 	}
 
 	//主轴减速过程中Z轴随动   2023.6.8郭强
@@ -2327,8 +2276,7 @@ int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEnc
 	uint8* ucMapArray = pSG33->pSChannel->pMapAxisArray;//通道轴映射数组
 	uint8 ucG33Axis1 = pSG33->ucAxis[0];
 	uint8 ucG33Axis2 = pSG33->ucAxis[1];
-	double dZAxisNewAddDist;
-	double dVe;
+    static uint32 unTimeOut = 0; //记录主轴异常连续次数 // 2026.5.9
 	if (pSSpindle == NULL || pSG33 == NULL || pSpindleEncoder == NULL)
 	{
 		return -2;
@@ -2337,13 +2285,6 @@ int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEnc
 	int32 ret = 1;
 
 	// zxr: 各补偿分支恢复有效反馈时，清零本对象随动及补偿的旧无反馈计数
-	dZAxisNewAddDist = calcZAxisNewAddDist(pSG33, pSpindleEncoder);
-	dVe = dZAxisNewAddDist / pSG33->SPlanData.dTc;
-	if (!isZero(dVe))
-	{
-		pSG33->unFollowTimeOut = 0;
-		pSG33->unRevCompTimeOut = 0;
-	}
 
 	//识别反转第一个周期进行T型带分摊的反转补偿规划
 	if ((pSpindleEncoder->cEncoderDir != pSG33->cTappingSpindleDir) && (pSG33->bSpindleRevBegin == FALSE))//反转第一个周期，此时该标志位 还未改变为TRUE
@@ -2372,6 +2313,12 @@ int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEnc
 
 		//1.对主轴反转补偿期间Z轴累积距离进行计算和记录
 		//（2022/8/8  设定累积距离正值方向为退刀方向，负值为攻丝方向）
+        double dZAxisNewAddDist; //新增距离
+        double dVe;
+
+        //计算上一周期主轴编码器增量对应的z轴位移
+        dZAxisNewAddDist = calcZAxisNewAddDist(pSG33, pSpindleEncoder);
+        dVe = dZAxisNewAddDist / pSG33->SPlanData.dTc;
 		if (pSpindleEncoder->cEncoderDir == pSG33->cTappingSpindleDir)
 		{
 			dZAxisNewAddDist = -1.0 * dZAxisNewAddDist;
@@ -2388,13 +2335,17 @@ int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEnc
 			pSG33->dCurrentSpeed = 0;
 			pSG33->bSpindleRevBegin = FALSE;
 			// zxr: 补偿无有效反馈时累计本对象计数，沿用原超时阈值
-			pSG33->unRevCompTimeOut++;
-			if (pSG33->unRevCompTimeOut > G33_TIMERANGE)
+            unTimeOut++;                   //记录异常次数
+            if (unTimeOut > G33_TIMERANGE) //异常连续次数超过1000次，主轴异常，停止
 			{
 				parseRunningError(pSG33->pSChannel->SRun.unGCodeLineNum,GCODE_ERROR_NUM154,9999);
 				return -3;
 			}
 			return -1;
+        }
+        else
+        {
+            unTimeOut = 0; //异常次数清零
 		}
 
 		//3.补偿阶段输出
@@ -2424,10 +2375,14 @@ int8 needReveComMove(struct _SSpindle* pSSpindle, struct G33* pSG33, struct SEnc
 #endif
 
 		//将标志位改为FALSE
+        double dZAxisNewAddDist; //新增距离
+        double dVe;
 		pSG33->bSpindleRevCompEndFirstTc = FALSE;
 
 		//1.对主轴反转补偿期间Z轴累积距离进行计算和记录
 		//（2022/8/8  设定累积距离正值方向为退刀方向，负值为攻丝方向）
+        dZAxisNewAddDist = calcZAxisNewAddDist(pSG33, pSpindleEncoder);
+        dVe = dZAxisNewAddDist / pSG33->SPlanData.dTc;
 		if (pSpindleEncoder->cEncoderDir == pSG33->cTappingSpindleDir)
 		{
 			dZAxisNewAddDist = -1.0 * dZAxisNewAddDist;
@@ -2653,18 +2608,6 @@ int8 motionSpindleReverseAndReturn(struct _SSpindle* pSSpindle, struct G33* pSG3
 
 	// zxr: 定转速或恒线速反转使能计时中且本拍无反馈时清零相关计数，避免合法等待误报154
 	// 有反馈时继续原随动和反向补偿，使能完成后恢复原超时判断
-	if (pSpindleEncoder->usDelta == 0 && pSSpindle->pSSpindleAxis != NULL &&
-		(pSSpindle->pSSpindleAxis->ucRunMode == SPINDLE_G97_MODE ||
-		 isG33ConstantSurfaceSpeed(pSSpindle->pSSpindleAxis->ucRunMode)) &&
-		pSSpindle->pSSpindleAxis->ucInpStatus == INP_OCCUPATION &&
-		pSSpindle->unEnableRunTime != 0 && pSSpindle->cStopError == 0 &&
-		!isSpindleStopping(pSSpindle))
-	{
-		pSG33->unFollowTimeOut = 0;
-		pSG33->unRevCompTimeOut = 0;
-		pSG33->dCurrentSpeed = 0;
-		return 1;
-	}
 
 	//2.先判断反转补偿距离是否为零
 	//2.1不需要反向补偿
@@ -2748,8 +2691,6 @@ int8 G33ResetInit(struct SChannel* pSChannel)
 	}
 	// zxr: 复位或报警停止收尾时清零各异常计数，即使当前指令类型已改写
 	pSChannel->SG33.unFollowTimeOut = 0;
-	pSChannel->SG33.unDirectionTimeOut = 0;
-	pSChannel->SG33.unRevCompTimeOut = 0;
 	//当当前指令类型为G33,将gG33中已加工头数清零
 	if (getBits(pSChannel->SPreProcess.unCommandType, CMD_MOTION_ADDR) == CMD_MOTION_G33)
 	{
@@ -2848,151 +2789,7 @@ int8 G33Action(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pS
   返 回 值：非负：停车随动距离；-1：参数或规划无效
   备    注：仅限位保护使用转速上界和额外周期、脉冲余量
 **************************************************/
-static double calcG33StopTravel(struct _SSpindle* pSpindle, const struct G33* pG33, bool bLimit)
-{
-    struct SPlan plan = {0};
-    struct SSingleAxis* pAxis;
-    uint8 physical;
-    double ratio = 1.0;
-    double count;
-    double travel;
-    double speed;
-    double factor;
-    double periods;
-    if (pSpindle == NULL || pSpindle->pSSpindleAxis == NULL ||
-        pSpindle->pSChannel != pG33->pSChannel)
-    {
-        return -1.0;
-    }
-    pAxis = pSpindle->pSSpindleAxis;
-    if (pAxis->ucAxis >= AXIS_NUM_MAX)
-    {
-        return -1.0;
-    }
-    physical = pG33->pSChannel->pMapAxisArray[pAxis->ucAxis];
-    if (physical >= AXIS_PHYSICS_NUM_MAX)
-    {
-        return -1.0;
-    }
-    // zxr: G96 的停车速度按恒线速和直径估算，不沿用前一段 G97 的固定转速。
-    if (!bLimit)
-    {
-        // zxr: 名义减速点使用进入本段时保存的转速，不采用限位保护的转速上界。
-        speed = pG33->dG33SpindleSpeed * DEGREE_OF_CIRCLE / 60000.0;
-    }
-    else if (isG33ConstantSurfaceSpeed(pAxis->ucRunMode))
-    {
-        uint8 follow = pSpindle->spindleFollowAxis;
-#if TURRET_AXIS_TEST == 1
-        VAL_STRUCT_TYPE occupied = pG33->pSChannel->SPreProcess.ucOccupideValStatus;
-#else
-        VAL_STRUCT_TYPE occupied = pG33->pSChannel->SPreProcess.ucLastValStatus;
-#endif
-        if (follow >= AXIS_NUM_MAX || !isfinite(pAxis->dLimitedSpindleSpeed) || pAxis->dLimitedSpindleSpeed < 0.0 ||
-            !isfinite(g_SSystemPara.SAxisPara[physical].dVmax) || g_SSystemPara.SAxisPara[physical].dVmax < 0.0)
-        {
-            return -1.0;
-        }
-        speed = min(pAxis->dLimitedSpindleSpeed, g_SSystemPara.SAxisPara[physical].dVmax);
-        // zxr: 仅当本段占用跟随轴且不移动它时，才按固定直径收紧限速上界。
-        if ((getbit(occupied & pG33->ucValStatus, follow)) && pG33->G33StartVector.dArray[follow] == 0.0)
-        {
-            double position;
-            if (getSingleAxisRealTimePoint(&position, follow, pG33->pSChannel->pMapAxisArray) != 1)
-            {
-                return -1.0;
-            }
-            double diameter = 2.0 * fabs(position - pG33->pSChannel->SRun.SCurrentOffset.dArray[follow]);
-            if (!isfinite(diameter) || !isfinite(pAxis->dFeedrate))
-            {
-                return -1.0;
-            }
-            // zxr: 与主轴恒线速规划采用相同的直径零值处理，结果单位为度/ms。
-            double target = fabs(pAxis->dFeedrate) * 1000.0 / (PI * (isZero(diameter) ? 2.0 * EPSINON : diameter)) * DEGREE_OF_CIRCLE;
-            speed = min(speed, target);
-        }
-    }
-    else
-    {
-        speed = getG97AbsSpindleSpeed(pSpindle) * DEGREE_OF_CIRCLE;
-    }
-    if (!isfinite(speed) || speed < 0.0 || !isfinite(pAxis->dCurrentSpeed) ||
-        !isfinite(g_SSystemPara.SAxisPara[physical].dVe) ||
-        g_SSystemPara.SAxisPara[physical].dVe < 0.0 ||
-        !isfinite(g_SSystemPara.SAxisPara[physical].dPulseToMm) ||
-        g_SSystemPara.SAxisPara[physical].dPulseToMm <= 0.0)
-    {
-        return -1.0;
-    }
-    if (bLimit)
-    {
-        speed = max(fabs(pAxis->dCurrentSpeed), speed);
-    }
-    // zxr: 停车只会降速；已切换或本段转速可能超过阈值时，才计入变减速影响。
-    bool mayChangeRate = pAxis->dSpindleSpeedForChangeAcc > 0 && pAxis->ucGearForChangeRate != 0 &&
-        (pAxis->bIsChangeAcc || speed * 60000.0 / DEGREE_OF_CIRCLE > pAxis->dSpindleSpeedForChangeAcc);
-    if (mayChangeRate)
-    {
-        // zxr: 停车中跨过变加速阈值会恢复原值，取两者较慢的减速度。
-        ratio = min(1.0, pAxis->ucGearForChangeRate / 100.0);
-    }
-    // zxr: 普通停车沿用主轴对象的规划周期，不以进给轴周期替代。
-    plan.dTc = pAxis->SPlanData.dTc;
-    plan.dVs = speed;
-    plan.dVe = min(speed, g_SSystemPara.SAxisPara[physical].dVe);
-    plan.dAcc = g_SSystemPara.dSysPlanSpindleAcc * ratio;
-    plan.dDec = g_SSystemPara.dSysPlanSpindleDec * ratio;
-    plan.ucAccVelPlanType = g_SSystemPara.SAxisPara[physical].ucAccVelPlanType;
-    plan.ucDecVelPlanType = g_SSystemPara.SAxisPara[physical].ucDecVelPlanType;
-    factor = getFactor(plan.ucDecVelPlanType);
-    if (!isfinite(plan.dTc) || plan.dTc <= 0.0 ||
-        !isfinite(plan.dAcc) || plan.dAcc <= 0.0 ||
-        !isfinite(plan.dDec) || plan.dDec <= 0.0)
-    {
-        return -1.0;
-    }
-    periods = 2.0 * factor * (speed - plan.dVe) / (plan.dDec * plan.dTc);
-    if (!isfinite(periods) || periods > 2147483646.0 ||
-        preparePlanningVelCombine(&plan, g_SSystemPara.SAxisPara[physical].dVeerDeltaVMax) != 1)
-    {
-        return -1.0;
-    }
-    count = max(1.0, (double)plan.unT5);
-    // zxr: 正常一毫秒周期下三种停车曲线单调且关于中点对称；右端离散和不超过梯形积分。
-    travel = (plan.dVs + plan.dVe) * 0.5 * count;
-    if (!bLimit)
-    {
-        // zxr: 名义减速点只取规划行程，不叠加限位保护的离散余量。
-        return travel * plan.dTc / DEGREE_OF_CIRCLE * fabs(pG33->dF * g_SSystemPara.dPercentageOfG33EnterLeadCorrection);
-    }
-    if (plan.dTc != 1.0)
-    {
-        // zxr: 非默认周期按实际速度多项式的各项绝对值求上界，不使用默认周期的对称性。
-        travel = (speed + fabs(plan.dDec) * count +
-            2.0 * fabs(plan.dDec) * count * plan.dTc * plan.dTc +
-            4.0 * fabs(plan.dDec) * count * plan.dTc * plan.dTc * plan.dTc / 3.0) * count;
-    }
-    if (mayChangeRate)
-    {
-        // zxr: 减速中最多恢复一次加速度；重启曲线的剩余行程不大于从原速度再停一次。
-        travel *= 2.0;
-    }
-    // zxr: 跨越减速点、递交停车请求及编码器读取各留一个周期，并覆盖主轴脉冲量化。
-    travel += 3.0 * speed + g_SSystemPara.SAxisPara[physical].dPulseToMm;
-    return travel / DEGREE_OF_CIRCLE * fabs(pG33->dF * g_SSystemPara.dPercentageOfG33EnterLeadCorrection);
-}
-
-/*************************************************
-  zxr: 检查 G33 刚性攻牙起终点及主轴减速随动冲程是否超出已使能软限位
-  函数名称：checkG33StartEndSoftLimit
-  函数功能：检查 G33 刚性攻牙起终点及减速随动冲程是否超出软限位
-  输入参数：pSSpindle，主轴对象；pSG33，攻牙对象；dStartupTarget，虚拟追赶累计目标
-  输出参数：无
-  返 回 值：0：通过；41~46：正限位；47~52：负限位；150/153：映射或参数无效
-  备    注：dStartupTarget为虚拟追赶累计目标，初始化时传0，启动前再次检查
-**************************************************/
-static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle, const struct G33* pSG33,
-    double dStartupTarget)
+static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle, const struct G33* pSG33)
 {
     SPointDouble SStartPoint;
     SPointDouble SEndPoint;
@@ -3011,65 +2808,19 @@ static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle, const struc
     }
 
     // zxr: 预检使用停车距离上界；减速点与实际攻入使用同一速度模式的算法。
+    if (pSSpindle != NULL)
     {
-        double dStop = calcG33StopTravel(pSSpindle, pSG33, TRUE);
-        double dDistance = pSG33->SPlanData.dDistance;
-        double dDecStart = dDistance;
-        struct SEncoder* pEncoder = pSG33->G33RotateAxis == AXIS_A
-            ? pSG33->pSChannel->pSSecondSpindleEncoder : pSG33->pSChannel->pSSpindleEncoder;
-        if (!isfinite(dStop) || dStop < 0.0 || !isfinite(dDistance) || dDistance < 0.0 ||
-            !isfinite(dStartupTarget) || dStartupTarget < 0.0 || pEncoder == NULL ||
-            pEncoder->usEncoderCirclePulseNum == 0)
+            double dEsti = calcSpindleDecZAxicSurpassLength(pSSpindle, (struct G33*)pSG33);
+        if (isfinite(dEsti) && dEsti > 0.0)
         {
-            return GCODE_ERROR_NUM153;
-        }
-        if (g_SSystemPara.bG33RecalDecPointFlag)
+            if (g_SSystemPara.bG33RecalDecPointFlag && dEsti >= 1.0)
         {
-            double dEsti;
-            if (isG33ConstantSurfaceSpeed(pSSpindle->pSSpindleAxis->ucRunMode))
-            {
-                dEsti = calcG33StopTravel(pSSpindle, pSG33, FALSE);
+                dSurpassLength = 1.0;
             }
             else
             {
-                uint8 ucRotate = pSG33->G33RotateAxis;
-                if (ucRotate >= AXIS_NUM_MAX || pSG33->pSChannel->pMapAxisArray[ucRotate] >= AXIS_PHYSICS_NUM_MAX)
-                {
-                    return GCODE_ERROR_NUM150;
+                dSurpassLength = dEsti;
                 }
-                uint8 ucPhysical = pSG33->pSChannel->pMapAxisArray[ucRotate];
-                double dDec = getSingleAxisDec(ucRotate, g_SSystemPara.SAxisPara[ucPhysical].ucDecVelPlanType,
-                    pSG33->pSChannel->pMapAxisArray);
-                double dVe = g_SSystemPara.SAxisPara[ucPhysical].dVeerDeltaVMax;
-                double dVs = getG97AbsSpindleSpeed(pSSpindle) * DEGREE_OF_CIRCLE;
-                double dTc = pSG33->SPlanData.dTc;
-                // zxr: 旧减速点估算会将周期转为整数，先拒绝无效值和周期溢出。
-                if (!isfinite(dDec) || dDec <= 0.0 || !isfinite(dVe) || dVe < 0.0 ||
-                    !isfinite(dTc) || dTc <= 0.0 ||
-                    !isfinite(2.0 * fabs(dVs - dVe) / (dDec * dTc)) ||
-                    2.0 * fabs(dVs - dVe) / (dDec * dTc) > 2147483646.0)
-                {
-                    return GCODE_ERROR_NUM153;
-                }
-                dEsti = calcSpindleDecZAxicSurpassLength(pSSpindle, (struct G33*)pSG33);
-            }
-            if (!isfinite(dEsti) || dEsti < 0.0)
-            {
-                return GCODE_ERROR_NUM153;
-            }
-            if (dEsti >= 1.0)
-            {
-                dDecStart = dDistance - dEsti + 1.0;
-            }
-        }
-        // zxr: 启动追赶结束前无法停车，累计目标与重算减速点取较远者。
-        // 同步窗口的向上取整再保留一个编码器计数，不能只核对名义终点。
-        dSurpassLength = max(0.0, max(dStartupTarget, dDecStart) + dStop - dDistance)
-            + fabs(pSG33->dF * g_SSystemPara.dPercentageOfG33EnterLeadCorrection) /
-                pEncoder->usEncoderCirclePulseNum;
-        if (!isfinite(dSurpassLength))
-        {
-            return GCODE_ERROR_NUM153;
         }
     }
 
@@ -3114,10 +2865,6 @@ static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle, const struc
         {
             double dVec = pSG33->G33StartVector.dArray[ucAxis];
             // zxr: 非法方向不能绕过停车距离的分轴限位检查。
-            if (!isfinite(dVec))
-            {
-                return GCODE_ERROR_NUM153;
-            }
             if (dVec > 0.0)
             {
                 dPeakPos += dVec * dSurpassLength;
@@ -3126,22 +2873,6 @@ static uint16 checkG33StartEndSoftLimit(struct _SSpindle* pSSpindle, const struc
             {
                 dPeakNeg += dVec * dSurpassLength;
             }
-        }
-
-        // zxr: 位置取整最多增加一个进给轴脉冲，按该轴实际脉冲当量保留余量。
-        if (!isfinite(g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm) ||
-            g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm <= 0.0 ||
-            !isfinite(dPeakPos) || !isfinite(dPeakNeg))
-        {
-            return GCODE_ERROR_NUM153;
-        }
-        if (dPeakPos > dStart)
-        {
-            dPeakPos += fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm);
-        }
-        if (dPeakNeg < dStart)
-        {
-            dPeakNeg -= fabs(g_SSystemPara.SAxisPara[ucPhysicalAxis].dPulseToMm);
         }
 
         // 正向软限位检查（检查起点、终点及正向冲程峰值）
@@ -3236,7 +2967,7 @@ int8 MotionG33(struct SInterpolationPre* pInterpPrePointer, struct _SSpindle* pS
 		}
 		// zxr: 进入刚性攻牙实际运动前检查起终点软限位（含主轴减速随动冲程）
 		{
-			uint16 usLimitError = checkG33StartEndSoftLimit(pSSpindle, pSG33, 0.0);
+			uint16 usLimitError = checkG33StartEndSoftLimit(pSSpindle, pSG33);
 			if (usLimitError != 0)
 			{
 				parseRunningError(pSG33->pSChannel->SRun.unGCodeLineNum, usLimitError, 9999);

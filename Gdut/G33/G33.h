@@ -128,9 +128,6 @@ struct G33
 	uint32 unFollowTimeOut;
 
 	// zxr: 本G33对象的连续方向异常计数，初始化与复位时清零
-	uint32 unDirectionTimeOut;
-	// zxr: 本G33对象的反转补偿无反馈计数，恢复反馈或复位时清零
-	uint32 unRevCompTimeOut;
 };
 
 
