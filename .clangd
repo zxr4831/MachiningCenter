@@ -1,0 +1,11 @@
+# 从本工程的 CMake 编译数据库读取头文件目录、宏定义和编译选项。
+CompileFlags:
+  CompilationDatabase: LocalDev/clangd
+  # 将原源码中 MSVC 接受的四类诊断按警告显示，让 clangd 完成全文件索引。
+  Add:
+    - -Wno-error=incompatible-function-pointer-types
+    - -Wno-error=implicit-function-declaration
+    - -Wno-error=return-mismatch
+    - -Wno-error=int-conversion
+Index:
+  Background: Build

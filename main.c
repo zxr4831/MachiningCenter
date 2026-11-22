@@ -98,6 +98,8 @@ int main(void)
     HANDLE IRQhandle;
     DWORD result = 4;
 
+    SetConsoleOutputCP(CP_UTF8); // 控制台按 UTF-8 显示，与工程编译编码一致。
+
     pWriteFid = fopen("./outputFile/test.txt", "w");
     if (!pWriteFid)
         return 1;

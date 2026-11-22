@@ -10,7 +10,7 @@
 
 入口为 `main.c`。后台循环调用 `GCodeRunLoopAPI()`，`PROCESST1()` 调用 `interruptFuncAPI()`，读取程序沿用 `GCodeTest.c`。
 
-默认 `resource/O0001.txt` 为 XYZ 基础程序，终点 X1、Y22、Z33。
+当前直槽从 X0、Y0、Z0 起步，下刀 F120、切削 F600，两层深度 Z−1／Z−2，终点 X10、Y20、Z5。配合 Φ6 平底刀，理论槽宽 6、总长 46、深 2 mm，已通过 VS 数值与 CIMCO 形状对照。
 
 ## 源码与预留位置
 
@@ -26,10 +26,17 @@
 
 `LocalDev/` 保存本地备份和验证资料，`.vscode/` 保存本机编辑器配置，均已忽略。历史测试、导出工具和过程说明集中在本机 `LocalDev/local-support/`。
 
-## 代码格式
+## 格式与跳转
 
 C/H 使用 UTF-8、CRLF、Microsoft／Allman 风格和 4 空格缩进。VS 编译采用 `/utf-8`。
-新增源码时同步 VS 与 CMake 清单。
+
+`.clangd` 读取 `LocalDev/clangd/compile_commands.json`，`CMakeLists.txt` 保留相同内核源码与编译参数。本机可运行 VS Code 任务“clangd：刷新编译数据库”。换机后，在具备 MSVC、CMake 和 Ninja 的开发者终端生成数据库。
+
+```powershell
+cmake -S . -B LocalDev/clangd -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+```
+
+启用 clangd 扩展后用 F12 跳转。增删源码时同步 VS 与 CMake 清单，并刷新数据库。
 
 ## 来源与对照
 
