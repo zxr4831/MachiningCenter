@@ -107,7 +107,7 @@ int main(void)
     GCODE_OPEN_FILE(0);
 
     g_ucNameType = 1;
-    strcpy(g_cName_C0, "0001"); // 按原方式读取 ./resource/O0001.txt。
+    strcpy(g_cName_C0, "0002"); // 按原方式读取 ./resource/O0002.txt。
 
     initMapArray();
     initEncoderMapArray();

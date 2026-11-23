@@ -6,11 +6,21 @@
 
 1. 用 Visual Studio 打开 `VS_Interpolation.sln`，选择 Debug 或 Release、x64，生成工程。
 2. 调试工作目录设为工程根目录，命令参数留空。
-3. 编辑 `resource/O0001.txt` 后运行。终端显示坐标和进给，`outputFile/test.txt` 保存周期、行号和 XYZ 指令坐标。
+3. 在 `main.c` 的 `g_cName_C0` 中选择程序编号，当前为 `0002`，读取 `resource/O0002.txt`。改为 `0001` 可复验原直槽。重新生成后运行，终端显示坐标和进给，`outputFile/test.txt` 保存周期、行号和 XYZ 指令坐标。
 
 入口为 `main.c`。后台循环调用 `GCodeRunLoopAPI()`，`PROCESST1()` 调用 `interruptFuncAPI()`，读取程序沿用 `GCodeTest.c`。
 
-当前直槽从 X0、Y0、Z0 起步，下刀 F120、切削 F600，两层深度 Z−1／Z−2，终点 X10、Y20、Z5。配合 Φ6 平底刀，理论槽宽 6、总长 46、深 2 mm，已通过 VS 数值与 CIMCO 形状对照。
+`O0001.txt` 直槽从 X0、Y0、Z0 起步，下刀 F120、切削 F600，两层深度 Z−1／Z−2，终点 X10、Y20、Z5。配合 Φ6 平底刀，理论槽宽 6、总长 46、深 2 mm，已通过 VS 数值与 CIMCO 形状对照。
+
+`O0002.txt` 综合验证 XY／XYZ 直线、两层圆角轮廓、G90/G91、正负 R 与非轴对齐 I/J 圆弧、半圆及整圆螺旋、G17/G18/G19，终点 X100、Y55、Z5。VS Debug／Release 的 52 段运动数值检查通过，最大几何偏差约 0.000828 mm。CIMCO 原程序与采样回放的最终形状及终点已按用户截图对照确认。使用 Φ6 平底刀、120×80×12 mm 毛坯，顶面 Z0。G18/G19 在毛坯上方验证刀路。
+
+本机对照资料按 `outputFile/cimco/程序案例/运行日期/` 保存。每次保留输入快照 `input.nc`、坐标 `test.txt`、`reference.nc`／`replay.nc`、两份同名 `.setup` 和 `validation.json`。中间记录归入 `LocalDev`，生成资料沿用 Git 忽略规则。
+
+以下转换命令仅用于已配置本地工具的本机，`LocalDev` 脚本未随 Git 分发。VS 重新生成并运行后执行，编号 1 用 `0001`，编号 2 用 `0002`。脚本自动归档并显示两份 NC 路径。可用 `-Executable .\x64\Debug\mc_cli.exe` 指定实际运行文件，省略时其来源记为未知。查看旧回放直接打开对应日期目录的 NC。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\LocalDev\local-support\tools\run_cimco_case.ps1 -Program 0002
+```
 
 ## 源码与预留位置
 
