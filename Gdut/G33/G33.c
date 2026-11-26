@@ -100,6 +100,7 @@
 #include "CTrajPlanning.h"
 #include "lookAhead.h"
 #include "Spindle.h"
+#include "SecondSpindle.h"
 #include "motionAPI.h"
 #include "ringbuff.h"
 #include "G0.h"

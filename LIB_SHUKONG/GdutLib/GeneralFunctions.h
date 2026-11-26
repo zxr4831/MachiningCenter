@@ -6,8 +6,10 @@
 
 #define EN_DEBUG 0 //开启debug   print输出
 
-#if STM32_MODE
+#ifndef min
 #define min(a, b) (((a) < (b)) ? (a) : (b)) //两个数取小值
+#endif
+#ifndef max
 #define max(a, b) (((a) > (b)) ? (a) : (b)) //两个数取大值
 #endif
 

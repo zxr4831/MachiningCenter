@@ -50,7 +50,7 @@ static volatile uint8 g_ucHandwheelSimRequestArray[CHANNEL_NUM_MAX];
 extern uint8 SpindleB;
 #endif
 #if !STM32_MODE
-uint8 out[30];  //企业的输出IO数组,与企业同名
+extern uint8 out[30]; //企业的输出IO数组,与企业同名（定义在 IOCommand.c）
 uint8 SpindleB; //企业手轮模式的名称,与企业同名
 #endif
 /*************************************************

@@ -103,7 +103,7 @@ void SG1LoadSysPara(struct SG1* pSG1)
     const uint8* ucMapArray; //映射
     if (pSG1 == NULL)
     {
-        return -1;
+        return;
     }
     //通过通道获取映射
     ucMapArray = pSG1->pSChannel->pMapAxisArray;
