@@ -1,0 +1,101 @@
+/**
+ * @file         : axis_interface.h
+ * @author       : zxr
+ * @brief        : SOEM EtherCAT 主站轴层极简统一接口 (7大标准接口)
+ */
+
+#ifndef __AXIS_INTERFACE_H
+#define __AXIS_INTERFACE_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/* 轴最大支持数（适配双轴/三轴） */
+#define AXIS_MAX_NUM 3
+
+/* zxr: 与当前 TIM3 的 1ms 周期对应，供保护限值换算及超周期统计共用。
+ * 此宏不会设置硬件定时器；以后修改 TIM3 周期时，须同步更新此值。 */
+#define AXIS_CYCLE_PERIOD_US 1000U
+
+    /* ==================== 7 大核心轴接口 ==================== */
+
+    /**
+     * @brief  总线与从站全自动初始化 (PHY链接检测、从站扫描、PDO映射、进入OP模式)
+     * @retval true: 初始化并进入 OP 成功, false: 初始化失败
+     */
+    bool Axis_SystemInit(void);
+
+    /**
+     * @brief  1ms 周期同步函数 (挂载于定时器中断: 收PDO -> 校验WKC -> 更新状态 -> CiA402非阻塞推进 -> 防冲幅值保护 -> 发PDO)
+     */
+    void Axis_SyncLoop(void);
+
+    /**
+     * @brief  轴使能/去使能控制 (非阻塞请求)
+     * @param  axis_id: 轴索引 (0, 1, 2...)
+     * @param  enable:  true: 请求使能, false: 请求去使能
+     */
+    void Axis_SetEnable(uint8_t axis_id, bool enable);
+
+    /**
+     * @brief  下发轴目标位置 (脉冲单位，内置使能跟踪与步进限幅保护)
+     * @param  axis_id:           轴索引
+     * @param  target_pos_pulse:  目标脉冲绝对位置
+     */
+    void Axis_SetTargetPos(uint8_t axis_id, int32_t target_pos_pulse);
+
+    /**
+     * @brief  读取轴实际编码器位置 (脉冲单位)
+     * @param  axis_id: 轴索引
+     * @retval int32_t: 编码器当前实际脉冲位置
+     */
+    int32_t Axis_GetActualPos(uint8_t axis_id);
+
+    /**
+     * @brief  查询轴是否处于就绪运行状态 (CiA402 处于 Operation Enabled 且无故障)
+     * @param  axis_id: 轴索引
+     * @retval true: 已就绪可接收插补脉冲, false: 未就绪
+     */
+    bool Axis_IsReady(uint8_t axis_id);
+
+    /**
+     * @brief  轴故障复位请求 (触发 20ms 非阻塞复位脉冲)
+     * @param  axis_id: 轴索引
+     */
+    void Axis_ResetFault(uint8_t axis_id);
+    void Axis_CancelReset(uint8_t axis_id);
+
+    /* ==================== 辅助状态与实验指标接口 ==================== */
+
+    bool Axis_IsAllReady(void);
+    uint16_t Axis_GetStatusWord(uint8_t axis_id);
+    int32_t Axis_GetFollowingError(uint8_t axis_id);
+    bool Axis_IsFault(uint8_t axis_id);
+    bool Axis_IsResetting(uint8_t axis_id);
+    /* zxr: 轴循环入口到收发结束的执行耗时，包含期间被其他中断抢占的时间。 */
+    uint32_t Axis_GetCycleTimeUs(void);
+    uint32_t Axis_GetMaxCycleTimeUs(void);
+    /* zxr: 相邻 Axis_SyncLoop 入口间隔，正常约 1000us；前两次调用形成首个间隔。
+     * 尚无间隔时返回 0；各项独立读取，统计在 Axis_SystemInit 时重置。 */
+    uint32_t Axis_GetCycleIntervalUs(void);
+    uint32_t Axis_GetMinCycleIntervalUs(void);
+    uint32_t Axis_GetMaxCycleIntervalUs(void);
+    /* zxr: 执行耗时达到或超过 1000us 的次数，仅统计，不触发停机。 */
+    uint32_t Axis_GetCycleOverrunCount(void);
+    uint32_t Axis_GetLostWkcCount(void);
+    bool Axis_IsBusError(void);
+    bool Axis_IsFeedbackValid(void);
+    uint8_t Axis_GetActiveCount(void);
+    bool Axis_IsAvailable(uint8_t axis_id);
+    void Axis_SetSafetyLimits(uint8_t axis_id, int32_t max_step_limit, int32_t max_following_err_limit);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __AXIS_INTERFACE_H */

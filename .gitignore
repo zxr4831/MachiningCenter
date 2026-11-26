@@ -62,3 +62,10 @@ htmlcov/
 
 # 本机 CIMCO 转换窗口入口
 /CIMCO验证.cmd
+
+# Master STM32CubeIDE 构建输出与本地缓存
+/Master/Debug/
+/Master/Release/
+/Master/.cache/
+/Master/.vscode/
+/Master/compile_commands.json
