@@ -72,7 +72,6 @@
 <listOptionValue builtIn="false" value="../../CODE/IOCommand"/>
 <listOptionValue builtIn="false" value="../../CODE/list"/>
 <listOptionValue builtIn="false" value="../../CODE/lookAhead"/>
-<listOptionValue builtIn="false" value="../../CODE/Machine"/>
 <listOptionValue builtIn="false" value="../../CODE/manageMem"/>
 <listOptionValue builtIn="false" value="../../CODE/Motion"/>
 <listOptionValue builtIn="false" value="../../CODE/RingBuff"/>
@@ -216,7 +215,6 @@
 <listOptionValue builtIn="false" value="../../CODE/IOCommand"/>
 <listOptionValue builtIn="false" value="../../CODE/list"/>
 <listOptionValue builtIn="false" value="../../CODE/lookAhead"/>
-<listOptionValue builtIn="false" value="../../CODE/Machine"/>
 <listOptionValue builtIn="false" value="../../CODE/manageMem"/>
 <listOptionValue builtIn="false" value="../../CODE/Motion"/>
 <listOptionValue builtIn="false" value="../../CODE/RingBuff"/>

@@ -29,8 +29,7 @@ powershell -ExecutionPolicy Bypass -File .\LocalDev\local-support\tools\run_cimc
 | `CODE/` | 译码、通道、刀补、前瞻和速度规划 |
 | `Gdut/` | 运行 API、系统参数、坐标和插补 |
 | `LIB_SHUKONG/` | 共享类型与公共函数 |
-| `Master/` | 用户预留的模块化 SOEM 主站位置 |
-| `CODE/Machine/` | 后续主站与内核衔接位置 |
+| `Master/` | STM32H743 板级宿主工程与模块化 SOEM 主站（`Core/Src/main.c`、`tim.c` 直接调用数控与主站 API） |
 
 当前采用单通道直角坐标 XYZ，支持 G0/G1/G2/G3、G4、G17～G21、G40、G54～G59、G90/G91、G94 和 M0/M1/M2/M30。主轴、刀长刀径补偿、换刀、孔循环及硬件联调待逐项实现。
 
