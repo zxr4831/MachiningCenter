@@ -1078,10 +1078,8 @@ void interruptFuncAPI(uint8 ucChannelNum)
 #if ERROR_COMP_TYPE == TWOWAY_SCREW_COMP //双向螺距误差补偿  在此处计算脉冲  主轴暂时没有补偿
     BilateralScrewComp(&g_SChannel[ucChannelNum].SRun, AXIS_NUM_MAX, g_SChannel[ucChannelNum].pMapAxisArray);
 #endif // ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
-#if !MC_PROFILE_XYZ
     calculatePWMValue(&g_SChannel[ucChannelNum].SRun, g_SChannel[ucChannelNum].pMapAxisArray,
-                      g_SChannel[ucChannelNum].pPWMMapAxisArray, TRUE); //计算PWM值
-#endif // XYZ 总线配置发布位置目标，PWM 时序由对应脉冲输出配置处理。
+                      g_SChannel[ucChannelNum].pPWMMapAxisArray, TRUE); // 发布总线轴增量并计算脉冲轴PWM值
 }
 
 /*************************************************
@@ -1095,13 +1093,11 @@ void interruptFuncAPI(uint8 ucChannelNum)
 void interruptFuncLoopAPI()
 {
     int i;
-    //对于总线型不用进行换向处理，脉冲型需要
+    //仅脉冲轴进行换向处理，总线轴在函数内部跳过
     for (i = 0; i < CHANNEL_NUM_MAX; i++)
     {
-        interruptFuncAPI(i); //中断服务函数，计算脉冲值
-#if !MC_PROFILE_XYZ
+        interruptFuncAPI(i);        //中断服务函数，计算脉冲值
         isMotionChangeDirection(i); //判断轴换向，且修改轴脉冲
-#endif
     }
 }
 

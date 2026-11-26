@@ -1377,6 +1377,8 @@ extern uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX]; //各个轴发送脉冲的
 
 extern int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; //各个轴发送的脉冲数
 
+extern int16 g_sBusAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; // 总线轴本拍指令增量，按物理轴号索引，非总线轴槽位恒为0
+
 extern int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX]; //各个轴的运行方向 //增加2026.2.7
 
 extern struct SEncoder g_SEncoder[ENCODER_NUM_MAX]; //手轮是定时器4，数组的最后一个

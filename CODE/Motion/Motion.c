@@ -1274,9 +1274,29 @@ static bool isResetSpindleKept(const struct SChannel* pSChannel, uint8 ucLogical
             (pSecondAxis != NULL && pSecondAxis->ucAxis == ucLogicalAxis && pSecondAxis->ucRunMode != SINGLEAXIS_MODE));
 }
 
+/* 判断逻辑轴是否走总线输出：XYZ 加工中心仅 XYZ 走总线，主轴及后续刀库脉冲轴仍走 PWM。 */
+static bool isBusAxis(uint8 ucLogicalAxis)
+{
+#if MC_PROFILE_XYZ
+    return ucLogicalAxis == AXIS_X || ucLogicalAxis == AXIS_Y || ucLogicalAxis == AXIS_Z;
+#else
+    (void)ucLogicalAxis;
+    return FALSE;
+#endif
+}
+
+/* 清空总线和脉冲输出全局数组，确保多轴校验失败时不残留部分通道增量。 */
+static void clearOutputArrays(void)
+{
+    memset(g_usReloadValue, 0, sizeof(g_usReloadValue));
+    memset(g_usCompareValue, 0, sizeof(g_usCompareValue));
+    memset(g_sAxisDeltaPulse, 0, sizeof(g_sAxisDeltaPulse));
+    memset(g_sBusAxisDeltaPulse, 0, sizeof(g_sBusAxisDeltaPulse));
+}
+
 /*************************************************
   函数名称：calculatePWMValue()
-  函数功能  计算重装载值 和 比较值 保存到数组中
+  函数功能  发布总线轴本拍增量，并计算脉冲轴重装载值与比较值保存到数组中
   输入参数：
   输出参数：
   返 回 值:
@@ -1286,18 +1306,72 @@ void calculatePWMValue(struct _SRun* pSRun, const uint8* ucAxisMap, const uint8*
 {
     int8 cCounter;
     int32 nPulseValue;
+    int16 sBusPulse[AXIS_PHYSICS_NUM_MAX] = {0};
+    bool bBusAssigned[AXIS_PHYSICS_NUM_MAX] = {FALSE};
+    uint16 usPwmReload[AXIS_PHYSICS_NUM_MAX] = {0};
+    uint16 usPwmCompare[AXIS_PHYSICS_NUM_MAX] = {0};
+    int16 sPwmDeltaPulse[AXIS_PHYSICS_NUM_MAX] = {0};
+    bool bPwmSlotAssigned[AXIS_PHYSICS_NUM_MAX] = {FALSE};
+    bool bPhysicalAssigned[AXIS_PHYSICS_NUM_MAX] = {FALSE};
+
+    if (pSRun == NULL || pSRun->pSChannel == NULL || ucAxisMap == NULL)
+    {
+        return;
+    }
+
     if (pSRun->pSChannel->ucChannelNum == 0) //陈敏聪	2023/9/20	通道0运行该函数时对数组进行初始化
     {
-        memset(g_usCompareValue, 0, sizeof(g_usCompareValue));
-        memset(g_sAxisDeltaPulse, 0, sizeof(g_sAxisDeltaPulse));
+        clearOutputArrays();
     }
 
     for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
     {
-        if (ucAxisMap[cCounter] >= AXIS_PHYSICS_NUM_MAX)
+        uint8 ucPhysicalAxis = ucAxisMap[cCounter];
+        if (isBusAxis((uint8)cCounter))
+        {
+            if (ucPhysicalAxis == AXIS_NULL && pSRun->sAxisDeltaPulse[cCounter] == 0)
+            {
+                continue;
+            }
+            if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX || bPhysicalAssigned[ucPhysicalAxis])
+            {
+                clearOutputArrays();
+                parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+                return;
+            }
+#if ERROR_COMP_TYPE == SCREW_AND_REVCLEARANCE //双向螺距误差补偿  在此处计算脉冲  主轴暂时没有补偿
+            if (isCompFlag)                   //补偿
+            {
+                // zxr: 复位、急停时保持旧补偿；复位保留的主轴仍按原流程运行
+                if (pSRun->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP ||
+                    (pSRun->pSChannel->ucChannelStatus == SYS_RESET && !isResetSpindleKept(pSRun->pSChannel, cCounter)))
+                {
+                    holdRevCompensationAPI(ucPhysicalAxis);
+                }
+                else
+                {
+                    pSRun->sAxisDeltaPulse[cCounter] += getCompensationPulseAPI(
+                        ucPhysicalAxis, nSgn(pSRun->sAxisDeltaPulse[cCounter])); //反向间隙误差补偿
+                }
+            }
+#endif
+            bPhysicalAssigned[ucPhysicalAxis] = TRUE;
+            bBusAssigned[ucPhysicalAxis] = TRUE;
+            sBusPulse[ucPhysicalAxis] = pSRun->sAxisDeltaPulse[cCounter];
+            continue;
+        }
+
+        if (ucPhysicalAxis >= AXIS_PHYSICS_NUM_MAX)
         {
             continue;
         }
+        if (bPhysicalAssigned[ucPhysicalAxis])
+        {
+            clearOutputArrays();
+            parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+            return;
+        }
+        bPhysicalAssigned[ucPhysicalAxis] = TRUE;
 
         if (!(pSRun->pSChannel->SSpindle.cSpindleClampStatus == STATUS_UNCLAMPED ||
               pSRun->pSChannel->SSpindle.cSpindleClampStatus == STATUS_GET_CLAMP_INSTRUCTION) &&
@@ -1307,7 +1381,6 @@ void calculatePWMValue(struct _SRun* pSRun, const uint8* ucAxisMap, const uint8*
             {
                 parseRunningError(9999, GCODE_ERROR_NUM148, 9999);
                 pSRun->sAxisDeltaPulse[cCounter] = 0;
-                g_sAxisDeltaPulse[ucAxisMap[cCounter]] = pSRun->sAxisDeltaPulse[cCounter];
             }
         }
 
@@ -1318,80 +1391,69 @@ void calculatePWMValue(struct _SRun* pSRun, const uint8* ucAxisMap, const uint8*
             if (pSRun->pSChannel->ucChannelStatus == SYS_EMERGENCY_STOP ||
                 (pSRun->pSChannel->ucChannelStatus == SYS_RESET && !isResetSpindleKept(pSRun->pSChannel, cCounter)))
             {
-                holdRevCompensationAPI(ucAxisMap[cCounter]);
+                holdRevCompensationAPI(ucPhysicalAxis);
             }
             else
             {
-                pSRun->sAxisDeltaPulse[cCounter] += getCompensationPulseAPI(
-                    ucAxisMap[cCounter], nSgn(pSRun->sAxisDeltaPulse[cCounter])); //反向间隙误差补偿
+                pSRun->sAxisDeltaPulse[cCounter] +=
+                    getCompensationPulseAPI(ucPhysicalAxis, nSgn(pSRun->sAxisDeltaPulse[cCounter])); //反向间隙误差补偿
             }
         }
-#endif                                             // ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
-        if (pSRun->sAxisDeltaPulse[cCounter] != 0) //脉冲数大于0
+#endif // ERROR_COMP_TYPE == TWOWAY_SCREW_COMP
+
+        if (ucPWMAxisMap == NULL)
         {
-            //计算重装载值ARR
-            g_usReloadValue[ucAxisMap[cCounter]] = 50000000 / (abs(pSRun->sAxisDeltaPulse[cCounter]) * 1000) - 1;
-            //计算比较值CCR
-            g_usCompareValue[ucAxisMap[cCounter]] = g_usReloadValue[ucAxisMap[cCounter]] / 2;
-            g_sAxisDeltaPulse[ucAxisMap[cCounter]] = pSRun->sAxisDeltaPulse[cCounter];
+            clearOutputArrays();
+            parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+            return;
         }
-        else if (pSRun->pSChannel->ucChannelNum == 0 &&
-                 pSRun->sAxisDeltaPulse[cCounter] ==
-                     0) //如果脉冲为0，且为通道0，对各个轴发送的脉冲值进行初始化为0	//陈敏聪	2023/9/18
+
         {
-            g_usCompareValue[ucAxisMap[cCounter]] = 0; //不输出脉冲
-            g_sAxisDeltaPulse[ucAxisMap[cCounter]] = pSRun->sAxisDeltaPulse[cCounter];
+            uint8 ucOutput = ucPWMAxisMap[ucPhysicalAxis];
+            if (ucOutput >= AXIS_PHYSICS_NUM_MAX)
+            {
+                clearOutputArrays();
+                parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+                return;
+            }
+            if (bPwmSlotAssigned[ucOutput])
+            {
+                clearOutputArrays();
+                parseRunningError(pSRun->unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+                return;
+            }
+            bPwmSlotAssigned[ucOutput] = TRUE;
+            if (pSRun->sAxisDeltaPulse[cCounter] != 0) //脉冲数大于0
+            {
+                //计算重装载值ARR
+                usPwmReload[ucOutput] = 50000000 / (abs(pSRun->sAxisDeltaPulse[cCounter]) * 1000) - 1;
+                //计算比较值CCR
+                usPwmCompare[ucOutput] = usPwmReload[ucOutput] / 2;
+                sPwmDeltaPulse[ucOutput] = pSRun->sAxisDeltaPulse[cCounter];
+            }
         }
     }
 
-    uint16 g_usTempCompareValue[AXIS_PHYSICS_NUM_MAX]; //2025.10.31 熊骏
-    uint16 g_usTempReloadValue[AXIS_PHYSICS_NUM_MAX];
-    int16 g_sTempAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX];
-    for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
+    for (cCounter = 0; cCounter < AXIS_PHYSICS_NUM_MAX; cCounter++)
     {
-        g_usTempCompareValue[cCounter] = g_usCompareValue[cCounter];
-        g_usTempReloadValue[cCounter] = g_usReloadValue[cCounter];
-        g_sTempAxisDeltaPulse[cCounter] = g_sAxisDeltaPulse[cCounter];
-        g_usCompareValue[cCounter] = 0;
-        g_usReloadValue[cCounter] = 0;
-        g_sAxisDeltaPulse[cCounter] = 0;
-    }
-    for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
-    {
-        if (ucPWMAxisMap[cCounter] >= AXIS_PHYSICS_NUM_MAX)
+        if (bBusAssigned[cCounter])
         {
-            continue;
+            g_sBusAxisDeltaPulse[cCounter] = sBusPulse[cCounter];
         }
-        g_usCompareValue[ucPWMAxisMap[cCounter]] = g_usTempCompareValue[cCounter];
-        g_usReloadValue[ucPWMAxisMap[cCounter]] = g_usTempReloadValue[cCounter];
-        g_sAxisDeltaPulse[ucPWMAxisMap[cCounter]] = g_sTempAxisDeltaPulse[cCounter];
-    }
-
-    /*修改2026.2.7 从企业库转移到学校库，增加电机方向计算*/
-    for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
-    {
-        if (ucPWMAxisMap[cCounter] >= AXIS_PHYSICS_NUM_MAX)
+        if (bPwmSlotAssigned[cCounter])
         {
-            continue;
+            g_usReloadValue[cCounter] = usPwmReload[cCounter];
+            g_usCompareValue[cCounter] = usPwmCompare[cCounter];
+            g_sAxisDeltaPulse[cCounter] = sPwmDeltaPulse[cCounter];
+            if (g_sAxisDeltaPulse[cCounter] != 0)
+            {
+                g_cMotionDirection[cCounter] =
+                    (g_sAxisDeltaPulse[cCounter] * g_SSystemPara.ucMotorphase[cCounter]) > 0 ? 0 : 1; //0为正转 1为反转
+            }
+            nPulseValue = abs((int32)g_sAxisDeltaPulse[cCounter]);
+            nPulseValue = nPulseValue > 1001 ? 0 : nPulseValue;
+            g_usCounterValue[cCounter] = 50000 - usTimeComp[nPulseValue]; //计算CNT
         }
-        if (g_sAxisDeltaPulse[ucPWMAxisMap[cCounter]] != 0)
-        {
-            g_cMotionDirection[ucPWMAxisMap[cCounter]] =
-                (g_sAxisDeltaPulse[ucPWMAxisMap[cCounter]] * g_SSystemPara.ucMotorphase[ucPWMAxisMap[cCounter]]) > 0
-                    ? 0
-                    : 1; //0为正转 1为反转
-        }
-    }
-
-    for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
-    {
-        if (ucPWMAxisMap[cCounter] >= AXIS_PHYSICS_NUM_MAX)
-        {
-            continue;
-        }
-        nPulseValue = abs((int32)g_sAxisDeltaPulse[ucPWMAxisMap[cCounter]]);
-        nPulseValue = nPulseValue > 1001 ? 0 : nPulseValue;
-        g_usCounterValue[ucPWMAxisMap[cCounter]] = 50000 - usTimeComp[nPulseValue]; //计算CNT
     }
 }
 
@@ -1455,8 +1517,8 @@ bool isMotionChangeDirection(uint8 ucChannelNum)
     }
     for (cCounter = 0; cCounter < AXIS_NUM_MAX; cCounter++)
     {
-        //跳过无效轴
-        if (ucMapArray[cCounter] >= AXIS_PHYSICS_NUM_MAX)
+        //跳过总线轴与无效轴
+        if (isBusAxis((uint8)cCounter) || ucMapArray[cCounter] >= AXIS_PHYSICS_NUM_MAX)
         {
             continue;
         }
@@ -2996,25 +3058,36 @@ int8 channelStopToIDLE(struct SChannel* pSChannel)
     return 1;
 }
 
-/* 复位第 1 步：本拍减速脉冲以及上一拍提交到仿真输出槽的值均为零才可收尾。
- * calculatePWMValue 每拍用物理轴到 PWM 槽的映射更新全局数组；VS 没有硬件待发帧。 */
+/* 复位第 1 步：本拍减速脉冲以及上一拍提交到全局输出槽的值均为零才可收尾。
+ * 总线轴按物理轴检查总线增量槽；脉冲轴按对应的 PWM 槽检查脉冲与比较值。 */
 static bool isResetPulseOutputIdle(const struct SChannel* pSChannel)
 {
     uint8 ucAxis;
-    if (pSChannel->pMapAxisArray == NULL || pSChannel->pPWMMapAxisArray == NULL)
+    if (pSChannel->pMapAxisArray == NULL)
         return FALSE;
 
     for (ucAxis = 0; ucAxis < AXIS_NUM_MAX; ucAxis++)
     {
         uint8 ucSource = pSChannel->pMapAxisArray[ucAxis];
-        uint8 ucOutput;
         if (ucSource >= AXIS_PHYSICS_NUM_MAX || isResetSpindleKept(pSChannel, ucAxis))
             continue;
         if (pSChannel->SRun.sAxisDeltaPulse[ucAxis] != 0)
             return FALSE;
-        ucOutput = pSChannel->pPWMMapAxisArray[ucSource];
-        if (ucOutput < AXIS_PHYSICS_NUM_MAX && (g_sAxisDeltaPulse[ucOutput] != 0 || g_usCompareValue[ucOutput] != 0))
-            return FALSE;
+        if (isBusAxis(ucAxis))
+        {
+            if (g_sBusAxisDeltaPulse[ucSource] != 0)
+                return FALSE;
+        }
+        else
+        {
+            uint8 ucOutput;
+            if (pSChannel->pPWMMapAxisArray == NULL)
+                return FALSE;
+            ucOutput = pSChannel->pPWMMapAxisArray[ucSource];
+            if (ucOutput < AXIS_PHYSICS_NUM_MAX &&
+                (g_sAxisDeltaPulse[ucOutput] != 0 || g_usCompareValue[ucOutput] != 0))
+                return FALSE;
+        }
     }
     return TRUE;
 }

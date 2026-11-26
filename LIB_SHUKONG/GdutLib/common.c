@@ -18,6 +18,8 @@ uint16 g_usCounterValue[AXIS_PHYSICS_NUM_MAX]; //各个轴发送脉冲的计数�
 
 int16 g_sAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; //各个轴发送的脉冲数
 
+int16 g_sBusAxisDeltaPulse[AXIS_PHYSICS_NUM_MAX]; // 总线轴本拍指令增量，按物理轴号索引，非总线轴槽位恒为0
+
 int8 g_cMotionDirection[AXIS_PHYSICS_NUM_MAX]; //各个轴的运行方向 //增加2026.2.7
 
 struct SEncoder g_SEncoder[ENCODER_NUM_MAX]; //编码器结构体
