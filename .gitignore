@@ -69,3 +69,4 @@ htmlcov/
 /Master/.cache/
 /Master/.vscode/
 /Master/compile_commands.json
+/Master/*.launch

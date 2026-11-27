@@ -21,9 +21,15 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-#include "app_soem.h"
 #include "axis_interface.h"  /* zxr */
 #include "machine_control.h" /* zxr: 独立主站的整组轴服务入口。 */
+
+/* 解除 <stdbool.h> 的 bool 宏定义，避免与数控内核 common.h 的 typedef signed char bool 冲突。 */
+#undef bool
+#include "Channel.h"
+#include "ErrorFunction.h"
+#include "RunAPI.h"
+#include "common.h"
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;
@@ -108,7 +114,7 @@ void MX_TIM3_Init(void)
     /* USER CODE END TIM3_Init 2 */
 }
 
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *tim_baseHandle)
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
 {
 
     if (tim_baseHandle->Instance == TIM2)
@@ -141,7 +147,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *tim_baseHandle)
     }
 }
 
-void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *tim_baseHandle)
+void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 {
 
     if (tim_baseHandle->Instance == TIM2)
@@ -175,22 +181,90 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *tim_baseHandle)
 }
 
 /* USER CODE BEGIN 1 */
+extern uint32 timeji;
+extern volatile uint8_t g_nc_running;
+extern volatile uint8_t g_nc_master_fault_reported;
+extern volatile uint32_t g_nc_cycle_counter;
+
+/* zxr: 监控主站收发加数控插补的整拍总耗时（微秒）。 */
+volatile uint32_t g_nc_total_cycle_us = 0;
+volatile uint32_t g_nc_max_total_cycle_us = 0;
+
 /**
  * @brief  定时器中断回调函数
  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
     if (htim->Instance == TIM3) /* zxr: TIM2 不再依靠中断累计秒数。 */
     {
-        // HAL_GPIO_WritePin(TIM_DEBUG_GPIO_Port, TIM_DEBUG_Pin, GPIO_PIN_SET);
+        uint32_t begin = get_us();
 
-        // EtherCAT 周期性交换数据
-        MachineControl_Cycle(); /* zxr: 内部唯一一次Axis_SyncLoop；本工程不生成运动轨迹。 */
+        // 1. EtherCAT 周期性交换数据与整组安全检查
+        MachineControl_Cycle();
 
-        // HAL_GPIO_WritePin(TIM_DEBUG_GPIO_Port, TIM_DEBUG_Pin, GPIO_PIN_RESET);
+        // 2. 整组就绪时推进一拍数控插补并提交下拍总线增量；异常时通知数控侧停机
+        if (g_nc_running != 0U)
+        {
+            if (MachineControl_CanStep())
+            {
+                if (isErrorHasBeenWritten() == TRUE)
+                {
+                    g_nc_running = 0U;
+                }
+                else if (g_SChannel[0].ucChannelStatus == SYS_IDLE &&
+                         g_SChannel[0].SSpindle.pSSpindleAxis->ucInpStatus == INP_FINISHED)
+                {
+                    g_nc_running = 0U;
+                }
+                else
+                {
+                    int32_t bus_delta[MACHINE_PHYSICAL_AXIS_COUNT] = {0};
+                    int i;
+
+                    interruptFuncAPI(0);
+                    timeji++;
+                    machineTimerInterp(0);
+                    g_nc_cycle_counter++;
+
+                    for (i = 0; i < MACHINE_PHYSICAL_AXIS_COUNT && i < AXIS_PHYSICS_NUM_MAX; i++)
+                    {
+                        bus_delta[i] = (int32_t)g_sBusAxisDeltaPulse[i];
+                    }
+
+                    if (!MachineControl_SubmitStep(bus_delta))
+                    {
+                        g_nc_running = 0U;
+                        if (g_nc_master_fault_reported == 0U)
+                        {
+                            g_nc_master_fault_reported = 1U;
+                            parseRunningError(g_SChannel[0].SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+                        }
+                    }
+                }
+            }
+            else if (MachineControl_GetState() != MC_STATE_READY)
+            {
+                g_nc_running = 0U;
+                if (g_nc_master_fault_reported == 0U)
+                {
+                    g_nc_master_fault_reported = 1U;
+                    parseRunningError(g_SChannel[0].SPreProcess.unGCodeLineNum, GCODE_ERROR_NUM150, 9999);
+                }
+            }
+        }
+
+        uint32_t elapsed = (uint32_t)(get_us() - begin);
+        g_nc_total_cycle_us = elapsed;
+        if (elapsed > g_nc_max_total_cycle_us)
+        {
+            g_nc_max_total_cycle_us = elapsed;
+        }
     }
 }
 
 /* zxr: 直接读硬件计数；用 uint32_t 差值计算耗时，可跨一次计数回绕。 */
-uint32_t get_us(void) { return TIM2->CNT; }
+uint32_t get_us(void)
+{
+    return TIM2->CNT;
+}
 /* USER CODE END 1 */

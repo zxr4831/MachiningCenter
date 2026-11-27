@@ -25,8 +25,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 
-#include "app_soem.h"
 #include "app_usart.h"
 #include "axis_interface.h" /* zxr */
 #include "ethernet_test.h"
@@ -40,6 +40,19 @@
 
 #include "ethernet.h"
 #include "mpu.h"
+
+/* 解除 <stdbool.h> 的 bool 宏定义，避免与数控内核 common.h 的 typedef signed char bool 冲突。 */
+#undef bool
+#include "Channel.h"
+#include "ErrorFunction.h"
+#include "Gcode.h"
+#include "Motion.h"
+#include "RunAPI.h"
+#include "SysParaAPI.h"
+#include "ToolCompensation.h"
+#include "common.h"
+#include "lookAhead.h"
+#include "toolAxis.h"
 
 /* USER CODE END Includes */
 
@@ -60,7 +73,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+/* 满足 CTrajPlanning.c / toolAxis.c 中 extern FILE* pWriteFid 的链接符号；板端不写桌面文件。 */
+FILE* pWriteFid = NULL;
+extern uint32 timeji;
 
+/* zxr: CubeIDE 现场表达式调试控制：g_nc_enable_cmd(1=使能,2=去使能)、g_nc_start_cmd(1=启动)、g_nc_reset_cmd(1=复位)，消费后清零。 */
+volatile uint32_t g_nc_enable_cmd = 0;
+volatile uint32_t g_nc_start_cmd = 0;
+volatile uint32_t g_nc_reset_cmd = 0;
+volatile uint8_t g_nc_running = 0;
+volatile uint8_t g_nc_master_fault_reported = 0;
+volatile uint32_t g_nc_cycle_counter = 0;
+static uint8_t s_nc_reset_pending = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +95,87 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/* 内置纯 XY 慢速测试程序 "0001"：F60 (1 mm/s) 按 0.001 mm/pulse 对应 1 pulse/ms，远低于主站 16 pulse/ms 保护限值。 */
+static const char* const s_xy_box_program[] = {
+    "G21 G17 G90 G94\n", "G54\n", "G01 X5 Y0 F60\n", "G01 X5 Y5 F60\n", "G01 X0 Y5 F60\n", "G01 X0 Y0 F60\n", "M30\n",
+};
 
+int ncEmbeddedGetProgramLine(const char* pName, uint32 unTargetLineNum, char* pOutBuf, uint32 unBufSize)
+{
+    uint32 line_count = (uint32)(sizeof(s_xy_box_program) / sizeof(s_xy_box_program[0]));
+    if (pName == NULL || pOutBuf == NULL || unBufSize == 0U)
+    {
+        return -1;
+    }
+    if (strcmp(pName, "0001") != 0 && strcmp(pName, "O0001") != 0)
+    {
+        return -1;
+    }
+    if (unTargetLineNum >= line_count)
+    {
+        return 0;
+    }
+
+    strncpy(pOutBuf, s_xy_box_program[unTargetLineNum], (size_t)(unBufSize - 1U));
+    pOutBuf[unBufSize - 1U] = '\0';
+    return 1;
+}
+
+static void ncInitKernel(void)
+{
+    struct SEncoder* pEncoderArrays[ENCODER_NUM_MAX];
+    int i;
+
+    g_nc_running = 0U;
+    g_nc_master_fault_reported = 0U;
+    g_nc_cycle_counter = 0U;
+    timeji = 0U;
+    g_ucNameType = 1U;
+
+    initMapArray();
+    initEncoderMapArray();
+    initSystemPara();
+    initAxisPara();
+
+    for (i = 0; i < ENCODER_NUM_MAX; i++)
+    {
+        pEncoderArrays[i] = (g_SSystemPara.ucEncoderMapArray[0][i] == ENCODER_NULL ||
+                             g_SSystemPara.ucEncoderMapArray[0][i] > ENCODER_NUM_MAX - 1)
+                                ? NULL
+                                : &(g_SEncoder[g_SSystemPara.ucEncoderMapArray[0][i]]);
+    }
+
+    initChannel(&g_SChannel[0], 0, g_SSystemPara.ucAxisMapArray[0], g_SSystemPara.ucPWMAxisMapArray[0], pEncoderArrays);
+    initToolAxis(&g_SChannel[0], &g_SChannel[0].SSingleAxisArray[TOOL_AXIS]);
+    initEditablePara();
+    initAfterLoadSysPara();
+    initErrorBuf();
+
+    g_RunMode = AUTOMATIC_MODE;
+    memset(g_sBusAxisDeltaPulse, 0, sizeof(g_sBusAxisDeltaPulse));
+}
+
+static void ncResetKernel(void)
+{
+    g_nc_running = 0U;
+    g_nc_master_fault_reported = 0U;
+    g_nc_cycle_counter = 0U;
+    timeji = 0U;
+
+    if (g_SChannel != NULL)
+    {
+        /* 释放中途停机未归还的全局轴/刀塔占用，并把通道、缓冲区和插补状态收回 SYS_IDLE。 */
+        channelStopToIDLE(&g_SChannel[0]);
+        gcodeInit(0, FALSE, FALSE);
+        toolCompensationInit(0);
+        lookAheadInit(&g_SChannel[0]);
+        interpolationInit(&g_SChannel[0].SPreProcess);
+    }
+
+    initErrorBuf();
+    g_RunMode = AUTOMATIC_MODE;
+    memset(g_sBusAxisDeltaPulse, 0, sizeof(g_sBusAxisDeltaPulse));
+}
 /* USER CODE END 0 */
 
 /**
@@ -145,6 +249,7 @@ int main(void)
     {
         /* zxr: 加载映射和保护参数后立即启动周期；上电不使能、不产生轨迹。 */
         MachineControl_Init();
+        ncInitKernel();
         HAL_TIM_Base_Start_IT(&htim3);
     }
     /* USER CODE END 2 */
@@ -153,8 +258,71 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        // ethernet_send_receive_test();
-        // HAL_Delay(1000);
+        if (g_nc_enable_cmd != 0U)
+        {
+            uint32_t cmd = g_nc_enable_cmd;
+            g_nc_enable_cmd = 0U;
+            if (cmd == 1U)
+            {
+                (void)MachineControl_Request(MC_CMD_ENABLE);
+            }
+            else if (cmd == 2U)
+            {
+                (void)MachineControl_Request(MC_CMD_DISABLE);
+            }
+        }
+
+        if (g_nc_reset_cmd != 0U)
+        {
+            g_nc_reset_cmd = 0U;
+            MachineState_e mc_state = MachineControl_GetState();
+            if (mc_state == MC_STATE_FAULT && MachineControl_GetError() != MC_ERROR_CONFIG)
+            {
+                if (MachineControl_Request(MC_CMD_RESET))
+                {
+                    s_nc_reset_pending = 1U;
+                }
+            }
+            else if (mc_state != MC_STATE_RESETTING && g_nc_running == 0U)
+            {
+                ncResetKernel();
+            }
+        }
+
+        if (s_nc_reset_pending != 0U)
+        {
+            MachineState_e mc_state = MachineControl_GetState();
+            if (mc_state == MC_STATE_NOT_READY)
+            {
+                ncResetKernel();
+                s_nc_reset_pending = 0U;
+            }
+            else if (mc_state == MC_STATE_FAULT)
+            {
+                s_nc_reset_pending = 0U;
+            }
+        }
+
+        if (g_nc_start_cmd != 0U)
+        {
+            g_nc_start_cmd = 0U;
+            if (MachineControl_GetState() == MC_STATE_READY && g_nc_running == 0U && isErrorHasBeenWritten() == FALSE)
+            {
+                memset((void*)g_cName_C0, 0, sizeof(g_cName_C0));
+                strncpy((char*)g_cName_C0, "0001", sizeof(g_cName_C0) - 1U);
+                g_nc_master_fault_reported = 0U;
+                memset(g_sBusAxisDeltaPulse, 0, sizeof(g_sBusAxisDeltaPulse));
+                if (runButtonAPI(0, FALSE) == 1)
+                {
+                    g_nc_running = 1U;
+                }
+            }
+        }
+
+        if (g_nc_running != 0U && isErrorHasBeenWritten() == FALSE)
+        {
+            GCodeRunLoopAPI();
+        }
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -205,7 +373,8 @@ void SystemClock_Config(void)
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 |
+                                  RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
@@ -247,7 +416,7 @@ void Error_Handler(void)
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t *file, uint32_t line)
+void assert_failed(uint8_t* file, uint32_t line)
 {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line number,

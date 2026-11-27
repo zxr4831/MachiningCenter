@@ -12,6 +12,9 @@
 #if STM32_MODE
 #include "flash_task.h"
 #endif
+#if MC_EMBEDDED_MEM_GCODE
+extern int ncEmbeddedGetProgramLine(const char* pName, uint32 unTargetLineNum, char* pOutBuf, uint32 unBufSize);
+#endif
 
 uint8 g_ucNameType = 1; //1：加O ，0：不加O    测试子程序调用测试必须置为1
 #if !STM32_MODE
@@ -55,6 +58,10 @@ void addPathVsFileName(int8 cOutput[50], int8* pInput)
 //打开文件
 void GCODE_OPEN_FILE(uint8 ucChannelNum)
 {
+#if MC_EMBEDDED_MEM_GCODE
+    (void)ucChannelNum;
+    return;
+#endif
     FILE* file1 = NULL;
     switch (ucChannelNum)
     {
@@ -109,6 +116,10 @@ void GCODE_OPEN_FILE(uint8 ucChannelNum)
 //关闭文件
 void GCODE_CLOSE_FILE(uint8 ucChannelNum)
 {
+#if MC_EMBEDDED_MEM_GCODE
+    (void)ucChannelNum;
+    return;
+#endif
     FILE* file1 = NULL;
     switch (ucChannelNum)
     {
@@ -246,6 +257,45 @@ uint8 tryToGetLine(int8* pName, uint32 unTargetLineNum, int8 cProgramListSize, u
     addPathSTM32FileName(cPathName, pName, cProgramListSize); //如果pName输入0001，cPathName等于O0001.TXT
 
     return Flash_listRe((char*)cPathName, unTargetLineNum, ucChannelNum);
+
+#elif MC_EMBEDDED_MEM_GCODE
+    (void)pFile;
+    (void)unCurrLine;
+    (void)cPathName;
+    (void)cProgramListSize;
+    (void)ucChannelNum;
+
+    for (; unWriteIdx < 20; unWriteIdx++)
+    {
+        if (s_bIsWritable[unWriteIdx] == TRUE)
+        {
+            break;
+        }
+    }
+    if (unWriteIdx >= 20)
+    {
+        return 0xF1; // 需要等待
+    }
+    else
+    {
+        char cAStatamentArray[MAX_LENGTH_OF_LINE];
+        int nRet;
+        memset(cAStatamentArray, 0, MAX_LENGTH_OF_LINE);
+        nRet = ncEmbeddedGetProgramLine((const char*)pName, unTargetLineNum, cAStatamentArray, MAX_LENGTH_OF_LINE);
+        if (nRet < 0)
+        {
+            parseGCodeErrorB(0, GCODE_ERROR_NUM89);
+            return 0xF3;
+        }
+        if (nRet == 0)
+        {
+            return 0xF2;
+        }
+        memset(g_textBuf[unWriteIdx], 0, MAX_LENGTH_OF_LINE);
+        strcpy((char*)g_textBuf[unWriteIdx], cAStatamentArray);
+        s_bIsWritable[unWriteIdx] = FALSE;
+        return (uint8)unWriteIdx;
+    }
 
 #else
     for (; unWriteIdx < 20; unWriteIdx++)
