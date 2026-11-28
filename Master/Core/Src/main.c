@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -244,12 +245,27 @@ int main(void)
     }
     HAL_Delay(2000);
 
-    /* zxr: 独立主站入口，只建立总线与轴执行层；外部运动系统以后通过API提交目标。 */
-    if (Axis_SystemInit())
+    if (axis_initSystem())
     {
-        /* zxr: 加载映射和保护参数后立即启动周期；上电不使能、不产生轨迹。 */
-        MachineControl_Init();
         ncInitKernel();
+        const uint8_t ucAxisCount = axis_getActiveCount();
+        SMachineAxisLimits limits[AXIS_MAX_NUM] = {0};
+        /* 总线增量沿用数控指令当量。联调阶段沿用台架方向和保护上限，整机按实测参数标定。 */
+        for (uint8_t axis = 0; axis < ucAxisCount && axis < AXIS_MAX_NUM; axis++)
+        {
+            const double dVmax = g_SSystemPara.SAxisPara[axis].dVmax;
+            const double dPulseToMm = g_SSystemPara.SAxisPara[axis].dPulseToMm;
+            if (g_SSystemPara.SAxisPara[axis].ucAxisType == LINEAR_AXIS && isfinite(dVmax) && dVmax > 0.0 &&
+                isfinite(dPulseToMm) && dPulseToMm > 0.0)
+            {
+                /* mm/ms × 周期(ms) ÷ mm/指令单位；同时遵守原台架 16 单位/拍的上限。 */
+                double dStep = ceil(dVmax * (AXIS_CYCLE_PERIOD_US / 1000.0) / dPulseToMm);
+                limits[axis].nMaxStepLimit = (int32_t)fmin(dStep, 16.0);
+                limits[axis].cDirectionInvert = 1;
+                limits[axis].nMaxFollowingErrorLimit = 285;
+            }
+        }
+        mc_init(limits, ucAxisCount);
         HAL_TIM_Base_Start_IT(&htim3);
     }
     /* USER CODE END 2 */
@@ -264,21 +280,21 @@ int main(void)
             g_nc_enable_cmd = 0U;
             if (cmd == 1U)
             {
-                (void)MachineControl_Request(MC_CMD_ENABLE);
+                (void)mc_requestCommand(MC_CMD_ENABLE);
             }
             else if (cmd == 2U)
             {
-                (void)MachineControl_Request(MC_CMD_DISABLE);
+                (void)mc_requestCommand(MC_CMD_DISABLE);
             }
         }
 
         if (g_nc_reset_cmd != 0U)
         {
             g_nc_reset_cmd = 0U;
-            MachineState_e mc_state = MachineControl_GetState();
-            if (mc_state == MC_STATE_FAULT && MachineControl_GetError() != MC_ERROR_CONFIG)
+            MACHINE_STATE mc_state = mc_getState();
+            if (mc_state == MC_STATE_FAULT && mc_getError() != MC_ERROR_CONFIG)
             {
-                if (MachineControl_Request(MC_CMD_RESET))
+                if (mc_requestCommand(MC_CMD_RESET))
                 {
                     s_nc_reset_pending = 1U;
                 }
@@ -291,7 +307,7 @@ int main(void)
 
         if (s_nc_reset_pending != 0U)
         {
-            MachineState_e mc_state = MachineControl_GetState();
+            MACHINE_STATE mc_state = mc_getState();
             if (mc_state == MC_STATE_NOT_READY)
             {
                 ncResetKernel();
@@ -306,7 +322,7 @@ int main(void)
         if (g_nc_start_cmd != 0U)
         {
             g_nc_start_cmd = 0U;
-            if (MachineControl_GetState() == MC_STATE_READY && g_nc_running == 0U && isErrorHasBeenWritten() == FALSE)
+            if (mc_getState() == MC_STATE_READY && g_nc_running == 0U && isErrorHasBeenWritten() == FALSE)
             {
                 memset((void*)g_cName_C0, 0, sizeof(g_cName_C0));
                 strncpy((char*)g_cName_C0, "0001", sizeof(g_cName_C0) - 1U);

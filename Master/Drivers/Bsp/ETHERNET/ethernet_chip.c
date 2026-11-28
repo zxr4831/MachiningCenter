@@ -702,7 +702,7 @@ int dm9162_write_packet(void *pBuff, int len)
     /* zxr: Tx_Buff 已由 MPU 设为 Normal 非缓存区；描述符提交顺序仍由 HAL 内存屏障保证。 */
 
     /* zxr: 此 HAL 接口只提交发送；沿用 HAL_ETH_Start，由下面轮询完成，不启用 ETH 中断。 */
-    uint32_t start_us = get_us();
+    uint32_t start_us = tim_getTimeUs();
     HAL_StatusTypeDef status = HAL_ETH_Transmit_IT(&g_eth_handler, &TxConfig);
     Emac.tx_buf.len = 0;
     if (status != HAL_OK)
@@ -721,7 +721,7 @@ int dm9162_write_packet(void *pBuff, int len)
             s_tx_error_count++;
             return 0;
         }
-        if ((uint32_t)(get_us() - start_us) >= ETH_TX_TIMEOUT_US)
+        if ((uint32_t)(tim_getTimeUs() - start_us) >= ETH_TX_TIMEOUT_US)
         {
             g_eth_handler.ErrorCode |= HAL_ETH_ERROR_TIMEOUT;
             s_tx_timeout_count++;

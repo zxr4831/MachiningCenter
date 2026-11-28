@@ -197,15 +197,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 {
     if (htim->Instance == TIM3) /* zxr: TIM2 不再依靠中断累计秒数。 */
     {
-        uint32_t begin = get_us();
+        uint32_t begin = tim_getTimeUs();
 
         // 1. EtherCAT 周期性交换数据与整组安全检查
-        MachineControl_Cycle();
+        mc_runCycle();
 
         // 2. 整组就绪时推进一拍数控插补并提交下拍总线增量；异常时通知数控侧停机
         if (g_nc_running != 0U)
         {
-            if (MachineControl_CanStep())
+            if (mc_canStep())
             {
                 if (isErrorHasBeenWritten() == TRUE)
                 {
@@ -231,7 +231,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
                         bus_delta[i] = (int32_t)g_sBusAxisDeltaPulse[i];
                     }
 
-                    if (!MachineControl_SubmitStep(bus_delta))
+                    if (!mc_submitStep(bus_delta))
                     {
                         g_nc_running = 0U;
                         if (g_nc_master_fault_reported == 0U)
@@ -242,7 +242,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
                     }
                 }
             }
-            else if (MachineControl_GetState() != MC_STATE_READY)
+            else if (mc_getState() != MC_STATE_READY)
             {
                 g_nc_running = 0U;
                 if (g_nc_master_fault_reported == 0U)
@@ -253,7 +253,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
             }
         }
 
-        uint32_t elapsed = (uint32_t)(get_us() - begin);
+        uint32_t elapsed = (uint32_t)(tim_getTimeUs() - begin);
         g_nc_total_cycle_us = elapsed;
         if (elapsed > g_nc_max_total_cycle_us)
         {
@@ -263,7 +263,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 }
 
 /* zxr: 直接读硬件计数；用 uint32_t 差值计算耗时，可跨一次计数回绕。 */
-uint32_t get_us(void)
+uint32_t tim_getTimeUs(void)
 {
     return TIM2->CNT;
 }

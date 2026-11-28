@@ -46,8 +46,8 @@ extern "C"
 
     /* USER CODE BEGIN Prototypes */
     /* zxr: TIM2 启动后的 32 位微秒计数，约 71.6 分钟回绕。
-     * 计时使用 (uint32_t)(get_us() - start_us)，测量间隔须小于一次完整回绕。 */
-    uint32_t get_us(void);
+     * 计时使用 (uint32_t)(tim_getTimeUs() - unStartUs)，测量间隔须小于一次完整回绕。 */
+    uint32_t tim_getTimeUs(void);
     /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

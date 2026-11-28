@@ -57,14 +57,14 @@ ec_timet osal_current_time (void)
 void osal_timer_start(osal_timert *self, uint32 timeout_usec)
 {
     /* zxr: 只记录起始计数和等待时长，不拼接秒数。 */
-    self->start_us = get_us();
+    self->start_us = tim_getTimeUs();
     self->timeout_us = timeout_usec;
 }
 
 boolean osal_timer_is_expired(osal_timert *self)
 {
     /* zxr: 无符号减法自动处理回绕；从起点到检查时刻须小于约 71.6 分钟。 */
-    return (uint32_t)(get_us() - self->start_us) >= self->timeout_us;
+    return (uint32_t)(tim_getTimeUs() - self->start_us) >= self->timeout_us;
 }
 
 void *osal_malloc(size_t size)

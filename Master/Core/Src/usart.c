@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 // 串口接收缓冲区
-uint8_t ucRxData[FRAME_TOTAL_LEN] = {0};
+uint8_t g_ucRxData[FRAME_TOTAL_LEN] = {0};
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -71,7 +71,7 @@ void MX_USART1_UART_Init(void)
         Error_Handler();
     }
     /* USER CODE BEGIN USART1_Init 2 */
-    HAL_UART_Receive_IT(&huart1, ucRxData, FRAME_TOTAL_LEN);
+    HAL_UART_Receive_IT(&huart1, g_ucRxData, FRAME_TOTAL_LEN);
     /* USER CODE END USART1_Init 2 */
 }
 
@@ -150,13 +150,13 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 //    if (huart->Instance == USART1)
 //    {
 //        // 打印收到的数据
-//        // HAL_UART_Transmit(&huart1, ucRxData, FRAME_TOTAL_LEN, HAL_MAX_DELAY);
+//        // HAL_UART_Transmit(&huart1, g_ucRxData, FRAME_TOTAL_LEN, HAL_MAX_DELAY);
 
 //       // 写入环形缓冲区
-//       writeRingBuffer(&g_usartRingBuffer, ucRxData, FRAME_TOTAL_LEN);
+//       writeRingBuffer(&g_usartRingBuffer, g_ucRxData, FRAME_TOTAL_LEN);
 
 //       // 重新开启接收
-//       HAL_UART_Receive_IT(&huart1, ucRxData, FRAME_TOTAL_LEN);
+//       HAL_UART_Receive_IT(&huart1, g_ucRxData, FRAME_TOTAL_LEN);
 //   }
 //}
 
@@ -164,13 +164,13 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 /* 加入以下代码, 支持printf函数, 而不需要选择use MicroLIB */
 
 /* zxr: GCC/Newlib 的 printf 经 syscalls.c 调用此串口输出接口。 */
-int __io_putchar(int ch)
+int __io_putchar(int nChar)
 {
     while ((USART1->ISR & 0X40) == 0)
     {
     }
-    USART1->TDR = (uint8_t)ch;
-    return ch;
+    USART1->TDR = (uint8_t)nChar;
+    return nChar;
 }
 
 /******************************************************************************************/

@@ -24,9 +24,9 @@ static int64_t s_lIntegralTerm = 0; // 积分项累加器
  *
  * @param lRefTimeNs         参考从站的 DC 时间 (单位: ns)
  * @param lCycleTimeUs       期望通信周期 (单位: us)
- * @param[out] pOffsetTimeUs 周期补偿量 (单位: us)
+ * @param[out] plOffsetTimeUs 周期补偿量 (单位: us)
  */
-void masterSync(int64_t lRefTimeNs, int64_t lCycleTimeUs, int64_t *pOffsetTimeUs)
+void dcSync_calculateOffset(int64_t lRefTimeNs, int64_t lCycleTimeUs, int64_t *plOffsetTimeUs)
 {
     // 1. 计算当前相位偏差
     int64_t lPhaseErrorUs = (lRefTimeNs / 1000 + TARGET_PHASE_OFFSET_US) % lCycleTimeUs;
@@ -51,16 +51,16 @@ void masterSync(int64_t lRefTimeNs, int64_t lCycleTimeUs, int64_t *pOffsetTimeUs
     int64_t lProportionalTerm = -(lPhaseErrorUs / PROPORTIONAL_GAIN_DIV);
     int64_t lIntegralOutput = -(s_lIntegralTerm / INTEGRAL_GAIN_DIV);
 
-    *pOffsetTimeUs = lProportionalTerm + lIntegralOutput;
+    *plOffsetTimeUs = lProportionalTerm + lIntegralOutput;
 
     // 5. 输出限幅
-    const int64_t lMaxCompensation = lCycleTimeUs * MAX_COMPENSATION_RATIO;
-    if (*pOffsetTimeUs > lMaxCompensation)
+    const int64_t MAX_COMPENSATION = lCycleTimeUs * MAX_COMPENSATION_RATIO;
+    if (*plOffsetTimeUs > MAX_COMPENSATION)
     {
-        *pOffsetTimeUs = lMaxCompensation;
+        *plOffsetTimeUs = MAX_COMPENSATION;
     }
-    else if (*pOffsetTimeUs < -lMaxCompensation)
+    else if (*plOffsetTimeUs < -MAX_COMPENSATION)
     {
-        *pOffsetTimeUs = -lMaxCompensation;
+        *plOffsetTimeUs = -MAX_COMPENSATION;
     }
 }

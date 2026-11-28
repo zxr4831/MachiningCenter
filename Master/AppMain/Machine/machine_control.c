@@ -22,438 +22,430 @@
 
 typedef struct
 {
-    MachineState_e state;
-    MachineError_e error;
-    uint8_t fault_axis;
-    int32_t target_pos[MACHINE_PHYSICAL_AXIS_COUNT];
-    int32_t actual_pos[MACHINE_PHYSICAL_AXIS_COUNT];
-    uint32_t ready_ticks;
-    uint32_t cycle_us, max_cycle_us;
-} MachineControlStatus_t;
+    MACHINE_STATE eState;
+    MACHINE_ERROR eError;
+    uint8_t ucFaultAxis;
+    int32_t nTargetPosition[MACHINE_PHYSICAL_AXIS_COUNT];
+    int32_t nActualPosition[MACHINE_PHYSICAL_AXIS_COUNT];
+    uint32_t unReadyTicks;
+    uint32_t unCycleUs, unMaxCycleUs;
+} SMachineControlStatus;
 
-/* zxr: 前台改 s_command；s_mc 只观察，一致性读取用 MachineControl_GetSnapshot。 */
-static volatile uint32_t s_command;
-static volatile MachineControlStatus_t s_mc;
-static uint8_t s_active_axis_count;
-static int32_t s_step_limit[MACHINE_PHYSICAL_AXIS_COUNT];
-static int8_t s_dir_invert[MACHINE_PHYSICAL_AXIS_COUNT];
-static bool s_aligned[MACHINE_PHYSICAL_AXIS_COUNT];
-static uint32_t s_wait_ticks, s_last_lost_wkc;
-static bool s_step_submitted;
-static bool s_reset_issued;
-static uint32_t s_cycle_count;
-static bool s_feedback_valid;
-static volatile uint32_t s_snapshot_seq;
-static MachineControlSnapshot_t s_snapshot;
+/* zxr: 前台改 s_unPendingCommand；s_SMachineStatus 只观察，一致性读取用 mc_getSnapshot。 */
+static volatile uint32_t s_unPendingCommand;
+static volatile SMachineControlStatus s_SMachineStatus;
+static uint8_t s_ucActiveAxisCount;
+static int32_t s_nStepLimit[MACHINE_PHYSICAL_AXIS_COUNT];
+static int8_t s_cDirectionInvert[MACHINE_PHYSICAL_AXIS_COUNT];
+static bool s_bAligned[MACHINE_PHYSICAL_AXIS_COUNT];
+static uint32_t s_unWaitTicks, s_unLastLostWkc;
+static bool s_bStepSubmitted;
+static bool s_bResetIssued;
+static uint32_t s_unCycleCount;
+static bool s_bFeedbackValid;
+static volatile uint32_t s_unSnapshotSequence;
+static SMachineControlSnapshot s_SSnapshot;
 
-static bool IsAxisHardwareFault(uint16_t status_word)
+static bool isAxisHardwareFault(uint16_t usStatusWord)
 {
-    uint16_t fault_bits = status_word & MC_CIA402_MASK_FAULT;
-    return fault_bits == MC_CIA402_VAL_FAULT || fault_bits == MC_CIA402_VAL_FAULT_REACTION;
+    uint16_t usFaultBits = usStatusWord & MC_CIA402_MASK_FAULT;
+    return usFaultBits == MC_CIA402_VAL_FAULT || usFaultBits == MC_CIA402_VAL_FAULT_REACTION;
 }
 
-static void PublishSnapshot(void)
+static void publishSnapshot(void)
 {
-    s_snapshot_seq++;
+    s_unSnapshotSequence++;
     __asm__ volatile("" ::: "memory");
 
-    s_snapshot.state = s_mc.state;
-    s_snapshot.error = s_mc.error;
-    s_snapshot.fault_axis = s_mc.fault_axis;
-    s_snapshot.active_axis_count = s_active_axis_count;
+    s_SSnapshot.eState = s_SMachineStatus.eState;
+    s_SSnapshot.eError = s_SMachineStatus.eError;
+    s_SSnapshot.ucFaultAxis = s_SMachineStatus.ucFaultAxis;
+    s_SSnapshot.ucActiveAxisCount = s_ucActiveAxisCount;
 
     for (uint8_t i = 0; i < MACHINE_PHYSICAL_AXIS_COUNT; i++)
     {
-        if (i < s_active_axis_count)
+        if (i < s_ucActiveAxisCount)
         {
-            s_snapshot.target_pos[i] = s_mc.target_pos[i];
-            s_snapshot.actual_pos[i] = s_mc.actual_pos[i];
-            s_snapshot.status_word[i] = Axis_GetStatusWord(i);
-            s_snapshot.following_error[i] = Axis_GetFollowingError(i);
+            s_SSnapshot.nTargetPosition[i] = s_SMachineStatus.nTargetPosition[i];
+            s_SSnapshot.nActualPosition[i] = s_SMachineStatus.nActualPosition[i];
+            s_SSnapshot.usStatusWord[i] = axis_getStatusWord(i);
+            s_SSnapshot.nFollowingError[i] = axis_getFollowingError(i);
         }
         else
         {
-            s_snapshot.target_pos[i] = 0;
-            s_snapshot.actual_pos[i] = 0;
-            s_snapshot.status_word[i] = 0;
-            s_snapshot.following_error[i] = 0;
+            s_SSnapshot.nTargetPosition[i] = 0;
+            s_SSnapshot.nActualPosition[i] = 0;
+            s_SSnapshot.usStatusWord[i] = 0;
+            s_SSnapshot.nFollowingError[i] = 0;
         }
     }
 
-    s_snapshot.ready_ticks = s_mc.ready_ticks;
-    s_snapshot.cycle_us = s_mc.cycle_us;
-    s_snapshot.max_cycle_us = s_mc.max_cycle_us;
-    s_snapshot.lost_wkc_count = Axis_GetLostWkcCount();
-    s_snapshot.feedback_valid = s_feedback_valid;
-    s_snapshot.cycle_count = s_cycle_count;
+    s_SSnapshot.unReadyTicks = s_SMachineStatus.unReadyTicks;
+    s_SSnapshot.unCycleUs = s_SMachineStatus.unCycleUs;
+    s_SSnapshot.unMaxCycleUs = s_SMachineStatus.unMaxCycleUs;
+    s_SSnapshot.unLostWkcCount = axis_getLostWkcCount();
+    s_SSnapshot.bFeedbackValid = s_bFeedbackValid;
+    s_SSnapshot.unCycleCount = s_unCycleCount;
 
     __asm__ volatile("" ::: "memory");
-    s_snapshot_seq++;
+    s_unSnapshotSequence++;
 }
 
 /* zxr: 统一去使能；普通停止不能覆盖故障，复位期间收到去使能须退回故障态保留原错误。 */
-static void Stop(MachineError_e error, uint8_t fault_axis)
+static void stopMachineGroup(MACHINE_ERROR eError, uint8_t ucFaultAxis)
 {
     /* zxr: 主站只撤销轴使能并发布状态，调用方负责停止推进自己的轨迹。 */
     for (uint8_t i = 0; i < AXIS_MAX_NUM; i++)
     {
-        Axis_SetEnable(i, false);
-        Axis_CancelReset(i);
+        axis_setEnable(i, false);
+        axis_cancelReset(i);
     }
-    s_reset_issued = false;
+    s_bResetIssued = false;
 
-    if (s_mc.state == MC_STATE_RESETTING && error == MC_ERROR_NONE)
+    if (s_SMachineStatus.eState == MC_STATE_RESETTING && eError == MC_ERROR_NONE)
     {
-        s_mc.state = MC_STATE_FAULT;
+        s_SMachineStatus.eState = MC_STATE_FAULT;
         return;
     }
 
-    if (s_mc.state != MC_STATE_FAULT)
+    if (s_SMachineStatus.eState != MC_STATE_FAULT)
     {
-        s_mc.error = error;
-        s_mc.fault_axis = (error == MC_ERROR_NONE) ? MACHINE_AXIS_NONE : fault_axis;
-        s_mc.state = error == MC_ERROR_NONE ? MC_STATE_NOT_READY : MC_STATE_FAULT;
+        s_SMachineStatus.eError = eError;
+        s_SMachineStatus.ucFaultAxis = (eError == MC_ERROR_NONE) ? MACHINE_AXIS_NONE : ucFaultAxis;
+        s_SMachineStatus.eState = eError == MC_ERROR_NONE ? MC_STATE_NOT_READY : MC_STATE_FAULT;
     }
 }
 
-static void HandleResettingState(bool lost_frame)
+static void handleResettingState(bool bLostFrame)
 {
-    for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+    for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
     {
-        Axis_SetEnable(axis, false);
-        s_mc.target_pos[axis] = s_mc.actual_pos[axis];
+        axis_setEnable(ucAxis, false);
+        s_SMachineStatus.nTargetPosition[ucAxis] = s_SMachineStatus.nActualPosition[ucAxis];
     }
 
-    if (!s_reset_issued)
+    if (!s_bResetIssued)
     {
-        bool can_issue = !lost_frame;
-        for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+        bool bCanIssue = !bLostFrame;
+        for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
         {
-            if ((Axis_GetStatusWord(axis) & MC_CIA402_MASK_BASIC) == MC_CIA402_VAL_OPERATION_ENABLE)
+            if ((axis_getStatusWord(ucAxis) & MC_CIA402_MASK_BASIC) == MC_CIA402_VAL_OPERATION_ENABLE)
             {
-                can_issue = false;
+                bCanIssue = false;
                 break;
             }
         }
 
-        if (can_issue)
+        if (bCanIssue)
         {
-            bool all_resetting = true;
-            for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+            bool bAllResetting = true;
+            for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
             {
-                Axis_ResetFault(axis);
-                all_resetting = all_resetting && Axis_IsResetting(axis);
+                axis_resetFault(ucAxis);
+                bAllResetting = bAllResetting && axis_isResetting(ucAxis);
             }
-            if (all_resetting)
+            if (bAllResetting)
             {
-                s_reset_issued = true;
+                s_bResetIssued = true;
             }
         }
     }
     else
     {
-        bool all_finished = true;
-        for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+        bool bAllFinished = true;
+        for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
         {
-            if (Axis_IsResetting(axis))
+            if (axis_isResetting(ucAxis))
             {
-                all_finished = false;
+                bAllFinished = false;
                 break;
             }
         }
 
-        if (all_finished)
+        if (bAllFinished)
         {
-            if (lost_frame || Axis_IsBusError())
+            if (bLostFrame || axis_isBusError())
             {
-                Stop(MC_ERROR_BUS, MACHINE_AXIS_NONE);
+                stopMachineGroup(MC_ERROR_BUS, MACHINE_AXIS_NONE);
                 return;
             }
-            for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+            for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
             {
-                uint16_t sw = Axis_GetStatusWord(axis);
-                bool still_op = (sw & MC_CIA402_MASK_BASIC) == MC_CIA402_VAL_OPERATION_ENABLE;
-                if (Axis_IsFault(axis) || IsAxisHardwareFault(sw) || still_op)
+                uint16_t usStatusWord = axis_getStatusWord(ucAxis);
+                bool bStillOp = (usStatusWord & MC_CIA402_MASK_BASIC) == MC_CIA402_VAL_OPERATION_ENABLE;
+                if (axis_isFault(ucAxis) || isAxisHardwareFault(usStatusWord) || bStillOp)
                 {
-                    Stop(MC_ERROR_AXIS, axis);
+                    stopMachineGroup(MC_ERROR_AXIS, ucAxis);
                     return;
                 }
             }
 
-            s_mc.error = MC_ERROR_NONE;
-            s_mc.fault_axis = MACHINE_AXIS_NONE;
-            s_mc.ready_ticks = 0;
-            s_reset_issued = false;
-            s_mc.state = MC_STATE_NOT_READY;
+            s_SMachineStatus.eError = MC_ERROR_NONE;
+            s_SMachineStatus.ucFaultAxis = MACHINE_AXIS_NONE;
+            s_SMachineStatus.unReadyTicks = 0;
+            s_bResetIssued = false;
+            s_SMachineStatus.eState = MC_STATE_NOT_READY;
             return;
         }
     }
 
-    if (++s_wait_ticks >= RESET_TIMEOUT_TICKS)
+    if (++s_unWaitTicks >= RESET_TIMEOUT_TICKS)
     {
-        if (lost_frame || Axis_IsBusError())
+        if (bLostFrame || axis_isBusError())
         {
-            Stop(MC_ERROR_BUS, MACHINE_AXIS_NONE);
+            stopMachineGroup(MC_ERROR_BUS, MACHINE_AXIS_NONE);
             return;
         }
-        for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+        for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
         {
-            if (Axis_IsFault(axis) || IsAxisHardwareFault(Axis_GetStatusWord(axis)))
+            if (axis_isFault(ucAxis) || isAxisHardwareFault(axis_getStatusWord(ucAxis)))
             {
-                Stop(MC_ERROR_AXIS, axis);
+                stopMachineGroup(MC_ERROR_AXIS, ucAxis);
                 return;
             }
         }
-        Stop(s_mc.error != MC_ERROR_NONE ? s_mc.error : MC_ERROR_AXIS, s_mc.fault_axis);
+        stopMachineGroup(s_SMachineStatus.eError != MC_ERROR_NONE ? s_SMachineStatus.eError : MC_ERROR_AXIS, s_SMachineStatus.ucFaultAxis);
     }
 }
 
-/* 物理轴号沿用轴层索引，台架配置必须与在线的驱动轴逐一对应。 */
-void MachineControl_Init(void)
+/* 物理轴号沿用轴层索引，调用方传入的保护参数数量必须与在线驱动轴数逐一匹配。 */
+void mc_init(const SMachineAxisLimits *pSAxisLimits, uint8_t ucAxisCount)
 {
-    memset((void *)&s_mc, 0, sizeof(s_mc));
-    s_mc.fault_axis = MACHINE_AXIS_NONE;
-    s_command = MC_CMD_NONE;
-    s_wait_ticks = 0;
-    s_last_lost_wkc = Axis_GetLostWkcCount();
-    s_step_submitted = false;
-    s_reset_issued = false;
-    s_cycle_count = 0;
-    s_feedback_valid = false;
-    s_snapshot_seq = 0;
-    memset(s_aligned, 0, sizeof(s_aligned));
-    memset(s_dir_invert, 0, sizeof(s_dir_invert));
-    memset(s_step_limit, 0, sizeof(s_step_limit));
-    memset(&s_snapshot, 0, sizeof(s_snapshot));
-    s_active_axis_count = 0;
+    memset((void *)&s_SMachineStatus, 0, sizeof(s_SMachineStatus));
+    s_SMachineStatus.ucFaultAxis = MACHINE_AXIS_NONE;
+    s_unPendingCommand = MC_CMD_NONE;
+    s_unWaitTicks = 0;
+    s_unLastLostWkc = axis_getLostWkcCount();
+    s_bStepSubmitted = false;
+    s_bResetIssued = false;
+    s_unCycleCount = 0;
+    s_bFeedbackValid = false;
+    s_unSnapshotSequence = 0;
+    memset(s_bAligned, 0, sizeof(s_bAligned));
+    memset(s_cDirectionInvert, 0, sizeof(s_cDirectionInvert));
+    memset(s_nStepLimit, 0, sizeof(s_nStepLimit));
+    memset(&s_SSnapshot, 0, sizeof(s_SSnapshot));
+    s_ucActiveAxisCount = 0;
 
-    uint8_t active_axes = Axis_GetActiveCount();
-    if (active_axes == 0 || active_axes > AXIS_MAX_NUM || active_axes > MACHINE_PHYSICAL_AXIS_COUNT || Machine_GetAxisConfig(active_axes) != NULL)
+    uint8_t ucActiveAxes = axis_getActiveCount();
+    if (ucActiveAxes == 0 || ucActiveAxes > AXIS_MAX_NUM || ucActiveAxes > MACHINE_PHYSICAL_AXIS_COUNT || pSAxisLimits == NULL || ucAxisCount != ucActiveAxes)
     {
-        Stop(MC_ERROR_CONFIG, MACHINE_AXIS_NONE);
-        PublishSnapshot();
+        stopMachineGroup(MC_ERROR_CONFIG, MACHINE_AXIS_NONE);
+        publishSnapshot();
         return;
     }
 
-    for (uint8_t axis = 0; axis < active_axes; axis++)
+    for (uint8_t ucAxis = 0; ucAxis < ucActiveAxes; ucAxis++)
     {
-        const MachineAxisConfig_t *cfg = Machine_GetAxisConfig(axis);
-        if (!Axis_IsAvailable(axis) || cfg == NULL || (cfg->direction_invert != 1 && cfg->direction_invert != -1))
+        const SMachineAxisLimits *pSLimits = &pSAxisLimits[ucAxis];
+        if (!axis_isAvailable(ucAxis) || (pSLimits->cDirectionInvert != 1 && pSLimits->cDirectionInvert != -1) || pSLimits->nMaxStepLimit <= 0 || pSLimits->nMaxFollowingErrorLimit <= 0)
         {
-            Stop(MC_ERROR_CONFIG, axis);
-            PublishSnapshot();
+            stopMachineGroup(MC_ERROR_CONFIG, ucAxis);
+            publishSnapshot();
             return;
         }
 
-        // 计算单拍步长与跟随误差门槛，并同步下发到底层轴接口
-        int32_t following_limit = 0;
-        if (!Machine_GetSafetyLimits(axis, AXIS_CYCLE_PERIOD_US, &s_step_limit[axis], &following_limit))
-        {
-            Stop(MC_ERROR_CONFIG, axis);
-            PublishSnapshot();
-            return;
-        }
-
-        s_dir_invert[axis] = cfg->direction_invert;
-        Axis_SetSafetyLimits(axis, s_step_limit[axis], following_limit);
+        s_nStepLimit[ucAxis] = pSLimits->nMaxStepLimit;
+        s_cDirectionInvert[ucAxis] = pSLimits->cDirectionInvert;
+        axis_setSafetyLimits(ucAxis, pSLimits->nMaxStepLimit, pSLimits->nMaxFollowingErrorLimit);
     }
 
-    s_active_axis_count = active_axes;
-    Stop(MC_ERROR_NONE, MACHINE_AXIS_NONE);
-    PublishSnapshot();
+    s_ucActiveAxisCount = ucActiveAxes;
+    stopMachineGroup(MC_ERROR_NONE, MACHINE_AXIS_NONE);
+    publishSnapshot();
 }
 
 /* zxr: 单生产者发布一个 32 位命令，不带多字段载荷；TIM3 消费后清零。
- * 运动数组只由同一周期上下文调用 SubmitStep，不经过此命令槽。 */
-bool MachineControl_Request(MachineCommand_e command)
+ * 运动数组只由同一周期上下文调用 mc_submitStep，不经过此命令槽。 */
+bool mc_requestCommand(MACHINE_COMMAND eCommand)
 {
-    if (command < MC_CMD_ENABLE || command > MC_CMD_RESET || s_command != MC_CMD_NONE)
+    if (eCommand < MC_CMD_ENABLE || eCommand > MC_CMD_RESET || s_unPendingCommand != MC_CMD_NONE)
         return false;
-    s_command = command;
+    s_unPendingCommand = eCommand;
     return true;
 }
 
-static void CycleStep(void)
+static void runCycleStep(void)
 {
-    MachineCommand_e command = (MachineCommand_e)s_command;
-    s_command = MC_CMD_NONE;
-    s_step_submitted = false;
+    MACHINE_COMMAND eCommand = (MACHINE_COMMAND)s_unPendingCommand;
+    s_unPendingCommand = MC_CMD_NONE;
+    s_bStepSubmitted = false;
 
-    if (command == MC_CMD_DISABLE)
-        Stop(MC_ERROR_NONE, MACHINE_AXIS_NONE); /* zxr: 去使能先于本拍 PDO 交换；故障锁存不被清除。 */
+    if (eCommand == MC_CMD_DISABLE)
+        stopMachineGroup(MC_ERROR_NONE, MACHINE_AXIS_NONE); /* zxr: 去使能先于本拍 PDO 交换；故障锁存不被清除。 */
 
-    Axis_SyncLoop(); /* zxr: 每拍唯一一次收发，处理上一拍暂存目标并取得最新反馈。 */
+    axis_runSyncCycle(); /* zxr: 每拍唯一一次收发，处理上一拍暂存目标并取得最新反馈。 */
 
-    s_cycle_count++;
-    s_feedback_valid = Axis_IsFeedbackValid();
-    bool lost_frame = !s_feedback_valid || (Axis_GetLostWkcCount() != s_last_lost_wkc);
-    s_last_lost_wkc = Axis_GetLostWkcCount();
+    s_unCycleCount++;
+    s_bFeedbackValid = axis_isFeedbackValid();
+    bool bLostFrame = !s_bFeedbackValid || (axis_getLostWkcCount() != s_unLastLostWkc);
+    s_unLastLostWkc = axis_getLostWkcCount();
 
-    for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+    for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
     {
-        s_mc.actual_pos[axis] = Axis_GetActualPos(axis);
+        s_SMachineStatus.nActualPosition[ucAxis] = axis_getActualPos(ucAxis);
     }
 
-    if (s_mc.state == MC_STATE_FAULT)
+    if (s_SMachineStatus.eState == MC_STATE_FAULT)
     {
-        if (command == MC_CMD_RESET && s_mc.error != MC_ERROR_CONFIG && s_active_axis_count > 0)
+        if (eCommand == MC_CMD_RESET && s_SMachineStatus.eError != MC_ERROR_CONFIG && s_ucActiveAxisCount > 0)
         {
-            for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
-                Axis_SetEnable(axis, false);
-            s_mc.state = MC_STATE_RESETTING;
-            s_wait_ticks = 0;
-            s_reset_issued = false;
+            for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
+                axis_setEnable(ucAxis, false);
+            s_SMachineStatus.eState = MC_STATE_RESETTING;
+            s_unWaitTicks = 0;
+            s_bResetIssued = false;
         }
         return;
     }
 
-    if (s_mc.state == MC_STATE_RESETTING)
+    if (s_SMachineStatus.eState == MC_STATE_RESETTING)
     {
-        HandleResettingState(lost_frame);
+        handleResettingState(bLostFrame);
         return;
     }
 
-    if (command == MC_CMD_ENABLE && s_mc.state == MC_STATE_NOT_READY)
+    if (eCommand == MC_CMD_ENABLE && s_SMachineStatus.eState == MC_STATE_NOT_READY)
     {
-        s_mc.state = MC_STATE_ENABLING;
-        s_wait_ticks = 0;
-        s_mc.ready_ticks = 0;
-        memset(s_aligned, 0, sizeof(s_aligned));
+        s_SMachineStatus.eState = MC_STATE_ENABLING;
+        s_unWaitTicks = 0;
+        s_SMachineStatus.unReadyTicks = 0;
+        memset(s_bAligned, 0, sizeof(s_bAligned));
     }
-    if (s_mc.state == MC_STATE_NOT_READY)
+    if (s_SMachineStatus.eState == MC_STATE_NOT_READY)
         return; /* zxr: 未使能时允许启动首拍等历史丢帧；启动当拍及使能期间不忽略新丢帧。 */
-    if (lost_frame || Axis_IsBusError())
+    if (bLostFrame || axis_isBusError())
     {
-        Stop(MC_ERROR_BUS, MACHINE_AXIS_NONE);
+        stopMachineGroup(MC_ERROR_BUS, MACHINE_AXIS_NONE);
         return;
     }
-    if (Axis_GetCycleIntervalUs() > 2U * AXIS_CYCLE_PERIOD_US)
+    if (axis_getCycleIntervalUs() > 2U * AXIS_CYCLE_PERIOD_US)
     {
-        Stop(MC_ERROR_CYCLE, MACHINE_AXIS_NONE);
+        stopMachineGroup(MC_ERROR_CYCLE, MACHINE_AXIS_NONE);
         return;
     }
 
-    bool all_ready = true;
-    uint8_t not_ready_axis = MACHINE_AXIS_NONE;
-    for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+    bool bAllReady = true;
+    uint8_t ucNotReadyAxis = MACHINE_AXIS_NONE;
+    for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
     {
-        if (Axis_IsFault(axis))
+        if (axis_isFault(ucAxis))
         {
-            Stop(MC_ERROR_AXIS, axis);
+            stopMachineGroup(MC_ERROR_AXIS, ucAxis);
             return;
         }
-        bool ready = Axis_IsReady(axis);
-        if (!ready && not_ready_axis == MACHINE_AXIS_NONE)
+        bool bReady = axis_isReady(ucAxis);
+        if (!bReady && ucNotReadyAxis == MACHINE_AXIS_NONE)
         {
-            not_ready_axis = axis;
+            ucNotReadyAxis = ucAxis;
         }
-        all_ready = all_ready && ready;
-        if (s_mc.state == MC_STATE_ENABLING)
+        bAllReady = bAllReady && bReady;
+        if (s_SMachineStatus.eState == MC_STATE_ENABLING)
         {
             /* zxr: 各轴首次就绪时记录与轴层相同的起点；等待结束不再追随实际位置改目标。 */
-            if (!ready)
-                s_aligned[axis] = false;
-            else if (!s_aligned[axis])
+            if (!bReady)
+                s_bAligned[ucAxis] = false;
+            else if (!s_bAligned[ucAxis])
             {
-                s_mc.target_pos[axis] = s_mc.actual_pos[axis];
-                s_aligned[axis] = true;
+                s_SMachineStatus.nTargetPosition[ucAxis] = s_SMachineStatus.nActualPosition[ucAxis];
+                s_bAligned[ucAxis] = true;
             }
-            Axis_SetEnable(axis, true);
+            axis_setEnable(ucAxis, true);
         }
     }
-    if (s_mc.state == MC_STATE_ENABLING)
+    if (s_SMachineStatus.eState == MC_STATE_ENABLING)
     {
-        s_mc.ready_ticks = all_ready ? s_mc.ready_ticks + 1U : 0U;
-        if (++s_wait_ticks >= ENABLE_TIMEOUT_TICKS)
-            Stop(MC_ERROR_ENABLE_TIMEOUT, MACHINE_AXIS_NONE);
-        else if (s_mc.ready_ticks >= READY_HOLD_TICKS)
-            s_mc.state = MC_STATE_READY;
+        s_SMachineStatus.unReadyTicks = bAllReady ? s_SMachineStatus.unReadyTicks + 1U : 0U;
+        if (++s_unWaitTicks >= ENABLE_TIMEOUT_TICKS)
+            stopMachineGroup(MC_ERROR_ENABLE_TIMEOUT, MACHINE_AXIS_NONE);
+        else if (s_SMachineStatus.unReadyTicks >= READY_HOLD_TICKS)
+            s_SMachineStatus.eState = MC_STATE_READY;
     }
-    else if (!all_ready)
-        Stop(MC_ERROR_NOT_READY, not_ready_axis);
+    else if (!bAllReady)
+        stopMachineGroup(MC_ERROR_NOT_READY, ucNotReadyAxis);
 }
 
 /* zxr: 这里只测主站服务和使能管理；接入后总体周期的耗时预算由调用方另行测量。 */
-void MachineControl_Cycle(void)
+void mc_runCycle(void)
 {
-    uint32_t begin = get_us();
-    CycleStep();
-    s_mc.cycle_us = (uint32_t)(get_us() - begin);
-    if (s_mc.cycle_us > s_mc.max_cycle_us)
-        s_mc.max_cycle_us = s_mc.cycle_us;
-    if (s_mc.state != MC_STATE_NOT_READY && s_mc.cycle_us >= AXIS_CYCLE_PERIOD_US)
-        Stop(MC_ERROR_CYCLE, MACHINE_AXIS_NONE);
-    PublishSnapshot();
+    uint32_t unStartUs = tim_getTimeUs();
+    runCycleStep();
+    s_SMachineStatus.unCycleUs = (uint32_t)(tim_getTimeUs() - unStartUs);
+    if (s_SMachineStatus.unCycleUs > s_SMachineStatus.unMaxCycleUs)
+        s_SMachineStatus.unMaxCycleUs = s_SMachineStatus.unCycleUs;
+    if (s_SMachineStatus.eState != MC_STATE_NOT_READY && s_SMachineStatus.unCycleUs >= AXIS_CYCLE_PERIOD_US)
+        stopMachineGroup(MC_ERROR_CYCLE, MACHINE_AXIS_NONE);
+    publishSnapshot();
 }
 
-bool MachineControl_CanStep(void) { return s_mc.state == MC_STATE_READY && !s_step_submitted; }
+bool mc_canStep(void) { return s_SMachineStatus.eState == MC_STATE_READY && !s_bStepSubmitted; }
 
-bool MachineControl_SubmitStep(const int32_t delta_pulse[MACHINE_PHYSICAL_AXIS_COUNT])
+bool mc_submitStep(const int32_t pnDeltaPulse[MACHINE_PHYSICAL_AXIS_COUNT])
 {
-    if (s_mc.state != MC_STATE_READY)
+    if (s_SMachineStatus.eState != MC_STATE_READY)
         return false;
-    if (delta_pulse == NULL || s_step_submitted)
+    if (pnDeltaPulse == NULL || s_bStepSubmitted)
     {
-        Stop(MC_ERROR_STEP, MACHINE_AXIS_NONE);
-        PublishSnapshot();
+        stopMachineGroup(MC_ERROR_STEP, MACHINE_AXIS_NONE);
+        publishSnapshot();
         return false;
     }
-    int32_t next_target[MACHINE_PHYSICAL_AXIS_COUNT] = {0};
+    int32_t nNextTarget[MACHINE_PHYSICAL_AXIS_COUNT] = {0};
     for (uint8_t i = 0; i < MACHINE_PHYSICAL_AXIS_COUNT; i++)
     {
-        if (i >= s_active_axis_count)
+        if (i >= s_ucActiveAxisCount)
         {
-            if (delta_pulse[i] != 0)
+            if (pnDeltaPulse[i] != 0)
             {
-                Stop(MC_ERROR_STEP, i); /* zxr: XYZ 任务不能静默丢掉未接 Z 轴后变成 XY。 */
-                PublishSnapshot();
+                stopMachineGroup(MC_ERROR_STEP, i); /* zxr: XYZ 任务不能静默丢掉未接 Z 轴后变成 XY。 */
+                publishSnapshot();
                 return false;
             }
             continue;
         }
-        int64_t step = (int64_t)delta_pulse[i] * s_dir_invert[i];
-        int64_t target = (int64_t)s_mc.target_pos[i] + step;
-        if (step > s_step_limit[i] || step < -(int64_t)s_step_limit[i] || target > INT32_MAX || target < INT32_MIN)
+        int64_t lStep = (int64_t)pnDeltaPulse[i] * s_cDirectionInvert[i];
+        int64_t lTarget = (int64_t)s_SMachineStatus.nTargetPosition[i] + lStep;
+        if (lStep > s_nStepLimit[i] || lStep < -(int64_t)s_nStepLimit[i] || lTarget > INT32_MAX || lTarget < INT32_MIN)
         {
-            Stop(MC_ERROR_STEP, i);
-            PublishSnapshot();
+            stopMachineGroup(MC_ERROR_STEP, i);
+            publishSnapshot();
             return false;
         }
-        next_target[i] = (int32_t)target;
+        nNextTarget[i] = (int32_t)lTarget;
     }
     /* zxr: 先算完并检查全部轴，再发布；后轴非法时前轴也不会提交。 */
-    for (uint8_t axis = 0; axis < s_active_axis_count; axis++)
+    for (uint8_t ucAxis = 0; ucAxis < s_ucActiveAxisCount; ucAxis++)
     {
-        s_mc.target_pos[axis] = next_target[axis];
-        Axis_SetTargetPos(axis, next_target[axis]);
+        s_SMachineStatus.nTargetPosition[ucAxis] = nNextTarget[ucAxis];
+        axis_setTargetPos(ucAxis, nNextTarget[ucAxis]);
     }
-    s_step_submitted = true;
-    PublishSnapshot();
+    s_bStepSubmitted = true;
+    publishSnapshot();
     return true;
 }
 
-MachineState_e MachineControl_GetState(void) { return s_mc.state; }
-MachineError_e MachineControl_GetError(void) { return s_mc.error; }
-uint8_t MachineControl_GetFaultAxis(void) { return s_mc.fault_axis; }
-uint8_t MachineControl_GetActiveAxisCount(void) { return s_active_axis_count; }
+MACHINE_STATE mc_getState(void) { return s_SMachineStatus.eState; }
+MACHINE_ERROR mc_getError(void) { return s_SMachineStatus.eError; }
+uint8_t mc_getFaultAxis(void) { return s_SMachineStatus.ucFaultAxis; }
+uint8_t mc_getActiveAxisCount(void) { return s_ucActiveAxisCount; }
 
-bool MachineControl_GetSnapshot(MachineControlSnapshot_t *snapshot)
+bool mc_getSnapshot(SMachineControlSnapshot *pSSnapshot)
 {
-    if (snapshot == NULL)
+    if (pSSnapshot == NULL)
         return false;
 
     for (;;)
     {
-        uint32_t seq1 = s_snapshot_seq;
-        if ((seq1 & 1U) != 0U)
+        uint32_t unSequenceBefore = s_unSnapshotSequence;
+        if ((unSequenceBefore & 1U) != 0U)
             continue;
         __asm__ volatile("" ::: "memory");
-        *snapshot = s_snapshot;
+        *pSSnapshot = s_SSnapshot;
         __asm__ volatile("" ::: "memory");
-        if (seq1 == s_snapshot_seq)
+        if (unSequenceBefore == s_unSnapshotSequence)
             return true;
     }
 }
 
-int32_t MachineControl_GetTargetPos(uint8_t physical_axis) { return physical_axis < s_active_axis_count ? s_mc.target_pos[physical_axis] : 0; }
-int32_t MachineControl_GetActualPos(uint8_t physical_axis) { return physical_axis < s_active_axis_count ? s_mc.actual_pos[physical_axis] : 0; }
+int32_t mc_getTargetPos(uint8_t ucPhysicalAxis) { return ucPhysicalAxis < s_ucActiveAxisCount ? s_SMachineStatus.nTargetPosition[ucPhysicalAxis] : 0; }
+int32_t mc_getActualPos(uint8_t ucPhysicalAxis) { return ucPhysicalAxis < s_ucActiveAxisCount ? s_SMachineStatus.nActualPosition[ucPhysicalAxis] : 0; }

@@ -70,3 +70,4 @@ htmlcov/
 /Master/.vscode/
 /Master/compile_commands.json
 /Master/*.launch
+/Master/.settings/language.settings.xml

@@ -9,3 +9,10 @@ CompileFlags:
     - -Wno-error=int-conversion
 Index:
   Background: Build
+
+---
+If:
+  PathMatch: Master/.*
+CompileFlags:
+  CompilationDatabase: LocalDev/clangd-master
+  Remove: [-fcyclomatic-complexity, '--specs=*', -fstack-usage]
